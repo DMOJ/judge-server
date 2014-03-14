@@ -165,7 +165,7 @@ class Judge(object):
     def win_max_memory_usage(self):
         return self.memory.get_memory_info(self.memory.OpenProcess(self.memory.PROCESS_ALL_ACCESS, True, self.process.pid))["PeakPagefileUsage"] # @UndefinedVariable
     def nix_memory_usage(self):
-        with open("/proc/%d/stat"%self.process.pid) as stat:
+        with open("/proc/%d/stat"%self.process.pid, "r") as stat:
             return int(stat.readline().split()[22])
     def begin_grading(self, problem_id, language, source_code):
         pass

@@ -1,41 +1,51 @@
 #!/usr/bin/python
-import os, Queue, subprocess, sys, thread, threading, time
+import os, packet, Queue, subprocess, sys, thread, threading, time
 
 class Result(object):
     AC=0x0
     WA=0x1
-    def __init__(self):
+    def __init__(self, parent):
+        self.parent=parent
         self.start_time=None
         self.end_time=None
         self.elasped_time=None
         self.max_memory=None
         self.result_flag=None
-    def start(self):
-        self.start_time=time.clock()
-    def stop(self, result_flag=None):
-        self.end_time=time.clock()
-        self.elasped_time=self.end_time-self.start_time
-        self.result_flag=result_flag
     def memory_hook(self, lock, function, *args):
         while lock.acquire(False):
             self.update_memory(function(*args))
             lock.release()
             time.sleep(0.1)
+    def start(self):
+        self.parent.start()
+        self.start_time=time.clock()
+    def stop(self, result_flag=None):
+        self.end_time=time.clock()
+        self.elasped_time=self.end_time-self.start_time
+        self.result_flag=result_flag
+        self.parent.stop()
     def update_memory(self, new_memory):
         if new_memory>self.max_memory:
             self.max_memory=new_memory
 
 class Results(object):
     def __init__(self, total_results):
-        self.results=[Result()]*total_results
+        self.results=[Result(self)]*total_results
         self.judge=None
     def __getitem__(self, index):
         return self.results[index]
     def link(self, judge):
         self.judge=judge
+        self.packet_manager=packet.PacketManager("host", "port", self.judge)
     def run(self, input_files, output_files):
+        self.packet_manager.begin_grading_packet()
         for result, input_file, output_file in zip(self.results, input_files, output_files):
             self.judge.run(result, input_file, output_file)
+        self.packet_manager.grading_end_packet()
+    def start(self):
+        pass
+    def stop(self):
+        pass
 
 class Judge(object):
     EOF=""
@@ -62,20 +72,20 @@ class Judge(object):
         return self
     def __exit__(self, exception_type, exception_value, traceback):
         self.close()
-    def alive(self):
+    def alive(self, result_flag=None):
         if not self.stopped:
             self.exitcode=self.process.poll()
             if self.exitcode is not None:
                 sys.stdin=self.old_stdin
                 sys.stdout=self.old_stdout
                 self.stopped=True
-                self.result.stop()
+                self.result.stop(result_flag)
                 self.write_lock.acquire()
                 self.memory_lock.acquire()
         return not self.stopped
-    def close(self, force_terminate=False):
-        if self.alive():
-            self.result.stop()
+    def close(self, force_terminate=False, result_flag=None):
+        if self.alive(result_flag):
+            self.result.stop(result_flag)
             self.write_lock.acquire()
             self.result.update_memory(self.max_memory_usage())
             self.memory_lock.acquire()
@@ -116,9 +126,7 @@ class Judge(object):
             judge_output=fo.read().strip().replace('\r\n', '\n')
             if process_output!=judge_output:
                 result_flag|=Result.WA
-        self.close()
-        self.stopped=True
-        self.result.stop(result_flag)
+        self.close(result_flag=result_flag)
     def write(self, data):
         self.write_queue.put_nowait(data)
     def write_async(self, write_lock):

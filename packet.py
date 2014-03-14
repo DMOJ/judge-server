@@ -16,7 +16,7 @@ class PacketManager(object):
                 name = packet["name"]
                 if name == "submission-request":
                         self.submission_handshake_packet()
-                        judge.begin_grading(packet["problem-id"], packet["language"], packet["source"])
+                        self.judge.begin_grading(packet["problem-id"], packet["language"], packet["source"])
                 elif name == "get-current-submission":
                         self.current_submission_packet()
                 else:
@@ -47,7 +47,7 @@ class PacketManager(object):
         def grading_end_packet(self):
                 self.send_packet({   "name": "grading-end",
                                 "submission-id": self.judge.current_submission})
-                judge.current_submission = None
+                self.judge.current_submission = None
  
         def current_submission_packet(self):
                 self.send_packet({   "name": "current-submission-id",

@@ -4,13 +4,18 @@ import os, packet, Queue, subprocess, sys, thread, threading, time
 class Result(object):
     AC=0x0
     WA=0x1
+    RTE=0x2
+    TLE=0x4
     def __init__(self, parent):
         self.parent=parent
         self.start_time=None
         self.end_time=None
-        self.elasped_time=None
+        self.elapsed_time=None
         self.max_memory=None
         self.result_flag=None
+        self.partial_output=""
+    def give_partial_output(self, partial_output):
+        self.partial_output=partial_output
     def memory_hook(self, lock, function, *args):
         while lock.acquire(False):
             self.update_memory(function(*args))
@@ -21,7 +26,7 @@ class Result(object):
         self.start_time=time.clock()
     def stop(self, result_flag=None):
         self.end_time=time.clock()
-        self.elasped_time=self.end_time-self.start_time
+        self.elapsed_time=self.end_time-self.start_time
         self.result_flag=result_flag
         self.parent.stop()
     def update_memory(self, new_memory):
@@ -41,6 +46,7 @@ class Results(object):
         self.packet_manager.begin_grading_packet()
         for result, input_file, output_file in zip(self.results, input_files, output_files):
             self.judge.run(result, input_file, output_file)
+            self.packet_manager.test_case_status_packet(result.result_flag, result.elapsed_time, result.max_memory, result.partial_output)
         self.packet_manager.grading_end_packet()
     def start(self):
         pass
@@ -123,6 +129,7 @@ class Judge(object):
             self.write(fi.read().strip())
             self.write(Judge.EOF)
             process_output=self.read().strip().replace('\r\n', '\n')
+            self.result.give_partial_output(process_output[:10])
             judge_output=fo.read().strip().replace('\r\n', '\n')
             if process_output!=judge_output:
                 result_flag|=Result.WA
@@ -169,7 +176,7 @@ def main():
             res.run(["segtree10.in"], ["segtree10.out"])
         except Exception, e:
             print e
-    print res[0].elasped_time, "seconds"
+    print res[0].elapsed_time, "seconds"
     print res[0].max_memory/1024.0/1024.0, "MB"
     if res[0].result_flag&Result.WA:
         print "Wrong Answer"

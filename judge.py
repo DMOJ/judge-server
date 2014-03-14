@@ -59,6 +59,9 @@ class Judge(object):
         if sys.platform=="win32":
             import memory # @UnresolvedImport
             self.memory=memory
+            self.memory_getter=self.win_max_memory_usage
+        else:
+            self.memory_getter=self.nix_memory_usage
         self.processname=processname
         self.language=language
         self.redirect=redirect
@@ -120,7 +123,7 @@ class Judge(object):
         self.process=subprocess.Popen([self.processname], shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         self.result=result
         self.result.start()
-        thread.start_new_thread(result.memory_hook, (self.memory_lock, self.max_memory_usage,))
+        thread.start_new_thread(result.memory_hook, (self.memory_lock, self.memory_getter,))
         if self.transfer:
             self.write(sys.stdin.read())
         thread.start_new_thread(self.write_async, (self.write_lock,))
@@ -159,8 +162,11 @@ class Judge(object):
                         os.fsync(self.process.stdin.fileno())
         except:
             pass
-    def max_memory_usage(self):
+    def win_max_memory_usage(self):
         return self.memory.get_memory_info(self.memory.OpenProcess(self.memory.PROCESS_ALL_ACCESS, True, self.process.pid))["PeakPagefileUsage"] # @UndefinedVariable
+    def nix_memory_usage(self):
+        with open("/proc/%d/stat"%self.process.pid) as stat:
+            return int(stat.readline().split()[22])
     def begin_grading(self, problem_id, language, source_code):
         pass
 

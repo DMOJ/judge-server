@@ -1,12 +1,13 @@
 #!/usr/bin/python
 import os
 import Queue
-import subprocess
+import traceback
 import sys
 import thread
 import threading
 
 import execute
+
 import packet
 
 
@@ -16,68 +17,65 @@ class Result(object):
     RTE = 0x2
     TLE = 0x4
 
-    def __init__(self, parent):
-        self.parent = parent
+    def __init__(self):
         self.result_flag = 0
-        self.elapsed_time = 0
+        self.execution_time = 0
         self.max_memory = 0
-        self.partial_output = ""
-
-    def give_partial_output(self, partial_output):
-        self.partial_output = partial_output
-
-    def start(self):
-        self.parent.start()
-
-    def stop(self, result_flag=None):
-        self.result_flag = result_flag
-        self.parent.stop()
-
-
-class Results(object):
-    def __init__(self, total_results):
-        self.results = [Result(self)] * total_results
-        self.judge = None
-
-    def __getitem__(self, index):
-        return self.results[index]
-
-    def link(self, judge):
-        self.judge = judge
-        self.packet_manager = packet.PacketManager("host", "port", self.judge)
-
-    def run(self, input_files, output_files):
-        self.packet_manager.begin_grading_packet()
-        for result, input_file, output_file in zip(self.results, input_files, output_files):
-            self.judge.run(result, input_file, output_file)
-            self.packet_manager.test_case_status_packet(result.result_flag, result.elapsed_time, result.max_memory,
-                                                        result.partial_output)
-        self.packet_manager.grading_end_packet()
-
-    def start(self):
-        pass
-
-    def stop(self):
-        pass
+        self.partial_output = None
 
 
 class Judge(object):
+    def __init__(self):
+        self.packet_manager = packet.PacketManager("127.0.0.1", "8080", self)
+        self.current_submission = None
+
+    def run(self, arguments, iofiles):
+        self.packet_manager.begin_grading_packet()
+        with ProgramJudge(arguments) as judge:
+            for input_file, output_file in iofiles.iteritems():
+                result = Result()
+                judge.run(result, input_file, output_file)
+                self.packet_manager.test_case_status_packet(result.result_flag, result.execution_time,
+                                                            result.max_memory,
+                                                            result.partial_output)
+                yield result
+        self.packet_manager.grading_end_packet()
+
+    def begin_grading(self, problem_id, language, source_code):
+        pass
+
+    # TODO: cleanup packet manager
+    def __del__(self):
+        pass
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exception_type, exception_value, traceback):
+        pass
+
+
+class ProgramJudge(object):
     EOF = ""
 
-    def __init__(self, processname, language="", redirect=False, transfer=False, interact=False, results=None):
+    def __init__(self, processname, redirect=False, transfer=False, interact=False):
+        self.result = None
+        self.process = execute.execute(processname)
+        self.write_lock = threading.Lock()
+        self.write_queue = Queue.Queue()
+        self.stopped = False
+        self.exitcode = None
         self.processname = processname
-        self.language = language
         self.redirect = redirect
         self.transfer = transfer
         self.interact = interact
-        self.results = results
+
         self.old_stdin = sys.stdin
         self.old_stdout = sys.stdout
         self.current_submission = None
         if self.redirect:
             sys.stdin = self
             sys.stdout = self
-        self.results.link(self)
 
     def __del__(self):
         self.close(True)
@@ -95,13 +93,13 @@ class Judge(object):
                 sys.stdin = self.old_stdin
                 sys.stdout = self.old_stdout
                 self.stopped = True
-                self.result.stop(result_flag)
+                self.result.result_flag = result_flag
                 self.write_lock.acquire()
         return not self.stopped
 
     def close(self, force_terminate=False, result_flag=None):
-        if self.alive(result_flag):
-            self.result.stop(result_flag)
+        if self.result and self.alive(result_flag):
+            self.result.result_flag = result_flag
             self.write_lock.acquire()
             sys.stdin = self.old_stdin
             sys.stdout = self.old_stdout
@@ -123,24 +121,18 @@ class Judge(object):
         return line.rstrip() if line else ""
 
     def run(self, result, input_file, output_file):
-        self.exitcode = None
-        self.stopped = False
-        self.write_queue = Queue.Queue()
-        self.write_lock = threading.Lock()
-        self.process = execute.execute(self.processname)
         self.result = result
-        self.result.start()
         if self.transfer:
             self.write(sys.stdin.read())
         thread.start_new_thread(self.write_async, (self.write_lock,))
         result_flag = 0
         with open(input_file, "r") as fi, open(output_file, "r") as fo:
             self.write(fi.read().strip())
-            self.write(Judge.EOF)
+            self.write(ProgramJudge.EOF)
             process_output = self.read().strip().replace('\r\n', '\n')
-            self.result.give_partial_output(process_output[:10])
+            self.result.partial_output = process_output[:10]
             self.result.max_memory = self.process.get_max_memory()
-            self.result.elapsed_time = self.process.get_execution_time()
+            self.result.execution_time = self.process.get_execution_time()
             judge_output = fo.read().strip().replace('\r\n', '\n')
             if process_output != judge_output:
                 result_flag |= Result.WA
@@ -161,7 +153,7 @@ class Judge(object):
                         pass
                 else:
                     break
-                if data == Judge.EOF:
+                if data == ProgramJudge.EOF:
                     self.process.stdin.close()
                     break
                 else:
@@ -170,30 +162,27 @@ class Judge(object):
                     if data == '\n':
                         self.process.stdin.flush()
                         os.fsync(self.process.stdin.fileno())
-        except:
-            pass
-
-    def begin_grading(self, problem_id, language, source_code):
-        pass
+        except Exception:
+            traceback.print_exc()
 
 
 def main():
-    if len(sys.argv) < 2:
-        print "Invalid arguments"
-        #sys.exit()
-        #sys.argv.append("Rivers.exe")
-    res = Results(1)
-    with Judge([sys.executable, "aplusb.py"], redirect=False, interact=False, results=res) as judge:
+    # TODO: argparse
+    with Judge() as judge:
         try:
-            res.run(["aplusb.in"], ["aplusb.out"])
-        except Exception, e:
-            print e
-    print res[0].elapsed_time, "seconds"
-    print res[0].max_memory / 1024.0, "MB"
-    if res[0].result_flag & Result.WA:
-        print "Wrong Answer"
-    else:
-        print "Accepted"
+            case = 1
+            for res in judge.run([sys.executable, "aplusb.py"], {"aplusb.in": "aplusb.out"}):
+                print "Test case %s" % case
+                print "\t%f seconds" % res.execution_time
+                print "\t%.2f mb (%s kb)" % (res.max_memory / 1024.0, res.max_memory)
+                if res.result_flag & Result.WA:
+                    print "\tWrong Answer"
+                else:
+                    print "\tAccepted"
+                case += 1
+        except Exception:
+            traceback.print_exc()
+
     print "Done"
 
 

@@ -3,12 +3,15 @@ import uuid
 
 class PacketManager(object):
     def __init__(self, host, port, judge):
+        self.host = host
+        self.port = port
         self.judge = judge
 
     def send_packet(self, packet):
-        print packet
+        print "%s:%s => %s" % (self.host, self.port, packet)
 
     def recieve_packet(self, packet):
+        print "%s:%s <= %s" % (self.host, self.port, packet)
         name = packet["name"]
         if name == "submission-request":
             self.judge.current_submission = packet["submission-id"]

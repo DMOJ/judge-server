@@ -42,7 +42,6 @@ class nix_Process(object):
 
 
 def execute(path):
-    print "Executing", path
     process = subprocess.Popen([sys.executable, __file__] + path, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     return nix_Process(process)
 

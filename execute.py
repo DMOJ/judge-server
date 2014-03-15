@@ -23,16 +23,19 @@ if not pid:
     resource.setrlimit(resource.RLIMIT_AS, (32*1024*1024,)*2)
     #resource.setrlimit(resource.RLIMIT_NOFILE, (4, 4))
     resource.setrlimit(resource.RLIMIT_NPROC, (0, 0))
+    os.dup2(os.open('/dev/null', os.O_WRONLY), 2)
     os.execvp(child, args)
+    os._exit(3306)
 else:
+    sys.stdin.close()
+    sys.stdout.close()
     start = time.time()
     time.sleep(5)
     duration = time.time() - start
     signal.signal(signal.SIGCHLD, h)
+    tle = 0
     if code is None: # TLE
         os.kill(pid, signal.SIGKILL)
         _, code, rusage = os.wait4(pid, 0)
-        print 'Time Limit Exceeded'
-    print rusage.ru_maxrss, 'KB of RAM'
-    print 'Execution time: %.3f seconds' % duration
-    print 'Return:', code
+        tle = 1
+    print>>sys.stderr, tle, rusage.ru_maxrss, duration, code

@@ -25,8 +25,8 @@ class Result(object):
 
 
 class Judge(object):
-    def __init__(self):
-        self.packet_manager = packet.PacketManager("127.0.0.1", "8080", self)
+    def __init__(self, host, port):
+        self.packet_manager = packet.PacketManager(host, port, self)
         self.current_submission = None
 
     def run(self, arguments, iofiles):
@@ -168,7 +168,7 @@ class ProgramJudge(object):
 
 def main():
     # TODO: argparse
-    with Judge() as judge:
+    with Judge("127.0.0.1", 8080) as judge:
         try:
             case = 1
             for res in judge.run([sys.executable, "aplusb.py"], {"aplusb.in": "aplusb.out"}):

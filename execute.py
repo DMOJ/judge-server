@@ -25,7 +25,9 @@ if not pid:
     resource.setrlimit(resource.RLIMIT_NPROC, (0, 0))
     os.dup2(os.open('/dev/null', os.O_WRONLY), 2)
     os.execvp(child, args)
-    os._exit(3306)
+    os._exit(3306) # When you reach here, you are screwed
+                   # As much as being handed control of a MySQL server without
+                   # ANY SQL knowledge or docs. ENJOY.
 else:
     sys.stdin.close()
     sys.stdout.close()

@@ -1,22 +1,21 @@
 __all__ = ['get_current_process', 'get_memory_info', 'get_memory_usage']
 
-import ctypes
-from ctypes import wintypes
+from ctypes.wintypes import *
 from ctypes import *
 
-GetCurrentProcess = ctypes.windll.kernel32.GetCurrentProcess  # @UndefinedVariable
+GetCurrentProcess = windll.kernel32.GetCurrentProcess  # @UndefinedVariable
 GetCurrentProcess.argtypes = []
-GetCurrentProcess.restype = wintypes.HANDLE
+GetCurrentProcess.restype = HANDLE
 
-OpenProcess = ctypes.windll.kernel32.OpenProcess  # @UndefinedVariable
-OpenProcess.restype = wintypes.HANDLE
+OpenProcess = windll.kernel32.OpenProcess  # @UndefinedVariable
+OpenProcess.restype = HANDLE
 
 PROCESS_ALL_ACCESS = 2035711
 
-class PROCESS_MEMORY_COUNTERS_EX(ctypes.Structure):
+class PROCESS_MEMORY_COUNTERS_EX(Structure):
     _fields_ = [
-        ('cb', wintypes.DWORD),
-        ('PageFaultCount', wintypes.DWORD),
+        ('cb', DWORD),
+        ('PageFaultCount', DWORD),
         ('PeakWorkingSetSize', c_size_t),
         ('WorkingSetSize', c_size_t),
         ('QuotaPeakPagedPoolUsage', c_size_t),
@@ -29,13 +28,13 @@ class PROCESS_MEMORY_COUNTERS_EX(ctypes.Structure):
     ]
 
 
-GetProcessMemoryInfo = ctypes.windll.psapi.GetProcessMemoryInfo
+GetProcessMemoryInfo = windll.psapi.GetProcessMemoryInfo
 GetProcessMemoryInfo.argtypes = [
-    wintypes.HANDLE,
-    ctypes.POINTER(PROCESS_MEMORY_COUNTERS_EX),
-    wintypes.DWORD,
+    HANDLE,
+    POINTER(PROCESS_MEMORY_COUNTERS_EX),
+    DWORD,
 ]
-GetProcessMemoryInfo.restype = wintypes.BOOL
+GetProcessMemoryInfo.restype = BOOL
 
 
 def get_current_process():
@@ -48,10 +47,9 @@ def get_memory_info(process=None):
     if process is None:
         process = get_current_process()
     counters = PROCESS_MEMORY_COUNTERS_EX()
-    ret = GetProcessMemoryInfo(process, ctypes.byref(counters),
-                               ctypes.sizeof(counters))
+    ret = GetProcessMemoryInfo(process, byref(counters), sizeof(counters))
     if not ret:
-        raise ctypes.WinError()
+        raise WinError()
     info = dict((name, getattr(counters, name))
                 for name, _ in counters._fields_)
     return info

@@ -1,6 +1,6 @@
 import json
 import socket
-import thread
+import threading
 import struct
 import traceback
 
@@ -12,13 +12,11 @@ class PacketManager(object):
         self.host = host
         self.port = port
         self.judge = judge
-        transfer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        transfer.bind((host, port))
-        transfer.listen(1)
-        self.conn, self.addr = transfer.accept()
-        self.input = transfer.makefile("r")
-        self.output = transfer.makefile("w")
-        thread.start_new_thread(self._read_async, None)
+        self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.conn.connect((host, port))
+        self.input = self.conn.makefile("r")
+        self.output = self.conn.makefile("w")
+        threading.Thread(target=self._read_async).start()
 
     def _read_async(self):
         try:
@@ -26,7 +24,7 @@ class PacketManager(object):
                 size = PacketManager.SIZE_PACK.unpack(self.input.read(PacketManager.SIZE_PACK.size))
                 packet = self.input.read(size).decode("zlib")
                 self._recieve_packet(packet)
-        except Exception:  # connection reset by peer
+        except Exception: # connection reset by peer
             traceback.print_exc()
         return
 

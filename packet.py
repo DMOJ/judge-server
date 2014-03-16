@@ -15,7 +15,7 @@ class PacketManager(object):
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.conn.connect((host, port))
         self.input = self.conn.makefile("r")
-        self.output = self.conn.makefile("w")
+        self.output = self.conn.makefile("w", 0)
         threading.Thread(target=self._read_async).start()
 
     def _read_async(self):

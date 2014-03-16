@@ -5,6 +5,7 @@ import traceback
 import sys
 import thread
 import threading
+import argparse
 
 import execute
 
@@ -167,8 +168,16 @@ class ProgramJudge(object):
 
 
 def main():
-    # TODO: argparse
-    with Judge("127.0.0.1", 8080) as judge:
+    parser = argparse.ArgumentParser(description='''
+        Spawns a judge for a submission server.
+    ''')
+    parser.add_argument('server_host', nargs='?', default='127.0.0.1',
+                        help='host to listen for the server')
+    parser.add_argument('-p', '--server-port', type=int, default=9999,
+                        help='port to listen for the server')
+
+    args = parser.parse_args()
+    with Judge(args.server_host(), args.server_port()) as judge:
         try:
             case = 1
             for res in judge.run([sys.executable, "aplusb.py"], {"aplusb.in": "aplusb.out"}):

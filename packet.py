@@ -47,11 +47,13 @@ class PacketManager(object):
         else:
             print "ERROR: unknown packet %s, payload %s" % (name, packet)
 
-    def test_case_status_packet(self, status, time, memory, output):
+    def test_case_status_packet(self, position, points, status, time, memory, output):
         self._send_packet({"name": "test-case-status",
                            "submission-id": self.judge.current_submission,
+                           "position": position,
                            "status": status,
                            "time": time,
+                           "points": points,
                            "memory": memory,
                            "output": output})
 

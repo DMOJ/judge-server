@@ -33,12 +33,15 @@ class Judge(object):
     def run(self, arguments, iofiles):
         self.packet_manager.begin_grading_packet()
         with ProgramJudge(arguments) as judge:
+            case = 1
             for input_file, output_file in iofiles.iteritems():
                 result = Result()
                 judge.run(result, input_file, output_file)
-                self.packet_manager.test_case_status_packet(result.result_flag, result.execution_time,
+                # TODO: get points
+                self.packet_manager.test_case_status_packet(case, 1, result.result_flag, result.execution_time,
                                                             result.max_memory,
                                                             result.partial_output)
+                case += 1
                 yield result
         self.packet_manager.grading_end_packet()
 

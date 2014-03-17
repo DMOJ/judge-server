@@ -21,8 +21,9 @@ class PacketManager(object):
     def _read_async(self):
         try:
             while True:
-                size = PacketManager.SIZE_PACK.unpack(self.input.read(PacketManager.SIZE_PACK.size))
+                size = PacketManager.SIZE_PACK.unpack(self.input.read(PacketManager.SIZE_PACK.size))[0]
                 packet = self.input.read(size).decode("zlib")
+                packet = json.loads(packet)
                 self._recieve_packet(packet)
         except Exception: # connection reset by peer
             traceback.print_exc()

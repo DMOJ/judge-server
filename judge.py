@@ -180,7 +180,7 @@ def main():
                         help='port to listen for the server')
 
     args = parser.parse_args()
-    with Judge(args.server_host(), args.server_port()) as judge:
+    with Judge(args.server_host, args.server_port) as judge:
         try:
             case = 1
             for res in judge.run([sys.executable, "aplusb.py"], {"aplusb.in": "aplusb.out"}):

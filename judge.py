@@ -130,7 +130,8 @@ class ProgramJudge(object):
             self.write(sys.stdin.read())
         thread.start_new_thread(self.write_async, (self.write_lock,))
         result_flag = 0
-        with open(input_file, "r") as fi, open(output_file, "r") as fo:
+        with open(input_file, "r") as fi:
+          with open(output_file, "r") as fo:
             self.write(fi.read().strip())
             self.write(ProgramJudge.EOF)
             process_output = self.read().strip().replace('\r\n', '\n')

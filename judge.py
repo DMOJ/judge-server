@@ -24,6 +24,7 @@ class Result(object):
     WA = 0x1
     RTE = 0x2
     TLE = 0x4
+    MLE = 0x8
 
     def __init__(self):
         self.result_flag = 0
@@ -96,10 +97,19 @@ class Judge(object):
                 print "Test case %s" % case
                 print "\t%f seconds" % res.execution_time
                 print "\t%.2f mb (%s kb)" % (res.max_memory / 1024.0, res.max_memory)
+                execution_verdict = []
                 if res.result_flag & Result.WA:
-                    print "\tWrong Answer"
-                else:
+                    execution_verdict.append("\tWrong Answer")
+                if res.result_flag & Result.RTE:
+                    execution_verdict.append("\tRuntime Error")
+                if res.result_flag & Result.TLE:
+                    execution_verdict.append("\tTime Limit Exceeded")
+                if res.result_flag & Result.MLE:
+                    execution_verdict.append("\tMemory Limit Exceeded")
+                if res.result_flag == Result.AC:
                     print "\tAccepted"
+                else:
+                    print "\n".join(execution_verdict)
                 case += 1
 
     def listen(self):
@@ -198,8 +208,10 @@ class ProgramJudge(object):
         self.result = result
         if self.transfer:
             self.write(sys.stdin.read())
-        thread.start_new_thread(self.write_async, (self.write_lock,))
         result_flag = Result.AC
+        write_thread = threading.Thread(target=self.write_async, args=(self.write_lock,))
+        write_thread.daemon = True
+        write_thread.start()
         self.write(input_file.read())
         self.write(ProgramJudge.EOF)
         process_output = self.read().strip().replace('\r\n', '\n')
@@ -209,6 +221,12 @@ class ProgramJudge(object):
         judge_output = output_file.read().strip().replace('\r\n', '\n')
         if process_output != judge_output:
             result_flag |= Result.WA
+        if self.process.get_rte():
+            result_flag |= Result.RTE
+        if self.process.get_tle():
+            result_flag |= Result.TLE
+        if self.process.get_mle():
+            result_flag |= Result.MLE
         self.close(result_flag=result_flag)
 
     def write(self, data):
@@ -258,7 +276,8 @@ def main():
 
     print "Running %s judge..." % (["local", "live"][args.server_host is not None])
 
-    cpp_source=r'''#include <iostream>
+    cpp_source=r'''
+#include <iostream>
 #include <cstdio>
 
 using namespace std;
@@ -276,7 +295,8 @@ int main()
     return 0;
 }
 '''
-    py2_source=r'''for i in xrange(int(raw_input())):
+    py2_source=r'''
+for i in xrange(int(raw_input())):
     print sum(map(int, raw_input().split()))
 '''
     if args.server_host:

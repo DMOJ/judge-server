@@ -15,10 +15,12 @@ OpenProcess.restype = HANDLE
 PROCESS_ALL_ACCESS = 2035711
 
 class win_Process(object):
-    def __init__(self, chained):
+    def __init__(self, chained, time_limit, memory_limit):
         self._chained = chained
         self.stdout = chained.stdout
         self.stdin = chained.stdin
+        self.time_limit = time_limit
+        self.memory_limit = memory_limit
         self.usages = None
         self.returncode = None
 
@@ -29,17 +31,27 @@ class win_Process(object):
             return getattr(self._chained, name)
         return object.__getattribute__(self, name)
 
+    # TODO: implement this
+    def get_rte(self):
+        return False
+
+    def get_tle(self):
+        return self.get_execution_time() > self.time_limit
+
+    def get_mle(self):
+        return self.get_max_memory() > self.memory_limit
+
     def get_execution_time(self):
         return time.time() - self._start_time
 
     def get_max_memory(self):
-        return get_memory_info(OpenProcess(PROCESS_ALL_ACCESS, True, self._chained.pid))["PeakPagefileUsage"]/1024.0
+        return get_memory_info(OpenProcess(PROCESS_ALL_ACCESS, True, self._chained.pid))["PeakPagefileUsage"] / 1024.0
 
 def execute(path, time, memory):
     process = subprocess.Popen(path, stdin=subprocess.PIPE,
                                      stdout=subprocess.PIPE,
                                      stderr=subprocess.PIPE)
-    return win_Process(process)
+    return win_Process(process, time, memory)
 
 class PROCESS_MEMORY_COUNTERS_EX(Structure):
     _fields_ = [

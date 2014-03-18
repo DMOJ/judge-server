@@ -35,6 +35,17 @@ class nix_Process(object):
             self.usages = map(eval, self._chained.stderr.readline().split())
         return self.usages
 
+    # TODO: implement this
+    def get_rte(self):
+        return False
+
+    def get_tle(self):
+        return self._get_usages()[0]
+
+    # TODO: implement this
+    def get_mle(self):
+        return False
+
     def get_execution_time(self):
         return self._get_usages()[2]
 

@@ -46,7 +46,7 @@ class Judge(object):
                 result = Result()
                 judge.run(result, openfile(input_file), openfile(output_file))
                 # TODO: get points
-                self.packet_manager.test_case_status_packet(case, point_value, result.result_flag, result.execution_time,
+                self.packet_manager.test_case_status_packet(case, point_value if result.result_flag == Result.AC else 0, point_value, result.result_flag, result.execution_time,
                                                             result.max_memory,
                                                             result.partial_output)
                 case += 1

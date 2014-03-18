@@ -11,6 +11,8 @@ import execute
 
 import packet
 
+import zipreader
+
 
 class Result(object):
     AC = 0x0
@@ -30,20 +32,63 @@ class Judge(object):
         self.packet_manager = packet.PacketManager(host, port, self)
         self.current_submission = None
 
-    def run(self, arguments, iofiles):
+    def run(self, arguments, iofiles, *args):
+        fromzip="zipfile" in iofiles
+        if fromzip:
+            archive = zipreader.ZipReader(iofiles["zipfile"])
         self.packet_manager.begin_grading_packet()
-        with ProgramJudge(arguments) as judge:
+        for input_file, output_file in iofiles.iteritems():
             case = 1
-            for input_file, output_file in iofiles.iteritems():
-                result = Result()
-                judge.run(result, input_file, output_file)
-                # TODO: get points
-                self.packet_manager.test_case_status_packet(case, 1, result.result_flag, result.execution_time,
-                                                            result.max_memory,
-                                                            result.partial_output)
-                case += 1
-                yield result
+            with ProgramJudge(arguments, *args) as judge:
+                if input_file != "zipfile":
+                    result = Result()
+                    if fromzip:
+                        judge.run(result, archive.files[input_file], archive.files[output_file])
+                    else:
+                        with open(input_file, "r") as fi, open(output_file, "r") as fo:
+                            judge.run(result, fi, fo)
+                    # TODO: get points
+                    self.packet_manager.test_case_status_packet(case, 1, result.result_flag, result.execution_time,
+                                                                result.max_memory,
+                                                                result.partial_output)
+                    case += 1
+                    yield result
         self.packet_manager.grading_end_packet()
+
+    def begin_grading(self, problem_id, language, source_code):
+        pass
+
+    # TODO: cleanup packet manager
+    def __del__(self):
+        pass
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exception_type, exception_value, traceback):
+        pass
+
+
+class DemoJudge(object):
+    def __init__(self, host, port):
+        self.current_submission = None
+
+    def run(self, arguments, iofiles, *args):
+        fromzip="zipfile" in iofiles
+        if fromzip:
+            archive = zipreader.ZipReader(iofiles["zipfile"])
+        for input_file, output_file in iofiles.iteritems():
+            case = 1
+            with ProgramJudge(arguments, *args) as judge:
+                if input_file != "zipfile":
+                    result = Result()
+                    if fromzip:
+                        judge.run(result, archive.files[input_file], archive.files[output_file])
+                    else:
+                        with open(input_file, "r") as fi, open(output_file, "r") as fo:
+                            judge.run(result, fi, fo)
+                    case += 1
+                    yield result
 
     def begin_grading(self, problem_id, language, source_code):
         pass
@@ -130,17 +175,15 @@ class ProgramJudge(object):
             self.write(sys.stdin.read())
         thread.start_new_thread(self.write_async, (self.write_lock,))
         result_flag = 0
-        with open(input_file, "r") as fi:
-          with open(output_file, "r") as fo:
-            self.write(fi.read().strip())
-            self.write(ProgramJudge.EOF)
-            process_output = self.read().strip().replace('\r\n', '\n')
-            self.result.partial_output = process_output[:10]
-            self.result.max_memory = self.process.get_max_memory()
-            self.result.execution_time = self.process.get_execution_time()
-            judge_output = fo.read().strip().replace('\r\n', '\n')
-            if process_output != judge_output:
-                result_flag |= Result.WA
+        self.write(input_file.read().strip())
+        self.write(ProgramJudge.EOF)
+        process_output = self.read().strip().replace('\r\n', '\n')
+        self.result.partial_output = process_output[:10]
+        self.result.max_memory = self.process.get_max_memory()
+        self.result.execution_time = self.process.get_execution_time()
+        judge_output = output_file.read().strip().replace('\r\n', '\n')
+        if process_output != judge_output:
+            result_flag |= Result.WA
         self.close(result_flag=result_flag)
 
     def write(self, data):
@@ -163,7 +206,10 @@ class ProgramJudge(object):
                     break
                 else:
                     data = data.replace('\r\n', '\n').replace('\r', '\n')
-                    self.process.stdin.write(data)
+                    try:
+                        self.process.stdin.write(data)
+                    except IOError:
+                        break
                     if data == '\n':
                         self.process.stdin.flush()
                         os.fsync(self.process.stdin.fileno())
@@ -181,10 +227,10 @@ def main():
                         help='port to listen for the server')
 
     args = parser.parse_args()
-    with Judge(args.server_host, args.server_port) as judge:
+    with DemoJudge(args.server_host, args.server_port) as judge:
         try:
             case = 1
-            for res in judge.run([sys.executable, "aplusb.py"], {"aplusb.in": "aplusb.out"}):
+            for res in judge.run([sys.executable, "aplusb.py"], {"zipfile": "aplusb.zip", "aplusb.in": "aplusb.out", "aplusb.2.in": "aplusb.2.out", "aplusb.3.in": "aplusb.3.out"}):
                 print "Test case %s" % case
                 print "\t%f seconds" % res.execution_time
                 print "\t%.2f mb (%s kb)" % (res.max_memory / 1024.0, res.max_memory)

@@ -1,11 +1,12 @@
 #!/usr/bin/python
+import argparse
+import json
 import os
 import Queue
 import traceback
 import sys
 import thread
 import threading
-import argparse
 
 import execute
 
@@ -54,7 +55,9 @@ class Judge(object):
         self.packet_manager.grading_end_packet()
 
     def begin_grading(self, problem_id, language, source_code):
-        pass
+        with open(os.path.join(problem_id, "init.json"), "r") as init_file:
+            init_data = json.load(init_file)
+            init_data["zip_archive"]
 
     # TODO: cleanup packet manager
     def __del__(self):

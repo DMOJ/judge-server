@@ -67,36 +67,13 @@ class Judge(object):
         pass
 
 
-class DemoJudge(object):
+class DemoJudge(Judge):
     def __init__(self, host, port):
+        class DummyPacketManager(object):
+            def __getattr__(self, *args):
+                return lambda *args: None
+        self.packet_manager = DummyPacketManager()
         self.current_submission = None
-
-    def run(self, arguments, iofiles, *args):
-        if "zipfile" in iofiles:
-            archive = zipreader.ZipReader(iofiles["zipfile"])
-            del iofiles["zipfile"]
-            openfile = archive.files.__getitem__
-        else:
-            openfile = open
-        for input_file, output_file in iofiles.iteritems():
-            case = 1
-            with ProgramJudge(arguments, *args) as judge:
-                result = Result()
-                judge.run(result, openfile(input_file), openfile(output_file))
-                case += 1
-                yield result
-
-    def begin_grading(self, problem_id, language, source_code):
-        pass
-
-    def __del__(self):
-        pass
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exception_type, exception_value, traceback):
-        pass
 
 
 class ProgramJudge(object):

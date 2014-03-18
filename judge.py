@@ -67,12 +67,13 @@ class Judge(object):
         pass
 
 
-class DemoJudge(Judge):
+class LocalJudge(Judge):
     def __init__(self, host, port):
-        class DummyPacketManager(object):
-            def __getattr__(self, *args):
-                return lambda *args: None
-        self.packet_manager = DummyPacketManager()
+        class LocalPacketManager(object):
+            def __getattr__(self, *args, **kwargs):
+                return lambda *args, **kwargs: None
+
+        self.packet_manager = LocalPacketManager()
         self.current_submission = None
 
 
@@ -193,16 +194,20 @@ def main():
     parser = argparse.ArgumentParser(description='''
         Spawns a judge for a submission server.
     ''')
-    parser.add_argument('server_host', nargs='?', default='127.0.0.1',
+    parser.add_argument('server_host', nargs='?', default=None,
                         help='host to listen for the server')
     parser.add_argument('-p', '--server-port', type=int, default=9999,
                         help='port to listen for the server')
-
     args = parser.parse_args()
-    with DemoJudge(args.server_host, args.server_port) as judge:
+
+    print "Running %s judge..." % (["local", "live"][args.server_host is not None])
+
+    with (LocalJudge if args.server_host is None else Judge)(args.server_host, args.server_port) as judge:
         try:
             case = 1
-            for res in judge.run([sys.executable, "aplusb.py"], {"zipfile": "aplusb.zip", "aplusb.in": "aplusb.out", "aplusb.2.in": "aplusb.2.out", "aplusb.3.in": "aplusb.3.out"}):
+            for res in judge.run([sys.executable, "aplusb.py"],
+                                 {"zipfile": "aplusb.zip", "aplusb.in": "aplusb.out", "aplusb.2.in": "aplusb.2.out",
+                                  "aplusb.3.in": "aplusb.3.out"}):
                 print "Test case %s" % case
                 print "\t%f seconds" % res.execution_time
                 print "\t%.2f mb (%s kb)" % (res.max_memory / 1024.0, res.max_memory)

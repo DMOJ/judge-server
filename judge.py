@@ -40,8 +40,8 @@ class Judge(object):
         else:
             openfile = open
         self.packet_manager.begin_grading_packet()
+        case = 1
         for input_file, output_file, point_value in io_files:
-            case = 1
             with ProgramJudge(arguments, *args) as judge:
                 result = Result()
                 judge.run(result, openfile(input_file), openfile(output_file))

@@ -33,26 +33,24 @@ class Judge(object):
         self.current_submission = None
 
     def run(self, arguments, iofiles, *args):
-        fromzip="zipfile" in iofiles
-        if fromzip:
+        if "zipfile" in iofiles:
             archive = zipreader.ZipReader(iofiles["zipfile"])
+            del iofiles["zipfile"]
+            openfile = archive.files.__getitem__
+        else:
+            openfile = open
         self.packet_manager.begin_grading_packet()
         for input_file, output_file in iofiles.iteritems():
             case = 1
             with ProgramJudge(arguments, *args) as judge:
-                if input_file != "zipfile":
-                    result = Result()
-                    if fromzip:
-                        judge.run(result, archive.files[input_file], archive.files[output_file])
-                    else:
-                        with open(input_file, "r") as fi, open(output_file, "r") as fo:
-                            judge.run(result, fi, fo)
-                    # TODO: get points
-                    self.packet_manager.test_case_status_packet(case, 1, result.result_flag, result.execution_time,
-                                                                result.max_memory,
-                                                                result.partial_output)
-                    case += 1
-                    yield result
+                result = Result()
+                judge.run(result, openfile(input_file), openfile(output_file))
+                # TODO: get points
+                self.packet_manager.test_case_status_packet(case, 1, result.result_flag, result.execution_time,
+                                                            result.max_memory,
+                                                            result.partial_output)
+                case += 1
+                yield result
         self.packet_manager.grading_end_packet()
 
     def begin_grading(self, problem_id, language, source_code):
@@ -74,26 +72,23 @@ class DemoJudge(object):
         self.current_submission = None
 
     def run(self, arguments, iofiles, *args):
-        fromzip="zipfile" in iofiles
-        if fromzip:
+        if "zipfile" in iofiles:
             archive = zipreader.ZipReader(iofiles["zipfile"])
+            del iofiles["zipfile"]
+            openfile = archive.files.__getitem__
+        else:
+            openfile = open
         for input_file, output_file in iofiles.iteritems():
             case = 1
             with ProgramJudge(arguments, *args) as judge:
-                if input_file != "zipfile":
-                    result = Result()
-                    if fromzip:
-                        judge.run(result, archive.files[input_file], archive.files[output_file])
-                    else:
-                        with open(input_file, "r") as fi, open(output_file, "r") as fo:
-                            judge.run(result, fi, fo)
-                    case += 1
-                    yield result
+                result = Result()
+                judge.run(result, openfile(input_file), openfile(output_file))
+                case += 1
+                yield result
 
     def begin_grading(self, problem_id, language, source_code):
         pass
 
-    # TODO: cleanup packet manager
     def __del__(self):
         pass
 

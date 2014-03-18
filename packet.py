@@ -28,6 +28,7 @@ class PacketManager(object):
             pass
         except Exception: # connection reset by peer
             traceback.print_exc()
+            raise SystemExit(1)
 
     def run(self):
         self._read_async()

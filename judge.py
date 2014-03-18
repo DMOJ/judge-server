@@ -6,6 +6,7 @@ import sys
 import thread
 import threading
 import argparse
+import json
 
 import execute
 
@@ -54,6 +55,10 @@ class Judge(object):
         self.packet_manager.grading_end_packet()
 
     def begin_grading(self, problem_id, language, source_code):
+        '''if language != "PY2":
+            pass  # Only python supported at the moment
+        data = os.path.join("data", "problems", problem_id)
+        files = zipreader.ZipReader(open(os.path.join(data, "init.json"))).files'''
         pass
 
     # TODO: cleanup packet manager

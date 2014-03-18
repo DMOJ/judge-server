@@ -34,19 +34,19 @@ class Judge(object):
         self.current_submission = None
 
     def run(self, arguments, io_files, *args, **kwargs):
-        if kwargs.get("zip_archive") is not None:
-            archive = zipreader.ZipReader(kwargs["zip_archive"])
+        if kwargs.get("archive") is not None:
+            archive = zipreader.ZipReader(kwargs["archive"])
             openfile = archive.files.__getitem__
         else:
             openfile = open
         self.packet_manager.begin_grading_packet()
-        for input_file, output_file in io_files.iteritems():
+        for input_file, output_file, point_value in io_files:
             case = 1
             with ProgramJudge(arguments, *args) as judge:
                 result = Result()
                 judge.run(result, openfile(input_file), openfile(output_file))
                 # TODO: get points
-                self.packet_manager.test_case_status_packet(case, 1, result.result_flag, result.execution_time,
+                self.packet_manager.test_case_status_packet(case, point_value, result.result_flag, result.execution_time,
                                                             result.max_memory,
                                                             result.partial_output)
                 case += 1
@@ -56,13 +56,24 @@ class Judge(object):
     def begin_grading(self, problem_id, language, source_code):
         if language not in ["PY2"]:
             raise Exception("Not implemented!")
-        with open(os.path.join(problem_id, "init.json"), "r") as init_file:
+        with open(os.path.join("data", "problems", problem_id, "init.json"), "r") as init_file:
             init_data = json.load(init_file)
-            self.run(arguments, io_files, *args, zip_archive=init_data["zip_archive"])
-        '''if language != "PY2":
-            pass  # Only python supported at the moment
-        data = os.path.join("data", "problems", problem_id)
-        files = zipreader.ZipReader(open(os.path.join(data, "init.json"))).files'''
+            problem_type = init_data["type"]
+            data = os.path.join("data", "problems", problem_id)
+            test_cases = init_data["test_cases"]
+            forward_test_cases = []
+            for case in test_cases:
+                forward_test_cases.append((case["in"], case["out"], case["points"]))
+            case = 1
+            for res in self.run([sys.executable, source_code], forward_test_cases, archive=os.path.join("data", "problems", problem_id, init_data["archive"])):
+                print "Test case %s" % case
+                print "\t%f seconds" % res.execution_time
+                print "\t%.2f mb (%s kb)" % (res.max_memory / 1024.0, res.max_memory)
+                if res.result_flag & Result.WA:
+                    print "\tWrong Answer"
+                else:
+                    print "\tAccepted"
+                case += 1
 
     # TODO: cleanup packet manager
     def __del__(self):
@@ -212,18 +223,7 @@ def main():
 
     with (LocalJudge if args.server_host is None else Judge)(args.server_host, args.server_port) as judge:
         try:
-            case = 1
-            for res in judge.run([sys.executable, "aplusb.py"],
-                                 {"aplusb.in": "aplusb.out", "aplusb.2.in": "aplusb.2.out",
-                                  "aplusb.3.in": "aplusb.3.out"}):
-                print "Test case %s" % case
-                print "\t%f seconds" % res.execution_time
-                print "\t%.2f mb (%s kb)" % (res.max_memory / 1024.0, res.max_memory)
-                if res.result_flag & Result.WA:
-                    print "\tWrong Answer"
-                else:
-                    print "\tAccepted"
-                case += 1
+            judge.begin_grading("aplusb", "PY2", "aplusb.py")
         except Exception:
             traceback.print_exc()
 

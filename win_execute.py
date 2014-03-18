@@ -35,8 +35,10 @@ class win_Process(object):
     def get_max_memory(self):
         return get_memory_info(OpenProcess(PROCESS_ALL_ACCESS, True, self._chained.pid))["PeakPagefileUsage"]/1024.0
 
-def execute(path):
-    process = subprocess.Popen(path, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+def execute(path, time, memory):
+    process = subprocess.Popen(path, stdin=subprocess.PIPE,
+                                     stdout=subprocess.PIPE,
+                                     stderr=subprocess.PIPE)
     return win_Process(process)
 
 class PROCESS_MEMORY_COUNTERS_EX(Structure):

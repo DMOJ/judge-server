@@ -33,15 +33,15 @@ class Judge(object):
         self.packet_manager = packet.PacketManager(host, port, self)
         self.current_submission = None
 
-    def run(self, arguments, iofiles, *args):
-        if "zipfile" in iofiles:
-            archive = zipreader.ZipReader(iofiles["zipfile"])
-            del iofiles["zipfile"]
+    def run(self, arguments, io_files, *args):
+        if "zipfile" in io_files:
+            archive = zipreader.ZipReader(io_files["zipfile"])
+            del io_files["zipfile"]
             openfile = archive.files.__getitem__
         else:
             openfile = open
         self.packet_manager.begin_grading_packet()
-        for input_file, output_file in iofiles.iteritems():
+        for input_file, output_file in io_files.iteritems():
             case = 1
             with ProgramJudge(arguments, *args) as judge:
                 result = Result()
@@ -80,16 +80,16 @@ class DemoJudge(Judge):
 
 
 class ProgramJudge(object):
-    EOF = ""
+    EOF = None
 
-    def __init__(self, processname, redirect=False, transfer=False, interact=False):
+    def __init__(self, process_name, redirect=False, transfer=False, interact=False):
         self.result = None
-        self.process = execute.execute(processname)
+        self.process = execute.execute(process_name, 5, 16384)
         self.write_lock = threading.Lock()
         self.write_queue = Queue.Queue()
         self.stopped = False
         self.exitcode = None
-        self.processname = processname
+        self.process_name = process_name
         self.redirect = redirect
         self.transfer = transfer
         self.interact = interact
@@ -176,7 +176,7 @@ class ProgramJudge(object):
                         pass
                 else:
                     break
-                if data == ProgramJudge.EOF:
+                if data is ProgramJudge.EOF:
                     self.process.stdin.close()
                     break
                 else:

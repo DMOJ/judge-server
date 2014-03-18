@@ -55,7 +55,7 @@ class PacketManager(object):
                            "status": status,
                            "time": time,
                            "points": points,
-                           "total_points": total_points,
+                           "total-points": total_points,
                            "memory": memory,
                            "output": output})
 

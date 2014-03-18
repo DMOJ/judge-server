@@ -1,0 +1,21 @@
+{
+    "archive": "aplusb.zip",
+    "type": "standard",
+    "test_cases": [
+        {
+            "in": "aplusb.in",
+            "out": "aplusb.out",
+            "points": "1"
+        },
+        {
+            "in": "aplusb.2.in",
+            "out": "aplusb.2.out",
+            "points": "1"
+        },
+        {
+            "in": "aplusb.3.in",
+            "out": "aplusb.3.out",
+            "points": "1"
+        }
+    ]
+}

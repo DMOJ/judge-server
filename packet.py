@@ -16,7 +16,6 @@ class PacketManager(object):
         self.conn.connect((host, port))
         self.input = self.conn.makefile("r")
         self.output = self.conn.makefile("w", 0)
-        threading.Thread(target=self._read_async).start()
 
     def _read_async(self):
         try:
@@ -25,9 +24,16 @@ class PacketManager(object):
                 packet = self.input.read(size).decode("zlib")
                 packet = json.loads(packet)
                 self._recieve_packet(packet)
+        except KeyboardInterrupt:
+            pass
         except Exception: # connection reset by peer
             traceback.print_exc()
-        return
+
+    def run(self):
+        self._read_async()
+    
+    def run_async(self):
+        threading.Thread(target=self._read_async).start()
 
     def _send_packet(self, packet):
         print "%s:%s => %s" % (self.host, self.port, json.dumps(packet, indent=4))

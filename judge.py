@@ -102,6 +102,9 @@ class Judge(object):
                     print "\tAccepted"
                 case += 1
 
+    def listen(self):
+        self.packet_manager.run()
+
     # TODO: cleanup packet manager
     def __del__(self):
         pass
@@ -114,13 +117,16 @@ class Judge(object):
 
 
 class LocalJudge(Judge):
-    def __init__(self, host, port):
+    def __init__(self):
         class LocalPacketManager(object):
             def __getattr__(self, *args, **kwargs):
                 return lambda *args, **kwargs: None
 
         self.packet_manager = LocalPacketManager()
         self.current_submission = "submission"
+
+    def listen(self):
+        pass
 
 
 class ProgramJudge(object):
@@ -273,14 +279,17 @@ int main()
     py2_source=r'''for i in xrange(int(raw_input())):
     print sum(map(int, raw_input().split()))
 '''
-    with (LocalJudge if args.server_host is None else Judge)(args.server_host, args.server_port) as judge:
-        try:
-            #judge.begin_grading("aplusb", "CPP", cpp_source)
-            judge.begin_grading("aplusb", "PY2", py2_source)
-        except Exception:
-            traceback.print_exc()
-
-    print "Done"
+    if args.server_host:
+        judge = Judge(args.server_host, args.server_port)
+        judge.listen()
+    else:
+        with LocalJudge() as judge:
+            try:
+                #judge.begin_grading("aplusb", "CPP", cpp_source)
+                judge.begin_grading("aplusb", "PY2", py2_source)
+            except Exception:
+                traceback.print_exc()
+        print "Done"
 
 
 if __name__ == "__main__":

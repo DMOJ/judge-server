@@ -73,17 +73,15 @@ class Judge(object):
                 fo.write(source_code)
             if sys.platform == "win32":
                 compiled_extension = ".exe"
-                linker_options = "-Wl,--stack,8388608"
+                linker_options = ["-Wl,--stack,8388608"]
             else:
                 compiled_extension = ""
-                linker_options = ""
+                linker_options = []
             output_file = str(self.current_submission) + compiled_extension
-            gcc_args = "g++", source_code_file, "-O2", "-std=c++0x", linker_options, "-static", "-s", "-o", output_file
-            gcc_process = subprocess.Popen(gcc_args, stdin=subprocess.PIPE,
-                                           stdout=subprocess.PIPE,
-                                           stderr=subprocess.PIPE)
-            if gcc_process.wait() != 0:
-                compile_error = gcc_process.stderr.read()
+            gcc_args = ["g++", source_code_file, "-O2", "-std=c++0x"] + linker_options + ["-static", "-s", "-o", output_file]
+            gcc_process = subprocess.Popen(gcc_args, stderr=subprocess.PIPE)
+            _, compile_error = gcc_process.communicate()
+            if gcc_process.returncode != 0:
                 print "Compile Error"
                 print compile_error
                 self.packet_manager.compile_error_packet(compile_error)

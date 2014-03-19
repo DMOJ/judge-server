@@ -20,11 +20,12 @@ import zipreader # @UnresolvedImport
 
 
 class Result(object):
-    AC = 0x0
-    WA = 0x1
-    RTE = 0x2
-    TLE = 0x4
-    MLE = 0x8
+    AC = 1 << 0
+    WA = 1 << 1
+    RTE = 1 << 2
+    TLE = 1 << 3
+    MLE = 1 << 4
+    IE = 1 << 30
 
     def __init__(self):
         self.result_flag = 0
@@ -42,69 +43,74 @@ class Judge(object):
 
     def begin_grading(self, problem_id, language, source_code):
         bad_files = []
-        if language == "PY2":
-            output_file = None
-            source_code_file = str(self.current_submission) + ".py"
-            with open(source_code_file, "wb") as fo:
-                fo.write(source_code)
-            bad_files.append(source_code_file)
-            arguments = [self.paths["python"], source_code_file]
-        elif language == "CPP":
-            source_code_file = str(self.current_submission) + ".cpp"
-            with open(source_code_file, "wb") as fo:
-                fo.write(source_code)
-            bad_files.append(source_code_file)
-            if sys.platform == "win32":
-                compiled_extension = ".exe"
-                linker_options = ["-Wl,--stack,8388608", "-static"]
-            else:
-                compiled_extension = ""
-                linker_options = []
-            output_file = str(self.current_submission) + compiled_extension
-            gcc_args = [self.paths["gcc"], source_code_file, "-O2", "-std=c++0x"] + linker_options + ["-s", "-o", output_file]
-            gcc_process = subprocess.Popen(gcc_args, stderr=subprocess.PIPE)
-            _, compile_error = gcc_process.communicate()
-            if gcc_process.returncode != 0:
-                print "Compile Error"
-                print compile_error
-                self.packet_manager.compile_error_packet(compile_error)
-                for bad_file in bad_files:
-                    os.unlink(bad_file)
-                return
-            bad_files.append(output_file)
-            arguments = [output_file]
-        else:
-            raise Exception("not implemented yet!")
-        with open(os.path.join("data", "problems", problem_id, "init.json"), "r") as init_file:
-            init_data = json.load(init_file)
-            problem_type = init_data["type"]
-            if problem_type == "standard":
-                run = self.run_standard
+        try:
+            if language == "PY2":
+                output_file = None
+                source_code_file = str(self.current_submission) + ".py"
+                with open(source_code_file, "wb") as fo:
+                    fo.write(source_code)
+                bad_files.append(source_code_file)
+                arguments = [self.paths["python"], source_code_file]
+            elif language == "CPP":
+                source_code_file = str(self.current_submission) + ".cpp"
+                with open(source_code_file, "wb") as fo:
+                    fo.write(source_code)
+                bad_files.append(source_code_file)
+                if sys.platform == "win32":
+                    compiled_extension = ".exe"
+                    linker_options = ["-Wl,--stack,8388608", "-static"]
+                else:
+                    compiled_extension = ""
+                    linker_options = []
+                output_file = str(self.current_submission) + compiled_extension
+                gcc_args = [self.paths["gcc"], source_code_file, "-O2", "-std=c++0x"] + linker_options + ["-s", "-o", output_file]
+                gcc_process = subprocess.Popen(gcc_args, stderr=subprocess.PIPE)
+                _, compile_error = gcc_process.communicate()
+                if gcc_process.returncode != 0:
+                    print "Compile Error"
+                    print compile_error
+                    self.packet_manager.compile_error_packet(compile_error)
+                    for bad_file in bad_files:
+                        os.unlink(bad_file)
+                    return
+                bad_files.append(output_file)
+                arguments = [output_file]
             else:
                 raise Exception("not implemented yet!")
-            test_cases = init_data["test_cases"]
-            forward_test_cases = [(case["in"], case["out"], case["points"]) for case in test_cases]
-            case = 1
-            for res in run(arguments, forward_test_cases, archive=os.path.join("data", "problems", problem_id, init_data["archive"]), time=int(init_data["time"]), memory=int(init_data["memory"])):
-                print "Test case %s" % case
-                print "\t%f seconds" % res.execution_time
-                print "\t%.2f mb (%s kb)" % (res.max_memory / 1024.0, res.max_memory)
-                execution_verdict = []
-                if res.result_flag & Result.WA:
-                    execution_verdict.append("\tWrong Answer")
-                if res.result_flag & Result.RTE:
-                    execution_verdict.append("\tRuntime Error")
-                if res.result_flag & Result.TLE:
-                    execution_verdict.append("\tTime Limit Exceeded")
-                if res.result_flag & Result.MLE:
-                    execution_verdict.append("\tMemory Limit Exceeded")
-                if res.result_flag == Result.AC:
-                    print "\tAccepted"
+            with open(os.path.join("data", "problems", problem_id, "init.json"), "r") as init_file:
+                init_data = json.load(init_file)
+                problem_type = init_data["type"]
+                if problem_type == "standard":
+                    run = self.run_standard
                 else:
-                    print "\n".join(execution_verdict)
-                case += 1
-        for bad_file in bad_files:
-            os.unlink(bad_file)
+                    raise Exception("not implemented yet!")
+                test_cases = init_data["test_cases"]
+                forward_test_cases = [(case["in"], case["out"], case["points"]) for case in test_cases]
+                case = 1
+                for res in run(arguments, forward_test_cases, archive=os.path.join("data", "problems", problem_id, init_data["archive"]), time=int(init_data["time"]), memory=int(init_data["memory"])):
+                    print "Test case %s" % case
+                    print "\t%f seconds" % res.execution_time
+                    print "\t%.2f mb (%s kb)" % (res.max_memory / 1024.0, res.max_memory)
+                    execution_verdict = []
+                    if res.result_flag & Result.WA:
+                        execution_verdict.append("\tWrong Answer")
+                    if res.result_flag & Result.RTE:
+                        execution_verdict.append("\tRuntime Error")
+                    if res.result_flag & Result.TLE:
+                        execution_verdict.append("\tTime Limit Exceeded")
+                    if res.result_flag & Result.MLE:
+                        execution_verdict.append("\tMemory Limit Exceeded")
+                    if res.result_flag == Result.AC:
+                        print "\tAccepted"
+                    else:
+                        print "\n".join(execution_verdict)
+                    case += 1
+        except IOError:
+            print "Internal Error: Test cases do not exist"
+            self.packet_manager.problem_not_exist_packet(problem_id)
+        finally:
+            for bad_file in bad_files:
+                os.unlink(bad_file)
 
     def listen(self):
         self.packet_manager.run()
@@ -326,7 +332,7 @@ for i in xrange(int(raw_input())):
     else:
         with LocalJudge() as judge:
             try:
-                judge.begin_grading("aplusb", "CPP", cpp_source)
+                #judge.begin_grading("aplusb", "CPP", cpp_source)
                 judge.begin_grading("aplusb", "PY2", py2_source)
             except Exception:
                 traceback.print_exc()

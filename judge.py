@@ -66,6 +66,7 @@ class Judge(object):
             source_code_file = str(self.current_submission) + ".py"
             with open(source_code_file, "wb") as fo:
                 fo.write(source_code)
+            output_file = None
             arguments = [sys.executable, source_code_file]
         elif language == "CPP":
             source_code_file = str(self.current_submission) + ".cpp"
@@ -117,6 +118,9 @@ class Judge(object):
                 else:
                     print "\n".join(execution_verdict)
                 case += 1
+        os.unlink(source_code_file)
+        if output_file is not None:
+            os.unlink(output_file)
 
     def listen(self):
         self.packet_manager.run()
@@ -313,7 +317,7 @@ for i in xrange(int(raw_input())):
         with LocalJudge() as judge:
             try:
                 judge.begin_grading("aplusb", "CPP", cpp_source)
-                #judge.begin_grading("aplusb", "PY2", py2_source)
+                judge.begin_grading("aplusb", "PY2", py2_source)
             except Exception:
                 traceback.print_exc()
         print "Done"

@@ -12,11 +12,11 @@ try:
 except ImportError:
     import Queue as queue    
 
-import execute
+import execute # @UnresolvedImport
 
-import packet
+import packet # @UnresolvedImport
 
-import zipreader
+import zipreader # @UnresolvedImport
 
 
 class Result(object):
@@ -40,39 +40,20 @@ class Judge(object):
         with open(os.path.join("data", "judge", "judge.json"), "r") as init_file:
             self.paths = json.load(init_file)
 
-    def run(self, arguments, io_files, *args, **kwargs):
-        if kwargs.get("archive") is not None:
-            archive = zipreader.ZipReader(kwargs["archive"])
-            openfile = archive.files.__getitem__
-        else:
-            openfile = open
-        self.packet_manager.begin_grading_packet()
-        case = 1
-        for input_file, output_file, point_value in io_files:
-            with ProgramJudge(arguments, *args) as judge:
-                result = Result()
-                # TODO: get time and memory limits
-                judge.run(result, openfile(input_file), openfile(output_file), 5, 16384)
-                self.packet_manager.test_case_status_packet(case,
-                                                            point_value if result.result_flag == Result.AC else 0,
-                                                            point_value,
-                                                            result.result_flag, result.execution_time,
-                                                            result.max_memory,
-                                                            result.partial_output)
-                case += 1
-                yield result
-        self.packet_manager.grading_end_packet()
-
     def begin_grading(self, problem_id, language, source_code):
         bad_files = []
         if language == "PY2":
             output_file = None
-            arguments = [self.paths["python"], "-c", source_code]
-        elif language == "CPP":
-            source_code_file = str(self.current_submission) + ".cpp"
-            bad_files.append(source_code_file)
+            source_code_file = str(self.current_submission) + ".py"
             with open(source_code_file, "wb") as fo:
                 fo.write(source_code)
+            bad_files.append(source_code_file)
+            arguments = [self.paths["python"], source_code_file]
+        elif language == "CPP":
+            source_code_file = str(self.current_submission) + ".cpp"
+            with open(source_code_file, "wb") as fo:
+                fo.write(source_code)
+            bad_files.append(source_code_file)
             if sys.platform == "win32":
                 compiled_extension = ".exe"
                 linker_options = ["-Wl,--stack,8388608", "-static"]
@@ -80,7 +61,6 @@ class Judge(object):
                 compiled_extension = ""
                 linker_options = []
             output_file = str(self.current_submission) + compiled_extension
-            bad_files.append(output_file)
             gcc_args = [self.paths["gcc"], source_code_file, "-O2", "-std=c++0x"] + linker_options + ["-s", "-o", output_file]
             gcc_process = subprocess.Popen(gcc_args, stderr=subprocess.PIPE)
             _, compile_error = gcc_process.communicate()
@@ -88,19 +68,24 @@ class Judge(object):
                 print "Compile Error"
                 print compile_error
                 self.packet_manager.compile_error_packet(compile_error)
+                for bad_file in bad_files:
+                    os.unlink(bad_file)
                 return
+            bad_files.append(output_file)
             arguments = [output_file]
         else:
             raise Exception("not implemented yet!")
         with open(os.path.join("data", "problems", problem_id, "init.json"), "r") as init_file:
             init_data = json.load(init_file)
             problem_type = init_data["type"]
-            if problem_type != "standard":
+            if problem_type == "standard":
+                run = self.run_standard
+            else:
                 raise Exception("not implemented yet!")
             test_cases = init_data["test_cases"]
             forward_test_cases = [(case["in"], case["out"], case["points"]) for case in test_cases]
             case = 1
-            for res in self.run(arguments, forward_test_cases, archive=os.path.join("data", "problems", problem_id, init_data["archive"])):
+            for res in run(arguments, forward_test_cases, archive=os.path.join("data", "problems", problem_id, init_data["archive"]), time=int(init_data["time"]), memory=int(init_data["memory"])):
                 print "Test case %s" % case
                 print "\t%f seconds" % res.execution_time
                 print "\t%.2f mb (%s kb)" % (res.max_memory / 1024.0, res.max_memory)
@@ -123,6 +108,32 @@ class Judge(object):
 
     def listen(self):
         self.packet_manager.run()
+
+    def run_standard(self, arguments, io_files, *args, **kwargs):
+        if "archive" in kwargs:
+            archive = zipreader.ZipReader(kwargs["archive"])
+            openfile = archive.files.__getitem__
+        else:
+            openfile = open
+        if "time" not in kwargs:
+            kwargs["time"] = 2
+        if "memory" not in kwargs:
+            kwargs["memory"] = 65536
+        self.packet_manager.begin_grading_packet()
+        case = 1
+        for input_file, output_file, point_value in io_files:
+            with ProgramJudge(arguments, *args) as judge:
+                result = Result()
+                judge.run_standard(result, openfile(input_file), openfile(output_file), kwargs["time"], kwargs["memory"])
+                self.packet_manager.test_case_status_packet(case,
+                                                            point_value if result.result_flag == Result.AC else 0,
+                                                            point_value,
+                                                            result.result_flag, result.execution_time,
+                                                            result.max_memory,
+                                                            result.partial_output)
+                case += 1
+                yield result
+        self.packet_manager.grading_end_packet()
 
     # TODO: cleanup packet manager
     def __del__(self):
@@ -215,7 +226,7 @@ class ProgramJudge(object):
             line = self.process.stdout.readline().rstrip()
         return line.rstrip() if line else ""
 
-    def run(self, result, input_file, output_file, time_limit, memory_limit):
+    def run_standard(self, result, input_file, output_file, time_limit, memory_limit):
         self.result = result
         result_flag = Result.AC
         self.process = execute.execute(self.process_name, time_limit, memory_limit)
@@ -248,7 +259,6 @@ class ProgramJudge(object):
         stdin = self.process.stdin
         write_queue = self.write_queue
         try:
-            import time
             while True:
                 while write_lock.acquire(False) and self.alive():
                     write_lock.release()
@@ -265,7 +275,6 @@ class ProgramJudge(object):
                 else:
                     data = data.replace('\r\n', '\n').replace('\r', '\n')
                     try:
-                        # BUGFIX: write takes a long time
                         stdin.write(data)
                     except IOError:
                         break

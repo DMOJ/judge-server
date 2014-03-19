@@ -1,6 +1,8 @@
 {
     "archive": "aplusb.zip",
     "type": "standard",
+    "time": "5",
+    "memory": "65536",
     "test_cases": [
         {
             "in": "aplusb.in",

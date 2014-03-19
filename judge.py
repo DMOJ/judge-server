@@ -37,6 +37,8 @@ class Judge(object):
     def __init__(self, host, port):
         self.packet_manager = packet.PacketManager(host, port, self)
         self.current_submission = None
+        with open(os.path.join("data", "judge", "judge.json"), "r") as init_file:
+            self.paths = json.load(init_file)
 
     def run(self, arguments, io_files, *args, **kwargs):
         if kwargs.get("archive") is not None:
@@ -65,7 +67,7 @@ class Judge(object):
         bad_files = []
         if language == "PY2":
             output_file = None
-            arguments = [sys.executable, "-c", source_code]
+            arguments = [self.paths["python"], "-c", source_code]
         elif language == "CPP":
             source_code_file = str(self.current_submission) + ".cpp"
             bad_files.append(source_code_file)
@@ -79,7 +81,7 @@ class Judge(object):
                 linker_options = []
             output_file = str(self.current_submission) + compiled_extension
             bad_files.append(output_file)
-            gcc_args = ["g++", source_code_file, "-O2", "-std=c++0x"] + linker_options + ["-s", "-o", output_file]
+            gcc_args = [self.paths["gcc"], source_code_file, "-O2", "-std=c++0x"] + linker_options + ["-s", "-o", output_file]
             gcc_process = subprocess.Popen(gcc_args, stderr=subprocess.PIPE)
             _, compile_error = gcc_process.communicate()
             if gcc_process.returncode != 0:
@@ -141,6 +143,8 @@ class LocalJudge(Judge):
 
         self.packet_manager = LocalPacketManager()
         self.current_submission = "submission"
+        with open(os.path.join("data", "judge", "judge.json"), "r") as init_file:
+            self.paths = json.load(init_file)
 
     def listen(self):
         pass
@@ -313,7 +317,7 @@ for i in xrange(int(raw_input())):
     else:
         with LocalJudge() as judge:
             try:
-                #judge.begin_grading("aplusb", "CPP", cpp_source)
+                judge.begin_grading("aplusb", "CPP", cpp_source)
                 judge.begin_grading("aplusb", "PY2", py2_source)
             except Exception:
                 traceback.print_exc()

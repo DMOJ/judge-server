@@ -62,14 +62,13 @@ class Judge(object):
         self.packet_manager.grading_end_packet()
 
     def begin_grading(self, problem_id, language, source_code):
+        bad_files = []
         if language == "PY2":
-            source_code_file = str(self.current_submission) + ".py"
-            with open(source_code_file, "wb") as fo:
-                fo.write(source_code)
             output_file = None
-            arguments = [sys.executable, source_code_file]
+            arguments = [sys.executable, "-c", source_code]
         elif language == "CPP":
             source_code_file = str(self.current_submission) + ".cpp"
+            bad_files.append(source_code_file)
             with open(source_code_file, "wb") as fo:
                 fo.write(source_code)
             if sys.platform == "win32":
@@ -79,6 +78,7 @@ class Judge(object):
                 compiled_extension = ""
                 linker_options = []
             output_file = str(self.current_submission) + compiled_extension
+            bad_files.append(output_file)
             gcc_args = ["g++", source_code_file, "-O2", "-std=c++0x"] + linker_options + ["-s", "-o", output_file]
             gcc_process = subprocess.Popen(gcc_args, stderr=subprocess.PIPE)
             _, compile_error = gcc_process.communicate()
@@ -116,9 +116,8 @@ class Judge(object):
                 else:
                     print "\n".join(execution_verdict)
                 case += 1
-        os.unlink(source_code_file)
-        if output_file is not None:
-            os.unlink(output_file)
+        for bad_file in bad_files:
+            os.unlink(bad_file)
 
     def listen(self):
         self.packet_manager.run()
@@ -314,7 +313,7 @@ for i in xrange(int(raw_input())):
     else:
         with LocalJudge() as judge:
             try:
-                judge.begin_grading("aplusb", "CPP", cpp_source)
+                #judge.begin_grading("aplusb", "CPP", cpp_source)
                 judge.begin_grading("aplusb", "PY2", py2_source)
             except Exception:
                 traceback.print_exc()

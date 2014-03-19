@@ -8,12 +8,13 @@ import argparse
 
 
 class nix_Process(object):
-    def __init__(self, chained):
+    def __init__(self, chained, memory_limit):
         self._chained = chained
         self.stdout = chained.stdout
         self.stdin = chained.stdin
         self.usages = None
         self.returncode = None
+        self.memory_limit = memory_limit
 
     def __getattr__(self, name):
         if name in ["wait", "send_signal", "terminate", "kill"]:
@@ -42,9 +43,8 @@ class nix_Process(object):
     def get_tle(self):
         return self._get_usages()[0]
 
-    # TODO: implement this
     def get_mle(self):
-        return False
+        return self._get_usages()[1] > self.memory_limit
 
     def get_execution_time(self):
         return self._get_usages()[2]
@@ -58,7 +58,7 @@ def execute(path, time, memory):
                                stdin=subprocess.PIPE,
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE)
-    return nix_Process(process)
+    return nix_Process(process, memory)
 
 
 if __name__ == "__main__":

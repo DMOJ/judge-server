@@ -4,7 +4,6 @@ import json
 import os
 import traceback
 import sys
-import thread
 import threading
 
 try:
@@ -47,10 +46,10 @@ class Judge(object):
         self.packet_manager.begin_grading_packet()
         case = 1
         for input_file, output_file, point_value in io_files:
-            # TODO: get time and memory limits
-            with ProgramJudge(arguments, 5, 16384, *args) as judge:
+            with ProgramJudge(arguments, *args) as judge:
                 result = Result()
-                judge.run(result, openfile(input_file), openfile(output_file))
+                # TODO: get time and memory limits
+                judge.run(result, openfile(input_file), openfile(output_file), 5, 16384)
                 self.packet_manager.test_case_status_packet(case,
                                                             point_value if result.result_flag == Result.AC else 0,
                                                             point_value,
@@ -142,9 +141,9 @@ class LocalJudge(Judge):
 class ProgramJudge(object):
     EOF = None
 
-    def __init__(self, process_name, time_limit, memory_limit, redirect=False, transfer=False, interact=False):
+    def __init__(self, process_name, redirect=False, transfer=False, interact=False):
         self.result = None
-        self.process = execute.execute(process_name, time_limit, memory_limit)
+        self.process = None
         self.write_lock = threading.Lock()
         self.write_queue = queue.Queue()
         self.stopped = False
@@ -204,14 +203,15 @@ class ProgramJudge(object):
             line = self.process.stdout.readline().rstrip()
         return line.rstrip() if line else ""
 
-    def run(self, result, input_file, output_file):
+    def run(self, result, input_file, output_file, time_limit, memory_limit):
         self.result = result
-        if self.transfer:
-            self.write(sys.stdin.read())
         result_flag = Result.AC
+        self.process = execute.execute(self.process_name, time_limit, memory_limit)
         write_thread = threading.Thread(target=self.write_async, args=(self.write_lock,))
         write_thread.daemon = True
         write_thread.start()
+        if self.transfer:
+            self.write(sys.stdin.read())
         self.write(input_file.read())
         self.write(ProgramJudge.EOF)
         process_output = self.read().strip().replace('\r\n', '\n')

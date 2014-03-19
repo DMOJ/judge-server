@@ -3,6 +3,7 @@ import argparse
 import json
 import os
 import traceback
+import subprocess
 import sys
 import threading
 
@@ -77,9 +78,15 @@ class Judge(object):
                 compiled_extension = ""
                 linker_options = ""
             output_file = str(self.current_submission) + compiled_extension
-            gcc_args = "g++ %s -O2 -std=c++0x %s -static -s -o %s" % (source_code_file, linker_options, output_file)
-            if os.system(gcc_args) != 0:
-                self.packet_manager.compile_error_packet("not implemented yet!")
+            gcc_args = "g++", source_code_file, "-O2", "-std=c++0x", linker_options, "-static", "-s", "-o", output_file
+            gcc_process = subprocess.Popen(gcc_args, stdin=subprocess.PIPE,
+                                           stdout=subprocess.PIPE,
+                                           stderr=subprocess.PIPE)
+            if gcc_process.wait() != 0:
+                compile_error = gcc_process.stderr.read()
+                print "Compile Error"
+                print compile_error
+                self.packet_manager.compile_error_packet(compile_error)
                 return
             arguments = [output_file]
         else:
@@ -305,8 +312,8 @@ for i in xrange(int(raw_input())):
     else:
         with LocalJudge() as judge:
             try:
-                #judge.begin_grading("aplusb", "CPP", cpp_source)
-                judge.begin_grading("aplusb", "PY2", py2_source)
+                judge.begin_grading("aplusb", "CPP", cpp_source)
+                #judge.begin_grading("aplusb", "PY2", py2_source)
             except Exception:
                 traceback.print_exc()
         print "Done"

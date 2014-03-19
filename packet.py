@@ -71,6 +71,11 @@ class PacketManager(object):
                            "submission-id": self.judge.current_submission,
                            "log": log})
 
+    def problem_not_exist_packet(self, problem):
+        self._send_packet({"name": "problem-not-exist",
+                           "submission-id": self.judge.current_submission,
+                           "problem": problem})
+
     def begin_grading_packet(self):
         self._send_packet({"name": "grading-begin",
                            "submission-id": self.judge.current_submission})

@@ -76,6 +76,10 @@ class PacketManager(object):
                            "submission-id": self.judge.current_submission,
                            "problem": problem})
 
+    def supported_problems_packet(self, problems):
+        self._send_packet({"name": "supported-problems",
+                           "problems": problems})
+
     def begin_grading_packet(self):
         self._send_packet({"name": "grading-begin",
                            "submission-id": self.judge.current_submission})

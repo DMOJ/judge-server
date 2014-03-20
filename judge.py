@@ -20,12 +20,12 @@ import zipreader # @UnresolvedImport
 
 
 class Result(object):
-    AC = 1 << 0 >> 1
-    WA = 1 << 1 >> 1
-    RTE = 1 << 2 >> 1
-    TLE = 1 << 3 >> 1
-    MLE = 1 << 4 >> 1
-    IE = 1 << 30 >> 1
+    AC = 0
+    WA = 1 << 0
+    RTE = 1 << 1
+    TLE = 1 << 2
+    MLE = 1 << 3
+    IE = 1 << 30
 
     def __init__(self):
         self.result_flag = 0
@@ -40,6 +40,10 @@ class Judge(object):
         self.current_submission = None
         with open(os.path.join("data", "judge", "judge.json"), "r") as init_file:
             self.paths = json.load(init_file)
+        supported_problems = []
+        for problem in os.listdir(os.path.join("data", "problems")):
+            supported_problems.append((problem, os.path.getmtime(os.path.join("data", "problems", problem))))
+        self.packet_manager.supported_problems_packet(supported_problems)
 
     def begin_grading(self, problem_id, language, source_code):
         bad_files = []

@@ -20,12 +20,12 @@ import zipreader # @UnresolvedImport
 
 
 class Result(object):
-    AC = 1 << 0
-    WA = 1 << 1
-    RTE = 1 << 2
-    TLE = 1 << 3
-    MLE = 1 << 4
-    IE = 1 << 30
+    AC = 1 << 0 >> 1
+    WA = 1 << 1 >> 1
+    RTE = 1 << 2 >> 1
+    TLE = 1 << 3 >> 1
+    MLE = 1 << 4 >> 1
+    IE = 1 << 30 >> 1
 
     def __init__(self):
         self.result_flag = 0

@@ -55,7 +55,7 @@ class Judge(object):
                     fo.write(source_code)
                 bad_files.append(source_code_file)
                 arguments = [self.paths["python"], source_code_file]
-            elif language == "CPP":
+            elif language.startswith("C++"):
                 source_code_file = str(self.current_submission) + ".cpp"
                 with open(source_code_file, "wb") as fo:
                     fo.write(source_code)
@@ -67,15 +67,13 @@ class Judge(object):
                     compiled_extension = ""
                     linker_options = []
                 output_file = str(self.current_submission) + compiled_extension
-                gcc_args = [self.paths["gcc"], source_code_file, "-O2", "-std=c++0x"] + linker_options + ["-s", "-o", output_file]
+                gcc_args = [self.paths["gcc"], source_code_file, "-O2"] + (["-std=c++0x"] if language == "C++11" else []) + linker_options + ["-s", "-o", output_file]
                 gcc_process = subprocess.Popen(gcc_args, stderr=subprocess.PIPE)
                 _, compile_error = gcc_process.communicate()
                 if gcc_process.returncode != 0:
                     print "Compile Error"
                     print compile_error
                     self.packet_manager.compile_error_packet(compile_error)
-                    for bad_file in bad_files:
-                        os.unlink(bad_file)
                     return
                 bad_files.append(output_file)
                 arguments = [output_file]
@@ -336,7 +334,7 @@ for i in xrange(int(raw_input())):
     else:
         with LocalJudge() as judge:
             try:
-                #judge.begin_grading("aplusb", "CPP", cpp_source)
+                judge.begin_grading("aplusb", "C++", cpp_source)
                 judge.begin_grading("aplusb", "PY2", py2_source)
             except Exception:
                 traceback.print_exc()

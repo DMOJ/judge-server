@@ -277,7 +277,7 @@ class ProgramJudge(object):
         self.result.max_memory = self.process.get_max_memory()
         self.result.execution_time = self.process.get_execution_time()
         judge_output = output_file.read()
-        for process_line, judge_line in zip(process_output.split(), judge_output.split()):
+        for process_line, judge_line in zip(process_output.split('\n'), judge_output.split('\n')):
             process_line.rstrip()
             judge_line.rstrip()
             if process_line != judge_line:

@@ -25,6 +25,7 @@ class Result(object):
     RTE = 1 << 1
     TLE = 1 << 2
     MLE = 1 << 3
+    IR = 1 << 4
     IE = 1 << 30
 
     def __init__(self):
@@ -119,6 +120,8 @@ class Judge(object):
                     print "\t%f seconds" % res.execution_time
                     print "\t%.2f mb (%s kb)" % (res.max_memory / 1024.0, res.max_memory)
                     execution_verdict = []
+                    if res.result_flag & Result.IR:
+                        execution_verdict.append("\tInvalid Return")
                     if res.result_flag & Result.WA:
                         execution_verdict.append("\tWrong Answer")
                     if res.result_flag & Result.RTE:
@@ -283,6 +286,9 @@ class ProgramJudge(object):
             if process_line != judge_line:
                 result_flag |= Result.WA
                 break
+        self.process.poll()
+        if self.process.returncode:
+            result_flag |= Result.IR
         if self.process.get_rte():
             result_flag |= Result.RTE
         if self.process.get_tle():
@@ -380,6 +386,7 @@ int main()
     py2_source=r'''
 for i in xrange(int(raw_input())):
     print sum(map(int, raw_input().split()))
+
 '''
     if args.server_host:
         judge = Judge(args.server_host, args.server_port, debug=args.debug)
@@ -387,8 +394,6 @@ for i in xrange(int(raw_input())):
     else:
         with LocalJudge(debug=args.debug) as judge:
             try:
-                judge.begin_grading("aplusb", "C++", cpp_source)
-                judge.begin_grading("aplusb", "C++11", cpp11_source)
                 judge.begin_grading("aplusb", "PY2", py2_source)
             except Exception:
                 traceback.print_exc()

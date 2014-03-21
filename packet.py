@@ -3,7 +3,7 @@ import socket
 import threading
 import struct
 import traceback
-
+import time
 
 class PacketManager(object):
     SIZE_PACK = struct.Struct("!I")
@@ -52,6 +52,8 @@ class PacketManager(object):
             self.judge.begin_grading(packet["problem-id"], packet["language"], packet["source"])
         elif name == "get-current-submission":
             self.current_submission_packet()
+        elif name == 'ping':
+            self.ping_packet(time.time())
         else:
             print "ERROR: unknown packet %s, payload %s" % (name, packet)
 
@@ -92,3 +94,7 @@ class PacketManager(object):
     def current_submission_packet(self):
         self._send_packet({"name": "current-submission-id",
                            "submission-id": self.judge.current_submission})
+
+    def ping_packet(self, when):
+        self._send_packet({"name": "ping-response",
+                           "time": time.time() - when})

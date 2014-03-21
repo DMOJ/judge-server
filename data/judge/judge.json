@@ -1,4 +1,6 @@
 {
     "gcc": "g++",
-    "python": "python"
+    "python": "python",
+    "java": "java",
+    "ruby": "ruby"
 }

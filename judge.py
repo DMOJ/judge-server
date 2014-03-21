@@ -141,7 +141,7 @@ class Judge(object):
         self.packet_manager.begin_grading_packet()
         case = 1
         for input_file, output_file, point_value in io_files:
-            with ProgramJudge(arguments, *args) as judge:
+            with ProgramJudge(arguments, *args, partial_output_limit=(10 if self.debug_mode else 2147483647)) as judge:
                 result = Result()
                 judge.run_standard(result, openfile(input_file), openfile(output_file), kwargs["time"], kwargs["memory"])
                 self.packet_manager.test_case_status_packet(case,
@@ -184,7 +184,7 @@ class LocalJudge(Judge):
 class ProgramJudge(object):
     EOF = None
 
-    def __init__(self, process_name, redirect=False, transfer=False, interact=False):
+    def __init__(self, process_name, redirect=False, transfer=False, interact=False, partial_output_limit=10):
         self.result = None
         self.process = None
         self.write_lock = threading.Lock()
@@ -195,6 +195,7 @@ class ProgramJudge(object):
         self.redirect = redirect
         self.transfer = transfer
         self.interact = interact
+        self.partial_output_limit = partial_output_limit
 
         self.old_stdin = sys.stdin
         self.old_stdout = sys.stdout
@@ -258,7 +259,7 @@ class ProgramJudge(object):
         self.write(input_file.read())
         self.write(ProgramJudge.EOF)
         process_output = self.read()
-        self.result.partial_output = process_output[:10]
+        self.result.partial_output = process_output[:self.partial_output_limit]
         self.result.max_memory = self.process.get_max_memory()
         self.result.execution_time = self.process.get_execution_time()
         judge_output = output_file.read()

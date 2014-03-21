@@ -5,8 +5,8 @@
     "memory": "65536",
     "test_cases": [
         {
-            "in": "aplusb.in",
-            "out": "aplusb.out",
+            "in": "aplusb.1.in",
+            "out": "aplusb.1.out",
             "points": "1"
         },
         {

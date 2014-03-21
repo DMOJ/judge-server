@@ -2,6 +2,7 @@
     "gcc": "g++",
     "python": "python",
     "java": "java",
+    "javac": "javac",
     "ruby": "ruby",
     "php": "php",
     "perl": "perl"

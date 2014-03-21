@@ -79,8 +79,23 @@ class Judge(object):
                 bad_files.append(source_code_file)
                 arguments = [self.paths["perl"], source_code_file]
             elif language == "JAVA":
-                self.packet_manager.compile_error_packet("java is unavailable at the moment")
-                return
+                output_file = None
+                source_code_file = problem_id + ".java"
+                with open(source_code_file, "wb") as fo:
+                    fo.write(source_code)
+                bad_files.append(source_code_file)
+                output_file = problem_id + ".class"
+                javac_args = [self.paths["javac"], source_code_file]
+                javac_process = subprocess.Popen(javac_args, stderr=subprocess.PIPE)
+                _, compile_error = javac_process.communicate()
+                if javac_process.returncode != 0:
+                    print "Compile Error"
+                    print compile_error
+                    self.packet_manager.compile_error_packet(compile_error)
+                    return
+                bad_files.append(output_file)
+
+                arguments = [self.paths['java'], "-cp", ".", problem_id]
             elif language.startswith("C++"):
                 source_code_file = str(self.current_submission) + ".cpp"
                 with open(source_code_file, "wb") as fo:
@@ -277,6 +292,7 @@ class ProgramJudge(object):
         self.write(ProgramJudge.EOF)
         process_output = self.read()
         self.result.partial_output = process_output[:self.partial_output_limit]
+        print process_output
         self.result.max_memory = self.process.get_max_memory()
         self.result.execution_time = self.process.get_execution_time()
         judge_output = output_file.read()
@@ -384,9 +400,25 @@ int main()
 }
 '''
     py2_source=r'''
-for i in xrange(int(raw_input())):
-    print sum(map(int, raw_input().split()))
+raise Exception
+'''
 
+    java_source='''
+
+
+import java.util.Scanner;
+public class aplusb
+{
+    public static void main(String args[])
+    {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        for(int i = 0; i != n; i++) {
+            System.out.println(sc.nextInt() + sc.nextInt());
+        }
+        sc.close();
+    }
+}
 '''
     if args.server_host:
         judge = Judge(args.server_host, args.server_port, debug=args.debug)
@@ -394,7 +426,7 @@ for i in xrange(int(raw_input())):
     else:
         with LocalJudge(debug=args.debug) as judge:
             try:
-                judge.begin_grading("aplusb", "PY2", py2_source)
+                judge.begin_grading("aplusb", "JAVA", java_source)
             except Exception:
                 traceback.print_exc()
         print "Done"

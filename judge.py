@@ -35,7 +35,8 @@ class Result(object):
 
 
 class Judge(object):
-    def __init__(self, host, port):
+    def __init__(self, host, port, **kwargs):
+        self.debug_mode = kwargs.get("debug", False)
         self.packet_manager = packet.PacketManager(host, port, self)
         self.current_submission = None
         with open(os.path.join("data", "judge", "judge.json"), "r") as init_file:
@@ -76,7 +77,7 @@ class Judge(object):
                     self.packet_manager.compile_error_packet(compile_error)
                     return
                 bad_files.append(output_file)
-                arguments = [output_file]
+                arguments = ["./" + output_file]
             else:
                 raise Exception("not implemented yet!")
             with open(os.path.join("data", "problems", problem_id, "init.json"), "r") as init_file:
@@ -155,7 +156,8 @@ class Judge(object):
 
 
 class LocalJudge(Judge):
-    def __init__(self):
+    def __init__(self, **kwargs):
+        self.debug_mode = kwargs.get("debug", False)
         class LocalPacketManager(object):
             def __getattr__(self, *args, **kwargs):
                 return lambda *args, **kwargs: None
@@ -245,13 +247,17 @@ class ProgramJudge(object):
             self.write(sys.stdin.read())
         self.write(input_file.read())
         self.write(ProgramJudge.EOF)
-        process_output = self.read().strip().replace('\r\n', '\n')
+        process_output = self.read()
         self.result.partial_output = process_output[:10]
         self.result.max_memory = self.process.get_max_memory()
         self.result.execution_time = self.process.get_execution_time()
-        judge_output = output_file.read().strip().replace('\r\n', '\n')
-        if process_output != judge_output:
-            result_flag |= Result.WA
+        judge_output = output_file.read()
+        for process_line, judge_line in zip(process_output.split(), judge_output.split()):
+            process_line.rstrip()
+            judge_line.rstrip()
+            if process_line != judge_line:
+                result_flag |= Result.WA
+                break
         if self.process.get_rte():
             result_flag |= Result.RTE
         if self.process.get_tle():
@@ -301,6 +307,8 @@ def main():
                         help='host to listen for the server')
     parser.add_argument('-p', '--server-port', type=int, default=9999,
                         help='port to listen for the server')
+    parser.add_argument('-d', '--debug', type=bool, default=False,
+                        help='enable debug mode (full output)')
     args = parser.parse_args()
 
     print "Running %s judge..." % (["local", "live"][args.server_host is not None])
@@ -324,17 +332,38 @@ int main()
     return 0;
 }
 '''
+    cpp11_source=r'''
+#include <iostream>
+#include <cstdio>
+#include <unordered_set>
+
+using namespace std;
+
+int main()
+{
+    int N, a, b;
+    scanf("%d",  &N);
+    for(int i=0; i<N; i++)
+    {
+        scanf("%d%d", &a, &b);
+        printf("%d\n", a+b);
+    }
+
+    return 0;
+}
+'''
     py2_source=r'''
 for i in xrange(int(raw_input())):
     print sum(map(int, raw_input().split()))
 '''
     if args.server_host:
-        judge = Judge(args.server_host, args.server_port)
+        judge = Judge(args.server_host, args.server_port, debug=args.debug)
         judge.listen()
     else:
-        with LocalJudge() as judge:
+        with LocalJudge(debug=args.debug) as judge:
             try:
                 judge.begin_grading("aplusb", "C++", cpp_source)
+                judge.begin_grading("aplusb", "C++11", cpp11_source)
                 judge.begin_grading("aplusb", "PY2", py2_source)
             except Exception:
                 traceback.print_exc()

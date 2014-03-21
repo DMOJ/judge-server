@@ -70,6 +70,13 @@ class Judge(object):
                     fo.write(source_code)
                 bad_files.append(source_code_file)
                 arguments = [self.paths["php"], source_code_file]
+            elif language == "PERL":
+                output_file = None
+                source_code_file = str(self.current_submission) + ".pl"
+                with open(source_code_file, "wb") as fo:
+                    fo.write(source_code)
+                bad_files.append(source_code_file)
+                arguments = [self.paths["perl"], source_code_file]
             elif language == "JAVA":
                 self.packet_manager.compile_error_packet("java is unavailable at the moment")
                 return

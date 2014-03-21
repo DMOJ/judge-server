@@ -76,7 +76,7 @@ class Judge(object):
                     self.packet_manager.compile_error_packet(compile_error)
                     return
                 bad_files.append(output_file)
-                arguments = [output_file]
+                arguments = ['' if sys.platform == "win32" else './' + output_file]
             else:
                 raise Exception("not implemented yet!")
             with open(os.path.join("data", "problems", problem_id, "init.json"), "r") as init_file:

@@ -1,6 +1,7 @@
 {
     "archive": "aplusb.zip",
     "type": "standard",
+    "short_circuit": "False",
     "time": "5",
     "memory": "65536",
     "test_cases": [

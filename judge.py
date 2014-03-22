@@ -420,6 +420,7 @@ int main()
     return 0;
 }
 '''
+
     cpp11_source=r'''
 #include <iostream>
 #include <cstdio>
@@ -440,13 +441,8 @@ int main()
     return 0;
 }
 '''
-    py2_source=r'''
-raise Exception
-'''
 
     java_source='''
-
-
 import java.util.Scanner;
 public class aplusb
 {
@@ -461,11 +457,17 @@ public class aplusb
     }
 }
 '''
+
+    py2_source=r'''
+for i in xrange(input()):
+    print sum(map(int, raw_input().split()))
+'''
+
     if args.server_host:
         judge = Judge(args.server_host, args.server_port, debug=args.debug)
         judge.listen()
     else:
-        with LocalJudge(debug=False and args.debug) as judge:
+        with LocalJudge(debug=args.debug) as judge:
             try:
                 judge.begin_grading("aplusb", "C++11", cpp11_source)
                 #judge.begin_grading("aplusb", "JAVA", java_source)

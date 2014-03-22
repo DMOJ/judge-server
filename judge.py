@@ -14,6 +14,8 @@ except ImportError:
 
 import execute # @UnresolvedImport
 
+import executors # @UnresolvedImport
+
 import packet # @UnresolvedImport
 
 import zipreader # @UnresolvedImport
@@ -74,50 +76,22 @@ class Judge(object):
         bad_files = []
         try:
             if language == "PY2":
-                output_file = None
-                source_code_file = str(self.current_submission) + ".py"
-                with open(source_code_file, "wb") as fo:
-                    fo.write(source_code)
-                bad_files.append(source_code_file)
-                arguments = [self.paths["python"], source_code_file]
+                bad_files, arguments = executors.PY2.generate(self.paths["python"], self.current_submission, source_code)
             elif language == "RUBY":
-                output_file = None
-                source_code_file = str(self.current_submission) + ".rb"
-                with open(source_code_file, "wb") as fo:
-                    fo.write(source_code)
-                bad_files.append(source_code_file)
-                arguments = [self.paths["ruby"], source_code_file]
+                bad_files, arguments = executors.RUBY.generate(self.paths["ruby"], self.current_submission, source_code)
             elif language == "PHP":
-                output_file = None
-                source_code_file = str(self.current_submission) + ".php"
-                with open(source_code_file, "wb") as fo:
-                    fo.write(source_code)
-                bad_files.append(source_code_file)
-                arguments = [self.paths["php"], source_code_file]
+                bad_files, arguments = executors.PHP.generate(self.paths["php"], self.current_submission, source_code)
             elif language == "PERL":
-                output_file = None
-                source_code_file = str(self.current_submission) + ".pl"
-                with open(source_code_file, "wb") as fo:
-                    fo.write(source_code)
-                bad_files.append(source_code_file)
-                arguments = [self.paths["perl"], source_code_file]
+                bad_files, arguments = executors.PERL.generate(self.paths["perl"], self.current_submission, source_code)
             elif language == "JAVA":
-                output_file = None
-                source_code_file = problem_id + ".java"
-                with open(source_code_file, "wb") as fo:
-                    fo.write(source_code)
-                bad_files.append(source_code_file)
-                output_file = problem_id + ".class"
-                javac_args = [self.paths["javac"], source_code_file]
-                javac_process = subprocess.Popen(javac_args, stderr=subprocess.PIPE)
-                _, compile_error = javac_process.communicate()
-                if javac_process.returncode != 0:
+                try:
+                    bad_files, arguments = executors.JAVA.generate(self.paths["javac"], self.paths["java"], problem_id, source_code)
+                except executors.JAVA.JavaCompileError, compile_error:
+                    bad_files.append(compile_error.args[1])
                     print "Compile Error"
-                    print compile_error
-                    self.packet_manager.compile_error_packet(compile_error)
+                    print compile_error.message
+                    self.packet_manager.compile_error_packet(compile_error.message)
                     return
-                bad_files.append(output_file)
-                arguments = [self.paths['java'], "-cp", ".", problem_id]
             elif language.startswith("C++"):
                 source_code_file = str(self.current_submission) + ".cpp"
                 with open(source_code_file, "wb") as fo:
@@ -469,8 +443,9 @@ for i in xrange(input()):
     else:
         with LocalJudge(debug=args.debug) as judge:
             try:
-                judge.begin_grading("aplusb", "C++11", cpp11_source)
+                #judge.begin_grading("aplusb", "C++11", cpp11_source)
                 #judge.begin_grading("aplusb", "JAVA", java_source)
+                judge.begin_grading("aplusb", "PY2", py2_source)
             except Exception:
                 traceback.print_exc()
         print "Done"

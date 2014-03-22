@@ -92,28 +92,24 @@ class Judge(object):
                     print compile_error.message
                     self.packet_manager.compile_error_packet(compile_error.message)
                     return
-            elif language.startswith("C++"):
-                source_code_file = str(self.current_submission) + ".cpp"
-                with open(source_code_file, "wb") as fo:
-                    fo.write(source_code)
-                bad_files.append(source_code_file)
-                if sys.platform == "win32":
-                    compiled_extension = ".exe"
-                    linker_options = ["-Wl,--stack,8388608", "-static"]
-                else:
-                    compiled_extension = ""
-                    linker_options = []
-                output_file = str(self.current_submission) + compiled_extension
-                gcc_args = [self.paths["gcc"], source_code_file, "-O2"] + (["-std=c++0x"] if language == "C++11" else []) + linker_options + ["-s", "-o", output_file]
-                gcc_process = subprocess.Popen(gcc_args, stderr=subprocess.PIPE)
-                _, compile_error = gcc_process.communicate()
-                if gcc_process.returncode != 0:
+            elif language == "C++":
+                try:
+                    bad_files, arguments = executors.CPP.generate(self.paths["gcc"], self.current_submission, source_code)
+                except executors.CPP.CppCompileError, compile_error:
+                    bad_files.append(compile_error.args[1])
                     print "Compile Error"
-                    print compile_error
-                    self.packet_manager.compile_error_packet(compile_error)
+                    print compile_error.message
+                    self.packet_manager.compile_error_packet(compile_error.message)
                     return
-                bad_files.append(output_file)
-                arguments = ["./" + output_file]
+            elif language == "C++11":
+                try:
+                    bad_files, arguments = executors.CPP11.generate(self.paths["gcc"], self.current_submission, source_code)
+                except executors.CPP11.Cpp11CompileError, compile_error:
+                    bad_files.append(compile_error.args[1])
+                    print "Compile Error"
+                    print compile_error.message
+                    self.packet_manager.compile_error_packet(compile_error.message)
+                    return
             else:
                 raise Exception("not implemented yet!")
             with open(os.path.join("data", "problems", problem_id, "init.json"), "r") as init_file:
@@ -166,10 +162,6 @@ class Judge(object):
             openfile = archive.files.__getitem__
         else:
             openfile = open
-        if "time" not in kwargs:
-            kwargs["time"] = 2
-        if "memory" not in kwargs:
-            kwargs["memory"] = 65536
         self.packet_manager.begin_grading_packet()
         short_circuit = kwargs.get("short_circuit", False)
         short_circuited = False
@@ -186,7 +178,7 @@ class Judge(object):
                             result.max_memory = 0
                             result.partial_output = ""
                         else:
-                            judge.run_standard(result, openfile(input_file), openfile(output_file), kwargs["time"], kwargs["memory"])
+                            judge.run_standard(result, openfile(input_file), openfile(output_file), kwargs.get("time", 2), kwargs.get("memory", 65536))
                         self.packet_manager.test_case_status_packet(case_number,
                                                                     point_value if not short_circuited and result.result_flag == Result.AC else 0,
                                                                     point_value,
@@ -443,9 +435,10 @@ for i in xrange(input()):
     else:
         with LocalJudge(debug=args.debug) as judge:
             try:
-                #judge.begin_grading("aplusb", "C++11", cpp11_source)
+                #judge.begin_grading("aplusb", "C++", cpp_source)
+                judge.begin_grading("aplusb", "C++11", cpp11_source)
                 #judge.begin_grading("aplusb", "JAVA", java_source)
-                judge.begin_grading("aplusb", "PY2", py2_source)
+                #judge.begin_grading("aplusb", "PY2", py2_source)
             except Exception:
                 traceback.print_exc()
         print "Done"

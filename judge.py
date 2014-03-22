@@ -10,15 +10,15 @@ import threading
 try:
     import queue
 except ImportError:
-    import Queue as queue    
+    import Queue as queue
 
-import execute # @UnresolvedImport
+import execute  # @UnresolvedImport
 
-import executors # @UnresolvedImport
+import executors  # @UnresolvedImport
 
-import packet # @UnresolvedImport
+import packet  # @UnresolvedImport
 
-import zipreader # @UnresolvedImport
+import zipreader  # @UnresolvedImport
 
 
 class Result(object):
@@ -75,43 +75,19 @@ class Judge(object):
     def begin_grading(self, problem_id, language, source_code):
         bad_files = []
         try:
-            if language == "PY2":
-                bad_files, arguments = executors.PY2.generate(self.paths["python"], self.current_submission, source_code)
-            elif language == "RUBY":
-                bad_files, arguments = executors.RUBY.generate(self.paths["ruby"], self.current_submission, source_code)
-            elif language == "PHP":
-                bad_files, arguments = executors.PHP.generate(self.paths["php"], self.current_submission, source_code)
-            elif language == "PERL":
-                bad_files, arguments = executors.PERL.generate(self.paths["perl"], self.current_submission, source_code)
-            elif language == "JAVA":
-                try:
-                    bad_files, arguments = executors.JAVA.generate(self.paths["javac"], self.paths["java"], problem_id, source_code)
-                except executors.JAVA.JavaCompileError, compile_error:
-                    bad_files.append(compile_error.args[1])
-                    print "Compile Error"
-                    print compile_error.message
-                    self.packet_manager.compile_error_packet(compile_error.message)
-                    return
-            elif language == "C++":
-                try:
-                    bad_files, arguments = executors.CPP.generate(self.paths["gcc"], self.current_submission, source_code)
-                except executors.CPP.CppCompileError, compile_error:
-                    bad_files.append(compile_error.args[1])
-                    print "Compile Error"
-                    print compile_error.message
-                    self.packet_manager.compile_error_packet(compile_error.message)
-                    return
-            elif language == "C++11":
-                try:
-                    bad_files, arguments = executors.CPP11.generate(self.paths["gcc"], self.current_submission, source_code)
-                except executors.CPP11.Cpp11CompileError, compile_error:
-                    bad_files.append(compile_error.args[1])
-                    print "Compile Error"
-                    print compile_error.message
-                    self.packet_manager.compile_error_packet(compile_error.message)
-                    return
-            else:
-                raise Exception("not implemented yet!")
+            try:
+                executor = getattr(executors, language)
+                bad_files, arguments = executor.generate(self.paths, self.current_submission, source_code)
+            except executors.CompileError, compile_error:
+                bad_files.append(compile_error.args[1])
+                print "Compile Error"
+                print compile_error.message
+                self.packet_manager.compile_error_packet(compile_error.message)
+                return
+        except AttributeError:
+            raise Exception("%s not implemented yet!" % language)
+
+        try:
             with open(os.path.join("data", "problems", problem_id, "init.json"), "r") as init_file:
                 init_data = json.load(init_file)
                 problem_type = init_data["type"]
@@ -120,9 +96,14 @@ class Judge(object):
                 else:
                     raise Exception("not implemented yet!")
                 test_cases = init_data["test_cases"]
-                forward_test_cases = [TestCase(case["in"], case["out"], case["points"]) if type(case) == dict else BatchedTestCase((subcase["in"], subcase["out"], subcase["points"]) for subcase in case) for case in test_cases]
+                forward_test_cases = [
+                    TestCase(case["in"], case["out"], case["points"]) if type(case) == dict else BatchedTestCase(
+                        (subcase["in"], subcase["out"], subcase["points"]) for subcase in case) for case in test_cases]
                 case = 1
-                for res in run(arguments, forward_test_cases, archive=os.path.join("data", "problems", problem_id, init_data["archive"]), time=int(init_data["time"]), memory=int(init_data["memory"]), short_circuit=(init_data["short_circuit"] == "True")):
+                for res in run(arguments, forward_test_cases,
+                               archive=os.path.join("data", "problems", problem_id, init_data["archive"]),
+                               time=int(init_data["time"]), memory=int(init_data["memory"]),
+                               short_circuit=(init_data["short_circuit"] == "True")):
                     print "Test case %s" % case
                     print "\t%f seconds" % res.execution_time
                     print "\t%.2f mb (%s kb)" % (res.max_memory / 1024.0, res.max_memory)
@@ -170,7 +151,8 @@ class Judge(object):
             try:
                 while True:
                     input_file, output_file, point_value = test_case.get_data()
-                    with ProgramJudge(arguments, *args, partial_output_limit=(2147483647 if self.debug_mode else 10)) as judge:
+                    with ProgramJudge(arguments, *args,
+                                      partial_output_limit=(2147483647 if self.debug_mode else 10)) as judge:
                         result = Result()
                         if short_circuited:
                             result.result_flag = Result.SC
@@ -178,7 +160,8 @@ class Judge(object):
                             result.max_memory = 0
                             result.partial_output = ""
                         else:
-                            judge.run_standard(result, openfile(input_file), openfile(output_file), kwargs.get("time", 2), kwargs.get("memory", 65536))
+                            judge.run_standard(result, openfile(input_file), openfile(output_file),
+                                               kwargs.get("time", 2), kwargs.get("memory", 65536))
                         self.packet_manager.test_case_status_packet(case_number,
                                                                     point_value if not short_circuited and result.result_flag == Result.AC else 0,
                                                                     point_value,
@@ -208,6 +191,7 @@ class Judge(object):
 class LocalJudge(Judge):
     def __init__(self, **kwargs):
         self.debug_mode = kwargs.get("debug", False)
+
         class LocalPacketManager(object):
             def __getattr__(self, *args, **kwargs):
                 return lambda *args, **kwargs: None
@@ -367,7 +351,7 @@ def main():
 
     print "Running %s judge..." % (["local", "live"][args.server_host is not None])
 
-    cpp_source=r'''
+    cpp_source = r'''
 #include <iostream>
 #include <cstdio>
 
@@ -387,7 +371,7 @@ int main()
 }
 '''
 
-    cpp11_source=r'''
+    cpp11_source = r'''
 #include <iostream>
 #include <cstdio>
 #include <unordered_set>
@@ -408,7 +392,7 @@ int main()
 }
 '''
 
-    java_source='''
+    java_source = '''
 import java.util.Scanner;
 public class aplusb
 {
@@ -424,7 +408,7 @@ public class aplusb
 }
 '''
 
-    py2_source=r'''
+    py2_source = r'''
 for i in xrange(input()):
     print sum(map(int, raw_input().split()))
 '''
@@ -435,13 +419,14 @@ for i in xrange(input()):
     else:
         with LocalJudge(debug=args.debug) as judge:
             try:
-                #judge.begin_grading("aplusb", "C++", cpp_source)
-                judge.begin_grading("aplusb", "C++11", cpp11_source)
+                #judge.begin_grading("aplusb", "CPP", cpp_source)
+                judge.begin_grading("aplusb", "CPP11", cpp11_source)
                 #judge.begin_grading("aplusb", "JAVA", java_source)
                 #judge.begin_grading("aplusb", "PY2", py2_source)
             except Exception:
                 traceback.print_exc()
         print "Done"
+
 
 if __name__ == "__main__":
     main()

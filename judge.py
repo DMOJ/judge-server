@@ -85,7 +85,7 @@ class Judge(object):
                 self.packet_manager.compile_error_packet(compile_error.message)
                 return
         except AttributeError:
-            raise Exception("%s not implemented yet!" % language)
+            raise NotImplementedError("%s not implemented yet!" % language)
 
         try:
             with open(os.path.join("data", "problems", problem_id, "init.json"), "r") as init_file:

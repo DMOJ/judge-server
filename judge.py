@@ -88,7 +88,7 @@ class Judge(object):
         try:
             try:
                 executor = getattr(executors, language)
-                bad_files, arguments = executor.generate(self.paths, self.current_submission, source_code)
+                bad_files, arguments = executor.generate(self.paths, problem_id, source_code)
             except executors.CompileError, compile_error:
                 bad_files.append(compile_error.args[1])
                 print "Compile Error"
@@ -297,6 +297,7 @@ class ProgramJudge(object):
         self.write(ProgramJudge.EOF)
         process_output = self.read()
         self.result.partial_output = process_output[:self.partial_output_limit]
+        print process_output
         self.result.max_memory = self.process.get_max_memory()
         self.result.execution_time = self.process.get_execution_time()
         judge_output = output_file.read()
@@ -407,10 +408,14 @@ int main()
 
     java_source = '''
 import java.util.Scanner;
+import java.io.*;
+
 public class aplusb
 {
-    public static void main(String args[])
+    public static void main(String args[]) throws IOException
     {
+        File f = new File("a.b");
+        f.createNewFile();
         Scanner sc = new Scanner(System.in);
         int n = sc.nextInt();
         for(int i = 0; i != n; i++) {
@@ -436,9 +441,9 @@ for i in xrange(n):
             try:
                 #judge.begin_grading("aplusb", "CPP", cpp_source)
                 #judge.begin_grading("aplusb", "CPP11", cpp11_source)
-                #judge.begin_grading("aplusb", "JAVA", java_source)
+                judge.begin_grading("aplusb", "JAVA", java_source)
                 #judge.begin_grading("aplusb", "PY2", py2_source)
-                judge.begin_grading("aplusb_batch", "PY2", py2_source)
+                #judge.begin_grading("aplusb_batch", "PY2", py2_source)
             except Exception:
                 traceback.print_exc()
         print "Done"

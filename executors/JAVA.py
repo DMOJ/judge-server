@@ -1,7 +1,6 @@
 import subprocess
 from __init__ import CompileError
 
-
 def generate(env, class_name, source_code):
     source_code_file = class_name + ".java"
     with open(source_code_file, "wb") as fo:
@@ -12,4 +11,8 @@ def generate(env, class_name, source_code):
     _, compile_error = javac_process.communicate()
     if javac_process.returncode != 0:
         raise CompileError(compile_error, source_code_file)
-    return [source_code_file, output_file], [env['java'], "-cp", ".", class_name]
+    return [source_code_file, output_file], \
+           [env['java'],
+            "-Djava.security.manager",
+            # "-Xmx" TODO
+            "-cp", ".", class_name]

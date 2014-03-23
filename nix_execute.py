@@ -66,6 +66,7 @@ if __name__ == "__main__":
     parser.add_argument("child_args", nargs="+", help="The child process path followed by arguments; relative allowed")
     parser.add_argument("-t", "--time", type=float, help="Time to limit process to, in seconds")
     parser.add_argument("-m", "--memory", type=int, help="Memory to limit process to, in kb")
+    parser.add_argument("-nf", "--no-fork", action='store_true', help="If specified, prevents process from forking")
     parsed = parser.parse_args()
 
     child = parsed.child_args[0]
@@ -85,9 +86,11 @@ if __name__ == "__main__":
     h = signal.signal(signal.SIGCHLD, sigchld)
     pid = os.fork()
     if not pid:
-        resource.setrlimit(resource.RLIMIT_AS, (parsed.memory * 1024 + 16 * 1024 * 1024,) * 2)
+        if parsed.memory:
+            resource.setrlimit(resource.RLIMIT_AS, (parsed.memory * 1024 + 16 * 1024 * 1024,) * 2)
         #resource.setrlimit(resource.RLIMIT_NOFILE, (4, 4))
-        resource.setrlimit(resource.RLIMIT_NPROC, (0, 0))
+        if parsed.no_fork:
+            resource.setrlimit(resource.RLIMIT_NPROC, (0, 0))
 
         # Merge the stderr (2) into stdout (1) so that the execute
         # may be able to return usage stats through stderr

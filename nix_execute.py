@@ -53,8 +53,17 @@ class nix_Process(object):
         return self._get_usages()[1]
 
 
-def execute(path, time, memory):
-    process = subprocess.Popen([sys.executable, __file__, '-t', str(time), '-m', str(memory), '--'] + path,
+def execute(args, time=None, memory=None, fork=True):
+    p_args = [sys.executable, __file__]
+    if time:
+        p_args += ["-t", str(time)]
+    if memory:
+        p_args += ["-m", str(memory)]
+    if not fork:
+        p_args.append("-nf")
+    p_args.append("--")
+    p_args += args
+    process = subprocess.Popen(p_args,
                                stdin=subprocess.PIPE,
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE)

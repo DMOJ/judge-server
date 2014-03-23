@@ -38,10 +38,6 @@ class Result(object):
         self.partial_output = None
 
 
-class EndOfTestCase(Exception):
-    pass
-
-
 class TestCase(object):
     def __init__(self, input_file, output_file, point_value):
         self.input_file = input_file
@@ -49,16 +45,31 @@ class TestCase(object):
         self.point_value = point_value
         self.complete = False
 
-    def get_data(self):
+    def __iter__(self):
+        return self
+
+    def next(self):
         if self.complete:
-            raise EndOfTestCase()
+            raise StopIteration
         self.complete = True
         return self.input_file, self.output_file, self.point_value
 
 
 class BatchedTestCase(TestCase):
-    pass
+    def __init__(self, point_value, io_files):
+        self.point_value = point_value
+        self.io_files = list(io_files)
+        self.current_case = 0
+    
+    def __iter__(self):
+        return self
 
+    def next(self):
+        if self.current_case >= len(self.io_files):
+            raise StopIteration
+        else:
+            self.current_case += 1
+            return self.io_files[self.current_case - 1] + (self.point_value,)
 
 class Judge(object):
     def __init__(self, host, port, **kwargs):
@@ -97,8 +108,8 @@ class Judge(object):
                     raise Exception("not implemented yet!")
                 test_cases = init_data["test_cases"]
                 forward_test_cases = [
-                    TestCase(case["in"], case["out"], case["points"]) if type(case) == dict else BatchedTestCase(
-                        (subcase["in"], subcase["out"], subcase["points"]) for subcase in case) for case in test_cases]
+                    (BatchedTestCase(case["points"], ((subcase["in"], subcase["out"]) for subcase in case["data"])) if "data" in case else
+                     TestCase(case["in"], case["out"], case["points"])) for case in test_cases]
                 case = 1
                 for res in run(arguments, forward_test_cases,
                                archive=os.path.join("data", "problems", problem_id, init_data["archive"]),
@@ -144,37 +155,39 @@ class Judge(object):
         else:
             openfile = open
         self.packet_manager.begin_grading_packet()
-        short_circuit = kwargs.get("short_circuit", False)
-        short_circuited = False
+        short_circuit_all = kwargs.get("short_circuit", False)
         case_number = 1
+        short_circuited = False
         for test_case in test_cases:
-            try:
-                while True:
-                    input_file, output_file, point_value = test_case.get_data()
-                    with ProgramJudge(arguments, *args,
-                                      partial_output_limit=(2147483647 if self.debug_mode else 10)) as judge:
-                        result = Result()
-                        if short_circuited:
-                            result.result_flag = Result.SC
-                            result.execution_time = 0
-                            result.max_memory = 0
-                            result.partial_output = ""
-                        else:
-                            judge.run_standard(result, openfile(input_file), openfile(output_file),
-                                               kwargs.get("time", 2), kwargs.get("memory", 65536))
-                        self.packet_manager.test_case_status_packet(case_number,
-                                                                    point_value if not short_circuited and result.result_flag == Result.AC else 0,
-                                                                    point_value,
-                                                                    result.result_flag,
-                                                                    result.execution_time,
-                                                                    result.max_memory,
-                                                                    result.partial_output)
-                        if short_circuit and not short_circuited and result.result_flag != Result.AC:
-                            short_circuited = True
-                        case_number += 1
-                        yield result
-            except EndOfTestCase:
-                pass
+            if type(test_case) == BatchedTestCase:
+                self.packet_manager.begin_batch_packet()
+            for input_file, output_file, point_value in test_case:
+                with ProgramJudge(arguments, *args,
+                                  partial_output_limit=(2147483647 if self.debug_mode else 10)) as judge:
+                    result = Result()
+                    if short_circuited:
+                        result.result_flag = Result.SC
+                        result.execution_time = 0
+                        result.max_memory = 0
+                        result.partial_output = ""
+                    else:
+                        judge.run_standard(result, openfile(input_file), openfile(output_file),
+                                           kwargs.get("time", 2), kwargs.get("memory", 65536))
+                    self.packet_manager.test_case_status_packet(case_number,
+                                                                point_value if not short_circuited and result.result_flag == Result.AC else 0,
+                                                                point_value,
+                                                                result.result_flag,
+                                                                result.execution_time,
+                                                                result.max_memory,
+                                                                result.partial_output)
+                    if not short_circuited and result.result_flag != Result.AC:
+                        short_circuited = True
+                    case_number += 1
+                    yield result
+            if type(test_case) == BatchedTestCase:
+                self.packet_manager.batch_end_packet()
+            if not short_circuit_all:
+                short_circuited = False
         self.packet_manager.grading_end_packet()
 
     # TODO: cleanup packet manager
@@ -409,7 +422,9 @@ public class aplusb
 '''
 
     py2_source = r'''
-for i in xrange(input()):
+n = input()
+if n < 5: raise
+for i in xrange(n):
     print sum(map(int, raw_input().split()))
 '''
 
@@ -420,9 +435,10 @@ for i in xrange(input()):
         with LocalJudge(debug=args.debug) as judge:
             try:
                 #judge.begin_grading("aplusb", "CPP", cpp_source)
-                judge.begin_grading("aplusb", "CPP11", cpp11_source)
+                #judge.begin_grading("aplusb", "CPP11", cpp11_source)
                 #judge.begin_grading("aplusb", "JAVA", java_source)
                 #judge.begin_grading("aplusb", "PY2", py2_source)
+                judge.begin_grading("aplusb_batch", "PY2", py2_source)
             except Exception:
                 traceback.print_exc()
         print "Done"

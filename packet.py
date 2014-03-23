@@ -91,6 +91,14 @@ class PacketManager(object):
                            "submission-id": self.judge.current_submission})
         self.judge.current_submission = None
 
+    def begin_batch_packet(self):
+        self._send_packet({"name": "batch-begin",
+                           "submission-id": self.judge.current_submission})
+
+    def batch_end_packet(self):
+        self._send_packet({"name": "batch-end",
+                           "submission-id": self.judge.current_submission})
+
     def current_submission_packet(self):
         self._send_packet({"name": "current-submission-id",
                            "submission-id": self.judge.current_submission})

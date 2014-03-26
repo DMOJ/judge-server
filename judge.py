@@ -2,6 +2,7 @@
 import argparse
 import json
 import os
+import time
 import traceback
 import subprocess
 import sys
@@ -73,6 +74,8 @@ class BatchedTestCase(TestCase):
 
 
 class Judge(object):
+    PING_FREQUENCY = 5
+
     def __init__(self, host, port, **kwargs):
         self.debug_mode = kwargs.get("debug", False)
         self.packet_manager = packet.PacketManager(host, port, self)
@@ -83,6 +86,16 @@ class Judge(object):
         for problem in os.listdir(os.path.join("data", "problems")):
             supported_problems.append((problem, os.path.getmtime(os.path.join("data", "problems", problem))))
         self.packet_manager.supported_problems_packet(supported_problems)
+        self.ping_lock = threading.Lock()
+        self.ping_thread = threading.Thread(target=self.ping, args=(self.ping_lock,))
+        self.ping_thread.start()
+
+    def ping(self, ping_lock):
+        while ping_lock.acquire(False):
+            ping_lock.release()
+            # TODO
+            self.packet_manager.ping_packet(0)
+            time.sleep(1.0 / Judge.PING_FREQUENCY)
 
     def begin_grading(self, problem_id, language, source_code):
         bad_files = []
@@ -206,7 +219,7 @@ class Judge(object):
         return self
 
     def __exit__(self, exception_type, exception_value, traceback):
-        pass
+        self.ping_lock.acquire()
 
 
 class LocalJudge(Judge):
@@ -221,6 +234,9 @@ class LocalJudge(Judge):
         self.current_submission = "submission"
         with open(os.path.join("data", "judge", "judge.json"), "r") as init_file:
             self.paths = json.load(init_file)
+        self.ping_lock = threading.Lock()
+        self.ping_thread = threading.Thread(target=self.ping, args=(self.ping_lock,))
+        self.ping_thread.start()
 
     def listen(self):
         pass
@@ -298,7 +314,6 @@ class ProgramJudge(object):
         try:
             self.process = execute.execute(self.process_name, time_limit, memory_limit)
         except:
-            import traceback
             traceback.print_exc()
         write_thread = threading.Thread(target=self.write_async, args=(self.write_lock,))
         write_thread.daemon = True

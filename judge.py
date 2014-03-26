@@ -105,11 +105,11 @@ class Judge(object):
                 problem_type = init_data["type"]
                 if problem_type == "standard":
                     run = self.run_standard
-                    checker = StandardChecker
+                    checker = checker_standard
                     checker_args = ()
                 elif problem_type == "floats":
                     run = self.run_standard
-                    checker = FloatsChecker
+                    checker = checker_floats
                     checker_args = (int(init_data["precision"]),)
                 else:
                     raise Exception("not implemented yet!")
@@ -359,7 +359,7 @@ class ProgramJudge(object):
             traceback.print_exc()
 
 
-def StandardChecker(process_output, judge_output):
+def checker_standard(process_output, judge_output):
     for process_line, judge_line in zip(process_output.split('\n'), judge_output.split('\n')):
         process_line = process_line.rstrip()
         judge_line = judge_line.rstrip()
@@ -368,7 +368,7 @@ def StandardChecker(process_output, judge_output):
     return True
 
 
-def FloatsChecker(process_output, judge_output, precision):
+def checker_floats(process_output, judge_output, precision):
     epsilon = 10 ** -precision
     for process_line, judge_line in zip(process_output.split('\n'), judge_output.split('\n')):
         try:
@@ -463,7 +463,6 @@ for i in xrange(n):
     print sum(map(int, raw_input().split()))
 '''
 
-
     geom_py2_source = r'''
 import math
 def cp(x1, y1, x2, y2):
@@ -479,7 +478,6 @@ for i in xrange(input()):
     Z=x3, y3
     print "%.2f %.2f"%(area(X, Y, Z), perim(X, Y, Z))
 '''
-
 
     if args.server_host:
         judge = Judge(args.server_host, args.server_port, debug=args.debug)

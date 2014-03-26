@@ -71,6 +71,7 @@ class BatchedTestCase(TestCase):
             self.current_case += 1
             return self.io_files[self.current_case - 1] + (self.point_value,)
 
+
 class Judge(object):
     def __init__(self, host, port, **kwargs):
         self.debug_mode = kwargs.get("debug", False)
@@ -104,6 +105,12 @@ class Judge(object):
                 problem_type = init_data["type"]
                 if problem_type == "standard":
                     run = self.run_standard
+                    checker = StandardChecker
+                    checker_args = ()
+                elif problem_type == "floats":
+                    run = self.run_standard
+                    checker = FloatsChecker
+                    checker_args = (int(init_data["precision"]),)
                 else:
                     raise Exception("not implemented yet!")
                 test_cases = init_data["test_cases"]
@@ -111,7 +118,7 @@ class Judge(object):
                     (BatchedTestCase(case["points"], ((subcase["in"], subcase["out"]) for subcase in case["data"])) if "data" in case else
                      TestCase(case["in"], case["out"], case["points"])) for case in test_cases]
                 case = 1
-                for res in run(arguments, forward_test_cases,
+                for res in run(arguments, forward_test_cases, checker, checker_args,
                                archive=os.path.join("data", "problems", problem_id, init_data["archive"]),
                                time=int(init_data["time"]), memory=int(init_data["memory"]),
                                short_circuit=(init_data["short_circuit"] == "True")):
@@ -148,7 +155,7 @@ class Judge(object):
     def listen(self):
         self.packet_manager.run()
 
-    def run_standard(self, arguments, test_cases, *args, **kwargs):
+    def run_standard(self, arguments, test_cases, checker, checker_args, *args, **kwargs):
         if "archive" in kwargs:
             archive = zipreader.ZipReader(kwargs["archive"])
             openfile = archive.files.__getitem__
@@ -172,7 +179,8 @@ class Judge(object):
                         result.partial_output = ""
                     else:
                         judge.run_standard(result, openfile(input_file), openfile(output_file),
-                                           kwargs.get("time", 2), kwargs.get("memory", 65536))
+                                           kwargs.get("time", 2), kwargs.get("memory", 65536),
+                                           checker, checker_args)
                     self.packet_manager.test_case_status_packet(case_number,
                                                                 point_value if not short_circuited and result.result_flag == Result.AC else 0,
                                                                 point_value,
@@ -284,7 +292,7 @@ class ProgramJudge(object):
             line = self.process.stdout.readline().rstrip()
         return line.rstrip() if line else ""
 
-    def run_standard(self, result, input_file, output_file, time_limit, memory_limit):
+    def run_standard(self, result, input_file, output_file, time_limit, memory_limit, checker, checker_args):
         self.result = result
         result_flag = Result.AC
         try:
@@ -305,12 +313,8 @@ class ProgramJudge(object):
         self.result.max_memory = self.process.get_max_memory()
         self.result.execution_time = self.process.get_execution_time()
         judge_output = output_file.read()
-        for process_line, judge_line in zip(process_output.split('\n'), judge_output.split('\n')):
-            process_line = process_line.rstrip()
-            judge_line = judge_line.rstrip()
-            if process_line != judge_line:
-                result_flag |= Result.WA
-                break
+        if not checker(process_output, judge_output, *checker_args):
+            result_flag |= Result.WA
         self.process.poll()
         if self.process.returncode:
             result_flag |= Result.IR
@@ -353,6 +357,29 @@ class ProgramJudge(object):
                         os.fsync(stdin.fileno())
         except Exception:
             traceback.print_exc()
+
+
+def StandardChecker(process_output, judge_output):
+    for process_line, judge_line in zip(process_output.split('\n'), judge_output.split('\n')):
+        process_line = process_line.rstrip()
+        judge_line = judge_line.rstrip()
+        if process_line != judge_line:
+            return False
+    return True
+
+
+def FloatsChecker(process_output, judge_output, precision):
+    epsilon = 10 ** -precision
+    for process_line, judge_line in zip(process_output.split('\n'), judge_output.split('\n')):
+        try:
+            process_floats = map(float, process_line.split())
+            judge_floats = map(float, judge_line.split())
+        except:
+            return False
+        for process_float, judge_float in zip(process_floats, judge_floats):
+            if abs(process_float - judge_float) > epsilon:
+                return False
+    return True
 
 
 def main():
@@ -432,10 +459,27 @@ public class aplusb
 
     py2_source = r'''
 n = input()
-if n < 5: raise
 for i in xrange(n):
     print sum(map(int, raw_input().split()))
 '''
+
+
+    geom_py2_source = r'''
+import math
+def cp(x1, y1, x2, y2):
+    return x1*y2-y1*x2
+def area(x, y, z):
+    return abs(cp(x[0]-y[0], x[1]-y[1], x[0]-z[0], x[1]-z[1]))/2.0
+def perim(x, y, z):
+    return math.hypot(x[0]-y[0], x[1]-y[1])+math.hypot(x[0]-z[0], x[1]-z[1])+math.hypot(y[0]-z[0], y[1]-z[1])
+for i in xrange(input()):
+    x1, y1, x2, y2, x3, y3=map(int, raw_input().split())
+    X=x1, y1
+    Y=x2, y2
+    Z=x3, y3
+    print "%.2f %.2f"%(area(X, Y, Z), perim(X, Y, Z))
+'''
+
 
     if args.server_host:
         judge = Judge(args.server_host, args.server_port, debug=args.debug)
@@ -446,7 +490,8 @@ for i in xrange(n):
                 #judge.begin_grading("aplusb", "CPP", cpp_source)
                 #judge.begin_grading("aplusb", "CPP11", cpp11_source)
                 #judge.begin_grading("aplusb", "JAVA", java_source)
-                judge.begin_grading("aplusb", "PY2", py2_source)
+                #judge.begin_grading("aplusb", "PY2", py2_source)
+                judge.begin_grading("geometry1", "PY2", geom_py2_source)
                 #judge.begin_grading("aplusb_batch", "PY2", py2_source)
             except Exception:
                 traceback.print_exc()

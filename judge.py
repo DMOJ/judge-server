@@ -136,7 +136,7 @@ class ThreadWithExc(threading.Thread):
         check that your thread has caught it.
 
         CAREFUL : this function is executed in the context of the
-        caller thread, to raise an excpetion in the context of the
+        caller thread, to raise an exception in the context of the
         thread represented by this instance.
         """
         _async_raise( self._get_my_tid(), exctype )
@@ -169,7 +169,7 @@ class Judge(object):
             ping_lock.release()
             # TODO
             self.packet_manager.ping_packet(0)
-            time.sleep(1.0 / Judge.PING_FREQUENCY)
+            time.sleep(60.0 / Judge.PING_FREQUENCY)
 
     def begin_grading(self, problem_id, language, source_code):
         if self.current_submission_thread is not None:

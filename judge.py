@@ -172,6 +172,8 @@ class Judge(object):
             time.sleep(1.0 / Judge.PING_FREQUENCY)
 
     def begin_grading(self, problem_id, language, source_code):
+        if self.current_submission_thread is not None:
+            self.terminate_grading()
         self.current_submission_thread = ThreadWithExc(target=self._begin_grading, args=(problem_id, language, source_code))
         self.current_submission_thread.start()
 
@@ -328,6 +330,7 @@ class LocalJudge(Judge):
         self.current_submission = "submission"
         with open(os.path.join("data", "judge", "judge.json"), "r") as init_file:
             self.paths = json.load(init_file)
+        self.current_submission_thread = None
         self.ping_lock = threading.Lock()
         self.ping_thread = threading.Thread(target=self.ping, args=(self.ping_lock,))
         self.ping_thread.start()

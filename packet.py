@@ -47,13 +47,15 @@ class PacketManager(object):
         print "%s:%s <= %s" % (self.host, self.port, json.dumps(packet, indent=4))
 
         name = packet["name"]
-        if name == "submission-request":
-            self.judge.current_submission = packet["submission-id"]
-            self.judge.begin_grading(packet["problem-id"], packet["language"], packet["source"])
+        if name == 'ping':
+            self.ping_packet(time.time())
         elif name == "get-current-submission":
             self.current_submission_packet()
-        elif name == 'ping':
-            self.ping_packet(time.time())
+        elif name == "submission-request":
+            self.judge.current_submission = packet["submission-id"]
+            self.judge.begin_grading(packet["problem-id"], packet["language"], packet["source"])
+        elif name == "terminate-submission":
+            self.judge.terminate_grading()
         else:
             print "ERROR: unknown packet %s, payload %s" % (name, packet)
 

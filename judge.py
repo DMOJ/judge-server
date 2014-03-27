@@ -1,10 +1,11 @@
 #!/usr/bin/python
 import argparse
+import ctypes
+import inspect
 import json
 import os
 import time
 import traceback
-import subprocess
 import sys
 import threading
 
@@ -73,6 +74,78 @@ class BatchedTestCase(TestCase):
             return self.io_files[self.current_case - 1] + (self.point_value,)
 
 
+def _async_raise(tid, exctype):
+    '''Raises an exception in the threads with id tid'''
+    if not inspect.isclass(exctype):
+        raise TypeError("Only types can be raised (not instances)")
+    res = ctypes.pythonapi.PyThreadState_SetAsyncExc(tid,
+                                                  ctypes.py_object(exctype))
+    if res == 0:
+        raise ValueError("invalid thread id")
+    elif res != 1:
+        # "if it returns a number greater than one, you're in trouble,
+        # and you should call it again with exc=NULL to revert the effect"
+        ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, 0)
+        raise SystemError("PyThreadState_SetAsyncExc failed")
+
+class ThreadWithExc(threading.Thread):
+    '''A thread class that supports raising exception in the thread from
+       another thread.
+    '''
+    def _get_my_tid(self):
+        """determines this (self's) thread id
+
+        CAREFUL : this function is executed in the context of the caller
+        thread, to get the identity of the thread represented by this
+        instance.
+        """
+        if not self.isAlive():
+            raise threading.ThreadError("the thread is not active")
+
+        # do we have it cached?
+        if hasattr(self, "_thread_id"):
+            return self._thread_id
+
+        # no, look for it in the _active dict
+        for tid, tobj in threading._active.items():
+            if tobj is self:
+                self._thread_id = tid
+                return tid
+
+        # TODO: in python 2.6, there's a simpler way to do : self.ident
+
+        raise AssertionError("could not determine the thread's id")
+
+    def raiseExc(self, exctype):
+        """Raises the given exception type in the context of this thread.
+
+        If the thread is busy in a system call (time.sleep(),
+        socket.accept(), ...), the exception is simply ignored.
+
+        If you are sure that your exception should terminate the thread,
+        one way to ensure that it works is:
+
+            t = ThreadWithExc( ... )
+            ...
+            t.raiseExc( SomeException )
+            while t.isAlive():
+                time.sleep( 0.1 )
+                t.raiseExc( SomeException )
+
+        If the exception is to be caught by the thread, you need a way to
+        check that your thread has caught it.
+
+        CAREFUL : this function is executed in the context of the
+        caller thread, to raise an excpetion in the context of the
+        thread represented by this instance.
+        """
+        _async_raise( self._get_my_tid(), exctype )
+
+
+class TerminateGrading(Exception):
+    pass
+
+
 class Judge(object):
     PING_FREQUENCY = 5
 
@@ -86,6 +159,7 @@ class Judge(object):
         for problem in os.listdir(os.path.join("data", "problems")):
             supported_problems.append((problem, os.path.getmtime(os.path.join("data", "problems", problem))))
         self.packet_manager.supported_problems_packet(supported_problems)
+        self.current_submission_thread = None
         self.ping_lock = threading.Lock()
         self.ping_thread = threading.Thread(target=self.ping, args=(self.ping_lock,))
         self.ping_thread.start()
@@ -98,72 +172,92 @@ class Judge(object):
             time.sleep(1.0 / Judge.PING_FREQUENCY)
 
     def begin_grading(self, problem_id, language, source_code):
-        bad_files = []
-        try:
-            try:
-                executor = getattr(executors, language)
-                bad_files, arguments = executor.generate(self.paths, problem_id, source_code)
-            except executors.CompileError, compile_error:
-                bad_files.append(compile_error.args[1])
-                print "Compile Error"
-                print compile_error.message
-                self.packet_manager.compile_error_packet(compile_error.message)
-                return
-        except AttributeError:
-            raise NotImplementedError("%s not implemented yet!" % language)
+        self.current_submission_thread = ThreadWithExc(target=self._begin_grading, args=(problem_id, language, source_code))
+        self.current_submission_thread.start()
 
+    def terminate_grading(self):
+        if self.current_submission_thread is not None:
+            try:
+                while self.current_submission_thread is not None and self.current_submission_thread.isAlive():
+                    self.current_submission_thread.raiseExc(TerminateGrading)
+                    time.sleep(0.1)
+            except threading.ThreadError:
+                print "Successfully terminated grading."
+            except:
+                traceback.print_exc()
+
+    def _begin_grading(self, problem_id, language, source_code):
         try:
-            with open(os.path.join("data", "problems", problem_id, "init.json"), "r") as init_file:
-                init_data = json.load(init_file)
-                problem_type = init_data["type"]
-                if problem_type == "standard":
-                    run = self.run_standard
-                    checker = checker_standard
-                    checker_args = ()
-                elif problem_type == "floats":
-                    run = self.run_standard
-                    checker = checker_floats
-                    checker_args = (int(init_data["precision"]),)
-                else:
-                    raise Exception("not implemented yet!")
-                test_cases = init_data["test_cases"]
-                forward_test_cases = [
-                    (BatchedTestCase(case["points"], ((subcase["in"], subcase["out"]) for subcase in case["data"])) if "data" in case else
-                     TestCase(case["in"], case["out"], case["points"])) for case in test_cases]
-                case = 1
-                for res in run(arguments, forward_test_cases, checker, checker_args,
-                               archive=os.path.join("data", "problems", problem_id, init_data["archive"]),
-                               time=int(init_data["time"]), memory=int(init_data["memory"]),
-                               short_circuit=(init_data["short_circuit"] == "True")):
-                    print "Test case %s" % case
-                    print "\t%f seconds" % res.execution_time
-                    print "\t%.2f mb (%s kb)" % (res.max_memory / 1024.0, res.max_memory)
-                    execution_verdict = []
-                    if res.result_flag & Result.IR:
-                        execution_verdict.append("\tInvalid Return")
-                    if res.result_flag & Result.WA:
-                        execution_verdict.append("\tWrong Answer")
-                    if res.result_flag & Result.RTE:
-                        execution_verdict.append("\tRuntime Error")
-                    if res.result_flag & Result.TLE:
-                        execution_verdict.append("\tTime Limit Exceeded")
-                    if res.result_flag & Result.MLE:
-                        execution_verdict.append("\tMemory Limit Exceeded")
-                    if res.result_flag & Result.SC:
-                        execution_verdict.append("\tShort Circuited")
-                    if res.result_flag & Result.IE:
-                        execution_verdict.append("\tInternal Error")
-                    if res.result_flag == Result.AC:
-                        print "\tAccepted"
+            bad_files = []
+            try:
+                try:
+                    executor = getattr(executors, language)
+                    bad_files, arguments = executor.generate(self.paths, problem_id, source_code)
+                except executors.CompileError, compile_error:
+                    bad_files.append(compile_error.args[1])
+                    print "Compile Error"
+                    print compile_error.message
+                    self.packet_manager.compile_error_packet(compile_error.message)
+                    return
+            except AttributeError:
+                raise NotImplementedError("%s not implemented yet!" % language)
+    
+            try:
+                with open(os.path.join("data", "problems", problem_id, "init.json"), "r") as init_file:
+                    init_data = json.load(init_file)
+                    problem_type = init_data["type"]
+                    if problem_type == "standard":
+                        run = self.run_standard
+                        checker = checker_standard
+                        checker_args = ()
+                    elif problem_type == "floats":
+                        run = self.run_standard
+                        checker = checker_floats
+                        checker_args = (int(init_data["precision"]),)
                     else:
-                        print "\n".join(execution_verdict)
-                    case += 1
-        except IOError:
-            print "Internal Error: Test cases do not exist"
-            self.packet_manager.problem_not_exist_packet(problem_id)
+                        raise Exception("not implemented yet!")
+                    test_cases = init_data["test_cases"]
+                    forward_test_cases = [
+                        (BatchedTestCase(case["points"], ((subcase["in"], subcase["out"]) for subcase in case["data"])) if "data" in case else
+                         TestCase(case["in"], case["out"], case["points"])) for case in test_cases]
+                    case = 1
+                    for res in run(arguments, forward_test_cases, checker, checker_args,
+                                   archive=os.path.join("data", "problems", problem_id, init_data["archive"]),
+                                   time=int(init_data["time"]), memory=int(init_data["memory"]),
+                                   short_circuit=(init_data["short_circuit"] == "True")):
+                        print "Test case %s" % case
+                        print "\t%f seconds" % res.execution_time
+                        print "\t%.2f mb (%s kb)" % (res.max_memory / 1024.0, res.max_memory)
+                        execution_verdict = []
+                        if res.result_flag & Result.IR:
+                            execution_verdict.append("\tInvalid Return")
+                        if res.result_flag & Result.WA:
+                            execution_verdict.append("\tWrong Answer")
+                        if res.result_flag & Result.RTE:
+                            execution_verdict.append("\tRuntime Error")
+                        if res.result_flag & Result.TLE:
+                            execution_verdict.append("\tTime Limit Exceeded")
+                        if res.result_flag & Result.MLE:
+                            execution_verdict.append("\tMemory Limit Exceeded")
+                        if res.result_flag & Result.SC:
+                            execution_verdict.append("\tShort Circuited")
+                        if res.result_flag & Result.IE:
+                            execution_verdict.append("\tInternal Error")
+                        if res.result_flag == Result.AC:
+                            print "\tAccepted"
+                        else:
+                            print "\n".join(execution_verdict)
+                        case += 1
+            except IOError:
+                print "Internal Error: Test cases do not exist"
+                self.packet_manager.problem_not_exist_packet(problem_id)
+            finally:
+                for bad_file in bad_files:
+                    os.unlink(bad_file)
+        except TerminateGrading:
+            print "Forcefully terminating grading. Resources may not be cleaned up."
         finally:
-            for bad_file in bad_files:
-                os.unlink(bad_file)
+            self.current_submission_thread = None
 
     def listen(self):
         self.packet_manager.run()
@@ -313,6 +407,8 @@ class ProgramJudge(object):
         result_flag = Result.AC
         try:
             self.process = execute.execute(self.process_name, time_limit, memory_limit)
+        except TerminateGrading:
+            raise
         except:
             traceback.print_exc()
         write_thread = threading.Thread(target=self.write_async, args=(self.write_lock,))
@@ -389,6 +485,8 @@ def checker_floats(process_output, judge_output, precision):
         try:
             process_floats = map(float, process_line.split())
             judge_floats = map(float, judge_line.split())
+        except TerminateGrading:
+            raise
         except:
             return False
         for process_float, judge_float in zip(process_floats, judge_floats):
@@ -500,12 +598,16 @@ for i in xrange(input()):
     else:
         with LocalJudge(debug=args.debug) as judge:
             try:
-                #judge.begin_grading("aplusb", "CPP", cpp_source)
+                judge.begin_grading("aplusb", "CPP", cpp_source)
                 #judge.begin_grading("aplusb", "CPP11", cpp11_source)
                 #judge.begin_grading("aplusb", "JAVA", java_source)
                 #judge.begin_grading("aplusb", "PY2", py2_source)
-                judge.begin_grading("geometry1", "PY2", geom_py2_source)
+                #judge.begin_grading("geometry1", "PY2", geom_py2_source)
                 #judge.begin_grading("aplusb_batch", "PY2", py2_source)
+                judge.terminate_grading()
+                while judge.current_submission_thread is not None:
+                    print judge.current_submission_thread.isAlive()
+                    time.sleep(0.1)
             except Exception:
                 traceback.print_exc()
         print "Done"

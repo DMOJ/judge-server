@@ -165,16 +165,25 @@ class Judge(object):
         self.ping_thread.start()
 
     def ping(self, ping_lock):
+        total_time = 60.0 / Judge.PING_FREQUENCY
         while ping_lock.acquire(False):
             ping_lock.release()
             # TODO
             self.packet_manager.ping_packet(0)
-            time.sleep(60.0 / Judge.PING_FREQUENCY)
+            time_slept = 0
+            while time_slept < total_time:
+                if ping_lock.acquire(False):
+                    ping_lock.release()
+                    time.sleep(0.1)
+                    time_slept += 0.1
+                else:
+                    break
 
     def begin_grading(self, problem_id, language, source_code):
         if self.current_submission_thread is not None:
             self.terminate_grading()
         self.current_submission_thread = ThreadWithExc(target=self._begin_grading, args=(problem_id, language, source_code))
+        self.current_submission_thread.daemon = True
         self.current_submission_thread.start()
 
     def terminate_grading(self):
@@ -190,74 +199,75 @@ class Judge(object):
 
     def _begin_grading(self, problem_id, language, source_code):
         try:
-            bad_files = []
             try:
+                bad_files = []
                 try:
-                    executor = getattr(executors, language)
-                    bad_files, arguments = executor.generate(self.paths, problem_id, source_code)
-                except executors.CompileError, compile_error:
-                    bad_files.append(compile_error.args[1])
-                    print "Compile Error"
-                    print compile_error.message
-                    self.packet_manager.compile_error_packet(compile_error.message)
-                    return
-            except AttributeError:
-                raise NotImplementedError("%s not implemented yet!" % language)
+                    try:
+                        executor = getattr(executors, language)
+                        bad_files, arguments = executor.generate(self.paths, problem_id, source_code)
+                    except executors.CompileError, compile_error:
+                        bad_files.append(compile_error.args[1])
+                        print "Compile Error"
+                        print compile_error.message
+                        self.packet_manager.compile_error_packet(compile_error.message)
+                        return
+                except AttributeError:
+                    raise NotImplementedError("%s not implemented yet!" % language)
     
-            try:
-                with open(os.path.join("data", "problems", problem_id, "init.json"), "r") as init_file:
-                    init_data = json.load(init_file)
-                    problem_type = init_data["type"]
-                    if problem_type == "standard":
-                        run = self.run_standard
-                        checker = checker_standard
-                        checker_args = ()
-                    elif problem_type == "floats":
-                        run = self.run_standard
-                        checker = checker_floats
-                        checker_args = (int(init_data["precision"]),)
-                    else:
-                        raise Exception("not implemented yet!")
-                    test_cases = init_data["test_cases"]
-                    forward_test_cases = [
-                        (BatchedTestCase(case["points"], ((subcase["in"], subcase["out"]) for subcase in case["data"])) if "data" in case else
-                         TestCase(case["in"], case["out"], case["points"])) for case in test_cases]
-                    case = 1
-                    for res in run(arguments, forward_test_cases, checker, checker_args,
-                                   archive=os.path.join("data", "problems", problem_id, init_data["archive"]),
-                                   time=int(init_data["time"]), memory=int(init_data["memory"]),
-                                   short_circuit=(init_data["short_circuit"] == "True")):
-                        print "Test case %s" % case
-                        print "\t%f seconds" % res.execution_time
-                        print "\t%.2f mb (%s kb)" % (res.max_memory / 1024.0, res.max_memory)
-                        execution_verdict = []
-                        if res.result_flag & Result.IR:
-                            execution_verdict.append("\tInvalid Return")
-                        if res.result_flag & Result.WA:
-                            execution_verdict.append("\tWrong Answer")
-                        if res.result_flag & Result.RTE:
-                            execution_verdict.append("\tRuntime Error")
-                        if res.result_flag & Result.TLE:
-                            execution_verdict.append("\tTime Limit Exceeded")
-                        if res.result_flag & Result.MLE:
-                            execution_verdict.append("\tMemory Limit Exceeded")
-                        if res.result_flag & Result.SC:
-                            execution_verdict.append("\tShort Circuited")
-                        if res.result_flag & Result.IE:
-                            execution_verdict.append("\tInternal Error")
-                        if res.result_flag == Result.AC:
-                            print "\tAccepted"
+                try:
+                    with open(os.path.join("data", "problems", problem_id, "init.json"), "r") as init_file:
+                        init_data = json.load(init_file)
+                        problem_type = init_data["type"]
+                        if problem_type == "standard":
+                            run = self.run_standard
+                            checker = checker_standard
+                            checker_args = ()
+                        elif problem_type == "floats":
+                            run = self.run_standard
+                            checker = checker_floats
+                            checker_args = (int(init_data["precision"]),)
                         else:
-                            print "\n".join(execution_verdict)
-                        case += 1
-            except IOError:
-                print "Internal Error: Test cases do not exist"
-                self.packet_manager.problem_not_exist_packet(problem_id)
+                            raise Exception("not implemented yet!")
+                        test_cases = init_data["test_cases"]
+                        forward_test_cases = [
+                            (BatchedTestCase(case["points"], ((subcase["in"], subcase["out"]) for subcase in case["data"])) if "data" in case else
+                             TestCase(case["in"], case["out"], case["points"])) for case in test_cases]
+                        case = 1
+                        for res in run(arguments, forward_test_cases, checker, checker_args,
+                                       archive=os.path.join("data", "problems", problem_id, init_data["archive"]),
+                                       time=int(init_data["time"]), memory=int(init_data["memory"]),
+                                       short_circuit=(init_data["short_circuit"] == "True")):
+                            print "Test case %s" % case
+                            print "\t%f seconds" % res.execution_time
+                            print "\t%.2f mb (%s kb)" % (res.max_memory / 1024.0, res.max_memory)
+                            execution_verdict = []
+                            if res.result_flag & Result.IR:
+                                execution_verdict.append("\tInvalid Return")
+                            if res.result_flag & Result.WA:
+                                execution_verdict.append("\tWrong Answer")
+                            if res.result_flag & Result.RTE:
+                                execution_verdict.append("\tRuntime Error")
+                            if res.result_flag & Result.TLE:
+                                execution_verdict.append("\tTime Limit Exceeded")
+                            if res.result_flag & Result.MLE:
+                                execution_verdict.append("\tMemory Limit Exceeded")
+                            if res.result_flag & Result.SC:
+                                execution_verdict.append("\tShort Circuited")
+                            if res.result_flag & Result.IE:
+                                execution_verdict.append("\tInternal Error")
+                            if res.result_flag == Result.AC:
+                                print "\tAccepted"
+                            else:
+                                print "\n".join(execution_verdict)
+                            case += 1
+                except IOError:
+                    print "Internal Error: Test cases do not exist"
+                    self.packet_manager.problem_not_exist_packet(problem_id)
             finally:
                 for bad_file in bad_files:
                     os.unlink(bad_file)
         except TerminateGrading:
-            print "Forcefully terminating grading. Resources may not be cleaned up."
+            print "Forcefully terminating grading. Temporary files may not be deleted."
         finally:
             self.current_submission_thread = None
 
@@ -607,9 +617,10 @@ for i in xrange(input()):
                 #judge.begin_grading("aplusb", "PY2", py2_source)
                 #judge.begin_grading("geometry1", "PY2", geom_py2_source)
                 #judge.begin_grading("aplusb_batch", "PY2", py2_source)
+                time.sleep(0.1)
                 judge.terminate_grading()
                 while judge.current_submission_thread is not None:
-                    print judge.current_submission_thread.isAlive()
+                    print "submission alive?", judge.current_submission_thread.isAlive()
                     time.sleep(0.1)
             except Exception:
                 traceback.print_exc()

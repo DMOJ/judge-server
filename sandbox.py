@@ -4,7 +4,6 @@ import time
 import resource
 import errno
 import ctypes
-from posix import *
 from signal import *
 
 libc = ctypes.CDLL('libc.so.6', use_errno=True)
@@ -18,6 +17,7 @@ PTRACE_SYSCALL = 24
 PTRACE_ATTACH = 8
 PTRACE_CONT = 7
 PTRACE_PEEKUSR = 3
+PTRACE_PEEKDATA = 2
 
 # x64 registers
 R15 = 0
@@ -99,60 +99,89 @@ def call_to_string(call):
             return v
     return "unknown"
 
+rdi = lambda: ctypes.c_long(ptrace(PTRACE_PEEKUSR, pid, 8 * RDI, None)).value
 
-allow = lambda: True
+__allow = lambda: True
 
 
-def do_write():
-    fd = ptrace(PTRACE_PEEKUSR, pid, 8 * RDI, None)
-    print fd
+def __do_write():
+    fd = rdi()
     # Only allow writing to stdout & stderr
+    print fd,
     return fd == 1 or fd == 2
 
 __execve_count = 0
-def do_execve():
+def __do_execve():
     global __execve_count
     __execve_count += 1
     if __execve_count > 2:
         return False
     return True
 
+def __open():
+    try:
+        addr = rdi()
+
+        print "(%d)" % addr,
+        if addr > 0:
+            mem = open("/proc/%d/mem" % pid, "rb")
+            mem.seek(addr, 0)
+            buf = ''
+            page = (addr + 4096) // 4096 * 4096 - addr
+            while True:
+                buf += mem.read(page)
+                if '\0' in buf:
+                    buf = buf[:buf.index('\0')]
+                    break
+                page = 4096
+            print buf,
+            for file in ["/usr/bin/python"]:
+                if buf.startswith(file):
+                    break
+            else:
+                return True
+
+    except:
+        import traceback
+        traceback.print_exc()
+    return True
+
 # @formatter:off
 proxied_syscalls = {
-    sys_execve:             do_execve,
-    sys_read:               allow,
-    sys_write:              do_write,
-    sys_open:               allow,
-    sys_access:             allow,
-    sys_close:              allow,
-    sys_stat:               allow,
-    sys_fstat:              allow,
-    sys_mmap:               allow,
-    sys_mprotect:           allow,
-    sys_munmap:             allow,
-    sys_brk:                allow,
-    sys_fcntl:              allow,
-    sys_arch_prctl:         allow,  # TODO: is this safe?
-    sys_set_tid_address:    allow,
-    sys_set_robust_list:    allow,
-    sys_futex:              allow,
-    sys_rt_sigaction:       allow,
-    sys_rt_sigprocmask:     allow,
-    sys_getrlimit:          allow,
-    sys_ioctl:              allow,
-    sys_readlink:           allow,
-    sys_getcwd:             allow,
-    sys_geteuid:            allow,
-    sys_getuid:             allow,
-    sys_getegid:            allow,
-    sys_getgid:             allow,
-    sys_lstat:              allow,
-    sys_openat:             allow,
-    sys_getdents:           allow,
-    sys_lseek:              allow,
+    sys_execve:             __do_execve,
+    sys_read:               __allow,
+    sys_write:              __do_write,
+    sys_open:               __open,
+    sys_access:             __open,
+    sys_close:              __allow,
+    sys_stat:               __allow,
+    sys_fstat:              __allow,
+    sys_mmap:               __allow,
+    sys_mprotect:           __allow,
+    sys_munmap:             __allow,
+    sys_brk:                __allow,
+    sys_fcntl:              __allow,
+    sys_arch_prctl:         __allow,  # TODO: is this safe?
+    sys_set_tid_address:    __allow,
+    sys_set_robust_list:    __allow,
+    sys_futex:              __allow,
+    sys_rt_sigaction:       __allow,
+    sys_rt_sigprocmask:     __allow,
+    sys_getrlimit:          __allow,
+    sys_ioctl:              __allow,
+    sys_readlink:           __allow,
+    sys_getcwd:             __allow,
+    sys_geteuid:            __allow,
+    sys_getuid:             __allow,
+    sys_getegid:            __allow,
+    sys_getgid:             __allow,
+    sys_lstat:              __allow,
+    sys_openat:             __allow,
+    sys_getdents:           __allow,
+    sys_lseek:              __allow,
 
-    sys_clone:              allow,
-    sys_fork:               allow
+    sys_clone:              __allow,
+    #sys_fork:               __allow
 }
 # @formatter:on
 
@@ -175,25 +204,29 @@ else:
     while True:
         __, status, rusage = os.wait4(pid, 0)
 
-        if WIFEXITED(status):
+        if os.WIFEXITED(status):
             print "Exited"
             break
 
-        if WIFSIGNALED(status):
+        if os.WIFSIGNALED(status):
             break
 
-        if WSTOPSIG(status) == SIGTRAP:
+        if os.WSTOPSIG(status) == SIGTRAP:
             if in_syscall:
                 call = ptrace(PTRACE_PEEKUSR, pid, 8 * ORIG_RAX, None)
 
-                print call_to_string(call)
+                print call_to_string(call),
 
                 if call in proxied_syscalls:
                     if not proxied_syscalls[call]():
                         os.kill(pid, SIGKILL)
+                        print
                         print "You're doing Something Bad"
+                        break
                 else:
+                    print
                     raise Exception(call)
+                print
             in_syscall = not in_syscall
 
         ptrace(PTRACE_SYSCALL, pid, None, None)
@@ -203,7 +236,7 @@ else:
         os.kill(pid, SIGKILL)
         _, status, rusage = os.wait4(pid, 0)
         print 'Time Limit Exceeded'
-    print rusage.ru_maxrss, 'KB of RAM'
+    print rusage.ru_maxrss + rusage.ru_isrss, 'KB of RAM'
     print 'Execution time: %.3f seconds' % duration
     print 'Return:', os.WEXITSTATUS(status)
 

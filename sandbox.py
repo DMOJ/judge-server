@@ -31,8 +31,10 @@ if __name__ == "__main__":
 
     def do_open():
         try:
-            addr = arg0(pid)
-
+            mode = ctypes.c_size_t(arg2(pid)).value
+            if mode:
+                print mode,
+            addr = ctypes.c_uint(arg0(pid)).value
             print "(%d)" % addr,
             if addr > 0:
                 mem = open("/proc/%d/mem" % pid, "rb")
@@ -93,6 +95,7 @@ if __name__ == "__main__":
         sys_lseek:              do_allow,
 
         sys_clone:              do_allow,
+        sys_exit_group:         do_allow,
         #sys_fork:               __allow
     }
     # @formatter:on

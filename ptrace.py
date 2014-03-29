@@ -1,6 +1,6 @@
 import ctypes
 
-read_reg = lambda pid, reg: ctypes.c_long(ptrace(PTRACE_PEEKUSR, pid, 8 * reg, None)).value
+read_reg = lambda pid, reg: ptrace(PTRACE_PEEKUSR, pid, 8 * reg, None)
 arg0 = lambda pid: read_reg(pid, RDI)
 arg1 = lambda pid: read_reg(pid, RSI)
 arg2 = lambda pid: read_reg(pid, RDX)

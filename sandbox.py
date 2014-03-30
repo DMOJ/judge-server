@@ -8,6 +8,7 @@ from signal import *
 from ptrace import *
 
 if __name__ == "__main__":
+    proc_mem = None
     do_allow = lambda: True
 
 
@@ -20,7 +21,6 @@ if __name__ == "__main__":
 
     execve_count = 0
 
-
     def do_execve():
         global execve_count
         execve_count += 1
@@ -28,21 +28,19 @@ if __name__ == "__main__":
             return False
         return True
 
-
-    def do_open():
+    def do_access():
+        global proc_mem
         try:
-            mode = ctypes.c_size_t(arg2(pid)).value
-            if mode:
-                print mode,
             addr = ctypes.c_uint(arg0(pid)).value
             print "(%d)" % addr,
             if addr > 0:
-                mem = open("/proc/%d/mem" % pid, "rb")
-                mem.seek(addr, 0)
+                if not proc_mem:
+                    proc_mem = open("/proc/%d/mem" % pid, "rb")
+                proc_mem.seek(addr, 0)
                 buf = ''
                 page = (addr + 4096) // 4096 * 4096 - addr
                 while True:
-                    buf += mem.read(page)
+                    buf += proc_mem.read(page)
                     if '\0' in buf:
                         buf = buf[:buf.index('\0')]
                         break
@@ -60,13 +58,20 @@ if __name__ == "__main__":
             traceback.print_exc()
         return True
 
+    def do_open():
+        mode = ctypes.c_size_t(arg2(pid)).value
+        if mode:
+            print mode,
+            # TODO: return False
+        return do_access()
+
     # @formatter:off
     proxied_syscalls = {
         sys_execve:             do_execve,
         sys_read:               do_allow,
         sys_write:              do_write,
         sys_open:               do_open,
-        sys_access:             do_open,
+        sys_access:             do_access,
         sys_close:              do_allow,
         sys_stat:               do_allow,
         sys_fstat:              do_allow,
@@ -96,7 +101,6 @@ if __name__ == "__main__":
 
         sys_clone:              do_allow,
         sys_exit_group:         do_allow,
-        #sys_fork:               __allow
     }
     # @formatter:on
 
@@ -106,6 +110,7 @@ if __name__ == "__main__":
     rusage = None
     status = None
 
+    mem = None
     pid = os.fork()
     if not pid:
         resource.setrlimit(resource.RLIMIT_AS, (32 * 1024 * 1024,) * 2)

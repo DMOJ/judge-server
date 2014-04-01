@@ -6,13 +6,13 @@ def generate(env, class_name, source_code):
     with open(source_code_file, "wb") as fo:
         fo.write(source_code)
     output_file = class_name + ".class"
-    javac_args = [env['javac'], source_code_file]
+    javac_args = [env["javac"], source_code_file]
     javac_process = subprocess.Popen(javac_args, stderr=subprocess.PIPE)
     _, compile_error = javac_process.communicate()
     if javac_process.returncode != 0:
         raise CompileError(compile_error, source_code_file)
-    return [source_code_file, output_file], \
-           [env['java'],
-            "-Djava.security.manager",
-            # "-Xmx" TODO
-            "-cp", ".", class_name]
+    return [source_code_file, output_file]
+
+def launch(env, execute, generated_files, *args, **kwargs):
+    # "-Xmx" TODO
+    return execute([env["java"], "-Djava.security.manager", "-cp", ".", generated_files[0][:generated_files[0].rfind(".java")]] + list(args), kwargs.get("time"), kwargs.get("memory"))

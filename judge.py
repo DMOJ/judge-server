@@ -200,13 +200,13 @@ class Judge(object):
     def _begin_grading(self, problem_id, language, source_code):
         try:
             try:
-                bad_files = []
+                generated_files = []
                 try:
                     try:
                         executor = getattr(executors, language)
-                        bad_files, arguments = executor.generate(self.paths, problem_id, source_code)
+                        generated_files = executor.generate(self.paths, problem_id, source_code)
                     except executors.CompileError, compile_error:
-                        bad_files.append(compile_error.args[1])
+                        generated_files.append(compile_error.args[1])
                         print "Compile Error"
                         print compile_error.message
                         self.packet_manager.compile_error_packet(compile_error.message)
@@ -233,7 +233,7 @@ class Judge(object):
                             (BatchedTestCase(case["points"], ((subcase["in"], subcase["out"]) for subcase in case["data"])) if "data" in case else
                              TestCase(case["in"], case["out"], case["points"])) for case in test_cases]
                         case = 1
-                        for res in run(arguments, forward_test_cases, checker, checker_args,
+                        for res in run(executor, generated_files, forward_test_cases, checker, checker_args,
                                        archive=os.path.join("data", "problems", problem_id, init_data["archive"]),
                                        time=int(init_data["time"]), memory=int(init_data["memory"]),
                                        short_circuit=(init_data["short_circuit"] == "True")):
@@ -264,7 +264,7 @@ class Judge(object):
                     print "Internal Error: Test cases do not exist"
                     self.packet_manager.problem_not_exist_packet(problem_id)
             finally:
-                for bad_file in bad_files:
+                for bad_file in generated_files:
                     os.unlink(bad_file)
         except TerminateGrading:
             print "Forcefully terminating grading. Temporary files may not be deleted."
@@ -274,7 +274,7 @@ class Judge(object):
     def listen(self):
         self.packet_manager.run()
 
-    def run_standard(self, arguments, test_cases, checker, checker_args, *args, **kwargs):
+    def run_standard(self, executor, generated_files, test_cases, checker, checker_args, *args, **kwargs):
         if "archive" in kwargs:
             archive = zipreader.ZipReader(kwargs["archive"])
             openfile = archive.files.__getitem__
@@ -288,8 +288,7 @@ class Judge(object):
             if type(test_case) == BatchedTestCase:
                 self.packet_manager.begin_batch_packet()
             for input_file, output_file, point_value in test_case:
-                with ProgramJudge(arguments, *args,
-                                  partial_output_limit=(2147483647 if self.debug_mode else 10)) as judge:
+                with ProgramJudge(*args, partial_output_limit=(2147483647 if self.debug_mode else 10)) as judge:
                     result = Result()
                     if short_circuited:
                         result.result_flag = Result.SC
@@ -297,8 +296,8 @@ class Judge(object):
                         result.max_memory = 0
                         result.partial_output = ""
                     else:
-                        judge.run_standard(result, openfile(input_file), openfile(output_file),
-                                           kwargs.get("time", 2), kwargs.get("memory", 65536),
+                        process = executor.launch(self.paths, execute.execute, generated_files, time=kwargs.get("time", 2), memory=kwargs.get("memory", 65536))
+                        judge.run_standard(process, result, openfile(input_file), openfile(output_file),
                                            checker, checker_args)
                     self.packet_manager.test_case_status_packet(case_number,
                                                                 point_value if not short_circuited and result.result_flag == Result.AC else 0,
@@ -352,14 +351,13 @@ class LocalJudge(Judge):
 class ProgramJudge(object):
     EOF = None
 
-    def __init__(self, process_name, redirect=False, transfer=False, interact=False, partial_output_limit=10):
+    def __init__(self, redirect=False, transfer=False, interact=False, partial_output_limit=10):
         self.result = None
         self.process = None
         self.write_lock = threading.Lock()
         self.write_queue = queue.Queue()
         self.stopped = False
         self.exitcode = None
-        self.process_name = process_name
         self.redirect = redirect
         self.transfer = transfer
         self.interact = interact
@@ -415,15 +413,10 @@ class ProgramJudge(object):
             line = self.process.stdout.readline().rstrip()
         return line.rstrip() if line else ""
 
-    def run_standard(self, result, input_file, output_file, time_limit, memory_limit, checker, checker_args):
+    def run_standard(self, process, result, input_file, output_file, checker, checker_args):
+        self.process = process
         self.result = result
         result_flag = Result.AC
-        try:
-            self.process = execute.execute(self.process_name, time_limit, memory_limit)
-        except TerminateGrading:
-            raise
-        except:
-            traceback.print_exc()
         write_thread = threading.Thread(target=self.write_async, args=(self.write_lock,))
         write_thread.daemon = True
         write_thread.start()
@@ -610,11 +603,13 @@ for i in xrange(input()):
         judge.listen()
     else:
         with LocalJudge(debug=args.debug) as judge:
+            class Nothing(Exception):
+                pass
             try:
-                judge.begin_grading("aplusb", "CPP", cpp_source)
+                #judge.begin_grading("aplusb", "CPP", cpp_source)
                 #judge.begin_grading("aplusb", "CPP11", cpp11_source)
                 #judge.begin_grading("aplusb", "JAVA", java_source)
-                #judge.begin_grading("aplusb", "PY2", py2_source)
+                judge.begin_grading("aplusb", "PY2", py2_source)
                 #judge.begin_grading("geometry1", "PY2", geom_py2_source)
                 #judge.begin_grading("aplusb_batch", "PY2", py2_source)
                 time.sleep(0.1)
@@ -622,6 +617,8 @@ for i in xrange(input()):
                 while judge.current_submission_thread is not None:
                     print "submission alive?", judge.current_submission_thread.isAlive()
                     time.sleep(0.1)
+            except Nothing:
+                pass
             except Exception:
                 traceback.print_exc()
         print "Done"

@@ -4,7 +4,7 @@ class CompileError(Exception):
 import CPP
 import CPP11
 import JAVA
-import PERL
-import PHP
+import __PERL
+import __PHP
 import PY2
 import RUBY

@@ -14,7 +14,7 @@ try:
 except ImportError:
     import Queue as queue
 
-import execute  # @UnresolvedImport
+from ptbox import sandbox  # @UnresolvedImport
 
 import executors  # @UnresolvedImport
 
@@ -296,7 +296,7 @@ class Judge(object):
                         result.max_memory = 0
                         result.partial_output = ""
                     else:
-                        process = executor.launch(self.paths, execute.execute, generated_files, time=kwargs.get("time", 2), memory=kwargs.get("memory", 65536))
+                        process = executor.launch(self.paths, sandbox.execute, generated_files, time=kwargs.get("time", 2), memory=kwargs.get("memory", 65536))
                         judge.run_standard(process, result, openfile(input_file), openfile(output_file),
                                            checker, checker_args)
                     self.packet_manager.test_case_status_packet(case_number,
@@ -427,19 +427,19 @@ class ProgramJudge(object):
         process_output = self.read()
         self.result.partial_output = process_output[:self.partial_output_limit]
         #print process_output
-        self.result.max_memory = self.process.get_max_memory()
-        self.result.execution_time = self.process.get_execution_time()
+        self.process.wait()
+        self.result.max_memory = self.process.max_memory
+        self.result.execution_time = self.process.execution_time
         judge_output = output_file.read()
         if not checker(process_output, judge_output, *checker_args):
             result_flag |= Result.WA
-        self.process.poll()
         if self.process.returncode:
             result_flag |= Result.IR
-        if self.process.get_rte():
+        if 0: # TODO
             result_flag |= Result.RTE
-        if self.process.get_tle():
+        if self.process.tle:
             result_flag |= Result.TLE
-        if self.process.get_mle():
+        if self.process.mle:
             result_flag |= Result.MLE
         self.close(result_flag=result_flag)
 

@@ -1,6 +1,35 @@
-import ctypes
+from ptbox._ptrace import *
 
-read_reg = lambda pid, reg: ptrace(PTRACE_PEEKUSR, pid, 8 * reg, None)
+# x64 registers
+R15 = 0
+R14 = 1
+R13 = 2
+R12 = 3
+RBP = 4
+RBX = 5
+R11 = 6
+R10 = 7
+R9 = 8
+R8 = 9
+RAX = 10
+RCX = 11
+RDX = 12
+RSI = 13
+RDI = 14
+ORIG_RAX = 15
+RIP = 16
+CS = 17
+EFLAGS = 18
+RSP = 19
+SS = 20
+FS_BASE = 21
+GS_BASE = 22
+DS = 23
+ES = 24
+FS = 25
+GS = 26
+
+read_reg = lambda pid, reg: ctype_primitive_wrapper(ptrace(PTRACE_PEEKUSR, pid, 8 * reg, None))
 arg0 = lambda pid: read_reg(pid, RDI)
 arg1 = lambda pid: read_reg(pid, RSI)
 arg2 = lambda pid: read_reg(pid, RDX)
@@ -325,56 +354,3 @@ syscalls = {
     'sys_process_vm_readv': 310,
     'sys_process_vm_writev': 311,
 }
-
-# Define all syscalls as variables
-for call, id in syscalls.iteritems():
-    vars()[call] = id
-
-
-def syscall_to_string(call):
-    for v, val in syscalls.iteritems():
-        if val == call:
-            return v
-    return "unknown"
-
-
-libc = ctypes.CDLL('libc.so.6', use_errno=True)
-ptrace = libc.ptrace
-
-# ptrace constants
-PTRACE_TRACEME = 0
-PTRACE_PEEKDATA = 2
-PTRACE_GETREGS = 12
-PTRACE_SYSCALL = 24
-PTRACE_ATTACH = 8
-PTRACE_CONT = 7
-PTRACE_PEEKUSR = 3
-
-# x64 registers
-R15 = 0
-R14 = 1
-R13 = 2
-R12 = 3
-RBP = 4
-RBX = 5
-R11 = 6
-R10 = 7
-R9 = 8
-R8 = 9
-RAX = 10
-RCX = 11
-RDX = 12
-RSI = 13
-RDI = 14
-ORIG_RAX = 15
-RIP = 16
-CS = 17
-EFLAGS = 18
-RSP = 19
-SS = 20
-FS_BASE = 21
-GS_BASE = 22
-DS = 23
-ES = 24
-FS = 25
-GS = 26

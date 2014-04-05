@@ -1,5 +1,9 @@
 import subprocess
 from __init__ import CompileError
+from ptbox.chroot import CHROOTProcessDebugger
+
+JAVA_FS = ["/usr/bin/java", ".\.[so|jar]"]
+
 
 def generate(env, class_name, source_code):
     source_code_file = class_name + ".java"
@@ -13,6 +17,10 @@ def generate(env, class_name, source_code):
         raise CompileError(compile_error, source_code_file)
     return [source_code_file, output_file]
 
+
 def launch(env, execute, generated_files, *args, **kwargs):
     # "-Xmx" TODO
-    return execute([env["java"], "-Djava.security.manager", "-cp", ".", generated_files[0][:generated_files[0].rfind(".java")]] + list(args), kwargs.get("time"), kwargs.get("memory"))
+    return execute([env["java"], "-Djava.security.manager", "-cp", ".",
+                    generated_files[0][:generated_files[0].rfind(".java")]] + list(args),
+                   debugger=CHROOTProcessDebugger(filesystem=JAVA_FS),
+                   time=kwargs.get("time"), memory=kwargs.get("memory"))

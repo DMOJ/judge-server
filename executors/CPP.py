@@ -1,6 +1,9 @@
 import subprocess
 import sys
 from __init__ import CompileError
+from ptbox.chroot import CHROOTProcessDebugger
+
+C_FS = [".\.[so]"]
 
 def generate(env, name, source_code):
     source_code_file = str(name) + ".cpp"
@@ -21,4 +24,4 @@ def generate(env, name, source_code):
     return [source_code_file, output_file]
 
 def launch(env, execute, generated_files, *args, **kwargs):
-    return execute(["./" + generated_files[1]] + list(args), kwargs.get("time"), kwargs.get("memory"))
+    return execute(["./" + generated_files[1]] + list(args), CHROOTProcessDebugger(filesystem=C_FS), kwargs.get("time"), kwargs.get("memory"))

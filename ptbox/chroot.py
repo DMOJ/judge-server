@@ -9,6 +9,10 @@ class CHROOTProcessDebugger(ProcessDebugger):
         super(CHROOTProcessDebugger, self).__init__()
         self.fs_jail = [re.compile(mask) for mask in (filesystem if filesystem else ['.*'])]
         self.execve_count = 0
+        self.__proc_mem = None
+
+    def __del__(self):
+        os.close(self.__proc_mem)
 
     def get_handlers(self):
         do_allow = self.do_allow
@@ -76,24 +80,23 @@ class CHROOTProcessDebugger(ProcessDebugger):
             if addr > 0:
                 #proc_mem = open("/proc/%d/mem" % pid, "rb")
                 #proc_mem.seek(addr, 0)
-                proc_mem = os.open('/proc/%d/mem' % self.pid, os.O_RDONLY)
-                os.lseek(proc_mem, addr, os.SEEK_SET)
+                if self.__proc_mem is None:
+                    self.__proc_mem = os.open('/proc/%d/mem' % self.pid, os.O_RDONLY)
+                os.lseek(self.__proc_mem, addr, os.SEEK_SET)
                 buf = ''
                 page = (addr + 4096) // 4096 * 4096 - addr
                 while True:
                     #buf += proc_mem.read(page)
-                    buf += os.read(proc_mem, page)
+                    buf += os.read(self.__proc_mem, page)
                     if '\0' in buf:
                         buf = buf[:buf.index('\0')]
                         break
                     page = 4096
-                os.close(proc_mem)
                 for mask in self.fs_jail:
                     if mask.match(buf):
                         break
                 else:
                     return False
-
         except:
             pass
         return True

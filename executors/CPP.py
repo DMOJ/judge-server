@@ -3,7 +3,7 @@ import sys
 from __init__ import CompileError
 from ptbox.chroot import CHROOTProcessDebugger
 
-C_FS = [".\.[so]"]
+C_FS = [".*\.[so]"]
 
 def generate(env, name, source_code):
     source_code_file = str(name) + ".cpp"

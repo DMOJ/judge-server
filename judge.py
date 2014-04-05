@@ -426,7 +426,7 @@ class ProgramJudge(object):
         self.write(ProgramJudge.EOF)
         process_output = self.read()
         self.result.partial_output = process_output[:self.partial_output_limit]
-        #print process_output
+        print process_output
         self.process.wait()
         self.result.max_memory = self.process.max_memory
         self.result.execution_time = self.process.execution_time
@@ -608,8 +608,8 @@ for i in xrange(input()):
             try:
                 #judge.begin_grading("aplusb", "CPP", cpp_source)
                 #judge.begin_grading("aplusb", "CPP11", cpp11_source)
-                #judge.begin_grading("aplusb", "JAVA", java_source)
-                judge.begin_grading("aplusb", "PY2", py2_source)
+                judge.begin_grading("aplusb", "JAVA", java_source)
+                #judge.begin_grading("aplusb", "PY2", py2_source)
                 #judge.begin_grading("geometry1", "PY2", geom_py2_source)
                 #judge.begin_grading("aplusb_batch", "PY2", py2_source)
                 time.sleep(0.1)

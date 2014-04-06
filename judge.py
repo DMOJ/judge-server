@@ -633,7 +633,7 @@ for i in xrange(input()):
                 judge.begin_grading("helloworld", "PY2", 'print "Hello, World!"')
                 #judge.begin_grading("geometry1", "PY2", geom_py2_source)
                 #judge.begin_grading("aplusb", "PY2", py2_source)
-                #judge.current_submission_thread.join()
+                judge.current_submission_thread.join()
                 # time.sleep(0.1)
                 # #judge.terminate_grading()
                 # while judge.current_submission_thread is not None:

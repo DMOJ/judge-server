@@ -9,7 +9,10 @@ class CHROOTProcessDebugger(ProcessDebugger):
         super(CHROOTProcessDebugger, self).__init__()
         self.fs_jail = re.compile('|'.join(filesystem) if filesystem else ".*")
         self.execve_count = 0
-        self.proc_mem = None
+        self.__proc_mem = None
+
+    def __del__(self):
+        os.close(self.__proc_mem)
 
     def get_handlers(self):
         do_allow = self.do_allow
@@ -72,28 +75,27 @@ class CHROOTProcessDebugger(ProcessDebugger):
         return True
 
     def __do_access(self):
-        addr = self.arg0().as_uint64
-        if addr > 0:
-            #proc_mem = open("/proc/%d/mem" % pid, "rb")
-            #proc_mem.seek(addr, 0)
-            if not self.proc_mem:
-                self.proc_mem = os.open('/proc/%d/mem' % self.pid, os.O_RDONLY)
-            proc_mem = self.proc_mem
-            buf = ''
-            page = (addr + 4096) // 4096 * 4096 - addr
-            try:
-                os.lseek(proc_mem, addr, os.SEEK_SET)
+        try:
+            addr = self.arg0().as_uint64
+            if addr > 0:
+                #proc_mem = open("/proc/%d/mem" % pid, "rb")
+                #proc_mem.seek(addr, 0)
+                if self.__proc_mem is None:
+                    self.__proc_mem = os.open('/proc/%d/mem' % self.pid, os.O_RDONLY)
+                os.lseek(self.__proc_mem, addr, os.SEEK_SET)
+                buf = ''
+                page = (addr + 4096) // 4096 * 4096 - addr
                 while True:
                     #buf += proc_mem.read(page)
-                    buf += os.read(proc_mem, page)
+                    buf += os.read(self.__proc_mem, page)
                     if '\0' in buf:
                         buf = buf[:buf.index('\0')]
                         break
                     page = 4096
-            except:
-                return True
-            #print buf
-            return self.fs_jail.match(buf)
+        except:
+            return True
+        #print buf
+        return self.fs_jail.match(buf)
         return True
 
     @unsafe_syscall

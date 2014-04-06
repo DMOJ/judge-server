@@ -122,7 +122,7 @@ class SecurePopen(object):
 
         gc_enabled = gc.isenabled()
         try:
-            #gc.disable()
+            gc.disable()
             pid = os.fork()
         except:
             if gc_enabled:

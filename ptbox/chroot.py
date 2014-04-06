@@ -7,8 +7,9 @@ from syscalls import *
 class CHROOTProcessDebugger(ProcessDebugger):
     def __init__(self, filesystem=None):
         super(CHROOTProcessDebugger, self).__init__()
-        self.fs_jail = [re.compile(mask) for mask in (filesystem if filesystem else ['.*'])]
+        self.fs_jail = re.compile('|'.join(filesystem) if filesystem else ".*")
         self.execve_count = 0
+        self.proc_mem = None
 
     def get_handlers(self):
         do_allow = self.do_allow
@@ -47,6 +48,7 @@ class CHROOTProcessDebugger(ProcessDebugger):
             sys_getrusage: do_allow,
             sys_sigaltstack: do_allow,
             sys_pipe: do_allow,
+            sys_clock_gettime: do_allow,
 
             sys_clone: do_allow,
             sys_exit_group: do_allow,
@@ -62,7 +64,6 @@ class CHROOTProcessDebugger(ProcessDebugger):
         # Only allow writing to stdout & stderr
         return fd == 1 or fd == 2
 
-
     @unsafe_syscall
     def do_execve(self):
         self.execve_count += 1
@@ -71,15 +72,17 @@ class CHROOTProcessDebugger(ProcessDebugger):
         return True
 
     def __do_access(self):
-        try:
-            addr = self.arg0().as_uint64
-            if addr > 0:
-                #proc_mem = open("/proc/%d/mem" % pid, "rb")
-                #proc_mem.seek(addr, 0)
-                proc_mem = os.open('/proc/%d/mem' % self.pid, os.O_RDONLY)
+        addr = self.arg0().as_uint64
+        if addr > 0:
+            #proc_mem = open("/proc/%d/mem" % pid, "rb")
+            #proc_mem.seek(addr, 0)
+            if not self.proc_mem:
+                self.proc_mem = os.open('/proc/%d/mem' % self.pid, os.O_RDONLY)
+            proc_mem = self.proc_mem
+            buf = ''
+            page = (addr + 4096) // 4096 * 4096 - addr
+            try:
                 os.lseek(proc_mem, addr, os.SEEK_SET)
-                buf = ''
-                page = (addr + 4096) // 4096 * 4096 - addr
                 while True:
                     #buf += proc_mem.read(page)
                     buf += os.read(proc_mem, page)
@@ -87,15 +90,10 @@ class CHROOTProcessDebugger(ProcessDebugger):
                         buf = buf[:buf.index('\0')]
                         break
                     page = 4096
-                os.close(proc_mem)
-                for mask in self.fs_jail:
-                    if mask.match(buf):
-                        break
-                else:
-                    return False
-
-        except:
-            pass
+            except:
+                return True
+            #print buf
+            return self.fs_jail.match(buf)
         return True
 
     @unsafe_syscall

@@ -1,5 +1,5 @@
+from functools import wraps
 import os
-import re
 from signal import *
 from _ptrace import *
 
@@ -26,6 +26,7 @@ class ProcessDebugger(object):
 
 
 def syscall(func):
+    @wraps(func)
     def delegate(self, *args, **kwargs):
         pid = self.pid
         if func(self, *args, **kwargs):
@@ -33,7 +34,6 @@ def syscall(func):
             return True
         return False
 
-    delegate.__syscall = True
     return delegate
 
 
@@ -46,6 +46,7 @@ def unsafe_syscall(func):
         Hence, here we stop all child tasks (SIGSTOP), execute the syscall, then resume all tasks (SIGCONT).
     """
 
+    @wraps(func)
     def halter(self, *args, **kwargs):
         pid = self.pid
         tasks = map(int, os.listdir("/proc/%d/task" % pid))
@@ -61,5 +62,4 @@ def unsafe_syscall(func):
                 os.kill(task, SIGCONT)
         return ret
 
-    halter.__syscall = True
     return halter

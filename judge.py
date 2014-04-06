@@ -62,7 +62,7 @@ class BatchedTestCase(TestCase):
         self.point_value = point_value
         self.io_files = list(io_files)
         self.current_case = 0
-    
+
     def __iter__(self):
         return self
 
@@ -79,7 +79,7 @@ def _async_raise(tid, exctype):
     if not inspect.isclass(exctype):
         raise TypeError("Only types can be raised (not instances)")
     res = ctypes.pythonapi.PyThreadState_SetAsyncExc(tid,
-                                                  ctypes.py_object(exctype))
+                                                     ctypes.py_object(exctype))
     if res == 0:
         raise ValueError("invalid thread id")
     elif res != 1:
@@ -88,10 +88,12 @@ def _async_raise(tid, exctype):
         ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, 0)
         raise SystemError("PyThreadState_SetAsyncExc failed")
 
+
 class ThreadWithExc(threading.Thread):
     '''A thread class that supports raising exception in the thread from
        another thread.
     '''
+
     def _get_my_tid(self):
         """determines this (self's) thread id
 
@@ -139,7 +141,7 @@ class ThreadWithExc(threading.Thread):
         caller thread, to raise an exception in the context of the
         thread represented by this instance.
         """
-        _async_raise( self._get_my_tid(), exctype )
+        _async_raise(self._get_my_tid(), exctype)
 
 
 class TerminateGrading(Exception):
@@ -180,9 +182,11 @@ class Judge(object):
                     break
 
     def begin_grading(self, problem_id, language, source_code):
+        print "Grading %s in %s..." % (problem_id, language)
         if self.current_submission_thread is not None:
             self.terminate_grading()
-        self.current_submission_thread = ThreadWithExc(target=self._begin_grading, args=(problem_id, language, source_code))
+        self.current_submission_thread = ThreadWithExc(target=self._begin_grading,
+                                                       args=(problem_id, language, source_code))
         self.current_submission_thread.daemon = True
         self.current_submission_thread.start()
 
@@ -190,7 +194,7 @@ class Judge(object):
         if self.current_submission_thread is not None:
             try:
                 while self.current_submission_thread is not None and self.current_submission_thread.isAlive():
-                    self.current_submission_thread.raiseExc(TerminateGrading)
+                    self.current_submission_thread.join()
                     time.sleep(0.1)
             except threading.ThreadError:
                 print "Successfully terminated grading."
@@ -213,7 +217,7 @@ class Judge(object):
                         return
                 except AttributeError:
                     raise NotImplementedError("%s not implemented yet!" % language)
-    
+
                 try:
                     with open(os.path.join("data", "problems", problem_id, "init.json"), "r") as init_file:
                         init_data = json.load(init_file)
@@ -230,7 +234,8 @@ class Judge(object):
                             raise Exception("not implemented yet!")
                         test_cases = init_data["test_cases"]
                         forward_test_cases = [
-                            (BatchedTestCase(case["points"], ((subcase["in"], subcase["out"]) for subcase in case["data"])) if "data" in case else
+                            (BatchedTestCase(case["points"], ((subcase["in"], subcase["out"]) for subcase in
+                                                              case["data"])) if "data" in case else
                              TestCase(case["in"], case["out"], case["points"])) for case in test_cases]
                         case = 1
                         for res in run(executor, generated_files, forward_test_cases, checker, checker_args,
@@ -296,7 +301,8 @@ class Judge(object):
                         result.max_memory = 0
                         result.partial_output = ""
                     else:
-                        process = executor.launch(self.paths, sandbox.execute, generated_files, time=kwargs.get("time", 2), memory=kwargs.get("memory", 65536))
+                        process = executor.launch(self.paths, sandbox.execute, generated_files,
+                                                  time=kwargs.get("time", 2), memory=kwargs.get("memory", 65536))
                         judge.run_standard(process, result, openfile(input_file), openfile(output_file),
                                            checker, checker_args)
                     self.packet_manager.test_case_status_packet(case_number,
@@ -423,19 +429,21 @@ class ProgramJudge(object):
         if self.transfer:
             self.write(sys.stdin.read())
         self.write(input_file.read())
+        input_file.close()
         self.write(ProgramJudge.EOF)
         process_output = self.read()
         self.result.partial_output = process_output[:self.partial_output_limit]
-        print process_output
+
         self.process.wait()
         self.result.max_memory = self.process.max_memory
         self.result.execution_time = self.process.execution_time
         judge_output = output_file.read()
+        output_file.close()
         if not checker(process_output, judge_output, *checker_args):
             result_flag |= Result.WA
         if self.process.returncode:
             result_flag |= Result.IR
-        if 0: # TODO
+        if 0:  # TODO
             result_flag |= Result.RTE
         if self.process.tle:
             result_flag |= Result.TLE
@@ -576,10 +584,19 @@ public class aplusb
 }
 '''
 
+    rb_source = r'''
+n = Integer(gets)
+n.times {
+    l = gets.split
+    puts Integer(l[0]) + Integer(l[1])
+}
+'''
+
     py2_source = r'''
 n = input()
 for i in xrange(n):
     print sum(map(int, raw_input().split()))
+open('aaa', 'w')
 '''
 
     geom_py2_source = r'''
@@ -598,30 +615,34 @@ for i in xrange(input()):
     print "%.2f %.2f"%(area(X, Y, Z), perim(X, Y, Z))
 '''
 
+    #import yappi
+
+    #yappi.start()
+
     if args.server_host:
         judge = Judge(args.server_host, args.server_port, debug=args.debug)
         judge.listen()
     else:
         with LocalJudge(debug=args.debug) as judge:
-            class Nothing(Exception):
-                pass
             try:
                 #judge.begin_grading("aplusb", "CPP", cpp_source)
-                #judge.begin_grading("aplusb", "CPP11", cpp11_source)
-                judge.begin_grading("aplusb", "JAVA", java_source)
-                #judge.begin_grading("aplusb", "PY2", py2_source)
+                #judge.begin_grading("aplusb", "RUBY", rb_source)
+                while True:
+                    judge.begin_grading("aplusb", "CPP11", cpp11_source)
+                #judge.begin_grading("aplusb", "JAVA", java_source)
+                #judge.begin_grading("helloworld", "PY2", 'print "Hello, World!"')
                 #judge.begin_grading("geometry1", "PY2", geom_py2_source)
-                #judge.begin_grading("aplusb_batch", "PY2", py2_source)
-                time.sleep(0.1)
-                judge.terminate_grading()
-                while judge.current_submission_thread is not None:
-                    print "submission alive?", judge.current_submission_thread.isAlive()
-                    time.sleep(0.1)
-            except Nothing:
-                pass
+                #judge.begin_grading("aplusb", "PY2", py2_source)
+                judge.current_submission_thread.join()
+                # time.sleep(0.1)
+                # #judge.terminate_grading()
+                # while judge.current_submission_thread is not None:
+                #     #print "submission alive?", judge.current_submission_thread.isAlive()
+                #     time.sleep(0.1)
             except Exception:
                 traceback.print_exc()
         print "Done"
+       # yappi.get_func_stats().print_all()
 
 
 if __name__ == "__main__":

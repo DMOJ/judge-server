@@ -1,6 +1,6 @@
 from ptbox.chroot import CHROOTProcessDebugger
 
-PYTHON_FS = ["usr/bin/python", ".*\.[so|py]", "/usr/lib/python", "/etc/.*"]
+PYTHON_FS = ["usr/bin/python", ".*\.[so|py]", ".*/lib(?:32|64)?/python[\d.]+/.*", ".*/lib/locale/.*"]
 
 
 def generate(env, name, source_code):

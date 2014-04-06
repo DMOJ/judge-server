@@ -47,7 +47,7 @@ class SecurePopen(object):
         self._died = threading.Event()
         self._worker = threading.Thread(target=self.__spawn_execute)
         self._worker.start()
-        if time:
+        if 0 and time:
             # Spawn thread to kill process after it times out
             self._shocker = threading.Thread(target=self.__shocker)
             self._shocker.start()
@@ -120,10 +120,9 @@ class SecurePopen(object):
     def __spawn_execute(self):
         child_args = self._args
 
-        status = None
         gc_enabled = gc.isenabled()
         try:
-            gc.disable()
+            #gc.disable()
             pid = os.fork()
         except:
             if gc_enabled:
@@ -135,10 +134,11 @@ class SecurePopen(object):
             os.dup2(self._stdin_, 0)
             os.dup2(self._stdout_, 1)
             os.dup2(self._stderr_, 2)
-            ptrace(PTRACE_TRACEME, 0, None, None)
             # Close all file descriptors that are not standard
             os.closerange(3, os.sysconf("SC_OPEN_MAX"))
-            os.kill(os.getpid(), SIGSTOP)
+            if self._debugger:
+                ptrace(PTRACE_TRACEME, 0, None, None)
+                os.kill(os.getpid(), SIGSTOP)
             # Replace current process with the child process
             # This call does not return
             os.execv(self._child, child_args)
@@ -151,68 +151,80 @@ class SecurePopen(object):
         else:
             if gc_enabled:
                 gc.enable()
-
-            self._debugger.pid = pid
-            # Depending on the bitness, import a different ptrace
-            # Registers change depending on bitness, as do syscall ids
-            bitness = self.bitness
-            if bitness == 64:
-                import _ptrace64 as _ptrace
-            else:
-                import _ptrace32 as _ptrace
-            # Define the shells for reading syscall arguments in the debugger
-            self._debugger.arg0 = lambda: _ptrace.arg0(pid)
-            self._debugger.arg1 = lambda: _ptrace.arg1(pid)
-            self._debugger.arg2 = lambda: _ptrace.arg2(pid)
-            self._debugger.arg3 = lambda: _ptrace.arg3(pid)
-            self._debugger.arg4 = lambda: _ptrace.arg4(pid)
-            self._debugger.arg5 = lambda: _ptrace.arg5(pid)
-            # Reverse syscall ids
-            wrapped_ids = dict((x[bitness == 64], k) for k, x in syscalls.translator.iteritems())
-
-            # Utility method for getting syscall number for call
-            get_syscall_number = lambda: wrapped_ids[_ptrace.get_syscall_number(pid)]
-            self._debugger.get_syscall_number = get_syscall_number
-
-            # Let the debugger define its proxies
-            syscall_proxies = self._debugger.get_handlers()
+            start = time.time()
+            status = None
+            self._pid = pid
 
             os.close(self._stdin_)
             os.close(self._stdout_)
             os.close(self._stderr_)
 
-            self._pid = pid
-            self._started.set()
+            if self._debugger:
+                self._debugger.pid = pid
+                # Depending on the bitness, import a different ptrace
+                # Registers change depending on bitness, as do syscall ids
+                bitness = self.bitness
+                if bitness == 64:
+                    import _ptrace64 as _ptrace
+                else:
+                    import _ptrace32 as _ptrace
+                # Define the shells for reading syscall arguments in the debugger
+                self._debugger.arg0 = lambda: _ptrace.arg0(pid)
+                self._debugger.arg1 = lambda: _ptrace.arg1(pid)
+                self._debugger.arg2 = lambda: _ptrace.arg2(pid)
+                self._debugger.arg3 = lambda: _ptrace.arg3(pid)
+                self._debugger.arg4 = lambda: _ptrace.arg4(pid)
+                self._debugger.arg5 = lambda: _ptrace.arg5(pid)
+                # Reverse syscall ids
+                wrapped_ids = [None] * len(syscalls.translator)
+                for k, x in syscalls.translator.iteritems():
+                    call = x[bitness == 64]
+                    if call is not None:
+                        wrapped_ids[call] = k
 
-            start = time.time()
-            i = 0
-            in_syscall = False
-            while True:
+                # Utility method for getting syscall number for call
+                get_syscall_number = lambda: wrapped_ids[_ptrace.get_syscall_number(pid)]
+                self._debugger.get_syscall_number = get_syscall_number
+
+                # Let the debugger define its proxies
+                syscall_proxies = [None] * len(syscalls.by_id)
+                for call_id, handler in self._debugger.get_handlers().iteritems():
+                    syscall_proxies[call_id] = handler
+
+                self._started.set()
+
+                start = time.time()
+                in_syscall = False
+                while True:
+                    _, status, self._rusage = os.wait4(pid, 0)
+
+                    if os.WIFEXITED(status):
+                        break
+
+                    if os.WIFSIGNALED(status):
+                        break
+
+                    if os.WSTOPSIG(status) == SIGTRAP:
+                        in_syscall = not in_syscall
+                        if not in_syscall:
+                            call = get_syscall_number()
+
+                            handler = syscall_proxies[call]
+                            if handler is not None:
+                                if not handler():
+                                    os.kill(pid, SIGKILL)
+                                    print "Killed on", call, syscalls.by_id[call]
+                                # The @*syscall decorators resume the syscall
+                                continue
+                            else:
+                                # Our method is not proxied, so is assumed to be disallowed
+                                # TODO: perhaps add option to cancel the syscall instead?
+                                raise AssertionError("%d (%s)" % (call, syscalls.by_id[call]))
+                    # Not handled by a decorator: resume syscall
+                    ptrace(PTRACE_SYSCALL, pid, None, None)
+            else:
+                self._started.set()
                 _, status, self._rusage = os.wait4(pid, 0)
-
-                if os.WIFEXITED(status):
-                    break
-
-                if os.WIFSIGNALED(status):
-                    break
-
-                if os.WSTOPSIG(status) == SIGTRAP:
-                    in_syscall = not in_syscall
-                    if not in_syscall:
-                        call = get_syscall_number()
-
-                        if call in syscall_proxies:
-                            if not syscall_proxies[call]():
-                                os.kill(pid, SIGKILL)
-                            # The @*syscall decorators resume the syscall
-                            continue
-                        else:
-                            # Our method is not proxied, so is assumed to be disallowed
-                            # TODO: perhaps add option to cancel the syscall instead?
-                            raise AssertionError("%d (%s)" % (call, syscalls.by_id[call]))
-                # Not handled by a decorator: resume syscall
-                ptrace(PTRACE_SYSCALL, pid, None, None)
-
             self._duration = time.time() - start
             ret = os.WEXITSTATUS(status) if os.WIFEXITED(status) else -os.WTERMSIG(status)
             self._returncode = ret
@@ -223,5 +235,5 @@ def debug(args, debugger):
     return execute(args, debugger)
 
 
-def execute(args, debugger, time=None, memory=None):
+def execute(args, debugger=None, time=None, memory=None):
     return SecurePopen(args, debugger, time, memory)

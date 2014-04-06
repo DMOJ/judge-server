@@ -19,7 +19,6 @@ def generate(env, class_name, source_code):
 
 
 def launch(env, execute, generated_files, *args, **kwargs):
-    return execute([env["java"], "-Djava.security.manager", "-Xmx%sK" % kwargs.get("memory"), "-cp", ".",
+    return execute([env["java"], "-Djava.security.manager", "-client", "-Xmx%sK" % kwargs.get("memory"), "-cp", ".",
                     generated_files[0][:generated_files[0].rfind(".java")]] + list(args),
-                   debugger=CHROOTProcessDebugger(filesystem=JAVA_FS),
                    time=kwargs.get("time"))

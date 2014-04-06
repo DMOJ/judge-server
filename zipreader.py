@@ -8,3 +8,4 @@ class ZipReader(object):
         self.files = {}
         for name in archive.infolist():
             self.files[name.filename] = cStringIO.StringIO(archive.read(name))
+        archive.close()

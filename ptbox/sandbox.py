@@ -47,7 +47,7 @@ class SecurePopen(object):
         self._died = threading.Event()
         self._worker = threading.Thread(target=self.__spawn_execute)
         self._worker.start()
-        if 0 and time:
+        if time:
             # Spawn thread to kill process after it times out
             self._shocker = threading.Thread(target=self.__shocker)
             self._shocker.start()

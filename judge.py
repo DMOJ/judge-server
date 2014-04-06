@@ -627,13 +627,13 @@ for i in xrange(input()):
             try:
                 #judge.begin_grading("aplusb", "CPP", cpp_source)
                 #judge.begin_grading("aplusb", "RUBY", rb_source)
-                while True:
-                    judge.begin_grading("aplusb", "CPP11", cpp11_source)
+
+                #judge.begin_grading("aplusb", "CPP11", cpp11_source)
                 #judge.begin_grading("aplusb", "JAVA", java_source)
-                #judge.begin_grading("helloworld", "PY2", 'print "Hello, World!"')
+                judge.begin_grading("helloworld", "PY2", 'print "Hello, World!"')
                 #judge.begin_grading("geometry1", "PY2", geom_py2_source)
                 #judge.begin_grading("aplusb", "PY2", py2_source)
-                judge.current_submission_thread.join()
+                #judge.current_submission_thread.join()
                 # time.sleep(0.1)
                 # #judge.terminate_grading()
                 # while judge.current_submission_thread is not None:

@@ -36,6 +36,7 @@ class Result(object):
     def __init__(self):
         self.result_flag = 0
         self.execution_time = 0
+        self.r_execution_time = 0
         self.max_memory = 0
         self.partial_output = None
 
@@ -183,7 +184,7 @@ class Judge(object):
 
     def begin_grading(self, problem_id, language, source_code):
         print "Grading %s in %s..." % (problem_id, language)
-        if self.current_submission_thread is not None:
+        if self.current_submission_thread:
             self.terminate_grading()
         self.current_submission_thread = ThreadWithExc(target=self._begin_grading,
                                                        args=(problem_id, language, source_code))
@@ -191,11 +192,10 @@ class Judge(object):
         self.current_submission_thread.start()
 
     def terminate_grading(self):
-        if self.current_submission_thread is not None:
+        if self.current_submission_thread:
             try:
-                while self.current_submission_thread is not None and self.current_submission_thread.isAlive():
-                    self.current_submission_thread.join()
-                    time.sleep(0.1)
+                self.current_submission_thread.join()
+                self.current_submission_thread = None
             except threading.ThreadError:
                 print "Successfully terminated grading."
             except:
@@ -243,7 +243,10 @@ class Judge(object):
                                        time=int(init_data["time"]), memory=int(init_data["memory"]),
                                        short_circuit=(init_data["short_circuit"] == "True")):
                             print "Test case %s" % case
-                            print "\t%f seconds" % res.execution_time
+                            print "\t%f seconds (real)" % res.r_execution_time
+                            print "\t%f seconds (debugged)" % res.execution_time
+                            print "\tDebugging took %.2f%% of the time" % \
+                                  ((res.r_execution_time - res.execution_time) / res.r_execution_time * 100)
                             print "\t%.2f mb (%s kb)" % (res.max_memory / 1024.0, res.max_memory)
                             execution_verdict = []
                             if res.result_flag & Result.IR:
@@ -437,6 +440,7 @@ class ProgramJudge(object):
         self.process.wait()
         self.result.max_memory = self.process.max_memory
         self.result.execution_time = self.process.execution_time
+        self.result.r_execution_time = self.process.r_execution_time
         judge_output = output_file.read()
         output_file.close()
         if not checker(process_output, judge_output, *checker_args):
@@ -596,7 +600,6 @@ n.times {
 n = input()
 for i in xrange(n):
     print sum(map(int, raw_input().split()))
-open('aaa', 'w')
 '''
 
     geom_py2_source = r'''
@@ -628,11 +631,15 @@ for i in xrange(input()):
                 #judge.begin_grading("aplusb", "CPP", cpp_source)
                 #judge.begin_grading("aplusb", "RUBY", rb_source)
 
-                #judge.begin_grading("aplusb", "CPP11", cpp11_source)
-                #judge.begin_grading("aplusb", "JAVA", java_source)
+                judge.begin_grading("aplusb", "CPP11", cpp11_source)
+                judge.current_submission_thread.join()
+                judge.begin_grading("aplusb", "JAVA", java_source)
+                judge.current_submission_thread.join()
                 judge.begin_grading("helloworld", "PY2", 'print "Hello, World!"')
-                #judge.begin_grading("geometry1", "PY2", geom_py2_source)
-                #judge.begin_grading("aplusb", "PY2", py2_source)
+                judge.current_submission_thread.join()
+                judge.begin_grading("geometry1", "PY2", geom_py2_source)
+                judge.current_submission_thread.join()
+                judge.begin_grading("aplusb", "PY2", py2_source)
                 judge.current_submission_thread.join()
                 # time.sleep(0.1)
                 # #judge.terminate_grading()

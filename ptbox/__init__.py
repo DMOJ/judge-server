@@ -1,6 +1,7 @@
 from functools import wraps
 import os
 from signal import *
+import time
 from _ptrace import *
 
 __all__ = ['ProcessDebugger', 'syscall', 'unsafe_syscall']
@@ -31,6 +32,7 @@ def syscall(func):
         pid = self.pid
         if func(self, *args, **kwargs):
             ptrace(PTRACE_SYSCALL, pid, None, None)
+            self._tt += time.time() - self._st
             return True
         return False
 
@@ -57,9 +59,11 @@ def unsafe_syscall(func):
         ret = func(self, *args, **kwargs)
         if ret:
             ptrace(PTRACE_SYSCALL, pid, None, None)
+        t = time.time()
         if tasks:
             for task in tasks:
                 os.kill(task, SIGCONT)
+        self._tt += time.time() - self._st
         return ret
 
     return halter

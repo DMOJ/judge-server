@@ -35,6 +35,7 @@ class SecurePopen(object):
         self._pid = None
         self._rusage = None
         self._duration = None
+        self._r_duration = None
 
         self._stdin_, self._stdin = os.pipe()
         self._stdout, self._stdout_ = os.pipe()
@@ -47,7 +48,7 @@ class SecurePopen(object):
         self._died = threading.Event()
         self._worker = threading.Thread(target=self.__spawn_execute)
         self._worker.start()
-        if time:
+        if 0 and time:
             # Spawn thread to kill process after it times out
             self._shocker = threading.Thread(target=self.__shocker)
             self._shocker.start()
@@ -85,6 +86,10 @@ class SecurePopen(object):
         """
         # TODO: this can be done for when process hasn't exited yet
         return self._duration
+
+    @property
+    def r_execution_time(self):
+        return self._r_duration
 
     @property
     def mle(self):
@@ -192,11 +197,16 @@ class SecurePopen(object):
                     syscall_proxies[call_id] = handler
 
                 self._started.set()
+                if self._debugger:
+                    self._debugger._tt = 0
+                    self._debugger._st = 0
 
                 start = time.time()
                 in_syscall = False
                 while True:
                     _, status, self._rusage = os.wait4(pid, 0)
+                    if self._debugger:
+                        self._debugger._st = time.time()
 
                     if os.WIFEXITED(status):
                         break
@@ -221,11 +231,15 @@ class SecurePopen(object):
                                 # TODO: perhaps add option to cancel the syscall instead?
                                 raise AssertionError("%d (%s)" % (call, syscalls.by_id[call]))
                     # Not handled by a decorator: resume syscall
+
                     ptrace(PTRACE_SYSCALL, pid, None, None)
+                    if self._debugger:
+                        self._debugger._tt += time.time() - self._debugger._st
             else:
                 self._started.set()
                 _, status, self._rusage = os.wait4(pid, 0)
-            self._duration = time.time() - start
+            self._r_duration = time.time() - start
+            self._duration = self._r_duration - (self._debugger._tt if self._debugger else 0)
             ret = os.WEXITSTATUS(status) if os.WIFEXITED(status) else -os.WTERMSIG(status)
             self._returncode = ret
             self._died.set()

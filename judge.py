@@ -200,6 +200,7 @@ class Judge(object):
                 print "Successfully terminated grading."
             except:
                 traceback.print_exc()
+            self.packet_manager.submission_terminated_packet()
 
     def _begin_grading(self, problem_id, language, source_code):
         try:

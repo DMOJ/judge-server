@@ -194,6 +194,7 @@ class Judge(object):
     def terminate_grading(self):
         if self.current_submission_thread:
             try:
+                self.current_submission_thread.throw(TerminateGrading)
                 self.current_submission_thread.join()
                 self.current_submission_thread = None
             except threading.ThreadError:

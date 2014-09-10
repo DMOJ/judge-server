@@ -159,93 +159,97 @@ class SecurePopen(object):
         else:
             if gc_enabled:
                 gc.enable()
-            start = time.time()
-            status = None
-            self._pid = pid
-
-            os.close(self._stdin_)
-            os.close(self._stdout_)
-            os.close(self._stderr_)
-
-            if self._debugger:
-                self._debugger.pid = pid
-                # Depending on the bitness, import a different ptrace
-                # Registers change depending on bitness, as do syscall ids
-                bitness = self.bitness
-                if bitness == 64:
-                    import _ptrace64 as _ptrace
-                else:
-                    import _ptrace32 as _ptrace
-                # Define the shells for reading syscall arguments in the debugger
-                self._debugger.arg0 = lambda: _ptrace.arg0(pid)
-                self._debugger.arg1 = lambda: _ptrace.arg1(pid)
-                self._debugger.arg2 = lambda: _ptrace.arg2(pid)
-                self._debugger.arg3 = lambda: _ptrace.arg3(pid)
-                self._debugger.arg4 = lambda: _ptrace.arg4(pid)
-                self._debugger.arg5 = lambda: _ptrace.arg5(pid)
-                # Reverse syscall ids
-                wrapped_ids = [None] * len(syscalls.translator)
-                for k, x in syscalls.translator.iteritems():
-                    call = x[bitness == 64]
-                    if call is not None:
-                        wrapped_ids[call] = k
-
-                # Utility method for getting syscall number for call
-                get_syscall_number = lambda: wrapped_ids[_ptrace.get_syscall_number(pid)]
-                self._debugger.get_syscall_number = get_syscall_number
-
-                # Let the debugger define its proxies
-                syscall_proxies = [None] * len(syscalls.by_id)
-                for call_id, handler in self._debugger.get_handlers().iteritems():
-                    syscall_proxies[call_id] = handler
-
-                self._started.set()
-                if self._debugger:
-                    self._debugger._tt = 0
-                    self._debugger._st = 0
-
+            try:
                 start = time.time()
-                in_syscall = False
-                while True:
+                status = None
+                self._pid = pid
+
+                os.close(self._stdin_)
+                os.close(self._stdout_)
+                os.close(self._stderr_)
+
+                if self._debugger:
+                    self._debugger.pid = pid
+                    # Depending on the bitness, import a different ptrace
+                    # Registers change depending on bitness, as do syscall ids
+                    bitness = self.bitness
+                    if bitness == 64:
+                        import _ptrace64 as _ptrace
+                    else:
+                        import _ptrace32 as _ptrace
+                    # Define the shells for reading syscall arguments in the debugger
+                    self._debugger.arg0 = lambda: _ptrace.arg0(pid)
+                    self._debugger.arg1 = lambda: _ptrace.arg1(pid)
+                    self._debugger.arg2 = lambda: _ptrace.arg2(pid)
+                    self._debugger.arg3 = lambda: _ptrace.arg3(pid)
+                    self._debugger.arg4 = lambda: _ptrace.arg4(pid)
+                    self._debugger.arg5 = lambda: _ptrace.arg5(pid)
+                    # Reverse syscall ids
+                    wrapped_ids = [None] * len(syscalls.translator)
+                    for k, x in syscalls.translator.iteritems():
+                        call = x[bitness == 64]
+                        if call is not None:
+                            wrapped_ids[call] = k
+
+                    # Utility method for getting syscall number for call
+                    get_syscall_number = lambda: wrapped_ids[_ptrace.get_syscall_number(pid)]
+                    self._debugger.get_syscall_number = get_syscall_number
+
+                    # Let the debugger define its proxies
+                    syscall_proxies = [None] * len(syscalls.by_id)
+                    for call_id, handler in self._debugger.get_handlers().iteritems():
+                        syscall_proxies[call_id] = handler
+
+                    self._started.set()
+                    if self._debugger:
+                        self._debugger._tt = 0
+                        self._debugger._st = 0
+
+                    start = time.time()
+                    in_syscall = False
+                    while True:
+                        _, status, self._rusage = os.wait4(pid, 0)
+                        if self._debugger:
+                            self._debugger._st = time.time()
+
+                        if os.WIFEXITED(status):
+                            break
+
+                        if os.WIFSIGNALED(status):
+                            break
+
+                        if os.WSTOPSIG(status) == SIGTRAP:
+                            in_syscall = not in_syscall
+                            if not in_syscall:
+                                call = get_syscall_number()
+
+                                handler = syscall_proxies[call]
+                                if handler is not None:
+                                    if not handler():
+                                        os.kill(pid, SIGKILL)
+                                        print "Killed on", call, syscalls.by_id[call]
+                                    # The @*syscall decorators resume the syscall
+                                    continue
+                                else:
+                                    # Our method is not proxied, so is assumed to be disallowed
+                                    # TODO: perhaps add option to cancel the syscall instead?
+                                    raise AssertionError("%d (%s)" % (call, syscalls.by_id[call]))
+                        # Not handled by a decorator: resume syscall
+
+                        ptrace(PTRACE_SYSCALL, pid, None, None)
+                        if self._debugger:
+                            self._debugger._tt += time.time() - self._debugger._st
+                else:
+                    self._started.set()
                     _, status, self._rusage = os.wait4(pid, 0)
-                    if self._debugger:
-                        self._debugger._st = time.time()
-
-                    if os.WIFEXITED(status):
-                        break
-
-                    if os.WIFSIGNALED(status):
-                        break
-
-                    if os.WSTOPSIG(status) == SIGTRAP:
-                        in_syscall = not in_syscall
-                        if not in_syscall:
-                            call = get_syscall_number()
-
-                            handler = syscall_proxies[call]
-                            if handler is not None:
-                                if not handler():
-                                    os.kill(pid, SIGKILL)
-                                    print "Killed on", call, syscalls.by_id[call]
-                                # The @*syscall decorators resume the syscall
-                                continue
-                            else:
-                                # Our method is not proxied, so is assumed to be disallowed
-                                # TODO: perhaps add option to cancel the syscall instead?
-                                raise AssertionError("%d (%s)" % (call, syscalls.by_id[call]))
-                    # Not handled by a decorator: resume syscall
-
-                    ptrace(PTRACE_SYSCALL, pid, None, None)
-                    if self._debugger:
-                        self._debugger._tt += time.time() - self._debugger._st
-            else:
-                self._started.set()
-                _, status, self._rusage = os.wait4(pid, 0)
-            self._r_duration = time.time() - start
-            self._duration = self._r_duration - (self._debugger._tt if self._debugger else 0)
-            ret = os.WEXITSTATUS(status) if os.WIFEXITED(status) else -os.WTERMSIG(status)
-            self._returncode = ret
-            self._died.set()
+                self._r_duration = time.time() - start
+                self._duration = self._r_duration - (self._debugger._tt if self._debugger else 0)
+                ret = os.WEXITSTATUS(status) if os.WIFEXITED(status) else -os.WTERMSIG(status)
+                self._returncode = ret
+                self._died.set()
+            finally:
+                if self.returncode is None:
+                    os.kill(self._pid, SIGKILL)
 
 
 def debug(args, debugger):

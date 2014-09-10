@@ -245,8 +245,8 @@ class Judge(object):
                             print "Test case %s" % case
                             print "\t%f seconds (real)" % res.r_execution_time
                             print "\t%f seconds (debugged)" % res.execution_time
-                            print "\tDebugging took %.2f%% of the time" % \
-                                  ((res.r_execution_time - res.execution_time) / res.r_execution_time * 100)
+                            #print "\tDebugging took %.2f%% of the time" % \
+                            #      ((res.r_execution_time - res.execution_time) / res.r_execution_time * 100)
                             print "\t%.2f mb (%s kb)" % (res.max_memory / 1024.0, res.max_memory)
                             execution_verdict = []
                             if res.result_flag & Result.IR:

@@ -12,8 +12,12 @@ PTRACE_ATTACH = 8
 PTRACE_CONT = 7
 PTRACE_PEEKUSR = 3
 
+PR_SET_PDEATHSIG = 1
+SIGHUP = 1
+
 libc = ctypes.CDLL('libc.so.6', use_errno=True)
 ptrace = libc.ptrace
+prctl = libc.prctl
 
 
 class ctype_primitive_wrapper(object):

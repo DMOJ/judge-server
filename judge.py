@@ -338,8 +338,7 @@ class Judge(object):
         self.ping_lock.acquire()
 
     def murder(self):
-        if self.current_submission_thread is not None:
-            self.current_submission_thread.throw(KeyboardInterrupt)
+        self.terminate_grading()
 
 
 class LocalJudge(Judge):
@@ -630,8 +629,10 @@ for i in xrange(input()):
 
     if args.server_host:
         judge = Judge(args.server_host, args.server_port, debug=args.debug)
-        judge.listen()
-        judge.murder()
+        try:
+            judge.listen()
+        finally:
+            judge.murder()
     else:
         with LocalJudge(debug=args.debug) as judge:
             try:

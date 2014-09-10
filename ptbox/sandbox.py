@@ -48,7 +48,7 @@ class SecurePopen(object):
         self._died = threading.Event()
         self._worker = threading.Thread(target=self.__spawn_execute)
         self._worker.start()
-        if time:
+        if 0 and time:
             # Spawn thread to kill process after it times out
             self._shocker = threading.Thread(target=self.__shocker)
             self._shocker.start()
@@ -121,6 +121,9 @@ class SecurePopen(object):
         if self.returncode is None:
             os.kill(self._pid, SIGKILL)
             self._tle = True
+			
+	def kill(self):
+		os.kill(self._pid, SIGKILL)		
 
     def __spawn_execute(self):
         child_args = self._args
@@ -136,7 +139,6 @@ class SecurePopen(object):
         if not pid:
             if self._memory:
                 resource.setrlimit(resource.RLIMIT_AS, (self._memory * 1024 + 16 * 1024 * 1024,) * 2)
-            prctl(PR_SET_PDEATHSIG, SIGHUP, 0, 0, 0) # Ensure child dies with parent
             os.dup2(self._stdin_, 0)
             os.dup2(self._stdout_, 1)
             os.dup2(self._stderr_, 2)

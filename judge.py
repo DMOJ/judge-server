@@ -119,7 +119,7 @@ class ThreadWithExc(threading.Thread):
 
         raise AssertionError("could not determine the thread's id")
 
-    def raiseExc(self, exctype):
+    def throw(self, exctype):
         """Raises the given exception type in the context of this thread.
 
         If the thread is busy in a system call (time.sleep(),
@@ -334,6 +334,10 @@ class Judge(object):
 
     def __exit__(self, exception_type, exception_value, traceback):
         self.ping_lock.acquire()
+
+    def murder(self):
+        if self.current_submission_thread is not None:
+            self.current_submission_thread.throw(KeyboardInterrupt)
 
 
 class LocalJudge(Judge):
@@ -625,6 +629,7 @@ for i in xrange(input()):
     if args.server_host:
         judge = Judge(args.server_host, args.server_port, debug=args.debug)
         judge.listen()
+        judge.murder()
     else:
         with LocalJudge(debug=args.debug) as judge:
             try:

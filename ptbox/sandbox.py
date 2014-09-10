@@ -136,7 +136,7 @@ class SecurePopen(object):
         if not pid:
             if self._memory:
                 resource.setrlimit(resource.RLIMIT_AS, (self._memory * 1024 + 16 * 1024 * 1024,) * 2)
-            prctl(PR_SET_PDEATHSIG, SIGHUP) # Ensure child dies with parent
+            prctl(PR_SET_PDEATHSIG, SIGHUP, 0, 0, 0) # Ensure child dies with parent
             os.dup2(self._stdin_, 0)
             os.dup2(self._stdout_, 1)
             os.dup2(self._stderr_, 2)

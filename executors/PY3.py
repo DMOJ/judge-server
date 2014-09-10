@@ -1,6 +1,6 @@
 from ptbox.chroot import CHROOTProcessDebugger
 
-PYTHON_FS = ["/bin/python", ".*\.[so|py]", ".*/lib(?:32|64)?/python[\d.]+/.*", ".*/lib/locale/.*"]
+PYTHON_FS = ["\xb8", "\xff", "/dev/urandom", "/bin/python", ".*\.[so|py]", ".*/lib(?:32|64)?/python[\d.]+/.*", ".*/lib/locale/.*"]
 
 
 def generate(env, name, source_code):
@@ -16,5 +16,5 @@ __import__("sys").stdin = __import__("os").fdopen(0, 'r', 65536)
 
 def launch(env, execute, generated_files, *args, **kwargs):
     return execute([env["python3"], "-B", generated_files[0]] + list(args),
-                   debugger=CHROOTProcessDebugger(filesystem=PYTHON_FS), time=kwargs.get("time"),
+                   debugger=CHROOTProcessDebugger(filesystem=PYTHON_FS + [str(env['python3dir']) + '.*']), time=kwargs.get("time"),
                    memory=kwargs.get("memory"))

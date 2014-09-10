@@ -24,6 +24,7 @@ class CHROOTProcessDebugger(ProcessDebugger):
             sys_access: self.do_access,
             sys_close: do_allow,
             sys_stat: do_allow,
+            sys_dup: do_allow,
             sys_fstat: do_allow,
             sys_mmap: do_allow,
             sys_mprotect: do_allow,
@@ -94,7 +95,7 @@ class CHROOTProcessDebugger(ProcessDebugger):
                     page = 4096
         except:
             return True
-        #print buf
+        #print 'Access:', `buf`
         return self.fs_jail.match(buf)
         return True
 

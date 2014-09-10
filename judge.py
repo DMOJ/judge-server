@@ -608,6 +608,11 @@ for i in xrange(n):
     print sum(map(int, raw_input().split()))
 '''
 
+    py3_source = r'''
+for i in range(int(input())):
+    print(sum(map(int, input().split())))
+'''
+
     geom_py2_source = r'''
 import math
 def cp(x1, y1, x2, y2):
@@ -642,11 +647,13 @@ for i in xrange(input()):
                 judge.current_submission_thread.join()
                 judge.begin_grading("aplusb", "JAVA", java_source)
                 judge.current_submission_thread.join()
-                judge.begin_grading("helloworld", "PY2", 'print "Hello, World!"')
+                judge.begin_grading("helloworld", "PY3", 'print("Hello, World!")')
                 judge.current_submission_thread.join()
                 judge.begin_grading("geometry1", "PY2", geom_py2_source)
                 judge.current_submission_thread.join()
                 judge.begin_grading("aplusb", "PY2", py2_source)
+                judge.current_submission_thread.join()
+                judge.begin_grading("aplusb", "PY3", py3_source)
                 judge.current_submission_thread.join()
                 # time.sleep(0.1)
                 # #judge.terminate_grading()

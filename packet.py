@@ -104,6 +104,10 @@ class PacketManager(object):
     def current_submission_packet(self):
         self._send_packet({"name": "current-submission-id",
                            "submission-id": self.judge.current_submission})
+                           
+    def submission_terminated_packet(self):
+        self._send_packet({"name": "submission-terminated",
+                           "submission-id": self.judge.current_submission})
 
     def ping_packet(self, when):
         self._send_packet({"name": "ping-response",

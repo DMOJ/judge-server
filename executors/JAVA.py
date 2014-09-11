@@ -1,5 +1,5 @@
 import subprocess
-from __init__ import CompileError
+from judgeerror import CompileError
 from ptbox.chroot import CHROOTProcessDebugger
 
 JAVA_FS = ["/usr/bin/java", ".*\.[so|jar]"]

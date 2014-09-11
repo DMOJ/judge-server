@@ -1,6 +1,3 @@
-class CompileError(Exception):
-    pass
-
 import CPP
 import CPP11
 import JAVA

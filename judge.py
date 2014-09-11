@@ -15,6 +15,7 @@ except ImportError:
     import Queue as queue
 
 from ptbox import sandbox  # @UnresolvedImport
+from judgeerror import CompileError
 
 import executors  # @UnresolvedImport
 
@@ -211,7 +212,7 @@ class Judge(object):
                     try:
                         executor = getattr(executors, language)
                         generated_files = executor.generate(self.paths, problem_id, source_code)
-                    except executors.CompileError, compile_error:
+                    except CompileError as compile_error:
                         generated_files.append(compile_error.args[1])
                         print "Compile Error"
                         print compile_error.message

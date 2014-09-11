@@ -1,6 +1,6 @@
 import subprocess
 import sys
-from __init__ import CompileError
+from judgeerror import CompileError
 from ptbox.chroot import CHROOTProcessDebugger
 
 C_FS = [".*\.[so]"]

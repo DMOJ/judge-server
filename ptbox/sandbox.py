@@ -34,6 +34,7 @@ class SecurePopen(object):
         self._tle = False
         self._pid = None
         self._rusage = None
+        self._start = None
         self._duration = None
         self._r_duration = None
 
@@ -48,7 +49,7 @@ class SecurePopen(object):
         self._died = threading.Event()
         self._worker = threading.Thread(target=self.__spawn_execute)
         self._worker.start()
-        if 0 and time:
+        if time:
             # Spawn thread to kill process after it times out
             self._shocker = threading.Thread(target=self.__shocker)
             self._shocker.start()
@@ -117,11 +118,16 @@ class SecurePopen(object):
 
     def __shocker(self):
         self._started.wait()
-        time.sleep(self._time)
-        if self.returncode is None:
-            os.kill(self._pid, SIGKILL)
-            self._tle = True
-			
+
+        while self.returncode is None:
+            duration = time.time() - self._start - (self._debugger and self._debugger._tt)
+            # 5 second grace for system load.
+            if duration > self._time + 5:
+                os.kill(self._pid, SIGKILL)
+                self._tle = True
+                break
+            time.sleep(1)
+
 	def kill(self):
 		os.kill(self._pid, SIGKILL)		
 
@@ -160,7 +166,6 @@ class SecurePopen(object):
             if gc_enabled:
                 gc.enable()
             try:
-                start = time.time()
                 status = None
                 self._pid = pid
 
@@ -200,12 +205,12 @@ class SecurePopen(object):
                     for call_id, handler in self._debugger.get_handlers().iteritems():
                         syscall_proxies[call_id] = handler
 
+                    self._start = time.time()
                     self._started.set()
                     if self._debugger:
                         self._debugger._tt = 0
                         self._debugger._st = 0
 
-                    start = time.time()
                     in_syscall = False
                     while True:
                         _, status, self._rusage = os.wait4(pid, 0)
@@ -240,10 +245,15 @@ class SecurePopen(object):
                         if self._debugger:
                             self._debugger._tt += time.time() - self._debugger._st
                 else:
+                    self._start = time.time()
                     self._started.set()
                     _, status, self._rusage = os.wait4(pid, 0)
-                self._r_duration = time.time() - start
-                self._duration = self._r_duration - (self._debugger._tt if self._debugger else 0)
+                #self._r_duration = time.time() - start
+                #self._duration = self._r_duration - (self._debugger._tt if self._debugger else 0)
+                # CPU time, __shocker uses clock time in case a malicious user sleeps or what not.
+                self._duration = self._rusage.ru_utime
+                if self._time and self._duration > self._time:
+                    self._tle = True
                 ret = os.WEXITSTATUS(status) if os.WIFEXITED(status) else -os.WTERMSIG(status)
                 self._returncode = ret
                 self._died.set()

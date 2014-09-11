@@ -96,30 +96,6 @@ class ThreadWithExc(threading.Thread):
        another thread.
     '''
 
-    def _get_my_tid(self):
-        """determines this (self's) thread id
-
-        CAREFUL : this function is executed in the context of the caller
-        thread, to get the identity of the thread represented by this
-        instance.
-        """
-        if not self.isAlive():
-            raise threading.ThreadError("the thread is not active")
-
-        # do we have it cached?
-        if hasattr(self, "_thread_id"):
-            return self._thread_id
-
-        # no, look for it in the _active dict
-        for tid, tobj in threading._active.items():
-            if tobj is self:
-                self._thread_id = tid
-                return tid
-
-        # TODO: in python 2.6, there's a simpler way to do : self.ident
-
-        raise AssertionError("could not determine the thread's id")
-
     def throw(self, exctype):
         """Raises the given exception type in the context of this thread.
 
@@ -143,7 +119,7 @@ class ThreadWithExc(threading.Thread):
         caller thread, to raise an exception in the context of the
         thread represented by this instance.
         """
-        _async_raise(self._get_my_tid(), exctype)
+        _async_raise(self.ident, exctype)
 
 
 class TerminateGrading(Exception):
@@ -634,11 +610,11 @@ for i in xrange(input()):
     #yappi.start()
 
     if args.server_host:
-        judge = Judge(args.server_host, args.server_port, debug=args.debug)
-        try:
-            judge.listen()
-        finally:
-            judge.murder()
+        with Judge(args.server_host, args.server_port, debug=args.debug) as judge:
+            try:
+                judge.listen()
+            finally:
+                judge.murder()
     else:
         with LocalJudge(debug=args.debug) as judge:
             try:

@@ -120,7 +120,7 @@ class SecurePopen(object):
         self._started.wait()
 
         while self.returncode is None:
-            duration = time.time() - self._start - (self._debugger and self._debugger._tt)
+            duration = time.time() - self._start - (self._debugger is not None and self._debugger._tt)
             # 5 second grace for system load.
             if duration > self._time + 5:
                 os.kill(self._pid, SIGKILL)

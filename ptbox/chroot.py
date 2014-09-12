@@ -97,7 +97,6 @@ class CHROOTProcessDebugger(ProcessDebugger):
             return True
         #print 'Access:', `buf`
         return self.fs_jail.match(buf)
-        return True
 
     @unsafe_syscall
     def do_access(self):

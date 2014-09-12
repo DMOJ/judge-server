@@ -40,7 +40,7 @@ class Result(object):
         self.execution_time = 0
         self.r_execution_time = 0
         self.max_memory = 0
-        self.partial_output = None
+        self.proc_output = None
 
 
 class TestCase(object):
@@ -104,8 +104,7 @@ class TerminateGrading(Exception):
 class Judge(object):
     PING_FREQUENCY = 5
 
-    def __init__(self, host, port, debug=False, **kwargs):
-        self.debug_mode = debug
+    def __init__(self, host, port, **kwargs):
         self.packet_manager = packet.PacketManager(host, port, self)
         self.current_submission = None
         self.current_proc = None
@@ -229,13 +228,13 @@ class Judge(object):
                 if type(test_case) == BatchedTestCase:
                     self.packet_manager.begin_batch_packet()
                 for input_file, output_file, point_value in test_case:
-                    with ProgramJudge(*args, partial_output_limit=(2147483647 if self.debug_mode else 10)) as judge:
+                    with ProgramJudge(*args) as judge:
                         result = Result()
                         if short_circuited:
                             result.result_flag = Result.SC
                             result.execution_time = 0
                             result.max_memory = 0
-                            result.partial_output = ""
+                            result.proc_output = ""
                         else:
                             self.current_proc = executor.launch(self.env, generated_files, time=time, memory=memory)
                             judge.run_standard(self.current_proc, result, openfile(input_file), openfile(output_file),
@@ -246,7 +245,7 @@ class Judge(object):
                                                                     result.result_flag,
                                                                     result.execution_time,
                                                                     result.max_memory,
-                                                                    result.partial_output)
+                                                                    result.proc_output[:10]) # TODO: make limit configurable
                         if not short_circuited and result.result_flag != Result.AC:
                             short_circuited = True
                         case_number += 1
@@ -295,7 +294,7 @@ class LocalJudge(Judge):
 class ProgramJudge(object):
     EOF = None
 
-    def __init__(self, redirect=False, transfer=False, interact=False, partial_output_limit=10):
+    def __init__(self, redirect=False, transfer=False, interact=False):
         self.result = None
         self.process = None
         self.write_lock = threading.Lock()
@@ -305,7 +304,6 @@ class ProgramJudge(object):
         self.redirect = redirect
         self.transfer = transfer
         self.interact = interact
-        self.partial_output_limit = partial_output_limit
 
         self.old_stdin = sys.stdin
         self.old_stdout = sys.stdout
@@ -369,8 +367,7 @@ class ProgramJudge(object):
         self.write(input_file.read())
         input_file.close()
         self.write(ProgramJudge.EOF)
-        process_output = self.read()
-        self.result.partial_output = process_output[:self.partial_output_limit]
+        self.result.proc_output = self.read()
 
         self.process.wait()
         self.result.max_memory = self.process.max_memory
@@ -378,7 +375,7 @@ class ProgramJudge(object):
         self.result.r_execution_time = self.process.r_execution_time
         judge_output = output_file.read()
         output_file.close()
-        if not checker(process_output, judge_output):
+        if not checker(self.result.proc_output, judge_output):
             result_flag |= Result.WA
         if self.process.returncode:
             result_flag |= Result.IR

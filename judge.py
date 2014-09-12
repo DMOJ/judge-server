@@ -262,6 +262,8 @@ class Judge(object):
         except:
             traceback.print_exc()
             self.packet_manager.grading_end_packet()
+        else:
+            self.packet_manager.grading_end_packet()
         finally:
             self.current_proc = None
 

@@ -5,6 +5,7 @@ import struct
 import traceback
 import time
 
+
 class PacketManager(object):
     SIZE_PACK = struct.Struct("!I")
 
@@ -29,13 +30,13 @@ class PacketManager(object):
                 self._recieve_packet(packet)
         except KeyboardInterrupt:
             pass
-        except Exception: # connection reset by peer
+        except Exception:  # connection reset by peer
             traceback.print_exc()
             raise SystemExit(1)
 
     def run(self):
         self._read_async()
-    
+
     def run_async(self):
         threading.Thread(target=self._read_async).start()
 
@@ -107,7 +108,7 @@ class PacketManager(object):
     def current_submission_packet(self):
         self._send_packet({"name": "current-submission-id",
                            "submission-id": self.judge.current_submission})
-                           
+
     def submission_terminated_packet(self):
         self._send_packet({"name": "submission-terminated",
                            "submission-id": self.judge.current_submission})

@@ -128,8 +128,8 @@ class SecurePopen(object):
                 break
             time.sleep(1)
 
-	def kill(self):
-		os.kill(self._pid, SIGKILL)		
+    def kill(self):
+        os.kill(self._pid, SIGKILL)
 
     def __spawn_execute(self):
         child_args = self._args

@@ -119,6 +119,7 @@ class Judge(object):
     def begin_grading(self, problem_id, language, source_code):
         print "Grading %s in %s..." % (problem_id, language)
         if self.current_submission_thread:
+            #TODO: this should be an error
             self.terminate_grading()
         self.current_submission_thread = ThreadWithExc(target=self._begin_grading,
                                                        args=(problem_id, language, source_code))
@@ -189,24 +190,14 @@ class Judge(object):
                     # print "\tDebugging took %.2f%% of the time" % \
                     # ((res.r_execution_time - res.execution_time) / res.r_execution_time * 100)
                     print "\t%.2f mb (%s kb)" % (res.max_memory / 1024.0, res.max_memory)
-                    execution_verdict = []
-                    if res.result_flag & Result.IR:
-                        execution_verdict.append("\tInvalid Return")
-                    if res.result_flag & Result.WA:
-                        execution_verdict.append("\tWrong Answer")
-                    if res.result_flag & Result.RTE:
-                        execution_verdict.append("\tRuntime Error")
-                    if res.result_flag & Result.TLE:
-                        execution_verdict.append("\tTime Limit Exceeded")
-                    if res.result_flag & Result.MLE:
-                        execution_verdict.append("\tMemory Limit Exceeded")
-                    if res.result_flag & Result.SC:
-                        execution_verdict.append("\tShort Circuited")
-                    if res.result_flag & Result.IE:
-                        execution_verdict.append("\tInternal Error")
+
                     if res.result_flag == Result.AC:
                         print "\tAccepted"
                     else:
+                        execution_verdict = []
+                        for flag in ["IR", "WA", "RTE", "TLE", "MLE", "SC", "IE"]:
+                            if res.result_flag & getattr(Result, flag):
+                                execution_verdict.append("\t" + flag)
                         print "\n".join(execution_verdict)
                     case += 1
         except IOError:

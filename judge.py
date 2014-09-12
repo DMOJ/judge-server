@@ -103,8 +103,8 @@ class TerminateGrading(Exception):
 class Judge(object):
     PING_FREQUENCY = 5
 
-    def __init__(self, host, port, **kwargs):
-        self.debug_mode = kwargs.get("debug", False)
+    def __init__(self, host, port, debug=False, **kwargs):
+        self.debug_mode = debug
         self.packet_manager = packet.PacketManager(host, port, self)
         self.current_submission = None
         self.current_proc = None

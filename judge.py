@@ -134,27 +134,26 @@ class Judge(object):
                     self.current_proc.kill()
                 self.current_submission_thread.throw(TerminateGrading)
                 self.current_submission_thread.join()
-                self.current_submission_thread = None
             except threading.ThreadError:
                 print "Successfully terminated grading."
             except:
                 traceback.print_exc()
+            self.current_submission_thread = None
             self.packet_manager.submission_terminated_packet()
 
     def _begin_grading(self, problem_id, language, source_code):
         generated_files = []
         try:
             try:
-                try:
-                    executor = getattr(executors, language)
-                    generated_files = executor.generate(self.env, problem_id, source_code)
-                except AttributeError:
-                    raise NotImplementedError("unsupported language: " + language)
+                executor = getattr(executors, language)
+                generated_files = executor.generate(self.env, problem_id, source_code)
+            except AttributeError:
+                raise NotImplementedError("unsupported language: " + language)
             except CompileError as compile_error:
                 generated_files.append(compile_error.args[1])
                 print "Compile Error"
-                print compile_error.message
-                self.packet_manager.compile_error_packet(compile_error.message)
+                print compile_error.args[0]
+                self.packet_manager.compile_error_packet(compile_error.args[0])
                 return
 
             with open(os.path.join("data", "problems", problem_id, "init.json"), "r") as init_file:

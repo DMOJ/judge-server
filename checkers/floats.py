@@ -1,6 +1,6 @@
-def check(process_output, judge_output):
+def check(process_output, judge_output, init_data):
     from judge import TerminateGrading
-    epsilon = 10 ** -int(kwargs["precision"])
+    epsilon = 10 ** -int(init_data["precision"])
     for process_line, judge_line in zip(process_output.split('\n'), judge_output.split('\n')):
         try:
             process_floats = map(float, process_line.split())

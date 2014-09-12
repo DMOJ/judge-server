@@ -248,10 +248,10 @@ class SecurePopen(object):
                     self._start = time.time()
                     self._started.set()
                     _, status, self._rusage = os.wait4(pid, 0)
-                #self._r_duration = time.time() - start
-                #self._duration = self._r_duration - (self._debugger._tt if self._debugger else 0)
+                self._r_duration = time.time() - self._start
+                self._duration = self._r_duration - (self._debugger._tt if self._debugger else 0)
                 # CPU time, __shocker uses clock time in case a malicious user sleeps or what not.
-                self._duration = self._rusage.ru_utime
+                #self._duration = self._rusage.ru_utime
                 if self._time and self._duration > self._time:
                     self._tle = True
                 ret = os.WEXITSTATUS(status) if os.WIFEXITED(status) else -os.WTERMSIG(status)

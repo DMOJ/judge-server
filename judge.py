@@ -60,7 +60,7 @@ class TestCase(object):
         return self.input_file, self.output_file, self.point_value
 
 
-class BatchedTestCase(TestCase):
+class BatchedTestCase(object):
     def __init__(self, io_files, point_value):
         self.point_value = point_value
         self.io_files = list(io_files)

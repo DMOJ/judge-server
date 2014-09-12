@@ -82,6 +82,7 @@ class ThreadWithExc(threading.Thread):
         A thread class that supports raising exception in the thread from
         another thread.
     """
+
     def throw(self, exctype):
         if not inspect.isclass(exctype):
             raise TypeError("Only types can be raised (not instances)")
@@ -119,7 +120,7 @@ class Judge(object):
     def begin_grading(self, problem_id, language, source_code):
         print "Grading %s in %s..." % (problem_id, language)
         if self.current_submission_thread:
-            #TODO: this should be an error
+            # TODO: this should be an error
             self.terminate_grading()
         self.current_submission_thread = ThreadWithExc(target=self._begin_grading,
                                                        args=(problem_id, language, source_code))
@@ -181,9 +182,9 @@ class Judge(object):
 
                 case = 1
                 for res in self.run_standard(executor, generated_files, forward_test_cases, check_adapter,
-                               archive=os.path.join("data", "problems", problem_id, init_data["archive"]),
-                               time=int(init_data["time"]), memory=int(init_data["memory"]),
-                               short_circuit=(init_data["short_circuit"] == "True")):
+                                             archive=os.path.join("data", "problems", problem_id, init_data["archive"]),
+                                             time=int(init_data["time"]), memory=int(init_data["memory"]),
+                                             short_circuit=(init_data["short_circuit"] == "True")):
                     print "Test case %s" % case
                     print "\t%f seconds (real)" % res.r_execution_time
                     print "\t%f seconds (debugged)" % res.execution_time
@@ -213,14 +214,15 @@ class Judge(object):
     def listen(self):
         self.packet_manager.run()
 
-    def run_standard(self, executor, generated_files, test_cases, checker, *args, **kwargs):
+    def run_standard(self, executor, generated_files, test_cases, checker, short_circuit=False, time=2, memory=65536,
+                     *args, **kwargs):
         if "archive" in kwargs:
             archive = zipreader.ZipReader(kwargs["archive"])
             openfile = archive.files.__getitem__
         else:
             openfile = open
         self.packet_manager.begin_grading_packet()
-        short_circuit_all = kwargs.get("short_circuit", False)
+        short_circuit_all = short_circuit
         case_number = 1
         short_circuited = False
         try:
@@ -236,9 +238,9 @@ class Judge(object):
                             result.max_memory = 0
                             result.partial_output = ""
                         else:
-                            self.current_proc = executor.launch(self.env, generated_files,
-                                                      time=kwargs.get("time", 2), memory=kwargs.get("memory", 65536))
-                            judge.run_standard(self.current_proc, result, openfile(input_file), openfile(output_file), checker)
+                            self.current_proc = executor.launch(self.env, generated_files, time=time, memory=memory)
+                            judge.run_standard(self.current_proc, result, openfile(input_file), openfile(output_file),
+                                               checker)
                         self.packet_manager.test_case_status_packet(case_number,
                                                                     point_value if not short_circuited and result.result_flag == Result.AC else 0,
                                                                     point_value,

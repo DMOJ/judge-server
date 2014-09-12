@@ -1,4 +1,4 @@
-def check(process_output, judge_output, **kwargs):
+def check(process_output, judge_output):
     from judge import TerminateGrading
     epsilon = 10 ** -int(kwargs["precision"])
     for process_line, judge_line in zip(process_output.split('\n'), judge_output.split('\n')):

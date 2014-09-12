@@ -165,8 +165,7 @@ class Judge(object):
                     raise NotImplementedError("unsupported problem type: " + problem_type)
 
                 # Use a proxy to not expose init_data to all submethods
-                check_adapter = lambda proc_output, judge_output: checker.check(proc_output, judge_output,
-                                                                                *init_data)
+                check_adapter = lambda proc_output, judge_output: checker.check(proc_output, judge_output, init_data)
                 forward_test_cases = []
                 for case in init_data["test_cases"]:
                     if "data" in case:
@@ -245,7 +244,8 @@ class Judge(object):
                                                                     result.result_flag,
                                                                     result.execution_time,
                                                                     result.max_memory,
-                                                                    result.proc_output[:10]) # TODO: make limit configurable
+                                                                    result.proc_output[
+                                                                    :10])  # TODO: make limit configurable
                         if not short_circuited and result.result_flag != Result.AC:
                             short_circuited = True
                         case_number += 1

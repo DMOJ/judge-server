@@ -283,8 +283,8 @@ class Judge(object):
 
 
 class LocalJudge(Judge):
-    def __init__(self, **kwargs):
-        self.debug_mode = kwargs.get("debug", False)
+    def __init__(self, debug=False, **kwargs):
+        self.debug_mode = debug
 
         class LocalPacketManager(object):
             def __getattr__(self, *args, **kwargs):

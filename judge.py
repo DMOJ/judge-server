@@ -115,6 +115,7 @@ class Judge(object):
             supported_problems.append((problem, os.path.getmtime(os.path.join("data", "problems", problem))))
         self.packet_manager.supported_problems_packet(supported_problems)
         self.current_submission_thread = None
+        self._terminate_grading = False
 
     def begin_grading(self, problem_id, language, source_code):
         print "Grading %s in %s..." % (problem_id, language)
@@ -128,16 +129,10 @@ class Judge(object):
 
     def terminate_grading(self):
         if self.current_submission_thread:
-            try:
-                if self.current_proc:
-                    self.current_proc.kill()
-                self.current_submission_thread.throw(TerminateGrading)
-                self.current_submission_thread.join()
-            except threading.ThreadError:
-                print "Successfully terminated grading."
-            except:
-                traceback.print_exc()
-            self.current_submission_thread = None
+            self._terminate_grading = True
+            if self.current_proc:
+                self.current_proc.kill()
+            self.current_submission_thread.join()
             self.packet_manager.submission_terminated_packet()
 
     def _begin_grading(self, problem_id, language, source_code):
@@ -227,6 +222,8 @@ class Judge(object):
                 if type(test_case) == BatchedTestCase:
                     self.packet_manager.begin_batch_packet()
                 for input_file, output_file, point_value in test_case:
+                    if self._terminate_grading:
+                        raise TerminateGrading()
                     with ProgramJudge(*args) as judge:
                         result = Result()
                         if short_circuited:
@@ -238,6 +235,10 @@ class Judge(object):
                             self.current_proc = executor.launch(self.env, generated_files, time=time, memory=memory)
                             judge.run_standard(self.current_proc, result, openfile(input_file), openfile(output_file),
                                                checker)
+                            # Must check here because we might be interrupted mid-execution
+                            # If we don't bail out, we get an IR.
+                            if self._terminate_grading:
+                                raise TerminateGrading()
                         self.packet_manager.test_case_status_packet(case_number,
                                                                     point_value if not short_circuited and result.result_flag == Result.AC else 0,
                                                                     point_value,
@@ -254,11 +255,15 @@ class Judge(object):
                     self.packet_manager.batch_end_packet()
                 if not short_circuit_all:
                     short_circuited = False
+        except TerminateGrading:
+            self.packet_manager.submission_terminated_packet()
+            self._terminate_grading = False
+            raise
         except:
             traceback.print_exc()
-        finally:
             self.packet_manager.grading_end_packet()
-        self.current_proc = None
+        finally:
+            self.current_proc = None
 
     def __del__(self):
         del self.packet_manager

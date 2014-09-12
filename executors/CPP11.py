@@ -1,6 +1,7 @@
 import subprocess
 import sys
-from judgeerror import CompileError
+from error import CompileError
+from ptbox import sandbox
 from ptbox.chroot import CHROOTProcessDebugger
 
 C_FS = [".*\.[so]"]
@@ -25,6 +26,6 @@ def generate(env, name, source_code):
     return [source_code_file, output_file]
 
 
-def launch(env, execute, generated_files, *args, **kwargs):
-    return execute(["./" + generated_files[1]] + list(args), CHROOTProcessDebugger(filesystem=C_FS), kwargs.get("time"),
+def launch(env, generated_files, *args, **kwargs):
+    return sandbox.execute(["./" + generated_files[1]] + list(args), CHROOTProcessDebugger(filesystem=C_FS), kwargs.get("time"),
                    kwargs.get("memory"))

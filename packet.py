@@ -17,6 +17,9 @@ class PacketManager(object):
         self.input = self.conn.makefile("r")
         self.output = self.conn.makefile("w", 0)
 
+    def __del__(self):
+        self.conn.shutdown()
+
     def _read_async(self):
         try:
             while True:

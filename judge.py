@@ -15,9 +15,10 @@ except ImportError:
     import Queue as queue
 
 from ptbox import sandbox  # @UnresolvedImport
-from judgeerror import CompileError
+from error import CompileError
 
 import executors  # @UnresolvedImport
+import checkers
 
 import packet  # @UnresolvedImport
 
@@ -60,7 +61,7 @@ class TestCase(object):
 
 
 class BatchedTestCase(TestCase):
-    def __init__(self, point_value, io_files):
+    def __init__(self, io_files, point_value):
         self.point_value = point_value
         self.io_files = list(io_files)
         self.current_case = 0
@@ -76,50 +77,23 @@ class BatchedTestCase(TestCase):
             return self.io_files[self.current_case - 1] + (self.point_value,)
 
 
-def _async_raise(tid, exctype):
-    '''Raises an exception in the threads with id tid'''
-    if not inspect.isclass(exctype):
-        raise TypeError("Only types can be raised (not instances)")
-    res = ctypes.pythonapi.PyThreadState_SetAsyncExc(tid,
-                                                     ctypes.py_object(exctype))
-    if res == 0:
-        raise ValueError("invalid thread id")
-    elif res != 1:
-        # "if it returns a number greater than one, you're in trouble,
-        # and you should call it again with exc=NULL to revert the effect"
-        ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, 0)
-        raise SystemError("PyThreadState_SetAsyncExc failed")
-
-
 class ThreadWithExc(threading.Thread):
-    '''A thread class that supports raising exception in the thread from
-       another thread.
-    '''
-
+    """
+        A thread class that supports raising exception in the thread from
+        another thread.
+    """
     def throw(self, exctype):
-        """Raises the given exception type in the context of this thread.
-
-        If the thread is busy in a system call (time.sleep(),
-        socket.accept(), ...), the exception is simply ignored.
-
-        If you are sure that your exception should terminate the thread,
-        one way to ensure that it works is:
-
-            t = ThreadWithExc( ... )
-            ...
-            t.raiseExc( SomeException )
-            while t.isAlive():
-                time.sleep( 0.1 )
-                t.raiseExc( SomeException )
-
-        If the exception is to be caught by the thread, you need a way to
-        check that your thread has caught it.
-
-        CAREFUL : this function is executed in the context of the
-        caller thread, to raise an exception in the context of the
-        thread represented by this instance.
-        """
-        _async_raise(self.ident, exctype)
+        if not inspect.isclass(exctype):
+            raise TypeError("Only types can be raised (not instances)")
+        res = ctypes.pythonapi.PyThreadState_SetAsyncExc(self.ident,
+                                                         ctypes.py_object(exctype))
+        if res == 0:
+            raise ValueError("invalid thread id")
+        elif res != 1:
+            # "if it returns a number greater than one, you're in trouble,
+            # and you should call it again with exc=NULL to revert the effect"
+            ctypes.pythonapi.PyThreadState_SetAsyncExc(self.ident, 0)
+            raise SystemError("PyThreadState_SetAsyncExc failed")
 
 
 class TerminateGrading(Exception):
@@ -133,31 +107,14 @@ class Judge(object):
         self.debug_mode = kwargs.get("debug", False)
         self.packet_manager = packet.PacketManager(host, port, self)
         self.current_submission = None
+        self.current_proc = None
         with open(os.path.join("data", "judge", "judge.json"), "r") as init_file:
-            self.paths = json.load(init_file)
+            self.env = json.load(init_file)
         supported_problems = []
         for problem in os.listdir(os.path.join("data", "problems")):
             supported_problems.append((problem, os.path.getmtime(os.path.join("data", "problems", problem))))
         self.packet_manager.supported_problems_packet(supported_problems)
         self.current_submission_thread = None
-        self.ping_lock = threading.Lock()
-        self.ping_thread = threading.Thread(target=self.ping, args=(self.ping_lock,))
-        self.ping_thread.start()
-
-    def ping(self, ping_lock):
-        total_time = 60.0 / Judge.PING_FREQUENCY
-        while ping_lock.acquire(False):
-            ping_lock.release()
-            # TODO
-            self.packet_manager.ping_packet(0)
-            time_slept = 0
-            while time_slept < total_time:
-                if ping_lock.acquire(False):
-                    ping_lock.release()
-                    time.sleep(0.1)
-                    time_slept += 0.1
-                else:
-                    break
 
     def begin_grading(self, problem_id, language, source_code):
         print "Grading %s in %s..." % (problem_id, language)
@@ -171,6 +128,8 @@ class Judge(object):
     def terminate_grading(self):
         if self.current_submission_thread:
             try:
+                if self.current_proc:
+                    self.current_proc.kill()
                 self.current_submission_thread.throw(TerminateGrading)
                 self.current_submission_thread.join()
                 self.current_submission_thread = None
@@ -181,87 +140,89 @@ class Judge(object):
             self.packet_manager.submission_terminated_packet()
 
     def _begin_grading(self, problem_id, language, source_code):
+        generated_files = []
         try:
             try:
-                generated_files = []
                 try:
-                    try:
-                        executor = getattr(executors, language)
-                        generated_files = executor.generate(self.paths, problem_id, source_code)
-                    except CompileError as compile_error:
-                        generated_files.append(compile_error.args[1])
-                        print "Compile Error"
-                        print compile_error.message
-                        self.packet_manager.compile_error_packet(compile_error.message)
-                        return
+                    executor = getattr(executors, language)
+                    generated_files = executor.generate(self.env, problem_id, source_code)
                 except AttributeError:
-                    raise NotImplementedError("%s not implemented yet!" % language)
+                    raise NotImplementedError("unsupported language: " + language)
+            except CompileError as compile_error:
+                generated_files.append(compile_error.args[1])
+                print "Compile Error"
+                print compile_error.message
+                self.packet_manager.compile_error_packet(compile_error.message)
+                return
+
+            with open(os.path.join("data", "problems", problem_id, "init.json"), "r") as init_file:
+                init_data = json.load(init_file)
+                problem_type = init_data["type"]
 
                 try:
-                    with open(os.path.join("data", "problems", problem_id, "init.json"), "r") as init_file:
-                        init_data = json.load(init_file)
-                        problem_type = init_data["type"]
-                        if problem_type == "standard":
-                            run = self.run_standard
-                            checker = checker_standard
-                            checker_args = ()
-                        elif problem_type == "floats":
-                            run = self.run_standard
-                            checker = checker_floats
-                            checker_args = (int(init_data["precision"]),)
-                        else:
-                            raise Exception("not implemented yet!")
-                        test_cases = init_data["test_cases"]
-                        forward_test_cases = [
-                            (BatchedTestCase(case["points"], ((subcase["in"], subcase["out"]) for subcase in
-                                                              case["data"])) if "data" in case else
-                             TestCase(case["in"], case["out"], case["points"])) for case in test_cases]
-                        case = 1
-                        for res in run(executor, generated_files, forward_test_cases, checker, checker_args,
-                                       archive=os.path.join("data", "problems", problem_id, init_data["archive"]),
-                                       time=int(init_data["time"]), memory=int(init_data["memory"]),
-                                       short_circuit=(init_data["short_circuit"] == "True")):
-                            print "Test case %s" % case
-                            print "\t%f seconds (real)" % res.r_execution_time
-                            print "\t%f seconds (debugged)" % res.execution_time
-                            #print "\tDebugging took %.2f%% of the time" % \
-                            #      ((res.r_execution_time - res.execution_time) / res.r_execution_time * 100)
-                            print "\t%.2f mb (%s kb)" % (res.max_memory / 1024.0, res.max_memory)
-                            execution_verdict = []
-                            if res.result_flag & Result.IR:
-                                execution_verdict.append("\tInvalid Return")
-                            if res.result_flag & Result.WA:
-                                execution_verdict.append("\tWrong Answer")
-                            if res.result_flag & Result.RTE:
-                                execution_verdict.append("\tRuntime Error")
-                            if res.result_flag & Result.TLE:
-                                execution_verdict.append("\tTime Limit Exceeded")
-                            if res.result_flag & Result.MLE:
-                                execution_verdict.append("\tMemory Limit Exceeded")
-                            if res.result_flag & Result.SC:
-                                execution_verdict.append("\tShort Circuited")
-                            if res.result_flag & Result.IE:
-                                execution_verdict.append("\tInternal Error")
-                            if res.result_flag == Result.AC:
-                                print "\tAccepted"
-                            else:
-                                print "\n".join(execution_verdict)
-                            case += 1
-                except IOError:
-                    print "Internal Error: Test cases do not exist"
-                    self.packet_manager.problem_not_exist_packet(problem_id)
-            finally:
-                for bad_file in generated_files:
-                    os.unlink(bad_file)
+                    checker = getattr(checkers, problem_type)
+                except AttributeError:
+                    raise NotImplementedError("unsupported problem type: " + problem_type)
+
+                # Use a proxy to not expose init_data to all submethods
+                check_adapter = lambda proc_output, judge_output: checker.check(proc_output, judge_output,
+                                                                                *init_data)
+                forward_test_cases = []
+                for case in init_data["test_cases"]:
+                    if "data" in case:
+                        # Data is batched, with multiple subcases for each parent case
+                        # If one subcase fails, the main case fails too
+                        subcases = [(subcase["in"], subcase["out"]) for subcase in case["data"]]
+                        case = BatchedTestCase(subcases, case["points"])
+                    else:
+                        case = TestCase(case["in"], case["out"], case["points"])
+                    forward_test_cases.append(case)
+
+                case = 1
+                for res in self.run_standard(executor, generated_files, forward_test_cases, check_adapter,
+                               archive=os.path.join("data", "problems", problem_id, init_data["archive"]),
+                               time=int(init_data["time"]), memory=int(init_data["memory"]),
+                               short_circuit=(init_data["short_circuit"] == "True")):
+                    print "Test case %s" % case
+                    print "\t%f seconds (real)" % res.r_execution_time
+                    print "\t%f seconds (debugged)" % res.execution_time
+                    # print "\tDebugging took %.2f%% of the time" % \
+                    # ((res.r_execution_time - res.execution_time) / res.r_execution_time * 100)
+                    print "\t%.2f mb (%s kb)" % (res.max_memory / 1024.0, res.max_memory)
+                    execution_verdict = []
+                    if res.result_flag & Result.IR:
+                        execution_verdict.append("\tInvalid Return")
+                    if res.result_flag & Result.WA:
+                        execution_verdict.append("\tWrong Answer")
+                    if res.result_flag & Result.RTE:
+                        execution_verdict.append("\tRuntime Error")
+                    if res.result_flag & Result.TLE:
+                        execution_verdict.append("\tTime Limit Exceeded")
+                    if res.result_flag & Result.MLE:
+                        execution_verdict.append("\tMemory Limit Exceeded")
+                    if res.result_flag & Result.SC:
+                        execution_verdict.append("\tShort Circuited")
+                    if res.result_flag & Result.IE:
+                        execution_verdict.append("\tInternal Error")
+                    if res.result_flag == Result.AC:
+                        print "\tAccepted"
+                    else:
+                        print "\n".join(execution_verdict)
+                    case += 1
+        except IOError:
+            print "Internal Error: Test cases do not exist"
+            self.packet_manager.problem_not_exist_packet(problem_id)
         except TerminateGrading:
             print "Forcefully terminating grading. Temporary files may not be deleted."
         finally:
+            for bad_file in generated_files:
+                os.unlink(bad_file)
             self.current_submission_thread = None
 
     def listen(self):
         self.packet_manager.run()
 
-    def run_standard(self, executor, generated_files, test_cases, checker, checker_args, *args, **kwargs):
+    def run_standard(self, executor, generated_files, test_cases, checker, *args, **kwargs):
         if "archive" in kwargs:
             archive = zipreader.ZipReader(kwargs["archive"])
             openfile = archive.files.__getitem__
@@ -271,48 +232,51 @@ class Judge(object):
         short_circuit_all = kwargs.get("short_circuit", False)
         case_number = 1
         short_circuited = False
-        for test_case in test_cases:
-            if type(test_case) == BatchedTestCase:
-                self.packet_manager.begin_batch_packet()
-            for input_file, output_file, point_value in test_case:
-                with ProgramJudge(*args, partial_output_limit=(2147483647 if self.debug_mode else 10)) as judge:
-                    result = Result()
-                    if short_circuited:
-                        result.result_flag = Result.SC
-                        result.execution_time = 0
-                        result.max_memory = 0
-                        result.partial_output = ""
-                    else:
-                        process = executor.launch(self.paths, sandbox.execute, generated_files,
-                                                  time=kwargs.get("time", 2), memory=kwargs.get("memory", 65536))
-                        judge.run_standard(process, result, openfile(input_file), openfile(output_file),
-                                           checker, checker_args)
-                    self.packet_manager.test_case_status_packet(case_number,
-                                                                point_value if not short_circuited and result.result_flag == Result.AC else 0,
-                                                                point_value,
-                                                                result.result_flag,
-                                                                result.execution_time,
-                                                                result.max_memory,
-                                                                result.partial_output)
-                    if not short_circuited and result.result_flag != Result.AC:
-                        short_circuited = True
-                    case_number += 1
-                    yield result
-            if type(test_case) == BatchedTestCase:
-                self.packet_manager.batch_end_packet()
-            if not short_circuit_all:
-                short_circuited = False
-        self.packet_manager.grading_end_packet()
+        try:
+            for test_case in test_cases:
+                if type(test_case) == BatchedTestCase:
+                    self.packet_manager.begin_batch_packet()
+                for input_file, output_file, point_value in test_case:
+                    with ProgramJudge(*args, partial_output_limit=(2147483647 if self.debug_mode else 10)) as judge:
+                        result = Result()
+                        if short_circuited:
+                            result.result_flag = Result.SC
+                            result.execution_time = 0
+                            result.max_memory = 0
+                            result.partial_output = ""
+                        else:
+                            self.current_proc = executor.launch(self.env, generated_files,
+                                                      time=kwargs.get("time", 2), memory=kwargs.get("memory", 65536))
+                            judge.run_standard(self.current_proc, result, openfile(input_file), openfile(output_file), checker)
+                        self.packet_manager.test_case_status_packet(case_number,
+                                                                    point_value if not short_circuited and result.result_flag == Result.AC else 0,
+                                                                    point_value,
+                                                                    result.result_flag,
+                                                                    result.execution_time,
+                                                                    result.max_memory,
+                                                                    result.partial_output)
+                        if not short_circuited and result.result_flag != Result.AC:
+                            short_circuited = True
+                        case_number += 1
+                        yield result
+                if type(test_case) == BatchedTestCase:
+                    self.packet_manager.batch_end_packet()
+                if not short_circuit_all:
+                    short_circuited = False
+        except:
+            traceback.print_exc()
+        finally:
+            self.packet_manager.grading_end_packet()
+        self.current_proc = None
 
-    # TODO: cleanup packet manager
     def __del__(self):
-        pass
+        del self.packet_manager
 
     def __enter__(self):
         return self
 
     def __exit__(self, exception_type, exception_value, traceback):
-        self.ping_lock.acquire()
+        pass
 
     def murder(self):
         self.terminate_grading()
@@ -329,11 +293,8 @@ class LocalJudge(Judge):
         self.packet_manager = LocalPacketManager()
         self.current_submission = "submission"
         with open(os.path.join("data", "judge", "judge.json"), "r") as init_file:
-            self.paths = json.load(init_file)
+            self.env = json.load(init_file)
         self.current_submission_thread = None
-        self.ping_lock = threading.Lock()
-        self.ping_thread = threading.Thread(target=self.ping, args=(self.ping_lock,))
-        self.ping_thread.start()
 
     def listen(self):
         pass
@@ -404,7 +365,7 @@ class ProgramJudge(object):
             line = self.process.stdout.readline().rstrip()
         return line.rstrip() if line else ""
 
-    def run_standard(self, process, result, input_file, output_file, checker, checker_args):
+    def run_standard(self, process, result, input_file, output_file, checker):
         self.process = process
         self.result = result
         result_flag = Result.AC
@@ -425,7 +386,7 @@ class ProgramJudge(object):
         self.result.r_execution_time = self.process.r_execution_time
         judge_output = output_file.read()
         output_file.close()
-        if not checker(process_output, judge_output, *checker_args):
+        if not checker(process_output, judge_output):
             result_flag |= Result.WA
         if self.process.returncode:
             result_flag |= Result.IR
@@ -470,31 +431,6 @@ class ProgramJudge(object):
             traceback.print_exc()
 
 
-def checker_standard(process_output, judge_output):
-    for process_line, judge_line in zip(process_output.split('\n'), judge_output.split('\n')):
-        process_line = process_line.rstrip()
-        judge_line = judge_line.rstrip()
-        if process_line != judge_line:
-            return False
-    return True
-
-
-def checker_floats(process_output, judge_output, precision):
-    epsilon = 10 ** -precision
-    for process_line, judge_line in zip(process_output.split('\n'), judge_output.split('\n')):
-        try:
-            process_floats = map(float, process_line.split())
-            judge_floats = map(float, judge_line.split())
-        except TerminateGrading:
-            raise
-        except:
-            return False
-        for process_float, judge_float in zip(process_floats, judge_floats):
-            if abs(process_float - judge_float) > epsilon:
-                return False
-    return True
-
-
 def main():
     parser = argparse.ArgumentParser(description='''
         Spawns a judge for a submission server.
@@ -509,139 +445,12 @@ def main():
 
     print "Running %s judge..." % (["local", "live"][args.server_host is not None])
 
-    cpp_source = r'''
-#include <iostream>
-#include <cstdio>
-
-using namespace std;
-
-int main()
-{
-    int N, a, b;
-    scanf("%d",  &N);
-    for(int i=0; i<N; i++)
-    {
-        scanf("%d%d", &a, &b);
-        printf("%d\n", a+b);
-    }
-
-    return 0;
-}
-'''
-
-    cpp11_source = r'''
-#include <iostream>
-#include <cstdio>
-#include <unordered_set>
-
-using namespace std;
-
-int main()
-{
-    int N, a, b;
-    scanf("%d",  &N);
-    for(int i=0; i<N; i++)
-    {
-        scanf("%d%d", &a, &b);
-        printf("%d\n", a+b);
-    }
-
-    return 0;
-}
-'''
-
-    java_source = '''
-import java.util.Scanner;
-import java.io.*;
-
-public class aplusb
-{
-    public static void main(String args[]) throws IOException
-    {
-        //File f = new File("a.b");
-        //f.createNewFile();
-        Scanner sc = new Scanner(System.in);
-        int n = sc.nextInt();
-        for(int i = 0; i != n; i++) {
-            System.out.println(sc.nextInt() + sc.nextInt());
-        }
-        sc.close();
-    }
-}
-'''
-
-    rb_source = r'''
-n = Integer(gets)
-n.times {
-    l = gets.split
-    puts Integer(l[0]) + Integer(l[1])
-}
-'''
-
-    py2_source = r'''
-n = input()
-for i in xrange(n):
-    print sum(map(int, raw_input().split()))
-'''
-
-    py3_source = r'''
-for i in range(int(input())):
-    print(sum(map(int, input().split())))
-'''
-
-    geom_py2_source = r'''
-import math
-def cp(x1, y1, x2, y2):
-    return x1*y2-y1*x2
-def area(x, y, z):
-    return abs(cp(x[0]-y[0], x[1]-y[1], x[0]-z[0], x[1]-z[1]))/2.0
-def perim(x, y, z):
-    return math.hypot(x[0]-y[0], x[1]-y[1])+math.hypot(x[0]-z[0], x[1]-z[1])+math.hypot(y[0]-z[0], y[1]-z[1])
-for i in xrange(input()):
-    x1, y1, x2, y2, x3, y3=map(int, raw_input().split())
-    X=x1, y1
-    Y=x2, y2
-    Z=x3, y3
-    print "%.2f %.2f"%(area(X, Y, Z), perim(X, Y, Z))
-'''
-
-    #import yappi
-
-    #yappi.start()
-
     if args.server_host:
         with Judge(args.server_host, args.server_port, debug=args.debug) as judge:
             try:
                 judge.listen()
             finally:
                 judge.murder()
-    else:
-        with LocalJudge(debug=args.debug) as judge:
-            try:
-                #judge.begin_grading("aplusb", "CPP", cpp_source)
-                #judge.begin_grading("aplusb", "RUBY", rb_source)
-
-                judge.begin_grading("aplusb", "CPP11", cpp11_source)
-                judge.current_submission_thread.join()
-                judge.begin_grading("aplusb", "JAVA", java_source)
-                judge.current_submission_thread.join()
-                judge.begin_grading("helloworld", "PY3", 'print("Hello, World!")')
-                judge.current_submission_thread.join()
-                judge.begin_grading("geometry1", "PY2", geom_py2_source)
-                judge.current_submission_thread.join()
-                judge.begin_grading("aplusb", "PY2", py2_source)
-                judge.current_submission_thread.join()
-                judge.begin_grading("aplusb", "PY3", py3_source)
-                judge.current_submission_thread.join()
-                # time.sleep(0.1)
-                # #judge.terminate_grading()
-                # while judge.current_submission_thread is not None:
-                #     #print "submission alive?", judge.current_submission_thread.isAlive()
-                #     time.sleep(0.1)
-            except Exception:
-                traceback.print_exc()
-        print "Done"
-        # yappi.get_func_stats().print_all()
 
 
 if __name__ == "__main__":

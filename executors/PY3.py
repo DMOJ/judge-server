@@ -1,10 +1,6 @@
-try:
-    from executors import ResourceProxy
-except:
-    pass
+from .resource_proxy import ResourceProxy
 from ptbox import sandbox
 from ptbox.chroot import CHROOTProcessDebugger
-import os
 
 PYTHON_FS = ["\xb8", "\xff", "/dev/urandom", "/bin/python", ".*\.[so|py]", ".*/lib(?:32|64)?/python[\d.]+/.*",
              ".*/lib/locale/.*"]

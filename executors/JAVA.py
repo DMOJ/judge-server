@@ -2,12 +2,8 @@ import os
 import subprocess
 from error import CompileError
 
-try:
-    from executors import ResourceProxy
-except:
-    pass
+from .resource_proxy import ResourceProxy
 from ptbox import sandbox
-from ptbox.chroot import CHROOTProcessDebugger
 
 JAVA_FS = ["/usr/bin/java", ".*\.[so|jar]"]
 

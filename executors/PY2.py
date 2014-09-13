@@ -1,7 +1,7 @@
 from .resource_proxy import ResourceProxy
 from cptbox import SecurePopen, CHROOTSecurity
 
-PYTHON_FS = ["usr/bin/python", ".*\.[so|py]", ".*/lib(?:32|64)?/python[\d.]+/.*", ".*/lib/locale/.*"]
+PYTHON_FS = ["usr/bin/python", ".*\.[so|py]", ".*/lib(?:32|64)?/python[\d.]+/.*", ".*/lib/locale/.*", '/proc/meminfo']
 
 
 class Executor(ResourceProxy):

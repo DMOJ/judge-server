@@ -67,11 +67,16 @@ int pt_process::monitor() {
         if (WIFEXITED(status) || WIFSIGNALED(status))
             break;
 
+        if (WIFSTOPPED(status) && WSTOPSIG(status) == SIGSEGV) {
+            printf("Child segmentation fault\n");
+            kill(pid, SIGKILL);
+        }
+
         if (WIFSTOPPED(status) && WSTOPSIG(status) == SIGTRAP) {
             ptrace(PTRACE_GETSIGINFO, pid, NULL, &si);
             if (si.si_code == SIGTRAP || si.si_code == (SIGTRAP|0x80)) {
                 int syscall = debugger->syscall();
-                printf("%s syscall %d\n", in_syscall ? "Exit" : "Enter", syscall);
+                //printf("%s syscall %d\n", in_syscall ? "Exit" : "Enter", syscall);
                 if (!in_syscall) {
                     switch (handler[syscall]) {
                         case PTBOX_HANDLER_ALLOW:
@@ -79,9 +84,12 @@ int pt_process::monitor() {
                         case PTBOX_HANDLER_CALLBACK:
                             if (callback(context, syscall))
                                 break;
-                            // Fall through
+                            //printf("Killed by callback: %d\n", syscall);
+                            kill(pid, SIGKILL);
+                            continue;
                         default:
                             // Default is to kill, safety first.
+                            //printf("Killed by DISALLOW or None: %d\n", syscall);
                             kill(pid, SIGKILL);
                             continue;
                     }

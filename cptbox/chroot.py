@@ -55,9 +55,10 @@ class CHROOTSecurity(dict):
     def do_write(debugger):
         return debugger.arg0() in (1, 2)
 
-    def do_execve(self):
+    def do_execve(self, debugger):
         self.execve_count += 1
         return self.execve_count < 2
 
     def do_access(self, debugger):
-        return self.fs_jail.match(debugger.readstr(debugger.uarg0()))
+        file = debugger.readstr(debugger.uarg0())
+        return self.fs_jail.match(file) is not None

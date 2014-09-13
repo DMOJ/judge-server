@@ -1,4 +1,3 @@
-from libc.stdio cimport printf
 from libc.stdlib cimport atoi, malloc, free
 from posix.unistd cimport close, dup2, getpid, execve
 from posix.resource cimport setrlimit, rlimit, RLIMIT_AS, rusage

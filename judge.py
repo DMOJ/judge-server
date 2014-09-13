@@ -283,6 +283,7 @@ class LocalJudge(Judge):
         with open(os.path.join("data", "judge", "judge.json"), "r") as init_file:
             self.env = json.load(init_file)
         self.current_submission_thread = None
+        self._terminate_grading = False
 
     def listen(self):
         pass
@@ -324,7 +325,7 @@ class TestCaseJudge(object):
         self.process = process
         self.result = Result()
         result_flag = Result.AC
-        self.result.proc_output, _ = process.communicate(input_file.read())
+        self.result.proc_output, error = process.communicate(input_file.read())
 
         self.result.max_memory = self.process.max_memory
         self.result.execution_time = self.process.execution_time
@@ -341,7 +342,7 @@ class TestCaseJudge(object):
             result_flag |= Result.TLE
         if self.process.mle:
             result_flag |= Result.MLE
-        self.close()
+        #self.close()
         self.result.result_flag = result_flag
         return self.result
 
@@ -366,6 +367,13 @@ def main():
                 judge.listen()
             finally:
                 judge.murder()
+    else:
+        with LocalJudge() as judge:
+            try:
+                judge.begin_grading('helloworld', 'PY2', 'print "Hello, World!"')
+                judge.current_submission_thread.join()
+            except KeyboardInterrupt:
+                judge.terminate_grading()
 
 
 if __name__ == "__main__":

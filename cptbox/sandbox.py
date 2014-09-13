@@ -46,7 +46,8 @@ class _SecurePopen(Process):
         self._bitness = bitness
         self._executable = executable or _find_exe(args[0])
         self._args = args
-        self._env = env
+        #self._env = env
+        self._env = ['%s=%s' % i for i in os.environ.iteritems()]
         self._time = time
         self._memory = memory
         self._tle = False
@@ -60,12 +61,12 @@ class _SecurePopen(Process):
         else:
             for i in xrange(SYSCALL_COUNT):
                 handler = security.get(i, DISALLOW)
+                call = translator[i][bitness == 64]
                 if not isinstance(handler, int):
                     if not callable(handler):
                         raise ValueError('Handler not callable: ' + handler)
-                    self._callbacks[i] = handler
+                    self._callbacks[call] = handler
                     handler = _CALLBACK
-                call = translator[i][bitness == 64]
                 if call is not None:
                     self._handler(call, handler)
 
@@ -109,7 +110,7 @@ class _SecurePopen(Process):
     def _callback(self, syscall):
         callback = self._callbacks[syscall]
         if callback is not None:
-            return callback(self._debugger)
+            return callback(self.debugger)
         return False
 
     def _run_process(self):

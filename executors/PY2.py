@@ -10,9 +10,10 @@ class Executor(ResourceProxy):
         super(ResourceProxy, self).__init__()
         self.env = env
         source_code_file = str(problem_id) + ".py"
-        customize = '''__import__("sys").stdout = __import__("os").fdopen(1, 'w', 65536)
-    __import__("sys").stdin = __import__("os").fdopen(0, 'r', 65536)
-    '''
+        customize = '''\
+__import__("sys").stdout = __import__("os").fdopen(1, 'w', 65536)
+__import__("sys").stdin = __import__("os").fdopen(0, 'r', 65536)
+'''
         with open(source_code_file, "wb") as fo:
             fo.write(customize)
             fo.write(source_code)

@@ -2,7 +2,7 @@ import os
 from platform import architecture
 import threading
 import time
-from cptbox import Process, SYSCALL_COUNT
+from _cptbox import Process, SYSCALL_COUNT
 
 DISALLOW = 0
 ALLOW = 1

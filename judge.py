@@ -190,10 +190,12 @@ class Judge(object):
                      *args, **kwargs):
         if "archive" in kwargs:
             files = {}
-            with zipfile.ZipFile(kwargs["archive"], "r") as archive:
+            archive = zipfile.ZipFile(kwargs["archive"], "r")
+            try:
                 for name in archive.infolist():
                     files[name.filename] = cStringIO.StringIO(archive.read(name))
-
+            finally:
+                archive.close()
             topen = files.__getitem__
         else:
             topen = open

@@ -93,8 +93,7 @@ cdef int pt_child(void *context) nogil:
     return 3306
 
 cdef int pt_syscall_handler(void *context, int syscall) nogil:
-    with gil:
-        (<object>context)(syscall)
+    return (<Process>context)._syscall_handler(syscall)
 
 cdef char **alloc_string_array(list):
     cdef char **array = <char**>malloc((len(list) + 1) * sizeof(char*))
@@ -174,7 +173,7 @@ cdef class Process:
         self.debugger = Debugger()
         self.debugger.thisptr = self._debugger
         self.process = new pt_process(self._debugger)
-        self.process.set_callback(pt_syscall_handler, <void*>self._callback)
+        self.process.set_callback(pt_syscall_handler, <void*>self)
 
     def __dealloc__(self):
         del self.debugger
@@ -182,6 +181,9 @@ cdef class Process:
 
     def _callback(self, syscall):
         return False
+
+    cdef int _syscall_handler(self, int syscall) with gil:
+        return self._callback(syscall)
 
     cpdef _handler(self, syscall, handler):
         self.process.set_handler(syscall, handler)

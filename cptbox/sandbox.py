@@ -49,6 +49,8 @@ class _SecurePopen(Process):
                     handler = _CALLBACK
                 self._handler(i, handler)
 
+        self._start_time = 0
+        self._died_time = 0
         self._started = threading.Event()
         self._died = threading.Event()
         self._worker = threading.Thread(target=self._run_process)
@@ -77,6 +79,10 @@ class _SecurePopen(Process):
     def bitness(self):
         return self._bitness
 
+    @property
+    def r_execution_time(self):
+        return self._start_time and (self._start_time - (self._died_time or time.time()))
+
     def kill(self):
         os.kill(self.pid, os.SIGKILL)
 
@@ -89,8 +95,10 @@ class _SecurePopen(Process):
     def _run_process(self):
         self._spawn(self._executable, self._args, self._env)
         self._started.set()
+        self._start_time = time.time()
         code = self._monitor()
 
+        self._died_time = time.time()
         if self._time and self.execution_time > self._time:
             self._tle = True
         self._died.set()

@@ -1,3 +1,6 @@
+import os
+
+
 class ResourceProxy(object):
     def __init__(self):
         self._files = []

@@ -120,9 +120,9 @@ class _SecurePopen(Process):
         if stdout is PIPE:
             self._stdout, self._child_stdout = os.pipe()
             self.stdout = os.fdopen(self._stdout, 'r')
-        elif isinstance(stdin, int):
+        elif isinstance(stdout, int):
             self._stdout, self._child_stdout = -1, stdout
-        elif stdin is not None:
+        elif stdout is not None:
             self._stdout, self._child_stdout = -1, stdout.fileno()
         else:
             self._stdout = self._child_stdout = -1
@@ -130,9 +130,9 @@ class _SecurePopen(Process):
         if stderr is PIPE:
             self._stderr, self._child_stderr = os.pipe()
             self.stderr = os.fdopen(self._stderr, 'r')
-        elif isinstance(stdin, int):
+        elif isinstance(stderr, int):
             self._stderr, self._child_stderr = -1, stderr
-        elif stdin is not None:
+        elif stderr is not None:
             self._stderr, self._child_stderr = -1, stderr.fileno()
         else:
             self._stderr = self._child_stderr = -1

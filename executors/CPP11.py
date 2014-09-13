@@ -1,10 +1,11 @@
 import os
 import subprocess
 import sys
+
+from cptbox import CHROOTSecurity, SecurePopen
 from error import CompileError
 from .resource_proxy import ResourceProxy
-from ptbox import sandbox
-from ptbox.chroot import CHROOTProcessDebugger
+
 
 C_FS = [".*\.[so]"]
 
@@ -30,8 +31,11 @@ class Executor(ResourceProxy):
             os.unlink(source_code_file)
             raise CompileError(compile_error)
         self._files = [source_code_file, output_file]
+        self.name = problem_id
 
     def launch(self, *args, **kwargs):
-        return sandbox.execute(["./" + self._files[1]] + list(args), CHROOTProcessDebugger(filesystem=C_FS),
-                           kwargs.get("time"),
-                           kwargs.get("memory"))
+        return SecurePopen([self.name] + list(args),
+                           executable=self._files[1],
+                           security=CHROOTSecurity(C_FS),
+                           time=kwargs.get('time'),
+                           memory=kwargs.get('memory'))

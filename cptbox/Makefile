@@ -1,5 +1,5 @@
 CXX=g++
-CXXFLAGS=-g -fPIC -Wall
+CXXFLAGS=-g -fPIC -Wall -O3
 LIBS=-lrt
 SOURCES=ptbox.cpp ptdebug.cpp ptdebug32.cpp ptdebug64.cpp ptproc.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
@@ -9,6 +9,9 @@ all: $(SOURCES) $(EXECUTABLE) _cptbox.so
 
 $(EXECUTABLE): $(OBJECTS)
 	$(CXX) $(CXXFLAGS) -o $@ $(OBJECTS) $(LIBS)
+
+strip: $(EXECUTABLE) _cptbox.so
+	strip -s $(EXECUTABLE) _cptbox.so
 
 ptbox.cpp: ptbox.h
 ptdebug.cpp: ptbox.h
@@ -24,3 +27,6 @@ _cptbox.so: _cptbox.o $(OBJECTS)
 
 _cptbox.cpp: _cptbox.pyx
 	cython --cplus _cptbox.pyx
+
+clean:
+	-rm $(OBJECTS) _cptbox.so $(EXECUTABLE) _cptbox.cpp

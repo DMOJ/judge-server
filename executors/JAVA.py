@@ -1,5 +1,6 @@
 import os
 import subprocess
+from cptbox import SecurePopen, NullSecurity
 from error import CompileError
 
 from .resource_proxy import ResourceProxy
@@ -25,7 +26,10 @@ class Executor(ResourceProxy):
         self._files = [source_code_file, output_file]
 
     def launch(self, *args, **kwargs):
-        return sandbox.execute(
-            [self.env["java"], "-Djava.security.manager", "-client", "-Xmx%sK" % kwargs.get("memory"), "-cp", ".",
-             self._files[1]] + list(args),
-            time=kwargs.get("time"))
+        return SecurePopen(['java', "-Djava.security.manager", "-client",
+                            "-Xmx%sK" % kwargs.get("memory"), "-cp", ".",
+                                 self._files[1]] + list(args),
+                           executable=self.env['java'],
+                           security=NullSecurity(),
+                           time=kwargs.get('time'),
+                           memory=kwargs.get('memory'))

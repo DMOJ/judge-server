@@ -1,7 +1,7 @@
 from libc.stdio cimport printf
 from libc.stdlib cimport atoi, malloc, free
 from posix.unistd cimport close, dup2, getpid, execve
-from posix.resource cimport setrlimit, rlimit, RLIMIT_AS
+from posix.resource cimport setrlimit, rlimit, RLIMIT_AS, rusage
 from posix.signal cimport kill
 from libc.signal cimport SIGSTOP
 
@@ -34,6 +34,9 @@ cdef extern from 'ptbox.h' nogil:
         int monitor()
         int getpid()
         double execution_time()
+        const rusage *getrusage()
+
+    cdef int MAX_SYSCALL
 
 cdef extern from 'dirent.h' nogil:
     ctypedef struct DIR:
@@ -52,6 +55,8 @@ cdef extern from 'sys/ptrace.h' nogil:
     long ptrace(int, pid_t, void*, void*)
     cdef int PTRACE_TRACEME
 
+
+SYSCALL_COUNT = MAX_SYSCALL
 
 cdef struct child_config:
     unsigned long memory
@@ -123,6 +128,24 @@ cdef class Debugger:
     def arg5(self):
         return self.thisptr.arg5()
 
+    def uarg0(self):
+        return <unsigned long>self.thisptr.arg0()
+
+    def uarg1(self):
+        return <unsigned long>self.thisptr.arg1()
+
+    def uarg2(self):
+        return <unsigned long>self.thisptr.arg2()
+
+    def uarg3(self):
+        return <unsigned long>self.thisptr.arg3()
+
+    def uarg4(self):
+        return <unsigned long>self.thisptr.arg4()
+
+    def uarg5(self):
+        return <unsigned long>self.thisptr.arg5()
+
     def readstr(self, unsigned long address):
         cdef char* str = self.thisptr.readstr(address)
         pystr = <object>str
@@ -134,7 +157,8 @@ cdef class Process:
     cdef pt_debugger *_debugger
     cdef pt_process *process
     cdef public Debugger debugger
-    cdef public int _exitcode
+    cdef readonly bint _exited
+    cdef readonly int _exitcode
     cdef public int _child_stdin, _child_stdout, _child_stderr
     cdef public unsigned long _child_memory
 
@@ -162,7 +186,7 @@ cdef class Process:
     cpdef _handler(self, syscall, handler):
         self.process.set_handler(syscall, handler)
 
-    def _spawn(self, file, *args, env=()):
+    def _spawn(self, file, args, env=()):
         cdef child_config config
         config.memory = self._child_memory
         config.file = file
@@ -178,10 +202,31 @@ cdef class Process:
         free(config.argv)
         free(config.envp)
 
-    cpdef monitor(self):
+    cpdef _monitor(self):
         self._exitcode = self.process.monitor()
+        self._exited = True
         return self._exitcode
 
     property pid:
         def __get__(self):
             return self.process.getpid()
+
+    property execution_time:
+        def __get__(self):
+            return self.process.execution_time()
+
+    property cpu_time:
+        def __get__(self):
+            cdef const rusage *usage = self.process.getrusage()
+            return usage.ru_utime.tv_sec + usage.ru_utime.tv_usec / 1000000.
+
+    property max_memory:
+        def __get__(self):
+            cdef const rusage *usage = self.process.getrusage()
+            return usage.ru_maxrss
+
+    property returncode:
+        def __get__(self):
+            if not self._exited:
+                return None
+            return self._exitcode

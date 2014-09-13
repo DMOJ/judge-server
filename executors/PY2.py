@@ -1,6 +1,5 @@
 from .resource_proxy import ResourceProxy
-from ptbox import sandbox
-from ptbox.chroot import CHROOTProcessDebugger
+from cptbox import SecurePopen, CHROOTSecurity
 
 PYTHON_FS = ["usr/bin/python", ".*\.[so|py]", ".*/lib(?:32|64)?/python[\d.]+/.*", ".*/lib/locale/.*"]
 
@@ -20,7 +19,8 @@ __import__("sys").stdin = __import__("os").fdopen(0, 'r', 65536)
         self._files = [source_code_file]
 
     def launch(self, *args, **kwargs):
-        return sandbox.execute([self.env["python"], "-B", self._files[0]] + list(args),
-                               debugger=CHROOTProcessDebugger(filesystem=PYTHON_FS),
-                               time=kwargs.get("time"),
-                               memory=kwargs.get("memory"))
+        return SecurePopen(['python', '-B', self._files[0]] + list(args),
+                           executable=self.env['python'],
+                           security=CHROOTSecurity(PYTHON_FS),
+                           time=kwargs.get('time'),
+                           memory=kwargs.get('memory'))

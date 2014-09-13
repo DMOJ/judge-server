@@ -55,12 +55,11 @@ int pt_process::monitor() {
     bool in_syscall = false;
     struct timespec start, end, delta;
     int status;
-    struct rusage rusage;
     siginfo_t si;
 
     while (true) {
         clock_gettime(CLOCK_MONOTONIC, &start);
-        wait4(pid, &status, 0, &rusage);
+        wait4(pid, &status, 0, &_rusage);
         clock_gettime(CLOCK_MONOTONIC, &end);
         timespec_sub(&end, &start, &delta);
         timespec_add(&exec_time, &delta, &exec_time);

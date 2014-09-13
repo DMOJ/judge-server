@@ -1,4 +1,4 @@
-from cptbox import Process
+from _cptbox import Process
 
 allowed = [
     0, 1, 2, 3, 5, 9, 10, 11, 12, 13, 14, 16, 21, 59, 72,
@@ -10,8 +10,8 @@ def main():
     proc = Process(64)
     for call in allowed:
         proc._handler(call, 1)
-    proc._spawn('/bin/ls', 'ls')
-    print 'Return: %d' % proc.monitor()
+    proc._spawn('/bin/ls', ['ls'])
+    print 'Return: %d' % proc._monitor()
 
 if __name__ == '__main__':
     main()

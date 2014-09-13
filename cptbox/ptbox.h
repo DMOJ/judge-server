@@ -1,0 +1,100 @@
+#include <sys/types.h>
+#include <sys/time.h>
+
+#define MAX_SYSCALL 312
+#define PTBOX_HANDLER_DENY 0
+#define PTBOX_HANDLER_ALLOW 1
+#define PTBOX_HANDLER_CALLBACK 2
+
+inline void timespec_add(struct timespec *a, struct timespec *b, struct timespec *result) {
+    result->tv_sec = a->tv_sec + b->tv_sec ;
+    result->tv_nsec = a->tv_nsec + b->tv_nsec ;
+    if (result->tv_nsec >= 1000000000L) {
+        result->tv_sec++;
+        result->tv_nsec = result->tv_nsec - 1000000000L ;
+    }
+}
+
+inline void timespec_sub(struct timespec *a, struct timespec *b, struct timespec *result) {
+    if ((a->tv_sec < b->tv_sec) ||
+        ((a->tv_sec == b->tv_sec) &&
+         (a->tv_nsec <= b->tv_nsec))) { /* a <= b? */
+        result->tv_sec = result->tv_nsec = 0 ;
+    } else { /* a > b */
+        result->tv_sec = a->tv_sec - b->tv_sec;
+        if (a->tv_nsec < b->tv_nsec) {
+            result->tv_nsec = a->tv_nsec + 1000000000L - b->tv_nsec ;
+            result->tv_sec--; /* Borrow a second-> */
+        } else {
+            result->tv_nsec = a->tv_nsec - b->tv_nsec ;
+        }
+    }
+}
+
+class pt_debugger;
+
+typedef int (*pt_handler_callback)(void *context, int syscall);
+typedef int (*pt_fork_handler)(void *context);
+
+class pt_process {
+public:
+    pt_process(pt_debugger *debugger);
+    void set_callback(pt_handler_callback, void *context);
+    int set_handler(int syscall, int handler);
+    int spawn(pt_fork_handler child, void *context);
+    int monitor();
+    int getpid() { return pid; }
+    double execution_time() { return exec_time.tv_sec + exec_time.tv_nsec / 1000000000.0; }
+private:
+    pid_t pid;
+    int handler[MAX_SYSCALL];
+    pt_handler_callback callback;
+    void *context;
+    struct timespec exec_time;
+    pt_debugger *debugger;
+};
+
+class pt_debugger {
+public:
+    virtual int syscall() = 0;
+    virtual long arg0() = 0;
+    virtual long arg1() = 0;
+    virtual long arg2() = 0;
+    virtual long arg3() = 0;
+    virtual long arg4() = 0;
+    virtual long arg5() = 0;
+    void set_process(pt_process *);
+    virtual void new_process();
+    virtual char *readstr(unsigned long addr);
+    virtual void freestr(char *);
+protected:
+    pt_process *process;
+    int memory;
+};
+
+class pt_debugger32 : public pt_debugger {
+    long peek_reg(int);
+public:
+    virtual int syscall();
+    virtual long arg0();
+    virtual long arg1();
+    virtual long arg2();
+    virtual long arg3();
+    virtual long arg4();
+    virtual long arg5();
+};
+
+class pt_debugger64 : public pt_debugger {
+    long peek_reg(int);
+public:
+    virtual int syscall();
+    virtual long arg0();
+    virtual long arg1();
+    virtual long arg2();
+    virtual long arg3();
+    virtual long arg4();
+    virtual long arg5();
+};
+
+pt_process *pt_alloc_process(pt_debugger *);
+void pt_free_process(pt_process *);

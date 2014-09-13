@@ -81,7 +81,7 @@ class _SecurePopen(Process):
 
     @property
     def r_execution_time(self):
-        return self._start_time and (self._start_time - (self._died_time or time.time()))
+        return self._start_time and ((self._died_time or time.time()) - self._start_time)
 
     def kill(self):
         os.kill(self.pid, os.SIGKILL)

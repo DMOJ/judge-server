@@ -173,8 +173,9 @@ class SecurePopen(object):
                 os.close(self._stdout_)
                 os.close(self._stderr_)
 
-                if self._debugger:
-                    self._debugger.pid = pid
+                _debugger = self._debugger
+                if _debugger:
+                    _debugger.pid = pid
                     # Depending on the bitness, import a different ptrace
                     # Registers change depending on bitness, as do syscall ids
                     bitness = self.bitness
@@ -183,12 +184,12 @@ class SecurePopen(object):
                     else:
                         import _ptrace32 as _ptrace
                     # Define the shells for reading syscall arguments in the debugger
-                    self._debugger.arg0 = lambda: _ptrace.arg0(pid)
-                    self._debugger.arg1 = lambda: _ptrace.arg1(pid)
-                    self._debugger.arg2 = lambda: _ptrace.arg2(pid)
-                    self._debugger.arg3 = lambda: _ptrace.arg3(pid)
-                    self._debugger.arg4 = lambda: _ptrace.arg4(pid)
-                    self._debugger.arg5 = lambda: _ptrace.arg5(pid)
+                    _debugger.arg0 = lambda: _ptrace.arg0(pid)
+                    _debugger.arg1 = lambda: _ptrace.arg1(pid)
+                    _debugger.arg2 = lambda: _ptrace.arg2(pid)
+                    _debugger.arg3 = lambda: _ptrace.arg3(pid)
+                    _debugger.arg4 = lambda: _ptrace.arg4(pid)
+                    _debugger.arg5 = lambda: _ptrace.arg5(pid)
                     # Reverse syscall ids
                     wrapped_ids = [None] * len(syscalls.translator)
                     for k, x in syscalls.translator.iteritems():
@@ -198,7 +199,7 @@ class SecurePopen(object):
 
                     # Utility method for getting syscall number for call
                     get_syscall_number = lambda: wrapped_ids[_ptrace.get_syscall_number(pid)]
-                    self._debugger.get_syscall_number = get_syscall_number
+                    _debugger.get_syscall_number = get_syscall_number
 
                     # Let the debugger define its proxies
                     syscall_proxies = [None] * len(syscalls.by_id)
@@ -207,15 +208,15 @@ class SecurePopen(object):
 
                     self._start = time.time()
                     self._started.set()
-                    if self._debugger:
-                        self._debugger._tt = 0
-                        self._debugger._st = 0
+                    if _debugger:
+                        _debugger._tt = 0
+                        _debugger._st = 0
 
                     in_syscall = False
                     while True:
                         _, status, self._rusage = os.wait4(pid, 0)
-                        if self._debugger:
-                            self._debugger._st = time.time()
+                        if _debugger:
+                            _debugger._st = time.time()
 
                         if os.WIFEXITED(status):
                             break
@@ -242,14 +243,14 @@ class SecurePopen(object):
                         # Not handled by a decorator: resume syscall
 
                         ptrace(PTRACE_SYSCALL, pid, None, None)
-                        if self._debugger:
-                            self._debugger._tt += time.time() - self._debugger._st
+                        if _debugger:
+                            _debugger._tt += time.time() - _debugger._st
                 else:
                     self._start = time.time()
                     self._started.set()
                     _, status, self._rusage = os.wait4(pid, 0)
                 self._r_duration = time.time() - self._start
-                self._duration = self._r_duration - (self._debugger._tt if self._debugger else 0)
+                self._duration = self._r_duration - (_debugger._tt if _debugger else 0)
                 # CPU time, __shocker uses clock time in case a malicious user sleeps or what not.
                 #self._duration = self._rusage.ru_utime
                 if self._time and self._duration > self._time:

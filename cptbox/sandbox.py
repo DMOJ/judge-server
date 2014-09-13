@@ -5,7 +5,9 @@ import time
 import select
 import errno
 import signal
-from _cptbox import Process, SYSCALL_COUNT
+import sys
+from _cptbox import Process
+from .syscalls import translator, SYSCALL_COUNT
 
 DISALLOW = 0
 ALLOW = 1
@@ -63,7 +65,9 @@ class _SecurePopen(Process):
                         raise ValueError('Handler not callable: ' + handler)
                     self._callbacks[i] = handler
                     handler = _CALLBACK
-                self._handler(i, handler)
+                call = translator[i][bitness == 64]
+                if call is not None:
+                    self._handler(call, handler)
 
         self._start_time = 0
         self._died_time = 0
@@ -110,6 +114,9 @@ class _SecurePopen(Process):
 
     def _run_process(self):
         self._spawn(self._executable, self._args, self._env)
+        if self._child_stdin >= 0: os.close(self._child_stdin)
+        if self._child_stdout >= 0: os.close(self._child_stdout)
+        if self._child_stderr >= 0: os.close(self._child_stderr)
         self._started.set()
         self._start_time = time.time()
         code = self._monitor()

@@ -457,3 +457,5 @@ translator = {
     380: (None, 68),
     381: (None, 69),
 }
+
+SYSCALL_COUNT = 382

@@ -12,7 +12,7 @@ C_FS = [".*\.[so]"]
 
 class Executor(ResourceProxy):
     def __init__(self, env, problem_id, source_code):
-        super(ResourceProxy).__init__()
+        super(ResourceProxy, self).__init__()
         self.env = env
         source_code_file = str(problem_id) + ".cpp"
         with open(source_code_file, "wb") as fo:

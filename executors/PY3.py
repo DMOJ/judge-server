@@ -8,7 +8,7 @@ PYTHON_FS = ["\xb8", "\xff", "/dev/urandom", "/bin/python", ".*\.[so|py]", ".*/l
 
 class Executor(ResourceProxy):
     def __init__(self, env, problem_id, source_code):
-        super(ResourceProxy).__init__()
+        super(ResourceProxy, self).__init__()
         self.env = env
         source_code_file = str(problem_id) + ".py"
         customize = '''__import__("sys").stdout = __import__("os").fdopen(1, 'w', 65536)

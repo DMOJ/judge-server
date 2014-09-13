@@ -291,23 +291,11 @@ class LocalJudge(Judge):
 class TestCaseJudge(object):
     EOF = None
 
-    def __init__(self, redirect=False, transfer=False, interact=False):
+    def __init__(self):
         self.result = None
         self.process = None
-        self.write_lock = threading.Lock()
-        self.write_queue = queue.Queue()
         self.stopped = False
         self.exitcode = None
-        self.redirect = redirect
-        self.transfer = transfer
-        self.interact = interact
-
-        self.old_stdin = sys.stdin
-        self.old_stdout = sys.stdout
-        self.current_submission = None
-        if self.redirect:
-            sys.stdin = self
-            sys.stdout = self
 
     def __del__(self):
         self.close(True)
@@ -318,55 +306,26 @@ class TestCaseJudge(object):
     def __exit__(self, exception_type, exception_value, traceback):
         self.close()
 
-    def alive(self, result_flag=None):
+    def alive(self):
         if not self.stopped:
             self.exitcode = self.process.poll()
-            if self.exitcode is not None:
-                sys.stdin = self.old_stdin
-                sys.stdout = self.old_stdout
-                self.stopped = True
-                self.result.result_flag = result_flag
-                self.write_lock.acquire()
+            self.stopped = self.exitcode is not None
         return not self.stopped
 
-    def close(self, force_terminate=False, result_flag=None):
-        if self.result and self.alive(result_flag):
-            self.result.result_flag = result_flag
-            self.write_lock.acquire()
-            sys.stdin = self.old_stdin
-            sys.stdout = self.old_stdout
-            if force_terminate or self.interact:
-                self.process.terminate()
+    def close(self, force_terminate=False):
+        if self.result and self.alive():
+            if force_terminate:
+                self.process.kill()
             else:
                 self.exitcode = self.process.wait()
             self.stopped = True
-
-    def read(self, *args):
-        return self.process.stdout.read(*args) if self.alive() else ""
-
-    def readline(self):
-        if not self.alive():
-            return ""
-        line = self.process.stdout.readline().rstrip()
-        while not line and self.alive():
-            line = self.process.stdout.readline().rstrip()
-        return line.rstrip() if line else ""
 
     def run_standard(self, process, input_file, output_file, checker):
         self.process = process
         self.result = Result()
         result_flag = Result.AC
-        write_thread = threading.Thread(target=self.write_async, args=(self.write_lock,))
-        write_thread.daemon = True
-        write_thread.start()
-        if self.transfer:
-            self.write(sys.stdin.read())
-        self.write(input_file.read())
-        input_file.close()
-        self.write(TestCaseJudge.EOF)
-        self.result.proc_output = self.read()
+        self.result.proc_output, _ = process.communicate(input_file.read())
 
-        self.process.wait()
         self.result.max_memory = self.process.max_memory
         self.result.execution_time = self.process.execution_time
         self.result.r_execution_time = self.process.r_execution_time
@@ -382,40 +341,9 @@ class TestCaseJudge(object):
             result_flag |= Result.TLE
         if self.process.mle:
             result_flag |= Result.MLE
-        self.close(result_flag=result_flag)
+        self.close()
+        self.result.result_flag = result_flag
         return self.result
-
-    def write(self, data):
-        self.write_queue.put_nowait(data)
-
-    def write_async(self, write_lock):
-        stdin = self.process.stdin
-        write_queue = self.write_queue
-        try:
-            while True:
-                while write_lock.acquire(False) and self.alive():
-                    write_lock.release()
-                    try:
-                        data = write_queue.get(True, 1)
-                        break
-                    except queue.Empty:
-                        pass
-                else:
-                    break
-                if data is TestCaseJudge.EOF:
-                    stdin.close()
-                    break
-                else:
-                    data = data.replace('\r\n', '\n').replace('\r', '\n')
-                    try:
-                        stdin.write(data)
-                    except IOError:
-                        break
-                    if data == '\n':
-                        stdin.flush()
-                        os.fsync(stdin.fileno())
-        except Exception:
-            traceback.print_exc()
 
 
 def main():

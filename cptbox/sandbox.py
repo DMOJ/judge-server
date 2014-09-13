@@ -2,6 +2,8 @@ import os
 from platform import architecture
 import threading
 import time
+import select
+import errno
 from _cptbox import Process, SYSCALL_COUNT
 
 DISALLOW = 0
@@ -21,6 +23,19 @@ def _find_exe(path):
         if os.access(p, os.X_OK):
             return p
     raise OSError()
+
+
+_PIPE_BUF = getattr(select, 'PIPE_BUF', 512)
+
+
+def _eintr_retry_call(func, *args):
+    while True:
+        try:
+            return func(*args)
+        except (OSError, IOError) as e:
+            if e.errno == errno.EINTR:
+                continue
+            raise
 
 
 class _SecurePopen(Process):
@@ -115,6 +130,8 @@ class _SecurePopen(Process):
             time.sleep(1)
 
     def __init_streams(self, stdin, stdout, stderr):
+        self.stdin = self.stdout = self.stderr = None
+
         if stdin is PIPE:
             self._child_stdin, self._stdin = os.pipe()
             self.stdin = os.fdopen(self._stdin, 'w')
@@ -144,7 +161,108 @@ class _SecurePopen(Process):
             self._stderr, self._child_stderr = -1, stderr.fileno()
         else:
             self._stderr = self._child_stderr = -1
-        
+
+    # All communicate stuff copied from subprocess.
+    def communicate(self, input=None):
+        # Optimization: If we are only using one pipe, or no pipe at
+        # all, using select() or threads is unnecessary.
+        if [self.stdin, self.stdout, self.stderr].count(None) >= 2:
+            stdout = None
+            stderr = None
+            if self.stdin:
+                if input:
+                    try:
+                        self.stdin.write(input)
+                    except IOError as e:
+                        if e.errno != errno.EPIPE and e.errno != errno.EINVAL:
+                            raise
+                self.stdin.close()
+            elif self.stdout:
+                stdout = _eintr_retry_call(self.stdout.read)
+                self.stdout.close()
+            elif self.stderr:
+                stderr = _eintr_retry_call(self.stderr.read)
+                self.stderr.close()
+            self.wait()
+            return (stdout, stderr)
+
+        return self._communicate(input)
+
+    def _communicate(self, input):
+        if self.stdin:
+            # Flush stdio buffer.  This might block, if the user has
+            # been writing to .stdin in an uncontrolled fashion.
+            self.stdin.flush()
+            if not input:
+                self.stdin.close()
+
+        stdout = None # Return
+        stderr = None # Return
+        fd2file = {}
+        fd2output = {}
+
+        poller = select.poll()
+
+        def register_and_append(file_obj, eventmask):
+            poller.register(file_obj.fileno(), eventmask)
+            fd2file[file_obj.fileno()] = file_obj
+
+        def close_unregister_and_remove(fd):
+            poller.unregister(fd)
+            fd2file[fd].close()
+            fd2file.pop(fd)
+
+        if self.stdin and input:
+            register_and_append(self.stdin, select.POLLOUT)
+
+        select_POLLIN_POLLPRI = select.POLLIN | select.POLLPRI
+        if self.stdout:
+            register_and_append(self.stdout, select_POLLIN_POLLPRI)
+            fd2output[self.stdout.fileno()] = stdout = []
+        if self.stderr:
+            register_and_append(self.stderr, select_POLLIN_POLLPRI)
+            fd2output[self.stderr.fileno()] = stderr = []
+
+        input_offset = 0
+        while fd2file:
+            try:
+                ready = poller.poll()
+            except select.error, e:
+                if e.args[0] == errno.EINTR:
+                    continue
+                raise
+
+            for fd, mode in ready:
+                if mode & select.POLLOUT:
+                    chunk = input[input_offset : input_offset + _PIPE_BUF]
+                    try:
+                        input_offset += os.write(fd, chunk)
+                    except OSError as e:
+                        if e.errno == errno.EPIPE:
+                            close_unregister_and_remove(fd)
+                        else:
+                            raise
+                    else:
+                        if input_offset >= len(input):
+                            close_unregister_and_remove(fd)
+                elif mode & select_POLLIN_POLLPRI:
+                    data = os.read(fd, 4096)
+                    if not data:
+                        close_unregister_and_remove(fd)
+                    fd2output[fd].append(data)
+                else:
+                    # Ignore hang up or errors.
+                    close_unregister_and_remove(fd)
+
+        # All data exchanged.  Translate lists into strings.
+        if stdout is not None:
+            stdout = ''.join(stdout)
+        if stderr is not None:
+            stderr = ''.join(stderr)
+
+        self.wait()
+        return stdout, stderr
+
 
 def SecurePopen(argv, executable=None, *args, **kwargs):
     executable = executable or _find_exe(argv[0])

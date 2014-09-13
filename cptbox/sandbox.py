@@ -4,6 +4,7 @@ import threading
 import time
 import select
 import errno
+import signal
 from _cptbox import Process, SYSCALL_COUNT
 
 DISALLOW = 0
@@ -99,7 +100,7 @@ class _SecurePopen(Process):
         return self._start_time and ((self._died_time or time.time()) - self._start_time)
 
     def kill(self):
-        os.kill(self.pid, os.SIGKILL)
+        os.kill(self.pid, signal.SIGKILL)
 
     def _callback(self, syscall):
         callback = self._callbacks[syscall]
@@ -124,7 +125,7 @@ class _SecurePopen(Process):
 
         while not self._exited:
             if self.execution_time > self._time:
-                os.kill(self.pid, os.SIGKILL)
+                os.kill(self.pid, signal.SIGKILL)
                 self._tle = True
                 break
             time.sleep(1)

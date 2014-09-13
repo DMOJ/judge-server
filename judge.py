@@ -24,8 +24,6 @@ import checkers
 
 import packet  # @UnresolvedImport
 
-import zipreader  # @UnresolvedImport
-
 
 class Result(object):
     AC = 0

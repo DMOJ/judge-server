@@ -79,6 +79,7 @@ cdef int pt_child(void *context) nogil:
     if config.stdin >= 0:  dup2(config.stdin, 0)
     if config.stdout >= 0: dup2(config.stdout, 1)
     if config.stderr >= 0: dup2(config.stderr, 2)
+
     while True:
         dir = readdir(d)
         if dir == NULL:
@@ -204,7 +205,10 @@ cdef class Process:
         free(config.envp)
 
     cpdef _monitor(self):
-        self._exitcode = self.process.monitor()
+        cdef int exitcode
+        with nogil:
+            exitcode = self.process.monitor()
+        self._exitcode = exitcode
         self._exited = True
         return self._exitcode
 

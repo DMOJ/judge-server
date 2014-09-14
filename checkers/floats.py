@@ -10,6 +10,6 @@ def check(process_output, judge_output, data):
         except:
             return False
         for process_float, judge_float in zip(process_floats, judge_floats):
-            if abs(process_float - judge_float) > epsilon:
+            if abs(process_float - judge_float) > epsilon and (abs(judge_float) < epsilon or abs(1.0 - process_float / judge_float) > epsilon):
                 return False
     return True

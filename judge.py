@@ -323,8 +323,8 @@ class TestCaseJudge(object):
         self.process = process
         self.result = Result()
         result_flag = Result.AC
-        input = input_file.read()#.replace('\r\n', '\n').replace('\r', '\n')
-        self.result.proc_output, error = process.communicate(input)
+        input_data = input_file.read().replace('\r\n', '\n')#.replace('\r', '\n')
+        self.result.proc_output, error = process.communicate(input_data)
 
         self.result.max_memory = self.process.max_memory
         self.result.execution_time = self.process.execution_time

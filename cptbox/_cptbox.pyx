@@ -92,8 +92,9 @@ cdef int pt_child(void *context) nogil:
     cdef rlimit limit
 
     if config.memory:
-        limit.rlim_cur = limit.rlim_max = config.memory
+        limit.rlim_cur = limit.rlim_max = config.memory + 128 * 1024 * 1024
         setrlimit(RLIMIT_AS, &limit)
+        limit.rlim_cur = limit.rlim_max = config.memory
         setrlimit(RLIMIT_DATA, &limit)
 
     if config.cpu_time:

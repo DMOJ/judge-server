@@ -50,7 +50,8 @@ class _SecurePopen(Process):
         #self._env = env
         self._env = ['%s=%s' % i for i in os.environ.iteritems()]
         self._time = self._cpu_time = time
-        self._memory = self._child_memory = memory
+        self._memory = memory
+        self._child_memory = memory * 1024
         self._nproc = nproc
         self._tle = False
         self.__init_streams(stdin, stdout, stderr)

@@ -82,39 +82,43 @@ int pt_process::monitor() {
         if (first)
             dispatch(PTBOX_EVENT_ATTACH, 0);
 
-        if (WIFSTOPPED(status) && WSTOPSIG(status) == SIGSEGV) {
-            //printf("Child segmentation fault\n");
-            dispatch(PTBOX_EVENT_EXITING, exit_reason = PTBOX_EXIT_SEGFAULT);
-            kill(pid, SIGKILL);
-        }
-
-        if (WIFSTOPPED(status) && WSTOPSIG(status) == SIGTRAP) {
-            ptrace(PTRACE_GETSIGINFO, pid, NULL, &si);
-            if (si.si_code == SIGTRAP || si.si_code == (SIGTRAP|0x80)) {
-                int syscall = debugger->syscall();
-                //printf("%s syscall %d\n", in_syscall ? "Exit" : "Enter", syscall);
-                if (!in_syscall) {
-                    switch (handler[syscall]) {
-                        case PTBOX_HANDLER_ALLOW:
-                            break;
-                        case PTBOX_HANDLER_CALLBACK:
-                            if (callback(context, syscall))
+        if (WIFSTOPPED(status)) {
+            if (WSTOPSIG(status) == SIGTRAP) {
+                ptrace(PTRACE_GETSIGINFO, pid, NULL, &si);
+                if (si.si_code == SIGTRAP || si.si_code == (SIGTRAP|0x80)) {
+                    int syscall = debugger->syscall();
+                    //printf("%s syscall %d\n", in_syscall ? "Exit" : "Enter", syscall);
+                    if (!in_syscall) {
+                        switch (handler[syscall]) {
+                            case PTBOX_HANDLER_ALLOW:
                                 break;
-                            //printf("Killed by callback: %d\n", syscall);
-                            dispatch(PTBOX_EVENT_EXITING, exit_reason = PTBOX_EXIT_PROTECTION);
-                            kill(pid, SIGKILL);
-                            continue;
-                        default:
-                            // Default is to kill, safety first.
-                            //printf("Killed by DISALLOW or None: %d\n", syscall);
-                            dispatch(PTBOX_EVENT_EXITING, exit_reason = PTBOX_EXIT_PROTECTION);
-                            kill(pid, SIGKILL);
-                            continue;
+                            case PTBOX_HANDLER_CALLBACK:
+                                if (callback(context, syscall))
+                                    break;
+                                //printf("Killed by callback: %d\n", syscall);
+                                dispatch(PTBOX_EVENT_EXITING, exit_reason = PTBOX_EXIT_PROTECTION);
+                                kill(pid, SIGKILL);
+                                continue;
+                            default:
+                                // Default is to kill, safety first.
+                                //printf("Killed by DISALLOW or None: %d\n", syscall);
+                                dispatch(PTBOX_EVENT_EXITING, exit_reason = PTBOX_EXIT_PROTECTION);
+                                kill(pid, SIGKILL);
+                                continue;
+                        }
+                        if (debugger->is_exit(syscall))
+                            dispatch(PTBOX_EVENT_EXITING, PTBOX_EXIT_NORMAL);
                     }
-                    if (debugger->is_exit(syscall))
-                        dispatch(PTBOX_EVENT_EXITING, PTBOX_EXIT_NORMAL);
+                    in_syscall ^= true;
                 }
-                in_syscall ^= true;
+            } else {
+                switch (WSTOPSIG(status)) {
+                    case SIGSEGV:
+                        dispatch(PTBOX_EVENT_EXITING, exit_reason = PTBOX_EXIT_SEGFAULT);
+                        kill(pid, SIGKILL);
+                        break;
+                }
+                dispatch(PTBOX_EVENT_SIGNAL, WSTOPSIG(status));
             }
         }
         ptrace(PTRACE_SYSCALL, pid, NULL, NULL);

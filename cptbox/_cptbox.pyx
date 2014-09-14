@@ -46,6 +46,7 @@ cdef extern from 'ptbox.h' nogil:
     cdef int PTBOX_EVENT_ATTACH
     cdef int PTBOX_EVENT_EXITING
     cdef int PTBOX_EVENT_EXITED
+    cdef int PTBOX_EVENT_SIGNAL
 
     cdef int PTBOX_EXIT_NORMAL
     cdef int PTBOX_EXIT_PROTECTION
@@ -255,7 +256,7 @@ cdef class Process:
         return self._callback(syscall)
 
     cdef int _event_handler(self, int event, unsigned long param) nogil:
-        if event == PTBOX_EVENT_EXITING:
+        if event == PTBOX_EVENT_EXITING or event == PTBOX_EVENT_SIGNAL:
             self._max_memory = get_memory(self.process.getpid())
         return 0
 

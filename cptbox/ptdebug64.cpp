@@ -69,3 +69,7 @@ long pt_debugger64::arg4() {
 long pt_debugger64::arg5() {
     return peek_reg(R9);
 }
+
+bool pt_debugger64::is_exit(int syscall) {
+    return syscall == 231 || syscall == 60;
+}

@@ -20,6 +20,7 @@ def main():
     proc._handler(2, 2)
     proc._spawn('/bin/ls', ['ls'])
     print 'Return: %d' % proc._monitor()
+    print 'Memory usage: %d KB' % proc.max_memory
 
 if __name__ == '__main__':
     main()

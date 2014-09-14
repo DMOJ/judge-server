@@ -51,3 +51,7 @@ long pt_debugger32::arg4() {
 long pt_debugger32::arg5() {
     return 0;
 }
+
+bool pt_debugger32::is_exit(int syscall) {
+    return syscall == 252 || syscall == 1;
+}

@@ -11,6 +11,14 @@
 #define PTBOX_HANDLER_ALLOW 1
 #define PTBOX_HANDLER_CALLBACK 2
 
+#define PTBOX_EVENT_ATTACH 0
+#define PTBOX_EVENT_EXITING 1
+#define PTBOX_EVENT_EXITED 2
+
+#define PTBOX_EXIT_NORMAL 0
+#define PTBOX_EXIT_PROTECTION 1
+#define PTBOX_EXIT_SEGFAULT 2
+
 inline void timespec_add(struct timespec *a, struct timespec *b, struct timespec *result) {
     result->tv_sec = a->tv_sec + b->tv_sec ;
     result->tv_nsec = a->tv_nsec + b->tv_nsec ;
@@ -40,17 +48,21 @@ class pt_debugger;
 
 typedef int (*pt_handler_callback)(void *context, int syscall);
 typedef int (*pt_fork_handler)(void *context);
+typedef int (*pt_event_callback)(void *context, int event, unsigned long param);
 
 class pt_process {
 public:
     pt_process(pt_debugger *debugger);
     void set_callback(pt_handler_callback, void *context);
+    void set_event_proc(pt_event_callback, void *context);
     int set_handler(int syscall, int handler);
     int spawn(pt_fork_handler child, void *context);
     int monitor();
     int getpid() { return pid; }
     double execution_time() { return exec_time.tv_sec + exec_time.tv_nsec / 1000000000.0; }
     const rusage *getrusage() { return &_rusage; }
+protected:
+    int dispatch(int event, unsigned long param);
 private:
     pid_t pid;
     int handler[MAX_SYSCALL];
@@ -59,6 +71,8 @@ private:
     struct timespec exec_time;
     struct rusage _rusage;
     pt_debugger *debugger;
+    pt_event_callback event_proc;
+    void *event_context;
 };
 
 class pt_debugger {
@@ -70,6 +84,7 @@ public:
     virtual long arg3() = 0;
     virtual long arg4() = 0;
     virtual long arg5() = 0;
+    virtual bool is_exit(int syscall) = 0;
     void set_process(pt_process *);
     virtual void new_process();
     virtual char *readstr(unsigned long addr);
@@ -89,6 +104,7 @@ public:
     virtual long arg3();
     virtual long arg4();
     virtual long arg5();
+    virtual bool is_exit(int syscall);
 };
 
 class pt_debugger64 : public pt_debugger {
@@ -101,6 +117,7 @@ public:
     virtual long arg3();
     virtual long arg4();
     virtual long arg5();
+    virtual bool is_exit(int syscall);
 };
 
 pt_process *pt_alloc_process(pt_debugger *);

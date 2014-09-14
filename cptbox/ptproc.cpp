@@ -21,7 +21,8 @@ void pt_free_process(pt_process *process) {
 }
 
 pt_process::pt_process(pt_debugger *debugger) :
-    pid(0), callback(NULL), context(NULL), debugger(debugger)
+    pid(0), callback(NULL), context(NULL), debugger(debugger),
+    event_proc(NULL), event_context(NULL)
 {
     memset(&exec_time, 0, sizeof exec_time);
     memset(handler, 0, sizeof handler);
@@ -33,11 +34,22 @@ void pt_process::set_callback(pt_handler_callback callback, void *context) {
     this->context = context;
 }
 
+void pt_process::set_event_proc(pt_event_callback callback, void *context) {
+    this->event_proc = callback;
+    this->event_context = context;
+}
+
 int pt_process::set_handler(int syscall, int handler) {
     if (syscall >= MAX_SYSCALL || syscall < 0)
         return 1;
     this->handler[syscall] = handler;
     return 0;
+}
+
+int pt_process::dispatch(int event, unsigned long param) {
+    if (event_proc != NULL)
+        return event_proc(event_context, event, param);
+    return -1;
 }
 
 int pt_process::spawn(pt_fork_handler child, void *context) {
@@ -52,9 +64,9 @@ int pt_process::spawn(pt_fork_handler child, void *context) {
 }
 
 int pt_process::monitor() {
-    bool in_syscall = false;
+    bool in_syscall = false, first = true;
     struct timespec start, end, delta;
-    int status;
+    int status, exit_reason = PTBOX_EXIT_NORMAL;
     siginfo_t si;
 
     while (true) {
@@ -67,8 +79,12 @@ int pt_process::monitor() {
         if (WIFEXITED(status) || WIFSIGNALED(status))
             break;
 
+        if (first)
+            dispatch(PTBOX_EVENT_ATTACH, 0);
+
         if (WIFSTOPPED(status) && WSTOPSIG(status) == SIGSEGV) {
-            printf("Child segmentation fault\n");
+            //printf("Child segmentation fault\n");
+            dispatch(PTBOX_EVENT_EXITING, exit_reason = PTBOX_EXIT_SEGFAULT);
             kill(pid, SIGKILL);
         }
 
@@ -85,19 +101,25 @@ int pt_process::monitor() {
                             if (callback(context, syscall))
                                 break;
                             //printf("Killed by callback: %d\n", syscall);
+                            dispatch(PTBOX_EVENT_EXITING, exit_reason = PTBOX_EXIT_PROTECTION);
                             kill(pid, SIGKILL);
                             continue;
                         default:
                             // Default is to kill, safety first.
                             //printf("Killed by DISALLOW or None: %d\n", syscall);
+                            dispatch(PTBOX_EVENT_EXITING, exit_reason = PTBOX_EXIT_PROTECTION);
                             kill(pid, SIGKILL);
                             continue;
                     }
+                    if (debugger->is_exit(syscall))
+                        dispatch(PTBOX_EVENT_EXITING, PTBOX_EXIT_NORMAL);
                 }
                 in_syscall ^= true;
             }
         }
         ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
+        first = false;
     }
+    dispatch(PTBOX_EVENT_EXITED, exit_reason);
     return WIFEXITED(status) ? WEXITSTATUS(status) : -WTERMSIG(status);
 }

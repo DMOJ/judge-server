@@ -2,7 +2,8 @@ from libc.stdio cimport FILE, fopen, fclose, fgets, sprintf
 from libc.stdlib cimport atoi, malloc, free, strtoul
 from libc.string cimport strncmp, strlen
 from posix.unistd cimport close, dup2, getpid, execve
-from posix.resource cimport setrlimit, rlimit, RLIMIT_AS, rusage
+from posix.resource cimport setrlimit, rlimit, rusage, \
+    RLIMIT_AS, RLIMIT_DATA, RLIMIT_CPU, RLIMIT_STACK, RLIMIT_CORE
 from posix.signal cimport kill
 from posix.types cimport pid_t
 from libc.signal cimport SIGSTOP
@@ -67,11 +68,16 @@ cdef extern from 'sys/ptrace.h' nogil:
     long ptrace(int, pid_t, void*, void*)
     cdef int PTRACE_TRACEME
 
+cdef extern from 'sys/resource.h' nogil:
+    cdef int RLIMIT_NPROC
+
 
 SYSCALL_COUNT = MAX_SYSCALL
 
 cdef struct child_config:
     unsigned long memory
+    unsigned int cpu_time
+    int nproc
     char *file
     char **argv
     char **envp
@@ -88,6 +94,20 @@ cdef int pt_child(void *context) nogil:
     if config.memory:
         limit.rlim_cur = limit.rlim_max = config.memory
         setrlimit(RLIMIT_AS, &limit)
+        setrlimit(RLIMIT_DATA, &limit)
+
+    if config.cpu_time:
+        limit.rlim_cur = limit.rlim_max = config.cpu_time
+        setrlimit(RLIMIT_CPU, &limit)
+
+    if config.nproc >= 0:
+        limit.rlim_cur = limit.rlim_max = config.nproc
+        setrlimit(RLIMIT_NPROC, &limit)
+
+    limit.rlim_cur = limit.rlim_max = 2 * 1024 * 1024
+    setrlimit(RLIMIT_STACK, &limit)
+    limit.rlim_cur = limit.rlim_max = 0
+    setrlimit(RLIMIT_CORE, &limit)
 
     if config.stdin >= 0:  dup2(config.stdin, 0)
     if config.stdout >= 0: dup2(config.stdout, 1)
@@ -202,11 +222,15 @@ cdef class Process:
     cdef readonly int _exitcode
     cdef public int _child_stdin, _child_stdout, _child_stderr
     cdef public unsigned long _child_memory
+    cdef public unsigned int _cpu_time
+    cdef public int _nproc
     cdef unsigned long _max_memory
 
     def __cinit__(self, int bitness, *args, **kwargs):
         self._child_memory = 0
         self._child_stdin = self._child_stdout = self._child_stderr = -1
+        self._cpu_time = 0
+        self._nproc = -1
         if bitness == 32:
             self._debugger = new pt_debugger32()
         elif bitness == 64:
@@ -240,6 +264,8 @@ cdef class Process:
     def _spawn(self, file, args, env=()):
         cdef child_config config
         config.memory = self._child_memory
+        config.cpu_time = self._cpu_time
+        config.nproc = self._nproc
         config.file = file
         config.stdin = self._child_stdin
         config.stdout = self._child_stdout

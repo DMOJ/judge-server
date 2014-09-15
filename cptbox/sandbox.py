@@ -48,7 +48,7 @@ class _SecurePopen(Process):
         self._executable = executable or _find_exe(args[0])
         self._args = args
         self._env = env
-        #self._env = ['%s=%s' % i for i in os.environ.iteritems()]
+        self._env = ['%s=%s' % i for i in os.environ.iteritems()]
         self._time = time
         self._cpu_time = time + 10
         self._memory = memory

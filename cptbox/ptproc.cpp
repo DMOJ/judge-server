@@ -115,6 +115,7 @@ int pt_process::monitor() {
                 switch (WSTOPSIG(status)) {
                     case SIGSEGV:
                         dispatch(PTBOX_EVENT_EXITING, exit_reason = PTBOX_EXIT_SEGFAULT);
+                        puts("Child Segfault");
                         kill(pid, SIGKILL);
                         break;
                 }

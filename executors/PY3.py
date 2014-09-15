@@ -25,4 +25,5 @@ __import__("sys").stdin = __import__("os").fdopen(0, 'r', 65536)
                            executable=self.env['python3'],
                            security=CHROOTSecurity(PYTHON_FS + [str(self.env['python3dir']) + '.*', os.getcwd() + '$']),
                            time=kwargs.get('time'),
-                           memory=kwargs.get('memory'))
+                           memory=kwargs.get('memory'),
+                           address_grace=131072)

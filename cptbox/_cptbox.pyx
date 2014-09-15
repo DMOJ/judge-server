@@ -72,12 +72,15 @@ cdef extern from 'sys/ptrace.h' nogil:
 cdef extern from 'sys/resource.h' nogil:
     cdef int RLIMIT_NPROC
 
+cdef extern from 'signal.h' nogil:
+    cdef int SIGXCPU
 
 SYSCALL_COUNT = MAX_SYSCALL
 
 cdef struct child_config:
-    unsigned long memory
-    unsigned int cpu_time
+    unsigned long memory # affects only sbrk heap
+    unsigned long address_space # affects sbrk and mmap but not all address space is used memory
+    unsigned int cpu_time # ask linus how this counts the CPU time because it SIGKILLs way before the real time limit
     int nproc
     char *file
     char **argv
@@ -92,14 +95,17 @@ cdef int pt_child(void *context) nogil:
     cdef dirent *dir
     cdef rlimit limit
 
-    if config.memory:
-        limit.rlim_cur = limit.rlim_max = config.memory + 128 * 1024 * 1024
+    if config.address_space:
+        limit.rlim_cur = limit.rlim_max = config.address_space
         setrlimit(RLIMIT_AS, &limit)
+
+    if config.memory:
         limit.rlim_cur = limit.rlim_max = config.memory
         setrlimit(RLIMIT_DATA, &limit)
 
     if config.cpu_time:
-        limit.rlim_cur = limit.rlim_max = config.cpu_time
+        limit.rlim_cur = config.cpu_time
+        limit.rlim_max = config.cpu_time + 1
         setrlimit(RLIMIT_CPU, &limit)
 
     if config.nproc >= 0:
@@ -223,13 +229,13 @@ cdef class Process:
     cdef readonly bint _exited
     cdef readonly int _exitcode
     cdef public int _child_stdin, _child_stdout, _child_stderr
-    cdef public unsigned long _child_memory
+    cdef public unsigned long _child_memory, _child_address
     cdef public unsigned int _cpu_time
     cdef public int _nproc
     cdef unsigned long _max_memory
 
     def __cinit__(self, int bitness, *args, **kwargs):
-        self._child_memory = 0
+        self._child_memory = self._child_address = 0
         self._child_stdin = self._child_stdout = self._child_stderr = -1
         self._cpu_time = 0
         self._nproc = -1
@@ -258,6 +264,10 @@ cdef class Process:
     cdef int _event_handler(self, int event, unsigned long param) nogil:
         if event == PTBOX_EVENT_EXITING or event == PTBOX_EVENT_SIGNAL:
             self._max_memory = get_memory(self.process.getpid())
+        if event == PTBOX_EVENT_SIGNAL && param == SIGXCPU:
+            with gil:
+                import sys
+                print>>sys.stderr, 'SIGXCPU in child'
         return 0
 
     cpdef _handler(self, syscall, handler):
@@ -265,6 +275,7 @@ cdef class Process:
 
     def _spawn(self, file, args, env=()):
         cdef child_config config
+        config.address_space = self._child_address
         config.memory = self._child_memory
         config.cpu_time = self._cpu_time
         config.nproc = self._nproc

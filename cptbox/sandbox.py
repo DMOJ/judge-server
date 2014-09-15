@@ -43,15 +43,17 @@ def _eintr_retry_call(func, *args):
 
 class _SecurePopen(Process):
     def __init__(self, bitness, args, executable=None, security=None, time=0, memory=0, stdin=PIPE, stdout=PIPE,
-                 stderr=None, env=(), nproc=0):
+                 stderr=None, env=(), nproc=0, address_grace=4096):
         self._bitness = bitness
         self._executable = executable or _find_exe(args[0])
         self._args = args
-        #self._env = env
-        self._env = ['%s=%s' % i for i in os.environ.iteritems()]
-        self._time = self._cpu_time = time
+        self._env = env
+        #self._env = ['%s=%s' % i for i in os.environ.iteritems()]
+        self._time = time
+        self._cpu_time = time + 10
         self._memory = memory
         self._child_memory = memory * 1024
+        self._child_address = self._child_memory + address_grace * 1024
         self._nproc = nproc
         self._tle = False
         self.__init_streams(stdin, stdout, stderr)
@@ -108,6 +110,7 @@ class _SecurePopen(Process):
         return self._start_time and ((self._died_time or time.time()) - self._start_time)
 
     def kill(self):
+        print>>sys.stderr, 'Child is requested to be killed'
         os.kill(self.pid, signal.SIGKILL)
 
     def _callback(self, syscall):
@@ -136,6 +139,7 @@ class _SecurePopen(Process):
 
         while not self._exited:
             if self.execution_time > self._time:
+                print>>sys.stderr, 'Shocker activated, ouch!'
                 os.kill(self.pid, signal.SIGKILL)
                 self._tle = True
                 break

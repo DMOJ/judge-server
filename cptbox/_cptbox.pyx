@@ -264,7 +264,7 @@ cdef class Process:
     cdef int _event_handler(self, int event, unsigned long param) nogil:
         if event == PTBOX_EVENT_EXITING or event == PTBOX_EVENT_SIGNAL:
             self._max_memory = get_memory(self.process.getpid())
-        if event == PTBOX_EVENT_SIGNAL && param == SIGXCPU:
+        if event == PTBOX_EVENT_SIGNAL and param == SIGXCPU:
             with gil:
                 import sys
                 print>>sys.stderr, 'SIGXCPU in child'

@@ -95,13 +95,14 @@ class Judge(object):
         self.current_submission_thread = None
         self._terminate_grading = False
 
-    def begin_grading(self, problem_id, language, source_code):
+    def begin_grading(self, problem_id, language, source_code, time, mem, sc, grader, args):
         print "Grading %s in %s..." % (problem_id, language)
         if self.current_submission_thread:
             # TODO: this should be an error
             self.terminate_grading()
         self.current_submission_thread = threading.Thread(target=self._begin_grading,
-                                                          args=(problem_id, language, source_code))
+                                                          args=(problem_id, language, source_code,
+                                                                time, mem, sc, grader, args))
         self.current_submission_thread.daemon = True
         self.current_submission_thread.start()
 

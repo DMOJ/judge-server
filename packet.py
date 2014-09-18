@@ -63,7 +63,7 @@ class PacketManager(object):
                 packet["source"],
                 int(packet['time-limit']),
                 int(packet['memory-limit']),
-                packet['short-circuit'].lower() in ['True', '1'],
+                packet['short-circuit'],
                 packet['grader-id'],
                 packet['grader-args']
             )

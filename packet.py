@@ -57,7 +57,16 @@ class PacketManager(object):
             self.current_submission_packet()
         elif name == "submission-request":
             self.judge.current_submission = packet["submission-id"]
-            self.judge.begin_grading(packet["problem-id"], packet["language"], packet["source"])
+            self.judge.begin_grading(
+                packet["problem-id"],
+                packet["language"],
+                packet["source"],
+                int(packet['time-limit']),
+                int(packet['memory-limit']),
+                packet['short-circuit'].lower() in ['True', '1'],
+                packet['grader-id'],
+                packet['grader-args']
+            )
         elif name == "terminate-submission":
             self.judge.terminate_grading()
         else:

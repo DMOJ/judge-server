@@ -113,7 +113,7 @@ class Judge(object):
             self.current_submission_thread.join()
             self.packet_manager.submission_terminated_packet()
 
-    def _begin_grading(self, problem_id, language, source_code):
+    def _begin_grading(self, problem_id, language, source_code, time_limit, memory_limit, short_circuit, grader_id, grader_args):
         try:
             try:
                 # Launch an executor for the given language
@@ -130,16 +130,15 @@ class Judge(object):
 
             with open(os.path.join("data", "problems", problem_id, "init.json"), "r") as init_file:
                 init_data = json.load(init_file)
-                grader_type = init_data["type"].lower()
 
                 try:
                     # Obtain the output correctness checker, e.g. standard or float
-                    checker = getattr(checkers, grader_type)
+                    checker = getattr(checkers, grader_id)
                 except AttributeError:
-                    raise NotImplementedError("unsupported problem type: " + grader_type)
+                    raise NotImplementedError("unsupported problem type: " + grader_id)
 
                 # Use a proxy to not expose init_data to all submethods
-                check_adapter = lambda proc_output, judge_output: checker.check(proc_output, judge_output, init_data)
+                check_adapter = lambda proc_output, judge_output: checker.check(proc_output, judge_output, grader_args)
                 forward_test_cases = []
                 for case in init_data["test_cases"]:
                     if "data" in case:
@@ -155,8 +154,8 @@ class Judge(object):
                 for result in self.run_standard(executor.launch, forward_test_cases, check_adapter,
                                                 archive=os.path.join("data", "problems", problem_id,
                                                                      init_data["archive"]),
-                                                time=int(init_data["time"]), memory=int(init_data["memory"]),
-                                                short_circuit=(init_data["short_circuit"] == "True")):
+                                                time=time_limit, memory=memory_limit,
+                                                short_circuit=short_circuit):
                     print "Test case %s" % case
                     print "\t%f seconds (real)" % result.r_execution_time
                     print "\t%f seconds (debugged)" % result.execution_time

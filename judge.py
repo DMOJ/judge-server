@@ -18,10 +18,10 @@ except ImportError:
     import Queue as queue
 
 from ptbox import sandbox  # @UnresolvedImport
-from error import CompileError
+from error import CompileError # @UnresolvedImport
 
 import executors  # @UnresolvedImport
-import checkers
+import checkers # @UnresolvedImport
 
 import packet  # @UnresolvedImport
 

@@ -1,29 +1,18 @@
 #!/usr/bin/python
 import argparse
-import ctypes
 import gc
-import inspect
 import json
 import os
-import time
 import traceback
-import sys
 import threading
 import zipfile
 import cStringIO
 
-try:
-    import queue
-except ImportError:
-    import Queue as queue
-
-from ptbox import sandbox  # @UnresolvedImport
 from error import CompileError # @UnresolvedImport
 
-import executors  # @UnresolvedImport
+import executors
 import checkers # @UnresolvedImport
-
-import packet  # @UnresolvedImport
+import packet
 
 
 class Result(object):
@@ -176,6 +165,7 @@ class Judge(object):
                     case += 1
         except IOError:
             print "Internal Error: test cases do not exist"
+            traceback.print_exc()
             self.packet_manager.problem_not_exist_packet(problem_id)
         except TerminateGrading:
             print "Forcefully terminating grading. Temporary files may not be deleted."

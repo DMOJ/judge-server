@@ -65,22 +65,26 @@ int pt_process::spawn(pt_fork_handler child, void *context) {
 
 int pt_process::monitor() {
     bool in_syscall = false, first = true;
-    struct timespec start, end, delta;
+    struct timespec time_add, time_sub, used_time1, used_time2, delta;
+    memset(&time_add, 0, sizeof time_add);
+    memset(&time_sub, 0, sizeof time_sub);
     int status, exit_reason = PTBOX_EXIT_NORMAL;
     siginfo_t si;
 
     while (true) {
-        clock_gettime(CLOCK_MONOTONIC, &start);
+        clock_gettime(CLOCK_MONOTONIC, &used_time1);
         wait4(pid, &status, 0, &_rusage);
-        clock_gettime(CLOCK_MONOTONIC, &end);
-        timespec_sub(&end, &start, &delta);
-        timespec_add(&exec_time, &delta, &exec_time);
+        clock_gettime(CLOCK_MONOTONIC, &used_time2);
+        timespec_add(&time_add, &used_time2, &time_add);
+        timespec_add(&time_sub, &used_time1, &time_sub);
 
         if (WIFEXITED(status) || WIFSIGNALED(status))
             break;
 
-        if (first)
+        if (first) {
             dispatch(PTBOX_EVENT_ATTACH, 0);
+            first = false;
+        }
 
         if (WIFSTOPPED(status)) {
             if (WSTOPSIG(status) == SIGTRAP) {
@@ -123,8 +127,9 @@ int pt_process::monitor() {
             }
         }
         ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
-        first = false;
     }
     dispatch(PTBOX_EVENT_EXITED, exit_reason);
+    timespec_sub(&time_add, &time_sub, &delta);
+    timespec_add(&exec_time, &delta, &exec_time);
     return WIFEXITED(status) ? WEXITSTATUS(status) : -WTERMSIG(status);
 }

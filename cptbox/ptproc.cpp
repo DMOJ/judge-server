@@ -79,8 +79,10 @@ int pt_process::monitor() {
         if (WIFEXITED(status) || WIFSIGNALED(status))
             break;
 
-        if (first)
+        if (first) {
             dispatch(PTBOX_EVENT_ATTACH, 0);
+            first = false;
+        }
 
         if (WIFSTOPPED(status)) {
             if (WSTOPSIG(status) == SIGTRAP) {
@@ -123,7 +125,6 @@ int pt_process::monitor() {
             }
         }
         ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
-        first = false;
     }
     dispatch(PTBOX_EVENT_EXITED, exit_reason);
     return WIFEXITED(status) ? WEXITSTATUS(status) : -WTERMSIG(status);

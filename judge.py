@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import argparse
 import ctypes
+import gc
 import inspect
 import json
 import os
@@ -254,6 +255,7 @@ class Judge(object):
             self.packet_manager.grading_end_packet()
         finally:
             self.current_proc = None
+            gc.collect()
 
     def __del__(self):
         del self.packet_manager

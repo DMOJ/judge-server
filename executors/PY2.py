@@ -1,7 +1,7 @@
 from .resource_proxy import ResourceProxy
 from cptbox import SecurePopen, CHROOTSecurity
 
-PYTHON_FS = ["usr/bin/python", ".*\.[so|py]", ".*/lib(?:32|64)?/python[\d.]+/.*", ".*/lib/locale/.*", '/proc/meminfo']
+PYTHON_FS = [".*\.[so|py]", ".*/lib(?:32|64)?/python[\d.]+/.*", ".*/lib/locale/.*", '/proc/meminfo']
 
 
 class Executor(ResourceProxy):
@@ -19,7 +19,7 @@ __import__("sys").stdin = __import__("os").fdopen(0, 'r', 65536)
         self._files = [source_code_file]
 
     def launch(self, *args, **kwargs):
-        return SecurePopen(['python', '-B', self._files[0]] + list(args),
+        return SecurePopen(['python', '-BS', self._files[0]] + list(args),
                            executable=self.env['python'],
                            security=CHROOTSecurity(PYTHON_FS),
                            time=kwargs.get('time'),

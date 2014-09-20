@@ -2,7 +2,7 @@ import os
 from cptbox import CHROOTSecurity, SecurePopen
 from .resource_proxy import ResourceProxy
 
-PYTHON_FS = ["/dev/urandom", "/bin/python", ".*\.[so|py]", ".*/lib(?:32|64)?/python[\d.]+/.*",
+PYTHON_FS = ["/dev/urandom", ".*\.[so|py]", ".*/lib(?:32|64)?/python[\d.]+/.*",
              ".*/lib/locale/.*", '/usr/lib64', '.*/pyvenv.cfg', '/proc/meminfo']
 
 
@@ -21,7 +21,7 @@ __import__("sys").stdin = __import__("os").fdopen(0, 'r', 65536)
         self._files = [source_code_file]
 
     def launch(self, *args, **kwargs):
-        return SecurePopen(['python', '-B', self._files[0]] + list(args),
+        return SecurePopen(['python', '-BS', self._files[0]] + list(args),
                            executable=self.env['python3'],
                            security=CHROOTSecurity(PYTHON_FS + [str(self.env['python3dir']) + '.*', os.getcwd() + '$']),
                            time=kwargs.get('time'),

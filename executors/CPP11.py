@@ -27,11 +27,11 @@ class Executor(ResourceProxy):
         gcc_args = [env["gcc"], source_code_file, "-O2", "-std=c++0x"] + linker_options + ["-s", "-o", output_file]
         gcc_process = subprocess.Popen(gcc_args, stderr=subprocess.PIPE)
         _, compile_error = gcc_process.communicate()
+        self._files = [source_code_file, output_file]
+        self.name = problem_id
         if gcc_process.returncode != 0:
             os.unlink(source_code_file)
             raise CompileError(compile_error)
-        self._files = [source_code_file, output_file]
-        self.name = problem_id
 
     def launch(self, *args, **kwargs):
         return SecurePopen([self.name] + list(args),

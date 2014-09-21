@@ -20,10 +20,10 @@ class Executor(ResourceProxy):
         javac_args = [env["javac"], source_code_file]
         javac_process = subprocess.Popen(javac_args, stderr=subprocess.PIPE)
         _, compile_error = javac_process.communicate()
+        self._files = [source_code_file, output_file]
         if javac_process.returncode != 0:
             os.unlink(source_code_file)
             raise CompileError(compile_error)
-        self._files = [source_code_file, output_file]
 
     def launch(self, *args, **kwargs):
         return SecurePopen(['java', "-Djava.security.manager", "-client",

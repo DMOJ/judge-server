@@ -47,6 +47,7 @@ cdef extern from 'ptbox.h' nogil:
     cdef int PTBOX_EVENT_EXITING
     cdef int PTBOX_EVENT_EXITED
     cdef int PTBOX_EVENT_SIGNAL
+    cdef int PTBOX_EVENT_PROTECTION
 
     cdef int PTBOX_EXIT_NORMAL
     cdef int PTBOX_EXIT_PROTECTION
@@ -264,6 +265,9 @@ cdef class Process:
     cdef int _event_handler(self, int event, unsigned long param) nogil:
         if event == PTBOX_EVENT_EXITING or event == PTBOX_EVENT_SIGNAL:
             self._max_memory = get_memory(self.process.getpid())
+        if event == PTBOX_EVENT_PROTECTION:
+            with gil:
+                self._protection_fault(param)
         if event == PTBOX_EVENT_SIGNAL and param == SIGXCPU:
             with gil:
                 import sys
@@ -272,6 +276,9 @@ cdef class Process:
 
     cpdef _handler(self, syscall, handler):
         self.process.set_handler(syscall, handler)
+
+    cpdef _protection_fault(self, syscall):
+        pass
 
     def _spawn(self, file, args, env=()):
         cdef child_config config

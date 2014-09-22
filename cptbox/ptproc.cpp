@@ -100,12 +100,14 @@ int pt_process::monitor() {
                                 if (callback(context, syscall))
                                     break;
                                 //printf("Killed by callback: %d\n", syscall);
+                                dispatch(PTBOX_EVENT_PROTECTION, syscall);
                                 dispatch(PTBOX_EVENT_EXITING, exit_reason = PTBOX_EXIT_PROTECTION);
                                 kill(pid, SIGKILL);
                                 continue;
                             default:
                                 // Default is to kill, safety first.
                                 //printf("Killed by DISALLOW or None: %d\n", syscall);
+                                dispatch(PTBOX_EVENT_PROTECTION, syscall);
                                 dispatch(PTBOX_EVENT_EXITING, exit_reason = PTBOX_EXIT_PROTECTION);
                                 kill(pid, SIGKILL);
                                 continue;

@@ -7,6 +7,7 @@ import traceback
 import threading
 import zipfile
 import cStringIO
+import sys
 
 from error import CompileError # @UnresolvedImport
 
@@ -105,6 +106,7 @@ class Judge(object):
             self.packet_manager.submission_terminated_packet()
 
     def _begin_grading(self, problem_id, language, source_code, time_limit, memory_limit, short_circuit, grader_id, grader_args):
+        print>>sys.stderr, '===========Started Grading: %d===========' % self.current_submission
         try:
             try:
                 # Launch an executor for the given language
@@ -170,6 +172,7 @@ class Judge(object):
         except TerminateGrading:
             print "Forcefully terminating grading. Temporary files may not be deleted."
         finally:
+            print>>sys.stderr, '===========Done Grading: %d===========' % self.current_submission
             self.current_submission_thread = None
 
     def listen(self):
@@ -325,10 +328,10 @@ class TestCaseJudge(object):
         output_file.close()
         if not checker(self.result.proc_output, judge_output):
             result_flag |= Result.WA
-        if self.process.returncode:
+        if self.process.returncode > 0:
             result_flag |= Result.IR
-        if 0:  # TODO
-            result_flag |= Result.RTE
+        if self.process.returncode < 0:
+            result_flag |= Result.RTE # Killed by signal
         if self.process.tle:
             result_flag |= Result.TLE
         if self.process.mle:

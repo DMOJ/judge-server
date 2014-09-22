@@ -331,7 +331,8 @@ class TestCaseJudge(object):
         if self.process.returncode > 0:
             result_flag |= Result.IR
         if self.process.returncode < 0:
-            result_flag |= Result.RTE # Killed by signal
+            print>>sys.stderr, 'Killed by signal %d' % -self.process.returncode
+            result_flag |= Result.RTE  # Killed by signal
         if self.process.tle:
             result_flag |= Result.TLE
         if self.process.mle:

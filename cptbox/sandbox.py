@@ -121,12 +121,12 @@ class _SecurePopen(Process):
 
     def _protection_fault(self, syscall):
         print>>sys.stderr, 'Protection fault on:', syscall
-        print>>sys.stderr, 'Arg0: 0x%016x' % self.debugger.arg0()
-        print>>sys.stderr, 'Arg1: 0x%016x' % self.debugger.arg1()
-        print>>sys.stderr, 'Arg2: 0x%016x' % self.debugger.arg2()
-        print>>sys.stderr, 'Arg3: 0x%016x' % self.debugger.arg3()
-        print>>sys.stderr, 'Arg4: 0x%016x' % self.debugger.arg4()
-        print>>sys.stderr, 'Arg5: 0x%016x' % self.debugger.arg5()
+        print>>sys.stderr, 'Arg0: 0x%016x' % self.debugger.uarg0()
+        print>>sys.stderr, 'Arg1: 0x%016x' % self.debugger.uarg1()
+        print>>sys.stderr, 'Arg2: 0x%016x' % self.debugger.uarg2()
+        print>>sys.stderr, 'Arg3: 0x%016x' % self.debugger.uarg3()
+        print>>sys.stderr, 'Arg4: 0x%016x' % self.debugger.uarg4()
+        print>>sys.stderr, 'Arg5: 0x%016x' % self.debugger.uarg5()
 
     def _run_process(self):
         self._spawn(self._executable, self._args, self._env)

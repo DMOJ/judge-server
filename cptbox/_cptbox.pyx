@@ -272,12 +272,16 @@ cdef class Process:
             with gil:
                 import sys
                 print>>sys.stderr, 'SIGXCPU in child'
+                self._cpu_time_exceeded()
         return 0
 
     cpdef _handler(self, syscall, handler):
         self.process.set_handler(syscall, handler)
 
     cpdef _protection_fault(self, syscall):
+        pass
+
+    cpdef _cpu_time_exceeded(self):
         pass
 
     def _spawn(self, file, args, env=()):

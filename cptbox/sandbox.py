@@ -128,6 +128,9 @@ class _SecurePopen(Process):
         print>>sys.stderr, 'Arg4: 0x%016x' % self.debugger.uarg4()
         print>>sys.stderr, 'Arg5: 0x%016x' % self.debugger.uarg5()
 
+    def _cpu_time_exceeded(self):
+        self._tle = True
+
     def _run_process(self):
         self._spawn(self._executable, self._args, self._env)
         if self._child_stdin >= 0: os.close(self._child_stdin)

@@ -106,7 +106,8 @@ class Judge(object):
             self.packet_manager.submission_terminated_packet()
 
     def _begin_grading(self, problem_id, language, source_code, time_limit, memory_limit, short_circuit, grader_id, grader_args):
-        print>>sys.stderr, '===========Started Grading: %d===========' % self.current_submission
+        submission_id = self.current_submission
+        print>>sys.stderr, '===========Started Grading: %d===========' % submission_id
         try:
             try:
                 # Launch an executor for the given language
@@ -172,7 +173,7 @@ class Judge(object):
         except TerminateGrading:
             print "Forcefully terminating grading. Temporary files may not be deleted."
         finally:
-            print>>sys.stderr, '===========Done Grading: %d===========' % self.current_submission
+            print>>sys.stderr, '===========Done Grading: %d===========' % submission_id
             self.current_submission_thread = None
 
     def listen(self):

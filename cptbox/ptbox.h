@@ -70,7 +70,7 @@ private:
     int handler[MAX_SYSCALL];
     pt_handler_callback callback;
     void *context;
-    struct timespec exec_time;
+    volatile struct timespec exec_time;
     struct rusage _rusage;
     pt_debugger *debugger;
     pt_event_callback event_proc;

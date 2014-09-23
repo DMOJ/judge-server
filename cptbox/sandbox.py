@@ -152,7 +152,7 @@ class _SecurePopen(Process):
         print>>sys.stderr, 'Shocker armed...'
 
         while not self._exited:
-            print>>sys.stderr, 'Shocker checks...'
+            print>>sys.stderr, 'Shocker checks...', self.execution_time, self._time
             if self.execution_time > self._time:
                 print>>sys.stderr, 'Shocker activated, ouch!'
                 os.kill(self.pid, signal.SIGKILL)

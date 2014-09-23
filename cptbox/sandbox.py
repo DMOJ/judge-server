@@ -79,12 +79,12 @@ class _SecurePopen(Process):
         self._died_time = 0
         self._started = threading.Event()
         self._died = threading.Event()
-        self._worker = threading.Thread(target=self._run_process)
-        self._worker.start()
         if time:
             # Spawn thread to kill process after it times out
             self._shocker = threading.Thread(target=self._shocker_thread)
             self._shocker.start()
+        self._worker = threading.Thread(target=self._run_process)
+        self._worker.start()
 
     def wait(self):
         self._died.wait()
@@ -147,14 +147,18 @@ class _SecurePopen(Process):
         return code
 
     def _shocker_thread(self):
+        print>>sys.stderr, 'Shocker started...'
         self._started.wait()
+        print>>sys.stderr, 'Shocker armed...'
 
         while not self._exited:
+            print>>sys.stderr, 'Shocker checks...'
             if self.execution_time > self._time:
                 print>>sys.stderr, 'Shocker activated, ouch!'
                 os.kill(self.pid, signal.SIGKILL)
                 self._tle = True
                 break
+            print>>sys.stderr, 'Shocker waits...'
             time.sleep(1)
 
     def __init_streams(self, stdin, stdout, stderr):

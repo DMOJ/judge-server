@@ -160,6 +160,8 @@ class _SecurePopen(Process):
                 break
             print>>sys.stderr, 'Shocker waits...'
             time.sleep(1)
+            os.kill(self.pid, signal.SIGWINCH)
+            time.sleep(0.01)
 
     def __init_streams(self, stdin, stdout, stderr):
         self.stdin = self.stdout = self.stderr = None

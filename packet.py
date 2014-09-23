@@ -4,6 +4,7 @@ import threading
 import struct
 import traceback
 import time
+from sysinfo import load_fair
 
 
 class PacketManager(object):
@@ -124,4 +125,5 @@ class PacketManager(object):
 
     def ping_packet(self, when):
         self._send_packet({"name": "ping-response",
-                           "time": time.time() - when})
+                           "time": time.time() - when,
+                           "load": load_fair()})

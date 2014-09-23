@@ -147,18 +147,14 @@ class _SecurePopen(Process):
         return code
 
     def _shocker_thread(self):
-        print>>sys.stderr, 'Shocker started...'
         self._started.wait()
-        print>>sys.stderr, 'Shocker armed...'
 
         while not self._exited:
-            print>>sys.stderr, 'Shocker checks...', self.execution_time, self._time
             if self.execution_time > self._time:
                 print>>sys.stderr, 'Shocker activated, ouch!'
                 os.kill(self.pid, signal.SIGKILL)
                 self._tle = True
                 break
-            print>>sys.stderr, 'Shocker waits...'
             time.sleep(1)
             os.kill(self.pid, signal.SIGWINCH)
             time.sleep(0.01)

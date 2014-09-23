@@ -156,8 +156,12 @@ class _SecurePopen(Process):
                 self._tle = True
                 break
             time.sleep(1)
-            os.kill(self.pid, signal.SIGWINCH)
-            time.sleep(0.01)
+            try:
+                os.kill(self.pid, signal.SIGWINCH)
+            except OSError:
+                pass
+            else:
+                time.sleep(0.01)
 
     def __init_streams(self, stdin, stdout, stderr):
         self.stdin = self.stdout = self.stderr = None

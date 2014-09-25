@@ -109,6 +109,8 @@ class Judge(object):
         submission_id = self.current_submission
         print>>sys.stderr, '===========Started Grading: %d===========' % submission_id
         try:
+            if isinstance(source_code, unicode):
+                source_code = source_code.encode('utf-8')
             try:
                 # Launch an executor for the given language
                 # The executor is responsible for writing source files and compiling (if applicable)

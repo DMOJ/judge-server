@@ -10,6 +10,7 @@ class Executor(ResourceProxy):
         self.env = env
         source_code_file = str(problem_id) + ".py"
         customize = '''\
+# encoding: utf-8
 __import__("sys").stdout = __import__("os").fdopen(1, 'w', 65536)
 __import__("sys").stdin = __import__("os").fdopen(0, 'r', 65536)
 '''

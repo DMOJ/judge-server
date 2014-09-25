@@ -86,7 +86,7 @@ class PacketManager(object):
                            'key': key})
         try:
             resp = self._read_single()
-        except socket.error:
+        except Exception:
             traceback.print_exc()
             raise JudgeAuthenticationFailed()
         else:

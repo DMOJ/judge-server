@@ -9,10 +9,11 @@ import zipfile
 import cStringIO
 import sys
 
-from error import CompileError # @UnresolvedImport
+from error import CompileError
+from judgeenv import env
 
 import executors
-import checkers # @UnresolvedImport
+import checkers
 import packet
 
 
@@ -77,8 +78,6 @@ class Judge(object):
         self.packet_manager = packet.PacketManager(host, port, self)
         self.current_submission = None
         self.current_proc = None
-        with open(os.path.join("data", "judge", "judge.json"), "r") as init_file:
-            self.env = json.load(init_file)
         supported_problems = []
         for problem in os.listdir(os.path.join("data", "problems")):
             supported_problems.append((problem, os.path.getmtime(os.path.join("data", "problems", problem))))
@@ -114,7 +113,7 @@ class Judge(object):
             try:
                 # Launch an executor for the given language
                 # The executor is responsible for writing source files and compiling (if applicable)
-                executor = getattr(executors, language).Executor(self.env, problem_id, source_code)
+                executor = getattr(executors, language).Executor(env, problem_id, source_code)
             except AttributeError:
                 raise NotImplementedError("unsupported language: " + language)
             except CompileError as compile_error:
@@ -276,8 +275,6 @@ class LocalJudge(Judge):
 
         self.packet_manager = LocalPacketManager()
         self.current_submission = "submission"
-        with open(os.path.join("data", "judge", "judge.json"), "r") as init_file:
-            self.env = json.load(init_file)
         self.current_submission_thread = None
         self._terminate_grading = False
 

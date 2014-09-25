@@ -48,14 +48,21 @@ class PacketManager(object):
         threading.Thread(target=self._read_async).start()
 
     def _send_packet(self, packet):
-        print '%s:%s => %s' % (self.host, self.port, json.dumps(packet, indent=4))
+        if packet['name'] != 'ping-response':
+            if 'key' in packet:
+                temp = packet.copy()
+                temp['key'] = '<secret>'
+            else:
+                temp = packet
+            print '%s:%s => %s' % (self.host, self.port, json.dumps(temp, indent=4))
 
         raw = json.dumps(packet).encode('zlib')
         self.output.write(PacketManager.SIZE_PACK.pack(len(raw)))
         self.output.write(raw)
 
     def _recieve_packet(self, packet):
-        print '%s:%s <= %s' % (self.host, self.port, json.dumps(packet, indent=4))
+        if packet['name'] != 'ping':
+            print '%s:%s <= %s' % (self.host, self.port, json.dumps(packet, indent=4))
 
         name = packet['name']
         if name == 'ping':

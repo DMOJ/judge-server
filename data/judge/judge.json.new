@@ -1,4 +1,6 @@
 {
+    "id": "<invalid>",
+    "key": "<invalid>",
     "gcc": "/usr/bin/g++",
     "python": "/usr/bin/python",
     "python3": "/usr/bin/python3.4",

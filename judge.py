@@ -81,7 +81,7 @@ class Judge(object):
         supported_problems = []
         for problem in os.listdir(os.path.join("data", "problems")):
             supported_problems.append((problem, os.path.getmtime(os.path.join("data", "problems", problem))))
-        self.packet_manager.supported_problems_packet(supported_problems)
+        self.packet_manager.handshake(supported_problems, env['id'], env['key'])
         self.current_submission_thread = None
         self._terminate_grading = False
 

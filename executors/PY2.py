@@ -26,3 +26,17 @@ __import__('sys').stdin = __import__('os').fdopen(0, 'r', 65536)
                            time=kwargs.get('time'),
                            memory=kwargs.get('memory'),
                            address_grace=131072)
+
+
+def initialize():
+    if not 'python' in env['runtime']:
+        return False
+    print 'Self-testing: PY2 executor'
+    try:
+        proc = Executor('self-test', 'print "Hello, World!"').launch(time=1, memory=16384)
+        stdout, stderr = proc.communicate()
+        return stdout == 'Hello, World!\n' and not stderr
+    except Exception:
+        import traceback
+        traceback.print_exc()
+        return False

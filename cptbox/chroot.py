@@ -48,6 +48,7 @@ class CHROOTSecurity(dict):
             sys_sigaltstack: ALLOW,
             sys_pipe: ALLOW,
             sys_clock_gettime: ALLOW,
+            sys_gettimeofday: ALLOW,
 
             sys_clone: ALLOW,
             sys_exit_group: ALLOW,

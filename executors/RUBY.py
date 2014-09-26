@@ -5,7 +5,7 @@ from executors.utils import test_executor
 from .resource_proxy import ResourceProxy
 from judgeenv import env
 
-RUBY_FS = ['usr/bin/ruby', '.*\.[so|rb]']
+RUBY_FS = ['.*\.[so|rb]', '/dev/urandom']
 
 
 class Executor(ResourceProxy):
@@ -21,7 +21,8 @@ class Executor(ResourceProxy):
                            executable=env['runtime']['ruby'],
                            security=CHROOTSecurity(RUBY_FS),
                            time=kwargs.get('time'),
-                           memory=kwargs.get('memory'))
+                           memory=kwargs.get('memory'),
+                           address_grace=65536)
 
 
 def initialize():

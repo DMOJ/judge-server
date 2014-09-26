@@ -25,7 +25,7 @@ class Executor(ResourceProxy):
         output_file = str(problem_id) + compiled_extension
         gcc_args = [env['runtime']['g++11'], source_code_file, '-O2',
                     '-std=' + env['runtime'].get('g++11std', 'c++0x')
-                    ] + linker_options + ['-s', '-o', output_file]
+                   ] + linker_options + ['-s', '-o', output_file]
         gcc_process = subprocess.Popen(gcc_args, stderr=subprocess.PIPE)
         _, compile_error = gcc_process.communicate()
         self._files = [source_code_file, output_file]
@@ -40,3 +40,9 @@ class Executor(ResourceProxy):
                            security=CHROOTSecurity(C_FS),
                            time=kwargs.get('time'),
                            memory=kwargs.get('memory'))
+
+
+def initialize():
+    if 'g++11' not in env['runtime']:
+        return False
+    return os.path.isfile(env['runtime']['g++11'])

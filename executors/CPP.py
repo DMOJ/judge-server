@@ -38,3 +38,9 @@ class Executor(ResourceProxy):
                            security=CHROOTSecurity(C_FS),
                            time=kwargs.get('time'),
                            memory=kwargs.get('memory'))
+
+
+def initialize():
+    if 'g++' not in env['runtime']:
+        return False
+    return os.path.isfile(env['runtime']['g++'])

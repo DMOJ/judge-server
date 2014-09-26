@@ -27,8 +27,14 @@ class Executor(ResourceProxy):
     def launch(self, *args, **kwargs):
         return SecurePopen(['java', '-Djava.security.manager', '-client',
                             '-Xmx%sK' % kwargs.get('memory'), '-cp', '.',
-                                 self._files[1]] + list(args),
+                            self._files[1]] + list(args),
                            executable=env['runtime']['java'],
                            security=NullSecurity(),
                            time=kwargs.get('time'),
                            memory=kwargs.get('memory'))
+
+
+def initialize():
+    if 'java' not in env['runtime']:
+        return False
+    return os.path.isfile(env['runtime']['java'])

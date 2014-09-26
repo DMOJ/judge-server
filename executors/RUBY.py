@@ -1,3 +1,4 @@
+import os
 from cptbox import SecurePopen, CHROOTSecurity
 
 from .resource_proxy import ResourceProxy
@@ -20,3 +21,9 @@ class Executor(ResourceProxy):
                            security=CHROOTSecurity(RUBY_FS),
                            time=kwargs.get('time'),
                            memory=kwargs.get('memory'))
+
+
+def initialize():
+    if 'ruby' not in env['runtime']:
+        return False
+    return os.path.isfile(env['runtime']['ruby'])

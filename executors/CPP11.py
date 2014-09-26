@@ -25,7 +25,7 @@ class Executor(ResourceProxy):
             linker_options = []
         output_file = str(problem_id) + compiled_extension
         gcc_args = [env['runtime']['g++11'], source_code_file, '-O2',
-                    '-std=' + env['runtime'].get('g++11std', 'c++0x')
+                    '-std=' + env['runtime'].get('g++11std', 'c++0x'), '-march=native'
                    ] + linker_options + ['-s', '-o', output_file]
         gcc_process = subprocess.Popen(gcc_args, stderr=subprocess.PIPE)
         _, compile_error = gcc_process.communicate()

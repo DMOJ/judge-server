@@ -109,6 +109,7 @@ public class JavaSafeExecutor {
                         return;
                     } else {
                         e.getCause().printStackTrace();
+                        error = INVOCATION_ERROR_CODE;
                     }
                 } catch (IllegalAccessException e) {
                     e.printStackTrace(STDERR);

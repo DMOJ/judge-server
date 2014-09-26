@@ -64,7 +64,7 @@ def initialize():
         return False
     if not os.path.isfile(env['runtime']['java']):
         return False
-    return test_executor('JAVA', Executor, r'''\
+    return test_executor('JAVA', Executor, '''\
 public class self_test {
     public static void main(String[] args) {
         System.out.println("Hello, World!");

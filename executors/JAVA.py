@@ -55,7 +55,7 @@ class Executor(ResourceProxy):
     def launch(self, *args, **kwargs):
         return JavaPopen(['java', '-Djava.security.manager', '-Djava.security.policy=' + JAVA_POLICY, '-client',
                           '-Xmx%sK' % kwargs.get('memory'), '-jar', JAVA_EXECUTOR, os.getcwd(),
-                          self._class_name, kwargs.get('time') * 1000] + list(args),
+                          self._class_name, str(kwargs.get('time') * 1000)] + list(args),
                          executable=env['runtime']['java'])
 
 

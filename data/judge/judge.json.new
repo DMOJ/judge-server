@@ -1,13 +1,15 @@
 {
     "id": "<invalid>",
     "key": "<invalid>",
-    "gcc": "/usr/bin/g++",
-    "python": "/usr/bin/python",
-    "python3": "/usr/bin/python3.4",
-    "python3dir": "/dev/null",
-    "java": "/usr/bin/java",
-    "javac": "/usr/bin/javac",
-    "ruby": "/usr/bin/ruby",
-    "php": "/usr/bin/php",
-    "perl": "/usr/bin/perl"
+    "runtime": {
+        "gcc": "/usr/bin/g++",
+        "python": "/usr/bin/python",
+        "python3": "/usr/bin/python3.4",
+        "python3dir": "/dev/null",
+        "java": "/usr/bin/java",
+        "javac": "/usr/bin/javac",
+        "ruby": "/usr/bin/ruby",
+        "php": "/usr/bin/php",
+        "perl": "/usr/bin/perl"
+    }
 }

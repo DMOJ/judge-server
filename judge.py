@@ -12,7 +12,7 @@ import sys
 from error import CompileError
 from judgeenv import env
 
-import executors
+from executors import executors
 import checkers
 import packet
 
@@ -79,14 +79,14 @@ class Judge(object):
         self.current_submission = None
         self.current_proc = None
         supported_problems = []
-        for problem in os.listdir(os.path.join("data", "problems")):
-            supported_problems.append((problem, os.path.getmtime(os.path.join("data", "problems", problem))))
+        for problem in os.listdir(os.path.join('data', 'problems')):
+            supported_problems.append((problem, os.path.getmtime(os.path.join('data', 'problems', problem))))
         self.packet_manager.handshake(supported_problems, env['id'], env['key'])
         self.current_submission_thread = None
         self._terminate_grading = False
 
     def begin_grading(self, problem_id, language, source_code, time, mem, sc, grader, args):
-        print "Grading %s in %s..." % (problem_id, language)
+        print 'Grading %s in %s...' % (problem_id, language)
         if self.current_submission_thread:
             # TODO: this should be an error
             self.terminate_grading()
@@ -113,66 +113,65 @@ class Judge(object):
             try:
                 # Launch an executor for the given language
                 # The executor is responsible for writing source files and compiling (if applicable)
-                executor = getattr(executors, language).Executor(env, problem_id, source_code)
-            except AttributeError:
-                raise NotImplementedError("unsupported language: " + language)
-            except CompileError as compile_error:
-                # No need to clean up anything; Executor does it
-                print "Compile Error"
-                print compile_error.args[0]
-                self.packet_manager.compile_error_packet(compile_error.args[0])
+                executor = executors[language].Executor(problem_id, source_code)
+            except KeyError:
+                raise NotImplementedError('unsupported language: ' + language)
+            except CompileError as e:
+                print 'Compile Error'
+                print e.args[0]
+                self.packet_manager.compile_error_packet(e.args[0])
                 return
 
-            with open(os.path.join("data", "problems", problem_id, "init.json"), "r") as init_file:
+            with open(os.path.join('data', 'problems', problem_id, 'init.json'), 'r') as init_file:
                 init_data = json.load(init_file)
 
                 try:
                     # Obtain the output correctness checker, e.g. standard or float
                     checker = getattr(checkers, grader_id)
                 except AttributeError:
-                    raise NotImplementedError("unsupported problem type: " + grader_id)
+                    raise NotImplementedError('unsupported problem type: ' + grader_id)
 
                 # Use a proxy to not expose init_data to all submethods
                 check_adapter = lambda proc_output, judge_output: checker.check(proc_output, judge_output, grader_args)
                 forward_test_cases = []
-                for case in init_data["test_cases"]:
-                    if "data" in case:
+                for case in init_data['test_cases']:
+                    if 'data' in case:
                         # Data is batched, with multiple subcases for each parent case
                         # If one subcase fails, the main case fails too
-                        subcases = [(subcase["in"], subcase["out"]) for subcase in case["data"]]
-                        case = BatchedTestCase(subcases, case["points"])
+                        subcases = [(subcase['in'], subcase['out']) for subcase in case['data']]
+                        case = BatchedTestCase(subcases, case['points'])
                     else:
-                        case = TestCase(case["in"], case["out"], case["points"])
+                        case = TestCase(case['in'], case['out'], case['points'])
                     forward_test_cases.append(case)
 
                 case = 1
                 for result in self.run_standard(executor.launch, forward_test_cases, check_adapter,
-                                                archive=os.path.join("data", "problems", problem_id,
-                                                                     init_data["archive"]),
+                                                archive=os.path.join('data', 'problems', problem_id,
+                                                                     init_data['archive']),
                                                 time=time_limit, memory=memory_limit,
                                                 short_circuit=short_circuit):
-                    print "Test case %s" % case
-                    print "\t%f seconds (real)" % result.r_execution_time
-                    print "\t%f seconds (debugged)" % result.execution_time
-                    # print "\tDebugging took %.2f%% of the time" % \
+                    print 'Test case %s' % case
+                    print '\t%f seconds (real)' % result.r_execution_time
+                    print '\t%f seconds (debugged)' % result.execution_time
+                    # print '\tDebugging took %.2f%% of the time' % \
                     # ((result.r_execution_time - result.execution_time) / result.r_execution_time * 100)
-                    print "\t%.2f mb (%s kb)" % (result.max_memory / 1024.0, result.max_memory)
+                    print '\t%.2f mb (%s kb)' % (result.max_memory / 1024.0, result.max_memory)
 
                     if result.result_flag == Result.AC:
-                        print "\tAccepted"
+                        print '\tAccepted'
                     else:
                         execution_verdict = []
-                        for flag in ["IR", "WA", "RTE", "TLE", "MLE", "SC", "IE"]:
+                        for flag in ['IR', 'WA', 'RTE', 'TLE', 'MLE', 'SC', 'IE']:
                             if result.result_flag & getattr(Result, flag):
-                                execution_verdict.append("\t" + flag)
-                        print "\n".join(execution_verdict)
+                                execution_verdict.append('\t' + flag)
+                        print '\n'.join(execution_verdict)
                     case += 1
         except IOError:
-            print "Internal Error: test cases do not exist"
+            print 'Internal Error: test cases do not exist'
             traceback.print_exc()
             self.packet_manager.problem_not_exist_packet(problem_id)
         except TerminateGrading:
-            print "Forcefully terminating grading. Temporary files may not be deleted."
+            print 'Forcefully terminating grading. Temporary files may not be deleted.'
         finally:
             print>>sys.stderr, '===========Done Grading: %d===========' % submission_id
             self.current_submission_thread = None
@@ -182,9 +181,9 @@ class Judge(object):
 
     def run_standard(self, executor_func, test_cases, check_func, short_circuit=False, time=2, memory=65536,
                      *args, **kwargs):
-        if "archive" in kwargs:
+        if 'archive' in kwargs:
             files = {}
-            archive = zipfile.ZipFile(kwargs["archive"], "r")
+            archive = zipfile.ZipFile(kwargs['archive'], 'r')
             try:
                 for name in archive.infolist():
                     files[name.filename] = cStringIO.StringIO(archive.read(name))
@@ -211,7 +210,7 @@ class Judge(object):
                             result.result_flag = Result.SC
                             result.execution_time = 0
                             result.max_memory = 0
-                            result.proc_output = ""
+                            result.proc_output = ''
                             continue
 
                         # Launch a process for the current test case
@@ -274,7 +273,7 @@ class LocalJudge(Judge):
                 return lambda *args, **kwargs: None
 
         self.packet_manager = LocalPacketManager()
-        self.current_submission = "submission"
+        self.current_submission = 'submission'
         self.current_submission_thread = None
         self._terminate_grading = False
 
@@ -354,7 +353,7 @@ def main():
                         help='enable debug mode (full output)')
     args = parser.parse_args()
 
-    print "Running %s judge..." % (["local", "live"][args.server_host is not None])
+    print 'Running %s judge...' % (['local', 'live'][args.server_host is not None])
 
     if args.server_host:
         with Judge(args.server_host, args.server_port, debug=args.debug) as judge:
@@ -377,5 +376,5 @@ def main():
                 judge.terminate_grading()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

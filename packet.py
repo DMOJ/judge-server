@@ -5,6 +5,7 @@ import struct
 import traceback
 import time
 from sysinfo import load_fair
+from executors import executors
 
 
 class JudgeAuthenticationFailed(Exception):
@@ -89,6 +90,7 @@ class PacketManager(object):
     def handshake(self, problems, id, key):
         self._send_packet({'name': 'handshake',
                            'problems': problems,
+                           'executors': executors.keys(),
                            'id': id,
                            'key': key})
         try:

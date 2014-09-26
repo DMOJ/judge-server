@@ -4,20 +4,19 @@ from cptbox import SecurePopen, NullSecurity
 from error import CompileError
 
 from .resource_proxy import ResourceProxy
-from ptbox import sandbox
+from judgeenv import env
 
-JAVA_FS = ["/usr/bin/java", ".*\.[so|jar]"]
+JAVA_FS = ['/usr/bin/java', '.*\.[so|jar]']
 
 
 class Executor(ResourceProxy):
-    def __init__(self, env, problem_id, source_code):
+    def __init__(self, problem_id, source_code):
         super(ResourceProxy, self).__init__()
-        self.env = env
-        source_code_file = problem_id + ".java"
-        with open(source_code_file, "wb") as fo:
+        source_code_file = problem_id + '.java'
+        with open(source_code_file, 'wb') as fo:
             fo.write(source_code)
-        output_file = problem_id + ".class"
-        javac_args = [env["javac"], source_code_file]
+        output_file = problem_id + '.class'
+        javac_args = [env['runtime']['javac'], source_code_file]
         javac_process = subprocess.Popen(javac_args, stderr=subprocess.PIPE)
         _, compile_error = javac_process.communicate()
         self._files = [source_code_file, output_file]
@@ -26,10 +25,10 @@ class Executor(ResourceProxy):
             raise CompileError(compile_error)
 
     def launch(self, *args, **kwargs):
-        return SecurePopen(['java', "-Djava.security.manager", "-client",
-                            "-Xmx%sK" % kwargs.get("memory"), "-cp", ".",
+        return SecurePopen(['java', '-Djava.security.manager', '-client',
+                            '-Xmx%sK' % kwargs.get('memory'), '-cp', '.',
                                  self._files[1]] + list(args),
-                           executable=self.env['java'],
+                           executable=env['runtime']['java'],
                            security=NullSecurity(),
                            time=kwargs.get('time'),
                            memory=kwargs.get('memory'))

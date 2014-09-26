@@ -5,26 +5,27 @@ import sys
 from cptbox import CHROOTSecurity, SecurePopen
 from error import CompileError
 from .resource_proxy import ResourceProxy
+from judgeenv import env
 
-
-C_FS = [".*\.[so]"]
+C_FS = ['.*\.[so]']
 
 
 class Executor(ResourceProxy):
-    def __init__(self, env, problem_id, source_code):
+    def __init__(self, problem_id, source_code):
         super(ResourceProxy, self).__init__()
-        self.env = env
-        source_code_file = str(problem_id) + ".cpp"
-        with open(source_code_file, "wb") as fo:
+        source_code_file = str(problem_id) + '.cpp'
+        with open(source_code_file, 'wb') as fo:
             fo.write(source_code)
-        if sys.platform == "win32":
-            compiled_extension = ".exe"
-            linker_options = ["-Wl,--stack,8388608", "-static"]
+        if sys.platform == 'win32':
+            compiled_extension = '.exe'
+            linker_options = ['-Wl,--stack,8388608', '-static']
         else:
-            compiled_extension = ""
+            compiled_extension = ''
             linker_options = []
         output_file = str(problem_id) + compiled_extension
-        gcc_args = [env["gcc"], source_code_file, "-O2", "-std=c++0x"] + linker_options + ["-s", "-o", output_file]
+        gcc_args = [env['runtime']['g++11'], source_code_file, '-O2',
+                    '-std=' + env['runtime'].get('g++11std', 'c++0x')
+                    ] + linker_options + ['-s', '-o', output_file]
         gcc_process = subprocess.Popen(gcc_args, stderr=subprocess.PIPE)
         _, compile_error = gcc_process.communicate()
         self._files = [source_code_file, output_file]

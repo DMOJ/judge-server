@@ -192,7 +192,7 @@ class Judge(object):
             topen = files.__getitem__
         else:
             topen = open
-        self.packet_manager.begin_grading_packet(test_cases)
+        self.packet_manager.begin_grading_packet()
         short_circuit_all = short_circuit
         case_number = 1
         short_circuited = False

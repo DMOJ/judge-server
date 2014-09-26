@@ -31,12 +31,15 @@ __import__('sys').stdin = __import__('os').fdopen(0, 'r', 65536)
 def initialize():
     if not 'python' in env['runtime']:
         return False
-    print 'Self-testing: PY2 executor'
+    print 'Self-testing: PY2 executor',
     try:
         proc = Executor('self-test', 'print "Hello, World!"').launch(time=1, memory=16384)
         stdout, stderr = proc.communicate()
-        return stdout == 'Hello, World!\n' and not stderr
+        res = stdout == 'Hello, World!\n' and not stderr
+        print ['Failed', 'Success'][res]
+        return res
     except Exception:
+        print 'Failed'
         import traceback
         traceback.print_exc()
         return False

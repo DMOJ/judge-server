@@ -8,6 +8,10 @@ from .resource_proxy import ResourceProxy
 from judgeenv import env
 
 
+JAVA_EXECUTOR = os.path.join(os.path.dirname(__file__), 'java_executor.jar')
+JAVA_POLICY = os.path.join(os.path.dirname(__file__), 'java_executor.policy')
+
+
 class JavaPopen(object):
     def __init__(self, args, executable):
         self.process = subprocess.Popen(args, executable=executable,
@@ -15,14 +19,13 @@ class JavaPopen(object):
         self.execution_time, self.tle = None, None
         self.max_memory, self.mle = None, None
         self.stderr = None
-        self.error = None
+        self.error_info, self.error = None, None
 
     def communicate(self, stdin):
         stdout, stderr = self.process.communicate()
         stderr = stderr.split('\n')
-        self.error = '\n'.join(stderr[:-1])
-        if stderr:
-            self.execution_time, self.tle, self.max_memory, self.mle = map(int, stderr[-1])
+        self.error_info = '\n'.join(stderr[:-1])
+        self.execution_time, self.tle, self.max_memory, self.mle, self.error = map(int, stderr[-1])
         return stdout, None
 
     @property
@@ -50,9 +53,9 @@ class Executor(ResourceProxy):
             raise CompileError(compile_error)
 
     def launch(self, *args, **kwargs):
-        return JavaPopen(['java', '-Djava.security.manager', '-Djava.security.policy=java_executor.policy', '-client',
-                            '-Xmx%sK' % kwargs.get('memory'), '-cp', 'java_executor', 'JavaSafeExecutor', os.getcwd(),
-                            self._class_name, kwargs.get('time') * 1000] + list(args),
+        return JavaPopen(['java', '-Djava.security.manager', '-Djava.security.policy=' + JAVA_POLICY, '-client',
+                          '-Xmx%sK' % kwargs.get('memory'), '-jar', JAVA_EXECUTOR, os.getcwd(),
+                          self._class_name, kwargs.get('time') * 1000] + list(args),
                          executable=env['runtime']['java'])
 
 

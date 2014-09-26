@@ -1,5 +1,5 @@
 CXX=g++
-CXXFLAGS=-g -fPIC -Wall -O3
+CXXFLAGS=-g -fPIC -Wall -O3 -march=native
 LIBS=-lrt
 SOURCES=ptbox.cpp ptdebug.cpp ptdebug32.cpp ptdebug64.cpp ptproc.cpp
 OBJECTS=$(SOURCES:.cpp=.o)

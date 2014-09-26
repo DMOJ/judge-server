@@ -58,8 +58,9 @@ public class JavaSafeExecutor {
         } catch (IOException ignored) {
         }
         boolean mle = submissionThread.mle;
+        int error = submissionThread.error;
 
-        STDERR.printf("%d %d %d %d\n", totalProgramTime, tle ? 1 : 0, mem, mle ? 1 : 0);
+        STDERR.printf("%d %d %d %d %d\n", totalProgramTime, tle ? 1 : 0, mem, mle ? 1 : 0, error);
     }
 
     public static class ShockerThread extends Thread {
@@ -85,6 +86,7 @@ public class JavaSafeExecutor {
         private final Class process;
         private boolean tle = false;
         private boolean mle = false;
+        private int error = 0;
 
         public ProcessExecutionThread(Class process) {
             this.process = process;
@@ -105,18 +107,18 @@ public class JavaSafeExecutor {
                     } else if(e.getCause() instanceof OutOfMemoryError) {
                         mle = true;
                         return;
+                    } else {
+                        e.getCause().printStackTrace();
                     }
-                    e.printStackTrace(STDERR);
-                    System.exit(INVOCATION_ERROR_CODE);
                 } catch (IllegalAccessException e) {
                     e.printStackTrace(STDERR);
-                    System.exit(ACCESS_ERROR_CODE);
+                    error = ACCESS_ERROR_CODE;
                 } catch (Throwable throwable) {
-                    System.exit(PROGRAM_ERROR_CODE);
+                    error= PROGRAM_ERROR_CODE;
                 }
             } catch (NoSuchMethodException e) {
                 e.printStackTrace(STDERR);
-                System.exit(NO_ENTRY_POINT_ERROR_CODE);
+                error = NO_ENTRY_POINT_ERROR_CODE;
             }
             shockerThread.stop();
         }

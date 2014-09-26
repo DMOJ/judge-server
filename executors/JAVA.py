@@ -25,7 +25,7 @@ class Executor(ResourceProxy):
             raise CompileError(compile_error)
 
     def launch(self, *args, **kwargs):
-        return SecurePopen(['java', '-Djava.security.manager', '-client',
+        return SecurePopen(['java', '-Djava.security.manager', '-Djava.security.policy=java_executor.policy', '-client',
                             '-Xmx%sK' % kwargs.get('memory'), '-cp', '.',
                             self._files[1]] + list(args),
                            executable=env['runtime']['java'],

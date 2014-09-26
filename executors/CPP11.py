@@ -4,6 +4,7 @@ import sys
 
 from cptbox import CHROOTSecurity, SecurePopen
 from error import CompileError
+from executors.utils import test_executor
 from .resource_proxy import ResourceProxy
 from judgeenv import env
 
@@ -45,4 +46,14 @@ class Executor(ResourceProxy):
 def initialize():
     if 'g++11' not in env['runtime']:
         return False
-    return os.path.isfile(env['runtime']['g++11'])
+    if not os.path.isfile(env['runtime']['g++11']):
+        return False
+    return test_executor('CPP11', Executor, r'''\
+#include <iostream>
+
+int main() {
+    auto message = "Hello, World!\n";
+    std::cout << message;
+    return 0;
+}
+''')

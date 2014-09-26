@@ -1,4 +1,5 @@
 from .resource_proxy import ResourceProxy
+from .utils import test_executor
 from cptbox import SecurePopen, CHROOTSecurity
 from judgeenv import env
 
@@ -31,16 +32,4 @@ __import__('sys').stdin = __import__('os').fdopen(0, 'r', 65536)
 def initialize():
     if not 'python' in env['runtime']:
         return False
-    print 'Self-testing: PY2 executor:',
-    try:
-        executor = Executor('self-test', 'print "Hello, World!"')
-        proc = executor.launch(time=1, memory=16384)
-        stdout, stderr = proc.communicate()
-        res = stdout == 'Hello, World!\n' and not stderr
-        print ['Failed', 'Success'][res]
-        return res
-    except Exception:
-        print 'Failed'
-        import traceback
-        traceback.print_exc()
-        return False
+    return test_executor('PY2', Executor, 'print "Hello, World!"')

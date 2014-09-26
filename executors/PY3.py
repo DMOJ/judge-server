@@ -1,5 +1,6 @@
 import os
 from cptbox import CHROOTSecurity, SecurePopen
+from executors.utils import test_executor
 from .resource_proxy import ResourceProxy
 from judgeenv import env
 
@@ -30,3 +31,9 @@ __import__('sys').stdin = __import__('os').fdopen(0, 'r', 65536)
                            time=kwargs.get('time'),
                            memory=kwargs.get('memory'),
                            address_grace=131072)
+
+
+def initialize():
+    if not 'python3' in env['runtime']:
+        return False
+    return test_executor('PY3', Executor, 'print("Hello, World!")')

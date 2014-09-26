@@ -1,5 +1,6 @@
 import os
 from cptbox import SecurePopen, CHROOTSecurity
+from executors.utils import test_executor
 
 from .resource_proxy import ResourceProxy
 from judgeenv import env
@@ -26,4 +27,7 @@ class Executor(ResourceProxy):
 def initialize():
     if 'ruby' not in env['runtime']:
         return False
-    return os.path.isfile(env['runtime']['ruby'])
+    if not os.path.isfile(env['runtime']['ruby']):
+        return False
+    return test_executor('RUBY', Executor, "puts 'Hello, World!'")
+

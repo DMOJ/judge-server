@@ -9,7 +9,7 @@ def __load(to_load):
         module = __import__('%s.%s' % (__name__, executor))
         for part in path:
             module = getattr(module, part)
-        return module
+        return getattr(module, executor)
 
     for name in to_load:
         executor = __load_module(name)

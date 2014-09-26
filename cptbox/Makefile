@@ -29,4 +29,4 @@ _cptbox.cpp: _cptbox.pyx
 	cython --cplus _cptbox.pyx
 
 clean:
-	-rm $(OBJECTS) _cptbox.so $(EXECUTABLE) _cptbox.cpp
+	-rm -f $(OBJECTS) _cptbox.so $(EXECUTABLE) _cptbox.cpp _cptbox.o

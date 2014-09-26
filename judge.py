@@ -173,7 +173,7 @@ class Judge(object):
         except TerminateGrading:
             print 'Forcefully terminating grading. Temporary files may not be deleted.'
         finally:
-            print>>sys.stderr, '===========Done Grading: %d===========' % submission_id
+            print>>sys.stderr, '===========Done Grading: %s===========' % submission_id
             self.current_submission_thread = None
 
     def listen(self):

@@ -106,7 +106,7 @@ class Judge(object):
 
     def _begin_grading(self, problem_id, language, source_code, time_limit, memory_limit, short_circuit, grader_id, grader_args):
         submission_id = self.current_submission
-        print>>sys.stderr, '===========Started Grading: %d===========' % submission_id
+        print>>sys.stderr, '===========Started Grading: %s===========' % submission_id
         try:
             if isinstance(source_code, unicode):
                 source_code = source_code.encode('utf-8')
@@ -276,6 +276,7 @@ class LocalJudge(Judge):
         self.current_submission = 'submission'
         self.current_submission_thread = None
         self._terminate_grading = False
+        self.current_proc = None
 
     def listen(self):
         pass

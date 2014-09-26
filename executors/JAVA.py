@@ -21,8 +21,8 @@ class JavaPopen(object):
         self.stderr = None
         self.error_info, self.error = None, None
 
-    def communicate(self, stdin):
-        stdout, stderr = self.process.communicate()
+    def communicate(self, stdin=None):
+        stdout, stderr = self.process.communicate(stdin)
         stderr = stderr.split('\n')
         self.error_info = '\n'.join(stderr[:-1])
         self.execution_time, self.tle, self.max_memory, self.mle, self.error = map(int, stderr[-1])

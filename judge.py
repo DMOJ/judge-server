@@ -364,7 +364,9 @@ def main():
     else:
         with LocalJudge() as judge:
             try:
-                judge.begin_grading('helloworld', 'PY2', 'print "Hello, World!"', 1, 16384, 0, 'standard', {})
+                #judge.begin_grading('helloworld', 'PY2', 'print "Hello, World!"', 1, 16384, 0, 'standard', {})
+                #judge.current_submission_thread.join()
+                judge.begin_grading('helloworld', 'RUBY', "puts 'Hello, World!'", 1, 16384, 0, 'standard', {})
                 judge.current_submission_thread.join()
                 #judge.begin_grading('aplusb', 'PY2', 'for i in xrange(input()): print sum(map(int, raw_input().split()))')
                 #judge.current_submission_thread.join()

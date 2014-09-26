@@ -15,10 +15,14 @@ class JavaPopen(object):
         self.execution_time, self.tle = None, None
         self.max_memory, self.mle = None, None
         self.stderr = None
+        self.error = None
 
     def communicate(self, stdin):
         stdout, stderr = self.process.communicate()
-        self.execution_time, self.tle, self.max_memory, self.mle = map(int, stderr.split('\n')[-1])
+        stderr = stderr.split('\n')
+        self.error = '\n'.join(stderr[:-1])
+        if stderr:
+            self.execution_time, self.tle, self.max_memory, self.mle = map(int, stderr[-1])
         return stdout, None
 
     @property

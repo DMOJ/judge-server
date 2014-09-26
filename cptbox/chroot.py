@@ -13,6 +13,7 @@ class CHROOTSecurity(dict):
             sys_execve: self.do_execve,
             sys_read: ALLOW,
             sys_write: self.do_write,
+            sys_writev: self.do_write,
             sys_open: self.do_access,
             sys_access: self.do_access,
             sys_close: ALLOW,

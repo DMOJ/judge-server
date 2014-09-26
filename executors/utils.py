@@ -9,7 +9,8 @@ def test_executor(name, Executor, code):
         stdout, stderr = proc.communicate()
         res = stdout.strip() == 'Hello, World!' and not stderr
         print ['Failed', 'Success'][res]
-        print>>sys.stderr, stderr
+        if stderr:
+            print>>sys.stderr, stderr
         return res
     except Exception:
         print 'Failed'

@@ -20,7 +20,7 @@ public class JavaSafeExecutor {
     public static void main(String[] argv) throws MalformedURLException, ClassNotFoundException {
         String path = argv[0];
         String classname = argv[1];
-        int timelimit = Integer.parseInt(argv[2]);
+        int TL = Integer.parseInt(argv[2]);
 
         System.setErr(System.out);
 
@@ -29,9 +29,11 @@ public class JavaSafeExecutor {
         submissionThread = new ProcessExecutionThread(program);
 
         // Count runtime loading as part of time used
-        timelimit -= ManagementFactory.getRuntimeMXBean().getUptime();
+        // Note that time here might be negative if RT loading time was greater than TL
+        // Oh well.
+        TL -= ManagementFactory.getRuntimeMXBean().getUptime();
 
-        shockerThread = new ShockerThread(timelimit, submissionThread);
+        shockerThread = new ShockerThread(TL, submissionThread);
         shockerThread.start();
 
         submissionThread.start();
@@ -55,7 +57,9 @@ public class JavaSafeExecutor {
             }
         } catch (IOException ignored) {
         }
-        STDERR.printf("%d %d %d\n", totalProgramTime, tle ? 1 : 0, mem);
+        boolean mle = submissionThread.mle;
+
+        STDERR.printf("%d %d %d %d\n", totalProgramTime, tle ? 1 : 0, mem, mle ? 1 : 0);
     }
 
     public static class ShockerThread extends Thread {
@@ -80,6 +84,7 @@ public class JavaSafeExecutor {
     public static class ProcessExecutionThread extends Thread {
         private final Class process;
         private boolean tle = false;
+        private boolean mle = false;
 
         public ProcessExecutionThread(Class process) {
             this.process = process;
@@ -96,6 +101,9 @@ public class JavaSafeExecutor {
                 } catch (InvocationTargetException e) {
                     if (e.getCause() == TLE) {
                         tle = true;
+                        return;
+                    } else if(e.getCause() instanceof OutOfMemoryError) {
+                        mle = true;
                         return;
                     }
                     e.printStackTrace(STDERR);

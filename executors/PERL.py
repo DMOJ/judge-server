@@ -5,7 +5,7 @@ from executors.utils import test_executor
 from .resource_proxy import ResourceProxy
 from judgeenv import env
 
-PERL_FS = ['.*\.[so|pm]']
+PERL_FS = ['.*\.[so|pm]', '/dev/urandom']
 
 
 class Executor(ResourceProxy):
@@ -22,7 +22,8 @@ class Executor(ResourceProxy):
                            security=CHROOTSecurity(PERL_FS),
                            time=kwargs.get('time'),
                            memory=kwargs.get('memory'),
-                           address_grace=16384)
+                           address_grace=16384,
+                           env={'LANG': 'C'})
 
 
 def initialize():

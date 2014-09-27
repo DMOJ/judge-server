@@ -43,12 +43,11 @@ def _eintr_retry_call(func, *args):
 
 class _SecurePopen(Process):
     def __init__(self, bitness, args, executable=None, security=None, time=0, memory=0, stdin=PIPE, stdout=PIPE,
-                 stderr=None, env=(), nproc=0, address_grace=4096):
+                 stderr=None, env=None, nproc=0, address_grace=4096):
         self._bitness = bitness
         self._executable = executable or _find_exe(args[0])
         self._args = args
-        self._env = env
-        self._env = ['%s=%s' % i for i in os.environ.iteritems()]
+        self._env = ['%s=%s' % i for i in (env or os.environ).iteritems()]
         self._time = time
         self._cpu_time = time + 5
         self._memory = memory

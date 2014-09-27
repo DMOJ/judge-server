@@ -68,7 +68,8 @@ public class JavaSafeExecutor {
                     mem = Integer.parseInt(data[1]);
                 }
             }
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         boolean mle = submissionThread.mle;
         int error = submissionThread.error;

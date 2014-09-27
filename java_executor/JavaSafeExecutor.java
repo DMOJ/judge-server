@@ -13,8 +13,10 @@ import java.security.AccessControlException;
 import java.security.Permission;
 import java.util.PropertyPermission;
 import java.util.Scanner;
+import java.util.*;
 
 public class JavaSafeExecutor {
+
     private static ThreadDeath TLE = new ThreadDeath();
     private static int INVOCATION_ERROR_CODE = -1000;
     private static int ACCESS_ERROR_CODE = -1001;
@@ -78,12 +80,17 @@ public class JavaSafeExecutor {
     public static class _SecurityManager extends SecurityManager {
         @Override
         public void checkPermission(Permission perm) {
+            if(perm instanceof RuntimePermission) {
+                if(perm.getName().equals("writeFileDescriptor"))
+                    return;
+            }
             if(perm instanceof PropertyPermission) {
                 if(perm.getActions().contains("write"))
-                    throw new AccessControlException("access denied", perm);
+                    throw new AccessControlException(perm.getClass() + " - " + perm.getName() + ": " + perm.getActions(), perm);
+                return;
             }
             if (!_safeBlock) {
-                throw new AccessControlException("access denied", perm);
+                throw new AccessControlException(perm.getClass() + " - " + perm.getName() + ": " + perm.getActions(), perm);
             }
         }
     }

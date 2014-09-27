@@ -24,9 +24,9 @@ public class JavaSafeExecutor {
     private static ShockerThread shockerThread;
     private static ProcessExecutionThread submissionThread;
     private static boolean _safeBlock = false;
-    
+
     static {
-        new Scanner(System.in).close(); // Load locale
+        new Scanner(new ByteArrayInputStream(new byte[128])).close(); // Load locale
     }
 
     public static void main(String[] argv) throws MalformedURLException, ClassNotFoundException {

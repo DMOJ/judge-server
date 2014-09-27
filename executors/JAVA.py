@@ -24,6 +24,7 @@ class JavaPopen(object):
         stderr = stderr.rstrip().split('\n')
         self.error_info = '\n'.join(stderr[:-1])
         self.execution_time, self.tle, self.max_memory, self.mle, self.error = map(int, stderr[-1].split())
+        self.execution_time /= 1000
         return stdout, None
 
     @property

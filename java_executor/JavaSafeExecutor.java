@@ -23,7 +23,6 @@ public class JavaSafeExecutor {
     private static ProcessExecutionThread submissionThread;
 
     public static void main(String[] argv) throws MalformedURLException, ClassNotFoundException {
-        System.setSecurityManager(new _SecurityManager());
         String path = argv[0];
         String classname = argv[1];
         int TL = Integer.parseInt(argv[2]);
@@ -40,6 +39,7 @@ public class JavaSafeExecutor {
         TL -= ManagementFactory.getRuntimeMXBean().getUptime();
 
         shockerThread = new ShockerThread(TL, submissionThread);
+        System.setSecurityManager(new _SecurityManager());
         shockerThread.start();
 
         submissionThread.start();

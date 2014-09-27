@@ -12,6 +12,7 @@ import java.net.URLClassLoader;
 import java.security.AccessControlException;
 import java.security.Permission;
 import java.util.PropertyPermission;
+import java.util.Scanner;
 
 public class JavaSafeExecutor {
     private static ThreadDeath TLE = new ThreadDeath();
@@ -23,6 +24,10 @@ public class JavaSafeExecutor {
     private static ShockerThread shockerThread;
     private static ProcessExecutionThread submissionThread;
     private static boolean _safeBlock = false;
+    
+    static {
+        new Scanner(System.in).close(); // Load locale
+    }
 
     public static void main(String[] argv) throws MalformedURLException, ClassNotFoundException {
         String path = argv[0];
@@ -60,7 +65,7 @@ public class JavaSafeExecutor {
             BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(new File("/proc/self/status"))));
             for (String line; (line = in.readLine()) != null; ) {
                 if (line.startsWith("VmHWM:")) {
-                    String[] data = line.split("\\s+");
+                    String[] data = line.split(" ");
                     mem = Integer.parseInt(data[1]);
                 }
             }
@@ -78,7 +83,6 @@ public class JavaSafeExecutor {
             if(perm instanceof PropertyPermission) {
                 if(perm.getActions().contains("write"))
                     throw new AccessControlException("access denied", perm);
-                return;
             }
             if (!_safeBlock) {
                 throw new AccessControlException("access denied", perm);

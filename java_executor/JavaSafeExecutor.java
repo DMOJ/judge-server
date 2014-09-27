@@ -73,6 +73,7 @@ public class JavaSafeExecutor {
         @Override
         @CallerSensitive
         public void checkPermission(Permission perm) {
+            if(inCheck) return;
             Class clazz = Reflection.getCallerClass();
             if (clazz != JavaSafeExecutor.class &&
                     clazz != ShockerThread.class &&

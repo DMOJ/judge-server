@@ -21,6 +21,7 @@ public class JavaSafeExecutor {
     private static int PROGRAM_ERROR_CODE = -1;
     private static ShockerThread shockerThread;
     private static ProcessExecutionThread submissionThread;
+    private static boolean _safeBlock = false;
 
     public static void main(String[] argv) throws MalformedURLException, ClassNotFoundException {
         String path = argv[0];
@@ -41,13 +42,14 @@ public class JavaSafeExecutor {
         shockerThread = new ShockerThread(TL, submissionThread);
         System.setSecurityManager(new _SecurityManager());
         shockerThread.start();
-
         submissionThread.start();
 
         try {
             submissionThread.join();
         } catch (InterruptedException ignored) {
         }
+        _safeBlock = true;
+        shockerThread.stop();
 
         long totalProgramTime = ManagementFactory.getRuntimeMXBean().getUptime();
         boolean tle = submissionThread.tle;
@@ -71,13 +73,8 @@ public class JavaSafeExecutor {
 
     public static class _SecurityManager extends SecurityManager {
         @Override
-        @CallerSensitive
         public void checkPermission(Permission perm) {
-            if(inCheck) return;
-            Class clazz = Reflection.getCallerClass();
-            if (clazz != JavaSafeExecutor.class &&
-                    clazz != ShockerThread.class &&
-                    clazz != ProcessExecutionThread.class) {
+            if (!_safeBlock) {
                 throw new AccessControlException("access denied", perm);
             }
         }

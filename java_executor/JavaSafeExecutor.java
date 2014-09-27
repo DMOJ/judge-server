@@ -1,3 +1,6 @@
+import sun.reflect.CallerSensitive;
+import sun.reflect.Reflection;
+
 import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.InvocationTargetException;
@@ -6,6 +9,8 @@ import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.security.AccessControlException;
+import java.security.Permission;
 
 public class JavaSafeExecutor {
     private static ThreadDeath TLE = new ThreadDeath();
@@ -18,6 +23,7 @@ public class JavaSafeExecutor {
     private static ProcessExecutionThread submissionThread;
 
     public static void main(String[] argv) throws MalformedURLException, ClassNotFoundException {
+        System.setSecurityManager(new _SecurityManager());
         String path = argv[0];
         String classname = argv[1];
         int TL = Integer.parseInt(argv[2]);
@@ -63,6 +69,19 @@ public class JavaSafeExecutor {
         STDERR.printf("%d %d %d %d %d\n", totalProgramTime, tle ? 1 : 0, mem, mle ? 1 : 0, error);
     }
 
+    public static class _SecurityManager extends SecurityManager {
+        @Override
+        @CallerSensitive
+        public void checkPermission(Permission perm) {
+            Class clazz = Reflection.getCallerClass();
+            if (clazz != JavaSafeExecutor.class &&
+                    clazz != ShockerThread.class &&
+                    clazz != ProcessExecutionThread.class) {
+                throw new AccessControlException("access denied", perm);
+            }
+        }
+    }
+
     public static class ShockerThread extends Thread {
         private final long timelimit;
         private final Thread target;
@@ -104,7 +123,7 @@ public class JavaSafeExecutor {
                     if (e.getCause() == TLE) {
                         tle = true;
                         return;
-                    } else if(e.getCause() instanceof OutOfMemoryError) {
+                    } else if (e.getCause() instanceof OutOfMemoryError) {
                         mle = true;
                         return;
                     } else {
@@ -115,7 +134,7 @@ public class JavaSafeExecutor {
                     e.printStackTrace(STDERR);
                     error = ACCESS_ERROR_CODE;
                 } catch (Throwable throwable) {
-                    error= PROGRAM_ERROR_CODE;
+                    error = PROGRAM_ERROR_CODE;
                 }
             } catch (NoSuchMethodException e) {
                 e.printStackTrace(STDERR);

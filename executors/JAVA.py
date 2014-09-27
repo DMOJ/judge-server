@@ -9,8 +9,6 @@ from judgeenv import env
 
 
 JAVA_EXECUTOR = os.path.join(os.path.dirname(__file__), 'java_executor.jar')
-JAVA_POLICY = os.path.join(os.path.dirname(__file__), 'java_executor.policy')
-
 
 class JavaPopen(object):
     def __init__(self, args, executable):
@@ -53,7 +51,7 @@ class Executor(ResourceProxy):
             raise CompileError(compile_error)
 
     def launch(self, *args, **kwargs):
-        return JavaPopen(['java', '-Djava.security.manager', '-Djava.security.policy=' + JAVA_POLICY, '-client',
+        return JavaPopen(['java', '-client',
                           '-Xmx%sK' % kwargs.get('memory'), '-jar', JAVA_EXECUTOR, os.getcwd(),
                           self._class_name, str(kwargs.get('time') * 1000)] + list(args),
                          executable=env['runtime']['java'])

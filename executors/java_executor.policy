@@ -1,3 +1,0 @@
-grant {
-  permission java.io.FilePermission "/proc/self/status", "read";
-};

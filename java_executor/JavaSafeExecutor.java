@@ -59,7 +59,7 @@ public class JavaSafeExecutor {
             BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(new File("/proc/self/status"))));
             for (String line; (line = in.readLine()) != null; ) {
                 if (line.startsWith("VmHWM:")) {
-                    String[] data = line.split(" ");
+                    String[] data = line.split("\\s+");
                     mem = Integer.parseInt(data[1]);
                 }
             }
@@ -138,6 +138,7 @@ public class JavaSafeExecutor {
                 e.printStackTrace(STDERR);
                 error = NO_ENTRY_POINT_ERROR_CODE;
             }
+            _safeBlock = true;
             shockerThread.stop();
         }
     }

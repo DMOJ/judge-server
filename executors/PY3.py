@@ -5,7 +5,7 @@ from .resource_proxy import ResourceProxy
 from judgeenv import env
 
 PYTHON_FS = ['/dev/urandom', '.*\.[so|py]', '.*/lib(?:32|64)?/python[\d.]+/.*',
-             '.*/lib/locale/.*', '/usr/lib64', '.*/pyvenv.cfg', '/proc/meminfo']
+             '.*/lib/locale/.*', '/usr/lib64', '.*/?pyvenv.cfg', '/proc/meminfo']
 if 'python3dir' in env:
     PYTHON_FS += [str(env['python3dir']) + '.*']
 

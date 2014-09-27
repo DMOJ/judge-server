@@ -101,6 +101,7 @@ public class JavaSafeExecutor {
         public void run() {
             try {
                 Thread.sleep(timelimit);
+                _safeBlock = true;
                 target.stop(TLE);
             } catch (InterruptedException ignored) {
             }

@@ -40,7 +40,8 @@ def make_executor(code, command, args, ext, test_code):
                                executable=self._files[1],
                                security=CHROOTSecurity(C_FS),
                                time=kwargs.get('time'),
-                               memory=kwargs.get('memory'))
+                               memory=kwargs.get('memory'),
+                               env={})
 
     def initialize():
         if command not in env['runtime']:

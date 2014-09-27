@@ -102,7 +102,6 @@ class Judge(object):
             if self.current_proc:
                 self.current_proc.kill()
             self.current_submission_thread.join()
-            self.packet_manager.submission_terminated_packet()
 
     def _begin_grading(self, problem_id, language, source_code, time_limit, memory_limit, short_circuit, grader_id, grader_args):
         submission_id = self.current_submission

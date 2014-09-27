@@ -1,5 +1,6 @@
 import os
 import subprocess
+import sys
 from cptbox import SecurePopen, NullSecurity
 from error import CompileError
 from executors.utils import test_executor
@@ -27,6 +28,7 @@ class JavaPopen(object):
         self.error_info = '\n'.join(stderr[:-1])
         self.execution_time, self.tle, self.max_memory, self.mle, self.returncode = map(int, stderr[-1].split())
         self.execution_time /= 1000.0
+        print>>sys.stderr, stderr
         return stdout, None
 
     @property

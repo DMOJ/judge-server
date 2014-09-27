@@ -1,0 +1,5 @@
+#!/bin/sh
+cd $(dirname "$0")/java_executor
+javac JavaSafeExecutor.java
+rm -f ../executors/java_executor.jar
+jar cmf META-INF/MANIFEST.MF ../executors/java_executor.jar JavaSafeExecutor*.class

@@ -11,6 +11,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.security.AccessControlException;
 import java.security.Permission;
+import java.util.PropertyPermission;
 
 public class JavaSafeExecutor {
     private static ThreadDeath TLE = new ThreadDeath();
@@ -63,7 +64,7 @@ public class JavaSafeExecutor {
                     mem = Integer.parseInt(data[1]);
                 }
             }
-        } catch (IOException ignored) {
+        } catch (Exception ignored) {
         }
         boolean mle = submissionThread.mle;
         int error = submissionThread.error;
@@ -74,6 +75,10 @@ public class JavaSafeExecutor {
     public static class _SecurityManager extends SecurityManager {
         @Override
         public void checkPermission(Permission perm) {
+            if(perm instanceof PropertyPermission) {
+                if(perm.getActions().contains("write"))
+                    throw new AccessControlException("access denied", perm);
+            }
             if (!_safeBlock) {
                 throw new AccessControlException("access denied", perm);
             }

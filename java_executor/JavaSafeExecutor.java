@@ -16,7 +16,6 @@ import java.util.Scanner;
 
 public class JavaSafeExecutor {
     private static ThreadDeath TLE = new ThreadDeath();
-    private static PrintStream STDERR = System.err;
     private static int INVOCATION_ERROR_CODE = -1000;
     private static int ACCESS_ERROR_CODE = -1001;
     private static int NO_ENTRY_POINT_ERROR_CODE = -1002;
@@ -33,8 +32,6 @@ public class JavaSafeExecutor {
         String path = argv[0];
         String classname = argv[1];
         int TL = Integer.parseInt(argv[2]);
-
-        System.setErr(System.out);
 
         URLClassLoader classLoader = URLClassLoader.newInstance(new URL[]{new File(path).toURI().toURL()});
         Class program = classLoader.loadClass(classname);
@@ -74,7 +71,8 @@ public class JavaSafeExecutor {
         boolean mle = submissionThread.mle;
         int error = submissionThread.error;
 
-        STDERR.printf("%d %d %d %d %d\n", totalProgramTime, tle ? 1 : 0, mem, mle ? 1 : 0, error);
+        System.err.println();
+        System.err.printf("%d %d %d %d %d\n", totalProgramTime, tle ? 1 : 0, mem, mle ? 1 : 0, error);
     }
 
     public static class _SecurityManager extends SecurityManager {
@@ -139,13 +137,13 @@ public class JavaSafeExecutor {
                         error = INVOCATION_ERROR_CODE;
                     }
                 } catch (IllegalAccessException e) {
-                    e.printStackTrace(STDERR);
+                    e.printStackTrace();
                     error = ACCESS_ERROR_CODE;
                 } catch (Throwable throwable) {
                     error = PROGRAM_ERROR_CODE;
                 }
             } catch (NoSuchMethodException e) {
-                e.printStackTrace(STDERR);
+                e.printStackTrace();
                 error = NO_ENTRY_POINT_ERROR_CODE;
             }
             _safeBlock = true;

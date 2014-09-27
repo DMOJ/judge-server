@@ -78,6 +78,7 @@ public class JavaSafeExecutor {
             if(perm instanceof PropertyPermission) {
                 if(perm.getActions().contains("write"))
                     throw new AccessControlException("access denied", perm);
+                return;
             }
             if (!_safeBlock) {
                 throw new AccessControlException("access denied", perm);

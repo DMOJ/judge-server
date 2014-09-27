@@ -10,6 +10,7 @@ from judgeenv import env
 
 JAVA_EXECUTOR = os.path.join(os.path.dirname(__file__), 'java_executor.jar')
 
+
 class JavaPopen(object):
     def __init__(self, args, executable):
         self.process = subprocess.Popen(args, executable=executable,
@@ -18,12 +19,13 @@ class JavaPopen(object):
         self.max_memory, self.mle = None, None
         self.stderr = None
         self.error_info, self.error = None, None
+        self.returncode = None
 
     def communicate(self, stdin=None):
         stdout, stderr = self.process.communicate(stdin)
         stderr = stderr.rstrip().split('\n')
         self.error_info = '\n'.join(stderr[:-1])
-        self.execution_time, self.tle, self.max_memory, self.mle, self.error = map(int, stderr[-1].split())
+        self.execution_time, self.tle, self.max_memory, self.mle, self.returncode = map(int, stderr[-1].split())
         self.execution_time /= 1000.0
         return stdout, None
 

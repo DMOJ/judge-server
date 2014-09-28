@@ -1,4 +1,5 @@
 import re
+import sys
 from .sandbox import ALLOW
 from .syscalls import *
 
@@ -64,4 +65,7 @@ class CHROOTSecurity(dict):
 
     def do_access(self, debugger):
         file = debugger.readstr(debugger.uarg0())
-        return self.fs_jail.match(file) is not None
+        if self.fs_jail.match(file) is None:
+            print>>sys.stderr, 'Not allowed to access:', file
+            return False
+        return True

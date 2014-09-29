@@ -17,6 +17,7 @@ public class JavaSafeExecutor {
     private static int ACCESS_ERROR_CODE = -1001;
     private static int NO_ENTRY_POINT_ERROR_CODE = -1002;
     private static int PROGRAM_ERROR_CODE = -1;
+    private static int NO_CLASS_DEF_ERROR_CODE = -1003;
     private static ShockerThread shockerThread;
     private static SubmissionThread submissionThread;
     private static boolean _safeBlock = false;
@@ -33,7 +34,13 @@ public class JavaSafeExecutor {
         System.setOut(new UnsafePrintStream(new FileOutputStream(FileDescriptor.out)));
 
         URLClassLoader classLoader = URLClassLoader.newInstance(new URL[]{new File(path).toURI().toURL()});
-        Class program = classLoader.loadClass(classname);
+        Class program;
+        try {
+            program = classLoader.loadClass(classname);
+        } catch (ClassNotFoundException e) {
+            System.err.printf("%d %d %d %d %d\n", 0, 0, 0, 0, NO_CLASS_DEF_ERROR_CODE);
+            return;
+        }
         submissionThread = new SubmissionThread(program);
 
         // Count runtime loading as part of time used

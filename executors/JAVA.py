@@ -45,7 +45,7 @@ class Executor(ResourceProxy):
         class_name = reclass.search(source_code)
         if class_name is None:
             raise CompileError('No public class')
-        source_code_file = self._file('%s.java' % class_name)
+        source_code_file = self._file('%s.java' % class_name.group(1))
         with open(source_code_file, 'wb') as fo:
             fo.write(source_code)
         javac_args = [env['runtime']['javac'], source_code_file]

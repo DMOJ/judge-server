@@ -49,7 +49,7 @@ class PacketManager(object):
         threading.Thread(target=self._read_async).start()
 
     def _send_packet(self, packet):
-        if packet['name'] != 'ping-response':
+        if packet['name'] not in ['ping-response', 'handshake']:
             if 'key' in packet:
                 temp = packet.copy()
                 temp['key'] = '<secret>'

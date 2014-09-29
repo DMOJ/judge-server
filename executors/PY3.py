@@ -13,7 +13,7 @@ if 'python3dir' in env:
 class Executor(ResourceProxy):
     def __init__(self, problem_id, source_code):
         super(ResourceProxy, self).__init__()
-        source_code_file = str(problem_id) + '.py'
+        self._script = source_code_file = self._file('%s.py' % problem_id)
         customize = '''\
 # encoding: utf-8
 __import__('sys').stdout = __import__('os').fdopen(1, 'w', 65536)
@@ -22,16 +22,15 @@ __import__('sys').stdin = __import__('os').fdopen(0, 'r', 65536)
         with open(source_code_file, 'wb') as fo:
             fo.write(customize)
             fo.write(source_code)
-        self._files = [source_code_file]
 
     def launch(self, *args, **kwargs):
-        return SecurePopen(['python', '-BS', self._files[0]] + list(args),
+        return SecurePopen(['python', '-BS', self._script] + list(args),
                            executable=env['runtime']['python3'],
                            security=CHROOTSecurity(PYTHON_FS + [os.getcwd() + '$']),
                            time=kwargs.get('time'),
                            memory=kwargs.get('memory'),
                            address_grace=131072,
-                           env={'LANG': 'C'})
+                           env={'LANG': 'C'}, cwd=self._dir)
 
 
 def initialize():

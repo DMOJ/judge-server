@@ -15,7 +15,7 @@ def make_executor(code, command, args, ext, test_code):
     class Executor(ResourceProxy):
         def __init__(self, problem_id, source_code):
             super(ResourceProxy, self).__init__()
-            source_code_file = str(problem_id) + ext
+            source_code_file = self._file('%s%s' % (problem_id, ext))
             with open(source_code_file, 'wb') as fo:
                 fo.write(source_code)
             if sys.platform == 'win32':
@@ -24,24 +24,24 @@ def make_executor(code, command, args, ext, test_code):
             else:
                 compiled_extension = ''
                 linker_options = []
-            output_file = str(problem_id) + compiled_extension
-            gcc_args = [env['runtime'][command], source_code_file, '-O2', '-march=native'
+            output_file = self._file('%s%s' % (problem_id, compiled_extension))
+            gcc_args = [command, source_code_file, '-O2', '-march=native'
                         ] + args + linker_options + ['-s', '-o', output_file]
-            gcc_process = subprocess.Popen(gcc_args, stderr=subprocess.PIPE)
+            gcc_process = subprocess.Popen(gcc_args, stderr=subprocess.PIPE, executable=env['runtime'][command],
+                                           cwd=self._dir)
             _, compile_error = gcc_process.communicate()
             if gcc_process.returncode != 0:
-                os.unlink(source_code_file)
                 raise CompileError(compile_error)
-            self._files = [source_code_file, output_file]
+            self._executable = output_file
             self.name = problem_id
 
         def launch(self, *args, **kwargs):
             return SecurePopen([self.name] + list(args),
-                               executable=self._files[1],
+                               executable=self._executable,
                                security=CHROOTSecurity(C_FS),
                                time=kwargs.get('time'),
                                memory=kwargs.get('memory'),
-                               env={})
+                               env={}, cwd=self._dir)
 
     def initialize():
         if command not in env['runtime']:

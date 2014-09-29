@@ -13,8 +13,8 @@ JAVA_EXECUTOR = os.path.join(os.path.dirname(__file__), 'java_executor.jar')
 
 
 class JavaPopen(object):
-    def __init__(self, args, executable):
-        self.process = subprocess.Popen(args, executable=executable,
+    def __init__(self, args, executable, cwd):
+        self.process = subprocess.Popen(args, executable=executable, cwd=cwd,
                                         stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         self.execution_time, self.tle = None, None
         self.max_memory, self.mle = None, None
@@ -42,24 +42,21 @@ class JavaPopen(object):
 class Executor(ResourceProxy):
     def __init__(self, problem_id, source_code):
         super(ResourceProxy, self).__init__()
-        source_code_file = problem_id + '.java'
+        source_code_file = self._file('%s.java' % problem_id)
         with open(source_code_file, 'wb') as fo:
             fo.write(source_code)
-        output_file = problem_id + '.class'
         javac_args = [env['runtime']['javac'], source_code_file]
-        javac_process = subprocess.Popen(javac_args, stderr=subprocess.PIPE)
+        javac_process = subprocess.Popen(javac_args, stderr=subprocess.PIPE, cwd=self._dir)
         _, compile_error = javac_process.communicate()
         if javac_process.returncode != 0:
-            os.unlink(source_code_file)
             raise CompileError(compile_error)
-        self._files = [source_code_file, output_file]
         self._class_name = problem_id
 
     def launch(self, *args, **kwargs):
         return JavaPopen(['java', '-client',
                           '-Xmx%sK' % kwargs.get('memory'), '-jar', JAVA_EXECUTOR, os.getcwd(),
                           self._class_name, str(kwargs.get('time') * 1000)] + list(args),
-                         executable=env['runtime']['java'])
+                         executable=env['runtime']['java'], cwd=self._dir)
 
 
 def initialize():

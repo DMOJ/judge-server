@@ -11,13 +11,12 @@ RUBY_FS = ['.*\.[so|rb]', '/dev/urandom']
 class Executor(ResourceProxy):
     def __init__(self, problem_id, source_code):
         super(ResourceProxy, self).__init__()
-        source_code_file = str(problem_id) + '.rb'
+        self._script = source_code_file = self._file('%s.rb' % problem_id)
         with open(source_code_file, 'wb') as fo:
             fo.write(source_code)
-        self._files = [source_code_file]
 
     def launch(self, *args, **kwargs):
-        return SecurePopen(['ruby', self._files[0]] + list(args),
+        return SecurePopen(['ruby', self._script] + list(args),
                            executable=env['runtime']['ruby'],
                            security=CHROOTSecurity(RUBY_FS),
                            time=kwargs.get('time'),

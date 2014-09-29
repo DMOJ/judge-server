@@ -18,8 +18,7 @@ class Executor(ResourceProxy):
         with open(source_code_file, 'wb') as fo:
             fo.write(source_code)
         output_file = str(problem_id)
-        fpc_args = [env['runtime']['fpc'], source_code_file, '-So', '-O2'
-                    ] + ['-s', '-o' + output_file]
+        fpc_args = [env['runtime']['fpc'], '-So', '-O2', source_code_file, '-o' + output_file]
         fpc_process = subprocess.Popen(fpc_args, stderr=subprocess.PIPE)
         _, compile_error = fpc_process.communicate()
         if fpc_process.returncode != 0:

@@ -1,7 +1,7 @@
 from libc.stdio cimport FILE, fopen, fclose, fgets, sprintf
 from libc.stdlib cimport atoi, malloc, free, strtoul
 from libc.string cimport strncmp, strlen
-from posix.unistd cimport close, dup2, getpid, execve
+from posix.unistd cimport close, dup2, getpid, execve, chdir
 from posix.resource cimport setrlimit, rlimit, rusage, \
     RLIMIT_AS, RLIMIT_DATA, RLIMIT_CPU, RLIMIT_STACK, RLIMIT_CORE
 from posix.signal cimport kill
@@ -84,6 +84,7 @@ cdef struct child_config:
     unsigned int cpu_time # ask linus how this counts the CPU time because it SIGKILLs way before the real time limit
     int nproc
     char *file
+    char *dir
     char **argv
     char **envp
     int stdin
@@ -112,6 +113,9 @@ cdef int pt_child(void *context) nogil:
     if config.nproc >= 0:
         limit.rlim_cur = limit.rlim_max = config.nproc
         setrlimit(RLIMIT_NPROC, &limit)
+
+    if config.dir:
+        chdir(config.dir)
 
     limit.rlim_cur = limit.rlim_max = 2 * 1024 * 1024
     setrlimit(RLIMIT_STACK, &limit)
@@ -284,13 +288,14 @@ cdef class Process:
     cpdef _cpu_time_exceeded(self):
         pass
 
-    def _spawn(self, file, args, env=()):
+    cpdef _spawn(self, file, args, env=(), chdir=None):
         cdef child_config config
         config.address_space = self._child_address
         config.memory = self._child_memory
         config.cpu_time = self._cpu_time
         config.nproc = self._nproc
         config.file = file
+        config.dir = chdir if chdir is not None else NULL
         config.stdin = self._child_stdin
         config.stdout = self._child_stdout
         config.stderr = self._child_stderr

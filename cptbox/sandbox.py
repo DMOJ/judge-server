@@ -43,10 +43,11 @@ def _eintr_retry_call(func, *args):
 
 class _SecurePopen(Process):
     def __init__(self, bitness, args, executable=None, security=None, time=0, memory=0, stdin=PIPE, stdout=PIPE,
-                 stderr=None, env=None, nproc=0, address_grace=4096):
+                 stderr=None, env=None, nproc=0, address_grace=4096, chdir=None):
         self._bitness = bitness
         self._executable = executable or _find_exe(args[0])
         self._args = args
+        self._chdir = chdir
         self._env = ['%s=%s' % i for i in (env or os.environ).iteritems()]
         self._time = time
         self._cpu_time = time + 5
@@ -131,7 +132,7 @@ class _SecurePopen(Process):
         self._tle = True
 
     def _run_process(self):
-        self._spawn(self._executable, self._args, self._env)
+        self._spawn(self._executable, self._args, self._env, self._chdir)
         if self._child_stdin >= 0: os.close(self._child_stdin)
         if self._child_stdout >= 0: os.close(self._child_stdout)
         if self._child_stderr >= 0: os.close(self._child_stderr)
@@ -267,7 +268,7 @@ class _SecurePopen(Process):
 
             for fd, mode in ready:
                 if mode & select.POLLOUT:
-                    chunk = input[input_offset : input_offset + _PIPE_BUF]
+                    chunk = input[input_offset:input_offset + _PIPE_BUF]
                     try:
                         input_offset += os.write(fd, chunk)
                     except OSError as e:

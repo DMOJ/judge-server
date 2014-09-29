@@ -11,7 +11,7 @@ from judgeenv import env
 C_FS = ['.*\.[so]']
 
 
-def make_executor(code, command, args, ext, test_code):
+def make_executor(code, command, args, ext, test_code, arg0):
     class Executor(ResourceProxy):
         def __init__(self, problem_id, source_code):
             super(Executor, self).__init__()
@@ -25,7 +25,7 @@ def make_executor(code, command, args, ext, test_code):
                 compiled_extension = ''
                 linker_options = []
             output_file = self._file('%s%s' % (problem_id, compiled_extension))
-            gcc_args = [command, source_code_file, '-O2', '-march=native'
+            gcc_args = [arg0, source_code_file, '-O2', '-march=native'
                         ] + args + linker_options + ['-s', '-o', output_file]
             gcc_process = subprocess.Popen(gcc_args, stderr=subprocess.PIPE, executable=env['runtime'][command],
                                            cwd=self._dir)

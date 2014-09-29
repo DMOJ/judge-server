@@ -7,6 +7,6 @@ int main() {
     std::cout << "Hello, World!\n";
     return 0;
 }
-''')
+''', 'g++')
 
 del make_executor

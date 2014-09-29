@@ -79,7 +79,7 @@ public class JavaSafeExecutor {
         @Override
         public void checkPermission(Permission perm) {
             if (perm instanceof RuntimePermission) {
-                if (perm.getName().equals("writeFileDescriptor"))
+                if (perm.getName().equals("writeFileDescriptor") || perm.getName().equals("readFileDescriptor"))
                     return;
             }
             if (perm instanceof PropertyPermission) {

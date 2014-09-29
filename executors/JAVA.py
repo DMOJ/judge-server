@@ -1,14 +1,14 @@
 import os
+import re
 import subprocess
 import sys
-from cptbox import SecurePopen, NullSecurity
 from error import CompileError
 from executors.utils import test_executor
 
 from .resource_proxy import ResourceProxy
 from judgeenv import env
 
-
+reclass = re.compile(r'public\s+class\s+([_a-zA-Z][_0-9a-zA-z]+)')
 JAVA_EXECUTOR = os.path.join(os.path.dirname(__file__), 'java_executor.jar')
 
 
@@ -42,7 +42,10 @@ class JavaPopen(object):
 class Executor(ResourceProxy):
     def __init__(self, problem_id, source_code):
         super(Executor, self).__init__()
-        source_code_file = self._file('%s.java' % problem_id)
+        class_name = reclass.search(source_code)
+        if class_name is None:
+            raise CompileError('No public class')
+        source_code_file = self._file('%s.java' % class_name)
         with open(source_code_file, 'wb') as fo:
             fo.write(source_code)
         javac_args = [env['runtime']['javac'], source_code_file]
@@ -50,7 +53,7 @@ class Executor(ResourceProxy):
         _, compile_error = javac_process.communicate()
         if javac_process.returncode != 0:
             raise CompileError(compile_error)
-        self._class_name = problem_id
+        self._class_name = class_name
 
     def launch(self, *args, **kwargs):
         return JavaPopen(['java', '-client',

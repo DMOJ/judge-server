@@ -141,10 +141,10 @@ public class JavaSafeExecutor {
                         return;
                     } else if (e.getCause() instanceof OutOfMemoryError) {
                         // Prevent throw new OutOfMemoryError from being counted as MLE
-                        if(e.getCause().getStackTrace()[0].getClassName().equals(submission.getSimpleName())) {
-                            error = PROGRAM_ERROR_CODE;
-                            return;
-                        }
+//                        if(e.getCause().getStackTrace()[0].getClassName().equals(submission.getSimpleName())) {
+//                            error = PROGRAM_ERROR_CODE;
+//                            return;
+//                        }
                         mle = true;
                         return;
                     } else {

@@ -1,6 +1,3 @@
-import sun.reflect.CallerSensitive;
-import sun.reflect.Reflection;
-
 import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.InvocationTargetException;
@@ -13,10 +10,8 @@ import java.security.AccessControlException;
 import java.security.Permission;
 import java.util.PropertyPermission;
 import java.util.Scanner;
-import java.util.*;
 
 public class JavaSafeExecutor {
-
     private static ThreadDeath TLE = new ThreadDeath();
     private static int INVOCATION_ERROR_CODE = -1000;
     private static int ACCESS_ERROR_CODE = -1001;
@@ -30,10 +25,12 @@ public class JavaSafeExecutor {
         new Scanner(new ByteArrayInputStream(new byte[128])).close(); // Load locale
     }
 
-    public static void main(String[] argv) throws MalformedURLException, ClassNotFoundException {
+    public static void main(String[] argv) throws MalformedURLException, ClassNotFoundException, UnsupportedEncodingException {
         String path = argv[0];
         String classname = argv[1];
         int TL = Integer.parseInt(argv[2]);
+
+        System.setOut(new UnsafePrintStream(new FileOutputStream(java.io.FileDescriptor.out)));
 
         URLClassLoader classLoader = URLClassLoader.newInstance(new URL[]{new File(path).toURI().toURL()});
         Class program = classLoader.loadClass(classname);
@@ -55,6 +52,7 @@ public class JavaSafeExecutor {
         }
         _safeBlock = true;
         shockerThread.stop();
+        System.out.flush();
 
         long totalProgramTime = ManagementFactory.getRuntimeMXBean().getUptime();
         boolean tle = submissionThread.tle;
@@ -64,12 +62,11 @@ public class JavaSafeExecutor {
             BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(new File("/proc/self/status"))));
             for (String line; (line = in.readLine()) != null; ) {
                 if (line.startsWith("VmHWM:")) {
-                    String[] data = line.split("\\s+");
+                    String[] data = line.split(" ");
                     mem = Integer.parseInt(data[1]);
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception ignored) {
         }
         boolean mle = submissionThread.mle;
         int error = submissionThread.error;
@@ -81,12 +78,12 @@ public class JavaSafeExecutor {
     public static class _SecurityManager extends SecurityManager {
         @Override
         public void checkPermission(Permission perm) {
-            if(perm instanceof RuntimePermission) {
-                if(perm.getName().equals("writeFileDescriptor"))
+            if (perm instanceof RuntimePermission) {
+                if (perm.getName().equals("writeFileDescriptor"))
                     return;
             }
-            if(perm instanceof PropertyPermission) {
-                if(perm.getActions().contains("write"))
+            if (perm instanceof PropertyPermission) {
+                if (perm.getActions().contains("write"))
                     throw new AccessControlException(perm.getClass() + " - " + perm.getName() + ": " + perm.getActions(), perm);
                 return;
             }
@@ -159,4 +156,167 @@ public class JavaSafeExecutor {
             shockerThread.stop();
         }
     }
+
+    public static class UnsafePrintStream extends PrintStream {
+        private BufferedWriter acc;
+
+        public UnsafePrintStream(OutputStream out) throws UnsupportedEncodingException {
+            super(new ByteArrayOutputStream());
+            acc = new BufferedWriter(new OutputStreamWriter(out, "ASCII"), 512);
+        }
+
+        @Override
+        public void flush() {
+            super.flush();
+            try {
+                acc.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        public void write(int b) {
+            try {
+                acc.write(b);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        public void write(byte buf[], int off, int len) {
+            super.write(buf, off, len); // TODO
+        }
+
+        private void write(char buf[]) {
+            try {
+                acc.write(buf);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        private void write(String s) {
+            try {
+                acc.write(s);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        private void newLine() {
+            try {
+                acc.write('\n');
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        public void print(boolean b) {
+            write(b ? "true" : "false");
+        }
+
+        public void print(char c) {
+            write(String.valueOf(c));
+        }
+
+        public void print(int i) {
+            write(String.valueOf(i));
+        }
+
+        public void print(long l) {
+            write(String.valueOf(l));
+        }
+
+        public void print(float f) {
+            write(String.valueOf(f));
+        }
+
+        public void print(double d) {
+            write(String.valueOf(d));
+        }
+
+        public void print(char s[]) {
+            write(s);
+        }
+
+        public void print(String s) {
+            if (s == null) {
+                s = "null";
+            }
+            write(s);
+        }
+
+        public void print(Object obj) {
+            write(String.valueOf(obj));
+        }
+
+        public void println() {
+            newLine();
+        }
+
+        public void println(boolean x) {
+            synchronized (this) {
+                print(x);
+                newLine();
+            }
+        }
+
+        public void println(char x) {
+            synchronized (this) {
+                print(x);
+                newLine();
+            }
+        }
+
+        public void println(int x) {
+            synchronized (this) {
+                print(x);
+                newLine();
+            }
+        }
+
+        public void println(long x) {
+            synchronized (this) {
+                print(x);
+                newLine();
+            }
+        }
+
+        public void println(float x) {
+            synchronized (this) {
+                print(x);
+                newLine();
+            }
+        }
+
+        public void println(double x) {
+            synchronized (this) {
+                print(x);
+                newLine();
+            }
+        }
+
+        public void println(char x[]) {
+            synchronized (this) {
+                print(x);
+                newLine();
+            }
+        }
+
+        public void println(String x) {
+            synchronized (this) {
+                print(x);
+                newLine();
+            }
+        }
+
+        public void println(Object x) {
+            String s = String.valueOf(x);
+            synchronized (this) {
+                print(s);
+                newLine();
+            }
+        }
+    }
+
 }

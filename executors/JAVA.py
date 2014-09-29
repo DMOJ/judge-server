@@ -53,7 +53,7 @@ class Executor(ResourceProxy):
         _, compile_error = javac_process.communicate()
         if javac_process.returncode != 0:
             raise CompileError(compile_error)
-        self._class_name = class_name
+        self._class_name = class_name.group(1)
 
     def launch(self, *args, **kwargs):
         return JavaPopen(['java', '-client',

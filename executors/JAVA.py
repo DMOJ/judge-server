@@ -53,8 +53,8 @@ class Executor(ResourceProxy):
         self._class_name = problem_id
 
     def launch(self, *args, **kwargs):
-        return JavaPopen(['java', '-client', '-cp', self._dir,
-                          '-Xmx%sK' % kwargs.get('memory'), '-jar', JAVA_EXECUTOR, os.getcwd(),
+        return JavaPopen(['java', '-client',
+                          '-Xmx%sK' % kwargs.get('memory'), '-jar', JAVA_EXECUTOR, self._dir,
                           self._class_name, str(kwargs.get('time') * 1000)] + list(args),
                          executable=env['runtime']['java'], cwd=self._dir)
 

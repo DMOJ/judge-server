@@ -41,7 +41,7 @@ def initialize():
         return False
     if not os.path.isfile(env['runtime']['fpc']):
         return False
-    return test_executor('self-test', Executor, '''\
+    return test_executor('PAS', Executor, '''\
 begin
     writeln('Hello, World!')
 end.''')

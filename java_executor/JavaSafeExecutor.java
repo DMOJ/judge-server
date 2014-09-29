@@ -162,7 +162,7 @@ public class JavaSafeExecutor {
 
         public UnsafePrintStream(OutputStream out) throws UnsupportedEncodingException {
             super(new ByteArrayOutputStream());
-            acc = new BufferedWriter(new OutputStreamWriter(out, "ASCII"), 512);
+            acc = new BufferedWriter(new OutputStreamWriter(out, "ASCII"), 4096);
         }
 
         @Override
@@ -240,10 +240,7 @@ public class JavaSafeExecutor {
         }
 
         public void print(String s) {
-            if (s == null) {
-                s = "null";
-            }
-            write(s);
+            write(s == null ? "null" : s);
         }
 
         public void print(Object obj) {
@@ -255,68 +252,48 @@ public class JavaSafeExecutor {
         }
 
         public void println(boolean x) {
-            synchronized (this) {
-                print(x);
-                newLine();
-            }
+            print(x);
+            newLine();
         }
 
         public void println(char x) {
-            synchronized (this) {
-                print(x);
-                newLine();
-            }
+            print(x);
+            newLine();
         }
 
         public void println(int x) {
-            synchronized (this) {
-                print(x);
-                newLine();
-            }
+            print(x);
+            newLine();
         }
 
         public void println(long x) {
-            synchronized (this) {
-                print(x);
-                newLine();
-            }
+            print(x);
+            newLine();
         }
 
         public void println(float x) {
-            synchronized (this) {
-                print(x);
-                newLine();
-            }
+            print(x);
+            newLine();
         }
 
         public void println(double x) {
-            synchronized (this) {
-                print(x);
-                newLine();
-            }
+            print(x);
+            newLine();
         }
 
         public void println(char x[]) {
-            synchronized (this) {
-                print(x);
-                newLine();
-            }
+            print(x);
+            newLine();
         }
 
         public void println(String x) {
-            synchronized (this) {
-                print(x);
-                newLine();
-            }
+            print(x);
+            newLine();
         }
 
         public void println(Object x) {
-            String s = String.valueOf(x);
-            synchronized (this) {
-                print(s);
-                newLine();
-            }
+            print(String.valueOf(x));
+            newLine();
         }
     }
-
 }

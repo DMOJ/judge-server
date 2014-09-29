@@ -114,7 +114,7 @@ cdef int pt_child(void *context) nogil:
         limit.rlim_cur = limit.rlim_max = config.nproc
         setrlimit(RLIMIT_NPROC, &limit)
 
-    if config.dir:
+    if config.dir[0]:
         chdir(config.dir)
 
     limit.rlim_cur = limit.rlim_max = 2 * 1024 * 1024
@@ -288,14 +288,14 @@ cdef class Process:
     cpdef _cpu_time_exceeded(self):
         pass
 
-    cpdef _spawn(self, file, args, env=(), chdir=None):
+    cpdef _spawn(self, file, args, env=(), chdir=''):
         cdef child_config config
         config.address_space = self._child_address
         config.memory = self._child_memory
         config.cpu_time = self._cpu_time
         config.nproc = self._nproc
         config.file = file
-        config.dir = chdir if chdir is not None else NULL
+        config.dir = chdir
         config.stdin = self._child_stdin
         config.stdout = self._child_stdout
         config.stderr = self._child_stderr

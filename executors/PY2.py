@@ -8,7 +8,7 @@ PYTHON_FS = ['.*\.[so|py]', '.*/lib(?:32|64)?/python[\d.]+/.*', '.*/lib/locale/.
 
 class Executor(ResourceProxy):
     def __init__(self, problem_id, source_code):
-        super(ResourceProxy, self).__init__()
+        super(Executor, self).__init__()
         self._script = source_code_file = self._file('%s.py' % problem_id)
         customize = '''\
 # encoding: utf-8

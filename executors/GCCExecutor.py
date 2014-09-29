@@ -14,7 +14,7 @@ C_FS = ['.*\.[so]']
 def make_executor(code, command, args, ext, test_code):
     class Executor(ResourceProxy):
         def __init__(self, problem_id, source_code):
-            super(ResourceProxy, self).__init__()
+            super(Executor, self).__init__()
             source_code_file = self._file('%s%s' % (problem_id, ext))
             with open(source_code_file, 'wb') as fo:
                 fo.write(source_code)

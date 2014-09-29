@@ -10,7 +10,7 @@ PERL_FS = ['.*\.[so|pm]', '/dev/urandom']
 
 class Executor(ResourceProxy):
     def __init__(self, problem_id, source_code):
-        super(ResourceProxy, self).__init__()
+        super(Executor, self).__init__()
         self._script = source_code_file = self._file('%s.pl' % problem_id)
         with open(source_code_file, 'wb') as fo:
             fo.write(source_code)

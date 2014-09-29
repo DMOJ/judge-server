@@ -13,7 +13,7 @@ PAS_FS = ['.*\.[so]']
 
 class Executor(ResourceProxy):
     def __init__(self, problem_id, source_code):
-        super(ResourceProxy, self).__init__()
+        super(Executor, self).__init__()
         source_code_file = self._file('%s.pas' % problem_id)
         with open(source_code_file, 'wb') as fo:
             fo.write(source_code)

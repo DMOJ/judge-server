@@ -123,7 +123,7 @@ public class JavaSafeExecutor {
         private int error = 0;
 
         public SubmissionThread(Class process) {
-            super(null, null, "Submission-Grading-Thread(" + process.getSimpleName() + ")", 1000000000);
+            super(null, null, "Submission-Grading-Thread(" + process.getSimpleName() + ")", 8000000);
             this.submission = process;
         }
 

@@ -18,7 +18,7 @@ public class JavaSafeExecutor {
     private static int NO_ENTRY_POINT_ERROR_CODE = -1002;
     private static int PROGRAM_ERROR_CODE = -1;
     private static ShockerThread shockerThread;
-    private static ProcessExecutionThread submissionThread;
+    private static SubmissionThread submissionThread;
     private static boolean _safeBlock = false;
 
     static {
@@ -30,11 +30,11 @@ public class JavaSafeExecutor {
         String classname = argv[1];
         int TL = Integer.parseInt(argv[2]);
 
-        System.setOut(new UnsafePrintStream(new FileOutputStream(java.io.FileDescriptor.out)));
+        System.setOut(new UnsafePrintStream(new FileOutputStream(FileDescriptor.out)));
 
         URLClassLoader classLoader = URLClassLoader.newInstance(new URL[]{new File(path).toURI().toURL()});
         Class program = classLoader.loadClass(classname);
-        submissionThread = new ProcessExecutionThread(program);
+        submissionThread = new SubmissionThread(program);
 
         // Count runtime loading as part of time used
         // Note that time here might be negative if RT loading time was greater than TL
@@ -42,7 +42,7 @@ public class JavaSafeExecutor {
         TL -= ManagementFactory.getRuntimeMXBean().getUptime();
 
         shockerThread = new ShockerThread(TL, submissionThread);
-        System.setSecurityManager(new _SecurityManager());
+        System.setSecurityManager(new SubmissionSecurityManager());
         shockerThread.start();
         submissionThread.start();
 
@@ -52,14 +52,16 @@ public class JavaSafeExecutor {
         }
         _safeBlock = true;
         shockerThread.stop();
+
+        // UnsafePrintStream buffers
         System.out.flush();
 
         long totalProgramTime = ManagementFactory.getRuntimeMXBean().getUptime();
         boolean tle = submissionThread.tle;
 
-        long mem = -1;
+        long mem = 0;
         try {
-            BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(new File("/proc/self/status"))));
+            BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream("/proc/self/status")));
             for (String line; (line = in.readLine()) != null; ) {
                 if (line.startsWith("VmHWM:")) {
                     String[] data = line.split("\\s+");
@@ -75,7 +77,7 @@ public class JavaSafeExecutor {
         System.err.printf("%d %d %d %d %d\n", totalProgramTime, tle ? 1 : 0, mem, mle ? 1 : 0, error);
     }
 
-    public static class _SecurityManager extends SecurityManager {
+    public static class SubmissionSecurityManager extends SecurityManager {
         @Override
         public void checkPermission(Permission perm) {
             if (perm instanceof RuntimePermission) {
@@ -98,6 +100,7 @@ public class JavaSafeExecutor {
         private final Thread target;
 
         public ShockerThread(long timelimit, Thread target) {
+            super("Grader-TL-Thread");
             this.timelimit = timelimit;
             this.target = target;
         }
@@ -113,21 +116,22 @@ public class JavaSafeExecutor {
         }
     }
 
-    public static class ProcessExecutionThread extends Thread {
-        private final Class process;
+    public static class SubmissionThread extends Thread {
+        private final Class submission;
         private boolean tle = false;
         private boolean mle = false;
         private int error = 0;
 
-        public ProcessExecutionThread(Class process) {
-            this.process = process;
+        public SubmissionThread(Class process) {
+            super(null, null, "Submission-Grading-Thread(" + process.getSimpleName() + ")", 1000000000);
+            this.submission = process;
         }
 
         @Override
         public void run() {
             Method handle;
             try {
-                handle = process.getMethod("main", String[].class);
+                handle = submission.getMethod("main", String[].class);
                 if (!Modifier.isStatic(handle.getModifiers())) System.exit(-10);
                 try {
                     handle.invoke(null, new Object[]{new String[0]});
@@ -158,56 +162,70 @@ public class JavaSafeExecutor {
     }
 
     public static class UnsafePrintStream extends PrintStream {
-        private BufferedWriter acc;
+        private BufferedWriter writer;
+        private OutputStreamWriter bin;
+        private OutputStream out;
+        private boolean trouble;
 
         public UnsafePrintStream(OutputStream out) throws UnsupportedEncodingException {
             super(new ByteArrayOutputStream());
-            acc = new BufferedWriter(new OutputStreamWriter(out, "ASCII"), 4096);
+            this.out = out;
+            bin = new OutputStreamWriter(out, "ASCII");
+            writer = new BufferedWriter(bin, 4096);
+        }
+
+        @Override
+        public boolean checkError() {
+            return trouble;
         }
 
         @Override
         public void flush() {
-            super.flush();
             try {
-                acc.flush();
+                writer.flush();
             } catch (IOException e) {
-                e.printStackTrace();
+                trouble = true;
             }
         }
 
         public void write(int b) {
             try {
-                acc.write(b);
+                writer.write(b);
             } catch (IOException e) {
-                e.printStackTrace();
+                trouble = true;
             }
         }
 
         public void write(byte buf[], int off, int len) {
-            super.write(buf, off, len); // TODO
+            flush();
+            try {
+                out.write(buf, off, len);
+            } catch (IOException e) {
+                trouble = true;
+            }
         }
 
         private void write(char buf[]) {
             try {
-                acc.write(buf);
+                writer.write(buf);
             } catch (IOException e) {
-                e.printStackTrace();
+                trouble = true;
             }
         }
 
         private void write(String s) {
             try {
-                acc.write(s);
+                writer.write(s);
             } catch (IOException e) {
-                e.printStackTrace();
+                trouble = true;
             }
         }
 
         private void newLine() {
             try {
-                acc.write('\n');
+                writer.write('\n');
             } catch (IOException e) {
-                e.printStackTrace();
+                trouble = true;
             }
         }
 

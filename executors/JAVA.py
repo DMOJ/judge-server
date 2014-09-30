@@ -52,6 +52,9 @@ class Executor(ResourceProxy):
         javac_process = subprocess.Popen(javac_args, stderr=subprocess.PIPE, cwd=self._dir)
         _, compile_error = javac_process.communicate()
         if javac_process.returncode != 0:
+            if 'is public, should be declared in a file named' in compile_error:
+                raise CompileError('You are a troll. Trolls are not welcome. '
+                                   'As a judge, I sentence your code to death.')
             raise CompileError(compile_error)
         self._class_name = class_name.group(1)
 

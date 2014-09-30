@@ -15,7 +15,7 @@ public class JavaSafeExecutor {
     private static ThreadDeath TLE = new ThreadDeath();
     private static int ACCESS_ERROR_CODE = -1001;
     private static int NO_ENTRY_POINT_ERROR_CODE = -1002;
-    private static int PROGRAM_ERROR_CODE = -1;
+    private static int PROGRAM_ERROR_CODE = 1;
     private static int CLASS_NOT_FOUND_ERROR_CODE = -1003;
     private static int NO_CLASS_DEF_ERROR_CODE = -1004;
     private static ShockerThread shockerThread;

@@ -17,7 +17,8 @@ public class JavaSafeExecutor {
     private static int ACCESS_ERROR_CODE = -1001;
     private static int NO_ENTRY_POINT_ERROR_CODE = -1002;
     private static int PROGRAM_ERROR_CODE = -1;
-    private static int NO_CLASS_DEF_ERROR_CODE = -1003;
+    private static int CLASS_NOT_FOUND_ERROR_CODE = -1003;
+    private static int NO_CLASS_DEF_ERROR_CODE = -1004;
     private static ShockerThread shockerThread;
     private static SubmissionThread submissionThread;
     private static boolean _safeBlock = false;
@@ -38,6 +39,9 @@ public class JavaSafeExecutor {
         try {
             program = classLoader.loadClass(classname);
         } catch (ClassNotFoundException e) {
+            System.err.printf("%d %d %d %d %d\n", 0, 0, 0, 0, CLASS_NOT_FOUND_ERROR_CODE);
+            return;
+        } catch (NoClassDefFoundError ex) {
             System.err.printf("%d %d %d %d %d\n", 0, 0, 0, 0, NO_CLASS_DEF_ERROR_CODE);
             return;
         }

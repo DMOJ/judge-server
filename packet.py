@@ -50,12 +50,7 @@ class PacketManager(object):
 
     def _send_packet(self, packet):
         if packet['name'] not in ['ping-response', 'handshake']:
-            if 'key' in packet:
-                temp = packet.copy()
-                temp['key'] = '<secret>'
-            else:
-                temp = packet
-            print '%s:%s => %s' % (self.host, self.port, json.dumps(temp, indent=4))
+            print '%s:%s => %s' % (self.host, self.port, json.dumps(packet, indent=4))
 
         raw = json.dumps(packet).encode('zlib')
         self.output.write(PacketManager.SIZE_PACK.pack(len(raw)))

@@ -145,6 +145,11 @@ class PacketManager(object):
                            'submission-id': self.judge.current_submission})
 
     def submission_terminated_packet(self):
+        traceback.print_exc()
+        try:
+            raise ValueError()
+        except ValueError:
+            traceback.print_exc()
         self._send_packet({'name': 'submission-terminated',
                            'submission-id': self.judge.current_submission})
 

@@ -8,8 +8,18 @@ from executors.utils import test_executor
 from .resource_proxy import ResourceProxy
 from judgeenv import env
 
-reclass = re.compile(r'public\s+class\s+([_a-zA-Z][_0-9a-zA-z]+)')
+recomment = re.compile(r'/\*.*?\*/', re.DOTALL)
+restring = re.compile(r'''(["'])(?:\\.|[^"\\])*\1''', re.DOTALL)
+reclass = re.compile(r'\bpublic\s+class\s+([_a-zA-Z][_0-9a-zA-z]+?)\b')
 JAVA_EXECUTOR = os.path.join(os.path.dirname(__file__), 'java_executor.jar')
+
+
+def find_class(source):
+    source = restring.sub('', recomment.sub('', source))
+    class_name = reclass.search(source)
+    if class_name is None:
+        raise CompileError('No public class')
+    return class_name
 
 
 class JavaPopen(object):
@@ -42,9 +52,7 @@ class JavaPopen(object):
 class Executor(ResourceProxy):
     def __init__(self, problem_id, source_code):
         super(Executor, self).__init__()
-        class_name = reclass.search(source_code)
-        if class_name is None:
-            raise CompileError('No public class')
+        class_name = find_class(source_code)
         source_code_file = self._file('%s.java' % class_name.group(1))
         with open(source_code_file, 'wb') as fo:
             fo.write(source_code)

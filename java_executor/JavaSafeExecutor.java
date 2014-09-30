@@ -13,7 +13,6 @@ import java.util.Scanner;
 
 public class JavaSafeExecutor {
     private static ThreadDeath TLE = new ThreadDeath();
-    private static int INVOCATION_ERROR_CODE = -1000;
     private static int ACCESS_ERROR_CODE = -1001;
     private static int NO_ENTRY_POINT_ERROR_CODE = -1002;
     private static int PROGRAM_ERROR_CODE = -1;
@@ -160,7 +159,7 @@ public class JavaSafeExecutor {
                         return;
                     } else {
                         e.getCause().printStackTrace();
-                        error = INVOCATION_ERROR_CODE;
+                        error = PROGRAM_ERROR_CODE;
                     }
                 } catch (IllegalAccessException e) {
                     e.printStackTrace();

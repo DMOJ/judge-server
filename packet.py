@@ -130,7 +130,6 @@ class PacketManager(object):
     def grading_end_packet(self):
         self._send_packet({'name': 'grading-end',
                            'submission-id': self.judge.current_submission})
-        self.judge.current_submission = None
 
     def begin_batch_packet(self):
         self._send_packet({'name': 'batch-begin',

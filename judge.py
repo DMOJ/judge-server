@@ -179,6 +179,7 @@ class Judge(object):
         finally:
             print>>sys.stderr, '===========Done Grading: %s===========' % submission_id
             self.current_submission_thread = None
+            self.current_submission = None
 
     def listen(self):
         self.packet_manager.run()

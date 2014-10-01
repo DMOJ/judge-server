@@ -71,8 +71,8 @@ class PacketManager(object):
         elif name == 'get-current-submission':
             self.current_submission_packet()
         elif name == 'submission-request':
-            self.judge.current_submission = packet['submission-id']
             self.judge.begin_grading(
+                packet['submission-id'],
                 packet['problem-id'],
                 packet['language'],
                 packet['source'],

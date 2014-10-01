@@ -85,7 +85,7 @@ class Judge(object):
         self.current_submission_thread = None
         self._terminate_grading = False
 
-    def begin_grading(self, problem_id, language, source_code, time, mem, sc, grader, args):
+    def begin_grading(self, id, problem_id, language, source_code, time, mem, sc, grader, args):
         print 'Grading %s in %s...' % (problem_id, language)
         try:
             self.current_submission_thread.join()
@@ -94,6 +94,7 @@ class Judge(object):
         #if self.current_submission_thread:
         #    print 'TODO: this should be an error'
         #    self.terminate_grading()
+        self.current_submission = id
         self.current_submission_thread = threading.Thread(target=self._begin_grading,
                                                           args=(problem_id, language, source_code,
                                                                 time, mem, sc, grader, args))
@@ -368,13 +369,13 @@ def main():
     else:
         with LocalJudge() as judge:
             try:
-                #judge.begin_grading('helloworld', 'PY2', 'print "Hello, World!"', 1, 16384, 0, 'standard', {})
+                #judge.begin_grading(None, 'helloworld', 'PY2', 'print "Hello, World!"', 1, 16384, 0, 'standard', {})
                 #judge.current_submission_thread.join()
-                judge.begin_grading('helloworld', 'RUBY', "puts 'Hello, World!'", 1, 16384, 0, 'standard', {})
+                judge.begin_grading(None, 'helloworld', 'RUBY', "puts 'Hello, World!'", 1, 16384, 0, 'standard', {})
                 judge.current_submission_thread.join()
-                #judge.begin_grading('aplusb', 'PY2', 'for i in xrange(input()): print sum(map(int, raw_input().split()))')
+                #judge.begin_grading(None, 'aplusb', 'PY2', 'for i in xrange(input()): print sum(map(int, raw_input().split()))')
                 #judge.current_submission_thread.join()
-                judge.begin_grading('aplusb', 'PY3',
+                judge.begin_grading(None, 'aplusb', 'PY3',
                                     'for i in range(int(input())): print(sum(map(int, input().split())))',
                                     5, 16384, 0, 'standard', {})
                 judge.current_submission_thread.join()

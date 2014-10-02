@@ -94,7 +94,7 @@ class Judge(object):
             pass
         # if self.current_submission_thread:
         # print 'TODO: this should be an error'
-        #    self.terminate_grading()
+        # self.terminate_grading()
         self.current_submission = id
         self.current_submission_thread = threading.Thread(target=self._begin_grading,
                                                           args=(problem_id, language, source_code,
@@ -143,7 +143,7 @@ class Judge(object):
                 run_call = [self.run_standard, self.run_interactive]['grader' in init_data]
 
                 case = 1
-                for result in run_call(executor.launch, init_data, check_adapter,
+                for result in run_call(executor.launch, init_data, check_adapter, problem_id,
                                        time=time_limit, memory=memory_limit,
                                        short_circuit=short_circuit):
                     print 'Test case %s' % case
@@ -176,13 +176,15 @@ class Judge(object):
     def listen(self):
         self.packet_manager.run()
 
-    def run_interactive(self, executor_func, init_data, check_adapter, short_circuit=False, time=2, memory=65536):
+    def run_interactive(self, executor_func, init_data, check_adapter, problem_id, short_circuit=False, time=2, memory=65536):
         forward_test_cases = []
         for case in init_data['test_cases']:
             case = TestCase(case.get('in', None), case.get('out', None), case['points'])
             forward_test_cases.append(case)
 
-        grader_path = init_data['grader']
+        if 'grader' not in init_data:
+            raise IOError('no grader specified')
+        grader_path = os.path.join('data', 'problems', problem_id, init_data['grader'])
         if not os.path.exists(grader_path):
             raise IOError('grader does not exist')
 
@@ -216,7 +218,8 @@ class Judge(object):
 
         if 'archive' in init_data:
             files = {}
-            archive = zipfile.ZipFile(init_data['archive'], 'r')
+            archive = zipfile.ZipFile(os.path.join('data', 'problems', problem_id,
+                                                   init_data['archive'], 'r'))
             try:
                 for name in archive.infolist():
                     files[name.filename] = cStringIO.StringIO(archive.read(name))
@@ -297,7 +300,7 @@ class Judge(object):
             self.current_proc = None
             gc.collect()
 
-    def run_standard(self, executor_func, init_data, check_func, short_circuit=False, time=2, memory=65536, *args):
+    def run_standard(self, executor_func, init_data, check_func, problem_id, short_circuit=False, time=2, memory=65536):
         forward_test_cases = []
         for case in init_data['test_cases']:
             if 'data' in case:
@@ -311,7 +314,8 @@ class Judge(object):
 
         if 'archive' in init_data:
             files = {}
-            archive = zipfile.ZipFile(init_data['archive'], 'r')
+            archive = zipfile.ZipFile(os.path.join('data', 'problems', problem_id,
+                                                   init_data['archive'], 'r'))
             try:
                 for name in archive.infolist():
                     files[name.filename] = cStringIO.StringIO(archive.read(name))

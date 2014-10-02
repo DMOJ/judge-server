@@ -219,7 +219,7 @@ class Judge(object):
         if 'archive' in init_data:
             files = {}
             archive = zipfile.ZipFile(os.path.join('data', 'problems', problem_id,
-                                                   init_data['archive'], 'r'))
+                                                   init_data['archive']), 'r')
             try:
                 for name in archive.infolist():
                     files[name.filename] = cStringIO.StringIO(archive.read(name))
@@ -315,7 +315,7 @@ class Judge(object):
         if 'archive' in init_data:
             files = {}
             archive = zipfile.ZipFile(os.path.join('data', 'problems', problem_id,
-                                                   init_data['archive'], 'r'))
+                                                   init_data['archive']), 'r')
             try:
                 for name in archive.infolist():
                     files[name.filename] = cStringIO.StringIO(archive.read(name))

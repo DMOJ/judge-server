@@ -250,6 +250,7 @@ class Judge(object):
                     result = interactive_grader(case_number, self.current_proc, case_input=_input,
                                                 case_output=_output, point_value=point_value)
                     try:
+                        process.wait()
                         process.kill()
                     except:  # The process might've already exited
                         pass

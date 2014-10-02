@@ -92,7 +92,7 @@ class Judge(object):
             self.current_submission_thread.join()
         except AttributeError:
             pass
-        #if self.current_submission_thread:
+        # if self.current_submission_thread:
         #    print 'TODO: this should be an error'
         #    self.terminate_grading()
         self.current_submission = id
@@ -144,10 +144,10 @@ class Judge(object):
 
                 case = 1
                 for result in run_call(executor.launch, init_data, check_adapter,
-                                                archive=os.path.join('data', 'problems', problem_id,
-                                                                     init_data['archive']),
-                                                time=time_limit, memory=memory_limit,
-                                                short_circuit=short_circuit):
+                                       archive=os.path.join('data', 'problems', problem_id,
+                                                            init_data['archive']),
+                                       time=time_limit, memory=memory_limit,
+                                       short_circuit=short_circuit):
                     print 'Test case %s' % case
                     print '\t%f seconds (real)' % result.r_execution_time
                     print '\t%f seconds (debugged)' % result.execution_time
@@ -193,8 +193,6 @@ class Judge(object):
         def set_entry_point(func):
             interactive_grader[0] = func
 
-        interactive_grader = interactive_grader[0]  # GG, python
-
         try:
             with open(grader_path, 'r') as g:
                 source = g.read()
@@ -212,6 +210,8 @@ class Judge(object):
             # TODO: because I was on a bus while writing this and had no time to find out how this method is supposed
             # TODO: to behave
             return
+
+        interactive_grader = interactive_grader[0]
 
         if not interactive_grader:
             raise IOError('no grader specified')

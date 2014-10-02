@@ -238,11 +238,11 @@ class Judge(object):
                     if self._terminate_grading:
                         raise TerminateGrading()
 
+                    _input = topen(input_file).read() if input_file else None
+                    _output = topen(output_file).read() if output_file else None
                     # Launch a process for the current test case
                     process = executor_func(time=time, memory=memory)
                     self.current_proc = process
-                    _input = topen(input_file).read() if input_file else None
-                    _output = topen(output_file).read() if output_file else None
                     # TODO: interactive grader should really run on another thread
                     # if submission dies, interactive grader might get stuck on a process IO call,
                     # hanging the main thread
@@ -281,7 +281,8 @@ class Judge(object):
                                                                 result.execution_time,
                                                                 result.max_memory,
                                                                 # TODO: make limit configurable
-                                                                result.proc_output[:10])
+                                                                #result.proc_output[:10
+                                                                '')
 
                     if not short_circuited and result.result_flag != Result.AC:
                         short_circuited = True

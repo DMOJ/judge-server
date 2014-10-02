@@ -310,7 +310,7 @@ class Judge(object):
                 case = TestCase(case['in'], case['out'], case['points'])
             forward_test_cases.append(case)
 
-        if 'archive' in kwargs:
+        if 'archive' in init_data:
             files = {}
             archive = zipfile.ZipFile(kwargs['archive'], 'r')
             try:

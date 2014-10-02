@@ -240,8 +240,8 @@ class Judge(object):
                     # Launch a process for the current test case
                     self.current_proc = executor_func(time=time, memory=memory)
                     process = self.current_proc
-                    _input = topen(input_file).read()
-                    _output = topen(output_file).read()
+                    _input = topen(input_file).read() if input_file else None
+                    _output = topen(output_file).read() if output_file else None
                     # TODO: interactive grader should really run on another thread
                     # if submission dies, interactive grader might get stuck on a process IO call,
                     # hanging the main thread

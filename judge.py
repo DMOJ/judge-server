@@ -33,6 +33,7 @@ class Result(object):
         self.r_execution_time = 0
         self.max_memory = 0
         self.proc_output = None
+        self.points = 0
 
 
 class TestCase(object):
@@ -108,9 +109,10 @@ class Judge(object):
                 self.current_proc.kill()
             self.current_submission_thread.join()
 
-    def _begin_grading(self, problem_id, language, source_code, time_limit, memory_limit, short_circuit, grader_id, grader_args):
+    def _begin_grading(self, problem_id, language, source_code, time_limit, memory_limit, short_circuit, grader_id,
+                       grader_args):
         submission_id = self.current_submission
-        print>>sys.stderr, '===========Started Grading: %s===========' % submission_id
+        print>> sys.stderr, '===========Started Grading: %s===========' % submission_id
         try:
             if isinstance(source_code, unicode):
                 source_code = source_code.encode('utf-8')
@@ -137,19 +139,11 @@ class Judge(object):
 
                 # Use a proxy to not expose init_data to all submethods
                 check_adapter = lambda proc_output, judge_output: checker.check(proc_output, judge_output, grader_args)
-                forward_test_cases = []
-                for case in init_data['test_cases']:
-                    if 'data' in case:
-                        # Data is batched, with multiple subcases for each parent case
-                        # If one subcase fails, the main case fails too
-                        subcases = [(subcase['in'], subcase['out']) for subcase in case['data']]
-                        case = BatchedTestCase(subcases, case['points'])
-                    else:
-                        case = TestCase(case['in'], case['out'], case['points'])
-                    forward_test_cases.append(case)
+
+                run_call = [self.run_standard, self.run_interactive]['grader' in init_data]
 
                 case = 1
-                for result in self.run_standard(executor.launch, forward_test_cases, check_adapter,
+                for result in run_call(executor.launch, init_data, check_adapter,
                                                 archive=os.path.join('data', 'problems', problem_id,
                                                                      init_data['archive']),
                                                 time=time_limit, memory=memory_limit,
@@ -177,15 +171,147 @@ class Judge(object):
         except TerminateGrading:
             print 'Forcefully terminating grading. Temporary files may not be deleted.'
         finally:
-            print>>sys.stderr, '===========Done Grading: %s===========' % submission_id
+            print>> sys.stderr, '===========Done Grading: %s===========' % submission_id
             self.current_submission_thread = None
             self.current_submission = None
 
     def listen(self):
         self.packet_manager.run()
 
-    def run_standard(self, executor_func, test_cases, check_func, short_circuit=False, time=2, memory=65536,
+    def run_interactive(self, archive, executor_func, init_data, short_circuit=False, time=2, memory=65536):
+        forward_test_cases = []
+        for case in init_data['test_cases']:
+            case = TestCase(case.get('in', None), case.get('out', None), case['points'])
+            forward_test_cases.append(case)
+
+        grader_path = init_data['grader']
+        if not os.path.exists(grader_path):
+            raise IOError('grader does not exist')
+
+        interactive_grader = [None]
+
+        def set_entry_point(func):
+            interactive_grader[0] = func
+
+        interactive_grader = interactive_grader[0]  # GG, python
+
+        try:
+            with open(grader_path, 'r') as g:
+                source = g.read()
+        except:
+            raise IOError('could not open grader file')
+
+        try:
+            exec (source, {'__judge__': self,
+                           'set_entry_point': set_entry_point,
+                           'Result': Result})
+        except:
+            traceback.print_exc()
+            self.packet_manager.submission_terminated_packet()
+            # TODO: the rest of this method might normally `yield` results, so if we ever IE its probably
+            # TODO: because I was on a bus while writing this and had no time to find out how this method is supposed
+            # TODO: to behave
+            return
+
+        if not interactive_grader:
+            raise IOError('no grader specified')
+
+        if 'archive' in init_data:
+            files = {}
+            archive = zipfile.ZipFile(archive, 'r')
+            try:
+                for name in archive.infolist():
+                    files[name.filename] = cStringIO.StringIO(archive.read(name))
+            finally:
+                archive.close()
+            topen = lambda x: files[x] if x in files else lambda ignored: None
+        else:
+            topen = lambda x: open(x, 'r') if os.path.exists(x) else None
+
+        self.packet_manager.begin_grading_packet()
+        case_number = 1
+        short_circuited = False
+        try:
+            for test_case in forward_test_cases:
+                for input_file, output_file, point_value in test_case:
+                    if self._terminate_grading:
+                        raise TerminateGrading()
+
+                    # Launch a process for the current test case
+                    self.current_proc = executor_func(time=time, memory=memory)
+                    process = self.current_proc
+                    _input = topen(input_file).read()
+                    _output = topen(output_file).read()
+                    # TODO: interactive grader should really run on another thread
+                    # if submission dies, interactive grader might get stuck on a process IO call,
+                    # hanging the main thread
+                    result = interactive_grader(case_number, self.current_proc, case_input=_input,
+                                                case_output=_output, point_value=point_value)
+                    try:
+                        process.kill()
+                    except:  # The process might've already exited
+                        pass
+                    result.max_memory = process.max_memory
+                    result.execution_time = process.execution_time
+                    result.r_execution_time = process.r_execution_time
+
+                    result_flag = 0
+
+                    if process.returncode > 0:
+                        result_flag |= Result.IR
+                    if process.returncode < 0:
+                        print>> sys.stderr, 'Killed by signal %d' % -process.returncode
+                        result_flag |= Result.RTE  # Killed by signal
+                    if process.tle:
+                        result_flag |= Result.TLE
+                    if process.mle:
+                        result_flag |= Result.MLE
+
+                    result.result_flag = result_flag
+
+                    # Must check here because we might be interrupted mid-execution
+                    # If we don't bail out, we get an IR.
+                    if self._terminate_grading:
+                        raise TerminateGrading()
+                    self.packet_manager.test_case_status_packet(case_number,
+                                                                result.points,
+                                                                point_value,
+                                                                result.result_flag,
+                                                                result.execution_time,
+                                                                result.max_memory,
+                                                                # TODO: make limit configurable
+                                                                result.proc_output[:10])
+
+                    if not short_circuited and result.result_flag != Result.AC:
+                        short_circuited = True
+                    case_number += 1
+                    yield result
+        except TerminateGrading:
+            self.packet_manager.submission_terminated_packet()
+            self._terminate_grading = False
+            raise
+        except:
+            traceback.print_exc()
+            self.packet_manager.grading_end_packet()
+        else:
+            self.packet_manager.grading_end_packet()
+        finally:
+            self.current_proc = None
+            gc.collect()
+
+    def run_standard(self, executor_func, init_data, check_func, short_circuit=False, time=2, memory=65536,
                      *args, **kwargs):
+        forward_test_cases = []
+        for case in init_data['test_cases']:
+            if 'data' in case:
+                # Data is batched, with multiple subcases for each parent case
+                # If one subcase fails, the main case fails too
+                subcases = [(subcase['in'], subcase['out']) for subcase in case['data']]
+                case = BatchedTestCase(subcases, case['points'])
+            else:
+                case = TestCase(case['in'], case['out'], case['points'])
+            forward_test_cases.append(case)
+
         if 'archive' in kwargs:
             files = {}
             archive = zipfile.ZipFile(kwargs['archive'], 'r')
@@ -202,7 +328,7 @@ class Judge(object):
         case_number = 1
         short_circuited = False
         try:
-            for test_case in test_cases:
+            for test_case in forward_test_cases:
                 if type(test_case) == BatchedTestCase:
                     self.packet_manager.begin_batch_packet()
                 for input_file, output_file, point_value in test_case:
@@ -323,7 +449,8 @@ class TestCaseJudge(object):
         self.process = process
         self.result = Result()
         result_flag = Result.AC
-        input_data = input_file.read().replace('\r\n', '\n')#.replace('\r', '\n')
+        input_data = input_file.read().replace('\r\n', '\n')  # .replace('\r', '\n')
+
         self.result.proc_output, error = process.communicate(input_data)
 
         self.result.max_memory = self.process.max_memory
@@ -336,13 +463,13 @@ class TestCaseJudge(object):
         if self.process.returncode > 0:
             result_flag |= Result.IR
         if self.process.returncode < 0:
-            print>>sys.stderr, 'Killed by signal %d' % -self.process.returncode
+            print>> sys.stderr, 'Killed by signal %d' % -self.process.returncode
             result_flag |= Result.RTE  # Killed by signal
         if self.process.tle:
             result_flag |= Result.TLE
         if self.process.mle:
             result_flag |= Result.MLE
-        #self.close()
+        # self.close()
         self.result.result_flag = result_flag
         return self.result
 
@@ -370,13 +497,13 @@ def main():
     else:
         with LocalJudge() as judge:
             try:
-                #judge.begin_grading(None, 'helloworld', 'PY2', 'print "Hello, World!"', 1, 16384, 0, 'standard', {})
-                #judge.current_submission_thread.join()
-                judge.begin_grading(None, 'helloworld', 'RUBY', "puts 'Hello, World!'", 1, 16384, 0, 'standard', {})
+                # judge.begin_grading('helloworld', 'PY2', 'print "Hello, World!"', 1, 16384, 0, 'standard', {})
+                # judge.current_submission_thread.join()
+                judge.begin_grading('helloworld', 'RUBY', "puts 'Hello, World!'", 1, 16384, 0, 'standard', {})
                 judge.current_submission_thread.join()
-                #judge.begin_grading(None, 'aplusb', 'PY2', 'for i in xrange(input()): print sum(map(int, raw_input().split()))')
-                #judge.current_submission_thread.join()
-                judge.begin_grading(None, 'aplusb', 'PY3',
+                # judge.begin_grading('aplusb', 'PY2', 'for i in xrange(input()): print sum(map(int, raw_input().split()))')
+                # judge.current_submission_thread.join()
+                judge.begin_grading('aplusb', 'PY3',
                                     'for i in range(int(input())): print(sum(map(int, input().split())))',
                                     5, 16384, 0, 'standard', {})
                 judge.current_submission_thread.join()

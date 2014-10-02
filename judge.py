@@ -144,8 +144,6 @@ class Judge(object):
 
                 case = 1
                 for result in run_call(executor.launch, init_data, check_adapter,
-                                       archive=os.path.join('data', 'problems', problem_id,
-                                                            init_data['archive']),
                                        time=time_limit, memory=memory_limit,
                                        short_circuit=short_circuit):
                     print 'Test case %s' % case

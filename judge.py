@@ -239,8 +239,8 @@ class Judge(object):
                         raise TerminateGrading()
 
                     # Launch a process for the current test case
-                    self.current_proc = executor_func(time=time, memory=memory)
-                    process = self.current_proc
+                    process = executor_func(time=time, memory=memory)
+                    self.current_proc = process
                     _input = topen(input_file).read() if input_file else None
                     _output = topen(output_file).read() if output_file else None
                     # TODO: interactive grader should really run on another thread
@@ -261,7 +261,7 @@ class Judge(object):
                     if process.returncode > 0:
                         result_flag |= Result.IR
                     if process.returncode < 0:
-                        print>> sys.stderr, 'Killed by signal %d' % -process.returncode
+                        #print>> sys.stderr, 'Killed by signal %d' % -process.returncode
                         result_flag |= Result.RTE  # Killed by signal
                     if process.tle:
                         result_flag |= Result.TLE

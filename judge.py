@@ -192,6 +192,7 @@ class Judge(object):
 
         def set_entry_point(func):
             interactive_grader[0] = func
+            print "Hooked interactive grader:", func
 
         try:
             with open(grader_path, 'r') as g:

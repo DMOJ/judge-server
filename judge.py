@@ -176,7 +176,7 @@ class Judge(object):
     def listen(self):
         self.packet_manager.run()
 
-    def run_interactive(self, executor_func, init_data, short_circuit=False, time=2, memory=65536):
+    def run_interactive(self, executor_func, init_data, check_adapter, short_circuit=False, time=2, memory=65536):
         forward_test_cases = []
         for case in init_data['test_cases']:
             case = TestCase(case.get('in', None), case.get('out', None), case['points'])
@@ -216,7 +216,7 @@ class Judge(object):
 
         if 'archive' in init_data:
             files = {}
-            archive = zipfile.ZipFile(archive, 'r')
+            archive = zipfile.ZipFile(init_data['archive'], 'r')
             try:
                 for name in archive.infolist():
                     files[name.filename] = cStringIO.StringIO(archive.read(name))

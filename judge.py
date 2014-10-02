@@ -292,7 +292,6 @@ class Judge(object):
                     yield result
         except TerminateGrading:
             self.packet_manager.submission_terminated_packet()
-            self._terminate_grading = False
             raise
         except:
             traceback.print_exc()
@@ -301,6 +300,7 @@ class Judge(object):
             self.packet_manager.grading_end_packet()
         finally:
             self.current_proc = None
+            self._terminate_grading = False
             gc.collect()
 
     def run_standard(self, executor_func, init_data, check_func, problem_id, short_circuit=False, time=2, memory=65536):
@@ -375,7 +375,6 @@ class Judge(object):
                     short_circuited = False
         except TerminateGrading:
             self.packet_manager.submission_terminated_packet()
-            self._terminate_grading = False
             raise
         except:
             traceback.print_exc()
@@ -384,6 +383,7 @@ class Judge(object):
             self.packet_manager.grading_end_packet()
         finally:
             self.current_proc = None
+            self._terminate_grading = False
             gc.collect()
 
     def __del__(self):

@@ -297,8 +297,7 @@ class Judge(object):
             self.current_proc = None
             gc.collect()
 
-    def run_standard(self, executor_func, init_data, check_func, short_circuit=False, time=2, memory=65536,
-                     *args, **kwargs):
+    def run_standard(self, executor_func, init_data, check_func, short_circuit=False, time=2, memory=65536, *args):
         forward_test_cases = []
         for case in init_data['test_cases']:
             if 'data' in case:
@@ -312,7 +311,7 @@ class Judge(object):
 
         if 'archive' in init_data:
             files = {}
-            archive = zipfile.ZipFile(kwargs['archive'], 'r')
+            archive = zipfile.ZipFile(init_data['archive'], 'r')
             try:
                 for name in archive.infolist():
                     files[name.filename] = cStringIO.StringIO(archive.read(name))
@@ -332,7 +331,7 @@ class Judge(object):
                 for input_file, output_file, point_value in test_case:
                     if self._terminate_grading:
                         raise TerminateGrading()
-                    with TestCaseJudge(*args) as judge:
+                    with TestCaseJudge() as judge:
                         if short_circuited:
                             # A previous subtestcase failed so we're allowed to break early
                             result = Result()

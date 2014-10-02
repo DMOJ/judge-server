@@ -93,7 +93,7 @@ class Judge(object):
         except AttributeError:
             pass
         # if self.current_submission_thread:
-        #    print 'TODO: this should be an error'
+        # print 'TODO: this should be an error'
         #    self.terminate_grading()
         self.current_submission = id
         self.current_submission_thread = threading.Thread(target=self._begin_grading,
@@ -200,9 +200,9 @@ class Judge(object):
             raise IOError('could not open grader file')
 
         try:
-            exec (source, {'__judge__': self,
-                           'set_entry_point': set_entry_point,
-                           'Result': Result})
+            exec source in {'__judge__': self,
+                            'set_entry_point': set_entry_point,
+                            'Result': Result}
         except:
             traceback.print_exc()
             self.packet_manager.submission_terminated_packet()

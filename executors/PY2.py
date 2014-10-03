@@ -3,7 +3,8 @@ from .utils import test_executor
 from cptbox import SecurePopen, CHROOTSecurity
 from judgeenv import env
 
-PYTHON_FS = ['.*\.[so|py]', '.*/lib(?:32|64)?/python[\d.]+/.*', '.*/lib/locale/.*', '/proc/meminfo', '/etc/localtime']
+PYTHON_FS = ['.*\.(?:so|py[co]?)$', '.*/lib(?:32|64)?/python[\d.]+/.*', '.*/lib/locale/', '/proc/meminfo$', '/etc/localtime$',
+             '/dev/urandom$']
 
 
 class Executor(ResourceProxy):

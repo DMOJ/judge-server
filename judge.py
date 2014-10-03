@@ -226,9 +226,9 @@ class Judge(object):
                     files[name.filename] = cStringIO.StringIO(archive.read(name))
             finally:
                 archive.close()
-            topen = lambda x: files[x] if x in files else lambda ignored: None
+            topen = files.__getitem__
         else:
-            topen = lambda x: open(x, 'r') if os.path.exists(x) else None
+            topen = open
 
         self.packet_manager.begin_grading_packet()
         case_number = 1

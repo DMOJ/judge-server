@@ -5,7 +5,7 @@ from executors.utils import test_executor
 from .resource_proxy import ResourceProxy
 from judgeenv import env
 
-RUBY_FS = ['.*\.[so|rb]', '/dev/urandom']
+RUBY_FS = ['.*\.(?:so|rb$)', '/dev/urandom$']
 
 
 class Executor(ResourceProxy):

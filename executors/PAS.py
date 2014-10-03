@@ -8,7 +8,7 @@ from executors.utils import test_executor
 from .resource_proxy import ResourceProxy
 from judgeenv import env
 
-PAS_FS = ['.*\.[so]']
+PAS_FS = ['.*\.so']
 
 
 class Executor(ResourceProxy):

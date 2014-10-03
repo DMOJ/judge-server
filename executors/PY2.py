@@ -4,7 +4,7 @@ from cptbox import SecurePopen, CHROOTSecurity
 from judgeenv import env
 
 PYTHON_FS = ['.*\.(?:so|py[co]?)$', '.*/lib(?:32|64)?/python[\d.]+/.*', '.*/lib/locale/', '/proc/meminfo$', '/etc/localtime$',
-             '/dev/urandom$']
+             '/dev/urandom$', '/etc/ld\.so']
 
 
 class Executor(ResourceProxy):

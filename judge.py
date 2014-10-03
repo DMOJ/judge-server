@@ -248,18 +248,18 @@ class Judge(object):
                     # if submission dies, interactive grader might get stuck on a process IO call,
                     # hanging the main thread
                     try:
-                        try:
-                            result = interactive_grader(case_number, self.current_proc, case_input=_input,
-                                                    case_output=_output, point_value=point_value)
-                        except:
-                            traceback.print_exc()
-                            self.packet_manager.problem_not_exist_packet(problem_id)
-                            return
-                    finally:
+                        result = interactive_grader(case_number, self.current_proc, case_input=_input,
+                                                case_output=_output, point_value=point_value)
+                    except:
+                        traceback.print_exc()
                         try:
                             process.kill()
                         except:  # The process might've already exited
                             pass
+                        self.packet_manager.problem_not_exist_packet(problem_id)
+                        return
+                    else:
+                        process.wait()
                     result.max_memory = process.max_memory
                     result.execution_time = process.execution_time
                     result.r_execution_time = process.r_execution_time

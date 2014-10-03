@@ -262,16 +262,14 @@ class Judge(object):
                     result.r_execution_time = process.r_execution_time
 
                     if process.returncode > 0:
-                        result.flag |= Result.IR
+                        result.result_flag |= Result.IR
                     if process.returncode < 0:
                         #print>> sys.stderr, 'Killed by signal %d' % -process.returncode
-                        result.flag |= Result.RTE  # Killed by signal
+                        result.result_flag |= Result.RTE  # Killed by signal
                     if process.tle:
-                        result.flag |= Result.TLE
+                        result.result_flag |= Result.TLE
                     if process.mle:
-                        result.flag |= Result.MLE
-
-                    result.result_flag = result.flag
+                        result.result_flag |= Result.MLE
 
                     # Must check here because we might be interrupted mid-execution
                     # If we don't bail out, we get an IR.

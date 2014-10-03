@@ -248,15 +248,18 @@ class Judge(object):
                     # if submission dies, interactive grader might get stuck on a process IO call,
                     # hanging the main thread
                     try:
-                        result = interactive_grader(case_number, self.current_proc, case_input=_input,
-                                                case_output=_output, point_value=point_value)
-                    except:
-                        self.packet_manager.problem_not_exist_packet(problem_id)
-                    try:
-                        process.wait()
-                        process.kill()
-                    except:  # The process might've already exited
-                        pass
+                        try:
+                            result = interactive_grader(case_number, self.current_proc, case_input=_input,
+                                                    case_output=_output, point_value=point_value)
+                        except:
+                            traceback.print_exc()
+                            self.packet_manager.problem_not_exist_packet(problem_id)
+                            return
+                    finally:
+                        try:
+                            process.kill()
+                        except:  # The process might've already exited
+                            pass
                     result.max_memory = process.max_memory
                     result.execution_time = process.execution_time
                     result.r_execution_time = process.r_execution_time
@@ -289,14 +292,13 @@ class Judge(object):
                         short_circuited = True
                     case_number += 1
                     yield result
+            self.packet_manager.grading_end_packet()
         except TerminateGrading:
             self.packet_manager.submission_terminated_packet()
             raise
         except:
             traceback.print_exc()
-            self.packet_manager.grading_end_packet()
-        else:
-            self.packet_manager.grading_end_packet()
+            self.packet_manager.problem_not_exist_packet(problem_id)
         finally:
             self.current_proc = None
             self._terminate_grading = False

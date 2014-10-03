@@ -247,8 +247,11 @@ class Judge(object):
                     # TODO: interactive grader should really run on another thread
                     # if submission dies, interactive grader might get stuck on a process IO call,
                     # hanging the main thread
-                    result = interactive_grader(case_number, self.current_proc, case_input=_input,
+                    try:
+                        result = interactive_grader(case_number, self.current_proc, case_input=_input,
                                                 case_output=_output, point_value=point_value)
+                    except:
+                        self.packet_manager.problem_not_exist_packet(problem_id)
                     try:
                         process.wait()
                         process.kill()
@@ -258,19 +261,17 @@ class Judge(object):
                     result.execution_time = process.execution_time
                     result.r_execution_time = process.r_execution_time
 
-                    result_flag = 0
-
                     if process.returncode > 0:
-                        result_flag |= Result.IR
+                        result.flag |= Result.IR
                     if process.returncode < 0:
                         #print>> sys.stderr, 'Killed by signal %d' % -process.returncode
-                        result_flag |= Result.RTE  # Killed by signal
+                        result.flag |= Result.RTE  # Killed by signal
                     if process.tle:
-                        result_flag |= Result.TLE
+                        result.flag |= Result.TLE
                     if process.mle:
-                        result_flag |= Result.MLE
+                        result.flag |= Result.MLE
 
-                    result.result_flag = result_flag
+                    result.result_flag = result.flag
 
                     # Must check here because we might be interrupted mid-execution
                     # If we don't bail out, we get an IR.

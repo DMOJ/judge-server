@@ -195,13 +195,13 @@ class Judge(object):
             print "Hooked interactive grader:", func
 
         try:
-            with open(grader_path, 'r') as g:
-                source = g.read()
+            with open(grader_path, 'r') as f:
+                code = compile(f.read(), grader_path, 'exec')
         except:
             raise IOError('could not open grader file')
 
         try:
-            exec source in {'__judge__': self,
+            exec code in {'__judge__': self,
                             'set_entry_point': set_entry_point,
                             'Result': Result}
         except:

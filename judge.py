@@ -364,7 +364,7 @@ class Judge(object):
                                                                     result.execution_time,
                                                                     result.max_memory,
                                                                     # TODO: make limit configurable
-                                                                    result.proc_output[:10])
+                                                                    result.proc_output[:10].decode('utf-8', 'replace'))
 
                         if not short_circuited and result.result_flag != Result.AC:
                             short_circuited = True

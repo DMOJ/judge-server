@@ -344,12 +344,12 @@ class Judge(object):
 
             _, ext = os.path.splitext(init_data['generator'])
             lookup = {
-                '.py': executors.PY2,
-                '.py3': executors.PY3,
-                '.c': executors.C,
-                '.cpp': executors.CPP11,
-                '.java': executors.JAVA,
-                '.rb': executors.RUBY
+                '.py': executors.get('PY2', None),
+                '.py3': executors.get('PY3', None),
+                '.c': executors.get('C', None),
+                '.cpp': executors.get('CPP11', None),
+                '.java': executors.get('JAVA', None),
+                '.rb': executors.get('RUBY', None)
             }
             clazz = lookup.get(ext, None)
             if not clazz:

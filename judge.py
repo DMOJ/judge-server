@@ -353,9 +353,10 @@ class Judge(object):
                 for input_file, output_file, point_value in test_case:
                     test += 1
                     generator_process = generator_launcher(stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                    generator_output, generator_error = generator_process.communicate('\n'.join((str(test), input_file, output_file, '')))
-                    files[input_file] = cStringIO.StringIO(generator_output)
-                    files[output_file] = cStringIO.StringIO(generator_error)
+                    generator_process.stdin.write('\n'.join((str(test), input_file, output_file, '')))
+                    generator_process.stdin.flush()
+                    files[input_file] = generator_process.stdout
+                    files[output_file] = generator_process.stderr
             topen = files.__getitem__
         else:
             topen = open

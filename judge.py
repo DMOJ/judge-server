@@ -359,6 +359,7 @@ class Judge(object):
                     print generator_error[:30]
                     print generator_source[:100]
                     print generator_extension
+                    print '\n'.join((str(test), input_file, output_file, ''))
             topen = files.__getitem__
         else:
             topen = open

@@ -5,7 +5,7 @@ import os
 
 class path(str):
     def __new__(cls, *args):
-        return str.__new__(os.path.join(*args))
+        return str.__new__(cls, os.path.join(*args))
 
     def __div__(self, other):
         return path(self, other)

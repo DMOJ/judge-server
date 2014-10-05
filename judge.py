@@ -355,11 +355,6 @@ class Judge(object):
                     generator_output, generator_error = generator_process.communicate('\n'.join((str(test), input_file, output_file, '')))
                     files[input_file] = cStringIO.StringIO(generator_output)
                     files[output_file] = cStringIO.StringIO(generator_error)
-                    print input_file, output_file, point_value
-                    print 'input %d:' % len(generator_output)
-                    print generator_output[:30]
-                    print 'output %d:' % len(generator_error)
-                    print generator_error[:30]
             topen = files.__getitem__
         else:
             topen = open

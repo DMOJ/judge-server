@@ -351,7 +351,7 @@ class Judge(object):
             for test_case in copied_forward_test_cases:
                 for input_file, output_file, point_value in test_case:
                     test += 1
-                    generator_process = generator_launcher(time=10, memory=262144)
+                    generator_process = generator_launcher(time=30, memory=262144)
                     generator_output, generator_error = generator_process.communicate('\n'.join((str(test), input_file, output_file, '')))
                     files[input_file] = cStringIO.StringIO(generator_output)
                     files[output_file] = cStringIO.StringIO(generator_error)

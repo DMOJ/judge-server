@@ -352,7 +352,6 @@ class Judge(object):
                     generator_output, generator_error = generator_process.communicate('\n'.join((str(test), input_file, output_file, '')))
                     files[input_file] = cStringIO.StringIO(generator_output)
                     files[output_file] = cStringIO.StringIO(generator_error)
-            print files
             topen = files.__getitem__
         else:
             topen = open
@@ -361,10 +360,13 @@ class Judge(object):
         case_number = 1
         short_circuited = False
         try:
+            print 'yyy'
             for test_case in forward_test_cases:
+                print test_case, "xxx"
                 if type(test_case) == BatchedTestCase:
                     self.packet_manager.begin_batch_packet()
                 for input_file, output_file, point_value in test_case:
+                    print input_file, output_file, point_value
                     if self._terminate_grading:
                         raise TerminateGrading()
                     with TestCaseJudge() as judge:

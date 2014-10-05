@@ -1,5 +1,5 @@
 from collections import defaultdict
-from .sandbox import SecurePopen, DISALLOW, ALLOW
+from .sandbox import SecurePopen, DISALLOW, ALLOW, PIPE
 from .chroot import CHROOTSecurity
 
 

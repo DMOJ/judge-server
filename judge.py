@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import argparse
+import copy
 import gc
 import json
 import os
@@ -345,7 +346,8 @@ class Judge(object):
                 traceback.print_exc()
                 raise
             test = 0
-            for test_case in forward_test_cases:
+            copied_forward_test_cases = copy.copy(forward_test_cases)
+            for test_case in copied_forward_test_cases:
                 for input_file, output_file, point_value in test_case:
                     test += 1
                     generator_process = executors['AUTO'].Executor('%s-generator' % problem_id, generator_source, generator_extension).launch(time=1, memory=262144)
@@ -360,13 +362,10 @@ class Judge(object):
         case_number = 1
         short_circuited = False
         try:
-            print 'yyy'
             for test_case in forward_test_cases:
-                print test_case, "xxx"
                 if type(test_case) == BatchedTestCase:
                     self.packet_manager.begin_batch_packet()
                 for input_file, output_file, point_value in test_case:
-                    print input_file, output_file, point_value
                     if self._terminate_grading:
                         raise TerminateGrading()
                     with TestCaseJudge() as judge:

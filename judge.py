@@ -327,14 +327,10 @@ class Judge(object):
                 archive.close()
             topen = files.__getitem__
         elif 'generator' in init_data:
-            print 'check 1'
             files = {}
-            print 'check 2'
             generator_path = os.path.join('data', 'problems', problem_id, init_data['generator'])
-            print 'check 3'
             if not os.path.exists(generator_path):
                 raise IOError('grader does not exist')
-            print 'check 4'
             try:
                 with open(generator_path, "r") as generator_file:
                     generator_source = generator_file.read()
@@ -342,24 +338,20 @@ class Judge(object):
                 print 'Internal Error: failed reading generator'
                 traceback.print_exc()
                 raise
-            print 'check 5'
             try:
                 generator_extension = init_data['generator'][init_data['generator'].rfind('.') + 1:]
             except:
                 print 'Internal Error: could not identify generator extension'
                 traceback.print_exc()
                 raise
-            print 'check 6'
-            generator_process = executors['AUTO'].Executor('%s-generator' % problem_id, generator_source, generator_extension).launch(time=1, memory=262144)
-            print 'check 7'
             test = 0
             for test_case in forward_test_cases:
                 for input_file, output_file, point_value in test_case:
                     test += 1
+                    generator_process = executors['AUTO'].Executor('%s-generator' % problem_id, generator_source, generator_extension).launch(time=1, memory=262144)
                     generator_output, generator_error = generator_process.communicate('\n'.join((str(test), input_file, output_file, '')))
                     files[input_file] = cStringIO.StringIO(generator_output)
                     files[output_file] = cStringIO.StringIO(generator_error)
-            print 'check 8'
             topen = files.__getitem__
         else:
             topen = open

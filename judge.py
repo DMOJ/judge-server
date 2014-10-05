@@ -373,34 +373,54 @@ class Judge(object):
                 for input_file, output_file, point_value in test_case:
                     if self._terminate_grading:
                         raise TerminateGrading()
-                    with TestCaseJudge() as judge:
-                        if short_circuited:
-                            # A previous subtestcase failed so we're allowed to break early
-                            result = Result()
-                            result.result_flag = Result.SC
-                            continue
+                    if short_circuited:
+                        # A previous subtestcase failed so we're allowed to break early
+                        result = Result()
+                        result.result_flag = Result.SC
+                        continue
 
-                        # Launch a process for the current test case
-                        self.current_proc = executor_func(time=time, memory=memory)
-                        result = judge.run_standard(self.current_proc, topen(input_file), topen(output_file),
-                                                    check_func)
-                        # Must check here because we might be interrupted mid-execution
-                        # If we don't bail out, we get an IR.
-                        if self._terminate_grading:
-                            raise TerminateGrading()
-                        self.packet_manager.test_case_status_packet(case_number,
-                                                                    point_value if not short_circuited and result.result_flag == Result.AC else 0,
-                                                                    point_value,
-                                                                    result.result_flag,
-                                                                    result.execution_time,
-                                                                    result.max_memory,
-                                                                    # TODO: make limit configurable
-                                                                    result.proc_output[:10].decode('utf-8', 'replace'))
+                    # Launch a process for the current test case
+                    self.current_proc = executor_func(time=time, memory=memory)
 
-                        if not short_circuited and result.result_flag != Result.AC:
-                            short_circuited = True
-                        case_number += 1
-                        yield result
+                    process = self.current_proc,
+                    result = Result()
+                    result.result_flag = Result.AC
+                    input_data = topen(input_file).read().replace('\r\n', '\n')  # .replace('\r', '\n')
+
+                    result.proc_output, error = process.communicate(input_data)
+
+                    result.max_memory = process.max_memory
+                    result.execution_time = process.execution_time
+                    result.r_execution_time = process.r_execution_time
+                    if not check_func(result.proc_output, topen(output_file).read()):
+                        result.result_flag |= Result.WA
+                    if process.returncode > 0:
+                        result.result_flag |= Result.IR
+                    if process.returncode < 0:
+                        print>> sys.stderr, 'Killed by signal %d' % -process.returncode
+                        result.result_flag |= Result.RTE  # Killed by signal
+                    if process.tle:
+                        result.result_flag |= Result.TLE
+                    if process.mle:
+                        result.result_flag |= Result.MLE
+
+                    # Must check here because we might be interrupted mid-execution
+                    # If we don't bail out, we get an IR.
+                    if self._terminate_grading:
+                        raise TerminateGrading()
+                    self.packet_manager.test_case_status_packet(case_number,
+                                                                point_value if not short_circuited and result.result_flag == Result.AC else 0,
+                                                                point_value,
+                                                                result.result_flag,
+                                                                result.execution_time,
+                                                                result.max_memory,
+                                                                # TODO: make limit configurable
+                                                                result.proc_output[:10].decode('utf-8', 'replace'))
+
+                    if not short_circuited and result.result_flag != Result.AC:
+                        short_circuited = True
+                    case_number += 1
+                    yield result
                 if type(test_case) == BatchedTestCase:
                     self.packet_manager.batch_end_packet()
                 if not short_circuit_all:
@@ -429,67 +449,6 @@ class Judge(object):
 
     def murder(self):
         self.terminate_grading()
-
-class TestCaseJudge(object):
-    EOF = None
-
-    def __init__(self):
-        self.result = None
-        self.process = None
-        self.stopped = False
-        self.exitcode = None
-
-    def __del__(self):
-        self.close(True)
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exception_type, exception_value, traceback):
-        self.close()
-
-    def alive(self):
-        if not self.stopped:
-            self.exitcode = self.process.poll()
-            self.stopped = self.exitcode is not None
-        return not self.stopped
-
-    def close(self, force_terminate=False):
-        if self.result and self.alive():
-            if force_terminate:
-                self.process.kill()
-            else:
-                self.exitcode = self.process.wait()
-            self.stopped = True
-
-    def run_standard(self, process, input_file, output_file, checker):
-        self.process = process
-        self.result = Result()
-        result_flag = Result.AC
-        input_data = input_file.read().replace('\r\n', '\n')  # .replace('\r', '\n')
-
-        self.result.proc_output, error = process.communicate(input_data)
-
-        self.result.max_memory = self.process.max_memory
-        self.result.execution_time = self.process.execution_time
-        self.result.r_execution_time = self.process.r_execution_time
-        judge_output = output_file.read()
-        output_file.close()
-        if not checker(self.result.proc_output, judge_output):
-            result_flag |= Result.WA
-        if self.process.returncode > 0:
-            result_flag |= Result.IR
-        if self.process.returncode < 0:
-            print>> sys.stderr, 'Killed by signal %d' % -self.process.returncode
-            result_flag |= Result.RTE  # Killed by signal
-        if self.process.tle:
-            result_flag |= Result.TLE
-        if self.process.mle:
-            result_flag |= Result.MLE
-        # self.close()
-        self.result.result_flag = result_flag
-        return self.result
-
 
 def main():
     parser = argparse.ArgumentParser(description='''

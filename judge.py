@@ -346,7 +346,7 @@ class Judge(object):
                 traceback.print_exc()
                 raise
             test = 0
-            copied_forward_test_cases = copy.copy(forward_test_cases)
+            copied_forward_test_cases = copy.deepcopy(forward_test_cases)
             for test_case in copied_forward_test_cases:
                 for input_file, output_file, point_value in test_case:
                     test += 1

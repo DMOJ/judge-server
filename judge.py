@@ -12,7 +12,6 @@ import sys
 import subprocess
 
 from error import CompileError
-from executors import *
 from judgeenv import env
 
 from executors import executors
@@ -35,7 +34,7 @@ class Result(object):
         self.execution_time = 0
         self.r_execution_time = 0
         self.max_memory = 0
-        self.proc_output = None
+        self.proc_output = ''
         self.points = 0
 
 
@@ -179,6 +178,58 @@ class Judge(object):
     def listen(self):
         self.packet_manager.run()
 
+    def _resolve_open_call(self, init_data, problem_id, forward_test_cases=None):
+        if 'archive' in init_data:
+            files = {}
+            archive = zipfile.ZipFile(os.path.join('data', 'problems', problem_id,
+                                                   init_data['archive']), 'r')
+            try:
+                for name in archive.infolist():
+                    files[name.filename] = cStringIO.StringIO(archive.read(name))
+            finally:
+                archive.close()
+            return files.__getitem__
+        elif 'generator' in init_data and forward_test_cases:
+            files = {}
+            generator_path = os.path.join('data', 'problems', problem_id, init_data['generator'])
+            if not os.path.exists(generator_path):
+                raise IOError('grader does not exist')
+            try:
+                with open(generator_path, "r") as generator_file:
+                    generator_source = generator_file.read()
+            except:
+                traceback.print_exc()
+                raise IOError('could not read grader source')
+
+            _, ext = os.path.splitext(init_data['generator'])
+            lookup = {
+                '.py': executors.get('PY2', None),
+                '.py3': executors.get('PY3', None),
+                '.c': executors.get('C', None),
+                '.cpp': executors.get('CPP11', None),
+                '.java': executors.get('JAVA', None),
+                '.rb': executors.get('RUBY', None)
+            }
+            clazz = lookup.get(ext, None)
+            if not clazz:
+                raise IOError('could not identify grader extension')
+            generator_launcher = clazz.Executor('%s-generator' % problem_id, generator_source).launch_unsafe
+
+            test = 0
+            copied_forward_test_cases = copy.deepcopy(forward_test_cases)
+            for test_case in copied_forward_test_cases:
+                for input_file, output_file, point_value in test_case:
+                    test += 1
+                    generator_process = generator_launcher(stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                                           stderr=subprocess.PIPE)
+                    generator_output, generator_error = generator_process.communicate(
+                        '\n'.join((str(test), input_file, output_file, '')))
+                    files[input_file] = cStringIO.StringIO(generator_output)
+                    files[output_file] = cStringIO.StringIO(generator_error)
+            return files.__getitem__
+        else:
+            return open
+
     def run_interactive(self, executor_func, init_data, check_adapter, problem_id, short_circuit=False, time=2,
                         memory=65536):
         forward_test_cases = []
@@ -221,18 +272,7 @@ class Judge(object):
         if not interactive_grader:
             raise IOError('no grader specified')
 
-        if 'archive' in init_data:
-            files = {}
-            archive = zipfile.ZipFile(os.path.join('data', 'problems', problem_id,
-                                                   init_data['archive']), 'r')
-            try:
-                for name in archive.infolist():
-                    files[name.filename] = cStringIO.StringIO(archive.read(name))
-            finally:
-                archive.close()
-            topen = lambda x: files[x].open
-        else:
-            topen = open
+        topen = self._resolve_open_call(init_data, problem_id)
 
         self.packet_manager.begin_grading_packet()
         case_number = 1
@@ -271,7 +311,7 @@ class Judge(object):
                     if process.returncode > 0:
                         result.result_flag |= Result.IR
                     if process.returncode < 0:
-                        # print>> sys.stderr, 'Killed by signal %d' % -process.returncode
+                        print>> sys.stderr, 'Killed by signal %d' % -process.returncode
                         result.result_flag |= Result.RTE  # Killed by signal
                     if process.tle:
                         result.result_flag |= Result.TLE
@@ -320,56 +360,8 @@ class Judge(object):
                 case = TestCase(case['in'], case['out'], case['points'])
             forward_test_cases.append(case)
 
-        if 'archive' in init_data:
-            files = {}
-            archive = zipfile.ZipFile(os.path.join('data', 'problems', problem_id,
-                                                   init_data['archive']), 'r')
-            try:
-                for name in archive.infolist():
-                    files[name.filename] = cStringIO.StringIO(archive.read(name))
-            finally:
-                archive.close()
-            topen = files.__getitem__
-        elif 'generator' in init_data:
-            files = {}
-            generator_path = os.path.join('data', 'problems', problem_id, init_data['generator'])
-            if not os.path.exists(generator_path):
-                raise IOError('grader does not exist')
-            try:
-                with open(generator_path, "r") as generator_file:
-                    generator_source = generator_file.read()
-            except:
-                traceback.print_exc()
-                raise IOError('could not read grader source')
+        topen = self._resolve_open_call(init_data, problem_id, forward_test_cases)
 
-            _, ext = os.path.splitext(init_data['generator'])
-            lookup = {
-                '.py': executors.get('PY2', None),
-                '.py3': executors.get('PY3', None),
-                '.c': executors.get('C', None),
-                '.cpp': executors.get('CPP11', None),
-                '.java': executors.get('JAVA', None),
-                '.rb': executors.get('RUBY', None)
-            }
-            clazz = lookup.get(ext, None)
-            if not clazz:
-                raise IOError('could not identify grader extension')
-            generator_launcher = clazz.Executor('%s-generator' % problem_id, generator_source).launch_unsafe
-
-            test = 0
-            copied_forward_test_cases = copy.deepcopy(forward_test_cases)
-            for test_case in copied_forward_test_cases:
-                for input_file, output_file, point_value in test_case:
-                    test += 1
-                    generator_process = generator_launcher(stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                                                           stderr=subprocess.PIPE)
-                    generator_output, generator_error = generator_process.communicate(
-                        '\n'.join((str(test), input_file, output_file, '')))
-                    files[input_file] = cStringIO.StringIO(generator_output)
-                    files[output_file] = cStringIO.StringIO(generator_error)
-            topen = files.__getitem__
-        else:
-            topen = open
         self.packet_manager.begin_grading_packet()
         short_circuit_all = short_circuit
         case_number = 1
@@ -386,9 +378,6 @@ class Judge(object):
                             # A previous subtestcase failed so we're allowed to break early
                             result = Result()
                             result.result_flag = Result.SC
-                            result.execution_time = 0
-                            result.max_memory = 0
-                            result.proc_output = ''
                             continue
 
                         # Launch a process for the current test case
@@ -440,25 +429,6 @@ class Judge(object):
 
     def murder(self):
         self.terminate_grading()
-
-
-class LocalJudge(Judge):
-    def __init__(self, debug=False, **kwargs):
-        self.debug_mode = debug
-
-        class LocalPacketManager(object):
-            def __getattr__(self, *args, **kwargs):
-                return lambda *args, **kwargs: None
-
-        self.packet_manager = LocalPacketManager()
-        self.current_submission = 'submission'
-        self.current_submission_thread = None
-        self._terminate_grading = False
-        self.current_proc = None
-
-    def listen(self):
-        pass
-
 
 class TestCaseJudge(object):
     EOF = None
@@ -525,37 +495,19 @@ def main():
     parser = argparse.ArgumentParser(description='''
         Spawns a judge for a submission server.
     ''')
-    parser.add_argument('server_host', nargs='?', default=None,
+    parser.add_argument('server_host', nargs='?',
                         help='host to listen for the server')
     parser.add_argument('-p', '--server-port', type=int, default=9999,
                         help='port to listen for the server')
-    parser.add_argument('-d', '--debug', type=bool, default=False,
-                        help='enable debug mode (full output)')
     args = parser.parse_args()
 
-    print 'Running %s judge...' % (['local', 'live'][args.server_host is not None])
+    print 'Running live judge...'
 
-    if args.server_host:
-        with Judge(args.server_host, args.server_port, debug=args.debug) as judge:
-            try:
-                judge.listen()
-            finally:
-                judge.murder()
-    else:
-        with LocalJudge() as judge:
-            try:
-                # judge.begin_grading('helloworld', 'PY2', 'print "Hello, World!"', 1, 16384, 0, 'standard', {})
-                # judge.current_submission_thread.join()
-                judge.begin_grading('helloworld', 'RUBY', "puts 'Hello, World!'", 1, 16384, 0, 'standard', {})
-                judge.current_submission_thread.join()
-                # judge.begin_grading('aplusb', 'PY2', 'for i in xrange(input()): print sum(map(int, raw_input().split()))')
-                # judge.current_submission_thread.join()
-                judge.begin_grading('aplusb', 'PY3',
-                                    'for i in range(int(input())): print(sum(map(int, input().split())))',
-                                    5, 16384, 0, 'standard', {})
-                judge.current_submission_thread.join()
-            except KeyboardInterrupt:
-                judge.terminate_grading()
+    with Judge(args.server_host, args.server_port) as judge:
+        try:
+            judge.listen()
+        finally:
+            judge.murder()
 
 
 if __name__ == '__main__':

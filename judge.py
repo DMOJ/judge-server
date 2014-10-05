@@ -345,19 +345,20 @@ class Judge(object):
                 print 'Internal Error: could not identify generator extension'
                 traceback.print_exc()
                 raise
+            generator_launcher = executors['AUTO'].Executor('%s-generator' % problem_id, generator_source, generator_extension).launch
             test = 0
             copied_forward_test_cases = copy.deepcopy(forward_test_cases)
             for test_case in copied_forward_test_cases:
                 for input_file, output_file, point_value in test_case:
                     test += 1
-                    generator_process = executors['AUTO'].Executor('%s-generator' % problem_id, generator_source, generator_extension).launch(time=10, memory=262144)
+                    generator_process = generator_launcher(time=10, memory=262144)
                     generator_output, generator_error = generator_process.communicate('\n'.join((str(test), input_file, output_file, '')))
                     files[input_file] = cStringIO.StringIO(generator_output)
                     files[output_file] = cStringIO.StringIO(generator_error)
                     print input_file, output_file, point_value
-                    print 'input:'
+                    print 'input %d:' % len(generator_output)
                     print generator_output[:30]
-                    print 'output:'
+                    print 'output %d:' % len(generator_error)
                     print generator_error[:30]
             topen = files.__getitem__
         else:

@@ -350,13 +350,15 @@ class Judge(object):
             for test_case in copied_forward_test_cases:
                 for input_file, output_file, point_value in test_case:
                     test += 1
-                    generator_process = executors['AUTO'].Executor('%s-generator' % problem_id, generator_source, generator_extension).launch(time=1, memory=262144)
+                    generator_process = executors['AUTO'].Executor('%s-generator' % problem_id, generator_source, generator_extension).launch(time=10, memory=262144)
                     generator_output, generator_error = generator_process.communicate('\n'.join((str(test), input_file, output_file, '')))
                     files[input_file] = cStringIO.StringIO(generator_output)
                     files[output_file] = cStringIO.StringIO(generator_error)
                     print input_file, output_file, point_value
                     print generator_output[:30]
                     print generator_error[:30]
+                    print generator_source[:100]
+                    print generator_extension
             topen = files.__getitem__
         else:
             topen = open

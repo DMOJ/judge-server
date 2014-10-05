@@ -2,7 +2,7 @@ import os
 import subprocess
 import sys
 
-from cptbox import CHROOTSecurity, SecurePopen
+from cptbox import CHROOTSecurity, SecurePopen, PIPE
 from error import CompileError
 from executors.utils import test_executor
 from .resource_proxy import ResourceProxy
@@ -41,6 +41,7 @@ def make_executor(code, command, args, ext, test_code, arg0):
                                security=CHROOTSecurity(C_FS),
                                time=kwargs.get('time'),
                                memory=kwargs.get('memory'),
+                               stderr=(PIPE if kwargs.get('pipe_stderr', False) else None),
                                env={}, cwd=self._dir)
 
     def initialize():

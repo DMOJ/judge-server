@@ -14,7 +14,7 @@ class Executor(ResourceProxy):
         self.real_executor = executor_class(problem_id, source_code)
 
     def launch(self, *args, **kwargs):
-        return self.real_executor.launch(*args, **kwargs)
+        return self.real_executor.launch(*args, pipe_stderr=True, **kwargs)
 
 def initialize():
     return True

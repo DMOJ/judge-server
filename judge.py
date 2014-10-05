@@ -193,13 +193,13 @@ class Judge(object):
             files = {}
             generator_path = os.path.join('data', 'problems', problem_id, init_data['generator'])
             if not os.path.exists(generator_path):
-                raise IOError('grader does not exist')
+                raise IOError('generator does not exist')
             try:
                 with open(generator_path, "r") as generator_file:
                     generator_source = generator_file.read()
             except:
                 traceback.print_exc()
-                raise IOError('could not read grader source')
+                raise IOError('could not read generator source')
 
             _, ext = os.path.splitext(init_data['generator'])
             lookup = {
@@ -212,7 +212,7 @@ class Judge(object):
             }
             clazz = lookup.get(ext, None)
             if not clazz:
-                raise IOError('could not identify grader extension')
+                raise IOError('could not identify generator extension')
             generator_launcher = clazz.Executor('%s-generator' % problem_id, generator_source).launch_unsafe
 
             test = 0

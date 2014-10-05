@@ -21,5 +21,8 @@ class ResourceProxy(object):
     def launch(self, *args, **kwargs):
         raise NotImplementedError
 
+    def launch_unsafe(self, *args, **kwargs):
+        raise NotImplementedError
+
     def __del__(self):
         self.cleanup()

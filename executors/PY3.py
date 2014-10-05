@@ -1,4 +1,5 @@
 import os
+from subprocess import *
 from cptbox import CHROOTSecurity, SecurePopen
 from executors.utils import test_executor
 from .resource_proxy import ResourceProxy
@@ -32,6 +33,12 @@ __import__('sys').stdin = __import__('os').fdopen(0, 'r', 65536)
                            address_grace=131072,
                            env={'LANG': 'C'}, cwd=self._dir)
 
+    def launch_unsafe(self, *args, **kwargs):
+        return Popen(['python', '-BS', self._script] + list(args),
+                     executable=env['runtime']['python3'],
+                     env={'LANG': 'C'},
+                     cwd=self._dir,
+                     **kwargs)
 
 def initialize():
     if not 'python3' in env['runtime']:

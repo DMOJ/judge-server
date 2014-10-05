@@ -1,4 +1,5 @@
 import os
+import subprocess
 from cptbox import SecurePopen, CHROOTSecurity
 from executors.utils import test_executor
 
@@ -23,6 +24,13 @@ class Executor(ResourceProxy):
                            memory=kwargs.get('memory'),
                            address_grace=16384,
                            env={'LANG': 'C'}, cwd=self._dir)
+
+    def launch_unsafe(self, *args, **kwargs):
+        return subprocess.Popen(['perl', self._script] + list(args),
+                     executable=env['runtime']['perl'],
+                     env={'LANG': 'C'},
+                     cwd=self._dir,
+                     **kwargs)
 
 
 def initialize():

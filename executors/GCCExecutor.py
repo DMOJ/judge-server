@@ -26,7 +26,7 @@ def make_executor(code, command, args, ext, test_code, arg0):
                 linker_options = []
             output_file = self._file('%s%s' % (problem_id, compiled_extension))
             gcc_args = [arg0, source_code_file, '-O2', '-march=native'
-                        ] + args + linker_options + ['-s', '-o', output_file]
+                       ] + args + linker_options + ['-s', '-o', output_file]
             gcc_process = subprocess.Popen(gcc_args, stderr=subprocess.PIPE, executable=env['runtime'][command],
                                            cwd=self._dir)
             _, compile_error = gcc_process.communicate()
@@ -44,10 +44,18 @@ def make_executor(code, command, args, ext, test_code, arg0):
                                stderr=(PIPE if kwargs.get('pipe_stderr', False) else None),
                                env={}, cwd=self._dir)
 
+        def launch_unsafe(self, *args, **kwargs):
+            return subprocess.Popen([self.name] + list(args),
+                                    executable=self._executable,
+                                    env={},
+                                    cwd=self._dir,
+                                    **kwargs)
+
     def initialize():
         if command not in env['runtime']:
             return False
         if not os.path.isfile(env['runtime'][command]):
             return False
         return test_executor(code, Executor, test_code)
+
     return Executor, initialize

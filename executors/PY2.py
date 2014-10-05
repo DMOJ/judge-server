@@ -2,8 +2,10 @@ from .resource_proxy import ResourceProxy
 from .utils import test_executor
 from cptbox import SecurePopen, CHROOTSecurity, PIPE
 from judgeenv import env
+from subprocess import Popen
 
-PYTHON_FS = ['.*\.(?:so|py[co]?$)', '.*/lib(?:32|64)?/python[\d.]+/.*', '.*/lib/locale/', '/proc/meminfo$', '/etc/localtime$',
+PYTHON_FS = ['.*\.(?:so|py[co]?$)', '.*/lib(?:32|64)?/python[\d.]+/.*', '.*/lib/locale/', '/proc/meminfo$',
+             '/etc/localtime$',
              '/dev/urandom$']
 
 
@@ -29,6 +31,13 @@ __import__('sys').stdin = __import__('os').fdopen(0, 'r', 65536)
                            address_grace=131072,
                            stderr=(PIPE if kwargs.get('pipe_stderr', False) else None),
                            env={'LANG': 'C'}, cwd=self._dir)
+
+    def launch_unsafe(self, *args, **kwargs):
+        return Popen(['python', '-BS', self._script] + list(args),
+                     executable=env['runtime']['python'],
+                     env={'LANG': 'C'},
+                     cwd=self._dir,
+                     **kwargs)
 
 
 def initialize():

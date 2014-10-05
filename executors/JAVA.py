@@ -1,6 +1,6 @@
 import os
 import re
-import subprocess
+from subprocess import *
 import sys
 from error import CompileError
 from executors.utils import test_executor
@@ -24,8 +24,8 @@ def find_class(source):
 
 class JavaPopen(object):
     def __init__(self, args, executable, cwd):
-        self.process = subprocess.Popen(args, executable=executable, cwd=cwd,
-                                        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.process = Popen(args, executable=executable, cwd=cwd,
+                                        stdin=PIPE, stdout=PIPE, stderr=PIPE)
         self.execution_time, self.tle = None, None
         self.max_memory, self.mle = None, None
         self.stderr = None
@@ -39,13 +39,13 @@ class JavaPopen(object):
         try:
             self.execution_time, self.tle, self.max_memory, self.mle, self.returncode = map(int, stderr[-1].split())
         except:
-            print>>sys.stderr, stderr_
+            print>> sys.stderr, stderr_
             raise
         self.execution_time /= 1000.0
         if self.returncode == -1:
             self.returncode = 1
         if self.error_info:
-            print>>sys.stderr, self.error_info
+            print>> sys.stderr, self.error_info
         return stdout, None
 
     @property
@@ -64,7 +64,7 @@ class Executor(ResourceProxy):
         with open(source_code_file, 'wb') as fo:
             fo.write(source_code)
         javac_args = [env['runtime']['javac'], source_code_file]
-        javac_process = subprocess.Popen(javac_args, stderr=subprocess.PIPE, cwd=self._dir)
+        javac_process = Popen(javac_args, stderr=PIPE, cwd=self._dir)
         _, compile_error = javac_process.communicate()
         if javac_process.returncode != 0:
             if 'is public, should be declared in a file named' in compile_error:
@@ -78,6 +78,12 @@ class Executor(ResourceProxy):
                           '-Xmx%sK' % kwargs.get('memory'), '-jar', JAVA_EXECUTOR, self._dir,
                           self._class_name, str(kwargs.get('time') * 1000)] + list(args),
                          executable=env['runtime']['java'], cwd=self._dir)
+
+    def launch_unsafe(self, *args, **kwargs):
+        return Popen(['java', '-client', self._class_name] + list(args),
+                     executable=env['runtime']['java'],
+                     cwd=self._dir,
+                     **kwargs)
 
 
 def initialize():

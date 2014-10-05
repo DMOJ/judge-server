@@ -9,6 +9,7 @@ import threading
 import zipfile
 import cStringIO
 import sys
+import subprocess
 
 from error import CompileError
 from judgeenv import env
@@ -345,13 +346,13 @@ class Judge(object):
                 print 'Internal Error: could not identify generator extension'
                 traceback.print_exc()
                 raise
-            generator_launcher = executors['AUTO'].Executor('%s-generator' % problem_id, generator_source, generator_extension).launch
+            generator_launcher = executors['AUTO'].Executor('%s-generator' % problem_id, generator_source, generator_extension).launch_unsafe
             test = 0
             copied_forward_test_cases = copy.deepcopy(forward_test_cases)
             for test_case in copied_forward_test_cases:
                 for input_file, output_file, point_value in test_case:
                     test += 1
-                    generator_process = generator_launcher(time=30, memory=262144)
+                    generator_process = generator_launcher(stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                     generator_output, generator_error = generator_process.communicate('\n'.join((str(test), input_file, output_file, '')))
                     files[input_file] = cStringIO.StringIO(generator_output)
                     files[output_file] = cStringIO.StringIO(generator_error)

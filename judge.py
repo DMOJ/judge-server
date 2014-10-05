@@ -349,7 +349,7 @@ class Judge(object):
             for test_case in forward_test_cases:
                 for input_file, output_file, point_value in test_case:
                     test += 1
-                    generator_output, generator_error = generator_process.communicate(str(test) + '\n')
+                    generator_output, generator_error = generator_process.communicate('\n'.join((str(test), input_file, output_file, '')))
                     files[input_file] = cStringIO.StringIO(generator_output)
                     files[output_file] = cStringIO.StringIO(generator_error)
             topen = files.__getitem__

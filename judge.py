@@ -12,6 +12,7 @@ import sys
 import subprocess
 
 from error import CompileError
+from executors import *
 from judgeenv import env
 
 from executors import executors
@@ -178,7 +179,8 @@ class Judge(object):
     def listen(self):
         self.packet_manager.run()
 
-    def run_interactive(self, executor_func, init_data, check_adapter, problem_id, short_circuit=False, time=2, memory=65536):
+    def run_interactive(self, executor_func, init_data, check_adapter, problem_id, short_circuit=False, time=2,
+                        memory=65536):
         forward_test_cases = []
         for case in init_data['test_cases']:
             case = TestCase(case.get('in', None), case.get('out', None), case['points'])
@@ -204,8 +206,8 @@ class Judge(object):
 
         try:
             exec code in {'__judge__': self,
-                            'set_entry_point': set_entry_point,
-                            'Result': Result}
+                          'set_entry_point': set_entry_point,
+                          'Result': Result}
         except:
             traceback.print_exc()
             self.packet_manager.submission_terminated_packet()
@@ -269,7 +271,7 @@ class Judge(object):
                     if process.returncode > 0:
                         result.result_flag |= Result.IR
                     if process.returncode < 0:
-                        #print>> sys.stderr, 'Killed by signal %d' % -process.returncode
+                        # print>> sys.stderr, 'Killed by signal %d' % -process.returncode
                         result.result_flag |= Result.RTE  # Killed by signal
                     if process.tle:
                         result.result_flag |= Result.TLE
@@ -287,7 +289,7 @@ class Judge(object):
                                                                 result.execution_time,
                                                                 result.max_memory,
                                                                 # TODO: make limit configurable
-                                                                #result.proc_output[:10
+                                                                # result.proc_output[:10
                                                                 '')
 
                     if not short_circuited and result.result_flag != Result.AC:
@@ -337,23 +339,32 @@ class Judge(object):
                 with open(generator_path, "r") as generator_file:
                     generator_source = generator_file.read()
             except:
-                print 'Internal Error: failed reading generator'
                 traceback.print_exc()
-                raise
-            try:
-                generator_extension = init_data['generator'][init_data['generator'].rfind('.') + 1:]
-            except:
-                print 'Internal Error: could not identify generator extension'
-                traceback.print_exc()
-                raise
-            generator_launcher = executors['AUTO'].Executor('%s-generator' % problem_id, generator_source, generator_extension).launch_unsafe
+                raise IOError('could not read grader source')
+
+            _, ext = os.path.splitext(init_data['generator'])
+            lookup = {
+                '.py': executors.PY2,
+                '.py3': executors.PY3,
+                '.c': executors.C,
+                '.cpp': executors.CPP11,
+                '.java': executors.JAVA,
+                '.rb': executors.RUBY
+            }
+            clazz = lookup.get(ext, None)
+            if not clazz:
+                raise IOError('could not identify grader extension')
+            generator_launcher = clazz.Executor('%s-generator' % problem_id, generator_source).launch_unsafe
+
             test = 0
             copied_forward_test_cases = copy.deepcopy(forward_test_cases)
             for test_case in copied_forward_test_cases:
                 for input_file, output_file, point_value in test_case:
                     test += 1
-                    generator_process = generator_launcher(stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                    generator_output, generator_error = generator_process.communicate('\n'.join((str(test), input_file, output_file, '')))
+                    generator_process = generator_launcher(stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                                           stderr=subprocess.PIPE)
+                    generator_output, generator_error = generator_process.communicate(
+                        '\n'.join((str(test), input_file, output_file, '')))
                     files[input_file] = cStringIO.StringIO(generator_output)
                     files[output_file] = cStringIO.StringIO(generator_error)
             topen = files.__getitem__

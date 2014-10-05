@@ -382,7 +382,7 @@ class Judge(object):
                     # Launch a process for the current test case
                     self.current_proc = executor_func(time=time, memory=memory)
 
-                    process = self.current_proc,
+                    process = self.current_proc
                     result = Result()
                     result.result_flag = Result.AC
                     input_data = topen(input_file).read().replace('\r\n', '\n')  # .replace('\r', '\n')

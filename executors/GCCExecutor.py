@@ -13,11 +13,17 @@ C_FS = ['.*\.so']
 
 def make_executor(code, command, args, ext, test_code, arg0):
     class Executor(ResourceProxy):
-        def __init__(self, problem_id, source_code):
+        def __init__(self, problem_id, main_source, aux_sources):
             super(Executor, self).__init__()
-            source_code_file = self._file('%s%s' % (problem_id, ext))
-            with open(source_code_file, 'wb') as fo:
-                fo.write(source_code)
+            aux_sources[problem_id + ext] = main_source
+            sources = []
+            for name, source in aux_sources.iteritems():
+                if '.' not in name:
+                    name += ext
+                source_code_file = self._file(name)
+                with open(source_code_file, 'wb') as fo:
+                    fo.write(source)
+                sources.append(source_code_file)
             if sys.platform == 'win32':
                 compiled_extension = '.exe'
                 linker_options = ['-Wl,--stack,8388608', '-static']
@@ -25,8 +31,7 @@ def make_executor(code, command, args, ext, test_code, arg0):
                 compiled_extension = ''
                 linker_options = []
             output_file = self._file('%s%s' % (problem_id, compiled_extension))
-            gcc_args = [arg0, source_code_file, '-O2', '-march=native'
-                       ] + args + linker_options + ['-s', '-o', output_file]
+            gcc_args = [arg0] + sources + ['-O2', '-march=native'] + args + linker_options + ['-s', '-o', output_file]
             gcc_process = subprocess.Popen(gcc_args, stderr=subprocess.PIPE, executable=env['runtime'][command],
                                            cwd=self._dir)
             _, compile_error = gcc_process.communicate()

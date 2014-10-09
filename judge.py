@@ -116,22 +116,32 @@ class Judge(object):
         submission_id = self.current_submission
         print>> sys.stderr, '===========Started Grading: %s===========' % submission_id
         try:
-            if isinstance(source_code, unicode):
-                source_code = source_code.encode('utf-8')
-            try:
-                # Launch an executor for the given language
-                # The executor is responsible for writing source files and compiling (if applicable)
-                executor = executors[language].Executor(problem_id, source_code)
-            except KeyError:
-                raise NotImplementedError('unsupported language: ' + language)
-            except CompileError as e:
-                print 'Compile Error'
-                print e.args[0]
-                self.packet_manager.compile_error_packet(e.args[0])
-                return
-
             with open(os.path.join('data', 'problems', problem_id, 'init.json'), 'r') as init_file:
                 init_data = json.load(init_file)
+
+                if isinstance(source_code, unicode):
+                    source_code = source_code.encode('utf-8')
+                try:
+                    # Launch an executor for the given language
+                    # The executor is responsible for writing source files and compiling (if applicable)
+                    if 'handler' in init_data and language in ['C', 'CPP', 'CPP11']:
+                        aux_sources = {}
+                        handler_data = init_data['handler']
+                        with open(os.path.join('data', 'problems', problem_id, handler_data['entry']), 'r') as i:
+                            with open(os.path.join('data', 'problems', problem_id, handler_data['header']), 'r') as j:
+                                aux_sources[problem_id + "-submission"] = ('#include "%s"\n#define main user_main\n' % handler_data['header']) + source_code
+                                aux_sources[handler_data['header']] = j.read()
+                                source_code = i.read()
+                    else:
+                        aux_sources = {}
+                    executor = executors[language].Executor(problem_id, source_code, aux_sources=aux_sources)
+                except KeyError:
+                    raise NotImplementedError('unsupported language: ' + language)
+                except CompileError as e:
+                    print 'Compile Error'
+                    print e.args[0]
+                    self.packet_manager.compile_error_packet(e.args[0])
+                    return
 
                 try:
                     # Obtain the output correctness checker, e.g. standard or float
@@ -452,6 +462,7 @@ class Judge(object):
 
     def murder(self):
         self.terminate_grading()
+
 
 def main():
     parser = argparse.ArgumentParser(description='''

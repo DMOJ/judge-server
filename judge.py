@@ -132,9 +132,11 @@ class Judge(object):
                                 aux_sources[problem_id + "-submission"] = ('#include "%s"\n#define main user_main\n' % handler_data['header']) + source_code
                                 aux_sources[handler_data['header']] = j.read()
                                 source_code = i.read()
+                        
+                        executor = executors[language].Executor(problem_id, source_code, aux_sources=aux_sources)
                     else:
                         aux_sources = {}
-                    executor = executors[language].Executor(problem_id, source_code, aux_sources=aux_sources)
+                        executor = executors[language].Executor(problem_id, source_code)
                 except KeyError:
                     raise NotImplementedError('unsupported language: ' + language)
                 except CompileError as e:

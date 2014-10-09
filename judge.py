@@ -238,7 +238,7 @@ class Judge(object):
                     files[output_file] = cStringIO.StringIO(generator_error)
             return files.__getitem__
         else:
-            return open
+            return lambda f: open(os.path.join('data', 'problems', problem_id, f), 'r')
 
     def run_interactive(self, executor_func, init_data, check_adapter, problem_id, short_circuit=False, time=2,
                         memory=65536):

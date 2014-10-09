@@ -13,7 +13,8 @@ C_FS = ['.*\.so']
 
 def make_executor(code, command, args, ext, test_code, arg0):
     class Executor(ResourceProxy):
-        def __init__(self, problem_id, main_source, aux_sources):
+        def __init__(self, problem_id, main_source, aux_sources=None):
+            if not aux_sources: aux_sources = {}
             super(Executor, self).__init__()
             aux_sources[problem_id + ext] = main_source
             sources = []

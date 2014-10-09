@@ -234,7 +234,10 @@ class Judge(object):
                         memory=65536):
         forward_test_cases = []
         for case in init_data['test_cases']:
-            case = TestCase(case.get('in', None), case.get('out', None), case['points'])
+            if isinstance(case, dict):
+                case = TestCase(case.get('in', None), case.get('out', None), case['points'])
+            else:
+                case = (None, None, int(case))
             forward_test_cases.append(case)
 
         if 'grader' not in init_data:

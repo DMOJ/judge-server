@@ -386,43 +386,41 @@ class Judge(object):
                 for input_file, output_file, point_value in test_case:
                     if self._terminate_grading:
                         raise TerminateGrading()
+                    result = Result()
                     if short_circuited:
                         # A previous subtestcase failed so we're allowed to break early
-                        result = Result()
                         result.result_flag = Result.SC
-                        continue
-
-                    # Launch a process for the current test case
-                    self.current_proc = executor_func(time=time, memory=memory)
-
-                    process = self.current_proc
-                    result = Result()
-                    result.result_flag = Result.AC
-                    input_data = topen(input_file).read().replace('\r\n', '\n')  # .replace('\r', '\n')
-
-                    result.proc_output, error = process.communicate(input_data)
-
-                    result.max_memory = process.max_memory
-                    result.execution_time = process.execution_time
-                    result.r_execution_time = process.r_execution_time
-                    if not check_func(result.proc_output, topen(output_file).read()):
-                        result.result_flag |= Result.WA
-                    if process.returncode > 0:
-                        result.result_flag |= Result.IR
-                    if process.returncode < 0:
-                        print>> sys.stderr, 'Killed by signal %d' % -process.returncode
-                        result.result_flag |= Result.RTE  # Killed by signal
-                    if process.tle:
-                        result.result_flag |= Result.TLE
-                    if process.mle:
-                        result.result_flag |= Result.MLE
+                    else:
+                        # Launch a process for the current test case
+                        self.current_proc = executor_func(time=time, memory=memory)
+    
+                        process = self.current_proc
+                        result.result_flag = Result.AC
+                        input_data = topen(input_file).read().replace('\r\n', '\n')  # .replace('\r', '\n')
+    
+                        result.proc_output, error = process.communicate(input_data)
+    
+                        result.max_memory = process.max_memory
+                        result.execution_time = process.execution_time
+                        result.r_execution_time = process.r_execution_time
+                        if not check_func(result.proc_output, topen(output_file).read()):
+                            result.result_flag |= Result.WA
+                        if process.returncode > 0:
+                            result.result_flag |= Result.IR
+                        if process.returncode < 0:
+                            print>> sys.stderr, 'Killed by signal %d' % -process.returncode
+                            result.result_flag |= Result.RTE  # Killed by signal
+                        if process.tle:
+                            result.result_flag |= Result.TLE
+                        if process.mle:
+                            result.result_flag |= Result.MLE
 
                     # Must check here because we might be interrupted mid-execution
                     # If we don't bail out, we get an IR.
                     if self._terminate_grading:
                         raise TerminateGrading()
                     self.packet_manager.test_case_status_packet(case_number,
-                                                                point_value if not short_circuited and result.result_flag == Result.AC else 0,
+                                                                point_value if result.result_flag == Result.AC else 0,
                                                                 point_value,
                                                                 result.result_flag,
                                                                 result.execution_time,

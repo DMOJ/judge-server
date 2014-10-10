@@ -21,22 +21,23 @@ public class JavaSafeExecutor {
     private static ShockerThread shockerThread;
     private static SubmissionThread submissionThread;
     private static boolean _safeBlock = false;
+    private static String cwd;
 
     static {
         new Scanner(new ByteArrayInputStream(new byte[128])).close(); // Load locale
     }
 
     public static void main(String[] argv) throws MalformedURLException, ClassNotFoundException, UnsupportedEncodingException {
-        String path = argv[0];
+        cwd = new File(argv[0]).toString(); // Resolve
         String classname = argv[1];
         int TL = Integer.parseInt(argv[2]);
 
         System.setOut(new UnsafePrintStream(new FileOutputStream(FileDescriptor.out)));
 
-        URLClassLoader classLoader = URLClassLoader.newInstance(new URL[]{new File(path).toURI().toURL()});
+        URLClassLoader classLoader = URLClassLoader.newInstance(new URL[]{new File(cwd).toURI().toURL()});
         Class program;
         try {
-            program = Class.forName(classname, true, classLoader);
+            program = classLoader.loadClass(classname);
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
             System.err.printf("\n%d %d %d %d %d\n", 0, 0, 0, 0, CLASS_NOT_FOUND_ERROR_CODE);
@@ -92,6 +93,10 @@ public class JavaSafeExecutor {
     public static class SubmissionSecurityManager extends SecurityManager {
         @Override
         public void checkPermission(Permission perm) {
+            if (perm instanceof FilePermission) {
+                if (perm.getActions().equals("read") && perm.getName().startsWith(cwd + File.separator))
+                    return;
+            }
             if (perm instanceof RuntimePermission) {
                 if (perm.getName().equals("writeFileDescriptor") || perm.getName().equals("readFileDescriptor"))
                     return;

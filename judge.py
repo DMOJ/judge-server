@@ -163,9 +163,9 @@ class Judge(object):
                 try:
                     # Obtain the output correctness checker, e.g. standard or float
                     grader_id = init_data.get('checker', 'standard')
-                    if type(grader_id) == dict:
+                    if isinstance(grader_id, dict):
                         grader_id = grader_id['name']
-                        grader_args = grader_id['arguments']
+                        grader_args = grader_id['parameters']
                     else:
                         grader_args = {}
                     if '.' in grader_id:

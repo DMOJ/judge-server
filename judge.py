@@ -405,7 +405,7 @@ class Judge(object):
                         input_data = topen(input_file).read().replace('\r\n', '\n')  # .replace('\r', '\n')
 
                         if hasattr(process, 'safe_communicate'):
-                            communicate = process.safe_cmmunicate
+                            communicate = process.safe_communicate
                         else:
                             communicate = partial(safe_communicate, process)
                         try:

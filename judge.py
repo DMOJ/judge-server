@@ -205,7 +205,6 @@ class Judge(object):
 
 
                 # Use a proxy to not expose init_data to all submethods
-
                 check_adapter = lambda test_input, proc_output, judge_output: checker.check(proc_output,
                                                                                 judge_output,
                                                                                 submission_source=source_code,

@@ -165,6 +165,7 @@ public class JavaSafeExecutor {
                     e.printStackTrace();
                     error = ACCESS_ERROR_CODE;
                 } catch (Throwable throwable) {
+                    throwable.printStackTrace();
                     error = PROGRAM_ERROR_CODE;
                 }
             } catch (NoSuchMethodException e) {

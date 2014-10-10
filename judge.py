@@ -10,6 +10,7 @@ import zipfile
 import cStringIO
 import sys
 import subprocess
+from communicate import safe_communicate, OutputLimitExceeded
 
 from error import CompileError
 from judgeenv import env
@@ -27,6 +28,7 @@ class Result(object):
     MLE = 1 << 3
     IR = 1 << 4
     SC = 1 << 5
+    OLE = 1 << 6
     IE = 1 << 30
 
     def __init__(self):
@@ -392,30 +394,39 @@ class Judge(object):
                     if short_circuited:
                         # A previous subtestcase failed so we're allowed to break early
                         result.result_flag = Result.SC
-                    else:
-                        # Launch a process for the current test case
-                        self.current_proc = executor_func(time=time, memory=memory)
-    
-                        process = self.current_proc
-                        result.result_flag = Result.AC
-                        input_data = topen(input_file).read().replace('\r\n', '\n')  # .replace('\r', '\n')
-    
-                        result.proc_output, error = process.communicate(input_data)
-    
-                        result.max_memory = process.max_memory
-                        result.execution_time = process.execution_time
-                        result.r_execution_time = process.r_execution_time
-                        if not check_func(result.proc_output, topen(output_file).read()):
-                            result.result_flag |= Result.WA
-                        if process.returncode > 0:
-                            result.result_flag |= Result.IR
-                        if process.returncode < 0:
-                            print>> sys.stderr, 'Killed by signal %d' % -process.returncode
-                            result.result_flag |= Result.RTE  # Killed by signal
-                        if process.tle:
-                            result.result_flag |= Result.TLE
-                        if process.mle:
-                            result.result_flag |= Result.MLE
+                        continue
+
+                    # Launch a process for the current test case
+                    self.current_proc = executor_func(time=time, memory=memory)
+
+                    process = self.current_proc
+                    result = Result()
+                    result.result_flag = Result.AC
+                    input_data = topen(input_file).read().replace('\r\n', '\n')  # .replace('\r', '\n')
+
+                    try:
+                        result.proc_output, error = safe_communicate(process, input_data)
+                    except OutputLimitExceeded as e:
+                        stream, result.proc_output, error = e.args
+                        print>>sys.stderr, 'OLE:', stream
+                        result.result_flag |= Result.OLE
+                        process.kill()
+                        process.wait()
+
+                    result.max_memory = process.max_memory
+                    result.execution_time = process.execution_time
+                    result.r_execution_time = process.r_execution_time
+                    if not check_func(result.proc_output, topen(output_file).read()):
+                        result.result_flag |= Result.WA
+                    if process.returncode > 0:
+                        result.result_flag |= Result.IR
+                    if process.returncode < 0:
+                        print>> sys.stderr, 'Killed by signal %d' % -process.returncode
+                        result.result_flag |= Result.RTE  # Killed by signal
+                    if process.tle:
+                        result.result_flag |= Result.TLE
+                    if process.mle:
+                        result.result_flag |= Result.MLE
 
                     # Must check here because we might be interrupted mid-execution
                     # If we don't bail out, we get an IR.

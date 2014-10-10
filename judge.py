@@ -104,7 +104,7 @@ class Judge(object):
         self.current_submission_thread = None
         self._terminate_grading = False
 
-    def begin_grading(self, id, problem_id, language, source_code, time, mem, sc, grader, args):
+    def begin_grading(self, id, problem_id, language, source_code, time, mem, sc):
         print 'Grading %s in %s...' % (problem_id, language)
         try:
             self.current_submission_thread.join()
@@ -116,7 +116,7 @@ class Judge(object):
         self.current_submission = id
         self.current_submission_thread = threading.Thread(target=self._begin_grading,
                                                           args=(problem_id, language, source_code,
-                                                                time, mem, sc, grader, args))
+                                                                time, mem, sc))
         self.current_submission_thread.daemon = True
         self.current_submission_thread.start()
 

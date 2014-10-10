@@ -8,7 +8,7 @@ from executors.utils import test_executor
 from .resource_proxy import ResourceProxy
 from judgeenv import env
 
-C_FS = ['.*\.so']
+C_FS = ['.*\.so', '/proc/meminfo', '/dev/null']
 
 
 def make_executor(code, command, args, ext, test_code, arg0):

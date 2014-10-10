@@ -131,10 +131,11 @@ class Judge(object):
                         handler_data = init_data['handler']
                         with open(os.path.join('data', 'problems', problem_id, handler_data['entry']), 'r') as i:
                             with open(os.path.join('data', 'problems', problem_id, handler_data['header']), 'r') as j:
-                                aux_sources[problem_id + "-submission"] = ('#include "%s"\n#define main user_main\n' % handler_data['header']) + source_code
+                                aux_sources[problem_id + "-submission"] = ('#include "%s"\n#define main user_main\n' %
+                                                                           handler_data['header']) + source_code
                                 aux_sources[handler_data['header']] = j.read()
                                 source_code = i.read()
-                        
+
                         executor = executors[language].Executor(problem_id, source_code, aux_sources=aux_sources)
                     else:
                         aux_sources = {}

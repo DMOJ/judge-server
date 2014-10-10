@@ -127,8 +127,7 @@ class Judge(object):
                 self.current_proc.kill()
             self.current_submission_thread.join()
 
-    def _begin_grading(self, problem_id, language, source_code, time_limit, memory_limit, short_circuit, grader_id,
-                       grader_args):
+    def _begin_grading(self, problem_id, language, source_code, time_limit, memory_limit, short_circuit):
         submission_id = self.current_submission
         print>> sys.stderr, '===========Started Grading: %s===========' % submission_id
         try:
@@ -164,9 +163,24 @@ class Judge(object):
 
                 try:
                     # Obtain the output correctness checker, e.g. standard or float
-                    checker = getattr(checkers, grader_id)
+                    grader_id = init_data.get('checker', 'standard')
+                    if type(grader_id) == dict:
+                        grader_id = grader_id['name']
+                        grader_args = grader_id['arguments']
+                    else:
+                        grader_args = {}
+                    if '.' in grader_id:
+                        mod, ext = os.path.splitext(grader_id)
+                        checker = imp.load_module(mod,
+                                                  open(os.path.join('data', 'problems', problem_id, grader_id), 'r'),
+                                                  grader_id, ('.py', 'U', 1))
+                        sys.modules.pop(mod)
+                        grader_id = mod
+                    else:
+                        checker = getattr(checkers, grader_id)
                 except AttributeError:
-                    raise NotImplementedError('unsupported problem type: ' + grader_id)
+                    raise NotImplementedError('error loading checker: ' + grader_id)
+
 
                 # Use a proxy to not expose init_data to all submethods
                 check_adapter = lambda proc_output, judge_output: checker.check(proc_output, judge_output, grader_args)

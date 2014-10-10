@@ -200,10 +200,10 @@ class Judge(object):
                                                    init_data['archive']), 'r')
             try:
                 for name in archive.infolist():
-                    files[name.filename] = cStringIO.StringIO(archive.read(name))
+                    files[name.filename] = archive.read(name)
             finally:
                 archive.close()
-            return lambda x: copy.copy(files[x])
+            return lambda x: cStringIO.StringIO(files[x])
         elif 'generator' in init_data and forward_test_cases:
             files = {}
             generator_path = os.path.join('data', 'problems', problem_id, init_data['generator'])
@@ -239,9 +239,9 @@ class Judge(object):
                                                            stderr=subprocess.PIPE)
                     generator_output, generator_error = generator_process.communicate(
                         '\n'.join((str(test), input_file, output_file, '')))
-                    files[input_file] = cStringIO.StringIO(generator_output)
-                    files[output_file] = cStringIO.StringIO(generator_error)
-            return lambda x: copy.copy(files[x])
+                    files[input_file] = generator_output
+                    files[output_file] = generator_error
+            return lambda x: cStringIO.StringIO(files[x])
         else:
             return lambda f: open(os.path.join('data', 'problems', problem_id, f), 'r')
 

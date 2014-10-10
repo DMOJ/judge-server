@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import argparse
 import copy
+from functools import partial
 import gc
 import json
 import os
@@ -402,9 +403,13 @@ class Judge(object):
                         process = self.current_proc
                         result.result_flag = Result.AC
                         input_data = topen(input_file).read().replace('\r\n', '\n')  # .replace('\r', '\n')
-    
+
+                        if hasattr(process, 'safe_communicate'):
+                            communicate = process.safe_cmmunicate
+                        else:
+                            communicate = partial(safe_communicate, process)
                         try:
-                            result.proc_output, error = safe_communicate(process, input_data)
+                            result.proc_output, error = communicate(input_data)
                         except OutputLimitExceeded as e:
                             stream, result.proc_output, error = e.args
                             print>>sys.stderr, 'OLE:', stream
@@ -420,7 +425,8 @@ class Judge(object):
                         if process.returncode > 0:
                             result.result_flag |= Result.IR
                         if process.returncode < 0:
-                            print>> sys.stderr, 'Killed by signal %d' % -process.returncode
+                            if process.returncode is not None:
+                                print>> sys.stderr, 'Killed by signal %d' % -process.returncode
                             result.result_flag |= Result.RTE  # Killed by signal
                         if process.tle:
                             result.result_flag |= Result.TLE

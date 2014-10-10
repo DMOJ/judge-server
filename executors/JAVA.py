@@ -2,6 +2,7 @@ import os
 import re
 from subprocess import *
 import sys
+from communicate import safe_communicate
 from error import CompileError
 from executors.utils import test_executor
 
@@ -33,7 +34,12 @@ class JavaPopen(object):
         self.returncode = None
 
     def communicate(self, stdin=None):
-        stdout, stderr_ = self.process.communicate(stdin)
+        self._communicate(*self.process.communicate(stdin))
+
+    def safe_communicate(self, stdin=None, limit=None):
+        return self._communicate(*safe_communicate(stdin, limit))
+
+    def _communicate(self, stdout, stderr_):
         stderr = stderr_.rstrip().split('\n')
         self.error_info = '\n'.join(stderr[:-1]).strip()
         try:

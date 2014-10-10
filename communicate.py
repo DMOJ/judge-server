@@ -9,7 +9,9 @@ class OutputLimitExceeded(Exception):
     pass
 
 
-def safe_communicate(proc, input, limit=10485760):
+def safe_communicate(proc, input, limit=None):
+    if limit is None:
+        limit = 10485760
     if proc.stdin:
         # Flush stdio buffer.  This might block, if the user has
         # been writing to .stdin in an uncontrolled fashion.

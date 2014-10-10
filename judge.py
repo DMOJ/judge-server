@@ -11,6 +11,7 @@ import zipfile
 import cStringIO
 import sys
 import subprocess
+from modload import load_module_from_file
 
 try:
     from watchdog.observers import Observer
@@ -194,12 +195,9 @@ class Judge(object):
                     else:
                         grader_args = {}
                     if '.' in grader_id:
-                        mod, ext = os.path.splitext(grader_id)
-                        checker = imp.load_module(mod,
-                                                  open(os.path.join('data', 'problems', problem_id, grader_id), 'r'),
-                                                  grader_id, ('.py', 'U', 1))
-                        sys.modules.pop(mod)
-                        grader_id = mod
+                        checker = load_module_from_file(open(os.path.join('data', 'problems', problem_id, grader_id)),
+                                                        'judge_checker')
+                        grader_id = checker.__name__
                     else:
                         checker = getattr(checkers, grader_id)
                 except AttributeError:

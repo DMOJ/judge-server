@@ -17,12 +17,11 @@ try:
     from watchdog.observers import Observer
     from watchdog.events import FileSystemEventHandler
 except ImportError:
-    print>>sys.stderr, 'No Watchdog!'
+    print>> sys.stderr, 'No Watchdog!'
     Observer = None
 
     class FileSystemEventHandler(object):
         pass
-
 
 from error import CompileError
 from judgeenv import env
@@ -183,7 +182,12 @@ class Judge(object):
 
 
                 # Use a proxy to not expose init_data to all submethods
-                check_adapter = lambda proc_output, judge_output: checker.check(proc_output, judge_output, **grader_args)
+
+                check_adapter = lambda test_input, proc_output, judge_output: checker.check(proc_output,
+                                                                                judge_output,
+                                                                                submission_source=source_code,
+                                                                                test_case_data=test_input,
+                                                                                **grader_args)
 
                 run_call = [self.run_standard, self.run_interactive]['grader' in init_data]
 
@@ -426,7 +430,7 @@ class Judge(object):
                     else:
                         # Launch a process for the current test case
                         self.current_proc = executor_func(time=time, memory=memory)
-    
+
                         process = self.current_proc
                         result = Result()
                         result.result_flag = Result.AC
@@ -440,15 +444,15 @@ class Judge(object):
                             result.proc_output, error = safe_communicate(process, input_data)
                         except OutputLimitExceeded as e:
                             stream, result.proc_output, error = e.args
-                            print>>sys.stderr, 'OLE:', stream
+                            print>> sys.stderr, 'OLE:', stream
                             result.result_flag |= Result.OLE
                             process.kill()
                             process.wait()
-    
+
                         result.max_memory = process.max_memory
                         result.execution_time = process.execution_time
                         result.r_execution_time = process.r_execution_time
-                        if not check_func(result.proc_output, topen(output_file).read()):
+                        if not check_func(input_data, result.proc_output, topen(output_file).read()):
                             result.result_flag |= Result.WA
                         if process.returncode > 0:
                             result.result_flag |= Result.IR

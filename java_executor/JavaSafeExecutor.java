@@ -11,6 +11,7 @@ import java.security.Permission;
 import java.util.PropertyPermission;
 import java.util.Scanner;
 
+@SuppressWarnings("deprecation")
 public class JavaSafeExecutor {
     private static ThreadDeath TLE = new ThreadDeath();
     private static int ACCESS_ERROR_CODE = -1001;

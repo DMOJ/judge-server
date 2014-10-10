@@ -146,6 +146,7 @@ public class JavaSafeExecutor {
         }
 
         @Override
+        @SuppressWarnings("unchecked")
         public void run() {
             Method handle;
             try {

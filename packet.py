@@ -97,6 +97,10 @@ class PacketManager(object):
             if resp['name'] != 'handshake-success':
                 raise JudgeAuthenticationFailed()
 
+    def supported_problems_packet(self, problems):
+        self._send_packet({'name': 'supported-problems',
+                           'problems': problems})
+
     def test_case_status_packet(self, position, points, total_points, status, time, memory, output):
         self._send_packet({'name': 'test-case-status',
                            'submission-id': self.judge.current_submission,

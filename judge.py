@@ -478,6 +478,7 @@ class Judge(object):
                         if not check_func(input_data, result.proc_output, topen(output_file).read()):
                             result.result_flag |= Result.WA
                         if process.returncode > 0:
+                            print>>sys.stderr, 'Exited with error: %d' % process.returncode
                             result.result_flag |= Result.IR
                         if process.returncode < 0:
                             if process.returncode is not None:

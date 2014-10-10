@@ -11,7 +11,6 @@ import zipfile
 import cStringIO
 import sys
 import subprocess
-from communicate import safe_communicate, OutputLimitExceeded
 
 try:
     from watchdog.observers import Observer
@@ -91,17 +90,43 @@ class TerminateGrading(Exception):
     pass
 
 
+class SendProblemsHandler(FileSystemEventHandler):
+    def __init__(self, judge):
+        self.judge = judge
+
+    def on_any_event(self, event):
+        print>>sys.stderr, event
+        self.judge.update_problems()
+
+
 class Judge(object):
     def __init__(self, host, port, **kwargs):
         self.packet_manager = packet.PacketManager(host, port, self)
         self.current_submission = None
         self.current_proc = None
-        supported_problems = []
-        for problem in os.listdir(os.path.join('data', 'problems')):
-            supported_problems.append((problem, os.path.getmtime(os.path.join('data', 'problems', problem))))
-        self.packet_manager.handshake(supported_problems, env['id'], env['key'])
+        self.packet_manager.handshake(self._get_supported_problems(), env['id'], env['key'])
         self.current_submission_thread = None
         self._terminate_grading = False
+        if Observer is not None:
+            self._monitor = monitor = Observer()
+            monitor.schedule(FileSystemEventHandler(), os.path.join('data', 'problems'))
+            monitor.start()
+        else:
+            self._monitor = None
+
+    def _stop_monitor(self):
+        if self._monitor is not None:
+            self._monitor.stop()
+            self._monitor.join(1)
+
+    def _get_supported_problems(self):
+        problems = []
+        for problem in os.listdir(os.path.join('data', 'problems')):
+            problems.append((problem, os.path.getmtime(os.path.join('data', 'problems', problem))))
+        return problems
+
+    def update_problems(self):
+        self.packet_manager.supported_problems_packet(self._get_supported_problems())
 
     def begin_grading(self, id, problem_id, language, source_code, time, mem, sc):
         print 'Grading %s in %s...' % (problem_id, language)
@@ -164,8 +189,8 @@ class Judge(object):
                     # Obtain the output correctness checker, e.g. standard or float
                     grader_id = init_data.get('checker', 'standard')
                     if isinstance(grader_id, dict):
-                        grader_id = grader_id['name']
                         grader_args = grader_id['parameters']
+                        grader_id = grader_id['name']
                     else:
                         grader_args = {}
                     if '.' in grader_id:
@@ -500,6 +525,7 @@ class Judge(object):
             gc.collect()
 
     def __del__(self):
+        self._stop_monitor()
         del self.packet_manager
 
     def __enter__(self):
@@ -510,6 +536,7 @@ class Judge(object):
 
     def murder(self):
         self.terminate_grading()
+        self._stop_monitor()
 
 
 def main():

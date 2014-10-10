@@ -36,12 +36,14 @@ public class JavaSafeExecutor {
         URLClassLoader classLoader = URLClassLoader.newInstance(new URL[]{new File(path).toURI().toURL()});
         Class program;
         try {
-            program = classLoader.loadClass(classname);
+            program = Class.forName(classname, true, classLoader);
         } catch (ClassNotFoundException e) {
-            System.err.printf("%d %d %d %d %d\n", 0, 0, 0, 0, CLASS_NOT_FOUND_ERROR_CODE);
+            e.printStackTrace();
+            System.err.printf("\n%d %d %d %d %d\n", 0, 0, 0, 0, CLASS_NOT_FOUND_ERROR_CODE);
             return;
         } catch (NoClassDefFoundError ex) {
-            System.err.printf("%d %d %d %d %d\n", 0, 0, 0, 0, NO_CLASS_DEF_ERROR_CODE);
+            ex.printStackTrace();
+            System.err.printf("\n%d %d %d %d %d\n", 0, 0, 0, 0, NO_CLASS_DEF_ERROR_CODE);
             return;
         }
         submissionThread = new SubmissionThread(program);

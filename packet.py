@@ -73,15 +73,13 @@ class PacketManager(object):
                 packet['source'],
                 int(packet['time-limit']),
                 int(packet['memory-limit']),
-                packet['short-circuit'],
-                packet['grader-id'],
-                packet['grader-args']
+                packet['short-circuit']
             )
         elif name == 'terminate-submission':
             self.judge.terminate_grading()
         else:
             print 'ERROR: unknown packet %s, payload %s' % (name, packet)
-    
+
     def handshake(self, problems, id, key):
         self._send_packet({'name': 'handshake',
                            'problems': problems,

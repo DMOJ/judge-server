@@ -11,6 +11,7 @@ import zipfile
 import cStringIO
 import sys
 import subprocess
+from communicate import safe_communicate, OutputLimitExceeded
 
 try:
     from watchdog.observers import Observer
@@ -30,6 +31,7 @@ from communicate import safe_communicate, OutputLimitExceeded
 from executors import executors
 import checkers
 import packet
+import imp
 
 
 class Result(object):
@@ -90,43 +92,17 @@ class TerminateGrading(Exception):
     pass
 
 
-class SendProblemsHandler(FileSystemEventHandler):
-    def __init__(self, judge):
-        self.judge = judge
-
-    def on_any_event(self, event):
-        print>>sys.stderr, event
-        self.judge.update_problems()
-
-
 class Judge(object):
     def __init__(self, host, port, **kwargs):
         self.packet_manager = packet.PacketManager(host, port, self)
         self.current_submission = None
         self.current_proc = None
-        self.packet_manager.handshake(self._get_supported_problems(), env['id'], env['key'])
+        supported_problems = []
+        for problem in os.listdir(os.path.join('data', 'problems')):
+            supported_problems.append((problem, os.path.getmtime(os.path.join('data', 'problems', problem))))
+        self.packet_manager.handshake(supported_problems, env['id'], env['key'])
         self.current_submission_thread = None
         self._terminate_grading = False
-        if Observer is not None:
-            self._monitor = monitor = Observer()
-            monitor.schedule(FileSystemEventHandler(), os.path.join('data', 'problems'))
-            monitor.start()
-        else:
-            self._monitor = None
-
-    def _stop_monitor(self):
-        if self._monitor is not None:
-            self._monitor.stop()
-            self._monitor.join(1)
-
-    def _get_supported_problems(self):
-        problems = []
-        for problem in os.listdir(os.path.join('data', 'problems')):
-            problems.append((problem, os.path.getmtime(os.path.join('data', 'problems', problem))))
-        return problems
-
-    def update_problems(self):
-        self.packet_manager.supported_problems_packet(self._get_supported_problems())
 
     def begin_grading(self, id, problem_id, language, source_code, time, mem, sc, grader, args):
         print 'Grading %s in %s...' % (problem_id, language)
@@ -238,10 +214,10 @@ class Judge(object):
                                                    init_data['archive']), 'r')
             try:
                 for name in archive.infolist():
-                    files[name.filename] = archive.read(name)
+                    files[name.filename] = cStringIO.StringIO(archive.read(name))
             finally:
                 archive.close()
-            return lambda x: cStringIO.StringIO(files[x])
+            return files.__getitem__
         elif 'generator' in init_data and forward_test_cases:
             files = {}
             generator_path = os.path.join('data', 'problems', problem_id, init_data['generator'])
@@ -277,9 +253,9 @@ class Judge(object):
                                                            stderr=subprocess.PIPE)
                     generator_output, generator_error = generator_process.communicate(
                         '\n'.join((str(test), input_file, output_file, '')))
-                    files[input_file] = generator_output
-                    files[output_file] = generator_error
-            return lambda x: cStringIO.StringIO(files[x])
+                    files[input_file] = cStringIO.StringIO(generator_output)
+                    files[output_file] = cStringIO.StringIO(generator_error)
+            return files.__getitem__
         else:
             return lambda f: open(os.path.join('data', 'problems', problem_id, f), 'r')
 
@@ -438,6 +414,7 @@ class Judge(object):
                         self.current_proc = executor_func(time=time, memory=memory)
     
                         process = self.current_proc
+                        result = Result()
                         result.result_flag = Result.AC
                         input_data = topen(input_file).read().replace('\r\n', '\n')  # .replace('\r', '\n')
 
@@ -446,7 +423,7 @@ class Judge(object):
                         else:
                             communicate = partial(safe_communicate, process)
                         try:
-                            result.proc_output, error = communicate(input_data)
+                            result.proc_output, error = safe_communicate(process, input_data)
                         except OutputLimitExceeded as e:
                             stream, result.proc_output, error = e.args
                             print>>sys.stderr, 'OLE:', stream
@@ -462,8 +439,7 @@ class Judge(object):
                         if process.returncode > 0:
                             result.result_flag |= Result.IR
                         if process.returncode < 0:
-                            if process.returncode is not None:
-                                print>> sys.stderr, 'Killed by signal %d' % -process.returncode
+                            print>> sys.stderr, 'Killed by signal %d' % -process.returncode
                             result.result_flag |= Result.RTE  # Killed by signal
                         if process.tle:
                             result.result_flag |= Result.TLE
@@ -506,7 +482,6 @@ class Judge(object):
 
     def __del__(self):
         del self.packet_manager
-        self._stop_monitor()
 
     def __enter__(self):
         return self
@@ -516,7 +491,6 @@ class Judge(object):
 
     def murder(self):
         self.terminate_grading()
-        self._stop_monitor()
 
 
 def main():

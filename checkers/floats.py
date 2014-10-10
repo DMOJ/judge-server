@@ -1,6 +1,6 @@
-def check(process_output, judge_output, data):
+def check(process_output, judge_output, precision, **kwargs):
     from judge import TerminateGrading
-    epsilon = 10 ** -int(data["precision"])
+    epsilon = 10 ** -int(precision)
     process_lines = filter(None, process_output.split('\n'))
     judge_lines = filter(None, judge_output.split('\n'))
     if len(process_lines) != len(judge_lines):

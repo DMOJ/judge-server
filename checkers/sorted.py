@@ -1,4 +1,4 @@
-def check(process_output, judge_output, data):
+def check(process_output, judge_output, **kwargs):
     import string
     process_lines = filter(None, process_output.split('\n'))
     judge_lines = filter(None, judge_output.split('\n'))

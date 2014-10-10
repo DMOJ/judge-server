@@ -179,11 +179,11 @@ class Judge(object):
                     else:
                         checker = getattr(checkers, grader_id)
                 except AttributeError:
-                    raise NotImplementedError('error loading checker: ' + grader_id)
+                    raise NotImplementedError('error loading checker')
 
 
                 # Use a proxy to not expose init_data to all submethods
-                check_adapter = lambda proc_output, judge_output: checker.check(proc_output, judge_output, grader_args)
+                check_adapter = lambda proc_output, judge_output: checker.check(proc_output, judge_output, **grader_args)
 
                 run_call = [self.run_standard, self.run_interactive]['grader' in init_data]
 

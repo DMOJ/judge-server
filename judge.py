@@ -385,7 +385,7 @@ class Judge(object):
             raise IOError('grader does not exist')
 
         try:
-            print sys.stderr>>grader_path
+            print >>sys.stderr, grader_path
             interactive_grader = load_module_from_file(open(grader_path, 'r'), 'judge_interactive')
         except:
             traceback.print_exc()

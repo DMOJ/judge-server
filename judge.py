@@ -384,35 +384,11 @@ class Judge(object):
         if not os.path.exists(grader_path):
             raise IOError('grader does not exist')
 
-        interactive_grader = [None]
-
-        # TODO: maybe we could switch to module loading for this like we did for signature grading
-        def set_entry_point(func):
-            """
-            Define a callback for interactive scripts to hook back into the main judge.
-            :param func: 
-                Grading callback specified in interactive script.
-            """
-            interactive_grader[0] = func
-            print "Hooked interactive grader:", func
-
         try:
-            with open(grader_path, 'r') as f:
-                code = compile(f.read(), grader_path, 'exec')
+            interactive_grader = load_module_from_file(open(grader_path, 'r'), 'judge_interactive')
         except:
             raise IOError('could not open grader file')
-
-        try:
-            exec code in {'__judge__': self,
-                          'set_entry_point': set_entry_point,
-                          'Result': Result}
-        except:
-            traceback.print_exc()
-            self.packet_manager.submission_terminated_packet()
-            return
-
-        interactive_grader = interactive_grader[0]
-
+        
         if not interactive_grader:
             raise IOError('no grader specified')
 
@@ -436,7 +412,7 @@ class Judge(object):
                     # if submission dies, interactive grader might get stuck on a process IO call,
                     # hanging the main thread
                     try:
-                        result = interactive_grader(case_number, self.current_proc, case_input=_input,
+                        result = interactive_grader.grade(case_number, self.current_proc, case_input=_input,
                                                     case_output=_output, point_value=point_value)
                     except:
                         traceback.print_exc()

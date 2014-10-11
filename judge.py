@@ -30,8 +30,6 @@ from communicate import safe_communicate, OutputLimitExceeded
 from executors import executors
 import checkers
 import packet
-import imp
-
 
 class Result(object):
     AC = 0
@@ -203,7 +201,6 @@ class Judge(object):
                 except AttributeError:
                     raise NotImplementedError('error loading checker')
 
-
                 # Use a proxy to not expose init_data to all submethods
                 check_adapter = lambda test_input, proc_output, judge_output: checker.check(proc_output,
                                                                                 judge_output,
@@ -289,7 +286,8 @@ class Judge(object):
             for test_case in copied_forward_test_cases:
                 for input_file, output_file, point_value in test_case:
                     test += 1
-                    generator_process = generator_launcher(stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                    generator_process = generator_launcher(stdin=subprocess.PIPE, 
+                                                           stdout=subprocess.PIPE,
                                                            stderr=subprocess.PIPE)
                     generator_output, generator_error = generator_process.communicate(
                         '\n'.join((str(test), input_file, output_file, '')))
@@ -334,9 +332,6 @@ class Judge(object):
         except:
             traceback.print_exc()
             self.packet_manager.submission_terminated_packet()
-            # TODO: the rest of this method might normally `yield` results, so if we ever IE its probably
-            # TODO: because I was on a bus while writing this and had no time to find out how this method is supposed
-            # TODO: to behave
             return
 
         interactive_grader = interactive_grader[0]

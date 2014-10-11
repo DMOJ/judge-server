@@ -387,10 +387,8 @@ class Judge(object):
         try:
             interactive_grader = load_module_from_file(open(grader_path, 'r'), 'judge_interactive')
         except:
+            traceback.print_exc()
             raise IOError('could not open grader file')
-        
-        if not interactive_grader:
-            raise IOError('no grader specified')
 
         topen = self._resolve_open_call(init_data, problem_id)
 
@@ -413,7 +411,7 @@ class Judge(object):
                     # hanging the main thread
                     try:
                         result = interactive_grader.grade(case_number, self.current_proc, case_input=_input,
-                                                    case_output=_output, point_value=point_value)
+                                                          case_output=_output, point_value=point_value)
                     except:
                         traceback.print_exc()
                         try:

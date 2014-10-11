@@ -31,6 +31,7 @@ from executors import executors
 import checkers
 import packet
 
+
 class Result(object):
     AC = 0
     WA = 1 << 0
@@ -94,7 +95,7 @@ class SendProblemsHandler(FileSystemEventHandler):
         self.judge = judge
 
     def on_any_event(self, event):
-        print>>sys.stderr, event
+        print>> sys.stderr, event
         self.judge.update_problems()
 
 
@@ -165,16 +166,23 @@ class Judge(object):
                     if 'handler' in init_data and language in ['C', 'CPP', 'CPP11']:
                         aux_sources = {}
                         handler_data = init_data['handler']
-                        with open(os.path.join('data', 'problems', problem_id, handler_data['entry']), 'r') as i:
-                            with open(os.path.join('data', 'problems', problem_id, handler_data['header']), 'r') as j:
+                        entry_path = os.path.join('data', 'problems', problem_id, handler_data['entry'])
+                        header_path = os.path.join('data', 'problems', problem_id, handler_data['header'])
+
+                        if not os.path.exists(entry_path):
+                            raise IOError('entry path "%s" does not exist' % entry_path)
+                        if not os.path.exists(header_path):
+                            raise IOError('header path "%s" does not exist' % header_path)
+
+                        with open(entry_path, 'r') as entry_point:
+                            with open(header_path, 'r') as header:
                                 aux_sources[problem_id + "-submission"] = ('#include "%s"\n#define main user_main\n' %
                                                                            handler_data['header']) + source_code
-                                aux_sources[handler_data['header']] = j.read()
-                                source_code = i.read()
-
+                                aux_sources[handler_data['header']] = header.read()
+                                source_code = entry_point.read()
+                        # Compile as CPP11 regardless of what the submission language is
                         executor = executors['CPP11'].Executor(problem_id, source_code, aux_sources=aux_sources)
                     else:
-                        aux_sources = {}
                         executor = executors[language].Executor(problem_id, source_code)
                 except KeyError:
                     raise NotImplementedError('unsupported language: ' + language)
@@ -203,10 +211,10 @@ class Judge(object):
 
                 # Use a proxy to not expose init_data to all submethods
                 check_adapter = lambda test_input, proc_output, judge_output: checker.check(proc_output,
-                                                                                judge_output,
-                                                                                submission_source=source_code,
-                                                                                test_case_data=test_input,
-                                                                                **grader_args)
+                                                                                            judge_output,
+                                                                                            submission_source=source_code,
+                                                                                            test_case_data=test_input,
+                                                                                            **grader_args)
 
                 run_call = [self.run_standard, self.run_interactive]['grader' in init_data]
 
@@ -287,7 +295,7 @@ class Judge(object):
             for test_case in copied_forward_test_cases:
                 for input_file, output_file, point_value in test_case:
                     test += 1
-                    generator_process = generator_launcher(stdin=subprocess.PIPE, 
+                    generator_process = generator_launcher(stdin=subprocess.PIPE,
                                                            stdout=subprocess.PIPE,
                                                            stderr=subprocess.PIPE)
                     generator_output, generator_error = generator_process.communicate(
@@ -473,11 +481,11 @@ class Judge(object):
                         if not check_func(input_data, result.proc_output, topen(output_file).read()):
                             result.result_flag |= Result.WA
                         if process.returncode > 0:
-                            print>>sys.stderr, 'Exited with error: %d' % process.returncode
+                            print>> sys.stderr, 'Exited with error: %d' % process.returncode
                             result.result_flag |= Result.IR
                         if process.returncode < 0:
                             if process.returncode is not None:
-                                print>>sys.stderr, 'Killed by signal %d' % -process.returncode
+                                print>> sys.stderr, 'Killed by signal %d' % -process.returncode
                             result.result_flag |= Result.RTE  # Killed by signal
                         if process.tle:
                             result.result_flag |= Result.TLE

@@ -172,7 +172,7 @@ class Judge(object):
                                 aux_sources[handler_data['header']] = j.read()
                                 source_code = i.read()
 
-                        executor = executors[language].Executor(problem_id, source_code, aux_sources=aux_sources)
+                        executor = executors['CPP11'].Executor(problem_id, source_code, aux_sources=aux_sources)
                     else:
                         aux_sources = {}
                         executor = executors[language].Executor(problem_id, source_code)
@@ -254,6 +254,7 @@ class Judge(object):
                     files[name.filename] = archive.read(name)
             finally:
                 archive.close()
+            # We return a new cStringIO in case init.json references the same file multiple times
             return lambda x: cStringIO.StringIO(files[x])
         elif 'generator' in init_data and forward_test_cases:
             files = {}
@@ -295,7 +296,7 @@ class Judge(object):
                     files[output_file] = generator_error
             return lambda x: cStringIO.StringIO(files[x])
         else:
-            return lambda f: open(os.path.join('data', 'problems', problem_id, f), 'r')
+            return lambda x: open(os.path.join('data', 'problems', problem_id, x), 'r')
 
     def run_interactive(self, executor_func, init_data, check_adapter, problem_id, short_circuit=False, time=2,
                         memory=65536):

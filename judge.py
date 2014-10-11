@@ -205,7 +205,7 @@ class Judge(object):
 
                         with open(entry_path, 'r') as entry_point:
                             with open(header_path, 'r') as header:
-                                aux_sources[problem_id + "-submission"] = ('#include "%s"\n#define main user_main\n' %
+                                aux_sources[problem_id + "_submission"] = ('#include "%s"\n#define main user_main\n' %
                                                                            handler_data['header']) + source_code
                                 aux_sources[handler_data['header']] = header.read()
                                 source_code = entry_point.read()

@@ -120,6 +120,10 @@ int pt_process::monitor() {
                         puts("Child Segfault");
                         kill(pid, SIGKILL);
                         break;
+                    case SIGFPE:
+                        puts("Child SIGFPE");
+                        kill(pid, SIGKILL);
+                        break;
                 }
                 dispatch(PTBOX_EVENT_SIGNAL, WSTOPSIG(status));
             }

@@ -194,27 +194,31 @@ class Judge(object):
 
                 try:
                     # Obtain the output correctness checker, e.g. standard or float
-                    grader_id = init_data.get('checker', 'standard')
-                    if isinstance(grader_id, dict):
-                        grader_args = grader_id['parameters']
-                        grader_id = grader_id['name']
+                    checker_id = init_data.get('checker', 'standard')
+                    if isinstance(checker_id, dict):
+                        checker_params = checker_id['parameters']
+                        checker_id = checker_id['name']
                     else:
-                        grader_args = {}
-                    if '.' in grader_id:
-                        checker = load_module_from_file(open(os.path.join('data', 'problems', problem_id, grader_id)),
-                                                        'judge_checker')
-                        grader_id = checker.__name__
+                        checker_params = {}
+                    if '.' in checker_id:
+                        module_path = os.path.join('data', 'problems', problem_id, checker_id)
+                        if not os.path.exists(module_path):
+                            raise IOError('checker module path "%s" does not exist' % module_path)
+                        checker = load_module_from_file(open(module_path, 'r'), 'judge_checker')
+                        checker_id = checker.__name__
                     else:
-                        checker = getattr(checkers, grader_id)
+                        checker = getattr(checkers, checker_id)
                 except AttributeError:
                     raise NotImplementedError('error loading checker')
+
+                print>> sys.stderr, 'Using checker %s' % checker_id
 
                 # Use a proxy to not expose init_data to all submethods
                 check_adapter = lambda test_input, proc_output, judge_output: checker.check(proc_output,
                                                                                             judge_output,
                                                                                             submission_source=source_code,
                                                                                             test_case_data=test_input,
-                                                                                            **grader_args)
+                                                                                            **checker_params)
 
                 run_call = [self.run_standard, self.run_interactive]['grader' in init_data]
 
@@ -239,11 +243,11 @@ class Judge(object):
                         print '\n'.join(execution_verdict)
                     case += 1
         except IOError:
-            print 'Internal Error: test cases do not exist'
+            print>> sys.stderr,  'Internal Error: test cases do not exist'
             traceback.print_exc()
             self.packet_manager.problem_not_exist_packet(problem_id)
         except TerminateGrading:
-            print 'Forcefully terminating grading. Temporary files may not be deleted.'
+            print>> sys.stderr,  'Forcefully terminating grading. Temporary files may not be deleted.'
         finally:
             print>> sys.stderr, '===========Done Grading: %s===========' % submission_id
             self.current_submission_thread = None

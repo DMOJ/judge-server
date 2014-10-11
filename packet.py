@@ -4,8 +4,8 @@ import threading
 import struct
 import traceback
 import time
-from sysinfo import load_fair
 from executors import executors
+import sysinfo
 
 
 class JudgeAuthenticationFailed(Exception):
@@ -150,6 +150,9 @@ class PacketManager(object):
                            'submission-id': self.judge.current_submission})
 
     def ping_packet(self, when):
-        self._send_packet({'name': 'ping-response',
-                           'time': time.time() - when,
-                           'load': load_fair()})
+        data = {'name': 'ping-response',
+                'time': time.time() - when}
+        for fn in sysinfo.report_callbacks:
+            key, value = fn()
+            data[key] = value
+        self._send_packet(data)

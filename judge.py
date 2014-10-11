@@ -120,31 +120,57 @@ class Judge(object):
             self._monitor.join(1)
 
     def _get_supported_problems(self):
+        """
+        Fetches a list of all problems supported by this judge.
+        :return:
+            A list of all problems in tuple format: (problem id, mtime)
+        """
         problems = []
         for problem in os.listdir(os.path.join('data', 'problems')):
             problems.append((problem, os.path.getmtime(os.path.join('data', 'problems', problem))))
         return problems
 
     def update_problems(self):
+        """
+        Pushes current problem set to server.
+        """
         self.packet_manager.supported_problems_packet(self._get_supported_problems())
 
-    def begin_grading(self, id, problem_id, language, source_code, time, mem, sc):
+    def begin_grading(self, id, problem_id, language, source_code, time_limit, memory_limit, short_circuit):
+        """
+        Grades a submission.
+        This method also handles notifying the server of judging results.
+        :param id:
+            The submission id to identify this submission with the server.
+        :param problem_id: 
+            Problem code.
+        :param language: 
+            The submission language, e.g. "CPP", "CPP11", "PY2"
+        :param source_code: 
+            The source code for the submission.
+        :param time_limit: 
+            Time limit for submission program, in seconds.
+        :param memory_limit: 
+            Memory limit for submission program, in kilobytes.
+        :param short_circuit: 
+            Whether to short-circuit batch testcases on WA.
+        """
         print 'Grading %s in %s...' % (problem_id, language)
         try:
             self.current_submission_thread.join()
         except AttributeError:
             pass
-        # if self.current_submission_thread:
-        # print 'TODO: this should be an error'
-        # self.terminate_grading()
         self.current_submission = id
         self.current_submission_thread = threading.Thread(target=self._begin_grading,
                                                           args=(problem_id, language, source_code,
-                                                                time, mem, sc))
+                                                                time_limit, memory_limit, short_circuit))
         self.current_submission_thread.daemon = True
         self.current_submission_thread.start()
 
     def terminate_grading(self):
+        """
+        Forcefully terminates the current submission. Not necessarily safe.
+        """
         if self.current_submission_thread:
             self._terminate_grading = True
             if self.current_proc:
@@ -152,6 +178,9 @@ class Judge(object):
             self.current_submission_thread.join()
 
     def _begin_grading(self, problem_id, language, source_code, time_limit, memory_limit, short_circuit):
+        """
+        Threaded callback for begin_grading.
+        """
         submission_id = self.current_submission
         print>> sys.stderr, '===========Started Grading: %s===========' % submission_id
         try:
@@ -243,24 +272,38 @@ class Judge(object):
                         print '\n'.join(execution_verdict)
                     case += 1
         except IOError:
-            print>> sys.stderr,  'Internal Error: test cases do not exist'
+            print>> sys.stderr, 'Internal Error: test cases do not exist'
             traceback.print_exc()
             self.packet_manager.problem_not_exist_packet(problem_id)
         except TerminateGrading:
-            print>> sys.stderr,  'Forcefully terminating grading. Temporary files may not be deleted.'
+            print>> sys.stderr, 'Forcefully terminating grading. Temporary files may not be deleted.'
         finally:
             print>> sys.stderr, '===========Done Grading: %s===========' % submission_id
             self.current_submission_thread = None
             self.current_submission = None
 
     def listen(self):
+        """
+        Attempts to connect to the handler server specified in command line.
+        """
         self.packet_manager.run()
 
     def _resolve_open_call(self, init_data, problem_id, forward_test_cases=None):
+        """
+        Resolves the method for accessing testing data given the problem initialization data.
+        :param init_data: 
+            The problem initialization data.
+        :param problem_id: 
+            The problem code.
+        :param forward_test_cases: 
+            A list of testcases contained in init_data.
+        """
         if 'archive' in init_data:
+            arch = os.path.join('data', 'problems', problem_id, init_data['archive'])
+            if not os.path.exists(arch):
+                raise IOError('archive file "%s" does not exist' % arch)
             files = {}
-            archive = zipfile.ZipFile(os.path.join('data', 'problems', problem_id,
-                                                   init_data['archive']), 'r')
+            archive = zipfile.ZipFile(arch, 'r')
             try:
                 for name in archive.infolist():
                     files[name.filename] = archive.read(name)
@@ -280,7 +323,7 @@ class Judge(object):
                 traceback.print_exc()
                 raise IOError('could not read generator source')
 
-            _, ext = os.path.splitext(init_data['generator'])
+            _, ext = os.path.splitext(generator_path)
             lookup = {
                 '.py': executors.get('PY2', None),
                 '.py3': executors.get('PY3', None),
@@ -312,6 +355,21 @@ class Judge(object):
 
     def run_interactive(self, executor_func, init_data, check_adapter, problem_id, short_circuit=False, time=2,
                         memory=65536):
+        """
+        Executes a submission in interactive mode.
+        :param executor_func: 
+            Callback to launch the submission program.
+        :param init_data: 
+            The problem initialization data.
+        :param problem_id: 
+            The problem code.
+        :param time: 
+            Time limit for submission program, in seconds.
+        :param memory: 
+            Memory limit for submission program, in kilobytes.
+        :return:
+            A Result instance representing the execution result of the submission program.
+        """
         forward_test_cases = []
         for case in init_data['test_cases']:
             if isinstance(case, dict):
@@ -328,7 +386,13 @@ class Judge(object):
 
         interactive_grader = [None]
 
+        # TODO: maybe we could switch to module loading for this like we did for signature grading
         def set_entry_point(func):
+            """
+            Define a callback for interactive scripts to hook back into the main judge.
+            :param func: 
+                Grading callback specified in interactive script.
+            """
             interactive_grader[0] = func
             print "Hooked interactive grader:", func
 
@@ -429,6 +493,25 @@ class Judge(object):
             gc.collect()
 
     def run_standard(self, executor_func, init_data, check_func, problem_id, short_circuit=False, time=2, memory=65536):
+        """
+        Executes a submission in standard (static) mode.
+        :param executor_func: 
+            Callback to launch the submission program.
+        :param init_data: 
+            The problem initialization data.
+        :param check_func: 
+            Callback to check validity of the submission program output.
+        :param problem_id: 
+            The problem code.
+        :param short_circuit:
+            Whether to short-circuit batch testcases.
+        :param time: 
+            Time limit for submission program, in seconds.
+        :param memory: 
+            Memory limit for submission program, in kilobytes.
+        :return:
+            A Result instance representing the execution result of the submission program.
+        """
         forward_test_cases = []
         for case in init_data['test_cases']:
             if 'data' in case:
@@ -541,6 +624,9 @@ class Judge(object):
         pass
 
     def murder(self):
+        """
+        End any submission currently executing, and exit the judge.
+        """
         self.terminate_grading()
         self._stop_monitor()
 

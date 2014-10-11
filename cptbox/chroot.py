@@ -53,6 +53,7 @@ class CHROOTSecurity(dict):
 
             sys_clone: ALLOW,
             sys_exit_group: ALLOW,
+            sys_gettid: ALLOW,
         })
 
     @staticmethod

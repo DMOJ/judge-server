@@ -11,7 +11,7 @@ from judgeenv import env
 
 recomment = re.compile(r'/\*.*?\*/', re.DOTALL)
 restring = re.compile(r'''(["'])(?:\\.|[^"\\])*\1''', re.DOTALL)
-reclass = re.compile(r'\bpublic\s+class\s+([_a-zA-Z][_0-9a-zA-z]+?)\b')
+reclass = re.compile(r'\bpublic\s+class\s+([_a-zA-Z][_0-9a-zA-z]*?)\b')
 JAVA_EXECUTOR = os.path.join(os.path.dirname(__file__), 'java_executor.jar')
 
 

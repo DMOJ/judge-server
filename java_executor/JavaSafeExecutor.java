@@ -53,7 +53,7 @@ public class JavaSafeExecutor {
         // Count runtime loading as part of time used
         // Note that if the time here more than the TL, I will not take it away.
         // If it is negative, the system is slow enough that you are penalized already.
-        int uptime = ManagementFactory.getRuntimeMXBean().getUptime();
+        long uptime = ManagementFactory.getRuntimeMXBean().getUptime();
         if (TL > uptime)
             TL -= uptime;
 

@@ -51,9 +51,11 @@ public class JavaSafeExecutor {
         submissionThread = new SubmissionThread(program);
 
         // Count runtime loading as part of time used
-        // Note that time here might be negative if RT loading time was greater than TL
-        // Oh well.
-        TL -= ManagementFactory.getRuntimeMXBean().getUptime();
+        // Note that if the time here more than the TL, I will not take it away.
+        // If it is negative, the system is slow enough that you are penalized already.
+        int uptime = ManagementFactory.getRuntimeMXBean().getUptime();
+        if (TL > uptime)
+            TL -= uptime;
 
         shockerThread = new ShockerThread(TL, submissionThread);
         System.setSecurityManager(new SubmissionSecurityManager());

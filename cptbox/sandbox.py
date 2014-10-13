@@ -43,7 +43,7 @@ def _eintr_retry_call(func, *args):
 
 class _SecurePopen(Process):
     def __init__(self, bitness, args, executable=None, security=None, time=0, memory=0, stdin=PIPE, stdout=PIPE,
-                 stderr=None, env=None, nproc=0, address_grace=4096, cwd=''):
+                 stderr=None, env=None, nproc=0, address_grace=4096, cwd='', fds=None):
         self._bitness = bitness
         self._executable = executable or _find_exe(args[0])
         self._args = args
@@ -56,6 +56,7 @@ class _SecurePopen(Process):
         self._child_address = self._child_memory + address_grace * 1024
         self._nproc = nproc
         self._tle = False
+        self._fds = fds
         self.__init_streams(stdin, stdout, stderr)
 
         self._security = security
@@ -132,7 +133,7 @@ class _SecurePopen(Process):
         self._tle = True
 
     def _run_process(self):
-        self._spawn(self._executable, self._args, self._env, self._chdir)
+        self._spawn(self._executable, self._args, self._env, self._chdir, self._fds)
         if self._child_stdin >= 0: os.close(self._child_stdin)
         if self._child_stdout >= 0: os.close(self._child_stdout)
         if self._child_stderr >= 0: os.close(self._child_stderr)

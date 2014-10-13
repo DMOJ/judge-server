@@ -90,12 +90,15 @@ cdef struct child_config:
     int stdin
     int stdout
     int stderr
+    int max_fd
+    int *fds
 
 cdef int pt_child(void *context) nogil:
     cdef child_config *config = <child_config*> context
     cdef DIR *d = opendir('/proc/self/fd')
     cdef dirent *dir
     cdef rlimit limit
+    cdef int i
 
     if config.address_space:
         limit.rlim_cur = limit.rlim_max = config.address_space
@@ -126,12 +129,15 @@ cdef int pt_child(void *context) nogil:
     if config.stdout >= 0: dup2(config.stdout, 1)
     if config.stderr >= 0: dup2(config.stderr, 2)
 
+    for i in xrange(3, config.max_fd + 1):
+        dup2(config.fds[i - 3], i)
+
     while True:
         dir = readdir(d)
         if dir == NULL:
             break
         fd = atoi(dir.d_name)
-        if fd > 2:
+        if fd > config.max_fd:
             close(fd)
     ptrace(PTRACE_TRACEME, 0, NULL, NULL)
     kill(getpid(), SIGSTOP)
@@ -288,7 +294,7 @@ cdef class Process:
     cpdef _cpu_time_exceeded(self):
         pass
 
-    cpdef _spawn(self, file, args, env=(), chdir=''):
+    cpdef _spawn(self, file, args, env=(), chdir='', fds=None):
         cdef child_config config
         config.address_space = self._child_address
         config.memory = self._child_memory
@@ -301,6 +307,14 @@ cdef class Process:
         config.stderr = self._child_stderr
         config.argv = alloc_string_array(args)
         config.envp = alloc_string_array(env)
+        if fds is None or not len(fds):
+            config.max_fd = 2
+            config.fds = NULL
+        else:
+            config.max_fd = 2 + len(fds)
+            config.fds = <int*>malloc(sizeof(int) * len(fds))
+            for i in xrange(len(fds)):
+                config.fds[i] = fds[i]
         with nogil:
             if self.process.spawn(pt_child, &config):
                 with gil:

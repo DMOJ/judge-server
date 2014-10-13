@@ -5,10 +5,11 @@ from .syscalls import *
 
 
 class CHROOTSecurity(dict):
-    def __init__(self, filesystem):
+    def __init__(self, filesystem, writable=(1, 2)):
         super(CHROOTSecurity, self).__init__()
         self.fs_jail = re.compile('|'.join(filesystem) if filesystem else '^')
         self.execve_count = 0
+        self._writable = writable
 
         self.update({
             sys_execve: self.do_execve,
@@ -56,9 +57,8 @@ class CHROOTSecurity(dict):
             sys_gettid: ALLOW,
         })
 
-    @staticmethod
-    def do_write(debugger):
-        return debugger.arg0() in (1, 2)
+    def do_write(self, debugger):
+        return debugger.arg0() in self._writable
 
     def do_execve(self, debugger):
         self.execve_count += 1

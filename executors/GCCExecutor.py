@@ -13,7 +13,7 @@ C_FS = ['.*\.so', '/proc/meminfo', '/dev/null']
 
 def make_executor(code, command, args, ext, test_code, arg0):
     class Executor(ResourceProxy):
-        def __init__(self, problem_id, main_source, aux_sources=None):
+        def __init__(self, problem_id, main_source, aux_sources=None, fds=None, writable=(1, 2)):
             if not aux_sources: aux_sources = {}
             super(Executor, self).__init__()
             aux_sources[problem_id + ext] = main_source
@@ -40,15 +40,17 @@ def make_executor(code, command, args, ext, test_code, arg0):
                 raise CompileError(compile_error)
             self._executable = output_file
             self.name = problem_id
+            self._fds = fds
+            self._writable = writable
 
         def launch(self, *args, **kwargs):
             return SecurePopen([self.name] + list(args),
                                executable=self._executable,
-                               security=CHROOTSecurity(C_FS),
+                               security=CHROOTSecurity(C_FS, writable=self._writable),
                                time=kwargs.get('time'),
                                memory=kwargs.get('memory'),
                                stderr=(PIPE if kwargs.get('pipe_stderr', False) else None),
-                               env={}, cwd=self._dir)
+                               env={}, cwd=self._dir, fds=self._fds)
 
         def launch_unsafe(self, *args, **kwargs):
             return subprocess.Popen([self.name] + list(args),

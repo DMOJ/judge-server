@@ -97,7 +97,9 @@ public class JavaSafeExecutor {
         @Override
         public void checkPermission(Permission perm) {
             if (perm instanceof FilePermission) {
-                if (perm.getActions().equals("read") && perm.getName().startsWith(cwd + File.separator))
+                if (perm.getActions().equals("read") && 
+                    (perm.getName().startsWith(cwd + File.separator) || 
+                    perm.getName().contains("/jre/lib/zi/"))) // Date
                     return;
             }
             if (perm instanceof RuntimePermission) {

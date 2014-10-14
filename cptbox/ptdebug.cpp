@@ -48,5 +48,6 @@ void pt_debugger::freestr(char *buf) {
 }
 
 pt_debugger::~pt_debugger() {
-    close(memory);
+    if (memory)
+        close(memory);
 }

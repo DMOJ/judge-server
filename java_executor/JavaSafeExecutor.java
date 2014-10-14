@@ -107,8 +107,10 @@ public class JavaSafeExecutor {
                     return;
             }
             if (perm instanceof PropertyPermission) {
-                if (perm.getActions().contains("write"))
+                if (perm.getActions().contains("write")) {
+                    if(perm.getName().equals("user.timezone)) return; // Date
                     throw new AccessControlException(perm.getClass() + " - " + perm.getName() + ": " + perm.getActions(), perm);
+                }
                 return;
             }
             if (!_safeBlock) {

@@ -91,6 +91,7 @@ public:
     virtual void new_process();
     virtual char *readstr(unsigned long addr);
     virtual void freestr(char *);
+    virtual ~pt_debugger();
 protected:
     pt_process *process;
     int memory;

@@ -46,3 +46,7 @@ char *pt_debugger::readstr(unsigned long addr) {
 void pt_debugger::freestr(char *buf) {
     free(buf);
 }
+
+pt_debugger::~pt_debugger() {
+    close(memory);
+}

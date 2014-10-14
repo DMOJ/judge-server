@@ -99,7 +99,7 @@ public class JavaSafeExecutor {
             if (perm instanceof FilePermission) {
                 if (perm.getActions().equals("read") && 
                     (perm.getName().startsWith(cwd + File.separator) || 
-                    perm.getName().contains("/jre/lib/zi/"))) // Date
+                    perm.getName().contains("/usr/lib/jvm/"))) // Date
                     return;
             }
             if (perm instanceof RuntimePermission) {

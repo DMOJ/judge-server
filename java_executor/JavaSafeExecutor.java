@@ -3,6 +3,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ReflectPermission;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -96,19 +97,33 @@ public class JavaSafeExecutor {
     public static class SubmissionSecurityManager extends SecurityManager {
         @Override
         public void checkPermission(Permission perm) {
+            String fname = perm.getName().replace("\\", "/");
             if (perm instanceof FilePermission) {
-                if (perm.getActions().equals("read") && 
-                    (perm.getName().startsWith(cwd + File.separator) || 
-                    perm.getName().contains("/usr/lib/jvm/"))) // Date
+                if (perm.getActions().equals("read") &&
+                        (fname.startsWith(cwd + File.separator) ||
+                                fname.startsWith("/usr/lib/jvm/") ||
+                                fname.contains("/jre/lib/zi/")
+                               )) // Date
                     return;
             }
             if (perm instanceof RuntimePermission) {
-                if (perm.getName().equals("writeFileDescriptor") || perm.getName().equals("readFileDescriptor"))
+                if (fname.equals("writeFileDescriptor") ||
+                        fname.equals("readFileDescriptor") ||
+                        fname.equals("fileSystemProvider"))
                     return;
+                if(fname.startsWith("accessClassInPackage")) {
+                    if(fname.contains("sun.util.resources"))
+                        return;
+                }
+            }
+            if(perm instanceof ReflectPermission)
+            {
+                if(fname.equals("suppressAccessChecks"))
+                    return; // Seems unsafe but needed for the goddamn date api
             }
             if (perm instanceof PropertyPermission) {
                 if (perm.getActions().contains("write")) {
-                    if(perm.getName().equals("user.timezone")) return; // Date
+                    if(fname.equals("user.timezone")) return; // Date
                     throw new AccessControlException(perm.getClass() + " - " + perm.getName() + ": " + perm.getActions(), perm);
                 }
                 return;

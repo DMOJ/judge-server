@@ -49,7 +49,7 @@ class PacketManager(object):
         threading.Thread(target=self._read_async).start()
 
     def _send_packet(self, packet):
-        if packet['name'] not in ['ping-response', 'handshake']:
+        if packet['name'] not in ['ping-response', 'handshake', 'test-case-status']:
             print '%s:%s => %s' % (self.host, self.port, json.dumps(packet, indent=4))
 
         raw = json.dumps(packet).encode('zlib')

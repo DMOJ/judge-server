@@ -235,7 +235,7 @@ class Judge(object):
                         module_path = os.path.join('data', 'problems', problem_id, checker_id)
                         if not os.path.exists(module_path):
                             raise IOError('checker module path "%s" does not exist' % module_path)
-                        checker = load_module_from_file(module_path, 'judge_checker')
+                        checker = load_module_from_file(module_path)
                         checker_id = checker.__name__
                     else:
                         checker = getattr(checkers, checker_id)
@@ -387,7 +387,7 @@ class Judge(object):
             raise IOError('grader does not exist')
 
         try:
-            interactive_grader = load_module_from_file(grader_path, 'judge_interactive')
+            interactive_grader = load_module_from_file(grader_path)
         except:
             traceback.print_exc()
             raise IOError('could not load grader module')

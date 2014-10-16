@@ -1,7 +1,7 @@
 import os
 import subprocess
 from cptbox import SecurePopen, CHROOTSecurity
-from executors.utils import test_executor
+from .utils import test_executor
 
 from .resource_proxy import ResourceProxy
 from judgeenv import env

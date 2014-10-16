@@ -1,10 +1,9 @@
 import os
 import subprocess
-import sys
 
 from cptbox import CHROOTSecurity, SecurePopen
 from error import CompileError
-from executors.utils import test_executor
+from .utils import test_executor
 from .resource_proxy import ResourceProxy
 from judgeenv import env
 

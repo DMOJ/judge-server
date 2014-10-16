@@ -1,10 +1,9 @@
-import os
 import re
 from subprocess import *
 import sys
 from communicate import safe_communicate
 from error import CompileError
-from executors.utils import test_executor
+from .utils import test_executor
 
 from .resource_proxy import ResourceProxy
 from judgeenv import env

@@ -35,7 +35,7 @@ int main() {
     for (unsigned i = 0; i < sizeof(allowed_calls) / sizeof(int); ++i)
         process->set_handler(allowed_calls[i], PTBOX_HANDLER_ALLOW);
     process->set_handler(2, PTBOX_HANDLER_CALLBACK);
-    process->set_callback(pt_syscall_handler, &debugger);
+    process->set_callback(pt_syscall_handler, debugger);
 
     process->spawn(child, NULL);
     printf("Return: %d", process->monitor());

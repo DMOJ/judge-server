@@ -1,5 +1,6 @@
+import os
 import re
-from subprocess import *
+from subprocess import Popen, PIPE
 import sys
 from communicate import safe_communicate
 from error import CompileError

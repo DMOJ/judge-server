@@ -29,8 +29,8 @@ int allowed_calls[] = {
 };
 
 int main() {
-    pt_debugger64 debugger;
-    pt_process *process = pt_alloc_process(&debugger);
+    pt_debugger64 *debugger = new pt_debugger64();
+    pt_process *process = pt_alloc_process(debugger);
 
     for (unsigned i = 0; i < sizeof(allowed_calls) / sizeof(int); ++i)
         process->set_handler(allowed_calls[i], PTBOX_HANDLER_ALLOW);
@@ -39,5 +39,7 @@ int main() {
 
     process->spawn(child, NULL);
     printf("Return: %d", process->monitor());
+    delete process;
+    delete debugger;
     return 0;
 }

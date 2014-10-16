@@ -263,8 +263,8 @@ cdef class Process:
         self.process.set_event_proc(pt_event_handler, <void*>self)
 
     def __dealloc__(self):
-        del self._debugger
         del self.process
+        del self._debugger
 
     def _callback(self, syscall):
         return False

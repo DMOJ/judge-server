@@ -265,7 +265,6 @@ cdef class Process:
     def __dealloc__(self):
         del self.debugger
         del self.process
-        del self._debugger
 
     def _callback(self, syscall):
         return False

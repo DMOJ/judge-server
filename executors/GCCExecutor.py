@@ -30,7 +30,7 @@ def make_executor(code, command, args, ext, test_code, arg0):
                 linker_options = ['-Wl,--stack,67108864', '-static']
             else:
                 compiled_extension = ''
-                linker_options = ['-Wl,--stack,67108864']
+                linker_options = []
             output_file = self._file('%s%s' % (problem_id, compiled_extension))
             gcc_args = [arg0] + sources + ['-O2', '-lm', '-march=native'] + args + linker_options + ['-s', '-o', output_file]
             gcc_process = subprocess.Popen(gcc_args, stderr=subprocess.PIPE, executable=env['runtime'][command],

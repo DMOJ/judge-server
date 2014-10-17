@@ -103,7 +103,7 @@ public class JavaSafeExecutor {
                         (fname.startsWith(cwd + File.separator) ||
                                 fname.startsWith("/usr/lib/jvm/") ||
                                 fname.contains("/jre/lib/zi/")
-                               )) // Date
+                        )) // Date
                     return;
             }
             if (perm instanceof RuntimePermission) {
@@ -111,19 +111,18 @@ public class JavaSafeExecutor {
                         fname.equals("readFileDescriptor") ||
                         fname.equals("fileSystemProvider"))
                     return;
-                if(fname.startsWith("accessClassInPackage")) {
-                    if(fname.contains("sun.util.resources"))
+                if (fname.startsWith("accessClassInPackage")) {
+                    if (fname.contains("sun.util.resources"))
                         return;
                 }
             }
-            if(perm instanceof ReflectPermission)
-            {
-                if(fname.equals("suppressAccessChecks"))
+            if (perm instanceof ReflectPermission) {
+                if (fname.equals("suppressAccessChecks"))
                     return; // Seems unsafe but needed for the goddamn date api
             }
             if (perm instanceof PropertyPermission) {
                 if (perm.getActions().contains("write")) {
-                    if(fname.equals("user.timezone")) return; // Date
+                    if (fname.equals("user.timezone")) return; // Date
                     throw new AccessControlException(perm.getClass() + " - " + perm.getName() + ": " + perm.getActions(), perm);
                 }
                 return;
@@ -151,213 +150,213 @@ public class JavaSafeExecutor {
                 _safeBlock = true;
                 target.stop(TLE);
             } catch (InterruptedException ignored) {
+            } catch (ThreadDeath ignored) {
             }
         }
-    }
 
-    public static class SubmissionThread extends Thread {
-        private final Class submission;
-        private boolean tle = false;
-        private boolean mle = false;
-        private int error = 0;
+        public static class SubmissionThread extends Thread {
+            private final Class submission;
+            private boolean tle = false;
+            private boolean mle = false;
+            private int error = 0;
 
-        public SubmissionThread(Class process) {
-            super(null, null, "Submission-Grading-Thread(" + process.getSimpleName() + ")", 8000000);
-            this.submission = process;
-        }
+            public SubmissionThread(Class process) {
+                super(null, null, "Submission-Grading-Thread(" + process.getSimpleName() + ")", 8000000);
+                this.submission = process;
+            }
 
-        @Override
-        @SuppressWarnings("unchecked")
-        public void run() {
-            Method handle;
-            try {
-                handle = submission.getMethod("main", String[].class);
-                if (!Modifier.isStatic(handle.getModifiers())) System.exit(-10);
+            @Override
+            @SuppressWarnings("unchecked")
+            public void run() {
+                Method handle;
                 try {
-                    handle.invoke(null, new Object[]{new String[0]});
-                } catch (InvocationTargetException e) {
-                    if (e.getCause() == TLE) {
-                        tle = true;
-                        return;
-                    } else if (e.getCause() instanceof OutOfMemoryError) {
-                        // Prevent throw new OutOfMemoryError from being counted as MLE
+                    handle = submission.getMethod("main", String[].class);
+                    if (!Modifier.isStatic(handle.getModifiers())) System.exit(-10);
+                    try {
+                        handle.invoke(null, new Object[]{new String[0]});
+                    } catch (InvocationTargetException e) {
+                        if (e.getCause() == TLE) {
+                            tle = true;
+                            return;
+                        } else if (e.getCause() instanceof OutOfMemoryError) {
+                            // Prevent throw new OutOfMemoryError from being counted as MLE
 //                        if(e.getCause().getStackTrace()[0].getClassName().equals(submission.getSimpleName())) {
 //                            error = PROGRAM_ERROR_CODE;
 //                            return;
 //                        }
-                        mle = true;
-                        return;
-                    } else {
-                        e.getCause().printStackTrace();
+                            mle = true;
+                            return;
+                        } else {
+                            e.getCause().printStackTrace();
+                            error = PROGRAM_ERROR_CODE;
+                        }
+                    } catch (IllegalAccessException e) {
+                        e.printStackTrace();
+                        error = ACCESS_ERROR_CODE;
+                    } catch (Throwable throwable) {
+                        throwable.printStackTrace();
                         error = PROGRAM_ERROR_CODE;
                     }
-                } catch (IllegalAccessException e) {
+                } catch (NoSuchMethodException e) {
                     e.printStackTrace();
-                    error = ACCESS_ERROR_CODE;
-                } catch (Throwable throwable) {
-                    throwable.printStackTrace();
-                    error = PROGRAM_ERROR_CODE;
+                    error = NO_ENTRY_POINT_ERROR_CODE;
                 }
-            } catch (NoSuchMethodException e) {
-                e.printStackTrace();
-                error = NO_ENTRY_POINT_ERROR_CODE;
+                _safeBlock = true;
+                shockerThread.stop();
             }
-            _safeBlock = true;
-            shockerThread.stop();
+        }
+
+        public static class UnsafePrintStream extends PrintStream {
+            private BufferedWriter writer;
+            private OutputStreamWriter bin;
+            private OutputStream out;
+            private boolean trouble;
+
+            public UnsafePrintStream(OutputStream out) throws UnsupportedEncodingException {
+                super(new ByteArrayOutputStream());
+                this.out = out;
+                bin = new OutputStreamWriter(out, "ASCII");
+                writer = new BufferedWriter(bin, 4096);
+            }
+
+            @Override
+            public boolean checkError() {
+                return trouble;
+            }
+
+            @Override
+            public void flush() {
+                try {
+                    writer.flush();
+                } catch (IOException e) {
+                    trouble = true;
+                }
+            }
+
+            public void write(int b) {
+                try {
+                    writer.write(b);
+                } catch (IOException e) {
+                    trouble = true;
+                }
+            }
+
+            public void write(byte buf[], int off, int len) {
+                flush();
+                try {
+                    out.write(buf, off, len);
+                } catch (IOException e) {
+                    trouble = true;
+                }
+            }
+
+            private void write(char buf[]) {
+                try {
+                    writer.write(buf);
+                } catch (IOException e) {
+                    trouble = true;
+                }
+            }
+
+            private void write(String s) {
+                try {
+                    writer.write(s);
+                } catch (IOException e) {
+                    trouble = true;
+                }
+            }
+
+            private void newLine() {
+                try {
+                    writer.write('\n');
+                } catch (IOException e) {
+                    trouble = true;
+                }
+            }
+
+            public void print(boolean b) {
+                write(b ? "true" : "false");
+            }
+
+            public void print(char c) {
+                write(String.valueOf(c));
+            }
+
+            public void print(int i) {
+                write(String.valueOf(i));
+            }
+
+            public void print(long l) {
+                write(String.valueOf(l));
+            }
+
+            public void print(float f) {
+                write(String.valueOf(f));
+            }
+
+            public void print(double d) {
+                write(String.valueOf(d));
+            }
+
+            public void print(char s[]) {
+                write(s);
+            }
+
+            public void print(String s) {
+                write(s == null ? "null" : s);
+            }
+
+            public void print(Object obj) {
+                write(String.valueOf(obj));
+            }
+
+            public void println() {
+                newLine();
+            }
+
+            public void println(boolean x) {
+                print(x);
+                newLine();
+            }
+
+            public void println(char x) {
+                print(x);
+                newLine();
+            }
+
+            public void println(int x) {
+                print(x);
+                newLine();
+            }
+
+            public void println(long x) {
+                print(x);
+                newLine();
+            }
+
+            public void println(float x) {
+                print(x);
+                newLine();
+            }
+
+            public void println(double x) {
+                print(x);
+                newLine();
+            }
+
+            public void println(char x[]) {
+                print(x);
+                newLine();
+            }
+
+            public void println(String x) {
+                print(x);
+                newLine();
+            }
+
+            public void println(Object x) {
+                print(String.valueOf(x));
+                newLine();
+            }
         }
     }
-
-    public static class UnsafePrintStream extends PrintStream {
-        private BufferedWriter writer;
-        private OutputStreamWriter bin;
-        private OutputStream out;
-        private boolean trouble;
-
-        public UnsafePrintStream(OutputStream out) throws UnsupportedEncodingException {
-            super(new ByteArrayOutputStream());
-            this.out = out;
-            bin = new OutputStreamWriter(out, "ASCII");
-            writer = new BufferedWriter(bin, 4096);
-        }
-
-        @Override
-        public boolean checkError() {
-            return trouble;
-        }
-
-        @Override
-        public void flush() {
-            try {
-                writer.flush();
-            } catch (IOException e) {
-                trouble = true;
-            }
-        }
-
-        public void write(int b) {
-            try {
-                writer.write(b);
-            } catch (IOException e) {
-                trouble = true;
-            }
-        }
-
-        public void write(byte buf[], int off, int len) {
-            flush();
-            try {
-                out.write(buf, off, len);
-            } catch (IOException e) {
-                trouble = true;
-            }
-        }
-
-        private void write(char buf[]) {
-            try {
-                writer.write(buf);
-            } catch (IOException e) {
-                trouble = true;
-            }
-        }
-
-        private void write(String s) {
-            try {
-                writer.write(s);
-            } catch (IOException e) {
-                trouble = true;
-            }
-        }
-
-        private void newLine() {
-            try {
-                writer.write('\n');
-            } catch (IOException e) {
-                trouble = true;
-            }
-        }
-
-        public void print(boolean b) {
-            write(b ? "true" : "false");
-        }
-
-        public void print(char c) {
-            write(String.valueOf(c));
-        }
-
-        public void print(int i) {
-            write(String.valueOf(i));
-        }
-
-        public void print(long l) {
-            write(String.valueOf(l));
-        }
-
-        public void print(float f) {
-            write(String.valueOf(f));
-        }
-
-        public void print(double d) {
-            write(String.valueOf(d));
-        }
-
-        public void print(char s[]) {
-            write(s);
-        }
-
-        public void print(String s) {
-            write(s == null ? "null" : s);
-        }
-
-        public void print(Object obj) {
-            write(String.valueOf(obj));
-        }
-
-        public void println() {
-            newLine();
-        }
-
-        public void println(boolean x) {
-            print(x);
-            newLine();
-        }
-
-        public void println(char x) {
-            print(x);
-            newLine();
-        }
-
-        public void println(int x) {
-            print(x);
-            newLine();
-        }
-
-        public void println(long x) {
-            print(x);
-            newLine();
-        }
-
-        public void println(float x) {
-            print(x);
-            newLine();
-        }
-
-        public void println(double x) {
-            print(x);
-            newLine();
-        }
-
-        public void println(char x[]) {
-            print(x);
-            newLine();
-        }
-
-        public void println(String x) {
-            print(x);
-            newLine();
-        }
-
-        public void println(Object x) {
-            print(String.valueOf(x));
-            newLine();
-        }
-    }
-}

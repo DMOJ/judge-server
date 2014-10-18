@@ -315,7 +315,7 @@ class Judge(object):
             finally:
                 archive.close()
             # We return a new cStringIO in case init.json references the same file multiple times
-            return lambda x: cStringIO.StringIO(files[x])
+            return files.__getitem__
         elif 'generator' in init_data and forward_test_cases:
             files = {}
             generator_path = os.path.join('data', 'problems', problem_id, init_data['generator'])
@@ -354,7 +354,7 @@ class Judge(object):
                         '\n'.join((str(test), input_file, output_file, '')))
                     files[input_file] = generator_output
                     files[output_file] = generator_error
-            return lambda x: cStringIO.StringIO(files[x])
+            return files.__getitem__
         else:
             return lambda x: open(os.path.join('data', 'problems', problem_id, x), 'r')
 
@@ -408,6 +408,10 @@ class Judge(object):
 
                     _input = topen(input_file) if input_file else None
                     _output = topen(output_file) if output_file else None
+                    if isinstance(_input, str):
+                        _input = cStringIO.StringIO(_input)
+                    if isinstance(_input, str):
+                        _output = cStringIO.StringIO(_output)
                     # Launch a process for the current test case
                     process = executor_func(time=time, memory=memory)
                     self.current_proc = process
@@ -526,7 +530,15 @@ class Judge(object):
                         process = self.current_proc
                         result = Result()
                         result.result_flag = Result.AC
-                        input_data = topen(input_file).read().replace('\r\n', '\n')  # .replace('\r', '\n')
+                        _input_data = topen(input_file)
+                        if hasattr(_input_data, 'read'):
+                            try:
+                                input_data = _input_data.read()
+                            finally:
+                                _input_data.close()
+                        else:
+                            input_data = _input_data
+                        input_data = input_data.replace('\r\n', '\n')  # .replace('\r', '\n')
 
                         if hasattr(process, 'safe_communicate'):
                             communicate = process.safe_communicate
@@ -544,7 +556,15 @@ class Judge(object):
                         result.max_memory = process.max_memory
                         result.execution_time = process.execution_time
                         result.r_execution_time = process.r_execution_time
-                        if not check_func(input_data, result.proc_output, topen(output_file).read()):
+                        _output_data = topen(output_file)
+                        if hasattr(_output_data, 'read'):
+                            try:
+                                output_data = _output_data.read()
+                            finally:
+                                _output_data.close()
+                        else:
+                            output_data = _output_data
+                        if not check_func(input_data, result.proc_output, output_data):
                             result.result_flag |= Result.WA
                         if process.returncode > 0:
                             print>> sys.stderr, 'Exited with error: %d' % process.returncode

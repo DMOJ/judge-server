@@ -177,7 +177,7 @@ class Judge(object):
                 self.current_proc.kill()
             self.current_submission_thread.join()
 
-    def _begin_grading(self, problem_id, language, source_code, time_limit, memory_limit, short_circuit):
+    def _begin_grading(self, problem_id, language, original_source, time_limit, memory_limit, short_circuit):
         """
         Threaded callback for begin_grading.
         """
@@ -187,8 +187,10 @@ class Judge(object):
             with open(os.path.join('data', 'problems', problem_id, 'init.json'), 'r') as init_file:
                 init_data = json.load(init_file)
 
-                if isinstance(source_code, unicode):
-                    source_code = source_code.encode('utf-8')
+                if isinstance(original_source, unicode):
+                    source_code = original_source.encode('utf-8')
+                else:
+                    source_code = original_source
                 try:
                     # Launch an executor for the given language
                     # The executor is responsible for writing source files and compiling (if applicable)
@@ -256,7 +258,7 @@ class Judge(object):
                 case = 1
                 for result in run_call(executor.launch, init_data, check_adapter, problem_id,
                                        time=time_limit, memory=memory_limit,
-                                       short_circuit=short_circuit):
+                                       short_circuit=short_circuit, source_code=original_source):
                     print 'Test case %s' % case
                     print '\t%f seconds (real)' % result.r_execution_time
                     print '\t%f seconds (debugged)' % result.execution_time
@@ -359,7 +361,7 @@ class Judge(object):
             return lambda x: open(os.path.join('data', 'problems', problem_id, x), 'r')
 
     def run_interactive(self, executor_func, init_data, check_adapter, problem_id, short_circuit=False, time=2,
-                        memory=65536):
+                        memory=65536, source_code=None):
         """
         Executes a submission in interactive mode.
         :param executor_func: 
@@ -420,7 +422,8 @@ class Judge(object):
                     # hanging the main thread
                     try:
                         result = interactive_grader.grade(case_number, self.current_proc, case_input=_input,
-                                                          case_output=_output, point_value=point_value)
+                                                          case_output=_output, point_value=point_value,
+                                                          source_code=source_code)
                     except:
                         traceback.print_exc()
                         try:
@@ -440,7 +443,7 @@ class Judge(object):
                     if process.returncode < 0:
                         print>> sys.stderr, 'Killed by signal %d' % -process.returncode
                         result.result_flag |= Result.RTE  # Killed by signal
-                    if process.tle:
+                    if not init_data.get('swallow_tle', False) and process.tle:
                         result.result_flag |= Result.TLE
                     if process.mle:
                         result.result_flag |= Result.MLE
@@ -475,7 +478,8 @@ class Judge(object):
             self._terminate_grading = False
             gc.collect()
 
-    def run_standard(self, executor_func, init_data, check_func, problem_id, short_circuit=False, time=2, memory=65536):
+    def run_standard(self, executor_func, init_data, check_func, problem_id, short_circuit=False, time=2, memory=65536,
+                     source_code=None):
         """
         Executes a submission in standard (static) mode.
         :param executor_func: 

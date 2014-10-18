@@ -305,7 +305,10 @@ class Judge(object):
             if not os.path.exists(arch):
                 raise IOError('archive file "%s" does not exist' % arch)
             files = {}
-            archive = zipfile.ZipFile(arch, 'r')
+            try:
+                archive = zipfile.ZipFile(arch, 'r')
+            except zipfile.BadZipfile:
+                raise IOError('Bad archive: %s' % arch)
             try:
                 for name in archive.infolist():
                     files[name.filename] = archive.read(name)

@@ -438,9 +438,9 @@ class Judge(object):
                     result.execution_time = process.execution_time
                     result.r_execution_time = process.r_execution_time
 
-                    if process.returncode > 0:
+                    if not init_data.get('swallow_ir', False) and process.returncode > 0:
                         result.result_flag |= Result.IR
-                    if process.returncode < 0:
+                    if not init_data.get('swallow_rte', False) and process.returncode < 0:
                         print>> sys.stderr, 'Killed by signal %d' % -process.returncode
                         result.result_flag |= Result.RTE  # Killed by signal
                     if not init_data.get('swallow_tle', False) and process.tle:

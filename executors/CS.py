@@ -39,6 +39,7 @@ class Executor(ResourceProxy):
         def tgkill(debugger):
             return debugger.arg0() == debugger.getpid()
         sec[sys_tgkill] = tgkill
+        # Mono uses sys_kill to signal all other instances of it.
 
         def unlink(debugger):
             path = debugger.readstr(debugger.uarg0())
@@ -56,7 +57,7 @@ class Executor(ResourceProxy):
                            time=kwargs.get('time'),
                            memory=kwargs.get('memory'),
                            stderr=(PIPE if kwargs.get('pipe_stderr', False) else None),
-                           env={}, cwd=self._dir, nproc=34)
+                           env={}, cwd=self._dir, nproc=-1)
 
     def launch_unsafe(self, *args, **kwargs):
         return subprocess.Popen(['mono', self.name] + list(args),

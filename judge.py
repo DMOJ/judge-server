@@ -24,7 +24,7 @@ except ImportError:
         pass
 
 from error import CompileError
-from judgeenv import env, get_problem_root
+from judgeenv import env, get_problem_root, get_problem_roots
 from communicate import safe_communicate, OutputLimitExceeded
 
 from executors import executors
@@ -108,8 +108,10 @@ class Judge(object):
         self.current_submission_thread = None
         self._terminate_grading = False
         if Observer is not None:
+            handler = FileSystemEventHandler()
             self._monitor = monitor = Observer()
-            monitor.schedule(FileSystemEventHandler(), os.path.join('data', 'problems'))
+            for dir in get_problem_roots():
+                monitor.schedule(handler, dir)
             monitor.start()
         else:
             self._monitor = None
@@ -126,8 +128,10 @@ class Judge(object):
             A list of all problems in tuple format: (problem id, mtime)
         """
         problems = []
-        for problem in os.listdir(os.path.join('data', 'problems')):
-            problems.append((problem, os.path.getmtime(os.path.join('data', 'problems', problem))))
+        for dir in get_problem_roots():
+            for problem in os.listdir(dir):
+                if os.access(os.path.join(dir, problem, 'init.json'), os.R_OK):
+                    problems.append((problem, os.path.getmtime(os.path.join(dir, problem))))
         return problems
 
     def update_problems(self):

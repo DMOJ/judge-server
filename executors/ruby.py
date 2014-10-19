@@ -16,10 +16,13 @@ def make_executor(name, key):
             with open(source_code_file, 'wb') as fo:
                 fo.write(source_code)
 
+        def _security(self):
+            return CHROOTSecurity(RUBY_FS)
+
         def launch(self, *args, **kwargs):
             return SecurePopen(['ruby', self._script] + list(args),
                                executable=env['runtime'][key],
-                               security=CHROOTSecurity(RUBY_FS),
+                               security=self._security(),
                                time=kwargs.get('time'),
                                memory=kwargs.get('memory'),
                                address_grace=65536)
@@ -31,4 +34,3 @@ def make_executor(name, key):
             return False
         return test_executor(name, Executor, "puts 'Hello, World!'")
     return Executor, initialize
-

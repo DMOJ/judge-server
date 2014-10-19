@@ -14,7 +14,6 @@ class Executor(ResourceProxy):
     def __init__(self, problem_id, source_code):
         super(Executor, self).__init__()
         source_code_file = self._file('%s.cs' % problem_id)
-        self._executable = self._file('%s.exe' % problem_id)
         self.name = '%s.exe' % problem_id
         with open(source_code_file, 'wb') as fo:
             fo.write(source_code)
@@ -25,8 +24,8 @@ class Executor(ResourceProxy):
             raise CompileError(compile_error)
 
     def launch(self, *args, **kwargs):
-        return SecurePopen([self.name] + list(args),
-                           executable=self._executable,
+        return SecurePopen(['mono', self.name] + list(args),
+                           executable=env['runtime']['mono'],
                            security=CHROOTSecurity(CS_FS),
                            time=kwargs.get('time'),
                            memory=kwargs.get('memory'),
@@ -34,15 +33,15 @@ class Executor(ResourceProxy):
                            env={}, cwd=self._dir)
 
     def launch_unsafe(self, *args, **kwargs):
-        return subprocess.Popen([self.name] + list(args),
-                                executable=self._executable,
+        return subprocess.Popen(['mono', self.name] + list(args),
+                                executable=env['runtime']['mono'],
                                 env={},
                                 cwd=self._dir,
                                 **kwargs)
 
 
 def initialize():
-    if 'csc' not in env['runtime']:
+    if 'csc' not in env['runtime'] or 'mono' not in env['runtime']:
         return False
     if not os.path.isfile(env['runtime']['csc']):
         return False

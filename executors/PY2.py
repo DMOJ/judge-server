@@ -2,7 +2,7 @@ from .resource_proxy import ResourceProxy
 from .utils import test_executor
 from cptbox import SecurePopen, CHROOTSecurity, PIPE
 from judgeenv import env
-from subprocess import Popen
+from subprocess import Popen, PIPE as sPIPE
 
 PYTHON_FS = ['.*\.(?:so|py[co]?$)', '.*/lib(?:32|64)?/python[\d.]+/.*', '.*/lib/locale/', '/proc/meminfo$',
              '/etc/localtime$',
@@ -44,3 +44,13 @@ def initialize():
     if not 'python' in env['runtime']:
         return False
     return test_executor('PY2', Executor, 'print "Hello, World!"')
+
+
+def aliases():
+    if not 'python' in env['runtime']:
+        return []
+    stdout = Popen(['python', '-V'], executable=env['runtime']['python'], stdout=sPIPE).communicate()[0]
+    if '2.7' in stdout:
+        return ['PY2', 'PY27']
+    else:
+        return ['PY2']

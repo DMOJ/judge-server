@@ -1,13 +1,14 @@
 import os
 import subprocess
 
-from cptbox import CHROOTSecurity, SecurePopen, PIPE
+from cptbox import CHROOTSecurity, SecurePopen, PIPE, ALLOW
+from cptbox.syscalls import *
 from error import CompileError
 from .utils import test_executor
 from .resource_proxy import ResourceProxy
 from judgeenv import env
 
-CS_FS = ['.*\.so']
+CS_FS = ['.*\.so', '/proc/(?:self/|xen)']
 
 
 class Executor(ResourceProxy):
@@ -23,10 +24,15 @@ class Executor(ResourceProxy):
         if csc_process.returncode != 0:
             raise CompileError(compile_error)
 
+    def _get_security(self):
+        sec = CHROOTSecurity(CS_FS)
+        sec[sys_sched_getaffinity] = ALLOW
+        return sec
+
     def launch(self, *args, **kwargs):
         return SecurePopen(['mono', self.name] + list(args),
                            executable=env['runtime']['mono'],
-                           security=CHROOTSecurity(CS_FS),
+                           security=self._get_security(),
                            time=kwargs.get('time'),
                            memory=kwargs.get('memory'),
                            stderr=(PIPE if kwargs.get('pipe_stderr', False) else None),

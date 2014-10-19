@@ -72,6 +72,7 @@ class CHROOTSecurity(dict):
             sys_fcntl64: ALLOW,
             sys_time: ALLOW,
             sys_prlimit64: ALLOW,
+            sys_getdents64: ALLOW,
         })
 
     def do_write(self, debugger):

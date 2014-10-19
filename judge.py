@@ -24,7 +24,7 @@ except ImportError:
         pass
 
 from error import CompileError
-from judgeenv import env
+from judgeenv import env, get_problem_root
 from communicate import safe_communicate, OutputLimitExceeded
 
 from executors import executors
@@ -184,7 +184,7 @@ class Judge(object):
         submission_id = self.current_submission
         print>> sys.stderr, '===========Started Grading: %s===========' % submission_id
         try:
-            with open(os.path.join('data', 'problems', problem_id, 'init.json'), 'r') as init_file:
+            with open(os.path.join(get_problem_root(problem_id), 'init.json'), 'r') as init_file:
                 init_data = json.load(init_file)
 
                 if isinstance(original_source, unicode):
@@ -197,8 +197,8 @@ class Judge(object):
                     if 'handler' in init_data and language in ['C', 'CPP', 'CPP11']:
                         aux_sources = {}
                         handler_data = init_data['handler']
-                        entry_path = os.path.join('data', 'problems', problem_id, handler_data['entry'])
-                        header_path = os.path.join('data', 'problems', problem_id, handler_data['header'])
+                        entry_path = os.path.join(get_problem_root(problem_id), handler_data['entry'])
+                        header_path = os.path.join(get_problem_root(problem_id), handler_data['header'])
 
                         if not os.path.exists(entry_path):
                             raise IOError('entry path "%s" does not exist' % entry_path)
@@ -234,7 +234,7 @@ class Judge(object):
                     else:
                         checker_params = {}
                     if '.' in checker_id:
-                        module_path = os.path.join('data', 'problems', problem_id, checker_id)
+                        module_path = os.path.join(get_problem_root(problem_id), checker_id)
                         if not os.path.exists(module_path):
                             raise IOError('checker module path "%s" does not exist' % module_path)
                         checker = load_module_from_file(module_path)
@@ -303,7 +303,7 @@ class Judge(object):
             A list of testcases contained in init_data.
         """
         if 'archive' in init_data:
-            arch = os.path.join('data', 'problems', problem_id, init_data['archive'])
+            arch = os.path.join(get_problem_root(problem_id), init_data['archive'])
             if not os.path.exists(arch):
                 raise IOError('archive file "%s" does not exist' % arch)
             files = {}
@@ -320,7 +320,7 @@ class Judge(object):
             return files.__getitem__
         elif 'generator' in init_data and forward_test_cases:
             files = {}
-            generator_path = os.path.join('data', 'problems', problem_id, init_data['generator'])
+            generator_path = os.path.join(get_problem_root(problem_id), init_data['generator'])
             if not os.path.exists(generator_path):
                 raise IOError('generator does not exist')
             try:
@@ -358,7 +358,7 @@ class Judge(object):
                     files[output_file] = generator_error
             return files.__getitem__
         else:
-            return lambda x: open(os.path.join('data', 'problems', problem_id, x), 'r')
+            return lambda x: open(os.path.join(get_problem_root(problem_id), x), 'r')
 
     def run_interactive(self, executor_func, init_data, check_adapter, problem_id, short_circuit=False, time=2,
                         memory=65536, source_code=None):
@@ -387,7 +387,7 @@ class Judge(object):
 
         if 'grader' not in init_data:
             raise IOError('no grader specified')
-        grader_path = os.path.join('data', 'problems', problem_id, init_data['grader'])
+        grader_path = os.path.join(get_problem_root(problem_id), init_data['grader'])
         if not os.path.exists(grader_path):
             raise IOError('grader does not exist')
 

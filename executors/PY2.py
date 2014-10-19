@@ -49,8 +49,8 @@ def initialize():
 def aliases():
     if not 'python' in env['runtime']:
         return []
-    stdout = Popen(['python', '-V'], executable=env['runtime']['python'], stdout=sPIPE).communicate()[0]
-    if '2.7' in stdout:
+    stderr = Popen(['python', '-V'], executable=env['runtime']['python'], stderr=sPIPE).communicate()[1]
+    if '2.7' in stderr:
         return ['PY2', 'PY27']
     else:
         return ['PY2']

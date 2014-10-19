@@ -92,7 +92,7 @@ public:
     virtual char *readstr(unsigned long addr);
     virtual void freestr(char *);
     virtual ~pt_debugger();
-    void pid_t getpid() { return process->getpid(); }
+    pid_t getpid() { return process->getpid(); }
 protected:
     pt_process *process;
     int memory;

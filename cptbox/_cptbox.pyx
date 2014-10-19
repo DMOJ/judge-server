@@ -19,6 +19,7 @@ cdef extern from 'ptbox.h' nogil:
         long arg5()
         char *readstr(unsigned long)
         void freestr(char*)
+        pid_t getpid()
 
     cdef cppclass pt_debugger32(pt_debugger):
         pass
@@ -231,6 +232,9 @@ cdef class Debugger:
         pystr = <object>str
         self.thisptr.freestr(str)
         return pystr
+
+    def getpid(self):
+        return self.thisptr.getpid()
 
 
 cdef class Process:

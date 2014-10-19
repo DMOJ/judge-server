@@ -19,7 +19,7 @@ class Executor(ResourceProxy):
         with open(source_code_file, 'wb') as fo:
             fo.write(source_code)
         csc_args = [env['runtime']['csc'], source_code_file]
-        csc_process = subprocess.Popen(csc_args, stderr=PIPE, cwd=self._dir)
+        csc_process = subprocess.Popen(csc_args, stderr=subprocess.PIPE, cwd=self._dir)
         _, compile_error = csc_process.communicate()
         if csc_process.returncode != 0:
             raise CompileError(compile_error)

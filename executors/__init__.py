@@ -1,4 +1,4 @@
-__executors = ['C', 'CPP', 'CPP0X', 'CPP11', 'JAVA', 'PY2', 'PY3', 'PAS', 'PERL', 'RUBY']
+__executors = ['C', 'CPP', 'CPP0X', 'CPP11', 'JAVA', 'PY2', 'PY3', 'PAS', 'PERL', 'RUBY18', 'RUBY19']
 executors = {}
 
 

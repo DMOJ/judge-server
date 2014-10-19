@@ -7,7 +7,7 @@ from judgeenv import env
 PYTHON_FS = ['/etc/localtime$', '/dev/urandom$', '.*\.(?:so|py[co]?$)', '.*/lib(?:32|64)?/python[\d.]+/.*',
              '.*/lib/locale/', '/usr/lib64', '.*/?pyvenv.cfg$', '/proc/meminfo$']
 if 'python3dir' in env:
-    PYTHON_FS += [str(env['python3dir']) + '.*']
+    PYTHON_FS += [str(env['python3dir'])]
 
 
 class Executor(ResourceProxy):

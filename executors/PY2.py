@@ -5,8 +5,9 @@ from judgeenv import env
 from subprocess import Popen, PIPE as sPIPE
 
 PYTHON_FS = ['.*\.(?:so|py[co]?$)', '.*/lib(?:32|64)?/python[\d.]+/.*', '.*/lib/locale/', '/proc/meminfo$',
-             '/etc/localtime$',
-             '/dev/urandom$']
+             '/etc/localtime$', '/dev/urandom$']
+if 'python2dir' in env:
+    PYTHON_FS += [str(env['python3dir'])]
 
 
 class Executor(ResourceProxy):

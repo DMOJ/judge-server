@@ -55,7 +55,10 @@ class CHROOTSecurity(dict):
             sys_clone: ALLOW,
             sys_exit_group: ALLOW,
             sys_gettid: ALLOW,
-            sys_mmap2: ALLOW
+
+            # x86 specific
+            sys_mmap2: ALLOW,
+            sys_fstat64: ALLOW,
         })
 
     def do_write(self, debugger):

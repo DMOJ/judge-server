@@ -60,6 +60,7 @@ class CHROOTSecurity(dict):
             sys_mmap2: ALLOW,
             sys_fstat64: ALLOW,
             sys_set_thread_area: ALLOW,
+            sys_ugetrlimit: ALLOW,
         })
 
     def do_write(self, debugger):

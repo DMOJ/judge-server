@@ -6,7 +6,7 @@
 #include <sys/types.h>
 #include <sys/time.h>
 
-#define MAX_SYSCALL 312
+#define MAX_SYSCALL 340
 #define PTBOX_HANDLER_DENY 0
 #define PTBOX_HANDLER_ALLOW 1
 #define PTBOX_HANDLER_CALLBACK 2
@@ -67,7 +67,7 @@ protected:
     int dispatch(int event, unsigned long param);
 private:
     pid_t pid;
-    int handler[MAX_SYSCALL];
+    int handler[MAX_SYSCALL+1];
     pt_handler_callback callback;
     void *context;
     struct timespec exec_time;

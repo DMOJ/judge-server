@@ -15,7 +15,11 @@ def __load(to_load):
         executor = __load_module(name)
         if hasattr(executor, 'initialize') and not executor.initialize():
             continue
-        executors[name] = executor
+        if hasattr(executor, 'aliases'):
+            for alias in executor.aliases():
+                executors[alias] = executor
+        else:
+            executors[name] = executor
 
 
 __load(__executors)

@@ -61,6 +61,16 @@ class CHROOTSecurity(dict):
             sys_fstat64: ALLOW,
             sys_set_thread_area: ALLOW,
             sys_ugetrlimit: ALLOW,
+            sys_uname: ALLOW,
+            sys_getuid32: ALLOW,
+            sys_geteuid32: ALLOW,
+            sys_getgid32: ALLOW,
+            sys_getegid32: ALLOW,
+            sys_stat64: ALLOW,
+            sys_lstat64: ALLOW,
+            sys_llseek: ALLOW,
+            sys_fcntl64: ALLOW,
+            sys_time: ALLOW,
         })
 
     def do_write(self, debugger):

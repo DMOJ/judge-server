@@ -60,7 +60,7 @@ __all__ = ['sys_mbind', 'sys_nfsservctl', 'sys_getresuid', 'sys_clone', 'sys_lis
            'sys_security', 'sys_socket', 'sys_shmat', 'sys_connect', 'sys_semget', 'sys_epoll_wait_old', 'sys_accept',
            'sys_perf_event_open', 'sys_bind', 'sys_recvmsg', 'sys_listen', 'sys_clock_adjtime', 'sys_sendmmsg',
            'sys_shmdt', 'sys_tuxcall', 'sys_restart_syscall', 'sys_semtimedop', 'sys_prlimit64', 'sys_shmctl',
-           'sys_msgctl', 'sys_msgget', 'sys_msgsnd',
+           'sys_msgctl', 'sys_msgget', 'sys_msgsnd', 'sys_prlimit64'
 ]
 
 by_name = {}
@@ -456,6 +456,7 @@ translator = {
     379: (None, 71),
     380: (None, 68),
     381: (None, 69),
+    382: (340, None),
 }
 
-SYSCALL_COUNT = 382
+SYSCALL_COUNT = 383

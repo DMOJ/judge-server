@@ -50,7 +50,8 @@ def make_executor(code, command, args, ext, test_code, arg0):
                                time=kwargs.get('time'),
                                memory=kwargs.get('memory'),
                                stderr=(PIPE if kwargs.get('pipe_stderr', False) else None),
-                               env={}, cwd=self._dir, fds=self._fds)
+                               env=env['runtime'].get('gcc_env', {}),
+                               cwd=self._dir, fds=self._fds)
 
         def launch_unsafe(self, *args, **kwargs):
             return subprocess.Popen([self.name] + list(args),

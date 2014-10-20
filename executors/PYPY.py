@@ -2,11 +2,10 @@ from .resource_proxy import ResourceProxy
 from .utils import test_executor
 from cptbox import SecurePopen, CHROOTSecurity, PIPE
 from judgeenv import env
-from subprocess import Popen, PIPE as sPIPE
+from subprocess import Popen
 
 PYTHON_FS = ['.*\.(?:so|py[co]?$)', '/proc/cpuinfo$', '/proc/meminfo$']
-if 'pypydir' in env['runtime']:
-    PYTHON_FS += [env['runtime']['pypydir']]
+
 
 class Executor(ResourceProxy):
     def __init__(self, problem_id, source_code):
@@ -21,10 +20,16 @@ __import__('sys').stdin = __import__('os').fdopen(0, 'r', 65536)
             fo.write(customize)
             fo.write(source_code)
 
+    def _executable(self):
+        return env['runtime']['pypy']
+
+    def _get_fs(self):
+        return PYTHON_FS + ([env['runtime']['pypydir']] if 'pypydir' in env['runtime'] else [])
+
     def launch(self, *args, **kwargs):
-        return SecurePopen([env['runtime']['pypy'], '-BS', self._script] + list(args),
-                           executable=env['runtime']['pypy'],
-                           security=CHROOTSecurity(PYTHON_FS),
+        return SecurePopen([self._executable(), '-BS', self._script] + list(args),
+                           executable=self._executable(),
+                           security=CHROOTSecurity(self._get_fs()),
                            time=kwargs.get('time'),
                            memory=kwargs.get('memory'),
                            address_grace=131072,
@@ -32,8 +37,8 @@ __import__('sys').stdin = __import__('os').fdopen(0, 'r', 65536)
                            env={'LANG': 'C'}, cwd=self._dir)
 
     def launch_unsafe(self, *args, **kwargs):
-        return Popen([env['runtime']['pypy'], '-BS', self._script] + list(args),
-                     executable=env['runtime']['pypy'],
+        return Popen([self._executable(), '-BS', self._script] + list(args),
+                     executable=self._executable(),
                      env={'LANG': 'C'},
                      cwd=self._dir,
                      **kwargs)

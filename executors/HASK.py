@@ -35,7 +35,7 @@ class Executor(ResourceProxy):
         sec[sys_timer_settime] = ALLOW
         sec[sys_timer_delete] = ALLOW
 
-        sec[sys_newselect] = lambda debugger: debugger.arg1() == 0 and debugger.arg2() == 0 and debugger.arg3() == 0
+        sec[sys_newselect] = ALLOW # lambda debugger: debugger.arg1() == 0 and debugger.arg2() == 0 and debugger.arg3() == 0
 
         return sec
 

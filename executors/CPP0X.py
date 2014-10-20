@@ -9,6 +9,6 @@ int main() {
     std::cout << message;
     return 0;
 }
-''', 'g++')
+''')
 
 del make_executor, env

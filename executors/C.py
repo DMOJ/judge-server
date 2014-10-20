@@ -7,6 +7,6 @@ int main() {
     puts("Hello, World!");
     return 0;
 }
-''', 'gcc')
+''')
 
 del make_executor

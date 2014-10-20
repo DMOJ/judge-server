@@ -11,7 +11,7 @@ from judgeenv import env
 C_FS = ['.*\.so', '/proc/meminfo', '/dev/null']
 
 
-def make_executor(code, command, args, ext, test_code, arg0):
+def make_executor(code, command, args, ext, test_code):
     class Executor(ResourceProxy):
         def __init__(self, problem_id, main_source, aux_sources=None, fds=None, writable=(1, 2)):
             if not aux_sources: aux_sources = {}

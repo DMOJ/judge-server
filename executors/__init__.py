@@ -1,5 +1,5 @@
 __executors = ['C', 'CPP', 'CPP0X', 'CPP11', 'CS', 'JAVA', 'PY2', 'PY3', 'PYPY', 'PYPY3', 'PAS', 'PERL',
-               'RUBY18', 'RUBY19', 'HASK', 'GO']
+               'RUBY18', 'RUBY19', 'HASK', 'GO', 'F95']
 executors = {}
 
 

@@ -1,14 +1,25 @@
+import os
+
 from .PYPY import Executor as PYPYExecutor, PYTHON_FS
 from executors.utils import test_executor
 from judgeenv import env
+from cptbox import CHROOTSecurity
+from cptbox.syscalls import *
 
 
 class Executor(PYPYExecutor):
     def _executable(self):
         return env['runtime']['pypy3']
     
-    def _get_fs(self):
-        return PYTHON_FS + ([env['runtime']['pypy3dir']] if 'pypy3dir' in env['runtime'] else [])
+    def _get_security(self):
+        sec = CHROOTSecurity(PYTHON_FS + ([env['runtime']['pypy3dir']] if 'pypy3dir' in env['runtime'] else []))
+        def unsafe_pypy3dir(debugger):
+            # Relies on the fact this user can't access here.
+            return debugger.readstr(debugger.uarg0()).startswith(env['runtime']['pypy3dir'])
+        if not os.access(env['runtime']['pypy3dir'], os.W_OK):
+            sec[sys_mkdir] = unsafe_pypy3dir
+            sec[sys_unlink] = unsafe_pypy3dir
+        return sec
 
 
 def initialize():

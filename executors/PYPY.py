@@ -23,13 +23,13 @@ __import__('sys').stdin = __import__('os').fdopen(0, 'r', 65536)
     def _executable(self):
         return env['runtime']['pypy']
 
-    def _get_fs(self):
-        return PYTHON_FS + ([env['runtime']['pypydir']] if 'pypydir' in env['runtime'] else [])
+    def _get_security(self):
+        return CHROOTSecurity(PYTHON_FS + ([env['runtime']['pypydir']] if 'pypydir' in env['runtime'] else []))
 
     def launch(self, *args, **kwargs):
         return SecurePopen([self._executable(), '-BS', self._script] + list(args),
                            executable=self._executable(),
-                           security=CHROOTSecurity(self._get_fs()),
+                           security=self._get_security(),
                            time=kwargs.get('time'),
                            memory=kwargs.get('memory'),
                            address_grace=131072,

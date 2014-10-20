@@ -24,7 +24,7 @@ class Executor(ResourceProxy):
         if nasm_process.returncode != 0:
             raise CompileError(compile_error)
 
-        ld_process = subprocess.Popen([env['runtime']['ld'], '-s', 'elf', obj_file, '-o', output_file],
+        ld_process = subprocess.Popen([env['runtime']['ld'], '-s', obj_file, '-o', output_file],
                                       stderr=subprocess.PIPE, cwd=self._dir)
         _, compile_error = ld_process.communicate()
         if ld_process.returncode != 0:

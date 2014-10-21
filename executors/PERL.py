@@ -6,7 +6,7 @@ from .utils import test_executor
 from .resource_proxy import ResourceProxy
 from judgeenv import env
 
-PERL_FS = ['.*\.[so|pm]', '/dev/urandom']
+PERL_FS = ['.*\.(?:so|pm$)', '/dev/urandom']
 
 
 class Executor(ResourceProxy):

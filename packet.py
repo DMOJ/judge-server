@@ -66,6 +66,7 @@ class PacketManager(object):
         elif name == 'get-current-submission':
             self.current_submission_packet()
         elif name == 'submission-request':
+            self.submission_acknowledged_packet(packet['submission-id'])
             self.judge.begin_grading(
                 packet['submission-id'],
                 packet['problem-id'],
@@ -156,3 +157,7 @@ class PacketManager(object):
             key, value = fn()
             data[key] = value
         self._send_packet(data)
+
+    def submission_acknowledged_packet(self, sub_id):
+        self._send_packet({'name': 'submission-acknowledged',
+                           'submission-id': sub_id})

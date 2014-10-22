@@ -35,7 +35,7 @@ class PacketManager(object):
             pass
         except Exception:  # connection reset by peer
             traceback.print_exc()
-            raise SystemExit(1)
+            #raise SystemExit(1)
 
     def _read_single(self):
         size = PacketManager.SIZE_PACK.unpack(self.input.read(PacketManager.SIZE_PACK.size))[0]

@@ -152,7 +152,8 @@ class PacketManager(object):
 
     def ping_packet(self, when):
         data = {'name': 'ping-response',
-                'time': time.time() - when}
+                'when': when,
+                'time': time.time()}
         for fn in sysinfo.report_callbacks:
             key, value = fn()
             data[key] = value

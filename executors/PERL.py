@@ -6,7 +6,7 @@ from .utils import test_executor
 from .resource_proxy import ResourceProxy
 from judgeenv import env
 
-PERL_FS = ['.*\.(?:so|pm$)', '/dev/urandom']
+PERL_FS = ['.*\.(?:so|p[lm]$)', '/dev/urandom']
 
 
 class Executor(ResourceProxy):
@@ -27,10 +27,10 @@ class Executor(ResourceProxy):
 
     def launch_unsafe(self, *args, **kwargs):
         return subprocess.Popen(['perl', self._script] + list(args),
-                     executable=env['runtime']['perl'],
-                     env={'LANG': 'C'},
-                     cwd=self._dir,
-                     **kwargs)
+                                executable=env['runtime']['perl'],
+                                env={'LANG': 'C'},
+                                cwd=self._dir,
+                                **kwargs)
 
 
 def initialize():

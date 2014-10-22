@@ -5,10 +5,10 @@ from .utils import test_executor
 from .resource_proxy import ResourceProxy
 from judgeenv import env
 
-RUBY_FS = ['.*\.(?:so|rb$)', '/dev/urandom$']
+RUBY_FS = ['.*\.(?:so|rb$)', '/dev/urandom$', '.*locale/', '/usr/lib', '/proc/self']
 
 
-def make_executor(name, key):
+def make_executor(key):
     class Executor(ResourceProxy):
         def __init__(self, problem_id, source_code):
             super(Executor, self).__init__()
@@ -19,18 +19,24 @@ def make_executor(name, key):
         def _nproc(self):
             return 0
 
+        def _security(self):
+            return CHROOTSecurity(RUBY_FS)
+
         def launch(self, *args, **kwargs):
             return SecurePopen(['ruby', self._script] + list(args),
                                executable=env['runtime'][key],
-                               security=CHROOTSecurity(RUBY_FS),
+                               security=self._security(),
                                time=kwargs.get('time'),
                                memory=kwargs.get('memory'),
                                address_grace=65536, nproc=self._nproc())
+    return Executor
 
+
+def make_initialize(name, key, Executor):
     def initialize():
         if key not in env['runtime']:
             return False
         if not os.path.isfile(env['runtime'][key]):
             return False
         return test_executor(name, Executor, "puts 'Hello, World!'")
-    return Executor, initialize
+    return initialize

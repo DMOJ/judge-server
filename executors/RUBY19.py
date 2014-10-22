@@ -1,8 +1,8 @@
-from .ruby import make_executor
-
-_Executor, initialize = make_executor('RUBY19', 'ruby19')
+from .ruby import make_executor, make_initialize
 
 
-class Executor(_Executor):
+class Executor(make_executor('ruby19')):
     def _nproc(self):
         return -1
+
+initialize = make_initialize('RUBY19', 'ruby19', Executor)

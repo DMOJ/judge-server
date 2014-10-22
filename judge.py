@@ -217,8 +217,8 @@ class Judge(object):
                                 source_code = entry_point.read()
                         # Compile as CPP11 regardless of what the submission language is
                         executor = executors['CPP11'].Executor(problem_id, source_code, aux_sources=aux_sources,
-                                                               writable=handler_data.get('writable', ()),
-                                                               fds=handler_data.get('fds', (1, 2)))
+                                                               writable=handler_data.get('writable', (1, 2)),
+                                                               fds=handler_data.get('fds', None))
                     else:
                         executor = executors[language].Executor(problem_id, source_code)
                 except KeyError:

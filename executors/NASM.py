@@ -24,8 +24,12 @@ class Executor(ResourceProxy):
         if nasm_process.returncode != 0:
             raise CompileError(compile_error)
 
-        ld_process = subprocess.Popen([env['runtime']['ld'], '-s', obj_file, '-o', output_file],
-                                      stderr=subprocess.PIPE, cwd=self._dir)
+        if 'gcc' in env['runtime'] and source_code.startswith('; libc'):
+            ld_process = subprocess.Popen([env['runtime']['gcc'], obj_file, '-o', output_file],
+                                          stderr=subprocess.PIPE, cwd=self._dir)
+        else:
+            ld_process = subprocess.Popen([env['runtime']['ld'], '-s', obj_file, '-o', output_file],
+                                          stderr=subprocess.PIPE, cwd=self._dir)
         _, compile_error = ld_process.communicate()
         if ld_process.returncode != 0:
             raise CompileError(compile_error)

@@ -198,7 +198,7 @@ class Judge(object):
                 try:
                     # Launch an executor for the given language
                     # The executor is responsible for writing source files and compiling (if applicable)
-                    if 'handler' in init_data and language in ['C', 'CPP', 'CPP11']:
+                    if 'handler' in init_data and language in ('C', 'CPP', 'CPP0X', 'CPP11'):
                         aux_sources = {}
                         handler_data = init_data['handler']
                         entry_path = os.path.join(get_problem_root(problem_id), handler_data['entry'])

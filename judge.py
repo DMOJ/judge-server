@@ -199,7 +199,15 @@ class Judge(object):
                     # Launch an executor for the given language
                     # The executor is responsible for writing source files and compiling (if applicable)
                     if 'handler' in init_data:
-                        if language in ('C', 'CPP', 'CPP0X', 'CPP11'):
+                        siggraders = ('C', 'CPP', 'CPP0X', 'CPP11')
+                        
+                        for i in xrange(3, -1, -1):
+                            if siggraders[i] in executors:
+                                siggrader = siggraders[i]
+                                break
+                        else:
+                            raise CompileError("Can't signature grade. Why did I get this submission?")
+                        if language in siggraders:
                             aux_sources = {}
                             handler_data = init_data['handler']
                             entry_path = os.path.join(get_problem_root(problem_id), handler_data['entry'])
@@ -212,15 +220,15 @@ class Judge(object):
 
                             with open(entry_path, 'r') as entry_point:
                                 with open(header_path, 'r') as header:
-                                    aux_sources[problem_id + "_submission"] = (
-                                                                              '#include "%s"\n#define main user_main\n' %
-                                                                              handler_data['header']) + source_code
+                                    aux_sources[problem_id + '_submission'] = (
+                                        '#include "%s"\n#define main user_main\n' %
+                                        handler_data['header']) + source_code
                                     aux_sources[handler_data['header']] = header.read()
                                     source_code = entry_point.read()
                             # Compile as CPP11 regardless of what the submission language is
-                            executor = executors['CPP11'].Executor(problem_id, source_code, aux_sources=aux_sources,
-                                                                   writable=handler_data.get('writable', (1, 2)),
-                                                                   fds=handler_data.get('fds', None))
+                            executor = executors[siggrader].Executor(problem_id, source_code, aux_sources=aux_sources,
+                                                                     writable=handler_data.get('writable', (1, 2)),
+                                                                     fds=handler_data.get('fds', None))
                         else:
                             raise CompileError('no valid handler compiler exists')
                     else:

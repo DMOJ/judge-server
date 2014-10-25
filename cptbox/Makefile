@@ -13,11 +13,11 @@ $(EXECUTABLE): $(OBJECTS)
 strip: $(EXECUTABLE) _cptbox.so
 	strip -s $(EXECUTABLE) _cptbox.so
 
-ptbox.cpp: ptbox.h
-ptdebug.cpp: ptbox.h
-ptdebug32.cpp: ptbox.h
-ptdebug64.cpp: ptbox.h
-ptproc.cpp: ptbox.h
+ptbox.o: ptbox.cpp ptbox.h
+ptdebug32.o: ptdebug32.cpp ptbox.h
+ptdebug64.o: ptdebug64.cpp ptbox.h
+ptdebug.o: ptdebug.cpp ptbox.h
+ptproc.o: ptproc.cpp ptbox.h
 
 .cpp.o:
 	$(CXX) $(CXXFLAGS) -c -o $@ $<

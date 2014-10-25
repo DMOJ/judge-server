@@ -63,10 +63,11 @@ int pt_process::spawn(pt_fork_handler child, void *context) {
     return 0;
 }
 
-void pt_process::protection_fault(int syscall) {
+int pt_process::protection_fault(int syscall) {
     dispatch(PTBOX_EVENT_PROTECTION, syscall);
-    dispatch(PTBOX_EVENT_EXITING, exit_reason = PTBOX_EXIT_PROTECTION);
+    dispatch(PTBOX_EVENT_EXITING, PTBOX_EXIT_PROTECTION);
     kill(pid, SIGKILL);
+    return PTBOX_EXIT_PROTECTION;
 }
 
 int pt_process::monitor() {
@@ -101,19 +102,19 @@ int pt_process::monitor() {
                             case PTBOX_HANDLER_STDOUTERR: {
                                 int arg0 = debugger->arg0();
                                 if (arg0 != 1 && arg0 != 2)
-                                    protection_fault(syscall);
+                                    exit_reason = protection_fault(syscall);
                                 break;
                             }
                             case PTBOX_HANDLER_CALLBACK:
                                 if (callback(context, syscall))
                                     break;
                                 //printf("Killed by callback: %d\n", syscall);
-                                protection_fault(syscall);
+                                exit_reason = protection_fault(syscall);
                                 continue;
                             default:
                                 // Default is to kill, safety first.
                                 //printf("Killed by DISALLOW or None: %d\n", syscall);
-                                protection_fault(syscall);
+                                exit_reason = protection_fault(syscall);
                                 continue;
                         }
                         if (debugger->is_exit(syscall))

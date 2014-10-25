@@ -66,7 +66,7 @@ public:
     const rusage *getrusage() { return &_rusage; }
 protected:
     int dispatch(int event, unsigned long param);
-    void protection_fault(int syscall);
+    int protection_fault(int syscall);
 private:
     pid_t pid;
     int handler[MAX_SYSCALL];

@@ -63,6 +63,12 @@ int pt_process::spawn(pt_fork_handler child, void *context) {
     return 0;
 }
 
+void pt_process::protection_fault(int syscall) {
+    dispatch(PTBOX_EVENT_PROTECTION, syscall);
+    dispatch(PTBOX_EVENT_EXITING, exit_reason = PTBOX_EXIT_PROTECTION);
+    kill(pid, SIGKILL);
+}
+
 int pt_process::monitor() {
     bool in_syscall = false, first = true;
     struct timespec start, end, delta;
@@ -92,20 +98,22 @@ int pt_process::monitor() {
                         switch (handler[syscall]) {
                             case PTBOX_HANDLER_ALLOW:
                                 break;
+                            case PTBOX_HANDLER_STDOUTERR: {
+                                int arg0 = debugger->arg0();
+                                if (arg0 != 1 && arg0 != 2)
+                                    protection_fault(syscall);
+                                break;
+                            }
                             case PTBOX_HANDLER_CALLBACK:
                                 if (callback(context, syscall))
                                     break;
                                 //printf("Killed by callback: %d\n", syscall);
-                                dispatch(PTBOX_EVENT_PROTECTION, syscall);
-                                dispatch(PTBOX_EVENT_EXITING, exit_reason = PTBOX_EXIT_PROTECTION);
-                                kill(pid, SIGKILL);
+                                protection_fault(syscall);
                                 continue;
                             default:
                                 // Default is to kill, safety first.
                                 //printf("Killed by DISALLOW or None: %d\n", syscall);
-                                dispatch(PTBOX_EVENT_PROTECTION, syscall);
-                                dispatch(PTBOX_EVENT_EXITING, exit_reason = PTBOX_EXIT_PROTECTION);
-                                kill(pid, SIGKILL);
+                                protection_fault(syscall);
                                 continue;
                         }
                         if (debugger->is_exit(syscall))

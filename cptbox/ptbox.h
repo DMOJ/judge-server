@@ -10,6 +10,7 @@
 #define PTBOX_HANDLER_DENY 0
 #define PTBOX_HANDLER_ALLOW 1
 #define PTBOX_HANDLER_CALLBACK 2
+#define PTBOX_HANDLER_STDOUTERR 3
 
 #define PTBOX_EVENT_ATTACH 0
 #define PTBOX_EVENT_EXITING 1
@@ -65,6 +66,7 @@ public:
     const rusage *getrusage() { return &_rusage; }
 protected:
     int dispatch(int event, unsigned long param);
+    void protection_fault(int syscall);
 private:
     pid_t pid;
     int handler[MAX_SYSCALL];

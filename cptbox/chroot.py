@@ -1,6 +1,6 @@
 import re
 import sys
-from .sandbox import ALLOW
+from .sandbox import ALLOW, STDOUTERR
 from .syscalls import *
 
 
@@ -14,7 +14,7 @@ class CHROOTSecurity(dict):
         self.update({
             sys_execve: self.do_execve,
             sys_read: ALLOW,
-            sys_write: self.do_write,
+            sys_write: STDOUTERR if writable == (1, 2) else self.do_write,
             sys_writev: self.do_write,
             sys_open: self.do_access,
             sys_access: self.do_access,

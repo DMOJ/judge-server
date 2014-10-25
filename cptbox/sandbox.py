@@ -12,6 +12,7 @@ from .syscalls import translator, SYSCALL_COUNT
 DISALLOW = 0
 ALLOW = 1
 _CALLBACK = 2
+STDOUTERR = 3
 
 PIPE = object()
 

@@ -263,11 +263,10 @@ class Judge(object):
                 print>> sys.stderr, 'Using checker %s' % checker_id
 
                 # Use a proxy to not expose init_data to all submethods
-                check_adapter = lambda test_input, proc_output, judge_output: checker.check(proc_output,
-                                                                                            judge_output,
-                                                                                            submission_source=source_code,
-                                                                                            test_case_data=test_input,
-                                                                                            **checker_params)
+                def check_adapter(test_input, proc_output, judge_output, point_value):
+                    return checker.check(proc_output, judge_output, submission_source=source_code,
+                                         test_case_data=test_input, point_value=point_value,
+                                         **checker_params)
 
                 run_call = [self.run_standard, self.run_interactive]['grader' in init_data]
 
@@ -543,6 +542,7 @@ class Judge(object):
                     if short_circuited:
                         # A previous subtestcase failed so we're allowed to break early
                         result.result_flag = Result.SC
+                        points = point_value
                     else:
                         # Launch a process for the current test case
                         self.current_proc = executor_func(time=time, memory=memory)
@@ -584,8 +584,10 @@ class Judge(object):
                                 _output_data.close()
                         else:
                             output_data = _output_data
-                        if not check_func(input_data, result.proc_output, output_data):
+                        check = check_func(input_data, result.proc_output, output_data, point_value)
+                        if not check:
                             result.result_flag |= Result.WA
+                        points = check if type(check) == int else point_value
                         if process.returncode > 0:
                             print>> sys.stderr, 'Exited with error: %d' % process.returncode
                             result.result_flag |= Result.IR
@@ -603,7 +605,7 @@ class Judge(object):
                     if self._terminate_grading:
                         raise TerminateGrading()
                     self.packet_manager.test_case_status_packet(case_number,
-                                                                point_value if result.result_flag == Result.AC else 0,
+                                                                points if result.result_flag == Result.AC else 0,
                                                                 point_value,
                                                                 result.result_flag,
                                                                 result.execution_time,

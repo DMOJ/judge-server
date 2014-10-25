@@ -108,7 +108,7 @@ class Judge(object):
         self.current_submission_thread = None
         self._terminate_grading = False
         if Observer is not None:
-            handler = FileSystemEventHandler()
+            handler = SendProblemsHandler(self)
             self._monitor = monitor = Observer()
             for dir in get_problem_roots():
                 monitor.schedule(handler, dir)

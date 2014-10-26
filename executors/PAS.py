@@ -18,12 +18,12 @@ class Executor(ResourceProxy):
             fo.write(source_code)
         self._executable = output_file = self._file(str(problem_id))
         fpc_args = [env['runtime']['fpc'], '-So', '-O2', source_code_file, '-o' + output_file]
-        fpc_process = subprocess.Popen(fpc_args, stderr=subprocess.PIPE, cwd=self._dir)
-        _, compile_error = fpc_process.communicate()
+        fpc_process = subprocess.Popen(fpc_args, stdout=subprocess.PIPE, cwd=self._dir)
+        compile_error, _ = fpc_process.communicate()
         if fpc_process.returncode != 0:
             raise CompileError(compile_error)
         self.name = problem_id
-        self.warning = compile_error
+        self.warning = compile_error if 'Warning:' in compile_error else None
 
     def launch(self, *args, **kwargs):
         return SecurePopen([self.name] + list(args),

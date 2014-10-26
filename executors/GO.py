@@ -20,10 +20,11 @@ class Executor(ResourceProxy):
         with open(source_code_file, 'wb') as fo:
             fo.write(source_code)
         ghc_args = [env['runtime']['go'], 'build', source_code_file]
-        ghc_process = subprocess.Popen(ghc_args, stderr=subprocess.PIPE, cwd=self._dir)
-        _, compile_error = ghc_process.communicate()
-        if ghc_process.returncode != 0:
+        go_process = subprocess.Popen(ghc_args, stderr=subprocess.PIPE, cwd=self._dir)
+        _, compile_error = go_process.communicate()
+        if go_process.returncode != 0:
             raise CompileError(compile_error)
+        self.warning = compile_error
 
     def _get_security(self):
         sec = CHROOTSecurity(GO_FS)

@@ -24,6 +24,7 @@ class Executor(ResourceProxy):
         _, compile_error = ghc_process.communicate()
         if ghc_process.returncode != 0:
             raise CompileError(compile_error)
+        self.warning = compile_error
 
     def _get_security(self):
         sec = CHROOTSecurity(HASK_FS)

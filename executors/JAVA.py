@@ -78,6 +78,7 @@ class Executor(ResourceProxy):
                                    'As a judge, I sentence your code to death.')
             raise CompileError(compile_error)
         self._class_name = class_name.group(1)
+        self.warning = compile_error
 
     def launch(self, *args, **kwargs):
         return JavaPopen(['java', '-client',

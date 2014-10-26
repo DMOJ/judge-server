@@ -26,6 +26,7 @@ class Executor(ResourceProxy):
         _, compile_error = csc_process.communicate()
         if csc_process.returncode != 0:
             raise CompileError(compile_error)
+        self.warning = compile_error
 
     def _get_security(self):
         sec = CHROOTSecurity(CS_FS + [self._dir])

@@ -23,6 +23,7 @@ class Executor(ResourceProxy):
         if fpc_process.returncode != 0:
             raise CompileError(compile_error)
         self.name = problem_id
+        self.warning = compile_error
 
     def launch(self, *args, **kwargs):
         return SecurePopen([self.name] + list(args),

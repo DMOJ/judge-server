@@ -43,6 +43,7 @@ def make_executor(code, command, args, ext, test_code):
             self.name = problem_id
             self._fds = fds
             self._writable = writable
+            self.warning = compile_error
 
         def launch(self, *args, **kwargs):
             return SecurePopen([self.name] + list(args),

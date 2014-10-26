@@ -30,10 +30,11 @@ class Executor(ResourceProxy):
         else:
             ld_process = subprocess.Popen([env['runtime']['ld'], '-s', obj_file, '-o', output_file],
                                           stderr=subprocess.PIPE, cwd=self._dir)
-        _, compile_error = ld_process.communicate()
+        _, link_error = ld_process.communicate()
         if ld_process.returncode != 0:
-            raise CompileError(compile_error)
+            raise CompileError(link_error)
         self.name = problem_id
+        self.warning = ('%s\n%s' % (compile_error, link_error)).strip('\n')
 
     def launch(self, *args, **kwargs):
         return SecurePopen([self.name] + list(args),

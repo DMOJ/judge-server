@@ -116,6 +116,11 @@ class PacketManager(object):
                            'submission-id': self.judge.current_submission,
                            'log': log})
 
+    def compile_message_packet(self, log):
+        self._send_packet({'name': 'compile-message',
+                           'submission-id': self.judge.current_submission,
+                           'log': log})
+
     def problem_not_exist_packet(self, problem):
         self._send_packet({'name': 'problem-not-exist',
                            'submission-id': self.judge.current_submission,

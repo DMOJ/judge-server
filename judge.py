@@ -271,6 +271,8 @@ class Judge(object):
                 run_call = [self.run_standard, self.run_interactive]['grader' in init_data]
 
                 case = 1
+                if hasattr(executor, 'warning') and executor.warning:
+                    self.packet_manager.compile_message_packet(executor.warning)
                 for result in run_call(executor.launch, init_data, check_adapter, problem_id,
                                        time=time_limit, memory=memory_limit,
                                        short_circuit=short_circuit, source_code=original_source):

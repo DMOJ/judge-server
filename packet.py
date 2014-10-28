@@ -1,4 +1,5 @@
 import json
+import zlib
 import socket
 import threading
 import struct
@@ -15,14 +16,24 @@ class JudgeAuthenticationFailed(Exception):
 class PacketManager(object):
     SIZE_PACK = struct.Struct('!I')
 
-    def __init__(self, host, port, judge):
+    def __init__(self, host, port, judge, name, key):
         self.host = host
         self.port = port
         self.judge = judge
+        self.name = name
+        self.key = key
+        self._connect()
+
+    def _connect(self):
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.conn.connect((host, port))
+        self.conn.connect((self.host, self.port))
         self.input = self.conn.makefile('r')
         self.output = self.conn.makefile('w', 0)
+        self.handshake(self.judge.supported_problems(), self.key, self.name)
+
+    def _reconnect(self):
+        self.conn.close()
+        self._connect()
 
     def __del__(self):
         self.conn.shutdown()
@@ -38,9 +49,21 @@ class PacketManager(object):
             raise SystemExit(1)
 
     def _read_single(self):
-        size = PacketManager.SIZE_PACK.unpack(self.input.read(PacketManager.SIZE_PACK.size))[0]
-        packet = self.input.read(size).decode('zlib')
-        return json.loads(packet)
+        try:
+            data = self.input.read(PacketManager.SIZE_PACK.size)
+        except socket.error:
+            self._reconnect()
+            return
+        if not data:
+            self._reconnect()
+            return
+        size = PacketManager.SIZE_PACK.unpack(data)[0]
+        try:
+            packet = self.input.read(size).decode('zlib')
+        except zlib.error:
+            self._reconnect()
+        else:
+            return json.loads(packet)
 
     def run(self):
         self._read_async()

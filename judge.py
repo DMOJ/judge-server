@@ -101,10 +101,9 @@ class SendProblemsHandler(FileSystemEventHandler):
 
 class Judge(object):
     def __init__(self, host, port, **kwargs):
-        self.packet_manager = packet.PacketManager(host, port, self)
+        self.packet_manager = packet.PacketManager(host, port, self, env['id'], env['key'])
         self.current_submission = None
         self.current_proc = None
-        self.packet_manager.handshake(self._get_supported_problems(), env['id'], env['key'])
         self.current_submission_thread = None
         self._terminate_grading = False
         if Observer is not None:
@@ -121,7 +120,7 @@ class Judge(object):
             self._monitor.stop()
             self._monitor.join(1)
 
-    def _get_supported_problems(self):
+    def supported_problems(self):
         """
         Fetches a list of all problems supported by this judge.
         :return:
@@ -138,7 +137,7 @@ class Judge(object):
         """
         Pushes current problem set to server.
         """
-        self.packet_manager.supported_problems_packet(self._get_supported_problems())
+        self.packet_manager.supported_problems_packet(self.supported_problems())
 
     def begin_grading(self, id, problem_id, language, source_code, time_limit, memory_limit, short_circuit):
         """

@@ -14,8 +14,9 @@ C_FS = ['.*\.so', '/proc/meminfo', '/dev/null']
 def make_executor(code, command, args, ext, test_code):
     class Executor(ResourceProxy):
         def __init__(self, problem_id, main_source, aux_sources=None, fds=None, writable=(1, 2)):
-            if not aux_sources: aux_sources = {}
             super(Executor, self).__init__()
+            if not aux_sources:
+                aux_sources = {}
             aux_sources[problem_id + ext] = main_source
             sources = []
             for name, source in aux_sources.iteritems():

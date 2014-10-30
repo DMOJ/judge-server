@@ -5,6 +5,7 @@ import threading
 import struct
 import traceback
 import time
+import sys
 from executors import executors
 import sysinfo
 
@@ -32,8 +33,10 @@ class PacketManager(object):
         self.handshake(self.judge.supported_problems(), self.key, self.name)
 
     def _reconnect(self):
-        self.conn.close()
-        self._connect()
+        print>>sys.stderr, 'Disconncted!'
+        raise SystemExit(1)
+        #self.conn.close()
+        #self._connect()
 
     def __del__(self):
         self.conn.shutdown()

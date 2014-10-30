@@ -30,7 +30,7 @@ class PacketManager(object):
         self.conn.connect((self.host, self.port))
         self.input = self.conn.makefile('r')
         self.output = self.conn.makefile('w', 0)
-        self.handshake(self.judge.supported_problems(), self.key, self.name)
+        self.handshake(self.judge.supported_problems(), self.name, self.key)
 
     def _reconnect(self):
         print>>sys.stderr, 'Disconncted!'

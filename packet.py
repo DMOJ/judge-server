@@ -33,10 +33,16 @@ class PacketManager(object):
         self.handshake(self.judge.supported_problems(), self.name, self.key)
 
     def _reconnect(self):
-        print>>sys.stderr, 'Disconncted!'
-        raise SystemExit(1)
-        #self.conn.close()
-        #self._connect()
+        print>>sys.stderr
+        print>>sys.stderr, 'SOCKET ERROR: Disconncted!'
+        self.conn.close()
+        time.sleep(30)
+        try:
+            self._connect()
+        except JudgeAuthenticationFailed:
+            traceback.print_exc()
+            # Return 0 to avoid supervisor restart.
+            raise SystemExit(0)
 
     def __del__(self):
         self.conn.shutdown()

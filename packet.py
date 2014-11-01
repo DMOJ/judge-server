@@ -132,7 +132,7 @@ class PacketManager(object):
         self._send_packet({'name': 'supported-problems',
                            'problems': problems})
 
-    def test_case_status_packet(self, position, points, total_points, status, time, memory, output):
+    def test_case_status_packet(self, position, points, total_points, status, time, memory, output, feedback=None):
         self._send_packet({'name': 'test-case-status',
                            'submission-id': self.judge.current_submission,
                            'position': position,
@@ -141,7 +141,8 @@ class PacketManager(object):
                            'points': points,
                            'total-points': total_points,
                            'memory': memory,
-                           'output': output})
+                           'output': output,
+                           'feedback': feedback})
 
     def compile_error_packet(self, log):
         self._send_packet({'name': 'compile-error',

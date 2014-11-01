@@ -52,6 +52,15 @@ class Result(object):
         self.points = 0
 
 
+class CheckerResult(object):
+    __slots__ = ('passed', 'points', 'feedback')
+
+    def __init__(self, passed, points, feedback=None):
+        self.passed = passed
+        self.points = points
+        self.feedback = feedback
+
+
 class TestCase(object):
     def __init__(self, input_file, output_file, point_value):
         self.input_file = input_file
@@ -543,7 +552,7 @@ class Judge(object):
                     if short_circuited:
                         # A previous subtestcase failed so we're allowed to break early
                         result.result_flag = Result.SC
-                        points = point_value
+                        check = CheckerResult(False, 0)
                     else:
                         # Launch a process for the current test case
                         self.current_proc = executor_func(time=time, memory=memory)
@@ -585,10 +594,13 @@ class Judge(object):
                                 _output_data.close()
                         else:
                             output_data = _output_data
+
                         check = check_func(input_data, result.proc_output, output_data, point_value)
-                        if not check:
+                        if not isinstance(check, CheckerResult):
+                            check = CheckerResult(not check, check if type(check) == int else point_value)
+                        if not check.passed:
                             result.result_flag |= Result.WA
-                        points = check if type(check) == int else point_value
+
                         if process.returncode > 0:
                             print>> sys.stderr, 'Exited with error: %d' % process.returncode
                             result.result_flag |= Result.IR
@@ -601,18 +613,22 @@ class Judge(object):
                         if process.mle:
                             result.result_flag |= Result.MLE
 
+                        if result.result_flag != Result.AC:
+                            check.points = 0
+
                     # Must check here because we might be interrupted mid-execution
                     # If we don't bail out, we get an IR.
                     if self._terminate_grading:
                         raise TerminateGrading()
                     self.packet_manager.test_case_status_packet(case_number,
-                                                                points if result.result_flag == Result.AC else 0,
+                                                                check.points,
                                                                 point_value,
                                                                 result.result_flag,
                                                                 result.execution_time,
                                                                 result.max_memory,
                                                                 # TODO: make limit configurable
-                                                                result.proc_output[:10].decode('utf-8', 'replace'))
+                                                                result.proc_output[:10].decode('utf-8', 'replace'),
+                                                                check.feedback)
 
                     if not short_circuited and result.result_flag != Result.AC:
                         short_circuited = True

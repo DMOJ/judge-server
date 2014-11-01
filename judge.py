@@ -119,7 +119,7 @@ class Judge(object):
             handler = SendProblemsHandler(self)
             self._monitor = monitor = Observer()
             for dir in get_problem_roots():
-                monitor.schedule(handler, dir)
+                monitor.schedule(handler, dir, recursive=True)
             monitor.start()
         else:
             self._monitor = None

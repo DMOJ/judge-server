@@ -597,7 +597,7 @@ class Judge(object):
 
                         check = check_func(input_data, result.proc_output, output_data, point_value)
                         if not isinstance(check, CheckerResult):
-                            check = CheckerResult(check, check if type(check) == int else check and point_value)
+                            check = CheckerResult(check, check and point_value)
                         if not check.passed:
                             result.result_flag |= Result.WA
 

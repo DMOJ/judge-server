@@ -22,8 +22,7 @@ def make_executor(code, command, args, ext, test_code):
             for name, source in aux_sources.iteritems():
                 if '.' not in name:
                     name += ext
-                source_code_file = self._file(name)
-                with open(source_code_file, 'wb') as fo:
+                with open(self._file(name), 'wb') as fo:
                     fo.write(source)
                 sources.append(name)
             if sys.platform == 'win32':

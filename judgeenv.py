@@ -6,11 +6,12 @@ __all__ = ['env', 'get_problem_root', 'get_problem_roots']
 
 _judge_dirs = ()
 _root = os.path.dirname(__file__)
+fs_encoding = os.environ.get('DMOJ_ENCODING', sys.getfilesystemencoding())
 
 
 def unicodify(string):
     if isinstance(string, str):
-        return string.decode(os.environ.get('DMOJ_ENCODING', sys.getfilesystemencoding()))
+        return string.decode(fs_encoding)
     return string
 
 

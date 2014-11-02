@@ -24,7 +24,7 @@ except ImportError:
         pass
 
 from error import CompileError
-from judgeenv import env, get_problem_root, get_problem_roots
+from judgeenv import env, get_problem_root, get_problem_roots, fs_encoding
 from communicate import safe_communicate, OutputLimitExceeded
 
 from executors import executors
@@ -138,6 +138,8 @@ class Judge(object):
         problems = []
         for dir in get_problem_roots():
             for problem in os.listdir(dir):
+                if isinstance(problem, str):
+                    problem = problem.decode(fs_encoding)
                 if os.access(os.path.join(dir, problem, 'init.json'), os.R_OK):
                     problems.append((problem, os.path.getmtime(os.path.join(dir, problem))))
         return problems

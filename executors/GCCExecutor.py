@@ -25,7 +25,7 @@ def make_executor(code, command, args, ext, test_code):
                 source_code_file = self._file(name)
                 with open(source_code_file, 'wb') as fo:
                     fo.write(source)
-                sources.append(source_code_file)
+                sources.append(name)
             if sys.platform == 'win32':
                 compiled_extension = '.exe'
                 linker_options = ['-Wl,--stack,67108864', '-static']

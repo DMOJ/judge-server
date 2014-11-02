@@ -10,7 +10,7 @@ _root = os.path.dirname(__file__)
 
 def unicodify(string):
     if isinstance(string, str):
-        return string.decode(sys.getfilesystemencoding())
+        return string.decode(os.environ.get('DMOJ_ENCODING', sys.getfilesystemencoding()))
     return string
 
 

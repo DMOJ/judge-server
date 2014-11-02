@@ -138,8 +138,6 @@ class Judge(object):
         problems = []
         for dir in get_problem_roots():
             for problem in os.listdir(dir):
-                if isinstance(problem, str):
-                    problem = problem.decode(sys.getfilesystemencoding())
                 if os.access(os.path.join(dir, problem, 'init.json'), os.R_OK):
                     problems.append((problem, os.path.getmtime(os.path.join(dir, problem))))
         return problems

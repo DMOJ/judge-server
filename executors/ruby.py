@@ -28,7 +28,8 @@ def make_executor(key):
                                security=self._security(),
                                time=kwargs.get('time'),
                                memory=kwargs.get('memory'),
-                               address_grace=65536, nproc=self._nproc())
+                               address_grace=65536, nproc=self._nproc(),
+                               env={})
     return Executor
 
 

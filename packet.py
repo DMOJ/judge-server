@@ -36,7 +36,7 @@ class PacketManager(object):
         print>>sys.stderr
         print>>sys.stderr, 'SOCKET ERROR: Disconncted!'
         self.conn.close()
-        time.sleep(30)
+        time.sleep(15)
         try:
             self._connect()
         except JudgeAuthenticationFailed:
@@ -62,10 +62,10 @@ class PacketManager(object):
             data = self.input.read(PacketManager.SIZE_PACK.size)
         except socket.error:
             self._reconnect()
-            return
+            return self._read_single()
         if not data:
             self._reconnect()
-            return
+            return self._read_single()
         size = PacketManager.SIZE_PACK.unpack(data)[0]
         try:
             packet = self.input.read(size).decode('zlib')

@@ -33,8 +33,8 @@ class PacketManager(object):
         self.handshake(self.judge.supported_problems(), self.name, self.key)
 
     def _reconnect(self):
-        print>>sys.stderr
-        print>>sys.stderr, 'SOCKET ERROR: Disconncted!'
+        print>> sys.stderr
+        print>> sys.stderr, 'SOCKET ERROR: Disconncted!'
         self.conn.close()
         time.sleep(15)
         try:
@@ -154,10 +154,10 @@ class PacketManager(object):
                            'submission-id': self.judge.current_submission,
                            'log': log})
 
-    def problem_not_exist_packet(self, problem):
-        self._send_packet({'name': 'problem-not-exist',
+    def internal_error_packet(self, message):
+        self._send_packet({'name': 'internal-error',
                            'submission-id': self.judge.current_submission,
-                           'problem': problem})
+                           'message': message})
 
     def begin_grading_packet(self):
         self._send_packet({'name': 'grading-begin',

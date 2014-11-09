@@ -210,7 +210,7 @@ class Judge(object):
                     # The executor is responsible for writing source files and compiling (if applicable)
                     if 'handler' in init_data:
                         siggraders = ('C', 'CPP', 'CPP0X', 'CPP11')
-                        
+
                         for i in xrange(3, -1, -1):
                             if siggraders[i] in executors:
                                 siggrader = siggraders[i]
@@ -231,8 +231,8 @@ class Judge(object):
                             with open(entry_path, 'r') as entry_point:
                                 with open(header_path, 'r') as header:
                                     aux_sources[problem_id + '_submission'] = (
-                                        '#include "%s"\n#define main user_main\n' %
-                                        handler_data['header']) + source_code
+                                                                                  '#include "%s"\n#define main user_main\n' %
+                                                                                  handler_data['header']) + source_code
                                     aux_sources[handler_data['header']] = header.read()
                                     source_code = entry_point.read()
                             # Compile as CPP11 regardless of what the submission language is
@@ -302,12 +302,11 @@ class Judge(object):
                                 execution_verdict.append('\t' + flag)
                         print '\n'.join(execution_verdict)
                     case += 1
-        except IOError:
-            print>> sys.stderr, 'Internal Error: test cases do not exist'
-            traceback.print_exc()
-            self.packet_manager.problem_not_exist_packet(problem_id)
         except TerminateGrading:
             print>> sys.stderr, 'Forcefully terminating grading. Temporary files may not be deleted.'
+        except:
+            traceback.print_exc()
+            self.packet_manager.internal_error_packet(traceback.format_exc())
         finally:
             print>> sys.stderr, '===========Done Grading: %s===========' % submission_id
             self.current_submission_thread = None

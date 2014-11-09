@@ -1,6 +1,5 @@
 #!/usr/bin/python
 import argparse
-import collections
 import copy
 from functools import partial
 import gc
@@ -329,7 +328,10 @@ class Judge(object):
         :param forward_test_cases: 
             A list of testcases contained in init_data.
         """
-        files = collections.defaultdict(lambda x: open(os.path.join(get_problem_root(problem_id), x), 'r'))
+        class iofile_fetcher(dict):
+            def __missing__(self, key):
+                return open(os.path.join(get_problem_root(problem_id), key), 'r')
+        files = iofile_fetcher()
         if 'archive' in init_data:
             archive_path = os.path.join(get_problem_root(problem_id), init_data['archive'])
             if not os.path.exists(archive_path):

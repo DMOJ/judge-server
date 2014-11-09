@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import argparse
+import collections
 import copy
 from functools import partial
 import gc
@@ -328,24 +329,21 @@ class Judge(object):
         :param forward_test_cases: 
             A list of testcases contained in init_data.
         """
+        files = collections.defaultdict(lambda x: open(os.path.join(get_problem_root(problem_id), x), 'r'))
         if 'archive' in init_data:
-            arch = os.path.join(get_problem_root(problem_id), init_data['archive'])
-            if not os.path.exists(arch):
-                raise IOError('archive file "%s" does not exist' % arch)
-            files = {}
+            archive_path = os.path.join(get_problem_root(problem_id), init_data['archive'])
+            if not os.path.exists(archive_path):
+                raise IOError('archive file "%s" does not exist' % archive_path)
             try:
-                archive = zipfile.ZipFile(arch, 'r')
+                archive = zipfile.ZipFile(archive_path, 'r')
             except zipfile.BadZipfile:
-                raise IOError('Bad archive: %s' % arch)
+                raise IOError('Bad archive: %s' % archive_path)
             try:
                 for name in archive.infolist():
                     files[name.filename] = archive.read(name)
             finally:
                 archive.close()
-            # We return a new cStringIO in case init.json references the same file multiple times
-            return files.__getitem__
-        elif 'generator' in init_data and forward_test_cases:
-            files = {}
+        if 'generator' in init_data and forward_test_cases:
             generator_path = os.path.join(get_problem_root(problem_id), init_data['generator'])
             if not os.path.exists(generator_path):
                 raise IOError('generator does not exist')
@@ -380,11 +378,11 @@ class Judge(object):
                                                            stderr=subprocess.PIPE)
                     generator_output, generator_error = generator_process.communicate(
                         '\n'.join((str(test), input_file, output_file, '')))
-                    files[input_file] = generator_output
-                    files[output_file] = generator_error
-            return files.__getitem__
-        else:
-            return lambda x: open(os.path.join(get_problem_root(problem_id), x), 'r')
+                    if input_file not in files:
+                        files[input_file] = generator_output
+                    if output_file not in files:
+                        files[output_file] = generator_error
+        return files.__getitem__
 
     def run_interactive(self, executor_func, init_data, check_adapter, problem_id, short_circuit=False, time=2,
                         memory=65536, source_code=None):
@@ -436,6 +434,7 @@ class Judge(object):
 
                     _input = topen(input_file) if input_file else None
                     _output = topen(output_file) if output_file else None
+                    # We use a new cStringIO in case init.json references the same file multiple times
                     if isinstance(_input, str):
                         _input = cStringIO.StringIO(_input)
                     if isinstance(_input, str):

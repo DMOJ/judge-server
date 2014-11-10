@@ -46,7 +46,7 @@ class JavaPopen(object):
         try:
             data = stderr[-1].split(None, 5)
             self.execution_time, self.tle, self.max_memory, self.mle, self.returncode = map(int, data[:5])
-            self.feedback = data[6]
+            self.feedback = data[5]
         except:
             print>> sys.stderr, stderr_
             raise

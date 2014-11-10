@@ -200,7 +200,7 @@ public class JavaSafeExecutor {
                     error = ACCESS_ERROR_CODE;
                 } catch (Throwable throwable) {
                     throwable.printStackTrace();
-                    exception = e.getCause();
+                    exception = throwable.getCause();
                     error = PROGRAM_ERROR_CODE;
                 }
             } catch (NoSuchMethodException e) {

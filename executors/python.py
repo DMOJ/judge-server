@@ -23,8 +23,7 @@ __import__('sys').stdin = __import__('os').fdopen(0, 'r', 65536)
         raise NotImplementedError()
 
     def launch(self, *args, **kwargs):
-        return SecurePopen(['python', '-BS', self._script] + list(args),
-                           executable=self.get_executable(),
+        return SecurePopen([self.get_executable(), '-BS', self._script] + list(args),
                            security=self.get_security(),
                            time=kwargs.get('time'),
                            memory=kwargs.get('memory'),
@@ -33,8 +32,7 @@ __import__('sys').stdin = __import__('os').fdopen(0, 'r', 65536)
                            env={'LANG': 'C'}, cwd=self._dir)
 
     def launch_unsafe(self, *args, **kwargs):
-        return Popen(['python', '-BS', self._script] + list(args),
-                     executable=self.get_executable(),
+        return Popen([self.get_executable(), '-BS', self._script] + list(args),
                      env={'LANG': 'C'},
                      cwd=self._dir,
                      **kwargs)

@@ -621,7 +621,7 @@ class Judge(object):
                             check.points = 0
 
                         feedback = (check.feedback or
-                                    (getattr(process, 'feedback') if hasattr(process, 'feedback') else
+                                    (process.feedback if hasattr(process, 'feedback') else
                                      getattr(executor, 'get_feedback', lambda s: '')(error)))
 
                     # Must check here because we might be interrupted mid-execution

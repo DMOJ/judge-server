@@ -92,7 +92,7 @@ public class JavaSafeExecutor {
         Throwable exc = submissionThread.exception;
 
         System.err.println();
-        System.err.printf("%d %d %d %d %d %s\n", totalProgramTime, tle ? 1 : 0, mem, mle ? 1 : 0, error, exc != null ? exc.getClass().getSimpleName() : "OK");
+        System.err.printf("%d %d %d %d %d %s\n", totalProgramTime, tle ? 1 : 0, mem, mle ? 1 : 0, error, exc != null ? exc.getClass().getName() : "OK");
     }
 
     public static class SubmissionSecurityManager extends SecurityManager {

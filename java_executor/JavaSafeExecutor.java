@@ -89,9 +89,10 @@ public class JavaSafeExecutor {
         }
         boolean mle = submissionThread.mle;
         int error = submissionThread.error;
+        Exception exc = submissionThread.exception;
 
         System.err.println();
-        System.err.printf("%d %d %d %d %d\n", totalProgramTime, tle ? 1 : 0, mem, mle ? 1 : 0, error);
+        System.err.printf("%d %d %d %d %d %s\n", totalProgramTime, tle ? 1 : 0, mem, mle ? 1 : 0, error, exc != null ? exc.getClass().getSimpleName() : "OK");
     }
 
     public static class SubmissionSecurityManager extends SecurityManager {
@@ -161,6 +162,7 @@ public class JavaSafeExecutor {
         private boolean tle = false;
         private boolean mle = false;
         private int error = 0;
+        private Exception exception;
 
         public SubmissionThread(Class process) {
             super(null, null, "Submission-Grading-Thread(" + process.getSimpleName() + ")", 8000000);
@@ -190,6 +192,7 @@ public class JavaSafeExecutor {
                         return;
                     } else {
                         e.getCause().printStackTrace();
+                        exception = e.getCause();
                         error = PROGRAM_ERROR_CODE;
                     }
                 } catch (IllegalAccessException e) {
@@ -197,6 +200,7 @@ public class JavaSafeExecutor {
                     error = ACCESS_ERROR_CODE;
                 } catch (Throwable throwable) {
                     throwable.printStackTrace();
+                    exception = e.getCause();
                     error = PROGRAM_ERROR_CODE;
                 }
             } catch (NoSuchMethodException e) {

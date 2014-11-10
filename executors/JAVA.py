@@ -32,6 +32,7 @@ class JavaPopen(object):
         self.stderr = None
         self.error_info, self.error = None, None
         self.returncode = None
+        self.feedback = None
 
     def communicate(self, stdin=None):
         return self._communicate(*self.process.communicate(stdin))
@@ -43,11 +44,13 @@ class JavaPopen(object):
         stderr = stderr_.rstrip().split('\n')
         self.error_info = '\n'.join(stderr[:-1]).strip()
         try:
-            self.execution_time, self.tle, self.max_memory, self.mle, self.returncode = map(int, stderr[-1].split())
+            self.execution_time, self.tle, self.max_memory, self.mle, self.returncode, self.feedback = map(int, stderr[-1].split())
         except:
             print>> sys.stderr, stderr_
             raise
         self.execution_time /= 1000.0
+        if self.feedback == 'OK':
+            self.feedback = None
         if self.returncode == -1:
             self.returncode = 1
         if self.error_info:

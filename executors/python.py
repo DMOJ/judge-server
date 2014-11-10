@@ -1,6 +1,9 @@
 from .resource_proxy import ResourceProxy
 from cptbox import SecurePopen, PIPE
 from subprocess import Popen
+import re
+
+retraceback = re.compile(r'Traceback \(most recent call last\):\n.*?\n(\w+)(?::[^\n]*?)?$')
 
 
 class PythonExecutor(ResourceProxy):
@@ -36,3 +39,11 @@ __import__('sys').stdin = __import__('os').fdopen(0, 'r', 65536)
                      env={'LANG': 'C'},
                      cwd=self._dir,
                      **kwargs)
+
+    def get_feedback(self, stderr):
+        if len(stderr) > 2048:
+            return ''
+        match = retraceback.search(stderr)
+        if match is None:
+            return ''
+        return match.group(1)

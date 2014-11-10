@@ -89,7 +89,7 @@ public class JavaSafeExecutor {
         }
         boolean mle = submissionThread.mle;
         int error = submissionThread.error;
-        Exception exc = submissionThread.exception;
+        Throwable exc = submissionThread.exception;
 
         System.err.println();
         System.err.printf("%d %d %d %d %d %s\n", totalProgramTime, tle ? 1 : 0, mem, mle ? 1 : 0, error, exc != null ? exc.getClass().getSimpleName() : "OK");
@@ -162,7 +162,7 @@ public class JavaSafeExecutor {
         private boolean tle = false;
         private boolean mle = false;
         private int error = 0;
-        private Exception exception;
+        private Throwable exception;
 
         public SubmissionThread(Class process) {
             super(null, null, "Submission-Grading-Thread(" + process.getSimpleName() + ")", 8000000);

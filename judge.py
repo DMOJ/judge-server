@@ -585,7 +585,8 @@ class Judge(object):
                             result.result_flag |= Result.OLE
                             process.kill()
                             process.wait()
-                        sys.stderr.write(error)
+                        if error:
+                            sys.stderr.write(error)
 
                         result.max_memory = process.max_memory
                         result.execution_time = process.execution_time

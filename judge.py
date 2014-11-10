@@ -283,7 +283,7 @@ class Judge(object):
                 case = 1
                 if hasattr(executor, 'warning') and executor.warning:
                     self.packet_manager.compile_message_packet(executor.warning)
-                for result in run_call(executor.launch, init_data, check_adapter, problem_id,
+                for result in run_call(executor, init_data, check_adapter, problem_id,
                                        time=time_limit, memory=memory_limit,
                                        short_circuit=short_circuit, source_code=original_source):
                     print 'Test case %s' % case
@@ -386,12 +386,12 @@ class Judge(object):
                         files[output_file] = generator_error
         return files.__getitem__
 
-    def run_interactive(self, executor_func, init_data, check_adapter, problem_id, short_circuit=False, time=2,
+    def run_interactive(self, executor, init_data, check_adapter, problem_id, short_circuit=False, time=2,
                         memory=65536, source_code=None):
         """
         Executes a submission in interactive mode.
-        :param executor_func: 
-            Callback to launch the submission program.
+        :param executor:
+            Executor to launch the submission program.
         :param init_data: 
             The problem initialization data.
         :param problem_id: 
@@ -442,7 +442,7 @@ class Judge(object):
                     if isinstance(_input, str):
                         _output = cStringIO.StringIO(_output)
                     # Launch a process for the current test case
-                    process = executor_func(time=time, memory=memory)
+                    process = executor.launch(time=time, memory=memory)
                     self.current_proc = process
                     # TODO: interactive grader should really run on another thread
                     # if submission dies, interactive grader might get stuck on a process IO call,
@@ -505,12 +505,12 @@ class Judge(object):
             self._terminate_grading = False
             gc.collect()
 
-    def run_standard(self, executor_func, init_data, check_func, problem_id, short_circuit=False, time=2, memory=65536,
+    def run_standard(self, executor, init_data, check_func, problem_id, short_circuit=False, time=2, memory=65536,
                      source_code=None):
         """
         Executes a submission in standard (static) mode.
-        :param executor_func: 
-            Callback to launch the submission program.
+        :param executor:
+            Executor to launch the submission program.
         :param init_data: 
             The problem initialization data.
         :param check_func: 
@@ -555,9 +555,10 @@ class Judge(object):
                         # A previous subtestcase failed so we're allowed to break early
                         result.result_flag = Result.SC
                         check = CheckerResult(False, 0)
+                        feedback = None
                     else:
                         # Launch a process for the current test case
-                        self.current_proc = executor_func(time=time, memory=memory)
+                        self.current_proc = executor.launch(time=time, memory=memory, pipe_stderr=True)
 
                         process = self.current_proc
                         result = Result()
@@ -584,6 +585,7 @@ class Judge(object):
                             result.result_flag |= Result.OLE
                             process.kill()
                             process.wait()
+                        sys.stderr.write(error)
 
                         result.max_memory = process.max_memory
                         result.execution_time = process.execution_time
@@ -618,19 +620,19 @@ class Judge(object):
                         if result.result_flag != Result.AC:
                             check.points = 0
 
+                        feedback = (check.feedback or
+                                    (getattr(process, 'feedback') if hasattr(process, 'feedback') else
+                                     getattr(executor, 'get_feedback', lambda s: '')(error)))
+
                     # Must check here because we might be interrupted mid-execution
                     # If we don't bail out, we get an IR.
                     if self._terminate_grading:
                         raise TerminateGrading()
-                    self.packet_manager.test_case_status_packet(case_number,
-                                                                check.points,
-                                                                point_value,
-                                                                result.result_flag,
-                                                                result.execution_time,
-                                                                result.max_memory,
-                                                                # TODO: make limit configurable
-                                                                result.proc_output[:10].decode('utf-8', 'replace'),
-                                                                check.feedback or getattr(self.current_proc, 'feedback'))
+                    self.packet_manager.test_case_status_packet(
+                        case_number, check.points, point_value, result.result_flag, result.execution_time,
+                        result.max_memory,
+                        # TODO: make limit configurable
+                        result.proc_output[:10].decode('utf-8', 'replace'), feedback)
 
                     if not short_circuited and result.result_flag != Result.AC:
                         short_circuited = True

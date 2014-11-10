@@ -577,7 +577,7 @@ class Judge(object):
                         else:
                             communicate = partial(safe_communicate, process)
                         try:
-                            result.proc_output, error = communicate(input_data)
+                            result.proc_output, error = communicate(input_data, outlimit=16777216)
                         except OutputLimitExceeded as e:
                             stream, result.proc_output, error = e.args
                             print>> sys.stderr, 'OLE:', stream

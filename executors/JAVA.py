@@ -36,8 +36,8 @@ class JavaPopen(object):
     def communicate(self, stdin=None):
         return self._communicate(*self.process.communicate(stdin))
 
-    def safe_communicate(self, stdin=None, limit=None):
-        return self._communicate(*safe_communicate(self.process, stdin, limit))
+    def safe_communicate(self, stdin=None, outlimit=None, errlimit=None):
+        return self._communicate(*safe_communicate(self.process, stdin, outlimit, errlimit))
 
     def _communicate(self, stdout, stderr_):
         stderr = stderr_.rstrip().split('\n')

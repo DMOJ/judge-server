@@ -9,9 +9,11 @@ class OutputLimitExceeded(Exception):
     pass
 
 
-def safe_communicate(proc, input, limit=None):
-    if limit is None:
-        limit = 10485760
+def safe_communicate(proc, input, outlimit=None, errlimit=None):
+    if outlimit is None:
+        outlimit = 10485760
+    if errlimit is None:
+        errlimit = outlimit
     if proc.stdin:
         # Flush stdio buffer.  This might block, if the user has
         # been writing to .stdin in an uncontrolled fashion.
@@ -24,6 +26,7 @@ def safe_communicate(proc, input, limit=None):
     fd2file = {}
     fd2output = {}
     fd2length = {}
+    fd2limit = {}
 
     poller = select.poll()
 
@@ -44,10 +47,12 @@ def safe_communicate(proc, input, limit=None):
         register_and_append(proc.stdout, select_POLLIN_POLLPRI)
         fd2output[proc.stdout.fileno()] = stdout = []
         fd2length[proc.stdout.fileno()] = 0
+        fd2limit[proc.stdout.fileno()] = outlimit
     if proc.stderr:
         register_and_append(proc.stderr, select_POLLIN_POLLPRI)
         fd2output[proc.stderr.fileno()] = stderr = []
         fd2length[proc.stderr.fileno()] = 0
+        fd2limit[proc.stderr.fileno()] = errlimit
 
     input_offset = 0
     while fd2file:
@@ -77,7 +82,7 @@ def safe_communicate(proc, input, limit=None):
                     close_unregister_and_remove(fd)
                 fd2output[fd].append(data)
                 fd2length[fd] += len(data)
-                if fd2length[fd] > limit:
+                if fd2length[fd] > fd2limit[fd]:
                     raise OutputLimitExceeded(['stderr', 'stdout'][proc.stdout.fileno() == fd],
                                               stdout and ''.join(stdout), stderr and ''.join(stderr))
             else:

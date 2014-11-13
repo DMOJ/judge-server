@@ -23,7 +23,7 @@ def find_class(source):
         raise CompileError('No public class')
     package = repackage.search(source)
     if package:
-        raise CompileError('Invalid package %s: do not declare package' % package)
+        raise CompileError('Invalid package %s: do not declare package' % package.group(1))
     return class_name
 
 

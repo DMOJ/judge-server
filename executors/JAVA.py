@@ -12,6 +12,7 @@ from judgeenv import env
 recomment = re.compile(r'/\*.*?\*/', re.DOTALL)
 restring = re.compile(r'''(["'])(?:\\.|[^"\\])*\1''', re.DOTALL)
 reclass = re.compile(r'\bpublic\s+class\s+([_a-zA-Z][_0-9a-zA-z]*?)\b')
+repackage = re.compile(r'\bpackage\s+(\.[^.]+)*\b')
 JAVA_EXECUTOR = os.path.abspath(os.path.join(os.path.dirname(__file__), 'java_executor.jar'))
 
 
@@ -20,6 +21,9 @@ def find_class(source):
     class_name = reclass.search(source)
     if class_name is None:
         raise CompileError('No public class')
+    package = repackage.search(source)
+    if package:
+        raise CompileError('Invalid package %s: do not declare package' % package)
     return class_name
 
 

@@ -42,11 +42,11 @@ public class JavaSafeExecutor {
             program = classLoader.loadClass(classname);
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
-            System.err.printf("\n%d %d %d %d %d\n", 0, 0, 0, 0, CLASS_NOT_FOUND_ERROR_CODE);
+            System.err.printf("\n%d %d %d %d %d CNF\n", 0, 0, 0, 0, CLASS_NOT_FOUND_ERROR_CODE);
             return;
         } catch (NoClassDefFoundError ex) {
             ex.printStackTrace();
-            System.err.printf("\n%d %d %d %d %d\n", 0, 0, 0, 0, NO_CLASS_DEF_ERROR_CODE);
+            System.err.printf("\n%d %d %d %d %d CNF\n", 0, 0, 0, 0, NO_CLASS_DEF_ERROR_CODE);
             return;
         }
         submissionThread = new SubmissionThread(program);

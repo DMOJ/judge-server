@@ -2,6 +2,7 @@ import os
 import re
 from subprocess import Popen, PIPE
 import sys
+import traceback
 from communicate import safe_communicate
 from error import CompileError
 from .utils import test_executor
@@ -53,7 +54,12 @@ class JavaPopen(object):
             self.feedback = data[5]
         except:
             print>> sys.stderr, stderr_
-            raise
+            traceback.print_exc()
+            self.execution_time = 0
+            self.tle = 0
+            self.max_memory = 0
+            self.mle = 0
+            self.returncode = -1
         self.execution_time /= 1000.0
         if self.feedback == 'OK':
             self.feedback = None

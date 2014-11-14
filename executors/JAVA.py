@@ -13,7 +13,7 @@ from judgeenv import env
 recomment = re.compile(r'/\*.*?\*/', re.DOTALL)
 restring = re.compile(r'''(["'])(?:\\.|[^"\\])*\1''', re.DOTALL)
 reclass = re.compile(r'\bpublic\s+class\s+([_a-zA-Z\$][_0-9a-zA-z\$]*?)\b')
-repackage = re.compile(r'\bpackage\s+[^.;]+(?:\.[^.;]+)*?;')
+repackage = re.compile(r'\bpackage\s+([^.;]+(?:\.[^.;]+)*?);')
 JAVA_EXECUTOR = os.path.abspath(os.path.join(os.path.dirname(__file__), 'java_executor.jar'))
 
 

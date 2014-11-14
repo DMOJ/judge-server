@@ -1,5 +1,7 @@
 import java.io.*;
 import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.RuntimeMXBean;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -14,23 +16,63 @@ import java.util.Scanner;
 
 @SuppressWarnings("deprecation")
 public class JavaSafeExecutor {
+    /**
+     * We use our own instance of ThreadDeath for killing submissions.
+     * This is just so that a `throw new ThreadDeath()` directive in a user's submission will not be
+     * incorrectly marked as TLE. But who throws ThreadDeaths randomly, anyways?
+     */
     private static ThreadDeath TLE = new ThreadDeath();
+    /**
+     * Reflection failed with IllegalAccessException. Did the SecurityManager fail?
+     */
     private static int ACCESS_ERROR_CODE = -1001;
+    /**
+     * The user did not declare a `public static void main(String[] argv)` in their code.
+     * How are we supposed to run it?
+     */
     private static int NO_ENTRY_POINT_ERROR_CODE = -1002;
+    /**
+     * User's submission threw a Throwable, which we caught.
+     */
     private static int PROGRAM_ERROR_CODE = 1;
+    /**
+     * Class.forName failed; internal error.
+     */
     private static int CLASS_NOT_FOUND_ERROR_CODE = -1003;
+    /**
+     * Class.forName failed; internal error.
+     */
     private static int NO_CLASS_DEF_ERROR_CODE = -1004;
+    /**
+     * Thread to kill the user's submission after their time limit is exceeded.
+     */
     private static ShockerThread shockerThread;
+    /**
+     * The thread the user's submission runs on.
+     */
     private static SubmissionThread submissionThread;
+    /**
+     * Flag to indicate that the security manager should be deactivated.
+     * Should be set to false before running the user's submission, and false after it has finished running.
+     * If this flag somehow is set to false while a user's submission is running, the judging server is
+     * compromised: the submission has root access.
+     */
     private static boolean _safeBlock = false;
+    /**
+     * The current working directory of the submission, used for classpath adding.
+     */
     private static String cwd;
 
     static {
-        new Scanner(new ByteArrayInputStream(new byte[128])).close(); // Load locale
+        /*
+        Scanner needs to load some locale files before it can be used. Since "files" implies IO which is blocked by
+        our security manager, we force Scanner to load the files here, before our security manager is activated.
+         */
+        new Scanner(new ByteArrayInputStream(new byte[128])).close();
     }
 
     public static void main(String[] argv) throws MalformedURLException, ClassNotFoundException, UnsupportedEncodingException {
-        cwd = new File(argv[0]).toString(); // Resolve
+        cwd = new File(argv[0]).toString(); // Resolve relative paths
         String classname = argv[1];
         int TL = Integer.parseInt(argv[2]);
 
@@ -76,6 +118,13 @@ public class JavaSafeExecutor {
         long totalProgramTime = ManagementFactory.getRuntimeMXBean().getUptime();
         boolean tle = submissionThread.tle;
 
+        /*
+         Fetch the memory usage for the submission. This is a Linux-specific task, and will obviously
+         fail on any other OS.
+
+         We could periodically poll MemoryMXBean for heap usage etc, but that would require a third thread and would
+         not be as accurate.
+         */
         long mem = 0;
         try {
             BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream("/proc/self/status")));
@@ -92,19 +141,21 @@ public class JavaSafeExecutor {
         Throwable exc = submissionThread.exception;
 
         System.err.println();
+        // Python-side executor interface
         System.err.printf("%d %d %d %d %d %s\n", totalProgramTime, tle ? 1 : 0, mem, mle ? 1 : 0, error, exc != null ? exc.getClass().getName() : "OK");
     }
 
     public static class SubmissionSecurityManager extends SecurityManager {
         @Override
         public void checkPermission(Permission perm) {
+            if (_safeBlock) return;
             String fname = perm.getName().replace("\\", "/");
             if (perm instanceof FilePermission) {
                 if (perm.getActions().equals("read") &&
                         (fname.startsWith(cwd + File.separator) ||
                                 fname.startsWith("/usr/lib/jvm/") ||
                                 fname.contains("/jre/lib/zi/")
-                               )) // Date
+                        )) // Date
                     return;
             }
             if (perm instanceof RuntimePermission) {
@@ -112,26 +163,29 @@ public class JavaSafeExecutor {
                         fname.equals("readFileDescriptor") ||
                         fname.equals("fileSystemProvider"))
                     return;
-                if(fname.startsWith("accessClassInPackage")) {
-                    if(fname.contains("sun.util.resources"))
+                if (fname.startsWith("accessClassInPackage")) {
+                    if (fname.contains("sun.util.resources"))
                         return;
                 }
             }
-            if(perm instanceof ReflectPermission)
-            {
-                if(fname.equals("suppressAccessChecks"))
-                    return; // Seems unsafe but needed for the goddamn date api
+            if (perm instanceof ReflectPermission) {
+                /*
+                    Java's Date API requires reflection. Wow.
+                    Thankfully this is safe enough, since it doesn't allow a malicious submission
+                    to access JavaSafeExecutor fields.
+                 */
+                if (fname.equals("suppressAccessChecks")) {
+                    return;
+                }
             }
             if (perm instanceof PropertyPermission) {
                 if (perm.getActions().contains("write")) {
-                    if(fname.equals("user.timezone")) return; // Date
+                    if (fname.equals("user.timezone")) return; // Date
                     throw new AccessControlException(perm.getClass() + " - " + perm.getName() + ": " + perm.getActions(), perm);
                 }
                 return;
             }
-            if (!_safeBlock) {
-                throw new AccessControlException(perm.getClass() + " - " + perm.getName() + ": " + perm.getActions(), perm);
-            }
+            throw new AccessControlException(perm.getClass() + " - " + perm.getName() + ": " + perm.getActions(), perm);
         }
     }
 
@@ -148,11 +202,15 @@ public class JavaSafeExecutor {
         @Override
         public void run() {
             try {
+                // Wait for TL
                 Thread.sleep(timelimit);
+                // Then disable the security manager
                 _safeBlock = true;
-                target.stop(TLE);
-            } catch (InterruptedException ignored) {
+                // And kill the submission
+                target.stop(TLE); // We use our own exception here!
+                // TODO: a submission may do something bad after _safeBlock = true but before the thread is stopped
             } catch (ThreadDeath ouch) {
+            } catch (InterruptedException ignored) {
             }
         }
     }
@@ -165,7 +223,7 @@ public class JavaSafeExecutor {
         private Throwable exception;
 
         public SubmissionThread(Class process) {
-            super(null, null, "Submission-Grading-Thread(" + process.getSimpleName() + ")", 8000000);
+            super(null, null, "Submission-Grading-Thread(" + process.getSimpleName() + ")", 8000000 /* Some pretty large stack size */);
             this.submission = process;
         }
 
@@ -175,23 +233,22 @@ public class JavaSafeExecutor {
             Method handle;
             try {
                 handle = submission.getMethod("main", String[].class);
-                if (!Modifier.isStatic(handle.getModifiers())) System.exit(-10);
+                if (!Modifier.isStatic(handle.getModifiers())) System.exit(NO_ENTRY_POINT_ERROR_CODE);
                 try {
                     handle.invoke(null, new Object[]{new String[0]});
                 } catch (InvocationTargetException e) {
-                    if (e.getCause() == TLE) {
+                    // All program errors will be wrapped in an InvocationTargetException
+                    Throwable ex = e.getCause();
+                    if (ex == TLE) {
+                        // We've caught the ThreadDeath we threw to kill the submission thread in case of TLE.
                         tle = true;
                         return;
-                    } else if (e.getCause() instanceof OutOfMemoryError) {
-                        // Prevent throw new OutOfMemoryError from being counted as MLE
-//                        if(e.getCause().getStackTrace()[0].getClassName().equals(submission.getSimpleName())) {
-//                            error = PROGRAM_ERROR_CODE;
-//                            return;
-//                        }
+                    } else if (ex instanceof OutOfMemoryError) {
+                        // TODO: prevent `throw new OutOfMemoryError()` as being counted as MLE
                         mle = true;
                         return;
                     } else {
-                        e.getCause().printStackTrace();
+                        ex.printStackTrace();
                         exception = e.getCause();
                         error = PROGRAM_ERROR_CODE;
                     }
@@ -212,6 +269,14 @@ public class JavaSafeExecutor {
         }
     }
 
+    /**
+     * The regular PrintStream set as System.out is just way too slow.
+     * This PrintStream implementation is a couple dozen times faster, at the cost of not being thread-safe.
+     * Since we forbid cloning anyways, this is not an issue as only the submission thread will ever print.
+     *
+     * FIXME: we use the ASCII encoding for speed reasons, but this may (will) cause Java submissions to fail
+     * FIXME: problems that require unicode output. Maybe we should have a -unicode flag?
+     */
     public static class UnsafePrintStream extends PrintStream {
         private BufferedWriter writer;
         private OutputStreamWriter bin;
@@ -222,7 +287,7 @@ public class JavaSafeExecutor {
             super(new ByteArrayOutputStream());
             this.out = out;
             bin = new OutputStreamWriter(out, "ASCII");
-            writer = new BufferedWriter(bin, 4096);
+            writer = new BufferedWriter(bin, 4096 /* 4k buffer seems to work pretty well */);
         }
 
         @Override

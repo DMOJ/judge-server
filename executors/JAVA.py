@@ -3,7 +3,7 @@ import re
 from subprocess import Popen, PIPE
 import sys
 import traceback
-from communicate import safe_communicate
+from communicate import safe_communicate, OutputLimitExceeded
 from error import CompileError
 from .utils import test_executor
 
@@ -43,7 +43,15 @@ class JavaPopen(object):
         return self._communicate(*self.process.communicate(stdin))
 
     def safe_communicate(self, stdin=None, outlimit=None, errlimit=None):
-        return self._communicate(*safe_communicate(self.process, stdin, outlimit, errlimit))
+        try:
+            return self._communicate(*safe_communicate(self.process, stdin, outlimit, errlimit))
+        except OutputLimitExceeded:
+            self.execution_time = 0
+            self.tle = 0
+            self.max_memory = 0
+            self.mle = 0
+            self.returncode = -1
+            raise
 
     def _communicate(self, stdout, stderr_):
         stderr = stderr_.rstrip().split('\n')
@@ -54,12 +62,7 @@ class JavaPopen(object):
             self.feedback = data[5]
         except:
             print>> sys.stderr, stderr_
-            traceback.print_exc()
-            self.execution_time = 0
-            self.tle = 0
-            self.max_memory = 0
-            self.mle = 0
-            self.returncode = -1
+            raise
         self.execution_time /= 1000.0
         if self.feedback == 'OK':
             self.feedback = None

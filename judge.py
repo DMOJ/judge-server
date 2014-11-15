@@ -403,6 +403,7 @@ class Judge(object):
         :return:
             A Result instance representing the execution result of the submission program.
         """
+        output_prefix_length = init_data.get('output_prefix_length', 32)
         forward_test_cases = []
         for case in init_data['test_cases']:
             if isinstance(case, dict):
@@ -485,9 +486,9 @@ class Judge(object):
                                                                 result.result_flag,
                                                                 result.execution_time,
                                                                 result.max_memory,
-                                                                # TODO: make limit configurable
-                                                                # result.proc_output[:10
-                                                                '')
+                                                                result.proc_output[:output_prefix_length].decode('utf-8', 'replace'),
+                                                                # TODO: add interactive grader's feedback
+                                                                None)
 
                     if not short_circuited and result.result_flag != Result.AC:
                         short_circuited = True
@@ -526,6 +527,7 @@ class Judge(object):
         :return:
             A Result instance representing the execution result of the submission program.
         """
+        output_prefix_length = init_data.get('output_prefix_length', 32)
         forward_test_cases = []
         for case in init_data['test_cases']:
             if 'data' in case:
@@ -632,8 +634,7 @@ class Judge(object):
                     self.packet_manager.test_case_status_packet(
                         case_number, check.points, point_value, result.result_flag, result.execution_time,
                         result.max_memory,
-                        # TODO: make limit configurable
-                        result.proc_output[:10].decode('utf-8', 'replace'), feedback)
+                        result.proc_output[:output_prefix_length].decode('utf-8', 'replace'), feedback)
 
                     if not short_circuited and result.result_flag != Result.AC:
                         short_circuited = True

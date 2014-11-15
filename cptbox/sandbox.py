@@ -124,7 +124,7 @@ class _SecurePopen(Process):
     def _protection_fault(self, syscall):
         callname = None
         index = self._bitness == 64
-        for id, call in translator:
+        for id, call in translator.iteritems():
             if call[index] == syscall:
                 callname = by_id[id]
                 break

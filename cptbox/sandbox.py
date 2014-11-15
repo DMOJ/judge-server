@@ -7,7 +7,7 @@ import errno
 import signal
 import sys
 from _cptbox import Process
-from .syscalls import translator, SYSCALL_COUNT
+from .syscalls import translator, SYSCALL_COUNT, by_id
 
 DISALLOW = 0
 ALLOW = 1
@@ -122,7 +122,13 @@ class _SecurePopen(Process):
         return False
 
     def _protection_fault(self, syscall):
-        print>>sys.stderr, 'Protection fault on:', syscall
+        callname = None
+        index = self._bitness == 64
+        for id, call in translator:
+            if call[index] == syscall:
+                callname = by_id[id]
+                break
+        print>>sys.stderr, 'Protection fault on: %d (%s)' % (syscall, callname)
         print>>sys.stderr, 'Arg0: 0x%016x' % self.debugger.uarg0()
         print>>sys.stderr, 'Arg1: 0x%016x' % self.debugger.uarg1()
         print>>sys.stderr, 'Arg2: 0x%016x' % self.debugger.uarg2()

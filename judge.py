@@ -255,7 +255,7 @@ class Judge(object):
                     # Obtain the output correctness checker, e.g. standard or float
                     checker_id = init_data.get('checker', 'standard')
                     if isinstance(checker_id, dict):
-                        checker_params = checker_id['parameters']
+                        checker_params = checker_id.get('parameters', {})
                         checker_id = checker_id['name']
                     else:
                         checker_params = {}

@@ -65,7 +65,7 @@ class JavaPopen(object):
         except:
             print>> sys.stderr, stderr_
             if self._killed:
-                return
+                return stdout, None
             raise
         self.execution_time /= 1000.0
         if self.feedback == 'OK':

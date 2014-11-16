@@ -590,6 +590,12 @@ class Judge(object):
                         if error:
                             sys.stderr.write(error)
 
+                        # Must check here because we might be interrupted mid-execution
+                        # If we don't bail out, we get an IR.
+                        # In Java's case, all the code after this will crash.
+                        if self._terminate_grading:
+                            raise TerminateGrading()
+
                         result.max_memory = process.max_memory
                         result.execution_time = process.execution_time
                         result.r_execution_time = process.r_execution_time
@@ -627,10 +633,6 @@ class Judge(object):
                                     (process.feedback if hasattr(process, 'feedback') else
                                      getattr(executor, 'get_feedback', lambda s: '')(error)))
 
-                    # Must check here because we might be interrupted mid-execution
-                    # If we don't bail out, we get an IR.
-                    if self._terminate_grading:
-                        raise TerminateGrading()
                     self.packet_manager.test_case_status_packet(
                         case_number, check.points, point_value, result.result_flag, result.execution_time,
                         result.max_memory,

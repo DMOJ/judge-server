@@ -39,6 +39,7 @@ class JavaPopen(object):
         self.error_info, self.error = None, None
         self.returncode = None
         self.feedback = None
+        self._killed = False
 
     def communicate(self, stdin=None):
         return self._communicate(*self.process.communicate(stdin))
@@ -63,6 +64,8 @@ class JavaPopen(object):
             self.feedback = data[5]
         except:
             print>> sys.stderr, stderr_
+            if self._killed:
+                return
             raise
         self.execution_time /= 1000.0
         if self.feedback == 'OK':
@@ -72,6 +75,10 @@ class JavaPopen(object):
         if self.error_info:
             print>> sys.stderr, self.error_info
         return stdout, None
+
+    def kill(self):
+        self._killed = True
+        return self.process.kill()
 
     @property
     def r_execution_time(self):

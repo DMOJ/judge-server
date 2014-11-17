@@ -3,6 +3,7 @@ from .resource_proxy import ResourceProxy
 from cptbox import SecurePopen, PIPE
 from subprocess import Popen
 import re
+from result import Result
 
 retraceback = re.compile(r'Traceback \(most recent call last\):\n.*?\n([a-zA-Z_]\w*)(?::[^\n]*?)?$', re.S | re.M)
 
@@ -41,8 +42,8 @@ __import__('sys').stdin = __import__('os').fdopen(0, 'r', 65536)
                      cwd=self._dir,
                      **kwargs)
 
-    def get_feedback(self, stderr):
-        if not stderr or len(stderr) > 2048:
+    def get_feedback(self, stderr, result):
+        if not result & Result.IR or not stderr or len(stderr) > 2048:
             return ''
         match = deque(retraceback.finditer(stderr), maxlen=1)
         if not match:

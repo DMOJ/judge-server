@@ -11,7 +11,10 @@ import zipfile
 import cStringIO
 import sys
 import subprocess
+
 from modload import load_module_from_file
+from result import Result
+
 
 try:
     from watchdog.observers import Observer
@@ -30,26 +33,6 @@ from communicate import safe_communicate, OutputLimitExceeded
 from executors import executors
 import checkers
 import packet
-
-
-class Result(object):
-    AC = 0
-    WA = 1 << 0
-    RTE = 1 << 1
-    TLE = 1 << 2
-    MLE = 1 << 3
-    IR = 1 << 4
-    SC = 1 << 5
-    OLE = 1 << 6
-    IE = 1 << 30
-
-    def __init__(self):
-        self.result_flag = 0
-        self.execution_time = 0
-        self.r_execution_time = 0
-        self.max_memory = 0
-        self.proc_output = ''
-        self.points = 0
 
 
 class CheckerResult(object):
@@ -631,7 +614,7 @@ class Judge(object):
 
                         feedback = (check.feedback or
                                     (process.feedback if hasattr(process, 'feedback') else
-                                     getattr(executor, 'get_feedback', lambda s: '')(error)))
+                                     getattr(executor, 'get_feedback', lambda s: '')(error, result)))
 
                     self.packet_manager.test_case_status_packet(
                         case_number, check.points, point_value, result.result_flag, result.execution_time,

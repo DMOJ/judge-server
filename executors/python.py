@@ -43,7 +43,7 @@ __import__('sys').stdin = __import__('os').fdopen(0, 'r', 65536)
                      **kwargs)
 
     def get_feedback(self, stderr, result):
-        if not result & Result.IR or not stderr or len(stderr) > 2048:
+        if not result.result_flag & Result.IR or not stderr or len(stderr) > 2048:
             return ''
         match = deque(retraceback.finditer(stderr), maxlen=1)
         if not match:

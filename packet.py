@@ -43,7 +43,7 @@ class PacketManager(object):
         print>> sys.stderr, 'SOCKET ERROR: Disconncted! Reconnecting in %d seconds.' % self.fallback
         self.conn.close()
         time.sleep(self.fallback)
-        self.fallback *= 2
+        self.fallback *= 1.5
         try:
             self._connect()
         except JudgeAuthenticationFailed:
@@ -150,6 +150,7 @@ class PacketManager(object):
                            'feedback': feedback})
 
     def compile_error_packet(self, log):
+        self.fallback = 4
         self._send_packet({'name': 'compile-error',
                            'submission-id': self.judge.current_submission,
                            'log': log})
@@ -169,6 +170,7 @@ class PacketManager(object):
                            'submission-id': self.judge.current_submission})
 
     def grading_end_packet(self):
+        self.fallback = 4
         self._send_packet({'name': 'grading-end',
                            'submission-id': self.judge.current_submission})
 

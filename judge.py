@@ -614,7 +614,7 @@ class Judge(object):
 
                         feedback = (check.feedback or
                                     (process.feedback if hasattr(process, 'feedback') else
-                                     getattr(executor, 'get_feedback', lambda s: '')(error, result)))
+                                     getattr(executor, 'get_feedback', lambda x, y: '')(error, result)))
 
                     self.packet_manager.test_case_status_packet(
                         case_number, check.points, point_value, result.result_flag, result.execution_time,

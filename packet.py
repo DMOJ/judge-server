@@ -24,6 +24,9 @@ class PacketManager(object):
         self.name = name
         self.key = key
         self._connect()
+        # Exponential backoff: starting at 4 seconds.
+        # Certainly hope it won't stack overflow, since it will take days if not years.
+        self.fallback = 4
 
     def _connect(self):
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -33,16 +36,18 @@ class PacketManager(object):
         self.handshake(self.judge.supported_problems(), self.name, self.key)
 
     def _reconnect(self):
+        if self.fallback > 65536:
+            # Return 0 to avoid supervisor restart.
+            raise SystemExit(0)
         print>> sys.stderr
-        print>> sys.stderr, 'SOCKET ERROR: Disconncted!'
+        print>> sys.stderr, 'SOCKET ERROR: Disconncted! Reconnecting in %d seconds.' % self.fallback
         self.conn.close()
-        time.sleep(15)
+        time.sleep(self.fallback)
+        self.fallback *= 2
         try:
             self._connect()
         except JudgeAuthenticationFailed:
-            traceback.print_exc()
-            # Return 0 to avoid supervisor restart.
-            raise SystemExit(0)
+            self._reconnect()
 
     def __del__(self):
         self.conn.shutdown()

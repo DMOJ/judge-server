@@ -1,9 +1,10 @@
+from collections import deque
 from .resource_proxy import ResourceProxy
 from cptbox import SecurePopen, PIPE
 from subprocess import Popen
 import re
 
-retraceback = re.compile(r'Traceback \(most recent call last\):\n.*?\n(\w+)(?::[^\n]*?)?$', re.S | re.M)
+retraceback = re.compile(r'Traceback \(most recent call last\):\n.*?\n([a-zA-Z_]\w*)(?::[^\n]*?)?$', re.S | re.M)
 
 
 class PythonExecutor(ResourceProxy):
@@ -43,7 +44,8 @@ __import__('sys').stdin = __import__('os').fdopen(0, 'r', 65536)
     def get_feedback(self, stderr):
         if not stderr or len(stderr) > 2048:
             return ''
-        match = retraceback.search(stderr)
-        if match is None:
+        match = deque(retraceback.finditer(stderr), maxlen=1)
+        if not match:
             return ''
-        return match.group(1)
+        exception = match[0].group(1)
+        return '' if len(exception) > 20 else exception

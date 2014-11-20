@@ -350,7 +350,11 @@ class Judge(object):
             }
             clazz = lookup.get(ext, None)
             if not clazz:
-                raise IOError('could not identify generator extension')
+                if ext in ['.c', '.cpp']:
+                    # unsafe works even if cptbox fails
+                    clazz = __import__('executors').CPP11
+                else:
+                    raise IOError('could not identify generator extension')
             generator_launcher = clazz.Executor('%s-generator' % problem_id, generator_source).launch_unsafe
 
             test = 0

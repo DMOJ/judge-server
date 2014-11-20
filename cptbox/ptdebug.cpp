@@ -33,11 +33,15 @@ char *pt_debugger::readstr(unsigned long addr) {
 
     lseek(memory, addr, SEEK_SET);
     while (true) {
-        read(memory, buf + size, page);
-        if (has_null(buf + size, page))
+        ssize_t done = read(memory, buf + size, page);
+        if (!done) {
+            buf[buf+size-1] = '\0';
             break;
-        size += page;
-        page = 4096;
+        }
+        if (has_null(buf + size, done))
+            break;
+        size += done;
+        page = (addr + size + 4096) / 4096 * 4096 - addr - size;
         buf = (char *) realloc(buf, size + page);
     }
     return buf;

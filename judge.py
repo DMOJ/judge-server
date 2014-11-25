@@ -258,7 +258,7 @@ class Judge(object):
                 # Use a proxy to not expose init_data to all submethods
                 def check_adapter(test_input, proc_output, judge_output, point_value):
                     return checker.check(proc_output, judge_output, submission_source=source_code,
-                                         test_case_data=test_input, point_value=point_value,
+                                         judge_input=test_input, point_value=point_value,
                                          **checker_params)
 
                 run_call = [self.run_standard, self.run_interactive]['grader' in init_data]

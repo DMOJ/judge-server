@@ -15,11 +15,8 @@ public class ShockerThread extends Thread {
         try {
             // Wait for TL
             Thread.sleep(timelimit);
-            // Then disable the security manager
-            JavaSafeExecutor._safeBlock = true;
             // And kill the submission
             target.stop(JavaSafeExecutor.TLE); // We use our own exception here!
-            // TODO: a submission may do something bad after _safeBlock = true but before the thread is stopped
         } catch (ThreadDeath ouch) {
         } catch (InterruptedException ignored) {
         }

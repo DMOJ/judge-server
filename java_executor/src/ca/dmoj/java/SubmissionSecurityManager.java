@@ -10,7 +10,7 @@ import java.util.PropertyPermission;
 public class SubmissionSecurityManager extends SecurityManager {
     @Override
     public void checkPermission(Permission perm) {
-        if (JavaSafeExecutor._safeBlock) return;
+        if (JavaSafeExecutor._safeBlock || Thread.currentThread() == JavaSafeExecutor.selfThread || Thread.currentThread() == JavaSafeExecutor.shockerThread) return;
         String fname = perm.getName().replace("\\", "/");
         if (perm instanceof FilePermission) {
             if (perm.getActions().equals("read") &&

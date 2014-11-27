@@ -44,6 +44,7 @@ public class JavaSafeExecutor {
      * The thread the user's submission runs on.
      */
     static SubmissionThread submissionThread;
+    static Thread selfThread;
     /**
      * Flag to indicate that the security manager should be deactivated.
      * Should be set to false before running the user's submission, and false after it has finished running.
@@ -68,6 +69,7 @@ public class JavaSafeExecutor {
         cwd = new File(argv[0]).toString(); // Resolve relative paths
         String classname = argv[1];
         int TL = Integer.parseInt(argv[2]);
+        selfThread = Thread.currentThread();
 
         System.setOut(new UnsafePrintStream(new FileOutputStream(FileDescriptor.out)));
 
@@ -102,7 +104,6 @@ public class JavaSafeExecutor {
             submissionThread.join();
         } catch (InterruptedException ignored) {
         }
-        _safeBlock = true;
         shockerThread.stop();
 
         // UnsafePrintStream buffers

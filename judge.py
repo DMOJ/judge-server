@@ -456,7 +456,8 @@ class Judge(object):
                     if not init_data.get('swallow_ir', False) and process.returncode > 0:
                         result.result_flag |= Result.IR
                     if not init_data.get('swallow_rte', False) and process.returncode < 0:
-                        print>> sys.stderr, 'Killed by signal %d' % -process.returncode
+                        if process.returncode is not None:
+                            print>> sys.stderr, 'Killed by signal %d' % -process.returncode
                         result.result_flag |= Result.RTE  # Killed by signal
                     if not init_data.get('swallow_tle', False) and process.tle:
                         result.result_flag |= Result.TLE

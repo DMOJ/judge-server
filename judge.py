@@ -445,7 +445,7 @@ class Judge(object):
                             process.kill()
                         except:  # The process might've already exited
                             pass
-                        self.packet_manager.problem_not_exist_packet(problem_id)
+                        self.packet_manager.internal_error_packet(problem_id)
                         return
                     else:
                         process.wait()
@@ -487,7 +487,7 @@ class Judge(object):
             raise
         except:
             traceback.print_exc()
-            self.packet_manager.problem_not_exist_packet(problem_id)
+            self.packet_manager.internal_error_packet(problem_id)
         finally:
             self.current_proc = None
             self._terminate_grading = False

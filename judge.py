@@ -473,6 +473,7 @@ class Judge(object):
                         result.execution_time *= time_adjust
                         if result.execution_time > time:
                             result.result_flag |= Result.TLE
+                            result.points = 0
                     self.packet_manager.test_case_status_packet(case_number,
                                                                 result.points,
                                                                 point_value,
@@ -631,6 +632,7 @@ class Judge(object):
                         result.execution_time *= time_adjust
                         if result.execution_time > time:
                             result.result_flag |= Result.TLE
+                            check.points = 0
 
                     self.packet_manager.test_case_status_packet(
                         case_number, check.points, point_value, result.result_flag, result.execution_time,

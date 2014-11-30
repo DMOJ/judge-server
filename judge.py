@@ -469,7 +469,7 @@ class Judge(object):
                     # If we don't bail out, we get an IR.
                     if self._terminate_grading:
                         raise TerminateGrading()
-                    if not init_data.get('swallow_tle', False) and not (result.result_flag & Result.TLE):
+                    if not init_data.get('swallow_tle', False) and not (result.result_flag & Result.TLE) and result.execution_time is not None:
                         result.execution_time *= time_adjust
                         if result.execution_time > time:
                             result.result_flag |= Result.TLE

@@ -451,8 +451,9 @@ class Judge(object):
                     else:
                         process.wait()
                     result.max_memory = process.max_memory
-                    result.execution_time = process.execution_time
-                    result.r_execution_time = process.r_execution_time
+                    # hack to counter Tudor's bad design
+                    result.execution_time = process.execution_time or 0.0
+                    result.r_execution_time = process.r_execution_time or 0.0
 
                     if not init_data.get('swallow_ir', False) and process.returncode > 0:
                         result.result_flag |= Result.IR
@@ -469,7 +470,7 @@ class Judge(object):
                     # If we don't bail out, we get an IR.
                     if self._terminate_grading:
                         raise TerminateGrading()
-                    if not init_data.get('swallow_tle', False) and not (result.result_flag & Result.TLE) and result.execution_time is not None:
+                    if not init_data.get('swallow_tle', False) and not (result.result_flag & Result.TLE):
                         result.execution_time *= time_adjust
                         if result.execution_time > time:
                             result.result_flag |= Result.TLE

@@ -391,6 +391,7 @@ class Judge(object):
             A Result instance representing the execution result of the submission program.
         """
         output_prefix_length = init_data.get('output_prefix_length', 32)
+        time_adjust = init_data.get('time_adjust', 1.0)
         forward_test_cases = []
         for case in init_data['test_cases']:
             if isinstance(case, dict):
@@ -472,7 +473,7 @@ class Judge(object):
                                                                 result.points,
                                                                 point_value,
                                                                 result.result_flag,
-                                                                result.execution_time,
+                                                                result.execution_time * time_adjust,
                                                                 result.max_memory,
                                                                 result.proc_output[:output_prefix_length].decode('utf-8', 'replace'),
                                                                 # TODO: add interactive grader's feedback
@@ -516,6 +517,7 @@ class Judge(object):
             A Result instance representing the execution result of the submission program.
         """
         output_prefix_length = init_data.get('output_prefix_length', 32)
+        time_adjust = init_data.get('time_adjust', 1.0)
         forward_test_cases = []
         for case in init_data['test_cases']:
             if 'data' in case:
@@ -622,7 +624,7 @@ class Judge(object):
                                      getattr(executor, 'get_feedback', lambda x, y: '')(error, result)))
 
                     self.packet_manager.test_case_status_packet(
-                        case_number, check.points, point_value, result.result_flag, result.execution_time,
+                        case_number, check.points, point_value, result.result_flag, result.execution_time * time_adjust,
                         result.max_memory,
                         result.proc_output[:output_prefix_length].decode('utf-8', 'replace'), feedback)
 

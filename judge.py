@@ -469,11 +469,15 @@ class Judge(object):
                     # If we don't bail out, we get an IR.
                     if self._terminate_grading:
                         raise TerminateGrading()
+                    if not init_data.get('swallow_tle', False) and not (result.result_flag & Result.TLE):
+                        result.execution_time *= time_adjust
+                        if result.execution_time > time:
+                            result.result_flag |= Result.TLE
                     self.packet_manager.test_case_status_packet(case_number,
                                                                 result.points,
                                                                 point_value,
                                                                 result.result_flag,
-                                                                result.execution_time * time_adjust,
+                                                                result.execution_time,
                                                                 result.max_memory,
                                                                 result.proc_output[:output_prefix_length].decode('utf-8', 'replace'),
                                                                 # TODO: add interactive grader's feedback
@@ -623,8 +627,13 @@ class Judge(object):
                                     (process.feedback if hasattr(process, 'feedback') else
                                      getattr(executor, 'get_feedback', lambda x, y: '')(error, result)))
 
+                    if not init_data.get('swallow_tle', False) and not (result.result_flag & Result.TLE):
+                        result.execution_time *= time_adjust
+                        if result.execution_time > time:
+                            result.result_flag |= Result.TLE
+
                     self.packet_manager.test_case_status_packet(
-                        case_number, check.points, point_value, result.result_flag, result.execution_time * time_adjust,
+                        case_number, check.points, point_value, result.result_flag, result.execution_time,
                         result.max_memory,
                         result.proc_output[:output_prefix_length].decode('utf-8', 'replace'), feedback)
 

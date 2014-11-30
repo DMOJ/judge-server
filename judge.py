@@ -450,8 +450,8 @@ class Judge(object):
                         return
                     else:
                         process.wait()
-                    result.max_memory = process.max_memory
                     # hack to counter Tudor's bad design
+                    result.max_memory = process.max_memory or 0.0
                     result.execution_time = process.execution_time or 0.0
                     result.r_execution_time = process.r_execution_time or 0.0
 

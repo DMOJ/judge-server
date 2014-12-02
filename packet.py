@@ -99,7 +99,7 @@ class PacketManager(object):
 
         name = packet['name']
         if name == 'ping':
-            self.ping_packet(time.time())
+            self.ping_packet(packet['when'])
         elif name == 'get-current-submission':
             self.current_submission_packet()
         elif name == 'submission-request':

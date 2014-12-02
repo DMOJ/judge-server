@@ -97,7 +97,6 @@ public:
     pid_t getpid() { return process->getpid(); }
 protected:
     pt_process *process;
-    int memory;
 };
 
 class pt_debugger32 : public pt_debugger {

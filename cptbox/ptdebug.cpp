@@ -1,6 +1,7 @@
 #define _BSD_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/ptrace.h>
@@ -19,30 +20,26 @@ void pt_debugger::set_process(pt_process *proc) {
     process = proc;
 }
 
-void pt_debugger::new_process() {
-    char *file;
-    asprintf(&file, "/proc/%d/mem", process->getpid());
-    memory = open(file, O_RDONLY);
-    free(file);
-}
+void pt_debugger::new_process() {}
 
 char *pt_debugger::readstr(unsigned long addr) {
-    unsigned long page = (addr + 4096) / 4096 * 4096 - addr;
-    unsigned long size = 0;
-    char *buf = (char *) malloc(page);
+    size_t size = 4096, read = 0;
+    char *buf = (char *) malloc(size);
+    union {
+        long val;
+        char byte[sizeof(long)];
+    } data;
 
-    lseek(memory, addr, SEEK_SET);
     while (true) {
-        ssize_t done = read(memory, buf + size, page);
-        if (!done) {
-            buf[size?size-1:0] = '\0';
-            break;
+        if (read + sizeof(long) > size) {
+            size += 4096;
+            buf = (char *) realloc(buf, size);
         }
-        if (has_null(buf + size, done))
+        data.val = ptrace(PTRACE_PEEKDATA, process->getpid(), addr + read, NULL);
+        memcpy(buf + read, data.byte, sizeof(long));
+        if (has_null(data.byte, sizeof(long)))
             break;
-        size += done;
-        page = (addr + size + 4096) / 4096 * 4096 - addr - size;
-        buf = (char *) realloc(buf, size + page);
+        read += sizeof(long);
     }
     return buf;
 }
@@ -51,7 +48,4 @@ void pt_debugger::freestr(char *buf) {
     free(buf);
 }
 
-pt_debugger::~pt_debugger() {
-    if (memory)
-        close(memory);
-}
+pt_debugger::~pt_debugger() {}

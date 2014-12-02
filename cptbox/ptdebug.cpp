@@ -35,7 +35,7 @@ char *pt_debugger::readstr(unsigned long addr) {
     while (true) {
         ssize_t done = read(memory, buf + size, page);
         if (!done) {
-            buf[size-1] = '\0';
+            buf[size?size-1:0] = '\0';
             break;
         }
         if (has_null(buf + size, done))

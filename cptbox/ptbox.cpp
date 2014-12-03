@@ -8,10 +8,6 @@
 
 int child(void *context) {
     char *envp[] = { NULL };
-    rlimit stack_limit;
-    stack_limit.rlim_cur = 16 * 1024 * 1024;
-    stack_limit.rlim_max = 16 * 1024 * 1024;
-    setrlimit(RLIMIT_STACK, &stack_limit);
     ptrace(PTRACE_TRACEME, 0, NULL, NULL);
     kill(getpid(), SIGSTOP);
     execle("/bin/ls", "ls", (char *) NULL, envp);

@@ -10,8 +10,7 @@ from .resource_proxy import ResourceProxy
 from judgeenv import env
 
 CS_FS = ['.*\.so', '/proc/(?:self/|xen)', '/dev/shm/', '/proc/stat', '/usr/lib/mono/',
-         '/etc/nsswitch.conf$', '/etc/passwd$', '/etc/mono/', '/dev/null$', '.*/.mono/',
-         '/sys/']
+         '/etc/nsswitch.conf$', '/etc/passwd$', '/etc/mono/', '/dev/null$', '.*/.mono/']
 UNLINK_FS = re.compile('/dev/shm/mono.\d+$')
 
 
@@ -30,7 +29,7 @@ class Executor(ResourceProxy):
         self.warning = compile_error
 
     def _get_security(self):
-        sec = CHROOTSecurity(CS_FS + [self._dir], writable=(1, 2, 3))
+        sec = CHROOTSecurity(CS_FS + [self._dir])
         sec[sys_sched_getaffinity] = ALLOW
         sec[sys_statfs] = ALLOW
         sec[sys_ftruncate64] = ALLOW
@@ -53,16 +52,17 @@ class Executor(ResourceProxy):
         return sec
 
     def launch(self, *args, **kwargs):
-        return SecurePopen([env['runtime']['mono'], self.name] + list(args),
+        return SecurePopen(['mono', self.name] + list(args),
+                           executable=env['runtime']['mono'],
                            security=self._get_security(),
-                           address_grace=65536,
                            time=kwargs.get('time'),
                            memory=kwargs.get('memory'),
                            stderr=(PIPE if kwargs.get('pipe_stderr', False) else None),
                            env={}, cwd=self._dir, nproc=-1)
 
     def launch_unsafe(self, *args, **kwargs):
-        return subprocess.Popen([env['runtime']['mono'], self.name] + list(args),
+        return subprocess.Popen(['mono', self.name] + list(args),
+                                executable=env['runtime']['mono'],
                                 env={},
                                 cwd=self._dir,
                                 **kwargs)

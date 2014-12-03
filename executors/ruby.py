@@ -5,7 +5,7 @@ from .utils import test_executor
 from .resource_proxy import ResourceProxy
 from judgeenv import env
 
-RUBY_FS = ['.*\.(?:so|rb$)', '/etc/localtime$' '/dev/urandom$', '/proc/self']
+RUBY_FS = ['.*\.(?:so|rb$)', '/etc/localtime$', '/dev/urandom$', '/proc/self']
 
 
 def make_executor(key):

@@ -10,6 +10,7 @@ PHP_FS = ['.*\.so', '/etc/localtime$', '.*/php[\w-]*\.ini$']
 if 'phpconfdir' in env['runtime']:
     PHP_FS += [env['runtime']['phpconfdir']]
 
+
 class Executor(ResourceProxy):
     def __init__(self, problem_id, source_code):
         super(Executor, self).__init__()
@@ -23,7 +24,7 @@ class Executor(ResourceProxy):
                            security=CHROOTSecurity(PHP_FS + [self._script]),
                            time=kwargs.get('time'),
                            memory=kwargs.get('memory'),
-                           address_grace=16384,
+                           address_grace=32768,
                            env={'LANG': 'C'}, cwd=self._dir)
 
     def launch_unsafe(self, *args, **kwargs):

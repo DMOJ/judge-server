@@ -14,28 +14,28 @@ int child(void *context) {
     return 3306;
 }
 
+void pt_syscall_return(void *context, int syscall) {
+    printf("Returning from: %d\n", syscall);
+}
+
 int pt_syscall_handler(void *context, int syscall) {
     pt_debugger* debugger = (pt_debugger*) context;
-    if (syscall == 2) {
+    if (syscall == 5) {
         char *file = debugger->readstr((unsigned long) debugger->arg0());
         printf("Opening: %s\n", file);
         debugger->freestr(file);
     }
+    debugger->on_return(pt_syscall_return, context);
     return true;
 }
 
-int allowed_calls[] = {
-    0, 1, 3, 5, 9, 10, 11, 12, 13, 14, 16, 21, 59, 72,
-    78, 97, 137, 158, 202, 218, 231, 273,
-};
-
 int main() {
-    pt_debugger64 *debugger = new pt_debugger64();
+    pt_debugger32 *debugger = new pt_debugger32();
     pt_process *process = pt_alloc_process(debugger);
 
-    for (unsigned i = 0; i < sizeof(allowed_calls) / sizeof(int); ++i)
-        process->set_handler(allowed_calls[i], PTBOX_HANDLER_ALLOW);
-    process->set_handler(2, PTBOX_HANDLER_CALLBACK);
+    for (unsigned i = 0; i < MAX_SYSCALL; ++i)
+        process->set_handler(i, PTBOX_HANDLER_ALLOW);
+    process->set_handler(5, PTBOX_HANDLER_CALLBACK);
     process->set_callback(pt_syscall_handler, debugger);
 
     process->spawn(child, NULL);

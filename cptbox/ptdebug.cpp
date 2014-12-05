@@ -8,6 +8,8 @@
 #include <unistd.h>
 #include "ptbox.h"
 
+pt_debugger::pt_debugger() : on_return_callback(NULL) {}
+
 bool has_null(char *buf, unsigned long size) {
     for (unsigned long i = 0; i < size; ++i) {
         if (buf[i] == '\0')

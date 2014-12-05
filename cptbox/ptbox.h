@@ -50,6 +50,7 @@ inline void timespec_sub(struct timespec *a, struct timespec *b, struct timespec
 class pt_debugger;
 
 typedef int (*pt_handler_callback)(void *context, int syscall);
+typedef void (*pt_syscall_return_callback)(void *context, int syscall);
 typedef int (*pt_fork_handler)(void *context);
 typedef int (*pt_event_callback)(void *context, int event, unsigned long param);
 
@@ -81,6 +82,7 @@ private:
 
 class pt_debugger {
 public:
+    pt_debugger();
     virtual int syscall() = 0;
     virtual long arg0() = 0;
     virtual long arg1() = 0;
@@ -95,8 +97,15 @@ public:
     virtual void freestr(char *);
     virtual ~pt_debugger();
     pid_t getpid() { return process->getpid(); }
+    void on_return(pt_syscall_return_callback callback, void *context) {
+        on_return_callback = callback;
+        on_return_context = context;
+    }
 protected:
     pt_process *process;
+    pt_syscall_return_callback on_return_callback;
+    void *on_return_context;
+    friend class pt_process;
 };
 
 class pt_debugger32 : public pt_debugger {

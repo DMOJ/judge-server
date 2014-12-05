@@ -119,6 +119,10 @@ int pt_process::monitor() {
                         }
                         if (debugger->is_exit(syscall))
                             dispatch(PTBOX_EVENT_EXITING, PTBOX_EXIT_NORMAL);
+                    } else if (debugger->on_return_callback) {
+                        debugger->on_return_callback(debugger->on_return_context, syscall);
+                        debugger->on_return_callback = NULL;
+                        debugger->on_return_context = NULL;
                     }
                     in_syscall ^= true;
                 }

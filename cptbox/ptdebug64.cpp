@@ -47,7 +47,7 @@ int pt_debugger64::syscall() {
     return (int) peek_reg(ORIG_RAX);
 }
 
-void pt_debugger32::syscall(int id) {
+void pt_debugger64::syscall(int id) {
     poke_reg(ORIG_RAX, id);
 }
 

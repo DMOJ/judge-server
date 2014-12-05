@@ -195,49 +195,85 @@ cdef class Debugger:
         def __get__(self):
             return self.thisptr.arg0()
 
+        def __set__(self, value):
+            self.thisptr.arg0(<long>value)
+
     property arg1:
         def __get__(self):
             return self.thisptr.arg1()
+
+        def __set__(self, value):
+            self.thisptr.arg1(<long>value)
 
     property arg2:
         def __get__(self):
             return self.thisptr.arg2()
 
+        def __set__(self, value):
+            self.thisptr.arg2(<long>value)
+
     property arg3:
         def __get__(self):
             return self.thisptr.arg3()
+
+        def __set__(self, value):
+            self.thisptr.arg3(<long>value)
 
     property arg4:
         def __get__(self):
             return self.thisptr.arg4()
 
+        def __set__(self, value):
+            self.thisptr.arg4(<long>value)
+
     property arg5:
         def __get__(self):
             return self.thisptr.arg5()
+
+        def __set__(self, value):
+            self.thisptr.arg5(<long>value)
 
     property uarg0:
         def __get__(self):
             return <unsigned long>self.thisptr.arg0()
 
+        def __set__(self, value):
+            self.thisptr.arg0(<long><unsigned long>value)
+
     property uarg1:
         def __get__(self):
             return <unsigned long>self.thisptr.arg1()
+
+        def __set__(self, value):
+            self.thisptr.arg1(<long><unsigned long>value)
 
     property uarg2:
         def __get__(self):
             return <unsigned long>self.thisptr.arg2()
 
+        def __set__(self, value):
+            self.thisptr.arg2(<long><unsigned long>value)
+
     property uarg3:
         def __get__(self):
             return <unsigned long>self.thisptr.arg3()
+
+        def __set__(self, value):
+            self.thisptr.arg3(<long><unsigned long>value)
 
     property uarg4:
         def __get__(self):
             return <unsigned long>self.thisptr.arg4()
 
+        def __set__(self, value):
+            self.thisptr.arg4(<long><unsigned long>value)
+
     property uarg5:
         def __get__(self):
             return <unsigned long>self.thisptr.arg5()
+
+        def __set__(self, value):
+            self.thisptr.arg5(<long><unsigned long>value)
 
     def readstr(self, unsigned long address):
         cdef char* str = self.thisptr.readstr(address)

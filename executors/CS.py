@@ -38,7 +38,7 @@ class Executor(ResourceProxy):
         sec[sys_sched_yield] = ALLOW
 
         def tgkill(debugger):
-            return debugger.arg0 == debugger.getpid()
+            return debugger.arg0 == debugger.pid
         sec[sys_tgkill] = tgkill
         # Mono uses sys_kill to signal all other instances of it.
 

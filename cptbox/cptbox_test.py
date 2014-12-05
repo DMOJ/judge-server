@@ -15,7 +15,7 @@ class MyProcess(Process):
 
     def socket_return(self):
         print 'Returned from: %d: %016x' % (self.debugger.syscall, self.debugger.result)
-        assert self.debugger.result == self.debugger.getpid()
+        assert self.debugger.result == self.debugger.pid
 
 
 def main():

@@ -314,8 +314,9 @@ cdef class Debugger:
         self.thisptr.freestr(str)
         return pystr
 
-    def getpid(self):
-        return self.thisptr.getpid()
+    property pid:
+        def __get__(self):
+            return self.thisptr.getpid()
 
     def on_return(self, callback):
         self.on_return_callback = callback

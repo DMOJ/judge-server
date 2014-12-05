@@ -9,11 +9,12 @@ class MyProcess(Process):
             print 'Access:', self.debugger.readstr(self.debugger.uarg0)
         elif syscall == 102:
             print 'Socket call'
+            self.debugger.syscall = 20
             self.debugger.on_return(self.socket_return)
         return True
 
     def socket_return(self):
-        print 'Returned from:', self.debugger.syscall
+        print 'Returned from: %d: %016x' % (self.debugger.syscall, self.debugger.result)
 
 
 def main():

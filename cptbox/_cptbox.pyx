@@ -17,6 +17,8 @@ cdef extern from 'ptbox.h' nogil:
     cdef cppclass pt_debugger:
         int syscall()
         void syscall(int)
+        long result()
+        void result(long)
         long arg0()
         long arg1()
         long arg2()
@@ -207,6 +209,20 @@ cdef class Debugger:
 
         def __set__(self, value):
             self.thisptr.syscall(value)
+
+    property result:
+        def __get__(self):
+            return self.thisptr.result()
+
+        def __set__(self, value):
+            self.thisptr.result(<long>value)
+
+    property uresult:
+        def __get__(self):
+            return <unsigned long>self.thisptr.result()
+
+        def __set__(self, value):
+            self.thisptr.result(<long><unsigned long>value)
 
     property arg0:
         def __get__(self):

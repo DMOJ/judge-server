@@ -15,7 +15,8 @@ int child(void *context) {
 }
 
 void pt_syscall_return(void *context, int syscall) {
-    printf("Returning from: %d\n", syscall);
+    pt_debugger* debugger = (pt_debugger*) context;
+    printf("Returning from: %d: 0x%016lx\n", syscall, debugger->result());
 }
 
 int pt_syscall_handler(void *context, int syscall) {

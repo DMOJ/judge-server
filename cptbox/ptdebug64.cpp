@@ -51,6 +51,14 @@ void pt_debugger64::syscall(int id) {
     poke_reg(ORIG_RAX, id);
 }
 
+long pt_debugger64::result() {
+    return peek_reg(RAX);
+}
+
+void pt_debugger64::result(long value) {
+    poke_reg(RAX, value);
+}
+
 #define make_arg(id, reg) \
     long pt_debugger64::arg##id() { \
         return peek_reg(reg); \

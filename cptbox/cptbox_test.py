@@ -1,6 +1,7 @@
 from _cptbox import Process
 import sys
 import os
+import errno
 
 
 class MyProcess(Process):
@@ -15,7 +16,7 @@ class MyProcess(Process):
 
     def socket_return(self):
         assert self.debugger.result == self.debugger.pid
-        self.debugger.result = -1
+        self.debugger.result = -errno.EACCES
         print 'Returned from: %d: 0x%016x' % (self.debugger.syscall, self.debugger.uresult)
 
 

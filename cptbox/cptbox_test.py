@@ -10,7 +10,7 @@ class MyProcess(Process):
             print 'Access:', self.debugger.readstr(self.debugger.uarg0)
         elif syscall == 102:
             print 'Socket call'
-            self.debugger.syscall = 20
+            self.debugger.syscall = self.debugger.getpid_syscall
             self.debugger.on_return(self.socket_return)
         return True
 

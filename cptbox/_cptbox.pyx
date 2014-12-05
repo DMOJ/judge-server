@@ -34,6 +34,7 @@ cdef extern from 'ptbox.h' nogil:
         char *readstr(unsigned long)
         void freestr(char*)
         pid_t getpid()
+        int getpid_syscall()
         void on_return(pt_syscall_return_callback callback, void *context)
 
     cdef cppclass pt_debugger32(pt_debugger):
@@ -202,6 +203,11 @@ cpdef unsigned long get_memory(pid_t pid) nogil:
 cdef class Debugger:
     cdef pt_debugger *thisptr
     cdef object on_return_callback
+    cdef int _getpid_syscall
+
+    property getpid_syscall:
+        def __get__(self):
+            return self._getpid_syscall
 
     property syscall:
         def __get__(self):
@@ -352,6 +358,7 @@ cdef class Process:
             raise ValueError('Invalid bitness')
         self.debugger = Debugger()
         self.debugger.thisptr = self._debugger
+        self.debugger._getpid_syscall = self.debugger.getpid_syscall()
         self.process = new pt_process(self._debugger)
         self.process.set_callback(pt_syscall_handler, <void*>self)
         self.process.set_event_proc(pt_event_handler, <void*>self)

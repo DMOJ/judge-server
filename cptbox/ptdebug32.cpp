@@ -70,3 +70,7 @@ void pt_debugger32::arg5(long data) {}
 bool pt_debugger32::is_exit(int syscall) {
     return syscall == 252 || syscall == 1;
 }
+
+int pt_debugger32::getpid_syscall() {
+    return 20;
+}

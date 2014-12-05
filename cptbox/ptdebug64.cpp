@@ -80,3 +80,7 @@ make_arg(5, R9);
 bool pt_debugger64::is_exit(int syscall) {
     return syscall == 231 || syscall == 60;
 }
+
+int pt_debugger64::getpid_syscall() {
+    return 39;
+}

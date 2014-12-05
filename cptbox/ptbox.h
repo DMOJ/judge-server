@@ -100,6 +100,7 @@ public:
     virtual void arg4(long) = 0;
     virtual void arg5(long) = 0;
     virtual bool is_exit(int syscall) = 0;
+    virtual int getpid_syscall() = 0;
     void set_process(pt_process *);
     virtual void new_process();
     virtual char *readstr(unsigned long addr);
@@ -138,6 +139,7 @@ public:
     virtual void arg4(long);
     virtual void arg5(long);
     virtual bool is_exit(int syscall);
+    virtual int getpid_syscall();
 };
 
 class pt_debugger64 : public pt_debugger {
@@ -161,6 +163,7 @@ public:
     virtual void arg4(long);
     virtual void arg5(long);
     virtual bool is_exit(int syscall);
+    virtual int getpid_syscall();
 };
 
 pt_process *pt_alloc_process(pt_debugger *);

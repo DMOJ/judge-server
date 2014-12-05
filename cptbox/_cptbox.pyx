@@ -11,6 +11,7 @@ from libc.signal cimport SIGSTOP
 cdef extern from 'ptbox.h' nogil:
     cdef cppclass pt_debugger:
         int syscall()
+        void syscall(int)
         long arg0()
         long arg1()
         long arg2()
@@ -194,8 +195,12 @@ cpdef unsigned long get_memory(pid_t pid) nogil:
 cdef class Debugger:
     cdef pt_debugger *thisptr
 
-    def syscall(self):
-        return self.thisptr.syscall()
+    property syscall:
+        def __get__(self):
+            return self.thisptr.syscall()
+
+        def __set__(self, value):
+            self.thisptr.syscall(value)
 
     property arg0:
         def __get__(self):

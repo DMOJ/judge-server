@@ -32,6 +32,10 @@ int pt_debugger32::syscall() {
     return (int) peek_reg(ORIG_EAX);
 }
 
+void pt_debugger32::syscall(int id) {
+    poke_reg(ORIG_EAX, id);
+}
+
 #define make_arg(id, reg) \
     long pt_debugger32::arg##id() { \
         return peek_reg(reg); \

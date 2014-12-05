@@ -84,6 +84,7 @@ class pt_debugger {
 public:
     pt_debugger();
     virtual int syscall() = 0;
+    virtual void syscall(int) = 0;
     virtual long arg0() = 0;
     virtual long arg1() = 0;
     virtual long arg2() = 0;
@@ -119,6 +120,7 @@ class pt_debugger32 : public pt_debugger {
     void poke_reg(int, long);
 public:
     virtual int syscall();
+    virtual void syscall(int);
     virtual long arg0();
     virtual long arg1();
     virtual long arg2();
@@ -139,6 +141,7 @@ class pt_debugger64 : public pt_debugger {
     void poke_reg(int, long);
 public:
     virtual int syscall();
+    virtual void syscall(int);
     virtual long arg0();
     virtual long arg1();
     virtual long arg2();

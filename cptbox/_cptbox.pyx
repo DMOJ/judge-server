@@ -9,6 +9,11 @@ from posix.types cimport pid_t
 from libc.signal cimport SIGSTOP
 
 cdef extern from 'ptbox.h' nogil:
+    ctypedef int (*pt_handler_callback)(void *context, int syscall)
+    ctypedef void (*pt_syscall_return_callback)(void *context, int syscall)
+    ctypedef int (*pt_fork_handler)(void *context)
+    ctypedef int (*pt_event_callback)(void *context, int event, unsigned long param)
+
     cdef cppclass pt_debugger:
         int syscall()
         void syscall(int)
@@ -27,16 +32,13 @@ cdef extern from 'ptbox.h' nogil:
         char *readstr(unsigned long)
         void freestr(char*)
         pid_t getpid()
+        void on_return(pt_syscall_return_callback callback, void *context)
 
     cdef cppclass pt_debugger32(pt_debugger):
         pass
 
     cdef cppclass pt_debugger64(pt_debugger):
         pass
-
-    ctypedef int (*pt_handler_callback)(void *context, int syscall)
-    ctypedef int (*pt_fork_handler)(void *context)
-    ctypedef int (*pt_event_callback)(void *context, int event, unsigned long param)
 
     cdef cppclass pt_process:
         pt_process(pt_debugger *) except +
@@ -155,6 +157,9 @@ cdef int pt_child(void *context) nogil:
 cdef int pt_syscall_handler(void *context, int syscall) nogil:
     return (<Process>context)._syscall_handler(syscall)
 
+cdef void pt_syscall_return_handler(void *context, int syscall) with gil:
+    (<Debugger>context)._on_return(syscall)
+
 cdef int pt_event_handler(void *context, int event, unsigned long param) nogil:
     return (<Process>context)._event_handler(event, param)
 
@@ -194,6 +199,7 @@ cpdef unsigned long get_memory(pid_t pid) nogil:
 
 cdef class Debugger:
     cdef pt_debugger *thisptr
+    cdef object on_return_callback
 
     property syscall:
         def __get__(self):
@@ -294,6 +300,14 @@ cdef class Debugger:
 
     def getpid(self):
         return self.thisptr.getpid()
+
+    def on_return(self, callback):
+        self.on_return_callback = callback
+        self.thisptr.on_return(pt_syscall_return_handler, <void*>self)
+
+    cdef _on_return(self, int syscall) with gil:
+        self.on_return_callback()
+        self.on_return_callback = None
 
 
 cdef class Process:

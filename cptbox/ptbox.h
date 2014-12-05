@@ -90,6 +90,12 @@ public:
     virtual long arg3() = 0;
     virtual long arg4() = 0;
     virtual long arg5() = 0;
+    virtual void arg0(long) = 0;
+    virtual void arg1(long) = 0;
+    virtual void arg2(long) = 0;
+    virtual void arg3(long) = 0;
+    virtual void arg4(long) = 0;
+    virtual void arg5(long) = 0;
     virtual bool is_exit(int syscall) = 0;
     void set_process(pt_process *);
     virtual void new_process();
@@ -110,6 +116,7 @@ protected:
 
 class pt_debugger32 : public pt_debugger {
     long peek_reg(int);
+    void poke_reg(int, long);
 public:
     virtual int syscall();
     virtual long arg0();
@@ -118,11 +125,18 @@ public:
     virtual long arg3();
     virtual long arg4();
     virtual long arg5();
+    virtual void arg0(long);
+    virtual void arg1(long);
+    virtual void arg2(long);
+    virtual void arg3(long);
+    virtual void arg4(long);
+    virtual void arg5(long);
     virtual bool is_exit(int syscall);
 };
 
 class pt_debugger64 : public pt_debugger {
     long peek_reg(int);
+    void poke_reg(int, long);
 public:
     virtual int syscall();
     virtual long arg0();
@@ -131,6 +145,12 @@ public:
     virtual long arg3();
     virtual long arg4();
     virtual long arg5();
+    virtual void arg0(long);
+    virtual void arg1(long);
+    virtual void arg2(long);
+    virtual void arg3(long);
+    virtual void arg4(long);
+    virtual void arg5(long);
     virtual bool is_exit(int syscall);
 };
 

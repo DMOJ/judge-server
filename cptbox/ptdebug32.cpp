@@ -24,33 +24,36 @@ long pt_debugger32::peek_reg(int reg) {
     return ptrace(PTRACE_PEEKUSER, process->getpid(), 4 * reg, 0);
 }
 
+void pt_debugger32::poke_reg(int reg, long data) {
+    ptrace(PTRACE_POKEUSER, process->getpid(), 4 * reg, data);
+}
+
 int pt_debugger32::syscall() {
     return (int) peek_reg(ORIG_EAX);
 }
 
-long pt_debugger32::arg0() {
-    return peek_reg(EBX);
-}
+#define make_arg(id, reg) \
+    long pt_debugger32::arg##id() { \
+        return peek_reg(reg); \
+    } \
+    \
+    void pt_debugger32::arg##id(long data) {\
+        poke_reg(reg, data); \
+    }
 
-long pt_debugger32::arg1() {
-    return peek_reg(ECX);
-}
+make_arg(0, EBX);
+make_arg(1, ECX);
+make_arg(2, EDX);
+make_arg(3, ESI);
+make_arg(4, EDI);
 
-long pt_debugger32::arg2() {
-    return peek_reg(EDX);
-}
-
-long pt_debugger32::arg3() {
-    return peek_reg(ESI);
-}
-
-long pt_debugger32::arg4() {
-    return peek_reg(EDI);
-}
+#undef make_arg
 
 long pt_debugger32::arg5() {
     return 0;
 }
+
+void pt_debugger32::arg5(long data) {}
 
 bool pt_debugger32::is_exit(int syscall) {
     return syscall == 252 || syscall == 1;

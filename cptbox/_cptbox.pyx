@@ -358,7 +358,7 @@ cdef class Process:
             raise ValueError('Invalid bitness')
         self.debugger = Debugger()
         self.debugger.thisptr = self._debugger
-        self.debugger._getpid_syscall = self.debugger.getpid_syscall()
+        self.debugger._getpid_syscall = self._debugger.getpid_syscall()
         self.process = new pt_process(self._debugger)
         self.process.set_callback(pt_syscall_handler, <void*>self)
         self.process.set_event_proc(pt_event_handler, <void*>self)

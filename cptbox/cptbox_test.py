@@ -9,7 +9,7 @@ allowed = [
 class MyProcess(Process):
     def _callback(self, syscall):
         if syscall == 2:
-            print 'Access:', self.debugger.readstr(self.debugger.uarg0())
+            print 'Access:', self.debugger.readstr(self.debugger.uarg0)
         return True
 
 

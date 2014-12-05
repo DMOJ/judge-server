@@ -14,7 +14,7 @@ class Executor(PythonExecutor):
 
         def unsafe_pypy3dir(debugger):
             # Relies on the fact this user can't access here.
-            return debugger.readstr(debugger.uarg0()).startswith(env['runtime']['pypy3dir'])
+            return debugger.readstr(debugger.uarg0).startswith(env['runtime']['pypy3dir'])
         if not os.access(env['runtime']['pypy3dir'], os.W_OK):
             sec[sys_mkdir] = unsafe_pypy3dir
             sec[sys_unlink] = unsafe_pypy3dir

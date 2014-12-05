@@ -38,12 +38,12 @@ class Executor(ResourceProxy):
         sec[sys_sched_yield] = ALLOW
 
         def tgkill(debugger):
-            return debugger.arg0() == debugger.getpid()
+            return debugger.arg0 == debugger.getpid()
         sec[sys_tgkill] = tgkill
         # Mono uses sys_kill to signal all other instances of it.
 
         def unlink(debugger):
-            path = debugger.readstr(debugger.uarg0())
+            path = debugger.readstr(debugger.uarg0)
             if UNLINK_FS.match(path) is None:
                 print 'Not allowed to unlink:', UNLINK_FS
                 return False

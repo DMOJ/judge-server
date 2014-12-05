@@ -129,12 +129,12 @@ class _SecurePopen(Process):
                 callname = by_id[id]
                 break
         print>>sys.stderr, 'Protection fault on: %d (%s)' % (syscall, callname)
-        print>>sys.stderr, 'Arg0: 0x%016x' % self.debugger.uarg0()
-        print>>sys.stderr, 'Arg1: 0x%016x' % self.debugger.uarg1()
-        print>>sys.stderr, 'Arg2: 0x%016x' % self.debugger.uarg2()
-        print>>sys.stderr, 'Arg3: 0x%016x' % self.debugger.uarg3()
-        print>>sys.stderr, 'Arg4: 0x%016x' % self.debugger.uarg4()
-        print>>sys.stderr, 'Arg5: 0x%016x' % self.debugger.uarg5()
+        print>>sys.stderr, 'Arg0: 0x%016x' % self.debugger.uarg0
+        print>>sys.stderr, 'Arg1: 0x%016x' % self.debugger.uarg1
+        print>>sys.stderr, 'Arg2: 0x%016x' % self.debugger.uarg2
+        print>>sys.stderr, 'Arg3: 0x%016x' % self.debugger.uarg3
+        print>>sys.stderr, 'Arg4: 0x%016x' % self.debugger.uarg4
+        print>>sys.stderr, 'Arg5: 0x%016x' % self.debugger.uarg5
 
     def _cpu_time_exceeded(self):
         self._tle = True

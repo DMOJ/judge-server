@@ -191,41 +191,53 @@ cdef class Debugger:
     def syscall(self):
         return self.thisptr.syscall()
 
-    def arg0(self):
-        return self.thisptr.arg0()
+    property arg0:
+        def __get__(self):
+            return self.thisptr.arg0()
 
-    def arg1(self):
-        return self.thisptr.arg1()
+    property arg1:
+        def __get__(self):
+            return self.thisptr.arg1()
 
-    def arg2(self):
-        return self.thisptr.arg2()
+    property arg2:
+        def __get__(self):
+            return self.thisptr.arg2()
 
-    def arg3(self):
-        return self.thisptr.arg3()
+    property arg3:
+        def __get__(self):
+            return self.thisptr.arg3()
 
-    def arg4(self):
-        return self.thisptr.arg4()
+    property arg4:
+        def __get__(self):
+            return self.thisptr.arg4()
 
-    def arg5(self):
-        return self.thisptr.arg5()
+    property arg5:
+        def __get__(self):
+            return self.thisptr.arg5()
 
-    def uarg0(self):
-        return <unsigned long>self.thisptr.arg0()
+    property uarg0:
+        def __get__(self):
+            return <unsigned long>self.thisptr.arg0()
 
-    def uarg1(self):
-        return <unsigned long>self.thisptr.arg1()
+    property uarg1:
+        def __get__(self):
+            return <unsigned long>self.thisptr.arg1()
 
-    def uarg2(self):
-        return <unsigned long>self.thisptr.arg2()
+    property uarg2:
+        def __get__(self):
+            return <unsigned long>self.thisptr.arg2()
 
-    def uarg3(self):
-        return <unsigned long>self.thisptr.arg3()
+    property uarg3:
+        def __get__(self):
+            return <unsigned long>self.thisptr.arg3()
 
-    def uarg4(self):
-        return <unsigned long>self.thisptr.arg4()
+    property uarg4:
+        def __get__(self):
+            return <unsigned long>self.thisptr.arg4()
 
-    def uarg5(self):
-        return <unsigned long>self.thisptr.arg5()
+    property uarg5:
+        def __get__(self):
+            return <unsigned long>self.thisptr.arg5()
 
     def readstr(self, unsigned long address):
         cdef char* str = self.thisptr.readstr(address)

@@ -1,5 +1,6 @@
 #include "helpers.h"
 #include <sstream>
+#include <strsafe.h>
 
 std::string FormatWindowsError(DWORD error) {
 	LPSTR message = nullptr;
@@ -14,6 +15,12 @@ std::string FormatWindowsError(DWORD error) {
 }
 
 WindowsException::WindowsException(const char* location, DWORD error) :
-	win_message(FormatWindowsError(error)),
-	full_message(std::string(location) + ": " + win_message) {
+	error(error), location(location) {
+	message[0] = '\0';
+}
+
+const char* WindowsException::what() const {
+	if (!message[0])
+		StringCchPrintfA(message, ARRAYSIZE(message), "%s: %d", location, error);
+	return message;
 }

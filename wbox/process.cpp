@@ -10,7 +10,7 @@ JobbedProcessManager::JobbedProcessManager() {
 }
 
 bool JobbedProcessManager::spawn() {
-	
+	return false;
 }
 
 bool JobbedProcessManager::terminate(unsigned code) {

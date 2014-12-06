@@ -32,11 +32,12 @@ public:
 std::string FormatWindowsError(DWORD error);
 
 class WindowsException : public std::exception {
-	std::string full_message, win_message;
+	DWORD error;
+	mutable char message[1024];
+	const char *location;
 public:
 	WindowsException(const char* location, DWORD error);
-	const char *what() const override { return full_message.c_str(); }
-	std::string &message() { return win_message; }
+	const char* what() const override;
 };
 
 #endif

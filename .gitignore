@@ -34,3 +34,10 @@ nosetests.xml
 .mr.developer.cfg
 .project
 .pydevproject
+
+*.opensdf
+*.sdf
+*.suo
+*.exe
+*.obj
+*.vcxproj.user

@@ -13,7 +13,6 @@ void WBoxGeneratePassword(LPWSTR szPassword, size_t cchLength, LPCWSTR szAlphabe
 
 class UserManager {
 	bool allow_existing, created;
-	USER_INFO_1 ui1User;
 	WCHAR szUsername[21];
 	WCHAR szPassword[LM20_PWLEN + 1];
 	void create_user();

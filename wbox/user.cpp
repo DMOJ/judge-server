@@ -26,6 +26,8 @@ void WBoxGeneratePassword(LPWSTR szPassword, size_t cchLength, LPCWSTR szAlphabe
 }
 
 void UserManager::create_user() {
+	USER_INFO_1 ui1User;
+	ZeroMemory(&ui1User, sizeof ui1User);
 	ui1User.usri1_name = szUsername;
 	ui1User.usri1_password = szPassword;
 	ui1User.usri1_priv = USER_PRIV_USER;

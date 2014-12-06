@@ -73,6 +73,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="helpers.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="process.cpp" />
     <ClCompile Include="user.cpp" />
   </ItemGroup>

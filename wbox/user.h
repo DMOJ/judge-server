@@ -7,7 +7,7 @@
 #include <windows.h>
 #include <lm.h>
 
-LPCWSTR wbox_password_alphabet = L"1234567890`~!@#$%^&*()-=_+{}[]|;:'<>?,./QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm";
+extern LPCWSTR wbox_password_alphabet;
 void WBoxGenerateUserName(LPWSTR szUsername, size_t cchLength);
 void WBoxGeneratePassword(LPWSTR szPassword, size_t cchLength, LPCWSTR szAlphabet=wbox_password_alphabet);
 

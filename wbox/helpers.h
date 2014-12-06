@@ -4,6 +4,8 @@
 #define id_26FCBE24_1243_4829_89F4_B266B158236E
 
 #include <windows.h>
+#include <exception>
+#include <string>
 
 class AutoHandle {
 	HANDLE handle;
@@ -25,6 +27,16 @@ public:
 		handle = nullptr;
 		return h;
 	}
+};
+
+std::string FormatWindowsError(DWORD error);
+
+class WindowsException : public std::exception {
+	std::string full_message, win_message;
+public:
+	WindowsException(const char* location, DWORD error);
+	const char *what() const override { return full_message.c_str(); }
+	std::string &message() { return win_message; }
 };
 
 #endif

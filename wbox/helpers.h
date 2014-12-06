@@ -36,6 +36,7 @@ class WindowsException : public std::exception {
 	mutable char message[1024];
 	const char *location;
 public:
+	WindowsException(const char* location);
 	WindowsException(const char* location, DWORD error);
 	const char* what() const override;
 };

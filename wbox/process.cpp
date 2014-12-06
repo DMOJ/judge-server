@@ -1,5 +1,6 @@
 #include "process.h"
 #include <objbase.h>
+#include <strsafe.h>
 
 JobbedProcessManager::JobbedProcessManager() {
 	ZeroMemory(&extLimits, sizeof extLimits);
@@ -10,6 +11,18 @@ JobbedProcessManager::JobbedProcessManager() {
 }
 
 bool JobbedProcessManager::spawn() {
+	HANDLE handle;
+	WCHAR szName[MAX_PATH];
+	StringCchCopy(szName, MAX_PATH, L"wbox_job_");
+	StringCchCat(szName, MAX_PATH, szGuid);
+
+	if (!(handle = CreateJobObject(nullptr, szName)))
+		throw WindowsException("CreateJobObject");
+	hJob = handle;
+
+	if (!SetInformationJobObject(hJob, JobObjectExtendedLimitInformation, &extLimits, sizeof extLimits))
+		throw WindowsException("SetInformationJobObject");
+
 	return false;
 }
 

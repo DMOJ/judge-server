@@ -14,6 +14,8 @@ std::string FormatWindowsError(DWORD error) {
 	return ss.str();
 }
 
+WindowsException::WindowsException(const char* location): WindowsException(location, GetLastError()) {}
+
 WindowsException::WindowsException(const char* location, DWORD error) :
 	error(error), location(location) {
 	message[0] = '\0';

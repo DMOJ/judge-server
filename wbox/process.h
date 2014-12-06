@@ -17,7 +17,7 @@ public:
 	JobbedProcessManager();
 	virtual ~JobbedProcessManager();
 
-	virtual bool spawn();
+	virtual bool spawn() throw(WindowsException);
 	virtual bool terminate(unsigned code);
 
 	JobbedProcessManager &time(double seconds);

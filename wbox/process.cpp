@@ -36,7 +36,16 @@ bool JobbedProcessManager::spawn() {
 	if (!szUsername)
 		return false;
 
-	if (!CreateProcessWithLogonW(szUsername, L".", szPassword, 0, nullptr, szCmdLine,
+	size_t cchCmdLine = lstrlen(szCmdLine) + lstrlen(szAgentPath) + lstrlen(szGuid) + 5;
+	LPWSTR szAgentCmdLine = (LPWSTR) malloc(cchCmdLine * sizeof(WCHAR));
+	StringCchCopy(szAgentCmdLine, cchCmdLine, L"\"");
+	StringCchCat(szAgentCmdLine, cchCmdLine, szAgentPath);
+	StringCchCat(szAgentCmdLine, cchCmdLine, L"\" ");
+	StringCchCat(szAgentCmdLine, cchCmdLine, szGuid);
+	StringCchCat(szAgentCmdLine, cchCmdLine, L" ");
+	StringCchCat(szAgentCmdLine, cchCmdLine, szCmdLine);
+
+	if (!CreateProcessWithLogonW(szUsername, L".", szPassword, 0, szAgentPath, szAgentCmdLine,
 								 NORMAL_PRIORITY_CLASS | CREATE_SUSPENDED | CREATE_BREAKAWAY_FROM_JOB,
 								 nullptr, szDirectory, &si, &pi))
 		throw WindowsException("CreateProcessWithLogonW");

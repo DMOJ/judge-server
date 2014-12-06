@@ -35,9 +35,10 @@ nosetests.xml
 .project
 .pydevproject
 
+*.vcxproj*
 *.opensdf
 *.sdf
 *.suo
+*.sln
 *.exe
 *.obj
-*.vcxproj.user

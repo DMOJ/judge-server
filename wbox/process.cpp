@@ -26,6 +26,7 @@ bool JobbedProcessManager::spawn() {
 	if (!(handle = CreateJobObject(nullptr, szName)))
 		throw WindowsException("CreateJobObject");
 	hJob = handle;
+	wprintf(L"Job: %s\n", szName);
 
 	if (!SetInformationJobObject(hJob, JobObjectExtendedLimitInformation, &extLimits, sizeof extLimits))
 		throw WindowsException("SetInformationJobObject");
@@ -46,11 +47,32 @@ bool JobbedProcessManager::spawn() {
 	StringCchCat(szAgentCmdLine, cchCmdLine, szCmdLine);
 
 	if (!CreateProcessWithLogonW(szUsername, L".", szPassword, 0, szAgentPath, szAgentCmdLine,
-								 NORMAL_PRIORITY_CLASS | CREATE_SUSPENDED | CREATE_BREAKAWAY_FROM_JOB,
+								 NORMAL_PRIORITY_CLASS | CREATE_BREAKAWAY_FROM_JOB,
 								 nullptr, szDirectory, &si, &pi))
 		throw WindowsException("CreateProcessWithLogonW");
 
-	return false;
+	union {
+		DWORD dw;
+		LONG l;
+	} uExitCode;
+	WaitForSingleObject(pi.hProcess, INFINITE);
+	GetExitCodeProcess(pi.hProcess, &uExitCode.dw);
+
+	if (uExitCode.l < 0) {
+		printf("Agent: %d\n", uExitCode.l);
+		return false;
+	}
+
+	CloseHandle(pi.hProcess);
+	CloseHandle(pi.hThread);
+
+	if (!(handle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, uExitCode.dw)))
+		throw WindowsException("OpenProcess");
+
+	hProcess = handle;
+	AssignProcessToJobObject(hJob, hProcess);
+
+	return true;
 }
 
 bool JobbedProcessManager::terminate(unsigned code) {

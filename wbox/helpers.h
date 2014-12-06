@@ -39,6 +39,7 @@ public:
 	WindowsException(const char* location);
 	WindowsException(const char* location, DWORD error);
 	const char* what() const override;
+	DWORD code() { return error; }
 };
 
 #endif

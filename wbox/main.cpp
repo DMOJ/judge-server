@@ -13,7 +13,8 @@ int wmain() {
 		*(PathFindFileName(szDirectory) - 1) = '\0';
 		PathCombine(szAgentPath, szDirectory, L"agent.exe");
 		WBoxSetAgent(szAgentPath);
-		process.time(2).memory(65536 * 1024).processes(1).command(L"hello.exe").directory(szDirectory);
+		process.time(2).memory(65536 * 1024).processes(1).command(L"hello.exe").directory(szDirectory)
+			.withLogin(user_manager.username(), user_manager.password());
 		process.spawn();
 	} catch (WindowsException &e) {
 		std::cout << e.what() << '\n';

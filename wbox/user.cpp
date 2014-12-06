@@ -40,6 +40,13 @@ void UserManager::create_user() {
 		throw WindowsException("NetUserAdd", status);
 	else
 		created = true;
+
+	LOCALGROUP_MEMBERS_INFO_3 lmi3;
+	ZeroMemory(&lmi3, sizeof lmi3);
+	lmi3.lgrmi3_domainandname = szUsername;
+	status = NetLocalGroupAddMembers(nullptr, L"Users", 3, (LPBYTE) &lmi3, 1);
+	if (status != NERR_Success)
+		throw WindowsException("NetLocalGroupAddMembers", status);
 }
 
 UserManager::UserManager() : allow_existing(false), created(false) {

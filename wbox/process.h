@@ -20,9 +20,9 @@ public:
 	virtual bool spawn();
 	virtual bool terminate(unsigned code);
 
-	void time(double seconds);
-	void memory(size_t bytes);
-	void processes(int count);
+	JobbedProcessManager &time(double seconds);
+	JobbedProcessManager &memory(size_t bytes);
+	JobbedProcessManager &processes(int count);
 
 	HANDLE process() { return hProcess; }
 	HANDLE job() { return hJob; }

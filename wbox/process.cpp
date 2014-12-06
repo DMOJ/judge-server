@@ -19,28 +19,31 @@ bool JobbedProcessManager::terminate(unsigned code) {
 	return false;
 }
 
-void JobbedProcessManager::time(double seconds) {
+JobbedProcessManager &JobbedProcessManager::time(double seconds) {
 	if (seconds) {
 		extLimits.BasicLimitInformation.PerJobUserTimeLimit.QuadPart = uint64_t(seconds * 1000 * 1000 * 10);
 		extLimits.BasicLimitInformation.LimitFlags |= JOB_OBJECT_LIMIT_JOB_TIME;
 	} else
 		extLimits.BasicLimitInformation.LimitFlags &= ~JOB_OBJECT_LIMIT_JOB_TIME;
+	return *this;
 }
 
-void JobbedProcessManager::memory(size_t bytes) {
+JobbedProcessManager &JobbedProcessManager::memory(size_t bytes) {
 	if (bytes) {
 		extLimits.JobMemoryLimit = bytes;
 		extLimits.BasicLimitInformation.LimitFlags |= JOB_OBJECT_LIMIT_JOB_MEMORY;
 	} else
 		extLimits.BasicLimitInformation.LimitFlags &= ~JOB_OBJECT_LIMIT_JOB_MEMORY;
+	return *this;
 }
 
-void JobbedProcessManager::processes(int count) {
+JobbedProcessManager &JobbedProcessManager::processes(int count) {
 	if (count) {
 		extLimits.BasicLimitInformation.ActiveProcessLimit = count;
 		extLimits.BasicLimitInformation.LimitFlags |= JOB_OBJECT_LIMIT_ACTIVE_PROCESS;
 	} else
 		extLimits.BasicLimitInformation.LimitFlags &= ~JOB_OBJECT_LIMIT_ACTIVE_PROCESS;
+	return *this;
 }
 
 JobbedProcessManager::~JobbedProcessManager() {

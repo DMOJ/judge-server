@@ -11,6 +11,8 @@ class JobbedProcessManager {
 	AutoHandle hProcess;
 	AutoHandle hJob;
 	JOBOBJECT_EXTENDED_LIMIT_INFORMATION extLimits;
+	GUID guid;
+	WCHAR szGuid[40];
 public:
 	JobbedProcessManager();
 	virtual ~JobbedProcessManager();

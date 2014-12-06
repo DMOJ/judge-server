@@ -1,10 +1,12 @@
 #include "process.h"
-
+#include <objbase.h>
 
 JobbedProcessManager::JobbedProcessManager() {
 	ZeroMemory(&extLimits, sizeof extLimits);
 	extLimits.BasicLimitInformation.ActiveProcessLimit = 1;
 	extLimits.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_ACTIVE_PROCESS;
+	CoCreateGuid(&guid);
+	StringFromGUID2(guid, szGuid, ARRAYSIZE(szGuid));
 }
 
 bool JobbedProcessManager::spawn() {

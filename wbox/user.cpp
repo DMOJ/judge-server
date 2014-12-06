@@ -33,9 +33,9 @@ void UserManager::create_user() {
 	NET_API_STATUS status = NetUserAdd(nullptr, 1, (LPBYTE) &ui1User, nullptr);
 	if (status == NERR_UserExists) {
 		if (!allow_existing)
-			throw new WindowsException("NetUserAdd", status);
+			throw WindowsException("NetUserAdd", status);
 	} else if (status != NERR_Success)
-		throw new WindowsException("NetUserAdd", status);
+		throw WindowsException("NetUserAdd", status);
 	else
 		created = true;
 }

@@ -1,8 +1,9 @@
 #pragma once
-#include <windows.h>
 
 #ifndef id_26FCBE24_1243_4829_89F4_B266B158236E
 #define id_26FCBE24_1243_4829_89F4_B266B158236E
+
+#include <windows.h>
 
 class AutoHandle {
 	HANDLE handle;

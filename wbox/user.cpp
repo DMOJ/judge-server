@@ -3,7 +3,7 @@
 #include <strsafe.h>
 #include <cinttypes>
 
-LPCWSTR wbox_password_alphabet = L"1234567890`~!@#$%^&*()-=_+{}[]|;:'<>?,./QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm"
+LPCWSTR wbox_password_alphabet = L"1234567890`~!@#$%^&*()-=_+{}[]|;:'<>?,./QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm";
 
 void WBoxGenerateUserName(LPWSTR szUsername, size_t cchLength) {
 	LUID luid;

@@ -16,11 +16,11 @@ class UserManager {
 	USER_INFO_1 ui1User;
 	WCHAR szUsername[21];
 	WCHAR szPassword[LM20_PWLEN + 1];
-	void create_user() throw(WindowsException);
+	void create_user();
 public:
-	UserManager() throw(WindowsException);
-	UserManager(LPCWSTR szUsername) throw(WindowsException);
-	UserManager(LPCWSTR szUsername, LPCWSTR szPassword) throw(WindowsException);
+	UserManager();
+	UserManager(LPCWSTR szUsername);
+	UserManager(LPCWSTR szUsername, LPCWSTR szPassword);
 	~UserManager();
 
 	LPCWSTR username() { return szUsername; }

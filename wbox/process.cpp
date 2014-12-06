@@ -3,7 +3,7 @@
 #include <strsafe.h>
 
 JobbedProcessManager::JobbedProcessManager() :
-		szUsername(nullptr), szPassword(nullptr) {
+		szUsername(nullptr), szPassword(nullptr), szDirectory(nullptr), szCmdLine(nullptr) {
 	ZeroMemory(&extLimits, sizeof extLimits);
 	extLimits.BasicLimitInformation.ActiveProcessLimit = 1;
 	extLimits.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_ACTIVE_PROCESS;
@@ -24,12 +24,24 @@ bool JobbedProcessManager::spawn() {
 	if (!SetInformationJobObject(hJob, JobObjectExtendedLimitInformation, &extLimits, sizeof extLimits))
 		throw WindowsException("SetInformationJobObject");
 
+	STARTUPINFO si = {sizeof(STARTUPINFO), 0};
+	PROCESS_INFORMATION pi;
+
+	if (!szUsername)
+		return false;
+
+	if (!CreateProcessWithLogonW(szUsername, L".", szPassword, 0, nullptr, szCmdLine,
+								 NORMAL_PRIORITY_CLASS | CREATE_SUSPENDED | CREATE_BREAKAWAY_FROM_JOB,
+								 nullptr, szDirectory, &si, &pi))
+		throw WindowsException("CreateProcessWithLogonW");
+
 	return false;
 }
 
 bool JobbedProcessManager::terminate(unsigned code) {
 	if (hProcess)
-		return TerminateProcess(hProcess, code);
+		if (!TerminateProcess(hProcess, code))
+			throw WindowsException("TerminateProcess");
 	return false;
 }
 
@@ -63,6 +75,21 @@ JobbedProcessManager &JobbedProcessManager::processes(int count) {
 JobbedProcessManager& JobbedProcessManager::withLogin(LPCWSTR szUsername, LPCWSTR szPassword) {
 	this->szUsername = szUsername;
 	this->szPassword = szPassword;
+	return *this;
+}
+
+JobbedProcessManager& JobbedProcessManager::command(LPCWSTR szCmdLine) {
+	if (this->szCmdLine)
+		free(this->szCmdLine);
+	size_t bytes = (lstrlen(szCmdLine) + 1) * sizeof(WCHAR);
+	this->szCmdLine = (LPWSTR) malloc(bytes);
+	StringCbCopy(this->szCmdLine, bytes, szCmdLine);
+	return *this;
+}
+
+JobbedProcessManager& JobbedProcessManager::directory(LPCWSTR szDirectory) {
+	this->szDirectory = szDirectory;
+	return *this;
 }
 
 JobbedProcessManager::~JobbedProcessManager() {

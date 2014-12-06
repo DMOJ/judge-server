@@ -2,7 +2,8 @@
 #include <objbase.h>
 #include <strsafe.h>
 
-JobbedProcessManager::JobbedProcessManager() {
+JobbedProcessManager::JobbedProcessManager() :
+		szUsername(nullptr), szPassword(nullptr) {
 	ZeroMemory(&extLimits, sizeof extLimits);
 	extLimits.BasicLimitInformation.ActiveProcessLimit = 1;
 	extLimits.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_ACTIVE_PROCESS;
@@ -57,6 +58,11 @@ JobbedProcessManager &JobbedProcessManager::processes(int count) {
 	} else
 		extLimits.BasicLimitInformation.LimitFlags &= ~JOB_OBJECT_LIMIT_ACTIVE_PROCESS;
 	return *this;
+}
+
+JobbedProcessManager& JobbedProcessManager::withLogin(LPCWSTR szUsername, LPCWSTR szPassword) {
+	this->szUsername = szUsername;
+	this->szPassword = szPassword;
 }
 
 JobbedProcessManager::~JobbedProcessManager() {

@@ -2,6 +2,12 @@
 #include <objbase.h>
 #include <strsafe.h>
 
+WCHAR szAgentPath[MAX_PATH];
+
+void WBoxSetAgent(LPWSTR szPath) {
+	StringCchCopy(szAgentPath, MAX_PATH, szPath);
+}
+
 JobbedProcessManager::JobbedProcessManager() :
 		szUsername(nullptr), szPassword(nullptr), szDirectory(nullptr), szCmdLine(nullptr) {
 	ZeroMemory(&extLimits, sizeof extLimits);

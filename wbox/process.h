@@ -7,6 +7,8 @@
 #include <cinttypes>
 #include "helpers.h"
 
+void WBoxSetAgent(LPWSTR szPath);
+
 class JobbedProcessManager {
 	AutoHandle hProcess;
 	AutoHandle hJob;

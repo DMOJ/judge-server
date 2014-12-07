@@ -14,6 +14,8 @@ public:
 	explicit AutoHandle(HANDLE h) : handle(h) {}
 	~AutoHandle() { CloseHandle(handle); }
 	operator HANDLE() { return handle; }
+	HANDLE get() { return handle; }
+	void set(HANDLE h) { *this = h; }
 
 	AutoHandle &operator=(HANDLE h) {
 		if (handle)

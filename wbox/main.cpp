@@ -19,7 +19,7 @@ int wmain() {
 		process.spawn();
 		process.stdIn().close();
 		process.stdErr().close();
-		int ch, fd = _open_osfhandle((intptr_t) (HANDLE) process.stdOut(), _O_RDONLY);
+		int ch, fd = _open_osfhandle((intptr_t) process.stdOut().detach(), _O_RDONLY);
 		FILE *file = _fdopen(fd, "r");
 		while ((ch = fgetc(file)) != EOF)
 			putchar(ch);

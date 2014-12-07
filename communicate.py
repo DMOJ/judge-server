@@ -15,6 +15,8 @@ if os.name == 'nt':
         read = 0
         while True:
             buf = fh.read(65536)
+            if not buf:
+                break
             read += len(buf)
             if read > limit:
                 ole[0] = True

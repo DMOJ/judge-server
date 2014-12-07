@@ -2,13 +2,20 @@ import os
 import subprocess
 import sys
 
-from cptbox import CHROOTSecurity, SecurePopen, PIPE
+try:
+    from cptbox import CHROOTSecurity, SecurePopen, PIPE
+except ImportError:
+    CHROOTSecurity, SecurePopen, PIPE = None, None, None
+
 from error import CompileError
 from .utils import test_executor
 from .resource_proxy import ResourceProxy
 from judgeenv import env
 
 C_FS = ['.*\.so', '/proc/meminfo', '/dev/null']
+GCC_ENV = env['runtime'].get('gcc_env', {})
+if os.name == 'nt':
+    GCC_ENV = dict((k.encode('mbcs'), v.encode('mbcs')) for k, v, in GCC_ENV.iteritems())
 
 
 def make_executor(code, command, args, ext, test_code):
@@ -27,7 +34,7 @@ def make_executor(code, command, args, ext, test_code):
                 sources.append(name)
             if sys.platform == 'win32':
                 compiled_extension = '.exe'
-                linker_options = ['-Wl,--stack,67108864', '-static']
+                linker_options = ['-Wl,--stack,67108864']
             else:
                 compiled_extension = ''
                 linker_options = []
@@ -35,7 +42,7 @@ def make_executor(code, command, args, ext, test_code):
             gcc_args = ([env['runtime'][command]] + sources + ['-Wall', '-DONLINE_JUDGE', '-O2', '-lm', '-march=native'] + args +
                         linker_options + ['-s', '-o', output_file])
             gcc_process = subprocess.Popen(gcc_args, stderr=subprocess.PIPE, executable=env['runtime'][command],
-                                           cwd=self._dir)
+                                           cwd=self._dir, env=GCC_ENV)
             _, compile_error = gcc_process.communicate()
             if gcc_process.returncode != 0:
                 raise CompileError(compile_error)
@@ -45,25 +52,26 @@ def make_executor(code, command, args, ext, test_code):
             self._writable = writable
             self.warning = compile_error
 
-        def launch(self, *args, **kwargs):
-            return SecurePopen([self.name] + list(args),
-                               executable=self._executable,
-                               security=CHROOTSecurity(C_FS, writable=self._writable),
-                               time=kwargs.get('time'),
-                               memory=kwargs.get('memory'),
-                               stderr=(PIPE if kwargs.get('pipe_stderr', False) else None),
-                               env=env['runtime'].get('gcc_env', {}),
-                               cwd=self._dir, fds=self._fds)
+        if SecurePopen is not None:
+            def launch(self, *args, **kwargs):
+                return SecurePopen([self.name] + list(args),
+                                   executable=self._executable,
+                                   security=CHROOTSecurity(C_FS, writable=self._writable),
+                                   time=kwargs.get('time'),
+                                   memory=kwargs.get('memory'),
+                                   stderr=(PIPE if kwargs.get('pipe_stderr', False) else None),
+                                   env=GCC_ENV,
+                                   cwd=self._dir, fds=self._fds)
 
         def launch_unsafe(self, *args, **kwargs):
             return subprocess.Popen([self.name] + list(args),
                                     executable=self._executable,
-                                    env={},
+                                    env=GCC_ENV,
                                     cwd=self._dir,
                                     **kwargs)
 
     def initialize():
-        if command not in env['runtime']:
+        if command not in env['runtime'] or SecurePopen is None:
             return False
         if not os.path.isfile(env['runtime'][command]):
             return False

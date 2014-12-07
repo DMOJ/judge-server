@@ -9,7 +9,7 @@ if hasattr(os, 'getloadavg'):
         return 'load', os.getloadavg()[0] / _cpu_count
 else:
     def load_fair():
-        return 'load', 0.5
+        return 'load', -0.5
 
 
 def cpu_count():

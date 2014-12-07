@@ -2,13 +2,20 @@ import os
 import re
 from subprocess import Popen, PIPE
 import sys
-import traceback
 from communicate import safe_communicate, OutputLimitExceeded
 from error import CompileError
 from .utils import test_executor
 
 from .resource_proxy import ResourceProxy
 from judgeenv import env
+
+try:
+    from winutils import max_memory, execution_time
+except ImportError:
+    windows = False
+    max_memory, execution_time = None, None
+else:
+    windows = True
 
 recomment = re.compile(r'/\*.*?\*/', re.DOTALL)
 restring = re.compile(r'''(["'])(?:\\.|[^"\\])*\1''', re.DOTALL)
@@ -30,7 +37,7 @@ def find_class(source):
 
 
 class JavaPopen(object):
-    def __init__(self, args, executable, cwd):
+    def __init__(self, args, executable, cwd, time_limit, memory_limit):
         self.process = Popen(args, executable=executable, cwd=cwd,
                                         stdin=PIPE, stdout=PIPE, stderr=PIPE)
         self.execution_time, self.tle = None, None
@@ -39,10 +46,21 @@ class JavaPopen(object):
         self.error_info, self.error = None, None
         self.returncode = None
         self.feedback = None
+        self.time_limit = time_limit
+        self.memory_limit = memory_limit
         self._killed = False
 
     def communicate(self, stdin=None):
         return self._communicate(*self.process.communicate(stdin))
+
+    def _update_windows_stats(self):
+        handle = int(self.process._handle)
+        self.execution_time = execution_time(handle)
+        self.tie = self.execution_time > self.time_limit
+        self.max_memory = max_memory(handle) / 1024.
+        self.mle = self.max_memory > self.memory_limit
+        if self.returncode is None:
+            self.returncode = self.process.returncode
 
     def safe_communicate(self, stdin=None, outlimit=None, errlimit=None):
         try:
@@ -63,17 +81,21 @@ class JavaPopen(object):
             self.execution_time, self.tle, self.max_memory, self.mle, self.returncode = map(int, data[:5])
             self.feedback = data[5]
         except:
-            print>> sys.stderr, stderr_
-            if self._killed:
-                return stdout, None
-            raise
-        self.execution_time /= 1000.0
-        if self.feedback == 'OK':
-            self.feedback = None
+            if not windows:
+                print>> sys.stderr, stderr_
+                if self._killed:
+                    return stdout, None
+                raise
+        if windows:
+            self._update_windows_stats()
+        else:
+            self.execution_time /= 1000.0
         if self.returncode == -1:
             self.returncode = 1
         if self.error_info:
             print>> sys.stderr, self.error_info
+        if self.feedback == 'OK':
+            self.feedback = None
         return stdout, None
 
     def kill(self):
@@ -110,7 +132,8 @@ class Executor(ResourceProxy):
         return JavaPopen(['java', '-client',
                           '-Xmx%sK' % kwargs.get('memory'), '-jar', JAVA_EXECUTOR, self._dir,
                           self._class_name, str(kwargs.get('time') * 1000)] + list(args),
-                         executable=env['runtime']['java'], cwd=self._dir)
+                         executable=env['runtime']['java'], cwd=self._dir,
+                         time_limit=kwargs.get('time'), memory_limit=kwargs.get('memory'))
 
     def launch_unsafe(self, *args, **kwargs):
         return Popen(['java', '-client', self._class_name] + list(args),

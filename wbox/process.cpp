@@ -1,4 +1,5 @@
 #include "process.h"
+#include "handles.h"
 #include <objbase.h>
 #include <strsafe.h>
 
@@ -19,59 +20,28 @@ JobbedProcessManager::JobbedProcessManager() :
 
 bool JobbedProcessManager::spawn() {
 	HANDLE handle;
-	WCHAR szName[MAX_PATH];
-	StringCchCopy(szName, MAX_PATH, L"wbox_job_");
-	StringCchCat(szName, MAX_PATH, szGuid);
-
-	if (!(handle = CreateJobObject(nullptr, szName)))
-		throw WindowsException("CreateJobObject");
-	hJob = handle;
-	wprintf(L"Job: %s\n", szName);
-
-	if (!SetInformationJobObject(hJob, JobObjectExtendedLimitInformation, &extLimits, sizeof extLimits))
-		throw WindowsException("SetInformationJobObject");
-
 	STARTUPINFO si = {sizeof(STARTUPINFO), 0};
 	PROCESS_INFORMATION pi;
 
 	if (!szUsername)
 		return false;
 
-	size_t cchCmdLine = lstrlen(szCmdLine) + lstrlen(szAgentPath) + lstrlen(szGuid) + 5;
-	LPWSTR szAgentCmdLine = (LPWSTR) malloc(cchCmdLine * sizeof(WCHAR));
-	StringCchCopy(szAgentCmdLine, cchCmdLine, L"\"");
-	StringCchCat(szAgentCmdLine, cchCmdLine, szAgentPath);
-	StringCchCat(szAgentCmdLine, cchCmdLine, L"\" ");
-	StringCchCat(szAgentCmdLine, cchCmdLine, szGuid);
-	StringCchCat(szAgentCmdLine, cchCmdLine, L" ");
-	StringCchCat(szAgentCmdLine, cchCmdLine, szCmdLine);
-
-	if (!CreateProcessWithLogonW(szUsername, L".", szPassword, 0, szAgentPath, szAgentCmdLine,
-								 NORMAL_PRIORITY_CLASS | CREATE_BREAKAWAY_FROM_JOB,
+	if (!CreateProcessWithLogonW(szUsername, L".", szPassword, 0, szExecutable, szCmdLine,
+								 NORMAL_PRIORITY_CLASS | CREATE_SUSPENDED | CREATE_BREAKAWAY_FROM_JOB,
 								 nullptr, szDirectory, &si, &pi))
 		throw WindowsException("CreateProcessWithLogonW");
 
-	union {
-		DWORD dw;
-		LONG l;
-	} uExitCode;
-	WaitForSingleObject(pi.hProcess, INFINITE);
-	GetExitCodeProcess(pi.hProcess, &uExitCode.dw);
+	hProcess = pi.hProcess;
 
-	if (uExitCode.l < 0) {
-		printf("Agent: %d\n", uExitCode.l);
-		return false;
-	}
+	if (!(handle = SearchForJob(hProcess, L"svchost.exe")))
+		throw WindowsException("Failed to find job", 0);
 
-	CloseHandle(pi.hProcess);
+	hJob = handle;
+	if (!SetInformationJobObject(hJob, JobObjectExtendedLimitInformation, &extLimits, sizeof extLimits))
+		throw WindowsException("SetInformationJobObject");
+
+	ResumeThread(pi.hThread);
 	CloseHandle(pi.hThread);
-
-	if (!(handle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, uExitCode.dw)))
-		throw WindowsException("OpenProcess");
-
-	hProcess = handle;
-	AssignProcessToJobObject(hJob, hProcess);
-
 	return true;
 }
 
@@ -121,6 +91,11 @@ JobbedProcessManager& JobbedProcessManager::command(LPCWSTR szCmdLine) {
 	size_t bytes = (lstrlen(szCmdLine) + 1) * sizeof(WCHAR);
 	this->szCmdLine = (LPWSTR) malloc(bytes);
 	StringCbCopy(this->szCmdLine, bytes, szCmdLine);
+	return *this;
+}
+
+JobbedProcessManager& JobbedProcessManager::executable(LPCWSTR szExecutable) {
+	this->szExecutable = szExecutable;
 	return *this;
 }
 

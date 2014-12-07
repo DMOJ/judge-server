@@ -15,7 +15,7 @@ class JobbedProcessManager {
 	JOBOBJECT_EXTENDED_LIMIT_INFORMATION extLimits;
 	GUID guid;
 	WCHAR szGuid[40];
-	LPCWSTR szUsername, szPassword, szDirectory;
+	LPCWSTR szUsername, szPassword, szDirectory, szExecutable;
 	LPWSTR szCmdLine;
 public:
 	JobbedProcessManager();
@@ -29,6 +29,7 @@ public:
 	JobbedProcessManager &processes(int count);
 	JobbedProcessManager &withLogin(LPCWSTR szUsername, LPCWSTR szPassword);
 	JobbedProcessManager &command(LPCWSTR szCmdLine);
+	JobbedProcessManager &executable(LPCWSTR szExecutable);
 	JobbedProcessManager &directory(LPCWSTR szDirectory);
 
 	HANDLE process() { return hProcess; }

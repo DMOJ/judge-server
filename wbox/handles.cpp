@@ -1,6 +1,5 @@
 #include <windows.h>
 #include <tlhelp32.h>
-#include <ntdef.h>
 #include <stdlib.h>
 
 #include "handles.h"
@@ -13,6 +12,8 @@
 #define ObjectBasicInformation 0
 #define ObjectNameInformation 1
 #define ObjectTypeInformation 2
+
+typedef LONG NTSTATUS, *PNTSTATUS;
 
 typedef NTSTATUS(NTAPI *_NtQuerySystemInformation)(
 	ULONG SystemInformationClass,
@@ -53,6 +54,12 @@ typedef enum _POOL_TYPE {
 	NonPagedPoolCacheAlignedMustS
 } POOL_TYPE, *PPOOL_TYPE;
 
+typedef struct _UNICODE_STRING {
+	USHORT Length;
+	USHORT MaximumLength;
+	PWSTR Buffer;
+} UNICODE_STRING, *PUNICODE_STRING;
+
 typedef struct _OBJECT_TYPE_INFORMATION {
 	UNICODE_STRING Name;
 	ULONG TotalNumberOfObjects;
@@ -86,11 +93,10 @@ _NtQuerySystemInformation NtQuerySystemInformation = (_NtQuerySystemInformation)
 _NtQueryObject NtQueryObject = (_NtQueryObject) GetLibraryProcAddress("ntdll.dll", "NtQueryObject");
 
 
-HANDLE SearchProcess(HANDLE hProcess, HANDLE hVictim) {
+HANDLE SearchProcess(HANDLE hProcess, HANDLE hVictim, ULONG pid) {
 	NTSTATUS status;
 	PSYSTEM_HANDLE_INFORMATION handleInfo;
 	ULONG handleInfoSize = 0x10000;
-	ULONG pid = GetProcessId(hVictim);
 	ULONG i;
 	HANDLE hJob = nullptr;
 
@@ -110,7 +116,6 @@ HANDLE SearchProcess(HANDLE hProcess, HANDLE hVictim) {
 		HANDLE dupHandle = nullptr;
 		POBJECT_TYPE_INFORMATION objectTypeInfo;
 		PVOID objectNameInfo;
-		UNICODE_STRING objectName;
 		ULONG returnLength;
 
 		/* Check if this handle belongs to the PID the user specified. */
@@ -118,7 +123,7 @@ HANDLE SearchProcess(HANDLE hProcess, HANDLE hVictim) {
 			continue;
 
 		/* Duplicate the handle so we can query it. */
-		if (!DuplicateHandle(hVictim, (HANDLE)handle.Handle, GetCurrentProcess(), &dupHandle, JOB_OBJECT_ALL_ACCESS, 0, 0))
+		if (!DuplicateHandle(hVictim, (HANDLE) handle.Handle, GetCurrentProcess(), &dupHandle, JOB_OBJECT_ALL_ACCESS, 0, 0))
 			continue;
 
 		/* Query the object type. */
@@ -174,6 +179,7 @@ HANDLE SearchProcess(HANDLE hProcess, HANDLE hVictim) {
 }
 
 HANDLE SearchForJob(HANDLE hProcess, LPWSTR szParentName) {
+	SeDebugPrivilege debug;
 	AutoHandle hProcessSnap, hParent;
 	HANDLE handle;
 	PROCESSENTRY32 pe32;
@@ -192,7 +198,7 @@ HANDLE SearchForJob(HANDLE hProcess, LPWSTR szParentName) {
 				fprintf(stderr, "Process %u: OpenProcess failed: %d\n", pe32.th32ProcessID, GetLastError());
 			else {
 				hParent = handle;
-				HANDLE hResult = SearchProcess(hProcess, hParent);
+				HANDLE hResult = SearchProcess(hProcess, hParent, pe32.th32ProcessID);
 				if (hResult)
 					return hResult;
 			}

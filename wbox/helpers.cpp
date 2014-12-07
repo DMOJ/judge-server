@@ -29,3 +29,24 @@ const char* WindowsException::what() const {
 		StringCchPrintfA(message, ARRAYSIZE(message), "%s: %d", location, error);
 	return message;
 }
+
+SeDebugPrivilege::SeDebugPrivilege() {
+	if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken))
+		throw WindowsException("OpenProcessToken");
+
+	tp.PrivilegeCount = 1;
+	tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+
+	if (!LookupPrivilegeValue(nullptr, SE_DEBUG_NAME, &tp.Privileges[0].Luid))
+		throw WindowsException("LookupPrivilegeValue SE_DEBUG_NAME");
+
+	if (!AdjustTokenPrivileges(hToken, FALSE, &tp, 0, nullptr, nullptr))
+		throw WindowsException("AdjustTokenPrivileges");
+}
+
+SeDebugPrivilege::~SeDebugPrivilege() {
+	tp.Privileges[0].Attributes = 0;
+
+	if (!AdjustTokenPrivileges(hToken, FALSE, &tp, 0, nullptr, nullptr))
+		throw WindowsException("AdjustTokenPrivileges");
+}

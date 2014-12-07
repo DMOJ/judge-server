@@ -29,6 +29,14 @@ public:
 	}
 };
 
+class SeDebugPrivilege {
+	HANDLE hToken;
+	TOKEN_PRIVILEGES tp;
+public:
+	SeDebugPrivilege();
+	~SeDebugPrivilege();
+};
+
 std::string FormatWindowsError(DWORD error);
 
 class WindowsException : public std::exception {

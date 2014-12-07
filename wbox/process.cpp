@@ -21,11 +21,27 @@ bool JobbedProcessManager::spawn() {
 	if (!szUsername)
 		return false;
 
+	if (!CreatePipe(&si.hStdInput, &handle, nullptr, 0))
+		throw WindowsException("CreatePipe stdin");
+	hStdin = handle;
+
+	if (!CreatePipe(&handle, &si.hStdOutput, nullptr, 0))
+		throw WindowsException("CreatePipe stdout");
+	hStdout = handle;
+
+	if (!CreatePipe(&handle, &si.hStdError, nullptr, 0))
+		throw WindowsException("CreatePipe stderr");
+	hStderr = handle;
+	si.dwFlags |= STARTF_USESTDHANDLES;
+
 	if (!CreateProcessWithLogonW(szUsername, L".", szPassword, 0, szExecutable, szCmdLine,
 								 NORMAL_PRIORITY_CLASS | CREATE_SUSPENDED | CREATE_BREAKAWAY_FROM_JOB,
 								 nullptr, szDirectory, &si, &pi))
 		throw WindowsException("CreateProcessWithLogonW");
 
+	CloseHandle(si.hStdInput);
+	CloseHandle(si.hStdOutput);
+	CloseHandle(si.hStdError);
 	hProcess = pi.hProcess;
 
 	if (!(handle = SearchForJob(hProcess, L"svchost.exe")))

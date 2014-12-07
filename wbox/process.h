@@ -10,6 +10,7 @@
 class JobbedProcessManager {
 	AutoHandle hProcess;
 	AutoHandle hJob;
+	AutoHandle hStdin, hStdout, hStderr;
 	JOBOBJECT_EXTENDED_LIMIT_INFORMATION extLimits;
 	GUID guid;
 	WCHAR szGuid[40];
@@ -30,8 +31,12 @@ public:
 	JobbedProcessManager &executable(LPCWSTR szExecutable);
 	JobbedProcessManager &directory(LPCWSTR szDirectory);
 
-	HANDLE process() { return hProcess; }
-	HANDLE job() { return hJob; }
+	AutoHandle &process() { return hProcess; }
+	AutoHandle &job() { return hJob; }
+	// stdin is apparently a macro. *facepalm*
+	AutoHandle &stdIn() { return hStdin; }
+	AutoHandle &stdOut() { return hStdout; }
+	AutoHandle &stdErr() { return hStderr; }
 };
 
 #endif

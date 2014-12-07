@@ -27,6 +27,11 @@ public:
 		handle = nullptr;
 		return h;
 	}
+
+	void close() {
+		CloseHandle(handle);
+		handle = nullptr;
+	}
 };
 
 class SeDebugPrivilege {

@@ -13,8 +13,8 @@ from .resource_proxy import ResourceProxy
 from judgeenv import env
 
 C_FS = ['.*\.so', '/proc/meminfo', '/dev/null']
-GCC_ENV = env['runtime'].get('gcc_env', {})
-if os.name == 'nt':
+GCC_ENV = env['runtime'].get('gcc_env', None)
+if os.name == 'nt' and GCC_ENV is not None:
     GCC_ENV = dict((k.encode('mbcs'), v.encode('mbcs')) for k, v, in GCC_ENV.iteritems())
 
 
@@ -60,7 +60,7 @@ def make_executor(code, command, args, ext, test_code):
                                    time=kwargs.get('time'),
                                    memory=kwargs.get('memory'),
                                    stderr=(PIPE if kwargs.get('pipe_stderr', False) else None),
-                                   env=GCC_ENV,
+                                   env=GCC_ENV or {},
                                    cwd=self._dir, fds=self._fds)
 
         def launch_unsafe(self, *args, **kwargs):

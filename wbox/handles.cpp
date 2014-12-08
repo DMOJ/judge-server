@@ -112,11 +112,9 @@ HANDLE SearchProcess(HANDLE hProcess, HANDLE hVictim, ULONG pid) {
 		return fprintf(stderr, "NtQuerySystemInformation failed: %ld\n", status), nullptr;
 
 	for (i = 0; i < handleInfo->HandleCount; i++) {
-		SYSTEM_HANDLE handle = handleInfo->Handles[i];
+		SYSTEM_HANDLE &handle = handleInfo->Handles[i];
 		HANDLE dupHandle = nullptr;
 		POBJECT_TYPE_INFORMATION objectTypeInfo;
-		PVOID objectNameInfo;
-		ULONG returnLength;
 
 		/* Check if this handle belongs to the PID the user specified. */
 		if (handle.ProcessId != pid)
@@ -129,51 +127,26 @@ HANDLE SearchProcess(HANDLE hProcess, HANDLE hVictim, ULONG pid) {
 		/* Query the object type. */
 		objectTypeInfo = (POBJECT_TYPE_INFORMATION) malloc(0x1000);
 		if (!NT_SUCCESS(NtQueryObject(dupHandle, ObjectTypeInformation, objectTypeInfo, 0x1000, nullptr))) {
-			CloseHandle(dupHandle);
-			continue;
-		}
-
-		/* Query the object name (unless it has an access of 0x0012019f, on which NtQueryObject could hang. */
-		/* No clue why this is done, but it must be right! */
-		if (handle.GrantedAccess == 0x0012019f) {
 			free(objectTypeInfo);
 			CloseHandle(dupHandle);
 			continue;
 		}
 
-		objectNameInfo = malloc(0x1000);
-		if (!NT_SUCCESS(NtQueryObject(dupHandle, ObjectNameInformation, objectNameInfo, 0x1000, &returnLength))) {
-			/* Reallocate the buffer and try again. */
-			objectNameInfo = realloc(objectNameInfo, returnLength);
-			if (!NT_SUCCESS(NtQueryObject(dupHandle, ObjectNameInformation, objectNameInfo, returnLength, nullptr))) {
-				free(objectTypeInfo);
-				free(objectNameInfo);
-				CloseHandle(dupHandle);
-				continue;
-			}
-		}
-
 		if (lstrcmpW(objectTypeInfo->Name.Buffer, L"Job") == 0) {
 			BOOL bInJob;
-
 			if (!IsProcessInJob(hProcess, dupHandle, &bInJob)) {
 				fprintf(stderr, "Process %u: IsProcessInJob failed: %d\n", pid, GetLastError());
 				continue;
 			}
-
 			if (bInJob) {
 				free(objectTypeInfo);
-				free(objectNameInfo);
 				hJob = dupHandle;
 				break;
 			}
 		}
-
 		free(objectTypeInfo);
-		free(objectNameInfo);
 		CloseHandle(dupHandle);
 	}
-
 	free(handleInfo);
 	return hJob;
 }

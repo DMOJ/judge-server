@@ -85,9 +85,9 @@ cdef class UserManager:
 
 cdef class ProcessManager:
     cdef JobbedProcessManager *thisptr
-    cdef double _time
-    cdef size_t _memory
-    cdef int _processes
+    cdef double _time_limit
+    cdef size_t _memory_limit
+    cdef int _process_limit
     cdef unicode _username
     cdef unicode _password
     cdef unicode _executable
@@ -97,9 +97,9 @@ cdef class ProcessManager:
 
     def __cinit__(self, username, password):
         self.thisptr = new JobbedProcessManager()
-        self._time = 0
-        self._memory = 0
-        self._processes = 0
+        self._time_limit = 0
+        self._memory_limit = 0
+        self._process_limit = 0
         self._username = username
         self._password = password
         self._executable = self._dir = u''
@@ -150,28 +150,28 @@ cdef class ProcessManager:
         def __get__(self):
             return self._stderr
 
-    property time:
+    property time_limit:
         def __get__(self):
-            return self._time
+            return self._time_limit
 
         def __set__(self, value):
-            self._time = value
+            self._time_limit = value
             self.thisptr.time(value)
 
-    property memory:
+    property memory_limit:
         def __get__(self):
-            return self._memory
+            return self._memory_limit
 
         def __set__(self, value):
-            self._memory = value
+            self._memory_limit = value
             self.thisptr.memory(value)
 
-    property processes:
+    property process_limit:
         def __get__(self):
-            return self._processes
+            return self._process_limit
 
         def __set__(self, value):
-            self._processes = value
+            self._process_limit = value
             self.thisptr.processes(value)
 
     property executable:

@@ -10,9 +10,9 @@ class WBoxPopen(object):
         if executable is not None:
             self.process.executable = executable
         self.process.dir = cwd
-        self.process.time = time
-        self.process.memory = memory
-        self.process.processes = nproc
+        self.process.time_limit = time
+        self.process.memory_limit = memory
+        self.process.process_limit = nproc
         self.returncode = None
 
     def wait(self, timeout=None):

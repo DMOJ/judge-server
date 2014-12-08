@@ -1,9 +1,18 @@
 from os import fdopen, O_RDONLY, O_WRONLY
 from msvcrt import open_osfhandle
 
+from libc.stdint cimport uint32_t
+
 ctypedef const Py_UNICODE *LPCWSTR
 ctypedef Py_UNICODE *LPWSTR
 ctypedef void *HANDLE
+ctypedef uint32_t DWORD
+
+
+cdef extern from 'windows.h' nogil:
+    DWORD WaitForSingleObject(HANDLE, DWORD milliseconds)
+    cdef DWORD INFINITE
+    bint GetExitCodeProcess(HANDLE, DWORD*)
 
 
 cdef extern from 'helpers.h' nogil:
@@ -115,6 +124,19 @@ cdef class ProcessManager:
 
     def terminate(self, code):
         return self.thisptr.terminate(code)
+
+    def wait(self, timeout=None):
+        cdef DWORD time, result
+        time = timeout or INFINITE
+        with nogil:
+            result = WaitForSingleObject(self.thisptr.process().get(), time)
+        return result
+
+    def get_exit_code(self):
+        cdef DWORD code
+        if not GetExitCodeProcess(self.thisptr.process().get(), &code):
+            raise WindowsError()
+        return None if code == 259 else code
 
     property stdin:
         def __get__(self):

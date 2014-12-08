@@ -9,6 +9,15 @@ JobbedProcessManager::JobbedProcessManager() :
 	ZeroMemory(&extLimits, sizeof extLimits);
 	extLimits.BasicLimitInformation.ActiveProcessLimit = 1;
 	extLimits.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_ACTIVE_PROCESS;
+	ZeroMemory(&uiLimits, sizeof uiLimits);
+	uiLimits.UIRestrictionsClass = 	JOB_OBJECT_UILIMIT_DESKTOP |
+									JOB_OBJECT_UILIMIT_DISPLAYSETTINGS |
+									JOB_OBJECT_UILIMIT_EXITWINDOWS |
+									JOB_OBJECT_UILIMIT_GLOBALATOMS |
+									JOB_OBJECT_UILIMIT_HANDLES |
+									JOB_OBJECT_UILIMIT_READCLIPBOARD |
+									JOB_OBJECT_UILIMIT_SYSTEMPARAMETERS |
+									JOB_OBJECT_UILIMIT_WRITECLIPBOARD;
 	CoCreateGuid(&guid);
 	StringFromGUID2(guid, szGuid, ARRAYSIZE(szGuid));
 }
@@ -49,7 +58,10 @@ bool JobbedProcessManager::spawn() {
 
 	hJob = handle;
 	if (!SetInformationJobObject(hJob, JobObjectExtendedLimitInformation, &extLimits, sizeof extLimits))
-		throw WindowsException("SetInformationJobObject");
+		throw WindowsException("SetInformationJobObject JobObjectExtendedLimitInformation");
+
+	if (!SetInformationJobObject(hJob, JobObjectBasicUIRestrictions, &uiLimits, sizeof uiLimits))
+		throw WindowsException("SetInformationJobObject JobObjectBasicUIRestrictions");
 
 	ResumeThread(pi.hThread);
 	CloseHandle(pi.hThread);

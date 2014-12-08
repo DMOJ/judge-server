@@ -12,6 +12,7 @@ class JobbedProcessManager {
 	AutoHandle hJob;
 	AutoHandle hStdin, hStdout, hStderr;
 	JOBOBJECT_EXTENDED_LIMIT_INFORMATION extLimits;
+	JOBOBJECT_BASIC_UI_RESTRICTIONS uiLimits;
 	GUID guid;
 	WCHAR szGuid[40];
 	LPCWSTR szUsername, szPassword, szDirectory, szExecutable;

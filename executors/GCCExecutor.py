@@ -13,9 +13,16 @@ from .resource_proxy import ResourceProxy
 from judgeenv import env
 
 C_FS = ['.*\.so', '/proc/meminfo', '/dev/null']
-GCC_ENV = env['runtime'].get('gcc_env', None)
-if os.name == 'nt' and GCC_ENV is not None:
-    GCC_ENV = dict((k.encode('mbcs'), v.encode('mbcs')) for k, v, in GCC_ENV.iteritems())
+
+GCC_ENV = env['runtime'].get('gcc_env', {})
+GCC_COMPILE = os.environ.copy()
+
+if os.name == 'nt':
+    GCC_COMPILE.update((k.encode('mbcs'), v.encode('mbcs')) for k, v in
+                       env['runtime'].get('gcc_compile', GCC_ENV).iteritems())
+    GCC_ENV = dict((k.encode('mbcs'), v.encode('mbcs')) for k, v in GCC_ENV.iteritems())
+else:
+    GCC_COMPILE.update(env['runtime'].get('gcc_compile', {}))
 
 
 def make_executor(code, command, args, ext, test_code):
@@ -41,8 +48,9 @@ def make_executor(code, command, args, ext, test_code):
             output_file = self._file('%s%s' % (problem_id, compiled_extension))
             gcc_args = ([env['runtime'][command]] + sources + ['-Wall', '-DONLINE_JUDGE', '-O2', '-lm', '-march=native'] + args +
                         linker_options + ['-s', '-o', output_file])
+
             gcc_process = subprocess.Popen(gcc_args, stderr=subprocess.PIPE, executable=env['runtime'][command],
-                                           cwd=self._dir, env=GCC_ENV)
+                                           cwd=self._dir, env=GCC_COMPILE)
             _, compile_error = gcc_process.communicate()
             if gcc_process.returncode != 0:
                 raise CompileError(compile_error)
@@ -60,7 +68,7 @@ def make_executor(code, command, args, ext, test_code):
                                    time=kwargs.get('time'),
                                    memory=kwargs.get('memory'),
                                    stderr=(PIPE if kwargs.get('pipe_stderr', False) else None),
-                                   env=GCC_ENV or {},
+                                   env=GCC_ENV,
                                    cwd=self._dir, fds=self._fds)
 
         def launch_unsafe(self, *args, **kwargs):

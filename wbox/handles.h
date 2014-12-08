@@ -6,6 +6,7 @@
 #include <windows.h>
 
 HANDLE SearchProcess(HANDLE hProcess, HANDLE hVictim);
-HANDLE SearchForJob(HANDLE hProcess, LPWSTR szParentName);
+HANDLE SearchForJobByService(HANDLE hProcess, LPCWSTR szServiceName);
+HANDLE SearchForJobByProcess(HANDLE hProcess, LPCWSTR szParentName);
 
 #endif

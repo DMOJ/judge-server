@@ -178,7 +178,37 @@ HANDLE SearchProcess(HANDLE hProcess, HANDLE hVictim, ULONG pid) {
 	return hJob;
 }
 
-HANDLE SearchForJob(HANDLE hProcess, LPWSTR szParentName) {
+HANDLE SearchForJobByService(HANDLE hProcess, LPCWSTR szServiceName) {
+	SC_HANDLE schManager, schService;
+	SERVICE_STATUS_PROCESS ssp;
+	DWORD dwError;
+	if (!(schManager = OpenSCManager(nullptr, SERVICES_ACTIVE_DATABASE, 0)))
+		throw WindowsException("OpenSCManager");
+	if (!(schService = OpenService(schManager, szServiceName, SERVICE_QUERY_STATUS))) {
+		CloseServiceHandle(schManager);
+		throw WindowsException("OpenService");
+	}
+	BOOL status = QueryServiceStatusEx(schService, SC_STATUS_PROCESS_INFO, (LPBYTE)&ssp, sizeof ssp, &dwError);
+	dwError = GetLastError();
+	CloseServiceHandle(schManager);
+	CloseServiceHandle(schService);
+	if (!status)
+		throw WindowsException("QueryServiceStatusEx", dwError);
+
+	HANDLE handle;
+	{
+		SeDebugPrivilege debug;
+		handle = OpenProcess(PROCESS_DUP_HANDLE, FALSE, ssp.dwProcessId);
+		if (!handle)
+			throw WindowsException("OpenProcess");
+	}
+
+	HANDLE result = SearchProcess(hProcess, handle, ssp.dwProcessId);
+	CloseHandle(handle);
+	return result;
+}
+
+HANDLE SearchForJobByProcess(HANDLE hProcess, LPCWSTR szParentName) {
 	SeDebugPrivilege debug;
 	AutoHandle hProcessSnap, hParent;
 	HANDLE handle;

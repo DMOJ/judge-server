@@ -44,7 +44,7 @@ bool JobbedProcessManager::spawn() {
 	CloseHandle(si.hStdError);
 	hProcess = pi.hProcess;
 
-	if (!(handle = SearchForJob(hProcess, L"svchost.exe")))
+	if (!(handle = SearchForJobByService(hProcess, L"seclogon")))
 		throw WindowsException("Failed to find job", 0);
 
 	hJob = handle;

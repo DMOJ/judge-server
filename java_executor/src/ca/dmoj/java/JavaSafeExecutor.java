@@ -67,14 +67,14 @@ public class JavaSafeExecutor {
         new Scanner(new ByteArrayInputStream(new byte[128])).close();
     }
 
-    static void writeState(String state, Object... format) {
+    static void writeState(String state, Object... format) throws IOException {
         FileOutputStream fos = new FileOutputStream(statefile);
         PrintStream out = new PrintStream(fos);
         out.format(state, format);
         fos.close();
     }
 
-    static void printStateAndExit() {
+    static void printStateAndExit() throws IOException {
         // UnsafePrintStream buffers
         System.out.flush();
 

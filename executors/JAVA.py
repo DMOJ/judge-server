@@ -77,7 +77,7 @@ class JavaPopen(object):
     def _communicate(self, stdout, stderr_):
         try:
             with open(self.statefile, 'r') as proc:
-                self.error_info = proc.read()
+                self.error_info = proc.read().strip()
         except:
             return stdout, None
         try:

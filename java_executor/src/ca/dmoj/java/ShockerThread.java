@@ -3,6 +3,8 @@ package ca.dmoj.java;
 import ca.dmoj.java.JavaSafeExecutor;
 import ca.dmoj.java.SubmissionThread;
 
+import java.io.IOException;
+
 public class ShockerThread extends Thread {
     private final long timelimit;
     private final SubmissionThread target;

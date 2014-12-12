@@ -79,7 +79,7 @@ class JavaPopen(object):
             with open(self.statefile, 'r') as proc:
                 self.error_info = proc.read().strip()
         except:
-            return stdout, None
+            return stdout, stderr_
         try:
             data = self.error_info.split(None, 5)
             self.execution_time, self.tle, self.max_memory, self.mle, self.returncode = map(int, data[:5])
@@ -88,7 +88,7 @@ class JavaPopen(object):
             if not windows:
                 print>> sys.stderr, stderr_
                 if self._killed:
-                    return stdout, None
+                    return stdout, stderr_
                 raise
         if windows:
             self._update_windows_stats()
@@ -96,11 +96,9 @@ class JavaPopen(object):
             self.execution_time /= 1000.0
         if self.returncode == -1:
             self.returncode = 1
-        if self.error_info:
-            print>> sys.stderr, self.error_info
         if self.feedback == 'OK':
             self.feedback = None
-        return stdout, None
+        return stdout, stderr_
 
     def kill(self):
         self._killed = True

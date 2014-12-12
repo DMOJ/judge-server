@@ -70,7 +70,7 @@ public class JavaSafeExecutor {
     static void writeState(String state, Object... format) {
         FileOutputStream fos = new FileOutputStream(statefile);
         PrintStream out = new PrintStream(fos);
-        out.print(state, format);
+        out.format(state, format);
         fos.close();
     }
 

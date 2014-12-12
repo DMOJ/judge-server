@@ -75,8 +75,11 @@ class JavaPopen(object):
             raise
 
     def _communicate(self, stdout, stderr_):
-        with open(self.statefile, 'r') as proc:
-            self.error_info = proc.read()
+        try:
+            with open(self.statefile, 'r') as proc:
+                self.error_info = proc.read()
+        except:
+            return stdout, None
         try:
             data = self.error_info.split(None, 5)
             self.execution_time, self.tle, self.max_memory, self.mle, self.returncode = map(int, data[:5])

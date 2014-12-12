@@ -107,7 +107,7 @@ public class JavaSafeExecutor {
         System.exit(0);
     }
 
-    public static void main(String[] argv) throws MalformedURLException, ClassNotFoundException, UnsupportedEncodingException {
+    public static void main(String[] argv) throws MalformedURLException, ClassNotFoundException, UnsupportedEncodingException, IOException {
         cwd = new File(argv[0]).toString(); // Resolve relative paths
         String classname = argv[1];
         int TL = Integer.parseInt(argv[2]);

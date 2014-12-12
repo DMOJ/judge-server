@@ -22,6 +22,7 @@ public class ShockerThread extends Thread {
             JavaSafeExecutor.printStateAndExit();
         } catch (ThreadDeath ouch) {
         } catch (InterruptedException ignored) {
+        } catch (IOException wtf) {
         }
     }
 }

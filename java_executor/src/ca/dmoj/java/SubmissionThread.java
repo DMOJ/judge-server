@@ -6,7 +6,7 @@ import java.lang.reflect.Modifier;
 
 public class SubmissionThread extends Thread {
     private final Class submission;
-    private boolean tle = false;
+    boolean tle = false;
     private boolean mle = false;
     private int error = 0;
     private Throwable exception;

@@ -1,10 +1,13 @@
 package ca.dmoj.java;
 
+import ca.dmoj.java.JavaSafeExecutor;
+import ca.dmoj.java.SubmissionThread;
+
 public class ShockerThread extends Thread {
     private final long timelimit;
-    private final Thread target;
+    private final SubmissionThread target;
 
-    public ShockerThread(long timelimit, Thread target) {
+    public ShockerThread(long timelimit, SubmissionThread target) {
         super("Grader-TL-Thread");
         this.timelimit = timelimit;
         this.target = target;
@@ -15,8 +18,8 @@ public class ShockerThread extends Thread {
         try {
             // Wait for TL
             Thread.sleep(timelimit);
-            // And kill the submission
-            target.stop(JavaSafeExecutor.TLE); // We use our own exception here!
+            target.tle = true;
+            JavaSafeExecutor.printStateAndExit();
         } catch (ThreadDeath ouch) {
         } catch (InterruptedException ignored) {
         }

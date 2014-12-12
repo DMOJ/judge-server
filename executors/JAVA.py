@@ -37,7 +37,7 @@ def find_class(source):
 
 
 class JavaPopen(object):
-    def __init__(self, args, executable, cwd, time_limit, memory_limit):
+    def __init__(self, args, executable, cwd, time_limit, memory_limit, statefile):
         self.process = Popen(args, executable=executable, cwd=cwd,
                                         stdin=PIPE, stdout=PIPE, stderr=PIPE)
         self.execution_time, self.tle = None, None
@@ -48,6 +48,7 @@ class JavaPopen(object):
         self.feedback = None
         self.time_limit = time_limit
         self.memory_limit = memory_limit
+        self.statefile = statefile
         self._killed = False
 
     def communicate(self, stdin=None):
@@ -74,10 +75,10 @@ class JavaPopen(object):
             raise
 
     def _communicate(self, stdout, stderr_):
-        stderr = stderr_.rstrip().split('\n')
-        self.error_info = '\n'.join(stderr[:-1]).strip()
+        with open(self.statefile, 'r') as proc:
+            self.error_info = proc.read()
         try:
-            data = stderr[-1].split(None, 5)
+            data = self.error_info.split(None, 5)
             self.execution_time, self.tle, self.max_memory, self.mle, self.returncode = map(int, data[:5])
             self.feedback = data[5]
         except:
@@ -127,13 +128,14 @@ class Executor(ResourceProxy):
             raise CompileError(compile_error)
         self._class_name = class_name.group(1)
         self.warning = compile_error
+        self.statefile = self._file('state')
 
     def launch(self, *args, **kwargs):
         return JavaPopen(['java', '-client',
                           '-Xmx%sK' % kwargs.get('memory'), '-jar', JAVA_EXECUTOR, self._dir,
-                          self._class_name, str(kwargs.get('time') * 1000)] + list(args),
+                          self._class_name, str(kwargs.get('time') * 1000), 'state'] + list(args),
                          executable=env['runtime']['java'], cwd=self._dir,
-                         time_limit=kwargs.get('time'), memory_limit=kwargs.get('memory'))
+                         time_limit=kwargs.get('time'), memory_limit=kwargs.get('memory'), statefile=self.statefile)
 
     def launch_unsafe(self, *args, **kwargs):
         return Popen(['java', '-client', self._class_name] + list(args),

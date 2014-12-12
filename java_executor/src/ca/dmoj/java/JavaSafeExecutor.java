@@ -57,6 +57,8 @@ public class JavaSafeExecutor {
      */
     static String cwd;
 
+    static File statefile;
+
     static {
         /*
         Scanner needs to load some locale files before it can be used. Since "files" implies IO which is blocked by
@@ -65,47 +67,14 @@ public class JavaSafeExecutor {
         new Scanner(new ByteArrayInputStream(new byte[128])).close();
     }
 
-    public static void main(String[] argv) throws MalformedURLException, ClassNotFoundException, UnsupportedEncodingException {
-        cwd = new File(argv[0]).toString(); // Resolve relative paths
-        String classname = argv[1];
-        int TL = Integer.parseInt(argv[2]);
-        selfThread = Thread.currentThread();
+    static void writeState(String state, Object... format) {
+        FileOutputStream fos = new FileOutputStream(statefile);
+        PrintStream out = new PrintStream(fos);
+        out.print(state, format);
+        fos.close();
+    }
 
-        System.setOut(new UnsafePrintStream(new FileOutputStream(FileDescriptor.out)));
-
-        URLClassLoader classLoader = URLClassLoader.newInstance(new URL[]{new File(cwd).toURI().toURL()});
-        Class program;
-        try {
-            program = classLoader.loadClass(classname);
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            System.err.printf("\n%d %d %d %d %d CNF\n", 0, 0, 0, 0, CLASS_NOT_FOUND_ERROR_CODE);
-            return;
-        } catch (NoClassDefFoundError ex) {
-            ex.printStackTrace();
-            System.err.printf("\n%d %d %d %d %d CNF\n", 0, 0, 0, 0, NO_CLASS_DEF_ERROR_CODE);
-            return;
-        }
-        submissionThread = new SubmissionThread(program);
-
-        // Count runtime loading as part of time used
-        // Note that if the time here more than the TL, I will not take it away.
-        // If it is negative, the system is slow enough that you are penalized already.
-        long uptime = ManagementFactory.getRuntimeMXBean().getUptime();
-        if (TL > uptime)
-            TL -= uptime;
-
-        shockerThread = new ShockerThread(TL, submissionThread);
-        System.setSecurityManager(new SubmissionSecurityManager());
-        shockerThread.start();
-        submissionThread.start();
-
-        try {
-            submissionThread.join();
-        } catch (InterruptedException ignored) {
-        }
-        shockerThread.stop();
-
+    static void printStateAndExit() {
         // UnsafePrintStream buffers
         System.out.flush();
 
@@ -134,9 +103,52 @@ public class JavaSafeExecutor {
         int error = submissionThread.getError();
         Throwable exc = submissionThread.getException();
 
-        System.err.println();
-        // Python-side executor interface
-        System.err.printf("%d %d %d %d %d %s\n", totalProgramTime, tle ? 1 : 0, mem, mle ? 1 : 0, error, exc != null ? exc.getClass().getName() : "OK");
+        writeState("%d %d %d %d %d %s\n", totalProgramTime, tle ? 1 : 0, mem, mle ? 1 : 0, error, exc != null ? exc.getClass().getName() : "OK");
+        System.exit(0);
     }
 
+    public static void main(String[] argv) throws MalformedURLException, ClassNotFoundException, UnsupportedEncodingException {
+        cwd = new File(argv[0]).toString(); // Resolve relative paths
+        String classname = argv[1];
+        int TL = Integer.parseInt(argv[2]);
+        selfThread = Thread.currentThread();
+        statefile = new File(new File(cwd), argv[3]);
+
+        System.setOut(new UnsafePrintStream(new FileOutputStream(FileDescriptor.out)));
+
+        URLClassLoader classLoader = URLClassLoader.newInstance(new URL[]{new File(cwd).toURI().toURL()});
+        Class program;
+        try {
+            program = classLoader.loadClass(classname);
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            writeState("\n%d %d %d %d %d CNF\n", 0, 0, 0, 0, CLASS_NOT_FOUND_ERROR_CODE);
+            return;
+        } catch (NoClassDefFoundError ex) {
+            ex.printStackTrace();
+            writeState("\n%d %d %d %d %d CNF\n", 0, 0, 0, 0, NO_CLASS_DEF_ERROR_CODE);
+            return;
+        }
+        submissionThread = new SubmissionThread(program);
+
+        // Count runtime loading as part of time used
+        // Note that if the time here more than the TL, I will not take it away.
+        // If it is negative, the system is slow enough that you are penalized already.
+        long uptime = ManagementFactory.getRuntimeMXBean().getUptime();
+        if (TL > uptime)
+            TL -= uptime;
+
+        shockerThread = new ShockerThread(TL, submissionThread);
+        System.setSecurityManager(new SubmissionSecurityManager());
+        shockerThread.start();
+        submissionThread.start();
+
+        try {
+            submissionThread.join();
+        } catch (InterruptedException ignored) {
+        }
+        shockerThread.stop();
+
+        printStateAndExit();
+    }
 }

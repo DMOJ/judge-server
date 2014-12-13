@@ -24,7 +24,7 @@ public class SubmissionThread extends Thread {
             handle = submission.getMethod("main", String[].class);
             if (!Modifier.isStatic(handle.getModifiers())) System.exit(JavaSafeExecutor.NO_ENTRY_POINT_ERROR_CODE);
             try {
-                handle.invoke(null, new Object[]{new String[0]});
+                handle.invoke(null, new Object[]{new String[]{"ONLINE_JUDGE"}});
             } catch (InvocationTargetException e) {
                 // All program errors will be wrapped in an InvocationTargetException
                 Throwable ex = e.getCause();

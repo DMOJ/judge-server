@@ -453,7 +453,7 @@ class Judge(object):
                         if input_data:
                             input_data = input_data.replace('\r\n', '\n')  # .replace('\r', '\n')
 
-                        _output_data = topen(output_file)
+                        _output_data = topen(output_file) if output_file else None
                         if hasattr(_output_data, 'read'):
                             try:
                                 output_data = _output_data.read()

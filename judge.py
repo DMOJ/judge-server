@@ -482,11 +482,11 @@ class Judge(object):
                                 else:
                                     error = ""
                             except:
+                                raise
                                 traceback.print_exc()
                                 try:
                                     process.kill()
                                 except:  # The process might've already exited
-                                    raise # jokes on you
                                     pass
                                 self.packet_manager.internal_error_packet(problem_id)
                                 return

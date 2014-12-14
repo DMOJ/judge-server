@@ -477,6 +477,10 @@ class Judge(object):
                                 result = interactive_grader.grade(case_number, self.current_proc, case_input=input_data,
                                                                   case_output=output_data, point_value=point_value,
                                                                   source_code=source_code)
+                                if isinstance(result, tuple) or isinstance(result, list):
+                                    result, error = result
+                                else:
+                                    error = ""
                             except:
                                 traceback.print_exc()
                                 try:

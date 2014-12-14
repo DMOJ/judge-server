@@ -8,7 +8,7 @@ from judgeenv import env
 from winutils import execution_time, max_memory
 
 
-reexc = re.compile(r'E1AE1B1F-C5FE-4335-B642-9446634350A0:\n(.*?):')
+reexc = re.compile(r'E1AE1B1F-C5FE-4335-B642-9446634350A0:\r?\n(.*?):')
 
 
 class CLRProcess(object):

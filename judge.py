@@ -474,8 +474,8 @@ class Judge(object):
                             # if submission dies, interactive grader might get stuck on a process IO call,
                             # hanging the main thread
                             try:
-                                result = interactive_grader.grade(case_number, self.current_proc, case_input=_input,
-                                                                  case_output=_output, point_value=point_value,
+                                result = interactive_grader.grade(case_number, self.current_proc, case_input=input_data,
+                                                                  case_output=output_data, point_value=point_value,
                                                                   source_code=source_code)
                             except:
                                 traceback.print_exc()

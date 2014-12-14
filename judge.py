@@ -371,8 +371,8 @@ class Judge(object):
                         files[output_file] = generator_error
         return files.__getitem__
 
-    def run_standard(self, executor, init_data, check_func, problem_id, short_circuit=False, time=2, memory=65536,
-                     source_code=None, interactive=False):
+    def run(self, executor, init_data, check_func, problem_id, short_circuit=False, time=2, memory=65536,
+            source_code=None, interactive=False):
         """
         Executes a submission in standard (static) mode.
         :param executor:

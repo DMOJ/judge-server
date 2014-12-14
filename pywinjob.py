@@ -122,54 +122,38 @@ MaxJobObjectInfoClass = 12
 
 
 class IO_COUNTERS(ctypes.Structure):
-    _fields_ = [('ReadOperationCount', c_uint64),
-                ('WriteOperationCount', c_uint64),
-                ('OtherOperationCount', c_uint64),
-                ('ReadTransferCount', c_uint64),
-                ('WriteTransferCount', c_uint64),
-                ('OtherTransferCount', c_uint64)]
-
-
-class JOBOBJECT_BASIC_LIMIT_INFORMATION(ctypes.Structure):
-    _fields_ = [('PerProcessUserTimeLimit', c_int64),
-                ('PerJobUserTimeLimit', c_int64),
-                ('LimitFlags', DWORD),
-                ('MinimumWorkingSetSize', c_size_t),
-                ('MaximumWorkingSetSize', c_size_t),
-                ('ActiveProcessLimit', DWORD),
-                ('Affinity', c_void_p),
-                ('PriorityClass', DWORD),
-                ('SchedulingClass', DWORD)]
-
-
-class JOBOBJECT_EXTENDED_LIMIT_INFORMATION(ctypes.Structure):
-    _fields_ = [('BasicLimitInformation', JOBOBJECT_BASIC_LIMIT_INFORMATION),
-                ('IoInfo', IO_COUNTERS),
-                ('ProcessMemoryLimit', c_size_t),
-                ('JobMemoryLimit', c_size_t),
-                ('PeakProcessMemoryUsed', c_size_t),
-                ('PeakJobMemoryUsed', c_size_t)]
-
-
-class USER_INFO_1(ctypes.Structure):
-    _fields_ = [('usri1_name', LPWSTR),
-                ('usri1_password', LPWSTR),
-                ('usri1_password_age', DWORD),
-                ('usri1_priv', DWORD),
-                ('usri1_home_dir', LPWSTR),
-                ('usri1_comment', LPWSTR),
-                ('usri1_flags', DWORD),
-                ('usri1_script_path', LPWSTR)
+    _fields_ = [
+        ('ReadOperationCount', c_uint64),
+        ('WriteOperationCount', c_uint64),
+        ('OtherOperationCount', c_uint64),
+        ('ReadTransferCount', c_uint64),
+        ('WriteTransferCount', c_uint64),
+        ('OtherTransferCount', c_uint64),
     ]
 
 
-class PROCESS_INFORMATION(ctypes.Structure):
-    _pack_ = 1
+class JOBOBJECT_BASIC_LIMIT_INFORMATION(ctypes.Structure):
     _fields_ = [
-        ('hProcess', HANDLE),
-        ('hThread', HANDLE),
-        ('dwProcessId', DWORD),
-        ('dwThreadId', DWORD),
+        ('PerProcessUserTimeLimit', c_int64),
+        ('PerJobUserTimeLimit', c_int64),
+        ('LimitFlags', DWORD),
+        ('MinimumWorkingSetSize', c_size_t),
+        ('MaximumWorkingSetSize', c_size_t),
+        ('ActiveProcessLimit', DWORD),
+        ('Affinity', c_void_p),
+        ('PriorityClass', DWORD),
+        ('SchedulingClass', DWORD),
+    ]
+
+
+class JOBOBJECT_EXTENDED_LIMIT_INFORMATION(ctypes.Structure):
+    _fields_ = [
+        ('BasicLimitInformation', JOBOBJECT_BASIC_LIMIT_INFORMATION),
+        ('IoInfo', IO_COUNTERS),
+        ('ProcessMemoryLimit', c_size_t),
+        ('JobMemoryLimit', c_size_t),
+        ('PeakProcessMemoryUsed', c_size_t),
+        ('PeakJobMemoryUsed', c_size_t),
     ]
 
 
@@ -177,7 +161,7 @@ class STARTUPINFO(ctypes.Structure):
     _pack_ = 1
     _fields_ = [
         ('cb', DWORD),
-        ('lpReserved', c_void_p),  # LPSTR
+        ('lpReserved', c_void_p),
         ('lpDesktop', LPSTR),
         ('lpTitle', LPSTR),
         ('dwX', DWORD),
@@ -190,7 +174,7 @@ class STARTUPINFO(ctypes.Structure):
         ('dwFlags', DWORD),
         ('wShowWindow', WORD),
         ('cbReserved2', WORD),
-        ('lpReserved2', c_void_p),  # LPBYTE
+        ('lpReserved2', c_void_p),
         ('hStdInput', HANDLE),
         ('hStdOutput', HANDLE),
         ('hStdError', HANDLE),

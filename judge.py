@@ -502,11 +502,6 @@ class Judge(object):
                                 process.wait()
                             if error:
                                 sys.stderr.write(error)
-                            check = check_func(input_data, result.proc_output, output_data, point_value)
-                            if not isinstance(check, CheckerResult):
-                                check = CheckerResult(check, check and point_value)
-                            if not check.passed:
-                                result.result_flag |= Result.WA
 
                         # Must check here because we might be interrupted mid-execution
                         # If we don't bail out, we get an IR.
@@ -517,6 +512,15 @@ class Judge(object):
                         result.max_memory = process.max_memory or 0.0
                         result.execution_time = process.execution_time or 0.0
                         result.r_execution_time = process.r_execution_time or 0.0
+
+                        if output_data is None:
+                            check = result.result_flag == Result.AC
+                        else:
+                            check = check_func(input_data, result.proc_output, output_data, point_value)
+                        if not isinstance(check, CheckerResult):
+                            check = CheckerResult(check, check and point_value)
+                        if not check.passed:
+                            result.result_flag |= Result.WA
 
                         if not init_data.get('swallow_ir', False) and process.returncode > 0:
                             print>> sys.stderr, 'Exited with error: %d' % process.returncode

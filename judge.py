@@ -465,7 +465,7 @@ class Judge(object):
                             output_data = output_data.replace('\r\n', '\n')  # .replace('\r', '\n')
 
                         # Launch a process for the current test case
-                        self.current_proc = executor.launch(time=time, memory=memory, pipe_stderr=(not interactive))
+                        self.current_proc = executor.launch(time=time, memory=memory, pipe_stderr=True)
 
                         process = self.current_proc
 
@@ -486,6 +486,7 @@ class Judge(object):
                                 try:
                                     process.kill()
                                 except:  # The process might've already exited
+                                    raise # jokes on you
                                     pass
                                 self.packet_manager.internal_error_packet(problem_id)
                                 return

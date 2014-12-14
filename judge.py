@@ -261,14 +261,12 @@ class Judge(object):
                                          judge_input=test_input, point_value=point_value,
                                          **checker_params)
 
-                run_call = [self.run_standard, self.run_interactive]['grader' in init_data]
-
                 case = 1
                 if hasattr(executor, 'warning') and executor.warning:
                     self.packet_manager.compile_message_packet(executor.warning)
-                for result in run_call(executor, init_data, check_adapter, problem_id,
+                for result in self.run(executor, init_data, check_adapter, problem_id,
                                        time=time_limit, memory=memory_limit,
-                                       short_circuit=short_circuit, source_code=original_source):
+                                       short_circuit=short_circuit, source_code=original_source, interactive=('grader' in init_data)):
                     print 'Test case %s' % case
                     print '\t%f seconds (real)' % result.r_execution_time
                     print '\t%f seconds (debugged)' % result.execution_time
@@ -373,136 +371,8 @@ class Judge(object):
                         files[output_file] = generator_error
         return files.__getitem__
 
-    def run_interactive(self, executor, init_data, check_adapter, problem_id, short_circuit=False, time=2,
-                        memory=65536, source_code=None):
-        """
-        Executes a submission in interactive mode.
-        :param executor:
-            Executor to launch the submission program.
-        :param init_data: 
-            The problem initialization data.
-        :param problem_id: 
-            The problem code.
-        :param time: 
-            Time limit for submission program, in seconds.
-        :param memory: 
-            Memory limit for submission program, in kilobytes.
-        :return:
-            A Result instance representing the execution result of the submission program.
-        """
-        output_prefix_length = init_data.get('output_prefix_length', 32)
-        time_adjust = init_data.get('time_adjust', 1.0)
-        forward_test_cases = []
-        for case in init_data['test_cases']:
-            if isinstance(case, dict):
-                case = TestCase(case.get('in', None), case.get('out', None), case['points'])
-            else:
-                case = (None, None, int(case))
-            forward_test_cases.append(case)
-
-        if 'grader' not in init_data:
-            raise IOError('no grader specified')
-        grader_path = os.path.join(get_problem_root(problem_id), init_data['grader'])
-        if not os.path.exists(grader_path):
-            raise IOError('grader does not exist')
-
-        try:
-            interactive_grader = load_module_from_file(grader_path)
-        except:
-            traceback.print_exc()
-            raise IOError('could not load grader module')
-
-        topen = self._resolve_open_call(init_data, problem_id)
-
-        self.packet_manager.begin_grading_packet()
-        case_number = 1
-        short_circuited = False
-        try:
-            for test_case in forward_test_cases:
-                for input_file, output_file, point_value in test_case:
-                    if self._terminate_grading:
-                        raise TerminateGrading()
-
-                    _input = topen(input_file) if input_file else None
-                    _output = topen(output_file) if output_file else None
-                    # We use a new cStringIO in case init.json references the same file multiple times
-                    if isinstance(_input, str):
-                        _input = cStringIO.StringIO(_input)
-                    if isinstance(_input, str):
-                        _output = cStringIO.StringIO(_output)
-                    # Launch a process for the current test case
-                    process = executor.launch(time=time, memory=memory)
-                    self.current_proc = process
-                    # TODO: interactive grader should really run on another thread
-                    # if submission dies, interactive grader might get stuck on a process IO call,
-                    # hanging the main thread
-                    try:
-                        result = interactive_grader.grade(case_number, self.current_proc, case_input=_input,
-                                                          case_output=_output, point_value=point_value,
-                                                          source_code=source_code)
-                    except:
-                        traceback.print_exc()
-                        try:
-                            process.kill()
-                        except:  # The process might've already exited
-                            pass
-                        self.packet_manager.internal_error_packet(problem_id)
-                        return
-                    else:
-                        process.wait()
-                    # hack to counter Tudor's bad design
-                    result.max_memory = process.max_memory or 0.0
-                    result.execution_time = process.execution_time or 0.0
-                    result.r_execution_time = process.r_execution_time or 0.0
-
-                    if not init_data.get('swallow_ir', False) and process.returncode > 0:
-                        result.result_flag |= Result.IR
-                    if not init_data.get('swallow_rte', False) and process.returncode < 0:
-                        if process.returncode is not None:
-                            print>> sys.stderr, 'Killed by signal %d' % -process.returncode
-                        result.result_flag |= Result.RTE  # Killed by signal
-                    if not init_data.get('swallow_tle', False) and process.tle:
-                        result.result_flag |= Result.TLE
-                    if process.mle:
-                        result.result_flag |= Result.MLE
-
-                    # Must check here because we might be interrupted mid-execution
-                    # If we don't bail out, we get an IR.
-                    if self._terminate_grading:
-                        raise TerminateGrading()
-                    if not init_data.get('swallow_tle', False) and not (result.result_flag & Result.TLE):
-                        result.execution_time *= time_adjust
-                        if result.execution_time > time:
-                            result.result_flag |= Result.TLE
-                            result.points = 0
-                    self.packet_manager.test_case_status_packet(case_number,
-                                                                result.points,
-                                                                point_value,
-                                                                result.result_flag,
-                                                                result.execution_time,
-                                                                result.max_memory,
-                                                                result.proc_output[:output_prefix_length].decode('utf-8', 'replace'),
-                                                                # TODO: add interactive grader's feedback
-                                                                None)
-
-                    if not short_circuited and result.result_flag != Result.AC:
-                        short_circuited = True
-                    case_number += 1
-                    yield result
-            self.packet_manager.grading_end_packet()
-        except TerminateGrading:
-            self.packet_manager.submission_terminated_packet()
-            raise
-        except:
-            traceback.print_exc()
-            self.packet_manager.internal_error_packet(problem_id)
-        finally:
-            self.current_proc = None
-            self._terminate_grading = False
-            gc.collect()
-
     def run_standard(self, executor, init_data, check_func, problem_id, short_circuit=False, time=2, memory=65536,
-                     source_code=None):
+                     source_code=None, interactive=False):
         """
         Executes a submission in standard (static) mode.
         :param executor:
@@ -519,6 +389,8 @@ class Judge(object):
             Time limit for submission program, in seconds.
         :param memory: 
             Memory limit for submission program, in kilobytes.
+        :param interactive: 
+            Boolean to indicate whether this needs a custom grader and interactor.
         :return:
             A Result instance representing the execution result of the submission program.
         """
@@ -529,16 +401,28 @@ class Judge(object):
             if 'data' in case:
                 # Data is batched, with multiple subcases for each parent case
                 # If one subcase fails, the main case fails too
-                subcases = [(subcase['in'], subcase['out']) for subcase in case['data']]
-                case = BatchedTestCase(subcases, case['points'])
+                subcases = [(subcase.get('in', None), subcase.get('out', None)) for subcase in case['data']]
+                case = BatchedTestCase(subcases, case.get('points', 0))
             else:
-                case = TestCase(case['in'], case['out'], case['points'])
+                case = TestCase(case.get('in', None), case.get('out', None), case.get('points', 0))
             forward_test_cases.append(case)
+
+        if interactive:
+            if 'grader' not in init_data:
+                raise IOError('no grader specified')
+            grader_path = os.path.join(get_problem_root(problem_id), init_data['grader'])
+            if not os.path.exists(grader_path):
+                raise IOError('grader does not exist')
+
+            try:
+                interactive_grader = load_module_from_file(grader_path)
+            except:
+                traceback.print_exc()
+                raise IOError('could not load grader module')
 
         topen = self._resolve_open_call(init_data, problem_id, forward_test_cases)
 
         self.packet_manager.begin_grading_packet()
-        short_circuit_all = short_circuit
         case_number = 1
         short_circuited = False
         try:
@@ -555,13 +439,10 @@ class Judge(object):
                         check = CheckerResult(False, 0)
                         feedback = None
                     else:
-                        # Launch a process for the current test case
-                        self.current_proc = executor.launch(time=time, memory=memory, pipe_stderr=True)
-
-                        process = self.current_proc
                         result = Result()
                         result.result_flag = Result.AC
-                        _input_data = topen(input_file)
+
+                        _input_data = topen(input_file) if input_file else None
                         if hasattr(_input_data, 'read'):
                             try:
                                 input_data = _input_data.read()
@@ -569,32 +450,9 @@ class Judge(object):
                                 _input_data.close()
                         else:
                             input_data = _input_data
-                        input_data = input_data.replace('\r\n', '\n')  # .replace('\r', '\n')
+                        if input_data:
+                            input_data = input_data.replace('\r\n', '\n')  # .replace('\r', '\n')
 
-                        if hasattr(process, 'safe_communicate'):
-                            communicate = process.safe_communicate
-                        else:
-                            communicate = partial(safe_communicate, process)
-                        try:
-                            result.proc_output, error = communicate(input_data, outlimit=25165824, errlimit=1048576)
-                        except OutputLimitExceeded as e:
-                            stream, result.proc_output, error = e.args
-                            print>> sys.stderr, 'OLE:', stream
-                            result.result_flag |= Result.OLE
-                            process.kill()
-                            process.wait()
-                        if error:
-                            sys.stderr.write(error)
-
-                        # Must check here because we might be interrupted mid-execution
-                        # If we don't bail out, we get an IR.
-                        # In Java's case, all the code after this will crash.
-                        if self._terminate_grading:
-                            raise TerminateGrading()
-
-                        result.max_memory = process.max_memory
-                        result.execution_time = process.execution_time
-                        result.r_execution_time = process.r_execution_time
                         _output_data = topen(output_file)
                         if hasattr(_output_data, 'read'):
                             try:
@@ -603,6 +461,57 @@ class Judge(object):
                                 _output_data.close()
                         else:
                             output_data = _output_data
+                        if output_data:
+                            output_data = output_data.replace('\r\n', '\n')  # .replace('\r', '\n')
+
+                        # Launch a process for the current test case
+                        self.current_proc = executor.launch(time=time, memory=memory, pipe_stderr=True)
+
+                        process = self.current_proc
+
+                        if interactive:
+                            # TODO: interactive grader should really run on another thread
+                            # if submission dies, interactive grader might get stuck on a process IO call,
+                            # hanging the main thread
+                            try:
+                                result = interactive_grader.grade(case_number, self.current_proc, case_input=_input,
+                                                                  case_output=_output, point_value=point_value,
+                                                                  source_code=source_code)
+                            except:
+                                traceback.print_exc()
+                                try:
+                                    process.kill()
+                                except:  # The process might've already exited
+                                    pass
+                                self.packet_manager.internal_error_packet(problem_id)
+                                return
+                            else:
+                                process.wait()
+                        else:
+                            if hasattr(process, 'safe_communicate'):
+                                communicate = process.safe_communicate
+                            else:
+                                communicate = partial(safe_communicate, process)
+                            try:
+                                result.proc_output, error = communicate(input_data, outlimit=25165824, errlimit=1048576)
+                            except OutputLimitExceeded as e:
+                                stream, result.proc_output, error = e.args
+                                print>> sys.stderr, 'OLE:', stream
+                                result.result_flag |= Result.OLE
+                                process.kill()
+                                process.wait()
+                            if error:
+                                sys.stderr.write(error)
+
+                        # Must check here because we might be interrupted mid-execution
+                        # If we don't bail out, we get an IR.
+                        # In Java's case, all the code after this will crash.
+                        if self._terminate_grading:
+                            raise TerminateGrading()
+
+                        result.max_memory = process.max_memory or 0.0
+                        result.execution_time = process.execution_time or 0.0
+                        result.r_execution_time = process.r_execution_time or 0.0
 
                         check = check_func(input_data, result.proc_output, output_data, point_value)
                         if not isinstance(check, CheckerResult):
@@ -610,14 +519,14 @@ class Judge(object):
                         if not check.passed:
                             result.result_flag |= Result.WA
 
-                        if process.returncode > 0:
+                        if not init_data.get('swallow_ir', False) and process.returncode > 0:
                             print>> sys.stderr, 'Exited with error: %d' % process.returncode
                             result.result_flag |= Result.IR
-                        if process.returncode < 0:
+                        if not init_data.get('swallow_rte', False) and process.returncode < 0:
                             if process.returncode is not None:
                                 print>> sys.stderr, 'Killed by signal %d' % -process.returncode
                             result.result_flag |= Result.RTE  # Killed by signal
-                        if process.tle:
+                        if not init_data.get('swallow_tle', False) and process.tle:
                             result.result_flag |= Result.TLE
                         if process.mle:
                             result.result_flag |= Result.MLE
@@ -642,11 +551,15 @@ class Judge(object):
 
                     if not short_circuited and result.result_flag != Result.AC:
                         short_circuited = True
+                        if point_value == 0:
+                            # Pretests failed
+                            short_circuit = True
+
                     case_number += 1
                     yield result
                 if type(test_case) == BatchedTestCase:
                     self.packet_manager.batch_end_packet()
-                if not short_circuit_all:
+                if not short_circuit:
                     short_circuited = False
         except TerminateGrading:
             self.packet_manager.submission_terminated_packet()

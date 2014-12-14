@@ -465,7 +465,7 @@ class Judge(object):
                             output_data = output_data.replace('\r\n', '\n')  # .replace('\r', '\n')
 
                         # Launch a process for the current test case
-                        self.current_proc = executor.launch(time=time, memory=memory, pipe_stderr=True)
+                        self.current_proc = executor.launch(time=time, memory=memory, pipe_stderr=(not interactive))
 
                         process = self.current_proc
 
@@ -474,7 +474,7 @@ class Judge(object):
                             # if submission dies, interactive grader might get stuck on a process IO call,
                             # hanging the main thread
                             try:
-                                result = interactive_grader.grade(case_number, self.current_proc, case_input=input_data,
+                                result = interactive_grader.grade(case_number, process, case_input=input_data,
                                                                   case_output=output_data, point_value=point_value,
                                                                   source_code=source_code)
                                 if isinstance(result, tuple) or isinstance(result, list):

@@ -528,7 +528,7 @@ class Judge(object):
         :return:
             A Result instance representing the execution result of the submission program.
         """
-        if 0 and interactive:
+        if interactive:
             # TODO: Fix this hack
             for i in self.run_interactive(executor, init_data, check_func, problem_id, short_circuit, time, memory, source_code):
                 yield i

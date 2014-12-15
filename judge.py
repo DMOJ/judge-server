@@ -412,11 +412,13 @@ class Judge(object):
 
         topen = self._resolve_open_call(init_data, problem_id)
 
+        print("binsearch")
         self.packet_manager.begin_grading_packet()
         case_number = 1
         short_circuited = False
         try:
             for test_case in forward_test_cases:
+                print("binsearch t")
                 if type(test_case) == BatchedTestCase:
                     self.packet_manager.begin_batch_packet()
                 for input_file, output_file, point_value in test_case:
@@ -437,9 +439,11 @@ class Judge(object):
                     # if submission dies, interactive grader might get stuck on a process IO call,
                     # hanging the main thread
                     try:
+                        print("binsearch s")
                         result = interactive_grader.grade(case_number, self.current_proc, case_input=_input,
                                                           case_output=_output, point_value=point_value,
                                                           source_code=source_code)
+                        print("binsearch k")
                     except:
                         traceback.print_exc()
                         try:
@@ -450,6 +454,7 @@ class Judge(object):
                         return
                     else:
                         process.wait()
+                    print("binsearch a")
                     # hack to counter Tudor's bad design
                     result.max_memory = process.max_memory or 0.0
                     result.execution_time = process.execution_time or 0.0

@@ -529,6 +529,7 @@ class Judge(object):
             A Result instance representing the execution result of the submission program.
         """
         if interactive:
+            # TODO: Fix this hack
             for i in self.run_interactive(executor, init_data, check_func, problem_id, short_circuit, time, memory, source_code):
                 yield i
             return
@@ -536,13 +537,17 @@ class Judge(object):
         time_adjust = init_data.get('time_adjust', 1.0)
         forward_test_cases = []
         for case in init_data['test_cases']:
-            if 'data' in case:
-                # Data is batched, with multiple subcases for each parent case
-                # If one subcase fails, the main case fails too
-                subcases = [(subcase.get('in', None), subcase.get('out', None)) for subcase in case['data']]
-                case = BatchedTestCase(subcases, case.get('points', 0))
+            if isinstance(case, dict):
+                if 'data' in case:
+                    # Data is batched, with multiple subcases for each parent case
+                    # If one subcase fails, the main case fails too
+                    subcases = [(subcase.get('in', None), subcase.get('out', None)) for subcase in case['data']]
+                    case = BatchedTestCase(subcases, int(case.get('points', 0)))
+                else:
+                    case = TestCase(case.get('in', None), case.get('out', None), int(case.get('points', 0)))
             else:
-                case = TestCase(case.get('in', None), case.get('out', None), case.get('points', 0))
+                # Not sure what this does, but it was in run_interactive
+                case = (None, None, int(case))
             forward_test_cases.append(case)
 
         if interactive:
@@ -577,9 +582,6 @@ class Judge(object):
                         check = CheckerResult(False, 0)
                         feedback = None
                     else:
-                        result = Result()
-                        result.result_flag = Result.AC
-
                         _input_data = topen(input_file) if input_file else None
                         if hasattr(_input_data, 'read'):
                             try:
@@ -630,6 +632,7 @@ class Judge(object):
                             else:
                                 process.wait()
                         else:
+                            result.result_flag = Result.AC
                             if hasattr(process, 'safe_communicate'):
                                 communicate = process.safe_communicate
                             else:

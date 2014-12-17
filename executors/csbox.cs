@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Threading;
 using System.Security;
 using System.Security.Policy;
 using System.Security.Permissions;
@@ -14,7 +13,6 @@ class Sandboxer : MarshalByRefObject {
             Console.WriteLine("Usage: sandbox <directory> <assembly> [allowed_files ...]");
             return;
         }
-        Thread.Sleep(86400000);
 
         AppDomainSetup adSetup = new AppDomainSetup();
         adSetup.ApplicationBase = Path.GetFullPath(args[0]);

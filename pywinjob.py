@@ -19,7 +19,6 @@ SetInformationJobObject = _kernel32.SetInformationJobObject
 QueryInformationJobObject = _kernel32.QueryInformationJobObject
 GetCurrentProcess = _kernel32.GetCurrentProcess
 CreateIoCompletionPort = _kernel32.CreateIoCompletionPort
-GetQueuedCompletionStatus = _kernel32.GetQueuedCompletionStatus
 
 
 def CreatePipe(buf=0):
@@ -231,8 +230,14 @@ class PROCESS_INFORMATION(ctypes.Structure):
 
 
 class OVERLAPPED(ctypes.Structure):
-    _fields_ = [ ('Internal', c_void_p),
-                 ('InternalHigh', c_void_p),
-                 ('Offset', DWORD),
-                 ('OffsetHigh', DWORD),
-                 ('hEvent', HANDLE) ]
+    _fields_ = [
+        ('Internal', c_void_p),
+        ('InternalHigh', c_void_p),
+        ('Offset', DWORD),
+        ('OffsetHigh', DWORD),
+        ('hEvent', HANDLE)
+    ]
+
+GetQueuedCompletionStatus = _kernel32.GetQueuedCompletionStatus
+GetQueuedCompletionStatus.restype = BOOL
+GetQueuedCompletionStatus.argtypes = (HANDLE, LPVOID, LPVOID, POINTER(OVERLAPPED), DWORD)

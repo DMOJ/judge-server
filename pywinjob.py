@@ -4,11 +4,43 @@ import ctypes
 
 __author__ = 'Tudor'
 
-kernel32 = ctypes.windll.kernel32
-ole32 = ctypes.windll.ole32
-oleaut32 = ctypes.windll.oleaut32
-netapi32 = ctypes.windll.netapi32
-advapi32 = ctypes.windll.advapi32
+_kernel32 = ctypes.windll.kernel32
+_ole32 = ctypes.windll.ole32
+_oleaut32 = ctypes.windll.oleaut32
+_netapi32 = ctypes.windll.netapi32
+_advapi32 = ctypes.windll.advapi32
+
+CreateJobObject = _kernel32.CreateJobObjectW
+CreateProcess = _kernel32.CreateProcessW
+AssignProcessToJobObject = _kernel32.AssignProcessToJobObject
+ResumeThread = _kernel32.ResumeThread
+CloseHandle = _kernel32.CloseHandle
+WaitForSingleObject = _kernel32.WaitForSingleObject
+TerminateProcess = _kernel32.TerminateProcess
+SetInformationJobObject = _kernel32.SetInformationJobObject
+QueryInformationJobObject = _kernel32.QueryInformationJobObject
+GetCurrentProcess = _kernel32.GetCurrentProcess
+
+
+def CreatePipe(buf=0):
+    read, write = HANDLE(), HANDLE()
+    if not _kernel32.CreatePipe(byref(read), byref(write), None, buf):
+        raise WinError()
+    return read.value, write.value
+
+
+def make_inheritable(handle):
+    out = HANDLE()
+    _kernel32.DuplicateHandle(GetCurrentProcess(), handle, GetCurrentProcess(), byref(out), 0, True,
+                              DUPLICATE_CLOSE_SOURCE | DUPLICATE_SAME_ACCESS)
+    return out.value
+
+
+def GetExitCodeProcess(process):
+    code = DWORD()
+    if not _kernel32.GetExitCodeProcess(process, byref(code)):
+        raise WinError()
+    return None if code.value == 259 else code.value
 
 LPSTR = ctypes.c_char_p
 LPBYTE = LPSTR
@@ -40,9 +72,13 @@ TokenImpersonation = 2
 ERROR_BROKEN_PIPE = 109
 INVALID_HANDLE_VALUE = -1
 HANDLE_FLAG_INHERIT = 0x0001
+DUPLICATE_CLOSE_SOURCE = 0x00000001
 DUPLICATE_SAME_ACCESS = 0x00000002
 INFINITE = 0xFFFFFFFF
+WAIT_OBJECT_0 = 0
+WAIT_TIMEOUT = 0x102
 WAIT_FAILED = 0xFFFFFFFF
+WAIT_ABANDONED = 0x80
 STARTF_USESTDHANDLES = 0x0100
 CREATE_NO_WINDOW = 0x08000000
 STARTF_USESHOWWINDOW = 0x00000001
@@ -56,14 +92,6 @@ NORMAL_PRIORITY_CLASS = 0x00000020
 IDLE_PRIORITY_CLASS = 0x00000040
 HIGH_PRIORITY_CLASS = 0x00000080
 
-UF_SCRIPT = 0x0001
-UF_ACCOUNTDISABLE = 0x0002
-UF_HOMEDIR_REQUIRED = 0x0008
-UF_LOCKOUT = 0x0010
-UF_PASSWD_NOTREQD = 0x0020
-UF_PASSWD_CANT_CHANGE = 0x0040
-UF_ENCRYPTED_TEXT_PASSWORD_ALLOWED = 0x0080
-UF_DONT_EXPIRE_PASSWD = 0x10000
 
 STD_INPUT_HANDLE = -10
 STD_OUTPUT_HANDLE = -11
@@ -157,6 +185,12 @@ class JOBOBJECT_EXTENDED_LIMIT_INFORMATION(ctypes.Structure):
     ]
 
 
+class SECURITY_ATTRIBUTES(Structure):
+    _fields_ = [("Length", DWORD),
+                ("SecDescriptor", LPVOID),
+                ("InheritHandle", BOOL)]
+
+
 class STARTUPINFO(ctypes.Structure):
     _pack_ = 1
     _fields_ = [
@@ -180,3 +214,12 @@ class STARTUPINFO(ctypes.Structure):
         ('hStdError', HANDLE),
     ]
 
+
+class PROCESS_INFORMATION(ctypes.Structure):
+    _pack_ = 1
+    _fields_ = [
+        ('hProcess', HANDLE),
+        ('hThread', HANDLE),
+        ('dwProcessId', DWORD),
+        ('dwThreadId', DWORD),
+    ]

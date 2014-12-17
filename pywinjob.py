@@ -2,8 +2,6 @@ from ctypes.wintypes import *
 from ctypes import *
 import ctypes
 
-__author__ = 'Tudor'
-
 _kernel32 = ctypes.windll.kernel32
 _ole32 = ctypes.windll.ole32
 _oleaut32 = ctypes.windll.oleaut32
@@ -20,6 +18,8 @@ TerminateProcess = _kernel32.TerminateProcess
 SetInformationJobObject = _kernel32.SetInformationJobObject
 QueryInformationJobObject = _kernel32.QueryInformationJobObject
 GetCurrentProcess = _kernel32.GetCurrentProcess
+CreateIoCompletionPort = _kernel32.CreateIoCompletionPort
+GetQueuedCompletionStatus = _kernel32.GetQueuedCompletionStatus
 
 
 def CreatePipe(buf=0):
@@ -185,6 +185,11 @@ class JOBOBJECT_EXTENDED_LIMIT_INFORMATION(ctypes.Structure):
     ]
 
 
+class JOBOBJECT_ASSOCIATE_COMPLETION_PORT(Structure):
+    _fields_ = [('CompletionKey', c_ulong),
+                ('CompletionPort', HANDLE)]
+
+
 class SECURITY_ATTRIBUTES(Structure):
     _fields_ = [("Length", DWORD),
                 ("SecDescriptor", LPVOID),
@@ -223,3 +228,11 @@ class PROCESS_INFORMATION(ctypes.Structure):
         ('dwProcessId', DWORD),
         ('dwThreadId', DWORD),
     ]
+
+
+class OVERLAPPED(ctypes.Structure):
+    _fields_ = [ ('Internal', c_void_p),
+                 ('InternalHigh', c_void_p),
+                 ('Offset', DWORD),
+                 ('OffsetHigh', DWORD),
+                 ('hEvent', HANDLE) ]

@@ -1,8 +1,10 @@
 import os
 import re
-import ctypes
 import subprocess
 import msvcrt
+from threading import Thread
+import time
+import sys
 
 from communicate import safe_communicate
 from error import CompileError
@@ -23,6 +25,7 @@ class CLRProcess(object):
     def __init__(self, executable, dir, time, memory):
         self._process = None
         self._job = None
+        self._port = None
 
         self.time_limit = time
         self.memory_limit = memory
@@ -37,7 +40,33 @@ class CLRProcess(object):
     def __del__(self):
         if self._process is not None:
             CloseHandle(self._process)
+        if self._job is not None:
             CloseHandle(self._job)
+        if self._port is not None:
+            CloseHandle(self._port)
+
+    def _monitor(self):
+        code = DWORD()
+        key = c_void_p()
+        overlapped = OVERLAPPED()
+        while GetQueuedCompletionStatus(self._port, byref(code), byref(key), byref(overlapped), INFINITE):
+            if key.value == self._job:
+                if code.value == JOB_OBJECT_MSG_ACTIVE_PROCESS_ZERO:
+                    break
+                elif code.value == JOB_OBJECT_MSG_JOB_MEMORY_LIMIT:
+                    self.mle = True
+                    TerminateProcess(self._process, 0xDEADBEEF)
+                    WaitForSingleObject(self._process, INFINITE)
+                    break
+        else:
+            raise WinError()
+
+    def _shocker(self):
+        time.sleep(self.time_limit)
+        if WaitForSingleObject(self._process, 0) == WAIT_TIMEOUT:
+            print>>sys.stderr, 'Ouch, shocker activated!'
+            TerminateProcess(self._process, 0xDEADBEEF)
+            WaitForSingleObject(self._process, INFINITE)
 
     def _execute(self, args, cwd):
         args = subprocess.list2cmdline(args)
@@ -49,7 +78,7 @@ class CLRProcess(object):
 
         limits = JOBOBJECT_EXTENDED_LIMIT_INFORMATION()
         limits.JobMemoryLimit = self.memory_limit * 1024  # bytes
-        limits.BasicLimitInformation.PerJobUserTimeLimit = int(self.time_limit * 10000000)  # 100ns units
+        limits.BasicLimitInformation.PerJobUserTimeLimit = int(self.time_limit)  # 100ns units
         limits.BasicLimitInformation.LimitFlags = (JOB_OBJECT_LIMIT_ACTIVE_PROCESS |
                                                    JOB_OBJECT_LIMIT_JOB_MEMORY |
                                                    JOB_OBJECT_LIMIT_JOB_TIME)
@@ -59,8 +88,17 @@ class CLRProcess(object):
         if not job:
             raise WinError()
 
-        if not SetInformationJobObject(job, JobObjectExtendedLimitInformation, ctypes.byref(limits),
-                                       ctypes.sizeof(JOBOBJECT_EXTENDED_LIMIT_INFORMATION)):
+        self._port = CreateIoCompletionPort(INVALID_HANDLE_VALUE, None, 0, 1)
+
+        if not SetInformationJobObject(job, JobObjectExtendedLimitInformation, byref(limits),
+                                       sizeof(JOBOBJECT_EXTENDED_LIMIT_INFORMATION)):
+            raise WinError()
+
+        port = JOBOBJECT_ASSOCIATE_COMPLETION_PORT()
+        port.CompletionKey = job
+        port.CompletionPort = self._port
+        if not SetInformationJobObject(job, JobObjectAssociateCompletionPortInformation, byref(port),
+                                       sizeof(JOBOBJECT_ASSOCIATE_COMPLETION_PORT)):
             raise WinError()
 
         stdin_, stdin = CreatePipe()
@@ -80,11 +118,15 @@ class CLRProcess(object):
         pi = PROCESS_INFORMATION()
 
         if not CreateProcess(self.csbox, args, None, None, True, CREATE_SUSPENDED | CREATE_BREAKAWAY_FROM_JOB,
-                             None, cwd, ctypes.byref(si), ctypes.byref(pi)):
+                             None, cwd, byref(si), byref(pi)):
             raise WinError()
 
         if AssignProcessToJobObject(job, pi.hProcess) == 0:
             raise WinError()
+
+        self._monitor_thread = Thread(target=self._monitor)
+        self._monitor_thread.daemon = True
+        self._monitor_thread.start()
 
         if ResumeThread(pi.hThread) == -1:
             raise WinError()
@@ -100,6 +142,10 @@ class CLRProcess(object):
         if not CloseHandle(stdin_):  raise WinError()
         if not CloseHandle(stdout_): raise WinError()
         if not CloseHandle(stderr_): raise WinError()
+
+        self._shocker_thread = Thread(target=self._shocker)
+        self._shocker_thread.daemon = True
+        self._shocker_thread.start()
 
     def wait(self):
         wait = WaitForSingleObject(self._process, int(self.time_limit * 1000))
@@ -122,9 +168,9 @@ class CLRProcess(object):
 
     def _update_stats(self):
         self.execution_time = execution_time(self._process)
-        self.tie = self.execution_time > self.time_limit
+        self.tle |= self.execution_time > self.time_limit
         self.max_memory = max_memory(self._process) / 1024.
-        self.mle = self.max_memory > self.memory_limit
+        self.mle |= self.max_memory > self.memory_limit
 
     def _find_exception(self, stderr):
         if len(stderr) < 8192:

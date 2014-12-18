@@ -15,13 +15,13 @@ class JobbedProcessManager {
 	JOBOBJECT_BASIC_UI_RESTRICTIONS uiLimits;
 	GUID guid;
 	WCHAR szGuid[40];
-	LPCWSTR szUsername, szPassword, szDirectory, szExecutable;
+	LPWSTR szUsername, szPassword, szDirectory, szExecutable;
 	LPWSTR szCmdLine;
 	bool tle_, mle_, terminate_shocker;
-	unsigned long long memory_, time_limit, memory_limit;
+	unsigned long long memory_, memory_limit;
 	DWORD cpu_time_;
 	LARGE_INTEGER liStart;
-	double qpc_freq, execution_time;
+	double qpc_freq, execution_time, time_limit;
 
 	static DWORD CALLBACK s_ShockerProc(LPVOID lpParam);
 	DWORD CALLBACK ShockerProc();

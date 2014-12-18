@@ -1,17 +1,16 @@
+from ctypes import WinError
 from os import fdopen, O_RDONLY, O_WRONLY
 from msvcrt import open_osfhandle
-
-from libc.stdint cimport uint32_t
 
 ctypedef const Py_UNICODE *LPCWSTR
 ctypedef Py_UNICODE *LPWSTR
 ctypedef void *HANDLE
-ctypedef uint32_t DWORD
+ctypedef unsigned long DWORD
 
 
 cdef extern from 'windows.h' nogil:
     DWORD WaitForSingleObject(HANDLE, DWORD milliseconds)
-    cdef DWORD INFINITE
+    cdef DWORD INFINITE, WAIT_TIMEOUT
     bint GetExitCodeProcess(HANDLE, DWORD*)
 
 
@@ -40,9 +39,9 @@ cdef extern from 'user.h' nogil:
 
 cdef extern from 'process.h' nogil:
     cdef cppclass JobbedProcessManager:
-        JobbedProcessManager()
+        JobbedProcessManager() except +
 
-        bint spawn()
+        bint spawn() except +
         bint terminate(unsigned code)
 
         JobbedProcessManager &time(double seconds)
@@ -52,6 +51,14 @@ cdef extern from 'process.h' nogil:
         JobbedProcessManager &command(LPCWSTR cmdline);
         JobbedProcessManager &executable(LPCWSTR executable)
         JobbedProcessManager &directory(LPCWSTR directory)
+
+        unsigned long long memory()
+        double executionTime()
+        bint tle()
+        bint mle()
+        DWORD return_code()
+        bint wait()
+        bint wait(DWORD time)
 
         AutoHandle &process()
         AutoHandle &job()
@@ -64,10 +71,10 @@ cdef class UserManager:
     cdef CUserManager *thisptr
 
     def __cinit__(self, username=None, password=None):
-        if username is not None:
-            self.thisptr = new CUserManager(username)
-        elif username is not None and password is not None:
+        if username is not None and password is not None:
             self.thisptr = new CUserManager(username, password)
+        elif username is not None:
+            self.thisptr = new CUserManager(username)
         else:
             self.thisptr = new CUserManager()
 
@@ -134,9 +141,12 @@ cdef class ProcessManager:
 
     def get_exit_code(self):
         cdef DWORD code
-        if not GetExitCodeProcess(self.thisptr.process().get(), &code):
-            raise WindowsError()
-        return None if code == 259 else code
+        if WaitForSingleObject(self.thisptr.process().get(), 0) == WAIT_TIMEOUT:
+            return None
+        else:
+            if not GetExitCodeProcess(self.thisptr.process().get(), &code):
+                raise WinError()
+            return code
 
     property stdin:
         def __get__(self):
@@ -213,3 +223,23 @@ cdef class ProcessManager:
         def __set__(self, value):
             self._password = value
             self.thisptr.withLogin(self._username, self._password)
+
+    property memory:
+        def __get__(self):
+            return self.thisptr.memory()
+
+    property mle:
+        def __get__(self):
+            return self.thisptr.mle()
+
+    property execution_time:
+        def __get__(self):
+            return self.thisptr.executionTime()
+
+    property tle:
+        def __get__(self):
+            return self.thisptr.tle()
+
+    property _handle:
+        def __get__(self):
+            return <unsigned long long>self.thisptr.process().get()

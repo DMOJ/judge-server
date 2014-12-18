@@ -1,19 +1,30 @@
 from _wbox import UserManager, ProcessManager
 from subprocess import list2cmdline, Popen
+from winutils import execution_time
 
 
 class WBoxPopen(object):
-    def __init__(self, argv, time, memory, nproc=1, executable=None, cwd=''):
+    def __init__(self, argv, time, memory, nproc=1, executable=None, cwd=None):
         self.user = UserManager()
         self.process = ProcessManager(self.user.username, self.user.password)
-        self.process.command = list2cmdline(argv)
+        argv = list2cmdline(argv)
+        if not isinstance(argv, unicode):
+            argv = argv.decode('mbcs')
+        self.process.command = argv
         if executable is not None:
+            if not isinstance(executable, unicode):
+                executable = executable.decode('mbcs')
             self.process.executable = executable
-        self.process.dir = cwd
+        if cwd is not None:
+            if not isinstance(cwd, unicode):
+                cwd = cwd.decode('mbcs')
+            self.process.dir = cwd
         self.process.time_limit = time
-        self.process.memory_limit = memory
+        self.process.memory_limit = memory * 1024
         self.process.process_limit = nproc
         self.returncode = None
+        self.universal_newlines = False
+        self.process.spawn()
 
     def wait(self, timeout=None):
         self.process.wait(timeout)
@@ -40,28 +51,34 @@ class WBoxPopen(object):
 
     @property
     def mle(self):
-        raise NotImplementedError()
+        return self.process.mle
 
     @property
     def max_memory(self):
-        raise NotImplementedError()
+        return self.process.memory / 1024.
+
+    @property
+    def max_memory_bytes(self):
+        return self.process.memory
 
     @property
     def tle(self):
-        raise NotImplementedError()
+        return self.process.tle
 
     @property
     def execution_time(self):
-        raise NotImplementedError()
+        return self.process.execution_time
 
     @property
     def cpu_time(self):
-        raise NotImplementedError()
+        return execution_time(self.process._handle)
 
     @property
     def r_execution_time(self):
-        raise NotImplementedError()
+        return self.process.execution_time
 
-    communicate = Popen.communicate
-    _communicate = Popen._communicate
-    _readerthread = Popen._readerthread
+    def communicate(self, stdin=None):
+        return self._communicate(stdin)
+
+    _communicate = Popen._communicate.im_func
+    _readerthread = Popen._readerthread.im_func

@@ -10,7 +10,7 @@ DWORD JobbedProcessManager::s_ShockerProc(LPVOID lpParam) {
 
 JobbedProcessManager::JobbedProcessManager() :
 		szUsername(nullptr), szPassword(nullptr), szDirectory(nullptr), szCmdLine(nullptr),
-		tle_(false), mle_(false), terminate_shocker(true) {
+		tle_(false), mle_(false), terminate_shocker(false) {
 	ZeroMemory(&extLimits, sizeof extLimits);
 	extLimits.BasicLimitInformation.ActiveProcessLimit = 1;
 	extLimits.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_ACTIVE_PROCESS;
@@ -70,7 +70,7 @@ bool JobbedProcessManager::spawn() {
 
 	LARGE_INTEGER liFreq;
 	QueryPerformanceFrequency(&liFreq);
-	qpc_freq = 1 / liFreq.QuadPart;
+	qpc_freq = 1.0 / liFreq.QuadPart;
 	QueryPerformanceCounter(&liStart);
 	ResumeThread(pi.hThread);
 	CloseHandle(pi.hThread);
@@ -78,6 +78,7 @@ bool JobbedProcessManager::spawn() {
 	if (!(handle = CreateThread(nullptr, 0, s_ShockerProc, this, 0, nullptr)))
 		throw WindowsException("CreateThread");
 	hShocker = handle;
+
 	return true;
 }
 
@@ -92,7 +93,7 @@ JobbedProcessManager &JobbedProcessManager::time(double seconds) {
 	if (seconds) {
 		extLimits.BasicLimitInformation.PerJobUserTimeLimit.QuadPart = uint64_t(seconds * 1000 * 1000 * 10);
 		extLimits.BasicLimitInformation.LimitFlags |= JOB_OBJECT_LIMIT_JOB_TIME;
-		time_limit = unsigned long long(seconds * 1000);
+		time_limit = seconds;
 	} else {
 		extLimits.BasicLimitInformation.LimitFlags &= ~JOB_OBJECT_LIMIT_JOB_TIME;
 		time_limit = 0;
@@ -121,28 +122,32 @@ JobbedProcessManager &JobbedProcessManager::processes(int count) {
 	return *this;
 }
 
+inline void safe_alloc_and_copy_with_free(LPWSTR &dest, LPCWSTR source) {
+	if (dest)
+		free(dest);
+	size_t bytes = (lstrlen(source) + 1) * sizeof(WCHAR);
+	dest = (LPWSTR)malloc(bytes);
+	StringCbCopy(dest, bytes, source);
+}
+
 JobbedProcessManager& JobbedProcessManager::withLogin(LPCWSTR szUsername, LPCWSTR szPassword) {
-	this->szUsername = szUsername;
-	this->szPassword = szPassword;
+	safe_alloc_and_copy_with_free(this->szUsername, szUsername);
+	safe_alloc_and_copy_with_free(this->szPassword, szPassword);
 	return *this;
 }
 
 JobbedProcessManager& JobbedProcessManager::command(LPCWSTR szCmdLine) {
-	if (this->szCmdLine)
-		free(this->szCmdLine);
-	size_t bytes = (lstrlen(szCmdLine) + 1) * sizeof(WCHAR);
-	this->szCmdLine = (LPWSTR) malloc(bytes);
-	StringCbCopy(this->szCmdLine, bytes, szCmdLine);
+	safe_alloc_and_copy_with_free(this->szCmdLine, szCmdLine);
 	return *this;
 }
 
 JobbedProcessManager& JobbedProcessManager::executable(LPCWSTR szExecutable) {
-	this->szExecutable = szExecutable;
+	safe_alloc_and_copy_with_free(this->szExecutable, szExecutable);
 	return *this;
 }
 
 JobbedProcessManager& JobbedProcessManager::directory(LPCWSTR szDirectory) {
-	this->szDirectory = szDirectory;
+	safe_alloc_and_copy_with_free(this->szDirectory, szDirectory);
 	return *this;
 }
 
@@ -172,11 +177,12 @@ JobbedProcessManager::~JobbedProcessManager() {
 DWORD JobbedProcessManager::ShockerProc() {
 	JOBOBJECT_EXTENDED_LIMIT_INFORMATION extLimit;
 	LARGE_INTEGER qpc;
+	DWORD result;
 	
 	do {
 		QueryPerformanceCounter(&qpc);
 		execution_time = (qpc.QuadPart - liStart.QuadPart) * qpc_freq;
-		if (time_limit && execution_time * 1000 > time_limit) {
+		if (time_limit && execution_time > time_limit) {
 			TerminateProcess(hProcess, 0xDEADBEEF);
 			tle_ = true;
 			WaitForSingleObject(hProcess, INFINITE);
@@ -185,6 +191,7 @@ DWORD JobbedProcessManager::ShockerProc() {
 		memory_ = extLimit.PeakJobMemoryUsed;
 		mle_ |= memory_limit && memory_ > memory_limit;
 		Sleep(100);
-	} while (!terminate_shocker && WaitForSingleObject(hProcess, 0) == WAIT_TIMEOUT);
+		result = WaitForSingleObject(hProcess, 0);
+	} while (!terminate_shocker && result == WAIT_TIMEOUT);
 	return 0;
 }

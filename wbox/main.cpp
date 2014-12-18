@@ -23,6 +23,10 @@ int wmain() {
 		FILE *file = _fdopen(fd, "r");
 		while ((ch = fgetc(file)) != EOF)
 			putchar(ch);
+		process.wait();
+		printf("Memory usage: %.2f MiB\n", process.memory() / 1024. / 1024.);
+		printf("Time usage: %.3fs\n", process.executionTime());
+		printf("Return: %lu\n", process.return_code());
 	} catch (WindowsException &e) {
 		std::cout << e.what() << '\n';
 	}

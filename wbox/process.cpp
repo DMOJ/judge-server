@@ -4,8 +4,13 @@
 #include <strsafe.h>
 
 
+DWORD JobbedProcessManager::s_ShockerProc(LPVOID lpParam) {
+	return static_cast<JobbedProcessManager*>(lpParam)->ShockerProc();
+}
+
 JobbedProcessManager::JobbedProcessManager() :
-		szUsername(nullptr), szPassword(nullptr), szDirectory(nullptr), szCmdLine(nullptr) {
+		szUsername(nullptr), szPassword(nullptr), szDirectory(nullptr), szCmdLine(nullptr),
+		tle_(false), mle_(false), terminate_shocker(true) {
 	ZeroMemory(&extLimits, sizeof extLimits);
 	extLimits.BasicLimitInformation.ActiveProcessLimit = 1;
 	extLimits.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_ACTIVE_PROCESS;
@@ -63,8 +68,16 @@ bool JobbedProcessManager::spawn() {
 	if (!SetInformationJobObject(hJob, JobObjectBasicUIRestrictions, &uiLimits, sizeof uiLimits))
 		throw WindowsException("SetInformationJobObject JobObjectBasicUIRestrictions");
 
+	LARGE_INTEGER liFreq;
+	QueryPerformanceFrequency(&liFreq);
+	qpc_freq = 1 / liFreq.QuadPart;
+	QueryPerformanceCounter(&liStart);
 	ResumeThread(pi.hThread);
 	CloseHandle(pi.hThread);
+
+	if (!(handle = CreateThread(nullptr, 0, s_ShockerProc, this, 0, nullptr)))
+		throw WindowsException("CreateThread");
+	hShocker = handle;
 	return true;
 }
 
@@ -79,8 +92,11 @@ JobbedProcessManager &JobbedProcessManager::time(double seconds) {
 	if (seconds) {
 		extLimits.BasicLimitInformation.PerJobUserTimeLimit.QuadPart = uint64_t(seconds * 1000 * 1000 * 10);
 		extLimits.BasicLimitInformation.LimitFlags |= JOB_OBJECT_LIMIT_JOB_TIME;
-	} else
+		time_limit = unsigned long long(seconds * 1000);
+	} else {
 		extLimits.BasicLimitInformation.LimitFlags &= ~JOB_OBJECT_LIMIT_JOB_TIME;
+		time_limit = 0;
+	}
 	return *this;
 }
 
@@ -88,8 +104,11 @@ JobbedProcessManager &JobbedProcessManager::memory(size_t bytes) {
 	if (bytes) {
 		extLimits.JobMemoryLimit = bytes;
 		extLimits.BasicLimitInformation.LimitFlags |= JOB_OBJECT_LIMIT_JOB_MEMORY;
-	} else
+		memory_limit = bytes;
+	} else {
 		extLimits.BasicLimitInformation.LimitFlags &= ~JOB_OBJECT_LIMIT_JOB_MEMORY;
+		memory_limit = 0;
+	}
 	return *this;
 }
 
@@ -127,5 +146,45 @@ JobbedProcessManager& JobbedProcessManager::directory(LPCWSTR szDirectory) {
 	return *this;
 }
 
+DWORD JobbedProcessManager::return_code() {
+	DWORD out;
+	if (!GetExitCodeProcess(hProcess, &out))
+		throw WindowsException("GetExitCodeProcess");
+	return out;
+}
+
+bool JobbedProcessManager::wait(DWORD time) {
+	switch (WaitForSingleObject(hProcess, time)) {
+	case WAIT_OBJECT_0:
+		return true;
+	case WAIT_FAILED:
+		throw WindowsException("WaitForSingleObject");
+	default:
+		return false;
+	}
+}
+
 JobbedProcessManager::~JobbedProcessManager() {
+	terminate_shocker = true;
+	WaitForSingleObject(hShocker, INFINITE);
+}
+
+DWORD JobbedProcessManager::ShockerProc() {
+	JOBOBJECT_EXTENDED_LIMIT_INFORMATION extLimit;
+	LARGE_INTEGER qpc;
+	
+	do {
+		QueryPerformanceCounter(&qpc);
+		execution_time = (qpc.QuadPart - liStart.QuadPart) * qpc_freq;
+		if (time_limit && execution_time * 1000 > time_limit) {
+			TerminateProcess(hProcess, 0xDEADBEEF);
+			tle_ = true;
+			WaitForSingleObject(hProcess, INFINITE);
+		}
+		QueryInformationJobObject(hJob, JobObjectExtendedLimitInformation, &extLimit, sizeof extLimit, nullptr);
+		memory_ = extLimit.PeakJobMemoryUsed;
+		mle_ |= memory_limit && memory_ > memory_limit;
+		Sleep(100);
+	} while (!terminate_shocker && WaitForSingleObject(hProcess, 0) == WAIT_TIMEOUT);
+	return 0;
 }

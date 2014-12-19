@@ -1,6 +1,11 @@
 from collections import deque
 from .resource_proxy import ResourceProxy
-from cptbox import SecurePopen, PIPE
+
+try:
+    from cptbox import SecurePopen, PIPE
+except ImportError:
+    SecurePopen, PIPE = None, None
+    from wbox import WBoxPopen
 from subprocess import Popen
 import re
 from result import Result
@@ -27,14 +32,20 @@ __import__('sys').stdin = __import__('os').fdopen(0, 'r', 65536)
     def get_executable(self):
         raise NotImplementedError()
 
-    def launch(self, *args, **kwargs):
-        return SecurePopen([self.get_executable(), '-BS', self._script] + list(args),
-                           security=self.get_security(),
-                           time=kwargs.get('time'),
-                           memory=kwargs.get('memory'),
-                           address_grace=131072,
-                           stderr=(PIPE if kwargs.get('pipe_stderr', False) else None),
-                           env={'LANG': 'C'}, cwd=self._dir)
+    if SecurePopen is None:
+        def launch(self, *args, **kwargs):
+            return WBoxPopen(['python', '-BS', self._script] + list(args),
+                             time=kwargs.get('time'), memory=kwargs.get('memory'),
+                             cwd=self._dir, executable=self.get_executable())
+    else:
+        def launch(self, *args, **kwargs):
+            return SecurePopen([self.get_executable(), '-BS', self._script] + list(args),
+                               security=self.get_security(),
+                               time=kwargs.get('time'),
+                               memory=kwargs.get('memory'),
+                               address_grace=131072,
+                               stderr=(PIPE if kwargs.get('pipe_stderr', False) else None),
+                               env={'LANG': 'C'}, cwd=self._dir)
 
     def launch_unsafe(self, *args, **kwargs):
         return Popen([self.get_executable(), '-BS', self._script] + list(args),

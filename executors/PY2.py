@@ -1,5 +1,10 @@
 from .utils import test_executor
-from cptbox import CHROOTSecurity
+
+try:
+    from cptbox import CHROOTSecurity
+except ImportError:
+    CHROOTSecurity = None
+
 from judgeenv import env
 from subprocess import Popen, PIPE as sPIPE
 from .python import PythonExecutor
@@ -11,8 +16,9 @@ if 'python2dir' in env:
 
 
 class Executor(PythonExecutor):
-    def get_security(self):
-        return CHROOTSecurity(PYTHON_FS)
+    if CHROOTSecurity is not None:
+        def get_security(self):
+            return CHROOTSecurity(PYTHON_FS)
 
     def get_executable(self):
         return env['runtime']['python']

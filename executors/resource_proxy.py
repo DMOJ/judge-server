@@ -2,11 +2,12 @@ import os
 import shutil
 import tempfile
 import errno
+from judgeenv import env
 
 
 class ResourceProxy(object):
     def __init__(self):
-        self._dir = tempfile.mkdtemp()
+        self._dir = tempfile.mkdtemp(dir=env.get('tempdir'))
 
     def cleanup(self):
         try:

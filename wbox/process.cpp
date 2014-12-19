@@ -46,7 +46,8 @@ bool JobbedProcessManager::spawn() {
 	if (!CreatePipe(&handle, &si.hStdError, nullptr, 0))
 		throw WindowsException("CreatePipe stderr");
 	hStderr = handle;
-	si.dwFlags |= STARTF_USESTDHANDLES;
+	si.dwFlags |= STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
+	si.wShowWindow = SW_HIDE;
 
 	if (!CreateProcessWithLogonW(szUsername, L".", szPassword, 0, szExecutable, szCmdLine,
 								 NORMAL_PRIORITY_CLASS | CREATE_SUSPENDED | CREATE_BREAKAWAY_FROM_JOB,

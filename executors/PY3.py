@@ -1,4 +1,8 @@
-from cptbox import CHROOTSecurity
+try:
+    from cptbox import CHROOTSecurity
+except ImportError:
+    CHROOTSecurity = None
+
 from .utils import test_executor
 from judgeenv import env
 from .python import PythonExecutor
@@ -10,8 +14,9 @@ if 'python3dir' in env:
 
 
 class Executor(PythonExecutor):
-    def get_security(self):
-        return CHROOTSecurity(PYTHON_FS + [self._dir + '$'])
+    if CHROOTSecurity is not None:
+        def get_security(self):
+            return CHROOTSecurity(PYTHON_FS + [self._dir + '$'])
 
     def get_executable(self):
         return env['runtime']['python3']

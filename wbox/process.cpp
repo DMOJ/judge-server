@@ -9,7 +9,8 @@ DWORD JobbedProcessManager::s_ShockerProc(LPVOID lpParam) {
 }
 
 JobbedProcessManager::JobbedProcessManager() :
-		szUsername(nullptr), szPassword(nullptr), szDirectory(nullptr), szCmdLine(nullptr), szExecutable(nullptr),
+		szUsername(nullptr), szPassword(nullptr), szDirectory(nullptr), szCmdLine(nullptr),
+		szExecutable(nullptr), szEnvBlock(nullptr),
 		tle_(false), mle_(false), terminate_shocker(false) {
 	ZeroMemory(&extLimits, sizeof extLimits);
 	extLimits.BasicLimitInformation.ActiveProcessLimit = 1;
@@ -50,8 +51,9 @@ bool JobbedProcessManager::spawn() {
 	si.wShowWindow = SW_HIDE;
 
 	if (!CreateProcessWithLogonW(szUsername, L".", szPassword, 0, szExecutable, szCmdLine,
-								 NORMAL_PRIORITY_CLASS | CREATE_SUSPENDED | CREATE_BREAKAWAY_FROM_JOB,
-								 nullptr, szDirectory, &si, &pi))
+								 NORMAL_PRIORITY_CLASS | CREATE_SUSPENDED | CREATE_BREAKAWAY_FROM_JOB |
+								 CREATE_UNICODE_ENVIRONMENT,
+								 szEnvBlock, szDirectory, &si, &pi))
 		throw WindowsException("CreateProcessWithLogonW");
 
 	CloseHandle(si.hStdInput);
@@ -149,6 +151,17 @@ JobbedProcessManager& JobbedProcessManager::executable(LPCWSTR szExecutable) {
 
 JobbedProcessManager& JobbedProcessManager::directory(LPCWSTR szDirectory) {
 	safe_alloc_and_copy_with_free(this->szDirectory, szDirectory);
+	return *this;
+}
+
+JobbedProcessManager& JobbedProcessManager::environment(LPCWSTR szEnvBlock, size_t cbBytes) {
+	if (this->szEnvBlock)
+		free(this->szEnvBlock);
+	if (szEnvBlock && cbBytes) {
+		this->szEnvBlock = (LPWSTR) malloc(cbBytes);
+		memcpy(this->szEnvBlock, szEnvBlock, cbBytes);
+	} else
+		this->szEnvBlock = nullptr;
 	return *this;
 }
 

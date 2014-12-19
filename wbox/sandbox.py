@@ -4,7 +4,7 @@ from winutils import execution_time
 
 
 class WBoxPopen(object):
-    def __init__(self, argv, time, memory, nproc=1, executable=None, cwd=None):
+    def __init__(self, argv, time, memory, nproc=1, executable=None, cwd=None, env=None):
         self.user = UserManager()
         self.process = ProcessManager(self.user.username, self.user.password)
         argv = list2cmdline(argv)
@@ -19,12 +19,25 @@ class WBoxPopen(object):
             if not isinstance(cwd, unicode):
                 cwd = cwd.decode('mbcs')
             self.process.dir = cwd
+        if env is not None:
+            self.process.set_environment(self._encode_environment(env))
         self.process.time_limit = time
         self.process.memory_limit = memory * 1024
         self.process.process_limit = nproc
         self.returncode = None
         self.universal_newlines = False
         self.process.spawn()
+
+    @staticmethod
+    def _encode_environment(env):
+        buf = []
+        for key, value in env.iteritems():
+            if not isinstance(key, unicode):
+                key = key.decode('mbcs')
+            if not isinstance(value, unicode):
+                value = value.decode('mbcs')
+            buf.append(u'%s=%s' % (key, value))
+        return u'\0'.join(buf) + u'\0\0'
 
     def wait(self, timeout=None):
         self.process.wait(timeout)

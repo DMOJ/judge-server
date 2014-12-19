@@ -6,6 +6,7 @@ try:
     from cptbox import CHROOTSecurity, SecurePopen, PIPE
 except ImportError:
     CHROOTSecurity, SecurePopen, PIPE = None, None, None
+    from wbox import WBoxPopen
 
 from error import CompileError
 from .utils import test_executor
@@ -60,7 +61,12 @@ def make_executor(code, command, args, ext, test_code):
             self._writable = writable
             self.warning = compile_error
 
-        if SecurePopen is not None:
+        if SecurePopen is None:
+            def launch(self, *args, **kwargs):
+                return WBoxPopen([self.name] + list(args), executable=self._executable,
+                                 time=kwargs.get('time'), memory=kwargs.get('memory'),
+                                 cwd=self._dir, env=GCC_ENV)
+        else:
             def launch(self, *args, **kwargs):
                 return SecurePopen([self.name] + list(args),
                                    executable=self._executable,
@@ -79,7 +85,7 @@ def make_executor(code, command, args, ext, test_code):
                                     **kwargs)
 
     def initialize():
-        if command not in env['runtime'] or SecurePopen is None:
+        if command not in env['runtime']:
             return False
         if not os.path.isfile(env['runtime'][command]):
             return False

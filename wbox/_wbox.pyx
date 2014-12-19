@@ -51,6 +51,7 @@ cdef extern from 'process.h' nogil:
         JobbedProcessManager &command(LPCWSTR cmdline);
         JobbedProcessManager &executable(LPCWSTR executable)
         JobbedProcessManager &directory(LPCWSTR directory)
+        JobbedProcessManager &environment(LPCWSTR env, size_t cb)
 
         unsigned long long memory()
         double executionTime()
@@ -147,6 +148,12 @@ cdef class ProcessManager:
             if not GetExitCodeProcess(self.thisptr.process().get(), &code):
                 raise WinError()
             return code
+
+    def set_environment(self, unicode memory):
+        self.thisptr.environment(memory, len(memory) * sizeof(Py_UNICODE))
+
+    def inherit_environment(self):
+        self.thisptr.environment(NULL, 0)
 
     property stdin:
         def __get__(self):

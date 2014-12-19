@@ -15,7 +15,7 @@ class JobbedProcessManager {
 	JOBOBJECT_BASIC_UI_RESTRICTIONS uiLimits;
 	GUID guid;
 	WCHAR szGuid[40];
-	LPWSTR szUsername, szPassword, szDirectory, szExecutable;
+	LPWSTR szUsername, szPassword, szDirectory, szExecutable, szEnvBlock;
 	LPWSTR szCmdLine;
 	bool tle_, mle_, terminate_shocker;
 	unsigned long long memory_, memory_limit;
@@ -39,6 +39,7 @@ public:
 	JobbedProcessManager &command(LPCWSTR szCmdLine);
 	JobbedProcessManager &executable(LPCWSTR szExecutable);
 	JobbedProcessManager &directory(LPCWSTR szDirectory);
+	JobbedProcessManager &environment(LPCWSTR szEnvBlock, size_t cbBytes);
 
 	unsigned long long memory() { return memory_; }
 	double executionTime() { return execution_time; }

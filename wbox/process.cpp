@@ -9,7 +9,7 @@ DWORD JobbedProcessManager::s_ShockerProc(LPVOID lpParam) {
 }
 
 JobbedProcessManager::JobbedProcessManager() :
-		szUsername(nullptr), szPassword(nullptr), szDirectory(nullptr), szCmdLine(nullptr),
+		szUsername(nullptr), szPassword(nullptr), szDirectory(nullptr), szCmdLine(nullptr), szExecutable(nullptr),
 		tle_(false), mle_(false), terminate_shocker(false) {
 	ZeroMemory(&extLimits, sizeof extLimits);
 	extLimits.BasicLimitInformation.ActiveProcessLimit = 1;

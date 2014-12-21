@@ -1,10 +1,15 @@
 import os
 import subprocess
-from cptbox import SecurePopen, CHROOTSecurity
-from .utils import test_executor
 
+from .utils import test_executor
 from .resource_proxy import ResourceProxy
 from judgeenv import env
+
+try:
+    from cptbox import SecurePopen, CHROOTSecurity
+except ImportError:
+    SecurePopen, CHROOTSecurity = None, None
+    from wbox import WBoxPopen
 
 PERL_FS = ['.*\.(?:so|p[lm]$)', '/dev/urandom']
 
@@ -16,14 +21,20 @@ class Executor(ResourceProxy):
         with open(source_code_file, 'wb') as fo:
             fo.write(source_code)
 
-    def launch(self, *args, **kwargs):
-        return SecurePopen(['perl', self._script] + list(args),
-                           executable=env['runtime']['perl'],
-                           security=CHROOTSecurity(PERL_FS),
-                           time=kwargs.get('time'),
-                           memory=kwargs.get('memory'),
-                           address_grace=16384,
-                           env={'LANG': 'C'}, cwd=self._dir)
+    if SecurePopen is None:
+        def launch(self, *args, **kwargs):
+            return WBoxPopen(['perl', self._script] + list(args), env={'LANG': 'C'},
+                             time=kwargs.get('time'), memory=kwargs.get('memory'),
+                             cwd=self._dir, executable=env['runtime']['perl'])
+    else:
+        def launch(self, *args, **kwargs):
+            return SecurePopen(['perl', self._script] + list(args),
+                               executable=env['runtime']['perl'],
+                               security=CHROOTSecurity(PERL_FS),
+                               time=kwargs.get('time'),
+                               memory=kwargs.get('memory'),
+                               address_grace=16384,
+                               env={'LANG': 'C'}, cwd=self._dir)
 
     def launch_unsafe(self, *args, **kwargs):
         return subprocess.Popen(['perl', self._script] + list(args),

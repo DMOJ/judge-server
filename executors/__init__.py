@@ -1,5 +1,5 @@
-__executors = ['TUR', 'OCAML', 'C', 'CPP', 'CPP0X', 'CPP11', 'CS', 'MONOCS', 'JAVA', 'PY2', 'PY3', 'PYPY', 'PYPY3', 'PAS', 'PERL',
-               'RUBY18', 'RUBY21', 'HASK', 'GO', 'F95', 'NASM', 'PHP', 'LUA']
+__executors = ['TUR', 'OCAML', 'C', 'CPP', 'CPP0X', 'CPP11', 'CS', 'FS', 'MONOCS', 'JAVA', 'PY2', 'PY3', 'PYPY',
+               'PYPY3', 'PAS', 'PERL', 'RUBY18', 'RUBY21', 'HASK', 'GO', 'F95', 'NASM', 'PHP', 'LUA']
 executors = {}
 
 

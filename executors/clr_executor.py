@@ -201,17 +201,24 @@ class CLRProcess(object):
 class CLRExecutor(ResourceProxy):
     extension = None
     compiler = None
+    compile_args = ['-nologo', '-out:{exe}', '{source}']
 
     def __init__(self, problem_id, source_code):
         super(CLRExecutor, self).__init__()
-        source_code_file = self._file('%s.%s' % (problem_id, self.extension))
+        self.source = self._file('%s.%s' % (problem_id, self.extension))
         self.name = self._file('%s.exe' % problem_id)
-        with open(source_code_file, 'wb') as fo:
+        with open(self.source, 'wb') as fo:
             fo.write(source_code)
+        self.warning = None
+        self.compile()
 
-        csc_args = [env['runtime'][self.compiler], '-nologo', '-out:%s' % self.name, source_code_file]
+    def get_compile_args(self):
+        return [env['runtime'][self.compiler]] + [arg.format(exe=self.name, source=self.source)
+                                                  for arg in self.compile_args]
 
-        csc_process = subprocess.Popen(csc_args, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, cwd=self._dir)
+    def compile(self):
+        csc_process = subprocess.Popen(self.get_compile_args(), stderr=subprocess.STDOUT,
+                                       stdout=subprocess.PIPE, cwd=self._dir)
         compile_error, _ = csc_process.communicate()
         if csc_process.returncode != 0:
             raise CompileError(compile_error)

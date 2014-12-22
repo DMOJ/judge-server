@@ -76,6 +76,7 @@ class PacketManager(object):
             packet = self.input.read(size).decode('zlib')
         except zlib.error:
             self._reconnect()
+            return self._read_single()
         else:
             return json.loads(packet)
 

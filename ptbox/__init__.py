@@ -41,7 +41,7 @@ def syscall(func):
 
 def unsafe_syscall(func):
     """
-        ptrace recieves notifications prior to the kernel reading the memory pointed to by the registers.
+        ptrace receives notifications prior to the kernel reading the memory pointed to by the registers.
         It is theoretically possible to modify a pointer after ptbox finishes validation but
         before the memory is actually accessed, given a multiprocess task.
 

@@ -55,7 +55,7 @@ class PacketManager(object):
     def _read_async(self):
         try:
             while True:
-                self._recieve_packet(self._read_single())
+                self._receive_packet(self._read_single())
         except KeyboardInterrupt:
             pass
         except Exception:  # connection reset by peer
@@ -93,7 +93,7 @@ class PacketManager(object):
         self.output.write(PacketManager.SIZE_PACK.pack(len(raw)))
         self.output.write(raw)
 
-    def _recieve_packet(self, packet):
+    def _receive_packet(self, packet):
         if packet['name'] != 'ping':
             print '%s:%s <= %s' % (self.host, self.port, json.dumps(packet, indent=4))
 

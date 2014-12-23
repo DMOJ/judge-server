@@ -78,7 +78,7 @@ class CLRProcess(object):
 
         limits = JOBOBJECT_EXTENDED_LIMIT_INFORMATION()
         limits.JobMemoryLimit = self.memory_limit * 1024  # bytes
-        limits.BasicLimitInformation.PerJobUserTimeLimit = int(self.time_limit)  # 100ns units
+        limits.BasicLimitInformation.PerJobUserTimeLimit = int(self.time_limit * 10000000)  # 100ns units
         limits.BasicLimitInformation.LimitFlags = (JOB_OBJECT_LIMIT_ACTIVE_PROCESS |
                                                    JOB_OBJECT_LIMIT_JOB_MEMORY |
                                                    JOB_OBJECT_LIMIT_JOB_TIME)

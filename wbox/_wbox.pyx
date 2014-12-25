@@ -68,6 +68,11 @@ cdef extern from 'process.h' nogil:
         AutoHandle &stdErr()
 
 
+cdef extern from 'firewall.h' nogil:
+    cdef cppclass CNetworkManager 'NetworkManager':
+        CNetworkManager(LPCWSTR name, LPCWSTR executable) except +
+
+
 cdef class UserManager:
     cdef CUserManager *thisptr
 
@@ -80,15 +85,72 @@ cdef class UserManager:
             self.thisptr = new CUserManager()
 
     def __dealloc__(self):
-        del self.thisptr
+        if self.thisptr:
+            del self.thisptr
+
+    def dispose(self):
+        if self.thisptr:
+            del self.thisptr
+            self.thisptr = NULL
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.dispose()
 
     property username:
         def __get__(self):
+            if not self.thisptr:
+                raise ValueError('already destroyed')
             return self.thisptr.username()
 
     property password:
         def __get__(self):
+            if not self.thisptr:
+                raise ValueError('already destroyed')
             return self.thisptr.password()
+
+
+cdef class NetworkManager:
+    cdef CNetworkManager *thisptr
+    cdef unicode _name, _executable
+
+    def __cinit__(self, name, executable):
+        if not isinstance(name, unicode):
+            name = name.decode('mbcs')
+        if not isinstance(executable, unicode):
+            executable = executable.decode('mbcs')
+        self._name = name
+        self._executable = executable
+        self.thisptr = new CNetworkManager(name, executable)
+
+    def __dealloc__(self):
+        if self.thisptr:
+            del self.thisptr
+
+    def dispose(self):
+        if self.thisptr:
+            del self.thisptr
+            self.thisptr = NULL
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.dispose()
+
+    property name:
+        def __get__(self):
+            if not self.thisptr:
+                raise ValueError('already destroyed')
+            return self._name
+
+    property executable:
+        def __get__(self):
+            if not self.thisptr:
+                raise ValueError('already destroyed')
+            return self._executable
 
 
 cdef class ProcessManager:

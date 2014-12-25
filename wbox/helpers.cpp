@@ -1,6 +1,7 @@
 #include "helpers.h"
 #include <sstream>
 #include <strsafe.h>
+#include <comdef.h>
 
 std::string FormatWindowsError(DWORD error) {
 	LPSTR message = nullptr;
@@ -49,4 +50,13 @@ SeDebugPrivilege::~SeDebugPrivilege() {
 
 	if (!AdjustTokenPrivileges(hToken, FALSE, &tp, 0, nullptr, nullptr))
 		throw WindowsException("AdjustTokenPrivileges");
+}
+
+HRException::HRException(const char* location, HRESULT error):
+		error(error), location(location) {}
+
+const char* HRException::what() const {
+	if (!message[0])
+		StringCchPrintfA(message, ARRAYSIZE(message), "%s: 0x%08X", location, error);
+	return message;
 }

@@ -57,4 +57,14 @@ public:
 	DWORD code() { return error; }
 };
 
+class HRException : public std::exception {
+	HRESULT error;
+	mutable char message[1024];
+	const char *location;
+public:
+	HRException(const char* location, HRESULT error);
+	const char* what() const override;
+	HRESULT code() { return error; }
+};
+
 #endif

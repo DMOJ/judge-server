@@ -25,7 +25,8 @@ class Executor(ResourceProxy):
         def launch(self, *args, **kwargs):
             return WBoxPopen(['perl', self._script] + list(args), env={'LANG': 'C'},
                              time=kwargs.get('time'), memory=kwargs.get('memory'),
-                             cwd=self._dir, executable=env['runtime']['perl'])
+                             cwd=self._dir, executable=env['runtime']['perl'],
+                             network_block=True)
     else:
         def launch(self, *args, **kwargs):
             return SecurePopen(['perl', self._script] + list(args),

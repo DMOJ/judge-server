@@ -65,7 +65,7 @@ def make_executor(code, command, args, ext, test_code):
             def launch(self, *args, **kwargs):
                 return WBoxPopen([self.name] + list(args), executable=self._executable,
                                  time=kwargs.get('time'), memory=kwargs.get('memory'),
-                                 cwd=self._dir, env=GCC_ENV)
+                                 cwd=self._dir, env=GCC_ENV, network_block=True)
         else:
             def launch(self, *args, **kwargs):
                 return SecurePopen([self.name] + list(args),

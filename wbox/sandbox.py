@@ -1,10 +1,11 @@
-from _wbox import UserManager, ProcessManager
+from _wbox import UserManager, ProcessManager, NetworkManager
 from subprocess import list2cmdline, Popen
 from winutils import execution_time
+from uuid import uuid1
 
 
 class WBoxPopen(object):
-    def __init__(self, argv, time, memory, nproc=1, executable=None, cwd=None, env=None):
+    def __init__(self, argv, time, memory, nproc=1, executable=None, cwd=None, env=None, network_block=False):
         self.user = UserManager()
         self.process = ProcessManager(self.user.username, self.user.password)
         argv = list2cmdline(argv)
@@ -26,6 +27,10 @@ class WBoxPopen(object):
         self.process.process_limit = nproc
         self.returncode = None
         self.universal_newlines = False
+        if executable is not None and network_block:
+            self.network_block = NetworkManager('wbox_%s' % uuid1(), executable)
+        else:
+            self.network_block = None
         self.process.spawn()
 
     @staticmethod
@@ -45,6 +50,8 @@ class WBoxPopen(object):
 
     def poll(self):
         self.returncode = self.process.get_exit_code()
+        if self.returncode is not None and self.network_block is not None:
+            self.network_block.dispose()
         return self.returncode
 
     def kill(self, code=0xDEADBEEF):

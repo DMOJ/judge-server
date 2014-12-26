@@ -1,7 +1,6 @@
 #include "helpers.h"
 #include <sstream>
 #include <strsafe.h>
-#include <comdef.h>
 
 std::string FormatWindowsError(DWORD error) {
 	LPSTR message = nullptr;

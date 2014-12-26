@@ -1,8 +1,12 @@
 CC=cl /nologo
 LD=cl /nologo
+CFLAGS=/Ox /EHsc /DUNICODE /W4
 CYTHON=cython
 LIBS=netapi32.lib advapi32.lib ole32.lib
-PYINCLUDE=.
+
+!IFDEF PYINCLUDE
+CFLAGS=$(CFLAGS) /I$(PYINCLUDE)
+!ENDIF
 
 _wbox.pyd: _wbox.obj handles.obj process.obj user.obj helpers.obj firewall.obj
     $(LD) /LD $** /Fe$@ $(LIBS) $(PYLIB)
@@ -20,7 +24,7 @@ _wbox.cpp: _wbox.pyx
     $(CYTHON) --cplus -a _wbox.pyx
 
 .cpp.obj::
-    $(CC) /c $< /I$(PYINCLUDE) /EHsc /DUNICODE
+    $(CC) $(CFLAGS) /c $<
 
 clean:
     del /q _wbox.pyd _wbox.obj handles.obj process.obj user.obj helpers.obj _wbox.cpp

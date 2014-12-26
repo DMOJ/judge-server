@@ -1,6 +1,7 @@
 CC=cl /nologo
 LD=cl /nologo
-CFLAGS=/Ox /EHsc /DUNICODE /W4
+CFLAGS=/Ox /EHsc /DUNICODE /W4 /GL
+LDFLAGS=/OPT:REF,ICF /LTCG
 CYTHON=cython
 LIBS=netapi32.lib advapi32.lib ole32.lib
 
@@ -9,7 +10,7 @@ CFLAGS=$(CFLAGS) /I$(PYINCLUDE)
 !ENDIF
 
 _wbox.pyd: _wbox.obj handles.obj process.obj user.obj helpers.obj firewall.obj
-    $(LD) /LD $** /Fe$@ $(LIBS) $(PYLIB)
+    $(LD) /LD $** /Fe$@ $(LIBS) $(PYLIB) /link $(LDFLAGS)
 
 process.h: helpers.h
 user.h: helpers.h

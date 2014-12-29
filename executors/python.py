@@ -36,7 +36,8 @@ __import__('sys').stdin = __import__('os').fdopen(0, 'r', 65536)
         def launch(self, *args, **kwargs):
             return WBoxPopen(['python', '-BS', self._script] + list(args),
                              time=kwargs.get('time'), memory=kwargs.get('memory'),
-                             cwd=self._dir, executable=self.get_executable())
+                             cwd=self._dir, executable=self.get_executable(),
+                             network_block=True)
     else:
         def launch(self, *args, **kwargs):
             return SecurePopen([self.get_executable(), '-BS', self._script] + list(args),

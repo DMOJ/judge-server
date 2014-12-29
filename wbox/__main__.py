@@ -8,7 +8,7 @@ def main():
 
     def run_file(file):
         print 'Running', file
-        child = WBoxPopen(['python', os.path.join(dir, file)], 1, 16384, executable=sys.executable)
+        child = WBoxPopen(['python', os.path.join(dir, file)], 1, 16384, executable=sys.executable, network_block=True)
         print 'Result:', child.communicate()
         print 'Return:', child.returncode
         print 'Execution time:', child.execution_time
@@ -19,6 +19,7 @@ def main():
     run_file('hello.py')
     run_file('hang.py')
     run_file('memory_abuse.py')
+    run_file('google.py')
 
 if __name__ == '__main__':
     main()

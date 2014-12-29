@@ -42,3 +42,8 @@ nosetests.xml
 *.sln
 *.exe
 *.obj
+*.exp
+*.pdb
+
+wbox/_wbox.cpp
+wbox/_wbox.html

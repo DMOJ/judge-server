@@ -14,7 +14,7 @@ public class SubmissionSecurityManager extends SecurityManager {
         String fname = perm.getName().replace("\\", "/");
         if (perm instanceof FilePermission) {
             if (perm.getActions().equals("read") &&
-                    (fname.startsWith(JavaSafeExecutor.cwd + File.separator) ||
+                    (fname.toLowerCase().endsWith(".class") ||
                             fname.startsWith("/usr/lib/jvm/") ||
                             fname.contains("/jre/lib/zi/")
                     )) // Date

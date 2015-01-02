@@ -2,6 +2,7 @@ import os
 import re
 from subprocess import Popen, PIPE
 import sys
+import time
 from communicate import safe_communicate, OutputLimitExceeded
 from error import CompileError
 from .utils import test_executor
@@ -39,7 +40,7 @@ def find_class(source):
 class JavaPopen(object):
     def __init__(self, args, executable, cwd, time_limit, memory_limit, statefile):
         self.process = Popen(args, executable=executable, cwd=cwd,
-                                        stdin=PIPE, stdout=PIPE, stderr=PIPE)
+                             stdin=PIPE, stdout=PIPE, stderr=PIPE)
         self.execution_time, self.tle = None, None
         self.max_memory, self.mle = None, None
         self.stderr = None
@@ -50,6 +51,7 @@ class JavaPopen(object):
         self.memory_limit = memory_limit
         self.statefile = statefile
         self._killed = False
+        self._start = time.time()
 
     def communicate(self, stdin=None):
         return self._communicate(*self.process.communicate(stdin))
@@ -63,15 +65,21 @@ class JavaPopen(object):
         if self.returncode is None:
             self.returncode = self.process.returncode
 
+    def _fallback_unix_stats(self):
+        self.execution_time = time.time() - self._start
+        self.tle = self.execution_time > self.time_limit
+        self.max_memory = 0
+        self.mle = 0
+        self.returncode = -1
+
     def safe_communicate(self, stdin=None, outlimit=None, errlimit=None):
         try:
             return self._communicate(*safe_communicate(self.process, stdin, outlimit, errlimit))
         except OutputLimitExceeded:
-            self.execution_time = 0
-            self.tle = 0
-            self.max_memory = 0
-            self.mle = 0
-            self.returncode = -1
+            if windows:
+                self._update_windows_stats()
+            else:
+                self._fallback_unix_stats()
             raise
 
     def _communicate(self, stdout, stderr):
@@ -86,10 +94,9 @@ class JavaPopen(object):
             self.feedback = data[5]
         except:
             if not windows:
-                print>> sys.stderr, stderr
-                if self._killed:
-                    return stdout, stderr
-                raise
+                print>> sys.stderr, self.error_info
+                self._fallback_unix_stats()
+                return stdout, stderr
         if windows:
             self._update_windows_stats()
         else:

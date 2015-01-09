@@ -1,9 +1,7 @@
 import os
-import re
 import subprocess
 
 from cptbox import CHROOTSecurity, SecurePopen, PIPE, ALLOW
-from cptbox.syscalls import *
 from error import CompileError
 from .utils import test_executor
 from .resource_proxy import ResourceProxy
@@ -25,19 +23,6 @@ class Executor(ResourceProxy):
         if ghc_process.returncode != 0:
             raise CompileError(compile_error)
 
-    def _get_security(self):
-        sec = CHROOTSecurity(GO_FS)
-
-        sec[sys_getpid] = ALLOW
-        sec[sys_getppid] = ALLOW
-        sec[sys_clock_getres] = ALLOW
-        sec[sys_timer_create] = ALLOW
-        sec[sys_timer_settime] = ALLOW
-        sec[sys_timer_delete] = ALLOW
-        sec[sys_modify_ldt] = ALLOW
-
-        return sec
-
     def launch(self, *args, **kwargs):
         return SecurePopen([self.name] + list(args),
                            executable=self.name,
@@ -46,7 +31,7 @@ class Executor(ResourceProxy):
                            time=kwargs.get('time'),
                            memory=kwargs.get('memory'),
                            stderr=(PIPE if kwargs.get('pipe_stderr', False) else None),
-                           env={}, cwd=self._dir, nproc=-1)
+                           env={}, cwd=self._dir, nproc=1)
 
     def launch_unsafe(self, *args, **kwargs):
         return subprocess.Popen([self.name] + list(args),

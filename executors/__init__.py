@@ -12,7 +12,7 @@ def __load(to_load):
         try:
             module = __import__('%s.%s' % (__name__, executor))
         except ImportError as e:
-            if e.message != 'No module named _cptbox':
+            if e.message not in ('No module named _cptbox', 'No module named msvcrt'):
                 traceback.print_exc()
             return None
         for part in path:

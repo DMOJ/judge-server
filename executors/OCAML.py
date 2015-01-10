@@ -31,7 +31,7 @@ class Executor(ResourceProxy):
                            time=kwargs.get('time'),
                            memory=kwargs.get('memory'),
                            stderr=(PIPE if kwargs.get('pipe_stderr', False) else None),
-                           env={}, cwd=self._dir, nproc=1)
+                           env={}, cwd=self._dir)
 
     def launch_unsafe(self, *args, **kwargs):
         return subprocess.Popen([self.name] + list(args),

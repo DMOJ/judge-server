@@ -7,7 +7,7 @@ try:
 except ImportError:
     CHROOTSecurity = None
 
-PYTHON_FS = ['.*\.(?:so|py[co]?$)', '/proc/cpuinfo$', '/proc/meminfo$']
+PYTHON_FS = ['.*\.(?:so|py[co]?$)', '/proc/cpuinfo$', '/proc/meminfo$', '/etc/localtime$', '/dev/urandom$']
 
 
 class Executor(PythonExecutor):

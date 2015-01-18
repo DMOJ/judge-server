@@ -133,7 +133,7 @@ cdef int pt_child(void *context) nogil:
     if config.dir[0]:
         chdir(config.dir)
 
-    limit.rlim_cur = limit.rlim_max = 16 * 1024 * 1024
+    limit.rlim_cur = limit.rlim_max = 64 * 1024 * 1024
     setrlimit(RLIMIT_STACK, &limit)
     limit.rlim_cur = limit.rlim_max = 0
     setrlimit(RLIMIT_CORE, &limit)

@@ -12,7 +12,7 @@ public class SubmissionThread extends Thread {
     private Throwable exception;
 
     public SubmissionThread(Class process) {
-        super(null, null, "Submission-Grading-Thread(" + process.getSimpleName() + ")", 8000000 /* Some pretty large stack size */);
+        super(null, null, "Submission-Grading-Thread(" + process.getSimpleName() + ")", 1<<25 /* Some pretty large stack size */);
         this.submission = process;
     }
 

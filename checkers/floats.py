@@ -7,12 +7,19 @@ def check(process_output, judge_output, precision, **kwargs):
     epsilon = 10 ** -int(precision)
     try:
         for process_line, judge_line in izip(process_lines, judge_lines):
-            process_floats = map(float, process_line.split())
-            judge_floats = map(float, judge_line.split())
-            if any(abs(process_float - judge_float) > epsilon and 
-                   (abs(judge_float) < epsilon or abs(1.0 - process_float / judge_float) > epsilon)
-                     for process_float, judge_float in izip(process_floats, judge_floats)):
-                return False
+            process_floats = process_line.split()
+            judge_floats = judge_line.split()
+            for process_token, judge_token in izip(process_floats, judge_floats):
+                try:
+                    judge_float = float(judge_token)
+                except:
+                    if process_token != judge_token:
+                        return False
+                else:
+                    process_float = float(process_token)
+                    if abs(process_float - judge_float) > epsilon and \
+                           (abs(judge_float) < epsilon or abs(1.0 - process_float / judge_float) > epsilon):
+                        return False
     except:
         return False
     return True

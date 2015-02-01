@@ -197,7 +197,10 @@ cdef class ProcessManager:
 
     def wait(self, timeout=None):
         cdef DWORD time, result
-        time = timeout or INFINITE
+        if timeout is not None:
+            time = timeout
+        else:
+            time = INFINITE
         with nogil:
             result = WaitForSingleObject(self.thisptr.process().get(), time)
         return result

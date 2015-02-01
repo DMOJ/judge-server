@@ -3,7 +3,7 @@ from libc.stdlib cimport atoi, malloc, free, strtoul
 from libc.string cimport strncmp, strlen
 from posix.unistd cimport close, dup2, getpid, execve, chdir
 from posix.resource cimport setrlimit, rlimit, rusage, \
-    RLIMIT_AS, RLIMIT_DATA, RLIMIT_CPU, RLIMIT_STACK, RLIMIT_CORE
+    RLIMIT_AS, RLIMIT_DATA, RLIMIT_CPU, RLIMIT_STACK, RLIMIT_CORE, RLIM_INFINITY
 from posix.signal cimport kill
 from posix.types cimport pid_t
 from libc.signal cimport SIGSTOP
@@ -133,7 +133,7 @@ cdef int pt_child(void *context) nogil:
     if config.dir[0]:
         chdir(config.dir)
 
-    limit.rlim_cur = limit.rlim_max = 16 * 1024 * 1024
+    limit.rlim_cur = limit.rlim_max = RLIM_INFINITY
     setrlimit(RLIMIT_STACK, &limit)
     limit.rlim_cur = limit.rlim_max = 0
     setrlimit(RLIMIT_CORE, &limit)

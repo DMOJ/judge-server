@@ -43,6 +43,7 @@ public class SubmissionSecurityManager extends SecurityManager {
         if (perm instanceof PropertyPermission) {
             if (perm.getActions().contains("write")) {
                 if (fname.equals("user.timezone")) return; // Date
+                if (fname.equals("user.language")) return; // Locale
                 throw new AccessControlException(perm.getClass() + " - " + perm.getName() + ": " + perm.getActions(), perm);
             }
             return;

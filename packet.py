@@ -110,7 +110,7 @@ class PacketManager(object):
                 packet['problem-id'],
                 packet['language'],
                 packet['source'],
-                int(packet['time-limit']),
+                float(packet['time-limit']),
                 int(packet['memory-limit']),
                 packet['short-circuit']
             )

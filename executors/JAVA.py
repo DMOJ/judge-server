@@ -141,7 +141,7 @@ class Executor(ResourceProxy):
     def launch(self, *args, **kwargs):
         return JavaPopen(['java', '-client',
                           '-Xmx%sK' % kwargs.get('memory'), '-jar', JAVA_EXECUTOR, self._dir,
-                          self._class_name, str(kwargs.get('time') * 1000), 'state'] + list(args),
+                          self._class_name, str(int(kwargs.get('time') * 1000)), 'state'] + list(args),
                          executable=env['runtime']['java'], cwd=self._dir,
                          time_limit=kwargs.get('time'), memory_limit=kwargs.get('memory'), statefile=self.statefile)
 

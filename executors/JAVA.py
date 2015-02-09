@@ -120,13 +120,16 @@ class JavaPopen(object):
 
 
 class Executor(ResourceProxy):
+    JAVA = 'java'
+    JAVAC = 'javac'
+
     def __init__(self, problem_id, source_code):
         super(Executor, self).__init__()
         class_name = find_class(source_code)
         source_code_file = self._file('%s.java' % class_name.group(1))
         with open(source_code_file, 'wb') as fo:
             fo.write(source_code)
-        javac_args = [env['runtime']['javac'], source_code_file]
+        javac_args = [env['runtime'][self.JAVAC], source_code_file]
         javac_process = Popen(javac_args, stderr=PIPE, cwd=self._dir)
         _, compile_error = javac_process.communicate()
         if javac_process.returncode != 0:
@@ -142,12 +145,12 @@ class Executor(ResourceProxy):
         return JavaPopen(['java', '-client',
                           '-Xmx%sK' % kwargs.get('memory'), '-jar', JAVA_EXECUTOR, self._dir,
                           self._class_name, str(int(kwargs.get('time') * 1000)), 'state'] + list(args),
-                         executable=env['runtime']['java'], cwd=self._dir,
+                         executable=env['runtime'][self.JAVA], cwd=self._dir,
                          time_limit=kwargs.get('time'), memory_limit=kwargs.get('memory'), statefile=self.statefile)
 
     def launch_unsafe(self, *args, **kwargs):
         return Popen(['java', '-client', self._class_name] + list(args),
-                     executable=env['runtime']['java'],
+                     executable=env['runtime'][self.JAVA],
                      cwd=self._dir,
                      **kwargs)
 

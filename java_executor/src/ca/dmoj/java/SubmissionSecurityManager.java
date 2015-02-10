@@ -35,12 +35,8 @@ public class SubmissionSecurityManager extends SecurityManager {
         if (perm instanceof ReflectPermission) {
             /*
                 Java's Date API requires reflection.
-                Thankfully this is safe enough, since it doesn't allow a malicious submission
-                to access JavaSafeExecutor fields.
              */
-            if (fname.equals("suppressAccessChecks")) {
-                return;
-            }
+            return;
         }
         if (perm instanceof PropertyPermission) {
             if (perm.getActions().contains("write")) {

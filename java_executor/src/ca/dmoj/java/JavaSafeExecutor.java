@@ -116,7 +116,13 @@ public class JavaSafeExecutor {
 
         System.setOut(new UnsafePrintStream(new FileOutputStream(FileDescriptor.out)));
 
-        URLClassLoader classLoader = URLClassLoader.newInstance(new URL[]{new File(cwd).toURI().toURL()});
+        URLClassLoader classLoader = new URLClassLoader(new URL[]{new File(cwd).toURI().toURL()}) {
+            @Override
+            protected Class<?> findClass(String name) throws ClassNotFoundException {
+                if(name.startsWith("ca.dmoj.")) throw new ClassNotFoundException("Nope.");
+                return super.findClass(name);
+            }
+        };
         Class program;
         try {
             program = classLoader.loadClass(classname);

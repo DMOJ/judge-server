@@ -132,7 +132,7 @@ public class JavaSafeExecutor {
                 askShouldFail(name);
                 return super.findClass(name);
             }
-        }
+        };
         Class program;
         try {
             program = classLoader.loadClass(classname);

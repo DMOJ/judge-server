@@ -117,12 +117,22 @@ public class JavaSafeExecutor {
         System.setOut(new UnsafePrintStream(new FileOutputStream(FileDescriptor.out)));
 
         URLClassLoader classLoader = new URLClassLoader(new URL[]{new File(cwd).toURI().toURL()}) {
+            private void askShouldFail(String name) throws ClassNotFoundException {
+                if (name.startsWith("ca.dmoj.")) throw new ClassNotFoundException("Nope");
+            }
+
+            @Override
+            public Class<?> loadClass(String name, boolean init) throws ClassNotFoundException {
+                askShouldFail(name);
+                return super.loadClass(name, init);
+            }
+
             @Override
             protected Class<?> findClass(String name) throws ClassNotFoundException {
-                if(name.startsWith("ca.dmoj.")) throw new ClassNotFoundException("Nope.");
+                askShouldFail(name);
                 return super.findClass(name);
             }
-        };
+        }
         Class program;
         try {
             program = classLoader.loadClass(classname);

@@ -23,11 +23,11 @@ class PacketManager(object):
         self.judge = judge
         self.name = name
         self.key = key
+        self._lock = threading.RLock()
         self._connect()
         # Exponential backoff: starting at 4 seconds.
         # Certainly hope it won't stack overflow, since it will take days if not years.
         self.fallback = 4
-        self._lock = threading.RLock()
 
     def _connect(self):
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

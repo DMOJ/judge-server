@@ -27,6 +27,7 @@ class PacketManager(object):
         # Exponential backoff: starting at 4 seconds.
         # Certainly hope it won't stack overflow, since it will take days if not years.
         self.fallback = 4
+        self._lock = threading.RLock()
 
     def _connect(self):
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -91,8 +92,9 @@ class PacketManager(object):
             print '%s:%s => %s' % (self.host, self.port, json.dumps(packet, indent=4))
 
         raw = json.dumps(packet).encode('zlib')
-        self.output.write(PacketManager.SIZE_PACK.pack(len(raw)))
-        self.output.write(raw)
+        with self._lock:
+            self.output.write(PacketManager.SIZE_PACK.pack(len(raw)))
+            self.output.write(raw)
 
     def _receive_packet(self, packet):
         if packet['name'] != 'ping':

@@ -48,7 +48,7 @@ class TestCase(object):
     def __init__(self, input_file, output_file, point_value):
         self.input_file = input_file
         self.output_file = output_file
-        self.point_value = point_value
+        self.point_value = int(point_value)
         self.complete = False
 
     def __iter__(self):
@@ -64,7 +64,7 @@ class TestCase(object):
 class BatchedTestCase(object):
     def __init__(self, io_files, point_value):
         self.io_files = list(io_files)
-        self.point_value = point_value
+        self.point_value = int(point_value)
         self._current_case = 0
 
     def __iter__(self):

@@ -339,21 +339,25 @@ class Judge(object):
                 raise IOError('could not read generator source')
 
             _, ext = os.path.splitext(generator_path)
+
+            def find_cpp():
+                global executors
+                for grader in ('CPP11', 'CPP0X', 'CPP'):
+                    if grader in executors:
+                        return grader
+                raise CompileError("Can't grade with generator. Why did I get this submission?")
+
             lookup = {
                 '.py': executors.get('PY2', None),
                 '.py3': executors.get('PY3', None),
                 '.c': executors.get('C', None),
-                '.cpp': executors.get('CPP11', None),
+                '.cpp': executors.get(find_cpp(), None),
                 '.java': executors.get('JAVA', None),
                 '.rb': executors.get('RUBY', None)
             }
             clazz = lookup.get(ext, None)
             if not clazz:
-                if ext in ['.c', '.cpp']:
-                    # unsafe works even if cptbox fails
-                    clazz = __import__('executors').CPP11
-                else:
-                    raise IOError('could not identify generator extension')
+                raise IOError('could not identify generator extension')
             generator_launcher = clazz.Executor('%s-generator' % problem_id, generator_source).launch_unsafe
 
             test = 0

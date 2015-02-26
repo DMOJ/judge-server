@@ -1,5 +1,7 @@
 #!/usr/bin/python
-import argparse
+
+import judgeenv
+
 import copy
 from functools import partial
 import gc
@@ -16,10 +18,12 @@ import uuid
 from modload import load_module_from_file
 from result import Result
 
+from judgeenv import env, get_problem_root, get_problem_roots, fs_encoding
+
 if os.name == 'nt':
     import ctypes
-    ctypes.windll.kernel32.SetErrorMode(0x8000 | 0x0002 | 0x0004 | 0x0001)
 
+    ctypes.windll.kernel32.SetErrorMode(0x8000 | 0x0002 | 0x0004 | 0x0001)
 
 try:
     from watchdog.observers import Observer
@@ -32,7 +36,6 @@ except ImportError:
         pass
 
 from error import CompileError
-from judgeenv import env, get_problem_root, get_problem_roots, fs_encoding
 from communicate import safe_communicate, OutputLimitExceeded
 
 from executors import executors
@@ -220,7 +223,9 @@ class Judge(object):
                                 with open(header_path, 'r') as header:
                                     aux_sources[problem_id + '_submission'] = (
                                                                                   '#include "%s"\n#define main main_%s\n' %
-                                                                                  (handler_data['header'], str(uuid.uuid4()).replace('-', ''))) + source_code
+                                                                                  (handler_data['header'],
+                                                                                   str(uuid.uuid4()).replace('-',
+                                                                                                             ''))) + source_code
                                     aux_sources[handler_data['header']] = header.read()
                                     source_code = entry_point.read()
                             # Compile as CPP11 regardless of what the submission language is
@@ -271,7 +276,8 @@ class Judge(object):
                     self.packet_manager.compile_message_packet(executor.warning)
                 for result in self.run(executor, init_data, check_adapter, problem_id,
                                        time=time_limit, memory=memory_limit,
-                                       short_circuit=short_circuit, source_code=original_source, interactive=('grader' in init_data)):
+                                       short_circuit=short_circuit, source_code=original_source,
+                                       interactive=('grader' in init_data)):
                     print 'Test case %s' % case
                     print '\t%f seconds (real)' % result.r_execution_time
                     print '\t%f seconds (debugged)' % result.execution_time
@@ -314,9 +320,11 @@ class Judge(object):
         :param forward_test_cases: 
             A list of testcases contained in init_data.
         """
+
         class iofile_fetcher(dict):
             def __missing__(self, key):
                 return open(os.path.join(get_problem_root(problem_id), key), 'r')
+
         files = iofile_fetcher()
         if 'archive' in init_data:
             archive_path = os.path.join(get_problem_root(problem_id), init_data['archive'])
@@ -490,7 +498,8 @@ class Judge(object):
                                                                 result.result_flag,
                                                                 result.execution_time,
                                                                 result.max_memory,
-                                                                result.proc_output[:output_prefix_length].decode('utf-8', 'replace'),
+                                                                result.proc_output[:output_prefix_length].decode(
+                                                                    'utf-8', 'replace'),
                                                                 # TODO: add interactive grader's feedback
                                                                 None)
 
@@ -539,7 +548,8 @@ class Judge(object):
         """
         if interactive:
             # TODO: Fix this hack
-            for i in self.run_interactive(executor, init_data, check_func, problem_id, short_circuit, time, memory, source_code):
+            for i in self.run_interactive(executor, init_data, check_func, problem_id, short_circuit, time, memory,
+                                          source_code):
                 yield i
             return
         output_prefix_length = init_data.get('output_prefix_length', 32)
@@ -750,18 +760,9 @@ class Judge(object):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='''
-        Spawns a judge for a submission server.
-    ''')
-    parser.add_argument('server_host', nargs='?',
-                        help='host to listen for the server')
-    parser.add_argument('-p', '--server-port', type=int, default=9999,
-                        help='port to listen for the server')
-    args = parser.parse_args()
-
     print 'Running live judge...'
 
-    with Judge(args.server_host, args.server_port) as judge:
+    with Judge(judgeenv.server_host, judgeenv.server_port) as judge:
         try:
             judge.listen()
         finally:

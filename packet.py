@@ -41,7 +41,7 @@ class PacketManager(object):
             # Return 0 to avoid supervisor restart.
             raise SystemExit(0)
         print>> sys.stderr
-        print>> sys.stderr, 'SOCKET ERROR: Disconncted! Reconnecting in %d seconds.' % self.fallback
+        print>> sys.stderr, 'SOCKET ERROR: Disconnected! Reconnecting in %d seconds.' % self.fallback
         self.conn.close()
         time.sleep(self.fallback)
         self.fallback *= 1.5

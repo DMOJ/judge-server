@@ -16,6 +16,10 @@ import uuid
 from modload import load_module_from_file
 from result import Result
 
+if os.name == 'nt':
+    import ctypes
+    ctypes.windll.kernel32.SetErrorMode(0x8000 | 0x0002 | 0x0004 | 0x0001)
+
 
 try:
     from watchdog.observers import Observer

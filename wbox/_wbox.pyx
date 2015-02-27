@@ -42,7 +42,7 @@ cdef extern from 'process.h' nogil:
         JobbedProcessManager() except +
 
         bint spawn() except +
-        bint terminate(unsigned code)
+        bint terminate(unsigned code) except +
 
         JobbedProcessManager &time(double seconds)
         JobbedProcessManager &memory(size_t bytes)

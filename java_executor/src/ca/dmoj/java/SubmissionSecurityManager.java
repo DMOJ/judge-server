@@ -6,6 +6,8 @@ import java.lang.reflect.ReflectPermission;
 import java.security.AccessControlException;
 import java.security.Permission;
 import java.util.PropertyPermission;
+import java.lang.reflect.*;
+import java.io.IOException;
 
 public class SubmissionSecurityManager extends SecurityManager {
     @Override
@@ -21,6 +23,16 @@ public class SubmissionSecurityManager extends SecurityManager {
                 return;
         }
         if (perm instanceof RuntimePermission) {
+            if(fname.contains("exitVM")) {
+                // Well, it can be handled but Thread.stop(Exception) is removed in Java 8
+                try {
+                    JavaSafeExecutor._safeBlock = true;
+                    JavaSafeExecutor.printStateAndExit();
+                } catch (IOException ignored) {
+                    ignored.printStackTrace();
+                }
+                return;
+            }
             if (fname.equals("writeFileDescriptor") ||
                     fname.equals("readFileDescriptor") ||
                     fname.equals("fileSystemProvider") ||

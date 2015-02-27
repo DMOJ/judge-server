@@ -7,6 +7,8 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Scanner;
 
+import java.util.Arrays;
+
 @SuppressWarnings("deprecation")
 public class JavaSafeExecutor {
     /**
@@ -15,6 +17,10 @@ public class JavaSafeExecutor {
      * incorrectly marked as TLE. But who throws ThreadDeaths randomly, anyways?
      */
     public static ThreadDeath TLE = new ThreadDeath();
+    /**
+     * Used to kill the submission thread when the user calls System.exit.
+     */
+    public static ThreadDeath EXIT_REQUESTED = new ThreadDeath();
     /**
      * Reflection failed with IllegalAccessException. Did the SecurityManager fail?
      */

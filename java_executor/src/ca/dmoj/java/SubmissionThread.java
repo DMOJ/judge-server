@@ -28,6 +28,8 @@ public class SubmissionThread extends Thread {
             } catch (InvocationTargetException e) {
                 // All program errors will be wrapped in an InvocationTargetException
                 Throwable ex = e.getCause();
+                ex.printStackTrace();
+                if(ex == JavaSafeExecutor.EXIT_REQUESTED) return;
                 if (ex == JavaSafeExecutor.TLE) {
                     // We've caught the ThreadDeath we threw to kill the submission thread in case of TLE.
                     tle = true;

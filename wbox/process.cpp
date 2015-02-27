@@ -86,9 +86,10 @@ bool JobbedProcessManager::spawn() {
 }
 
 bool JobbedProcessManager::terminate(unsigned code) {
-	if (hProcess)
+	if (hProcess) {
 		if (!TerminateProcess(hProcess, code))
 			throw WindowsException("TerminateProcess");
+    }
 	return false;
 }
 

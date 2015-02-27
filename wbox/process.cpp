@@ -86,9 +86,11 @@ bool JobbedProcessManager::spawn() {
 }
 
 bool JobbedProcessManager::terminate(unsigned code) {
-	if (hProcess)
+	if (hProcess) {
+	    SeDebugPrivilege debug;
 		if (!TerminateProcess(hProcess, code))
 			throw WindowsException("TerminateProcess");
+    }
 	return false;
 }
 

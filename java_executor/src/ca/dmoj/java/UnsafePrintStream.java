@@ -6,9 +6,6 @@ import java.io.*;
  * The regular PrintStream set as System.out is just way too slow.
  * This PrintStream implementation is a couple dozen times faster, at the cost of not being thread-safe.
  * Since we forbid cloning anyways, this is not an issue as only the submission thread will ever print.
- *
- * FIXME: we use the ASCII encoding for speed reasons, but this may (will) cause Java submissions to fail
- * FIXME: problems that require unicode output. Maybe we should have a -unicode flag?
  */
 public class UnsafePrintStream extends PrintStream {
     private BufferedWriter writer;
@@ -16,10 +13,10 @@ public class UnsafePrintStream extends PrintStream {
     private OutputStream out;
     private boolean trouble;
 
-    public UnsafePrintStream(OutputStream out) throws UnsupportedEncodingException {
+    public UnsafePrintStream(OutputStream out, boolean isUnicode) throws UnsupportedEncodingException {
         super(new ByteArrayOutputStream());
         this.out = out;
-        bin = new OutputStreamWriter(out, "ASCII");
+        bin = new OutputStreamWriter(out, isUnicode ? "UTF-8" : "ASCII");
         writer = new BufferedWriter(bin, 4096 /* 4k buffer seems to work pretty well */);
     }
 

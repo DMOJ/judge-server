@@ -59,6 +59,8 @@ public class JavaSafeExecutor {
 
     static File statefile;
 
+    static boolean isUnicode = false;
+
     static {
         /*
         Scanner needs to load some locale files before it can be used. Since "files" implies IO which is blocked by
@@ -114,7 +116,9 @@ public class JavaSafeExecutor {
         selfThread = Thread.currentThread();
         statefile = new File(new File(cwd), argv[3]);
 
-        System.setOut(new UnsafePrintStream(new FileOutputStream(FileDescriptor.out)));
+        isUnicode = Arrays.asList(argv).contains("-unicode");
+
+        System.setOut(new UnsafePrintStream(new FileOutputStream(FileDescriptor.out), isUnicode));
 
         URLClassLoader classLoader = new URLClassLoader(new URL[]{new File(cwd).toURI().toURL()}) {
             private void askShouldFail(String name) throws ClassNotFoundException {

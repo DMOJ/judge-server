@@ -17,8 +17,12 @@ def initialize():
         return False
     return test_executor('JAVA8', Executor, '''\
 public class self_test {
+    public static void run(Runnable target) {
+        target.run();
+    }
+
     public static void main(String[] args) {
-        System.out.println("Hello, World!");
+        run(() -> System.out.println("Hello, World!"));
     }
 }
 ''', problem='self_test')

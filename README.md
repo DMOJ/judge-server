@@ -1,6 +1,6 @@
 Judge
 =====
-Python contest judge.
+Python [AGPLv3](https://github.com/DMOJ/judge/blob/master/LICENSE) contest judge.
 
 <table>
 <tr>

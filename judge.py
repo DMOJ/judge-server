@@ -588,14 +588,6 @@ class Judge(object):
 
         topen = self._resolve_open_call(init_data, problem_id, forward_test_cases)
 
-        # Test whether all the required files exist
-        for test_case in forward_test_cases:
-            for input_file, output_file, point_value in test_case:
-                if input_file:
-                    topen(input_file)
-                if output_file:
-                    topen(output_file)
-
         self.packet_manager.begin_grading_packet()
         case_number = 1
         short_circuited = False

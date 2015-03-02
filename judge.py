@@ -386,9 +386,9 @@ class Judge(object):
                                                                stderr=subprocess.PIPE)
                         generator_output, generator_error = generator_process.communicate(
                             '\n'.join((str(test), input_file, output_file, '')))
-                        if input_file not in files:
+                        if input_file not in files and generator_output and generator_output[0] != '\0':
                             files[input_file] = generator_output
-                        if output_file not in files:
+                        if output_file not in files and generator_error and generator_error[0] != '\0':
                             files[output_file] = generator_error
         return files.__getitem__
 

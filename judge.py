@@ -11,6 +11,7 @@ import traceback
 import threading
 import zipfile
 import cStringIO
+import re
 import sys
 import subprocess
 import uuid
@@ -326,6 +327,7 @@ class Judge(object):
                 return open(os.path.join(get_problem_root(problem_id), key), 'r')
 
         files = iofile_fetcher()
+
         if 'archive' in init_data:
             archive_path = os.path.join(get_problem_root(problem_id), init_data['archive'])
             if not os.path.exists(archive_path):
@@ -339,6 +341,7 @@ class Judge(object):
                     files[name.filename] = archive.read(name)
             finally:
                 archive.close()
+
         if 'generator' in init_data and forward_test_cases:
             generator_path = os.path.join(get_problem_root(problem_id), init_data['generator'])
             if not os.path.exists(generator_path):
@@ -370,22 +373,23 @@ class Judge(object):
             clazz = lookup.get(ext, None)
             if not clazz:
                 raise IOError('could not identify generator extension')
-            generator_launcher = clazz.Executor('%s-generator' % problem_id, generator_source).launch_unsafe
+            generator_launcher = clazz.Executor('_%s_generator' % problem_id, generator_source).launch_unsafe
 
             test = 0
             copied_forward_test_cases = copy.deepcopy(forward_test_cases)
             for test_case in copied_forward_test_cases:
                 for input_file, output_file, point_value in test_case:
                     test += 1
-                    generator_process = generator_launcher(stdin=subprocess.PIPE,
-                                                           stdout=subprocess.PIPE,
-                                                           stderr=subprocess.PIPE)
-                    generator_output, generator_error = generator_process.communicate(
-                        '\n'.join((str(test), input_file, output_file, '')))
-                    if input_file not in files and generator_output[0] != '\0':
-                        files[input_file] = generator_output
-                    if output_file not in files and generator_error[0] != '\0':
-                        files[output_file] = generator_error
+                    if input_file not in files or output_file not in files:
+                        generator_process = generator_launcher(stdin=subprocess.PIPE,
+                                                               stdout=subprocess.PIPE,
+                                                               stderr=subprocess.PIPE)
+                        generator_output, generator_error = generator_process.communicate(
+                            '\n'.join((str(test), input_file, output_file, '')))
+                        if input_file not in files and generator_output and generator_output[0] != '\0':
+                            files[input_file] = generator_output
+                        if output_file not in files and generator_error and generator_error[0] != '\0':
+                            files[output_file] = generator_error
         return files.__getitem__
 
     def run_interactive(self, executor, init_data, check_adapter, problem_id, short_circuit=False, time=2,

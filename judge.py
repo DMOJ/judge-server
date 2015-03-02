@@ -735,6 +735,9 @@ class Judge(object):
         except TerminateGrading:
             self.packet_manager.submission_terminated_packet()
             raise
+        except IOError:
+            traceback.print_exc()
+            raise
         except:
             traceback.print_exc()
             self.packet_manager.grading_end_packet()

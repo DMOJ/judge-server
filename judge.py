@@ -324,7 +324,10 @@ class Judge(object):
 
         class iofile_fetcher(dict):
             def __missing__(self, key):
-                return open(os.path.join(get_problem_root(problem_id), key), 'r')
+                file_path = os.path.join(get_problem_root(problem_id), key)
+                if not os.path.isfile(file_path):
+                    raise IOError('file "%s" does not exist' % key)
+                return open(file_path, 'r')
 
         files = iofile_fetcher()
 

@@ -324,10 +324,7 @@ class Judge(object):
 
         class iofile_fetcher(dict):
             def __missing__(self, key):
-                file_path = os.path.join(get_problem_root(problem_id), key)
-                if not os.path.isfile(file_path):
-                    raise IOError('file "%s" does not exist' % key)
-                return open(file_path, 'r')
+                return open(os.path.join(get_problem_root(problem_id), key), 'r')
 
         files = iofile_fetcher()
 
@@ -590,6 +587,14 @@ class Judge(object):
                 raise IOError('could not load grader module')
 
         topen = self._resolve_open_call(init_data, problem_id, forward_test_cases)
+
+        # Test whether all the required files exist
+        for test_case in forward_test_cases:
+            for input_file, output_file, point_value in test_case:
+                if input_file:
+                    topen(input_file)
+                if output_file:
+                    topen(output_file)
 
         self.packet_manager.begin_grading_packet()
         case_number = 1

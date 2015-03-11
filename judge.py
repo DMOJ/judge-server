@@ -223,14 +223,13 @@ class Judge(object):
                             with open(entry_path, 'r') as entry_point:
                                 with open(header_path, 'r') as header:
                                     aux_sources[problem_id + '_submission'] = (
-                                                                                  '#include "%s"\n#define main main_%s\n' %
-                                                                                  (handler_data['header'],
-                                                                                   str(uuid.uuid4()).replace('-',
-                                                                                                             ''))) + source_code
+                                        '#include "%s"\n#define main main_%s\n' %
+                                        (handler_data['header'],
+                                        str(uuid.uuid4()).replace('-', ''))) + source_code
                                     aux_sources[handler_data['header']] = header.read()
-                                    source_code = entry_point.read()
+                                    entry = entry_point.read()
                             # Compile as CPP11 regardless of what the submission language is
-                            executor = executors[siggrader].Executor(problem_id, source_code, aux_sources=aux_sources,
+                            executor = executors[siggrader].Executor(problem_id, entry, aux_sources=aux_sources,
                                                                      writable=handler_data.get('writable', (1, 2)),
                                                                      fds=handler_data.get('fds', None))
                         else:

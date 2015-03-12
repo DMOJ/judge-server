@@ -1,6 +1,6 @@
 __executors = ['TUR', 'OCAML', 'C', 'CPP', 'CPP0X', 'CPP11', 'CS', 'FS', 'MONOCS', 'JAVA', 'JAVA8', 'PY2', 'PY3',
                'PYPY', 'PYPY3', 'PAS', 'PERL', 'RUBY18', 'RUBY19', 'RUBY21', 'HASK', 'GO', 'F95', 'NASM', 'PHP',
-               'LUA', 'V8JS']
+               'LUA', 'V8JS', 'RKT']
 executors = {}
 
 

@@ -51,10 +51,16 @@ if os.name == 'nt':
             if input is not None:
                 try:
                     proc.stdin.write(input)
-                except IOError as e:
-                    if e.errno != errno.EPIPE:
-                        raise
-            proc.stdin.close()
+                except IOError:
+                    # IOError: [Errno 22] Invalid argument
+                    # Happens when the child ignores stdin data and exits.
+                    # There is no way to handle it other than ignore.
+                    pass
+            try:
+                proc.stdin.close()
+            except IOError:
+                # See above.
+                pass
 
         if proc.stdout:
             stdout_thread.join()

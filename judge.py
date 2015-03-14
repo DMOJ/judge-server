@@ -701,6 +701,9 @@ class Judge(object):
                         if process.mle:
                             result.result_flag |= Result.MLE
 
+                        if result.result_flag & ~Result.WA:
+                            check.points = 0
+
                         feedback = (check.feedback or
                                     (process.feedback if hasattr(process, 'feedback') else
                                      getattr(executor, 'get_feedback', lambda x, y: '')(error, result)))

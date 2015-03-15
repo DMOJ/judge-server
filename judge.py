@@ -1,4 +1,5 @@
 #!/usr/bin/python
+from textwrap import dedent
 
 import judgeenv
 
@@ -190,7 +191,18 @@ class Judge(object):
         submission_id = self.current_submission
         print>> sys.stderr, '===========Started Grading: %s===========' % submission_id
         try:
-            with open(os.path.join(get_problem_root(problem_id), 'init.json'), 'r') as init_file:
+            problem_root = get_problem_root(problem_id)
+            if problem_root is None:
+                print>>sys.stderr, 'Unsupported problem:', problem_id
+                print>>sys.stderr, 'Please install watchdog so that the bridge can be notified of problems files' \
+                                   ' disappearing'
+                self.packet_manager.internal_error_packet(dedent('''\
+                    Unsupported problem: %s.
+
+                    Please install watchdog so that the bridge can be notified of problem files disappearing.''')
+                                                          % problem_id)
+                return
+            with open(os.path.join(problem_root, 'init.json'), 'r') as init_file:
                 init_data = json.load(init_file)
 
                 if isinstance(original_source, unicode):
@@ -212,8 +224,8 @@ class Judge(object):
                         if language in siggraders:
                             aux_sources = {}
                             handler_data = init_data['handler']
-                            entry_path = os.path.join(get_problem_root(problem_id), handler_data['entry'])
-                            header_path = os.path.join(get_problem_root(problem_id), handler_data['header'])
+                            entry_path = os.path.join(problem_root, handler_data['entry'])
+                            header_path = os.path.join(problem_root, handler_data['header'])
 
                             if not os.path.exists(entry_path):
                                 raise IOError('entry path "%s" does not exist' % entry_path)
@@ -253,7 +265,7 @@ class Judge(object):
                     else:
                         checker_params = {}
                     if '.' in checker_id:
-                        module_path = os.path.join(get_problem_root(problem_id), checker_id)
+                        module_path = os.path.join(problem_root, checker_id)
                         if not os.path.exists(module_path):
                             raise IOError('checker module path "%s" does not exist' % module_path)
                         checker = load_module_from_file(module_path)

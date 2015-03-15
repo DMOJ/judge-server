@@ -32,9 +32,12 @@ __import__('sys').stdin = __import__('os').fdopen(0, 'r', 65536)
     def get_executable(self):
         raise NotImplementedError()
 
+    def get_argv0(self):
+        return 'python'
+
     if SecurePopen is None:
         def launch(self, *args, **kwargs):
-            return WBoxPopen(['python', '-BS', self._script] + list(args),
+            return WBoxPopen([self.get_argv0(), '-BS', self._script] + list(args),
                              time=kwargs.get('time'), memory=kwargs.get('memory'),
                              cwd=self._dir, executable=self.get_executable(),
                              network_block=True)
@@ -49,10 +52,9 @@ __import__('sys').stdin = __import__('os').fdopen(0, 'r', 65536)
                                env={'LANG': 'C'}, cwd=self._dir)
 
     def launch_unsafe(self, *args, **kwargs):
-        return Popen([self.get_executable(), '-BS', self._script] + list(args),
-                     env={'LANG': 'C'},
-                     cwd=self._dir,
-                     **kwargs)
+        return Popen([self.get_argv0(), '-BS', self._script] + list(args),
+                     env={'LANG': 'C'}, executable=self.get_executable(),
+                     cwd=self._dir, **kwargs)
 
     def get_feedback(self, stderr, result):
         if not result.result_flag & Result.IR or not stderr or len(stderr) > 2048:

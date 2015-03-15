@@ -18,6 +18,8 @@ class Executor(PythonExecutor):
     def get_executable(self):
         return env['runtime']['pypy']
 
+    get_argv0 = get_executable
+
 
 def initialize():
     if not 'pypy' in env['runtime']:

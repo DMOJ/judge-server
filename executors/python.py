@@ -14,16 +14,20 @@ retraceback = re.compile(r'Traceback \(most recent call last\):\n.*?\n([a-zA-Z_]
 
 
 class PythonExecutor(ResourceProxy):
+    loader_script = '''\
+import runpy, sys, os
+del sys.argv[0]
+sys.stdin = os.fdopen(0, 'r', 65536)
+sys.stdout = os.fdopen(1, 'w', 65536)
+runpy.run_path(sys.argv[0], run_name='__main__')\
+'''
+
     def __init__(self, problem_id, source_code):
         super(PythonExecutor, self).__init__()
         self._script = source_code_file = self._file('%s.py' % problem_id)
-        customize = '''\
-# encoding: utf-8
-__import__('sys').stdout = __import__('os').fdopen(1, 'w', 65536)
-__import__('sys').stdin = __import__('os').fdopen(0, 'r', 65536)
-'''
         with open(source_code_file, 'wb') as fo:
-            fo.write(customize)
+            # UTF-8 BOM instead of comment to not modify line numbers.
+            fo.write('\xef\xbb\xbf')
             fo.write(source_code)
 
     def get_security(self):
@@ -37,22 +41,20 @@ __import__('sys').stdin = __import__('os').fdopen(0, 'r', 65536)
 
     if SecurePopen is None:
         def launch(self, *args, **kwargs):
-            return WBoxPopen([self.get_argv0(), '-BS', self._script] + list(args),
+            return WBoxPopen([self.get_argv0(), '-BS', '-c', self.loader_script, self._script] + list(args),
                              time=kwargs.get('time'), memory=kwargs.get('memory'),
                              cwd=self._dir, executable=self.get_executable(),
                              network_block=True)
     else:
         def launch(self, *args, **kwargs):
-            return SecurePopen([self.get_executable(), '-BS', self._script] + list(args),
-                               security=self.get_security(),
-                               time=kwargs.get('time'),
-                               memory=kwargs.get('memory'),
-                               address_grace=131072,
+            return SecurePopen([self.get_executable(), '-BS', '-c', self.loader_script, self._script] + list(args),
+                               security=self.get_security(), address_grace=131072,
+                               time=kwargs.get('time'), memory=kwargs.get('memory'),
                                stderr=(PIPE if kwargs.get('pipe_stderr', False) else None),
                                env={'LANG': 'C'}, cwd=self._dir)
 
     def launch_unsafe(self, *args, **kwargs):
-        return Popen([self.get_argv0(), '-BS', self._script] + list(args),
+        return Popen([self.get_argv0(), '-BS', '-c', self.loader_script, self._script] + list(args),
                      env={'LANG': 'C'}, executable=self.get_executable(),
                      cwd=self._dir, **kwargs)
 

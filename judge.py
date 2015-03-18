@@ -549,7 +549,7 @@ class Judge(object):
                         result.r_execution_time = process.r_execution_time or 0.0
 
                         if output_data is None or interactive:
-                            check = result.result_flag == Result.AC
+                            check = CheckerResult(result.result_flag == Result.AC, result.points)
                         else:
                             check = check_func(input_data, result.proc_output, output_data, point_value)
                         if not isinstance(check, CheckerResult):

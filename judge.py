@@ -635,8 +635,10 @@ class Judge(object):
                             # if submission dies, interactive grader might get stuck on a process IO call,
                             # hanging the main thread
                             try:
-                                result = interactive_grader.grade(case_number, process, case_input=input_data,
-                                                                  case_output=output_data, point_value=point_value,
+                                result = interactive_grader.grade(case_number, process,
+                                                                  case_input=cStringIO.StringIO(input_data),
+                                                                  case_output=cStringIO.StringIO(output_data),
+                                                                  point_value=point_value,
                                                                   source_code=source_code)
                                 if isinstance(result, tuple) or isinstance(result, list):
                                     result, error = result

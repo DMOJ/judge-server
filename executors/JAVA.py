@@ -3,6 +3,7 @@ import re
 from subprocess import Popen, PIPE
 import sys
 import time
+import errno
 from communicate import safe_communicate, OutputLimitExceeded
 from error import CompileError
 from .utils import test_executor
@@ -127,8 +128,14 @@ class Executor(ResourceProxy):
         super(Executor, self).__init__()
         class_name = find_class(source_code)
         source_code_file = self._file('%s.java' % class_name.group(1))
-        with open(source_code_file, 'wb') as fo:
-            fo.write(source_code)
+        try:
+            with open(source_code_file, 'wb') as fo:
+                fo.write(source_code)
+        except IOError as e:
+            if e.errno in (errno.ENAMETOOLONG, errno.ENOENT):
+                raise CompileError('Why do you need a class name so long? '
+                                   'As a judge, I sentence your code to death.')
+            raise
         javac_args = [env['runtime'][self.JAVAC], source_code_file]
         javac_process = Popen(javac_args, stderr=PIPE, cwd=self._dir)
         _, compile_error = javac_process.communicate()

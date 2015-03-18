@@ -26,7 +26,7 @@ else:
     GCC_COMPILE.update(env['runtime'].get('gcc_compile', {}))
 
 
-def make_executor(code, command, args, ext, test_code):
+def make_executor(code, command, args, ext, test_code, _defines=None):
     class Executor(ResourceProxy):
         def __init__(self, problem_id, main_source, aux_sources=None, fds=None, writable=(1, 2)):
             super(Executor, self).__init__()
@@ -40,15 +40,21 @@ def make_executor(code, command, args, ext, test_code):
                 with open(self._file(name), 'wb') as fo:
                     fo.write(source)
                 sources.append(name)
-            if sys.platform == 'win32':
+            defines = ['-DONLINE_JUDGE']
+            if _defines:
+                defines.extend(_defines)
+
+            if os.name == 'nt':
                 compiled_extension = '.exe'
                 linker_options = ['-Wl,--stack,67108864']
+                defines.append('-DWIN32')
             else:
                 compiled_extension = ''
                 linker_options = []
+
             output_file = self._file('%s%s' % (problem_id, compiled_extension))
-            gcc_args = ([env['runtime'][command]] + sources + ['-Wall', '-DONLINE_JUDGE', '-O2', '-lm', '-march=native'] + args +
-                        linker_options + ['-s', '-o', output_file])
+            gcc_args = ([env['runtime'][command], '-Wall'] + sources + defines + ['-O2', '-lm', '-march=native']
+                       + args + linker_options + ['-s', '-o', output_file])
 
             gcc_process = subprocess.Popen(gcc_args, stderr=subprocess.PIPE, executable=env['runtime'][command],
                                            cwd=self._dir, env=GCC_COMPILE)

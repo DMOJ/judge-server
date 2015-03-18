@@ -552,12 +552,6 @@ class Judge(object):
         :return:
             A Result instance representing the execution result of the submission program.
         """
-        if interactive:
-            # TODO: Fix this hack
-            for i in self.run_interactive(executor, init_data, check_func, problem_id, short_circuit, time, memory,
-                                          source_code):
-                yield i
-            return
         output_prefix_length = init_data.get('output_prefix_length', 32)
         time_adjust = init_data.get('time_adjust', 1.0)
         forward_test_cases = []
@@ -587,6 +581,8 @@ class Judge(object):
             except:
                 traceback.print_exc()
                 raise IOError('could not load grader module')
+        else:
+            interactive_grader = None
 
         topen = self._resolve_open_call(init_data, problem_id, forward_test_cases)
 
@@ -645,7 +641,7 @@ class Judge(object):
                                 if isinstance(result, tuple) or isinstance(result, list):
                                     result, error = result
                                 else:
-                                    error = ""
+                                    error = ''
                             except:
                                 traceback.print_exc()
                                 try:
@@ -670,8 +666,8 @@ class Judge(object):
                                 result.result_flag |= Result.OLE
                                 process.kill()
                                 process.wait()
-                            if error:
-                                sys.stderr.write(error)
+                        if error:
+                            sys.stderr.write(error)
 
                         # Must check here because we might be interrupted mid-execution
                         # If we don't bail out, we get an IR.
@@ -683,7 +679,7 @@ class Judge(object):
                         result.execution_time = process.execution_time or 0.0
                         result.r_execution_time = process.r_execution_time or 0.0
 
-                        if output_data is None:
+                        if output_data is None or interactive:
                             check = result.result_flag == Result.AC
                         else:
                             check = check_func(input_data, result.proc_output, output_data, point_value)

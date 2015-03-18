@@ -750,7 +750,6 @@ class Judge(object):
                 if not short_circuit:
                     short_circuited = False
         except TerminateGrading:
-            self.packet_manager.submission_terminated_packet()
             raise
         except IOError:
             traceback.print_exc()

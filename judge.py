@@ -314,6 +314,7 @@ class Judge(object):
             self.packet_manager.internal_error_packet(traceback.format_exc())
         finally:
             print>> sys.stderr, '===========Done Grading: %s===========' % submission_id
+            self._terminate_grading = False
             self.current_submission_thread = None
             self.current_submission = None
 
@@ -541,7 +542,6 @@ class Judge(object):
             self.packet_manager.internal_error_packet(problem_id + '\n\n' + traceback.format_exc())
         finally:
             self.current_proc = None
-            self._terminate_grading = False
             gc.collect()
 
     def run(self, executor, init_data, check_func, problem_id, short_circuit=False, time=2, memory=65536,

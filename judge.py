@@ -636,8 +636,8 @@ class Judge(object):
                             # hanging the main thread
                             try:
                                 result = interactive_grader.grade(case_number, process,
-                                                                  case_input=cStringIO.StringIO(input_data),
-                                                                  case_output=cStringIO.StringIO(output_data),
+                                                                  case_input=input_data and cStringIO.StringIO(input_data),
+                                                                  case_output=output_data and cStringIO.StringIO(output_data),
                                                                   point_value=point_value,
                                                                   source_code=source_code)
                                 if isinstance(result, tuple) or isinstance(result, list):

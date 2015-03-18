@@ -181,7 +181,10 @@ class Judge(object):
         if self.current_submission_thread:
             self._terminate_grading = True
             if self.current_proc:
-                self.current_proc.kill()
+                try:
+                    self.current_proc.kill()
+                except OSError:
+                    pass
             self.current_submission_thread.join()
 
     def _begin_grading(self, problem_id, language, original_source, time_limit, memory_limit, short_circuit):

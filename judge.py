@@ -375,10 +375,9 @@ class Judge(object):
             generator_launcher = clazz.Executor('_%s_generator' % problem_id, generator_source).launch_unsafe
 
             test = 0
-            copied_forward_test_cases = copy.deepcopy(forward_test_cases)
             if self._terminate_grading:
                 raise TerminateGrading()
-            for test_case in copied_forward_test_cases:
+            for test_case in forward_test_cases:
                 for input_file, output_file, point_value in test_case:
                     test += 1
                     if input_file not in files or output_file not in files:

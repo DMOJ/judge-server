@@ -56,36 +56,19 @@ class CheckerResult(object):
 
 class TestCase(object):
     def __init__(self, input_file, output_file, point_value):
-        self.input_file = input_file
-        self.output_file = output_file
-        self.point_value = int(point_value)
-        self.complete = False
+        self.list = [(input_file, output_file, int(point_value))]
 
     def __iter__(self):
-        return self
-
-    def next(self):
-        if self.complete:
-            raise StopIteration
-        self.complete = True
-        return self.input_file, self.output_file, self.point_value
+        return iter(self.list)
 
 
 class BatchedTestCase(object):
     def __init__(self, io_files, point_value):
-        self.io_files = list(io_files)
-        self.point_value = int(point_value)
-        self._current_case = 0
+        point = int(point_value)
+        self.list = [(i, o, point) for i, o in io_files]
 
     def __iter__(self):
-        return self
-
-    def next(self):
-        if self._current_case >= len(self.io_files):
-            raise StopIteration
-        else:
-            self._current_case += 1
-            return self.io_files[self._current_case - 1] + (self.point_value,)
+        return iter(self.list)
 
 
 class TerminateGrading(Exception):
@@ -460,7 +443,7 @@ class Judge(object):
         short_circuited = False
         try:
             for test_case in forward_test_cases:
-                if type(test_case) == BatchedTestCase:
+                if isinstance(test_case, BatchedTestCase):
                     self.packet_manager.begin_batch_packet()
                 for input_file, output_file, point_value in test_case:
                     if self._terminate_grading:
@@ -533,7 +516,7 @@ class Judge(object):
                         short_circuited = True
                     case_number += 1
                     yield result
-                if type(test_case) == BatchedTestCase:
+                if isinstance(test_case, BatchedTestCase):
                     self.packet_manager.batch_end_packet()
                 if not short_circuit:
                     short_circuited = False
@@ -613,7 +596,7 @@ class Judge(object):
         short_circuited = False
         try:
             for test_case in forward_test_cases:
-                if type(test_case) == BatchedTestCase:
+                if isinstance(test_case, BatchedTestCase):
                     self.packet_manager.begin_batch_packet()
                 for input_file, output_file, point_value in test_case:
                     if self._terminate_grading:
@@ -748,7 +731,7 @@ class Judge(object):
 
                     case_number += 1
                     yield result
-                if type(test_case) == BatchedTestCase:
+                if isinstance(test_case, BatchedTestCase):
                     self.packet_manager.batch_end_packet()
                 if not short_circuit:
                     short_circuited = False

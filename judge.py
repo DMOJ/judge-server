@@ -307,6 +307,7 @@ class Judge(object):
                         print '\n'.join(execution_verdict)
                     case += 1
         except TerminateGrading:
+            self.packet_manager.submission_terminated_packet()
             print>> sys.stderr, 'Forcefully terminating grading. Temporary files may not be deleted.'
         except:
             traceback.print_exc()
@@ -390,13 +391,19 @@ class Judge(object):
             copied_forward_test_cases = copy.deepcopy(forward_test_cases)
             for test_case in copied_forward_test_cases:
                 for input_file, output_file, point_value in test_case:
+                    if self._terminate_grading:
+                        raise TerminateGrading()
                     test += 1
                     if input_file not in files or output_file not in files:
                         generator_process = generator_launcher(stdin=subprocess.PIPE,
                                                                stdout=subprocess.PIPE,
                                                                stderr=subprocess.PIPE)
+                        self.current_proc = generator_process
                         generator_output, generator_error = generator_process.communicate(
                             '\n'.join((str(test), input_file, output_file, '')))
+                        if self._terminate_grading:
+                            raise TerminateGrading()
+                        self.current_proc = None
                         if input_file not in files and generator_output and generator_output[0] != '\0':
                             files[input_file] = generator_output
                         if output_file not in files and generator_error and generator_error[0] != '\0':
@@ -528,7 +535,6 @@ class Judge(object):
                     short_circuited = False
             self.packet_manager.grading_end_packet()
         except TerminateGrading:
-            self.packet_manager.submission_terminated_packet()
             raise
         except:
             traceback.print_exc()

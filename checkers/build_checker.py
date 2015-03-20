@@ -26,9 +26,11 @@ class Command(build_ext):
                 self.compiler.compile_options.remove('/GS-')
             self.compiler.compile_options += ['/Ox', '/W4', '/EHsc', '/GL', '/MT']
             self.compiler.ldflags_shared += ['/OPT:REF,ICF', '/LTCG']
+        else:
+            self.distribution.ext_modules[0].extra_compile_args = ['-march=native', '-O3']
         build_ext.build_extensions(self)
 
-command = build_ext(distribution)
+command = Command(distribution)
 command.finalize_options()
 command.run()
 

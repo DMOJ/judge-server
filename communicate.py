@@ -155,8 +155,14 @@ else:
                     fd2output[fd].append(data)
                     fd2length[fd] += len(data)
                     if fd2length[fd] > fd2limit[fd]:
+                        if stdout is not None:
+                            stdout = ''.join(stdout)
+                
+                        if stderr is not None:
+                            stderr = ''.join(stderr)
+
                         raise OutputLimitExceeded(['stderr', 'stdout'][proc.stdout.fileno() == fd],
-                                                  stdout and ''.join(stdout), stderr and ''.join(stderr))
+                                                  stdout, stderr)
                 else:
                     # Ignore hang up or errors.
                     close_unregister_and_remove(fd)

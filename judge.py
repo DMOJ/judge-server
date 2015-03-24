@@ -555,6 +555,7 @@ class Judge(object):
                         if interactive:
                             check = CheckerResult(result.result_flag == Result.AC, result.points)
                         else:
+                            print>>sys.stderr, type(result.proc_output), type(output_data)
                             check = check_func(input_data, result.proc_output, output_data, point_value)
                         if not isinstance(check, CheckerResult):
                             check = CheckerResult(check, check and point_value)

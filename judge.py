@@ -470,7 +470,7 @@ class Judge(object):
                         check = CheckerResult(False, 0)
                         feedback = None
                     else:
-                        _input_data = topen(input_file) if input_file else None
+                        _input_data = topen(input_file) if input_file else ''
                         if hasattr(_input_data, 'read'):
                             try:
                                 input_data = _input_data.read()
@@ -481,7 +481,7 @@ class Judge(object):
                         if input_data:
                             input_data = input_data.replace('\r\n', '\n')  # .replace('\r', '\n')
 
-                        _output_data = topen(output_file) if output_file else None
+                        _output_data = topen(output_file) if output_file else ''
                         if hasattr(_output_data, 'read'):
                             try:
                                 output_data = _output_data.read()
@@ -548,7 +548,11 @@ class Judge(object):
                         result.execution_time = process.execution_time or 0.0
                         result.r_execution_time = process.r_execution_time or 0.0
 
-                        if output_data is None or interactive:
+                        # C standard checker will crash if not given a string
+                        if result.proc_output is None:
+                            result.proc_output = ''
+
+                        if interactive:
                             check = CheckerResult(result.result_flag == Result.AC, result.points)
                         else:
                             check = check_func(input_data, result.proc_output, output_data, point_value)

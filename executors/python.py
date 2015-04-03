@@ -25,10 +25,12 @@ runpy.run_path(sys.argv[0], run_name='__main__')\
     def __init__(self, problem_id, source_code):
         super(PythonExecutor, self).__init__()
         self._script = source_code_file = self._file('%s.py' % problem_id)
-        with open(source_code_file, 'wb') as fo:
+        self._loader = self._file('-loader.py')
+        with open(source_code_file, 'wb') as fo, open(self._loader, 'wb') as loader:
             # UTF-8 BOM instead of comment to not modify line numbers.
             fo.write('\xef\xbb\xbf')
             fo.write(source_code)
+            loader.write(self.loader_script)
 
     def get_security(self):
         raise NotImplementedError()
@@ -41,20 +43,20 @@ runpy.run_path(sys.argv[0], run_name='__main__')\
 
     if SecurePopen is None:
         def launch(self, *args, **kwargs):
-            return WBoxPopen([self.get_argv0(), '-BS', '-c', self.loader_script, self._script] + list(args),
+            return WBoxPopen([self.get_argv0(), '-BS', self._loader, self._script] + list(args),
                              time=kwargs.get('time'), memory=kwargs.get('memory'),
                              cwd=self._dir, executable=self.get_executable(),
                              network_block=True)
     else:
         def launch(self, *args, **kwargs):
-            return SecurePopen([self.get_executable(), '-BS', '-c', self.loader_script, self._script] + list(args),
+            return SecurePopen([self.get_executable(), '-BS', self._loader, self._script] + list(args),
                                security=self.get_security(), address_grace=131072,
                                time=kwargs.get('time'), memory=kwargs.get('memory'),
                                stderr=(PIPE if kwargs.get('pipe_stderr', False) else None),
                                env={'LANG': 'C'}, cwd=self._dir)
 
     def launch_unsafe(self, *args, **kwargs):
-        return Popen([self.get_argv0(), '-BS', '-c', self.loader_script, self._script] + list(args),
+        return Popen([self.get_argv0(), '-BS', self._loader, self._script] + list(args),
                      env={'LANG': 'C'}, executable=self.get_executable(),
                      cwd=self._dir, **kwargs)
 

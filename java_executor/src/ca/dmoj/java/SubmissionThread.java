@@ -46,6 +46,11 @@ public class SubmissionThread extends Thread {
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
                 error = JavaSafeExecutor.ACCESS_ERROR_CODE;
+            } catch(OutOfMemoryError e) {
+                // But why do this again if we already check for this case above?
+                //              https://github.com/DMOJ/judge/issues/29
+                // Future maintainers, if any, enjoy.
+                mle = true;
             } catch (Throwable throwable) {
                 throwable.printStackTrace();
                 exception = throwable.getCause();

@@ -1,5 +1,4 @@
 import os
-import re
 import subprocess
 
 from cptbox import CHROOTSecurity, SecurePopen, PIPE, ALLOW
@@ -19,7 +18,7 @@ class Executor(ResourceProxy):
         self.name = self._file(problem_id)
         with open(source_code_file, 'wb') as fo:
             fo.write(source_code)
-        ghc_args = [env['runtime']['ghc'], '-o', problem_id, source_code_file]
+        ghc_args = [env['runtime']['ghc'], '-O', '-o', problem_id, source_code_file]
         ghc_process = subprocess.Popen(ghc_args, stderr=subprocess.PIPE, cwd=self._dir)
         _, compile_error = ghc_process.communicate()
         if ghc_process.returncode != 0:

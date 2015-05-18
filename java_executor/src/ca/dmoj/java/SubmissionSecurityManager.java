@@ -14,18 +14,19 @@ public class SubmissionSecurityManager extends SecurityManager {
     @Override
     public void checkPermission(Permission perm) {
         if (JavaSafeExecutor._safeBlock || Thread.currentThread() == JavaSafeExecutor.selfThread || Thread.currentThread() == JavaSafeExecutor.shockerThread) return;
-        String fname = perm.getName().replace("\\", "/");
+        String fname = perm.getName().replace("\\", "/").toLowerCase();
         if(perm instanceof LoggingPermission) return;
         if (perm instanceof FilePermission) {
             if (perm.getActions().equals("read") &&
-                    (fname.toLowerCase().endsWith(".class") ||
+                    (fname.endsWith(".class") ||
                             fname.startsWith("/usr/lib/jvm/") ||
                             fname.contains("/jre/lib/zi/")
                     )) // Date
                 return;
             if(perm.getActions().equals("read") && 
-                    (fname.toLowerCase().endsWith("ext/nashorn.jar") ||
-                     fname.toLowerCase().endsWith("ext/rhino.jar")))
+                    (fname.endsWith("/ext/nashorn.jar") ||
+                     fname.endsWith("/ext/rhino.jar") ||
+                     fname.endsWith("/jre/lib/content-types.properties"))
                 return; // JS
         }
         if (perm instanceof RuntimePermission) {

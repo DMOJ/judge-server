@@ -6,6 +6,7 @@ import java.lang.reflect.ReflectPermission;
 import java.security.AccessControlException;
 import java.security.Permission;
 import java.util.PropertyPermission;
+import java.util.logging.LoggingPermission;
 import java.lang.reflect.*;
 import java.io.IOException;
 
@@ -14,6 +15,7 @@ public class SubmissionSecurityManager extends SecurityManager {
     public void checkPermission(Permission perm) {
         if (JavaSafeExecutor._safeBlock || Thread.currentThread() == JavaSafeExecutor.selfThread || Thread.currentThread() == JavaSafeExecutor.shockerThread) return;
         String fname = perm.getName().replace("\\", "/");
+        if(perm instance of LoggingPermission) return;
         if (perm instanceof FilePermission) {
             if (perm.getActions().equals("read") &&
                     (fname.toLowerCase().endsWith(".class") ||

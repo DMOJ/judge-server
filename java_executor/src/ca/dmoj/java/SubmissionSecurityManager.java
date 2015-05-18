@@ -21,6 +21,10 @@ public class SubmissionSecurityManager extends SecurityManager {
                             fname.contains("/jre/lib/zi/")
                     )) // Date
                 return;
+            if(perm.getActions().equals("read") && 
+                    (fname.toLowerCase().endsWith("ext/nashorn.jar") ||
+                     fname.toLowerCase().endsWith("ext/rhino.jar")))
+                return; // JS
         }
         if (perm instanceof RuntimePermission) {
             if(fname.contains("exitVM")) {

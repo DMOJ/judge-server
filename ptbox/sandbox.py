@@ -129,7 +129,11 @@ class SecurePopen(object):
             time.sleep(1)
 
     def kill(self):
-        os.kill(self._pid, SIGKILL)
+        try:
+            os.kill(self._pid, SIGKILL)
+        except OSError:
+            import traceback
+            traceback.print_exc()
 
     def __spawn_execute(self):
         child_args = self._args

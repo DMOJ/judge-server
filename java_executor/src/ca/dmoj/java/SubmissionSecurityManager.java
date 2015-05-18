@@ -47,6 +47,7 @@ public class SubmissionSecurityManager extends SecurityManager {
                     fname.equals("accessDeclaredMembers") ||
                     fname.equals("shutdownHooks") ||
                     fname.equals("setContextClassLoader") ||
+                    fname.equals("createClassLoader") ||
                     fname.equals("setFactory"))
                 return;
             if (fname.startsWith("accessClassInPackage")) {

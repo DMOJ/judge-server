@@ -26,7 +26,7 @@ public class SubmissionSecurityManager extends SecurityManager {
             if(perm.getActions().equals("read") && 
                     (fname.endsWith("/ext/nashorn.jar") ||
                      fname.endsWith("/ext/rhino.jar") ||
-                     fname.endsWith("/jre/lib/content-types.properties"))
+                     fname.endsWith("/jre/lib/content-types.properties")))
                 return; // JS
         }
         if (perm instanceof RuntimePermission) {

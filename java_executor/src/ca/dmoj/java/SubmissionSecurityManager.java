@@ -41,7 +41,8 @@ public class SubmissionSecurityManager extends SecurityManager {
                     fname.equals("readFileDescriptor") ||
                     fname.equals("fileSystemProvider") ||
                     fname.equals("getProtectionDomain") ||
-                    fname.equals("accessDeclaredMembers"))
+                    fname.equals("accessDeclaredMembers") ||
+                    fname.equals("shutdownHooks"))
                 return;
             if (fname.startsWith("accessClassInPackage")) {
                 if (fname.contains("sun.util.resources"))

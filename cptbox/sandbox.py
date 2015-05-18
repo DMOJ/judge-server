@@ -113,7 +113,11 @@ class _SecurePopen(Process):
 
     def kill(self):
         print>>sys.stderr, 'Child is requested to be killed'
-        os.kill(self.pid, signal.SIGKILL)
+        try:
+            os.kill(self.pid, signal.SIGKILL)
+        except OSError:
+            import traceback
+            traceback.print_exc()
 
     def _callback(self, syscall):
         callback = self._callbacks[syscall]

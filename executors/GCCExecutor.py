@@ -44,14 +44,10 @@ class GCCExecutor(ResourceProxy):
             with open(self._file(name), 'wb') as fo:
                 fo.write(source)
             sources.append(name)
-        defines = ['-DONLINE_JUDGE'] + self.defines
-
-        if os.name == 'nt':
-            defines.append('-DWIN32')
 
         self.warning = None
         self.name = problem_id
-        output_file = self.compile(defines, sources)
+        output_file = self.compile(sources)
         self._executable = output_file
         self._fds = fds
         self._writable = writable
@@ -64,11 +60,20 @@ class GCCExecutor(ResourceProxy):
     def get_executable_ext(self):
         return ['', '.exe'][os.name == 'nt']
 
-    def compile(self, defines, sources):
+    def get_flags(self):
+        return self.flags
+
+    def get_defines(self):
+        defines = ['-DONLINE_JUDGE'] + self.defines
+        if os.name == 'nt':
+            defines.append('-DWIN32')
+        return defines
+
+    def compile(self, sources):
         output_file = self._file('%s%s' % (self.name, self.get_executable_ext()))
 
-        gcc_args = ([self.command, '-Wall'] + sources + defines + ['-O2', '-lm', '-march=native']
-                    + self.flags + self.get_ldflags() + ['-s', '-o', output_file])
+        gcc_args = ([self.command, '-Wall'] + sources + self.get_defines() + ['-O2', '-lm', '-march=native']
+                    + self.get_flags() + self.get_ldflags() + ['-s', '-o', output_file])
         gcc_process = subprocess.Popen(gcc_args, stderr=subprocess.PIPE,
                                        cwd=self._dir, env=GCC_COMPILE)
 

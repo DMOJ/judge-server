@@ -13,6 +13,7 @@ from .utils import test_executor
 from .resource_proxy import ResourceProxy
 from judgeenv import env
 
+C_FS = ['.*\.so', '/proc/meminfo', '/dev/null']
 GCC_ENV = env['runtime'].get('gcc_env', {})
 GCC_COMPILE = os.environ.copy()
 

@@ -1,12 +1,22 @@
-from .GCCExecutor import make_executor
+from .GCCExecutor import GCCExecutor
+from judgeenv import env
 
-Executor, initialize = make_executor('CPP', 'g++', [], '.cpp', r'''
+
+class Executor(GCCExecutor):
+    command = env['runtime'].get('g++')
+    std = None
+    ext = '.cpp'
+    name = 'CPP'
+    test_program = '''
 #include <iostream>
 
 int main() {
-    std::cout << "Hello, World!\n";
+    std::cout << std::cin.rdbuf();
     return 0;
 }
-''')
+'''
 
-del make_executor
+    def get_flags(self):
+        return (['-std=%s' % self.std] if self.std else []) + super(Executor, self).get_flags()
+
+initialize = Executor.initialize

@@ -1,14 +1,18 @@
+from .CPP import Executor as CPPExecutor
 from judgeenv import env
-from .GCCExecutor import make_executor
 
-Executor, initialize = make_executor('CPP11', 'g++11', ['-std=c++11'], '.cpp', r'''
+
+class Executor(CPPExecutor):
+    command = env['runtime'].get('g++11')
+    std = 'c++11'
+    test_program = '''
 #include <iostream>
 
 int main() {
-    auto message = "Hello, World!\n";
-    std::cout << message;
+    auto input = std::cin.rdbuf();
+    std::cout << input;
     return 0;
 }
-''')
+'''
 
-del make_executor, env
+initialize = Executor.initialize

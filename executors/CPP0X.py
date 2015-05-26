@@ -1,14 +1,8 @@
-from judgeenv import env
-from .GCCExecutor import make_executor
+from .CPP11 import Executor as CPP11Executor
 
-Executor, initialize = make_executor('CPP0X', 'g++11', ['-std=c++0x'], '.cpp', r'''
-#include <iostream>
 
-int main() {
-    auto message = "Hello, World!\n";
-    std::cout << message;
-    return 0;
-}
-''')
+class Executor(CPP11Executor):
+    std = 'c++0x'
+    name = 'CPP0X'
 
-del make_executor, env
+initialize = Executor.initialize

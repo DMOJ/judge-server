@@ -125,7 +125,7 @@ class GCCExecutor(ResourceProxy):
         print 'Self-testing: %s executor:' % cls.name,
         try:
             executor = cls('self-test', cls.test_program)
-            proc = executor.launch(time=1, memory=16384)
+            proc = executor.launch(time=1, memory=65536)
             test_message = 'echo: Hello, World!'
             stdout, stderr = proc.communicate(test_message)
             res = stdout.strip() == test_message and not stderr

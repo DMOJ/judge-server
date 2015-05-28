@@ -37,6 +37,6 @@ int main (int argc, const char * argv[]) {
             cls.objc_ldflags = check_output([env['runtime']['gnustep-config'], '--base-libs']).split()
         except CalledProcessError as e:
             return False
-        return super(Executor).initialize()
+        return super(Executor, cls).initialize()
 
 initialize = Executor.initialize

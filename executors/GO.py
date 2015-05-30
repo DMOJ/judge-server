@@ -1,3 +1,4 @@
+import os
 from .base_executor import CompiledExecutor
 from judgeenv import env
 
@@ -26,6 +27,9 @@ func main() {
 
     def get_compile_args(self):
         return [self.get_command(), 'build', self._code]
+
+    def get_nproc(self):
+        return [-1, 1][os.name == 'nt']
 
 
 initialize = Executor.initialize

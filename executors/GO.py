@@ -10,10 +10,12 @@ class Executor(CompiledExecutor):
     syscalls = ['getpid', 'getppid', 'clock_getres', 'timer_create', 'timer_settime',
                 'timer_delete', 'modify_ldt']
     command = env['runtime'].get('go')
+    test_name = 'echo'
     test_program = '''\
 package main
 
-import "fmt" "bufio"
+import "fmt"
+import "bufio"
 
 func main() {
     bio := bufio.NewReader(os.Stdin)

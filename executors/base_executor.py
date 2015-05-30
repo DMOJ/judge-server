@@ -26,6 +26,7 @@ class BaseExecutor(ResourceProxy):
     command = None
     name = '(unknown)'
     test_program = ''
+    test_name = 'self_test'
     test_time = 1
     test_memory = 65536
 
@@ -50,6 +51,9 @@ class BaseExecutor(ResourceProxy):
 
     def get_executable(self):
         return None
+
+    def get_cmdline(self):
+        raise NotImplementedError()
 
     def get_env(self):
         if WBoxPopen is not None:
@@ -102,7 +106,7 @@ class BaseExecutor(ResourceProxy):
 
         print 'Self-testing: %s executor:' % cls.name,
         try:
-            executor = cls('self_test', cls.test_program)
+            executor = cls(cls.test_name, cls.test_program)
             proc = executor.launch(time=cls.test_time, memory=cls.test_memory)
             test_message = 'echo: Hello, World!'
             stdout, stderr = proc.communicate(test_message)

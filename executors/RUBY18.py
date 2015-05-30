@@ -1,4 +1,7 @@
-from .ruby import make_executor, make_initialize
+from .ruby import RubyExecutor
 
-Executor = make_executor('ruby18')
-initialize = make_initialize('RUBY18', 'ruby18', Executor)
+
+class Executor(RubyExecutor):
+    name = 'RUBY18'
+
+initialize = Executor.initialize

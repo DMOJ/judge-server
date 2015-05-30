@@ -21,6 +21,9 @@ runpy.run_path(sys.argv[0], run_name='__main__')\
     def __init__(self, problem_id, source_code):
         super(PythonExecutor, self).__init__(problem_id, source_code)
 
+    def get_cmdline(self):
+        return [self.get_command(), '-BS', self._loader, self._code]
+
     def create_files(self, problem_id, source_code):
         self._loader = self._file('-loader.py')
         with open(self._code, 'wb') as fo, open(self._loader, 'wb') as loader:

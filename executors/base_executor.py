@@ -88,10 +88,14 @@ class BaseExecutor(ResourceProxy):
                      cwd=self._dir, **kwargs)
 
     @classmethod
+    def get_command(cls):
+        return cls.command
+
+    @classmethod
     def initialize(cls):
-        if cls.command is None:
+        if cls.get_command() is None:
             return False
-        if not os.path.isfile(cls.command):
+        if not os.path.isfile(cls.get_command()):
             return False
         if not cls.test_program:
             return True

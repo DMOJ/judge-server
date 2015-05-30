@@ -1,13 +1,13 @@
 from collections import deque
 import re
 
-from .base_executor import BaseExecutor
+from .base_executor import ScriptExecutor
 from result import Result
 
 retraceback = re.compile(r'Traceback \(most recent call last\):\n.*?\n([a-zA-Z_]\w*)(?::[^\n]*?)?$', re.S | re.M)
 
 
-class PythonExecutor(BaseExecutor):
+class PythonExecutor(ScriptExecutor):
     loader_script = '''\
 import runpy, sys, os
 del sys.argv[0]

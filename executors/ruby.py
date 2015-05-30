@@ -1,8 +1,8 @@
-from .base_executor import BaseExecutor
+from .base_executor import ScriptExecutor
 from judgeenv import env
 
 
-class RubyExecutor(BaseExecutor):
+class RubyExecutor(ScriptExecutor):
     ext = '.rb'
     name = 'RUBY'
     address_grace = 65536

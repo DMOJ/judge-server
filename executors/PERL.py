@@ -1,8 +1,8 @@
-from .base_executor import BaseExecutor
+from .base_executor import ScriptExecutor
 from judgeenv import env
 
 
-class Executor(BaseExecutor):
+class Executor(ScriptExecutor):
     ext = '.pl'
     name = 'PERL'
     command = env['runtime'].get('perl')

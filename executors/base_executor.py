@@ -1,6 +1,8 @@
 import os
 from subprocess import Popen
+import subprocess
 import sys
+from error import CompileError
 
 from .resource_proxy import ResourceProxy
 
@@ -26,22 +28,10 @@ class BaseExecutor(ResourceProxy):
     test_time = 1
     test_memory = 65536
 
-    def __init__(self, problem_id, source_code, *args, **kwargs):
+    def __init__(self, problem_id, source_code):
         super(BaseExecutor, self).__init__()
-        self._init(problem_id, source_code, *args, **kwargs)
-        self._code = self._file(problem_id + self.ext)
-        self.create_files(problem_id, source_code)
-        self.process_files()
-
-    def _init(self, problem_id, source_code, *args, **kwargs):
-        pass
-
-    def create_files(self, problem_id, source_code):
-        with open(self._code, 'wb') as fo:
-            fo.write(source_code)
-
-    def process_files(self):
-        pass
+        self.problem = problem_id
+        self.source = source_code
 
     def get_fs(self):
         return self.fs
@@ -122,3 +112,55 @@ class BaseExecutor(ResourceProxy):
             import traceback
             traceback.print_exc()
             return False
+
+
+class ScriptExecutor(BaseExecutor):
+    def __init__(self, problem_id, source_code):
+        super(ScriptExecutor, self).__init__(problem_id, source_code)
+        self._code = self._file(problem_id + self.ext)
+        self.create_files(problem_id, source_code)
+
+    def create_files(self, problem_id, source_code):
+        with open(self._code, 'wb') as fo:
+            fo.write(source_code)
+
+
+class CompiledExecutor(BaseExecutor):
+    def __init__(self, problem_id, source_code, *args, **kwargs):
+        super(CompiledExecutor, self).__init__(problem_id, source_code)
+        self.create_files(problem_id, source_code, *args, **kwargs)
+        self.warning = None
+        self._executable = self.compile()
+
+    def create_files(self, problem_id, source_code, *args, **kwargs):
+        self._code = self._file(problem_id + self.ext)
+        with open(self._code, 'wb') as fo:
+            fo.write(source_code)
+
+    def get_compile_args(self):
+        raise NotImplementedError()
+
+    def get_compile_env(self):
+        return None
+
+    def get_compile_popen_kwargs(self):
+        return {}
+
+    def get_compile_process(self):
+        return subprocess.Popen(self.get_compile_args(), stderr=subprocess.PIPE, cwd=self._dir,
+                                env=self.get_compile_env(), **self.get_compile_popen_kwargs())
+
+    def get_compile_output(self, process):
+        return process.communicate()[1]
+
+    def get_compiled_file(self):
+        return self._file(self.problem)
+
+    def compile(self):
+        process = self.get_compile_process()
+        output = self.get_compile_output(process)
+
+        if process.returncode != 0:
+            raise CompileError(output)
+        self.warning = output
+        return self.get_compiled_file()

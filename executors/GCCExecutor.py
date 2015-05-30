@@ -10,7 +10,7 @@ except ImportError:
 from error import CompileError
 from .utils import test_executor
 from .resource_proxy import ResourceProxy
-from .base_executor import BaseExecutor
+from .base_executor import CompiledExecutor
 from judgeenv import env
 
 C_FS = ['.*\.so', '/proc/meminfo', '/dev/null']
@@ -25,13 +25,12 @@ else:
     GCC_COMPILE.update(env['runtime'].get('gcc_compile', {}))
 
 
-class GCCExecutor(BaseExecutor):
+class GCCExecutor(CompiledExecutor):
     defines = []
     flags = []
     name = 'GCC'
 
-    def __init__(self, problem_id, main_source, aux_sources=None, fds=None, writable=(1, 2), *args, **kwargs):
-        super(BaseExecutor, self).__init__()
+    def create_files(self, problem_id, main_source, aux_sources=None, fds=None, writable=(1, 2)):
         if not aux_sources:
             aux_sources = {}
         aux_sources[problem_id + self.ext] = main_source
@@ -42,10 +41,7 @@ class GCCExecutor(BaseExecutor):
             with open(self._file(name), 'wb') as fo:
                 fo.write(source)
             sources.append(name)
-
-        self.warning = None
-        self.name = problem_id
-        self._executable = self.compile(sources)
+        self.sources = sources
         self._fds = fds
         self._writable = writable
 
@@ -66,19 +62,12 @@ class GCCExecutor(BaseExecutor):
             defines.append('-DWIN32')
         return defines
 
-    def compile(self, sources):
-        output_file = self._file('%s%s' % (self.name, self.get_executable_ext()))
+    def get_compile_args(self):
+        return ([self.command, '-Wall'] + self.sources + self.get_defines() + ['-O2', '-lm', '-march=native']
+               + self.get_flags() + self.get_ldflags() + ['-s', '-o', self.get_compiled_file()])
 
-        gcc_args = ([self.command, '-Wall'] + sources + self.get_defines() + ['-O2', '-lm', '-march=native']
-                    + self.get_flags() + self.get_ldflags() + ['-s', '-o', output_file])
-        gcc_process = subprocess.Popen(gcc_args, stderr=subprocess.PIPE,
-                                       cwd=self._dir, env=GCC_COMPILE)
-
-        _, output = gcc_process.communicate()
-        if gcc_process.returncode != 0:
-            raise CompileError(output)
-        self.warning = output
-        return output_file
+    def get_compile_env(self):
+        return GCC_COMPILE
 
     def get_fs(self):
         return ['.*\.so', '/proc/meminfo', '/dev/null']
@@ -87,7 +76,7 @@ class GCCExecutor(BaseExecutor):
         return CHROOTSecurity(self.get_fs(), writable=self._writable)
 
     def get_cmdline(self):
-        return [self.name]
+        return [self.problem]
 
     def get_executable(self):
         return self._executable

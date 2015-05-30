@@ -8,8 +8,6 @@ class Executor(PythonExecutor):
     command = env['runtime'].get('pypy')
     test_program = "print __import__('sys').stdin.read()"
     name = 'PYPY'
-
-    def get_fs(self):
-        return PYTHON_FS + ([env['runtime']['pypydir']] if 'pypydir' in env['runtime'] else [])
+    fs = PYTHON_FS + ([env['runtime']['pypydir']] if 'pypydir' in env['runtime'] else [])
 
 initialize = Executor.initialize

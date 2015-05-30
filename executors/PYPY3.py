@@ -14,9 +14,7 @@ class Executor(PythonExecutor):
     command = env['runtime'].get('pypy3')
     test_program = "print(__import__('sys').stdin.read(), end='')"
     name = 'PYPY3'
-
-    def get_fs(self):
-        return PYTHON_FS + ([env['runtime']['pypy3dir']] if 'pypy3dir' in env['runtime'] else [])
+    fs = PYTHON_FS + ([env['runtime']['pypy3dir']] if 'pypy3dir' in env['runtime'] else [])
 
     def get_security(self):
         sec = super(Executor, self).get_security()

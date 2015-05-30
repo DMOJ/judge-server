@@ -18,6 +18,8 @@ class BaseExecutor(ResourceProxy):
     ext = None
     network_block = True
     address_grace = 4096
+    nproc = 0
+    fs = ['.*\.so']
     command = None
     name = '(unknown)'
     test_program = ''
@@ -42,7 +44,7 @@ class BaseExecutor(ResourceProxy):
         pass
 
     def get_fs(self):
-        return ['.*\.so', '/proc/meminfo', '/dev/null']
+        return self.fs
 
     def get_security(self):
         if CHROOTSecurity is None:
@@ -68,19 +70,23 @@ class BaseExecutor(ResourceProxy):
         assert SecurePopen is not None
         return self.address_grace
 
+    def get_nproc(self):
+        return self.nproc
+
     if SecurePopen is None:
         def launch(self, *args, **kwargs):
             return WBoxPopen(self.get_cmdline() + list(args),
                              time=kwargs.get('time'), memory=kwargs.get('memory'),
                              cwd=self._dir, executable=self.get_executable(),
-                             network_block=True, env=self.get_env())
+                             network_block=True, env=self.get_env(),
+                             nproc=self.get_nproc() + 1)
     else:
         def launch(self, *args, **kwargs):
             return SecurePopen(self.get_cmdline() + list(args), executable=self.get_executable(),
                                security=self.get_security(), address_grace=self.get_address_grace(),
                                time=kwargs.get('time'), memory=kwargs.get('memory'),
                                stderr=(PIPE if kwargs.get('pipe_stderr', False) else None),
-                               env=self.get_env(), cwd=self._dir)
+                               env=self.get_env(), cwd=self._dir, nproc=self.get_nproc())
 
     def launch_unsafe(self, *args, **kwargs):
         return Popen(self.get_cmdline() + list(args),

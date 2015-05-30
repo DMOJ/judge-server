@@ -7,7 +7,7 @@ class Executor(CompiledExecutor):
     name = 'HASK'
     command = env['runtime'].get('ghc')
     syscalls = ['getpid', 'getppid', 'clock_getres', 'timer_create', 'timer_settime',
-                'timer_delete', 'sys_newselect']
+                'timer_delete', 'newselect']
     test_program = '''\
 main = do
     a <- getContents

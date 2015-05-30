@@ -1,6 +1,5 @@
 import os
 import subprocess
-import sys
 
 try:
     from cptbox import CHROOTSecurity, SecurePopen, PIPE
@@ -11,6 +10,7 @@ except ImportError:
 from error import CompileError
 from .utils import test_executor
 from .resource_proxy import ResourceProxy
+from .base_executor import BaseExecutor
 from judgeenv import env
 
 C_FS = ['.*\.so', '/proc/meminfo', '/dev/null']
@@ -25,16 +25,13 @@ else:
     GCC_COMPILE.update(env['runtime'].get('gcc_compile', {}))
 
 
-class GCCExecutor(ResourceProxy):
-    ext = None
+class GCCExecutor(BaseExecutor):
     defines = []
-    command = None
     flags = []
-    test_program = ''
     name = 'GCC'
 
-    def __init__(self, problem_id, main_source, aux_sources=None, fds=None, writable=(1, 2)):
-        super(GCCExecutor, self).__init__()
+    def __init__(self, problem_id, main_source, aux_sources=None, fds=None, writable=(1, 2), *args, **kwargs):
+        super(BaseExecutor, self).__init__()
         if not aux_sources:
             aux_sources = {}
         aux_sources[problem_id + self.ext] = main_source
@@ -48,8 +45,7 @@ class GCCExecutor(ResourceProxy):
 
         self.warning = None
         self.name = problem_id
-        output_file = self.compile(sources)
-        self._executable = output_file
+        self._executable = self.compile(sources)
         self._fds = fds
         self._writable = writable
 
@@ -90,54 +86,11 @@ class GCCExecutor(ResourceProxy):
     def get_security(self):
         return CHROOTSecurity(self.get_fs(), writable=self._writable)
 
-    if SecurePopen is None:
-        def launch(self, *args, **kwargs):
-            return WBoxPopen([self.name] + list(args), executable=self._executable,
-                             time=kwargs.get('time'), memory=kwargs.get('memory'),
-                             cwd=self._dir, env=GCC_ENV, network_block=True)
-    else:
-        def launch(self, *args, **kwargs):
-            return SecurePopen([self.name] + list(args),
-                               executable=self._executable,
-                               security=self.get_security(),
-                               time=kwargs.get('time'),
-                               memory=kwargs.get('memory'),
-                               stderr=(PIPE if kwargs.get('pipe_stderr', False) else None),
-                               env=GCC_ENV,
-                               cwd=self._dir, fds=self._fds)
+    def get_cmdline(self):
+        return [self.name]
 
-    def launch_unsafe(self, *args, **kwargs):
-        return subprocess.Popen([self.name] + list(args),
-                                executable=self._executable,
-                                env=GCC_ENV,
-                                cwd=self._dir,
-                                **kwargs)
-
-    @classmethod
-    def initialize(cls):
-        if cls.command is None:
-            return False
-        if not os.path.isfile(cls.command):
-            return False
-        if not cls.test_program:
-            return True
-
-        print 'Self-testing: %s executor:' % cls.name,
-        try:
-            executor = cls('self-test', cls.test_program)
-            proc = executor.launch(time=1, memory=65536)
-            test_message = 'echo: Hello, World!'
-            stdout, stderr = proc.communicate(test_message)
-            res = stdout.strip() == test_message and not stderr
-            print ['Failed', 'Success'][res]
-            if stderr:
-                print>>sys.stderr, stderr
-            return res
-        except Exception:
-            print 'Failed'
-            import traceback
-            traceback.print_exc()
-            return False
+    def get_env(self):
+        return GCC_ENV
 
 
 def make_executor(code, command, args, ext, test_code, _defines=None):

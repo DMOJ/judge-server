@@ -75,12 +75,6 @@ class GCCExecutor(CompiledExecutor):
     def get_security(self):
         return CHROOTSecurity(self.get_fs(), writable=self._writable)
 
-    def get_cmdline(self):
-        return [self.problem]
-
-    def get_executable(self):
-        return self._executable
-
     def get_env(self):
         return GCC_ENV
 

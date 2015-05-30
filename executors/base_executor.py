@@ -44,9 +44,6 @@ class BaseExecutor(ResourceProxy):
     def get_executable(self):
         return None
 
-    def get_cmdline(self):
-        return [self.get_command(), self._code]
-
     def get_env(self):
         if WBoxPopen is not None:
             return None
@@ -124,6 +121,9 @@ class ScriptExecutor(BaseExecutor):
         with open(self._code, 'wb') as fo:
             fo.write(source_code)
 
+    def get_cmdline(self):
+        return [self.get_command(), self._code]
+
 
 class CompiledExecutor(BaseExecutor):
     def __init__(self, problem_id, source_code, *args, **kwargs):
@@ -164,3 +164,9 @@ class CompiledExecutor(BaseExecutor):
             raise CompileError(output)
         self.warning = output
         return self.get_compiled_file()
+
+    def get_cmdline(self):
+        return [self.problem]
+
+    def get_executable(self):
+        return self._executable

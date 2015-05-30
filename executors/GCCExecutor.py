@@ -89,6 +89,9 @@ class GCCExecutor(BaseExecutor):
     def get_cmdline(self):
         return [self.name]
 
+    def get_executable(self):
+        return self._executable
+
     def get_env(self):
         return GCC_ENV
 

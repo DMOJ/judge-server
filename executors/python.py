@@ -20,9 +20,9 @@ runpy.run_path(sys.argv[0], run_name='__main__')\
 
     def __init__(self, problem_id, source_code):
         super(PythonExecutor, self).__init__(problem_id, source_code)
-        self._loader = self._file('-loader.py')
 
     def create_files(self, problem_id, source_code):
+        self._loader = self._file('-loader.py')
         with open(self._code, 'wb') as fo, open(self._loader, 'wb') as loader:
             # UTF-8 BOM instead of comment to not modify line numbers.
             fo.write('\xef\xbb\xbf')

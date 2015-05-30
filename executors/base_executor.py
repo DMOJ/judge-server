@@ -24,11 +24,15 @@ class BaseExecutor(ResourceProxy):
     test_time = 1
     test_memory = 65536
 
-    def __init__(self, problem_id, source_code):
+    def __init__(self, problem_id, source_code, *args, **kwargs):
         super(BaseExecutor, self).__init__()
+        self._init(problem_id, source_code, *args, **kwargs)
         self._code = self._file(problem_id + self.ext)
         self.create_files(problem_id, source_code)
         self.process_files()
+
+    def _init(self, problem_id, source_code, *args, **kwargs):
+        pass
 
     def create_files(self, problem_id, source_code):
         with open(self._code, 'wb') as fo:

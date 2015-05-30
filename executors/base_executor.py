@@ -76,7 +76,7 @@ class BaseExecutor(ResourceProxy):
                              network_block=True, env=self.get_env())
     else:
         def launch(self, *args, **kwargs):
-            return SecurePopen(self.get_cmdline() + list(args),
+            return SecurePopen(self.get_cmdline() + list(args), executable=self.get_executable(),
                                security=self.get_security(), address_grace=self.get_address_grace(),
                                time=kwargs.get('time'), memory=kwargs.get('memory'),
                                stderr=(PIPE if kwargs.get('pipe_stderr', False) else None),

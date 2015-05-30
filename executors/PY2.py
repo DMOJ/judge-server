@@ -18,13 +18,3 @@ class Executor(PythonExecutor):
 
 
 initialize = Executor.initialize
-
-
-def aliases():
-    if not 'python' in env['runtime']:
-        return []
-    stderr = Popen(['python', '-V'], executable=env['runtime']['python'], stderr=sPIPE).communicate()[1]
-    if '2.7' in stderr:
-        return ['PY2', 'PY27']
-    else:
-        return ['PY2']

@@ -1,36 +1,33 @@
 import os
 
 from .PYPY import PYTHON_FS
-from executors.python import PythonExecutor
-from executors.utils import test_executor
+from .python import PythonExecutor
 from judgeenv import env
 
 try:
-    from cptbox import CHROOTSecurity
-    from cptbox.syscalls import *
+    from cptbox.syscalls import sys_mkdir, sys_unlink
 except ImportError:
-    CHROOTSecurity = None
+    pass
 
 
 class Executor(PythonExecutor):
-    if CHROOTSecurity is not None:
-        def get_security(self):
-            sec = CHROOTSecurity(PYTHON_FS + ([env['runtime']['pypy3dir']] if 'pypy3dir' in env['runtime'] else []))
+    command = env['runtime'].get('pypy3')
+    test_program = "print(__import__('sys').stdin.read(), end='')"
+    name = 'PYPY3'
 
-            def unsafe_pypy3dir(debugger):
-                # Relies on the fact this user can't access here.
-                return debugger.readstr(debugger.uarg0).startswith(env['runtime']['pypy3dir'])
-            if not os.access(env['runtime']['pypy3dir'], os.W_OK):
-                sec[sys_mkdir] = unsafe_pypy3dir
-                sec[sys_unlink] = unsafe_pypy3dir
-            return sec
+    def get_fs(self):
+        return PYTHON_FS + ([env['runtime']['pypy3dir']] if 'pypy3dir' in env['runtime'] else [])
 
-    def get_executable(self):
-        return env['runtime']['pypy3']
+    def get_security(self):
+        sec = super(Executor, self).get_security()
 
+        def unsafe_pypy3dir(debugger):
+            # Relies on the fact this user can't access here.
+            return debugger.readstr(debugger.uarg0).startswith(env['runtime']['pypy3dir'])
 
-def initialize():
-    if not 'pypy3' in env['runtime']:
-        return False
-    return test_executor('PYPY3', Executor, 'print("Hello, World!")')
+        if not os.access(env['runtime']['pypy3dir'], os.W_OK):
+            sec[sys_mkdir] = unsafe_pypy3dir
+            sec[sys_unlink] = unsafe_pypy3dir
+        return sec
 
+initialize = Executor.initialize

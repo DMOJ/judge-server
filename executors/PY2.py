@@ -1,13 +1,6 @@
-from .utils import test_executor
-
-try:
-    from cptbox import CHROOTSecurity
-except ImportError:
-    CHROOTSecurity = None
-
 from judgeenv import env
-from subprocess import Popen, PIPE as sPIPE
 from .python import PythonExecutor
+
 
 PYTHON_FS = ['.*\.(?:so|py[co]?$)', '.*/lib(?:32|64)?/python[\d.]+/.*', '.*/lib/locale/', '/proc/meminfo$',
              '/etc/localtime$', '/dev/urandom$']
@@ -16,18 +9,15 @@ if 'python2dir' in env:
 
 
 class Executor(PythonExecutor):
-    if CHROOTSecurity is not None:
-        def get_security(self):
-            return CHROOTSecurity(PYTHON_FS)
+    command = env['runtime'].get('python')
+    test_program = "print __import__('sys').stdin.read()"
+    name = 'PY2'
 
-    def get_executable(self):
-        return env['runtime']['python']
+    def get_fs(self):
+        return PYTHON_FS
 
 
-def initialize():
-    if not 'python' in env['runtime']:
-        return False
-    return test_executor('PY2', Executor, 'print "Hello, World!"')
+initialize = Executor.initialize
 
 
 def aliases():

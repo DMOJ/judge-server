@@ -14,6 +14,7 @@ class Executor(CompiledExecutor):
     test_program = '''\
 package main
 
+import "os"
 import "fmt"
 import "bufio"
 

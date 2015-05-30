@@ -14,5 +14,8 @@ main = do
     putStr a
 '''
 
+    def get_compile_args(self):
+        return [self.get_command(), '-O', '-o', self.problem, self._code]
+
 
 initialize = Executor.initialize

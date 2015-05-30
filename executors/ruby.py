@@ -12,3 +12,6 @@ class RubyExecutor(BaseExecutor):
     @classmethod
     def get_command(cls):
         return env['runtime'].get(cls.name.lower())
+
+    def get_cmdline(self):
+        return [self.get_command(), self._code]

@@ -55,7 +55,7 @@ class BaseExecutor(ResourceProxy):
         return None
 
     def get_cmdline(self):
-        raise NotImplementedError
+        return [self.get_command(), self._code]
 
     def get_env(self):
         if WBoxPopen is not None:

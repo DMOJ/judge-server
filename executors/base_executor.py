@@ -8,9 +8,9 @@ from .resource_proxy import ResourceProxy
 
 
 try:
-    from cptbox import SecurePopen, PIPE, CHROOTSecurity
+    from cptbox import SecurePopen, PIPE, CHROOTSecurity, ALLOW, syscalls
 except ImportError:
-    SecurePopen, PIPE, CHROOTSecurity = None, None, None
+    SecurePopen, PIPE, CHROOTSecurity, ALLOW, syscalls = None, None, None, None, None
     from wbox import WBoxPopen
 else:
     WBoxPopen = None
@@ -22,6 +22,7 @@ class BaseExecutor(ResourceProxy):
     address_grace = 4096
     nproc = 0
     fs = ['.*\.so']
+    syscalls = []
     command = None
     name = '(unknown)'
     test_program = ''
@@ -36,10 +37,16 @@ class BaseExecutor(ResourceProxy):
     def get_fs(self):
         return self.fs
 
+    def get_allowed_syscalls(self):
+        return self.syscalls
+
     def get_security(self):
         if CHROOTSecurity is None:
             raise NotImplementedError('No security manager on Windows')
-        return CHROOTSecurity(self.get_fs())
+        sec = CHROOTSecurity(self.get_fs())
+        for name in self.get_allowed_syscalls():
+            sec[getattr(syscalls, 'sys_' + name)] = ALLOW
+        return sec
 
     def get_executable(self):
         return None

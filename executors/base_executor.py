@@ -50,7 +50,7 @@ class BaseExecutor(ResourceProxy):
         return CHROOTSecurity(self.get_fs())
 
     def get_executable(self):
-        raise None
+        return None
 
     def get_cmdline(self):
         raise NotImplementedError

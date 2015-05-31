@@ -3,6 +3,12 @@ import json
 import os
 import sys
 
+try:
+    import yaml
+except ImportError:
+    yaml = None
+
+
 __all__ = ['env', 'get_problem_root', 'get_problem_roots']
 
 _judge_dirs = ()
@@ -15,6 +21,17 @@ def unicodify(string):
     if isinstance(string, str):
         return string.decode(fs_encoding)
     return string
+
+
+def _get_default_model_file():
+    model_file = os.path.join(os.path.dirname(__file__), 'data', 'judge', 'judge.yml')
+    if os.path.exists(model_file):
+        if yaml is None:
+            print>>sys.stderr, 'Warning: found judge.yml but no yaml parser'
+        else:
+            return model_file
+    model_file = os.path.join(os.path.dirname(__file__), 'data', 'judge', 'judge.json')
+    return model_file
 
 
 _parser = argparse.ArgumentParser(description='''
@@ -33,11 +50,16 @@ server_port = _args.server_port
 
 model_file = _args.config
 if model_file is None:
-    model_file = os.path.join(os.path.dirname(__file__), 'data', 'judge', 'judge.json')
-    print >> sys.stderr, 'Warning: using default judge model path (%s) use --config to specify path' % model_file
+    model_file = _get_default_model_file()
+    print>>sys.stderr, 'Warning: using default judge model path (%s) use --config to specify path' % model_file
 
 with open(model_file) as init_file:
-    env = json.load(init_file)
+    if model_file.endswith('.json'):
+        env = json.load(init_file)
+    elif model_file.endswith(('.yml', '.yaml')):
+        env = yaml.safe_load(init_file)
+    else:
+        raise ValueError('Unknown judge model path')
     dirs = env.get('problem_storage_root', os.path.join('data', 'problems'))
     if isinstance(dirs, list):
         _judge_dirs = tuple(unicodify(os.path.normpath(os.path.join(_root, dir))) for dir in dirs)

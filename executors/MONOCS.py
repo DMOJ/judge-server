@@ -1,5 +1,6 @@
 import os
 import re
+import errno
 import subprocess
 
 from cptbox import CHROOTSecurity, SecurePopen, PIPE, ALLOW
@@ -40,6 +41,16 @@ class Executor(ResourceProxy):
         def tgkill(debugger):
             return debugger.arg0 == debugger.pid
         sec[sys_tgkill] = tgkill
+
+        def handle_kill(debugger):
+            def kill_return():
+                debugger.result = -errno.EPERM
+            if debugger.arg0 != debugger.pid:
+                debugger.syscall = debugger.getpid_syscall
+                debugger.on_return(kill_return)
+            return True
+        sec[sys_kill] = handle_kill
+
         # Mono uses sys_kill to signal all other instances of it.
 
         def unlink(debugger):

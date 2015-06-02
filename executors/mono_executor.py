@@ -26,7 +26,7 @@ class MonoExecutor(CompiledExecutor):
         return self._file('%s.exe' % self.problem)
 
     def get_cmdline(self):
-        return ['mono', self.name]
+        return ['mono', self._executable]
 
     def get_executable(self):
         return env['runtime']['mono']

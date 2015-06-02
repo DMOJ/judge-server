@@ -2,12 +2,10 @@ import sys
 import os
 import re
 import errno
-import subprocess
 from collections import defaultdict
 
 from cptbox import CHROOTSecurity, ALLOW
 from cptbox.syscalls import *
-from error import CompileError
 from .base_executor import CompiledExecutor
 from judgeenv import env
 
@@ -21,6 +19,7 @@ UNLINK_FS = re.compile('/dev/shm/mono.\d+$')
 
 class MonoExecutor(CompiledExecutor):
     name = 'MONO'
+    nproc = -1  # If you use Mono on Windows you are doing it wrong.
 
     def get_compiled_file(self):
         return self._file('%s.exe' % self.problem)

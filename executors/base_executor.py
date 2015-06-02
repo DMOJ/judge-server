@@ -158,8 +158,9 @@ class CompiledExecutor(BaseExecutor):
         return {}
 
     def get_compile_process(self):
-        return subprocess.Popen(self.get_compile_args(), stderr=subprocess.PIPE, cwd=self._dir,
-                                env=self.get_compile_env(), **self.get_compile_popen_kwargs())
+        kwargs = {'stderr': subprocess.PIPE, 'cwd': self._dir, 'env': self.get_compile_env()}
+        kwargs.update(self.get_compile_popen_kwargs())
+        return subprocess.Popen(self.get_compile_args(), **kwargs)
 
     def get_compile_output(self, process):
         return process.communicate()[1]

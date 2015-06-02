@@ -9,7 +9,8 @@ def test_executor(name, Executor, code, problem='self-test'):
         stdout, stderr = proc.communicate()
         res = stdout.strip() == 'Hello, World!' and not stderr
         print ['Failed', 'Success'][res]
-        if stderr:
+        if not res:
+            print>>sys.stdout, stdout
             print>>sys.stderr, stderr
         return res
     except Exception:

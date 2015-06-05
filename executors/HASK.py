@@ -8,7 +8,7 @@ class Executor(CompiledExecutor):
     fs = ['.*\.so', '/usr/']
     command = env['runtime'].get('ghc')
     syscalls = ['getpid', 'getppid', 'clock_getres', 'timer_create', 'timer_settime',
-                'timer_delete', 'newselect']
+                'timer_delete', 'newselect', 'select']
     test_program = '''\
 main = do
     a <- getContents

@@ -13,7 +13,7 @@ from judgeenv import env
 CS_FS = ['.*\.so', '/proc/(?:self/|xen)', '/dev/shm/', '/proc/stat', '/usr/lib/mono',
          '/etc/nsswitch.conf$', '/etc/passwd$', '/etc/mono/', '/dev/null$', '.*/.mono/',
          '/sys/']
-WRITE_FS = ['/proc/self/task/\d+/comm$']
+WRITE_FS = ['/proc/self/task/\d+/comm$', '/dev/shm/mono\.\d+$']
 UNLINK_FS = re.compile('/dev/shm/mono.\d+$')
 
 
@@ -68,6 +68,9 @@ class MonoExecutor(CompiledExecutor):
         def handle_write(debugger):
             return writable[debugger.arg0]
 
+        def handle_ftruncate(debugger):
+            return writable[debugger.arg0]
+
         def handle_kill(debugger):
             # Mono likes to signal other instances of it, but doesn't care if it fails.
             def kill_return():
@@ -84,14 +87,23 @@ class MonoExecutor(CompiledExecutor):
                 return False
             return True
 
+        def handle_socket(debugger):
+            def socket_return():
+                debugger.result = -errno.EACCES
+            debugger.syscall = debugger.getpid_syscall
+            debugger.on_return(socket_return)
+            return True
+
         sec[sys_open] = handle_open
         sec[sys_close] = handle_close
         sec[sys_dup2] = handle_dup
         sec[sys_dup3] = handle_dup
         sec[sys_write] = handle_write
+        sec[sys_ftruncate] = handle_ftruncate
         sec[sys_kill] = handle_kill
         sec[sys_tgkill] = handle_kill
         sec[sys_unlink] = unlink
+        sec[sys_socket] = handle_socket
         return sec
 
     @classmethod

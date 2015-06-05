@@ -24,7 +24,7 @@ class Executor(ResourceProxy):
                            security=CHROOTSecurity(PHP_FS + [self._script]),
                            time=kwargs.get('time'),
                            memory=kwargs.get('memory'),
-                           address_grace=32768,
+                           address_grace=131076,
                            env={'LANG': 'C'}, cwd=self._dir)
 
     def launch_unsafe(self, *args, **kwargs):

@@ -1,11 +1,6 @@
-from .GCCExecutor import make_executor
-from .utils import test_executor
-from error import CompileError
-from judgeenv import env
-import os
 import itertools
-
-OldExecutor, _ = make_executor('C', 'gcc', ['-std=c99'], '.c', None)
+from .C import Executor as CExecutor
+from error import CompileError
 
 template = '''\
 #include <stdio.h>
@@ -24,7 +19,10 @@ trans = {'>': '++ptr;', '<': '--ptr;',
          '[': 'while(*ptr){', ']': '}'}
 
 
-class Executor(OldExecutor):
+class Executor(CExecutor):
+    name = 'BF'
+    test_program = ',+[-.,+]'
+
     def __init__(self, problem_id, source_code):
         if source_code.count('[') != source_code.count(']'):
             raise CompileError('Unmatched brackets')
@@ -32,15 +30,4 @@ class Executor(OldExecutor):
         super(Executor, self).__init__(problem_id, code)
 
 
-def initialize():
-    if 'gcc' not in env['runtime']:
-        return False
-    if not os.path.isfile(env['runtime']['gcc']):
-        return False
-    return test_executor('BF', Executor, '''\
-++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->+>+[<]<-]>>.>---.+++++++..+++.>>++++.
-------------.<-.<.+++.------.--------.>>+.>++.
-''')
-
-
-del make_executor
+initialize = Executor.initialize

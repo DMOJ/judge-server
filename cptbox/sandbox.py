@@ -69,13 +69,14 @@ class _SecurePopen(Process):
             for i in xrange(SYSCALL_COUNT):
                 handler = security.get(i, DISALLOW)
                 call = translator[i][bitness == 64]
+                if call is None:
+                    continue
                 if not isinstance(handler, int):
                     if not callable(handler):
                         raise ValueError('Handler not callable: ' + handler)
                     self._callbacks[call] = handler
                     handler = _CALLBACK
-                if call is not None:
-                    self._handler(call, handler)
+                self._handler(call, handler)
 
         self._start_time = 0
         self._died_time = 0

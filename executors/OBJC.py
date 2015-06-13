@@ -14,11 +14,12 @@ class Executor(GCCExecutor):
 #import <Foundation/Foundation.h>
 
 int main (int argc, const char * argv[]) {
-        NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-        NSString *hello = @"Hello, World!";
-        printf("%s\n", [hello cStringUsingEncoding:NSUTF8StringEncoding]);
-        [pool drain];
-        return 0;
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    int ch;
+    while ((ch = getchar()) != EOF)
+        putchar(ch);
+    [pool drain];
+    return 0;
 }
 '''
 
@@ -27,6 +28,9 @@ int main (int argc, const char * argv[]) {
 
     def get_ldflags(self):
         return self.objc_ldflags + super(Executor, self).get_ldflags()
+
+    def get_fs(self):
+        return super(Executor, self).get_fs() + ['/proc/\d+/cmdline', '/usr/lib']
 
     @classmethod
     def initialize(cls):

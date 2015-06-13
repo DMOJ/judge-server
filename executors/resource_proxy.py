@@ -10,6 +10,10 @@ class ResourceProxy(object):
         self._dir = tempfile.mkdtemp(dir=env.get('tempdir'))
 
     def cleanup(self):
+        if not hasattr(self, '_dir'):
+            # We are really toasted, as constructor failed.
+            print 'ResourceProxy error: not initialized?'
+            return
         try:
             shutil.rmtree(self._dir)  # delete directory
         except OSError as exc:

@@ -1,8 +1,17 @@
 from judgeenv import env
-from .GCCExecutor import make_executor
+from .GCCExecutor import GCCExecutor
 
-Executor, initialize = make_executor('F95', 'gfortran', [], '.f95', '''\
-PRINT *, "Hello, World!"
-END''')
 
-del make_executor, env
+class Executor(GCCExecutor):
+    name = 'F95'
+    command = env['runtime'].get('gfortran')
+    ext = '.f95'
+    test_program = '''\
+character(100) :: line
+read(*,'(A)') line
+write(*,'(A)') line
+end
+'''
+
+initialize = Executor.initialize
+

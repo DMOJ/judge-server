@@ -6,7 +6,7 @@ from judgeenv import env
 class Executor(CompiledExecutor):
     ext = '.go'
     name = 'GO'
-    address_grace = 131072
+    address_grace = 786432
     fs = ['.*\.so', '/proc/stat$']
     syscalls = ['getpid', 'getppid', 'clock_getres', 'timer_create', 'timer_settime',
                 'timer_delete', 'modify_ldt', 'sched_getaffinity']

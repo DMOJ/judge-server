@@ -18,17 +18,17 @@ class Executor(ResourceProxy):
             fo.write(source_code)
         obj_file = self._file('%s.o' % problem_id)
         self._executable = output_file = self._file(str(problem_id))
-        nasm_process = subprocess.Popen([env['runtime']['nasm'], '-f', 'elf', source_code_file, '-o', obj_file],
+        nasm_process = subprocess.Popen([env['runtime']['nasm'], '-f', 'elf32', source_code_file, '-o', obj_file],
                                         stderr=subprocess.PIPE, cwd=self._dir)
         _, compile_error = nasm_process.communicate()
         if nasm_process.returncode != 0:
             raise CompileError(compile_error)
 
         if 'gcc' in env['runtime'] and source_code.startswith('; libc'):
-            ld_process = subprocess.Popen([env['runtime']['gcc'], obj_file, '-o', output_file],
+            ld_process = subprocess.Popen([env['runtime']['gcc'], '-m32', obj_file, '-o', output_file],
                                           stderr=subprocess.PIPE, cwd=self._dir)
         else:
-            ld_process = subprocess.Popen([env['runtime']['ld'], '-s', obj_file, '-o', output_file],
+            ld_process = subprocess.Popen([env['runtime']['ld'], '-melf_i386', '-s', obj_file, '-o', output_file],
                                           stderr=subprocess.PIPE, cwd=self._dir)
         _, link_error = ld_process.communicate()
         if ld_process.returncode != 0:

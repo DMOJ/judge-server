@@ -174,6 +174,6 @@ public class self_test {
             return False
         if not os.path.isfile(env['runtime'][cls.JAVA]) or not os.path.isfile(env['runtime'][cls.JAVAC]):
             return False
-        return test_executor(cls.name, Executor, cls.test_program, problem='self_test')
+        return test_executor(cls.name, cls, cls.test_program, problem='self_test')
 
 initialize = Executor.initialize

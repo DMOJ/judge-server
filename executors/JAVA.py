@@ -123,6 +123,13 @@ class JavaPopen(object):
 class Executor(ResourceProxy):
     JAVA = 'java'
     JAVAC = 'javac'
+    name = 'JAVA'
+    test_program = '''\
+public class self_test {
+    public static void main(String[] args) {
+        System.out.println("Hello, World!");
+    }
+}'''
 
     def __init__(self, problem_id, source_code):
         super(Executor, self).__init__()
@@ -161,16 +168,12 @@ class Executor(ResourceProxy):
                      cwd=self._dir,
                      **kwargs)
 
+    @classmethod
+    def initialize(cls):
+        if cls.JAVA not in env['runtime'] or cls.JAVAC not in env['runtime']:
+            return False
+        if not os.path.isfile(env['runtime'][cls.JAVA]) or not os.path.isfile(env['runtime'][cls.JAVAC]):
+            return False
+        return test_executor(cls.name, Executor, cls.test_program, problem='self_test')
 
-def initialize():
-    if 'java' not in env['runtime']:
-        return False
-    if not os.path.isfile(env['runtime']['java']):
-        return False
-    return test_executor('JAVA', Executor, '''\
-public class self_test {
-    public static void main(String[] args) {
-        System.out.println("Hello, World!");
-    }
-}
-''', problem='self_test')
+initialize = Executor.initialize

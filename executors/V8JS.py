@@ -30,7 +30,7 @@ class Executor(ResourceProxy):
                                security=CHROOTSecurity([]),
                                time=kwargs.get('time'),
                                memory=kwargs.get('memory'),
-                               address_grace=65536,
+                               address_grace=786432,
                                env={}, cwd=self._dir)
 
     def launch_unsafe(self, *args, **kwargs):

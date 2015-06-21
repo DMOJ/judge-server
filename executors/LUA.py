@@ -7,7 +7,7 @@ class Executor(ScriptExecutor):
     name = 'LUA'
     command = env['runtime'].get('lua')
     address_grace = 131072
-    test_program = "io.write(io.read('*all')"
+    test_program = "io.write(io.read('*all'))"
     fs = ['.*\.(so|lua$)']
 
 

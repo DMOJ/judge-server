@@ -163,6 +163,7 @@ public class JavaSafeExecutor {
         long uptime = ManagementFactory.getRuntimeMXBean().getUptime();
         if (TL > uptime)
             TL -= uptime;
+        TL = Math.max(TL, 0);
 
         shockerThread = new ShockerThread(TL, submissionThread);
         System.setSecurityManager(new SubmissionSecurityManager());

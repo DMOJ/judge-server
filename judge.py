@@ -46,8 +46,6 @@ import packet
 
 
 class CheckerResult(object):
-    __slots__ = ('passed', 'points', 'feedback')
-
     def __init__(self, passed, points, feedback=None):
         self.passed = passed
         self.points = points

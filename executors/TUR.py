@@ -7,6 +7,7 @@ class Executor(CompiledExecutor):
     name = 'TUR'
     fs = ['.*\.so', '.*\.tbc$']
     command = env['runtime'].get('tprologc')
+    syscalls = ['getpid']
     test_program = '''\
 var turing_sucks : string
 get turing_sucks : *

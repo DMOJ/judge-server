@@ -24,10 +24,10 @@ class ResourceProxy(object):
         return os.path.join(self._dir, file)
 
     def launch(self, *args, **kwargs):
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def launch_unsafe(self, *args, **kwargs):
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def __del__(self):
         self.cleanup()

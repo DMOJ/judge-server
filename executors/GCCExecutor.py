@@ -1,5 +1,4 @@
 import os
-import subprocess
 
 try:
     from cptbox import CHROOTSecurity, SecurePopen, PIPE
@@ -7,9 +6,6 @@ except ImportError:
     CHROOTSecurity, SecurePopen, PIPE = None, None, None
     from wbox import WBoxPopen
 
-from error import CompileError
-from .utils import test_executor
-from .resource_proxy import ResourceProxy
 from .base_executor import CompiledExecutor
 from judgeenv import env
 

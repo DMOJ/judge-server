@@ -12,7 +12,7 @@ class Executor(ScriptExecutor):
     command = env['runtime'].get('tclsh')
     fs = ['.*\.(so|tcl)', '/etc/nsswitch\.conf$', '/etc/passwd$']
     test_program = '''\
-gets stdin $input
+gets stdin input
 puts $input
 '''
 

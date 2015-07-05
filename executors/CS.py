@@ -10,7 +10,7 @@ class Executor(CLRExecutor):
 
 
 def initialize():
-    if not 'csc' in env['runtime']:
+    if 'csc' not in env['runtime']:
         return False
     if not os.path.isfile(env['runtime']['csc']):
         return False

@@ -40,7 +40,7 @@ class Executor(ResourceProxy):
 
 
 def initialize():
-    if not 'dart' in env['runtime']:
+    if 'dart' not in env['runtime']:
         return False
     return test_executor('DART', Executor, '''void main() {
     print("Hello, World!");

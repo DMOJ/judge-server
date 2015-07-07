@@ -11,7 +11,7 @@ class Executor(CLRExecutor):
 
 
 def initialize():
-    if not 'fsc' in env['runtime']:
+    if 'fsc' not in env['runtime']:
         return False
     if not os.path.isfile(env['runtime']['fsc']):
         return False

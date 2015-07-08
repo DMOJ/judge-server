@@ -53,7 +53,7 @@ class Executor(ResourceProxy):
 
 
 def initialize():
-    if not 'racket' in env['runtime']:
+    if 'racket' not in env['runtime']:
         return False
     return test_executor('RKT', Executor, '''\
 #lang racket

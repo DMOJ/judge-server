@@ -8,7 +8,7 @@ class Executor(ScriptExecutor):
     command = env['runtime'].get('v8dmoj')
     test_program = 'print(gets());'
     address_grace = 786432
-    fs = []
+    fs = []  # v8dmoj binaries are distributed statically linked
 
 
 initialize = Executor.initialize

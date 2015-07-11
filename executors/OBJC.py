@@ -9,6 +9,7 @@ class Executor(GCCExecutor):
     objc_ldflags = []
     command = env['runtime'].get('gobjc')
     name = 'OBJC'
+    address_grace = 131072
 
     test_program = r'''
 #import <Foundation/Foundation.h>

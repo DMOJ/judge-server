@@ -35,5 +35,7 @@ puts $input
         security[sys_access] = True
         security[sys_getsockname] = True
 
+        return security
+
 
 initialize = Executor.initialize

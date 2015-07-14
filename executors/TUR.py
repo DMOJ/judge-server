@@ -5,7 +5,7 @@ from judgeenv import env
 class Executor(CompiledExecutor):
     ext = '.t'
     name = 'TUR'
-    fs = ['.*\.so', '.*\.tbc$']
+    fs = ['.*\.(?:so|tbc$)']
     command = env['runtime'].get('tprologc')
     syscalls = ['getpid']
     test_program = '''\

@@ -16,7 +16,7 @@ class Executor(ResourceProxy):
         source_code_file = self._file('%s.cbl' % problem_id)
         with open(source_code_file, 'wb') as fo:
             fo.write(source_code)
-        self._executable = output_file = self._file(str(problem_id))
+        self._executable = self._file(str(problem_id))
         cbl_args = [env['runtime']['cobc'], '-x', source_code_file]
         cbl_process = subprocess.Popen(cbl_args, stdout=subprocess.PIPE, cwd=self._dir)
         compile_error, _ = cbl_process.communicate()

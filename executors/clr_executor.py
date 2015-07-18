@@ -217,10 +217,10 @@ class CLRExecutor(ResourceProxy):
                                                   for arg in self.compile_args]
 
     def compile(self):
-        csc_process = subprocess.Popen(self.get_compile_args(), stderr=subprocess.STDOUT,
+        compile_process = subprocess.Popen(self.get_compile_args(), stderr=subprocess.STDOUT,
                                        stdout=subprocess.PIPE, cwd=self._dir)
-        compile_error, _ = csc_process.communicate()
-        if csc_process.returncode != 0:
+        compile_error, _ = compile_process.communicate()
+        if compile_process.returncode != 0:
             raise CompileError(compile_error)
         self.warning = compile_error
 

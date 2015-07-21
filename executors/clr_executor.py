@@ -18,7 +18,11 @@ reexc = re.compile(r'E1AE1B1F-C5FE-4335-B642-9446634350A0:\r?\n(.*?):')
 
 
 class CLRProcess(object):
-    csbox = os.path.join(os.path.dirname(__file__), 'csbox.exe')
+    if 'csbox' in env['runtime']:
+        csbox = env['runtime']['csbox']
+    else:
+        csbox = os.path.join(os.path.dirname(__file__), 'csbox.exe')
+
     if not isinstance(csbox, unicode):
         csbox = csbox.decode('mbcs')
 

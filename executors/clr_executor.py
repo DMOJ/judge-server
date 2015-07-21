@@ -177,6 +177,7 @@ class CLRProcess(object):
             match = reexc.search(stderr)
             return match and match.group(1)
 
+    # TODO: avoid hijacking private methods and stealing their guts.
     _communicate = subprocess.Popen._communicate.im_func
     _readerthread = subprocess.Popen._readerthread.im_func
     universal_newlines = False

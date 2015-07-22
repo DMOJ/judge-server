@@ -36,6 +36,8 @@ static int check_standard(const char *judge, size_t jlen, const char *process, s
 	size_t j = 0, p = 0;
 	int nj, np;
 
+	while (j < jlen && iswhite(judge[j])) ++j;
+	while (p < plen && iswhite(process[p])) ++p;
 	for (;;) {
 		nj = np = 0;
 		while (j < jlen && ((nj |= isline(judge[j])), iswhite(judge[j]))) ++j;

@@ -184,6 +184,7 @@ class CLRProcess(object):
     # TODO: avoid hijacking private methods and stealing their guts.
     _communicate = subprocess.Popen._communicate.im_func
     _readerthread = subprocess.Popen._readerthread.im_func
+    # Duck-typing: this is only to appear like a Popen to fool Popen's guts.
     universal_newlines = False
 
     def communicate(self, stdin=None):

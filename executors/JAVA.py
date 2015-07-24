@@ -1,15 +1,16 @@
 import os
 import re
-from subprocess import Popen, PIPE
 import sys
 import time
 import errno
+from subprocess import Popen, PIPE
+
 from communicate import safe_communicate, OutputLimitExceeded
 from error import CompileError
 from .utils import test_executor
-
 from .resource_proxy import ResourceProxy
 from judgeenv import env
+
 
 try:
     from winutils import max_memory, execution_time

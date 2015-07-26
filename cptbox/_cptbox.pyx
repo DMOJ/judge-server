@@ -1,12 +1,12 @@
 from libc.stdio cimport FILE, fopen, fclose, fgets, sprintf
 from libc.stdlib cimport atoi, malloc, free, strtoul
 from libc.string cimport strncmp, strlen
+from libc.signal cimport SIGSTOP
 from posix.unistd cimport close, dup2, getpid, execve, chdir
 from posix.resource cimport setrlimit, rlimit, rusage, \
     RLIMIT_AS, RLIMIT_DATA, RLIMIT_CPU, RLIMIT_STACK, RLIMIT_CORE, RLIM_INFINITY
 from posix.signal cimport kill
 from posix.types cimport pid_t
-from libc.signal cimport SIGSTOP
 
 cdef extern from 'ptbox.h' nogil:
     ctypedef int (*pt_handler_callback)(void *context, int syscall)

@@ -31,11 +31,11 @@ else:
                     self.load = pt / 100.
                 sleep(1)
 
-    load_thread = SystemLoadThread()
-    load_thread.start()
+    _load_thread = SystemLoadThread()
+    _load_thread.start()
 
     def load_fair():
-        return 'load', load_thread.load
+        return 'load', _load_thread.load
 
 
 def cpu_count():

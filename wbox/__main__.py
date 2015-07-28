@@ -6,6 +6,9 @@ import os
 def main():
     dir = os.path.dirname(__file__)
 
+    print '        wbox Test Script'
+    print '====Please run as administrator==='
+
     def run_file(file):
         print 'Running', file
         child = WBoxPopen(['python', os.path.join(dir, file)], 1, 16384, executable=sys.executable, network_block=True)

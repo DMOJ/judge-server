@@ -44,9 +44,9 @@ class Executor(ResourceProxy):
         self.warning = compile_error
 
     def launch(self, *args, **kwargs):
-            return WBoxPopen([self.name] + list(args), executable=self._executable,
-                             time=kwargs.get('time'), memory=kwargs.get('memory'),
-                             cwd=self._dir, env=VC_ENV, network_block=True)
+        return WBoxPopen([self.name] + list(args), executable=self._executable,
+                         time=kwargs.get('time'), memory=kwargs.get('memory'),
+                         cwd=self._dir, env=VC_ENV, network_block=True)
 
     def launch_unsafe(self, *args, **kwargs):
         return subprocess.Popen([self.name] + list(args), executable=self._executable,

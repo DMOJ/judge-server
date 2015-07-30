@@ -4,11 +4,6 @@ from .PYPY import PYTHON_FS
 from .python import PythonExecutor
 from judgeenv import env
 
-try:
-    from cptbox.syscalls import sys_mkdir, sys_unlink
-except ImportError:
-    pass
-
 
 class Executor(PythonExecutor):
     command = env['runtime'].get('pypy3')
@@ -17,6 +12,8 @@ class Executor(PythonExecutor):
     fs = PYTHON_FS + [command] + ([env['runtime']['pypy3dir']] if 'pypy3dir' in env['runtime'] else [])
 
     def get_security(self):
+        from cptbox.syscalls import sys_mkdir, sys_unlink
+
         sec = super(Executor, self).get_security()
 
         def unsafe_pypy3dir(debugger):

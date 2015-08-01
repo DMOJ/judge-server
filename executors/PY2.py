@@ -8,7 +8,7 @@ class Executor(PythonExecutor):
     name = 'PY2'
 
     fs = ['.*\.(?:so|py[co]?$)', '.*/lib(?:32|64)?/python[\d.]+/.*', '.*/lib/locale/', '/proc/meminfo$',
-                 '/etc/localtime$', '/dev/urandom$']
+          '/etc/localtime$', '/dev/urandom$']
     if 'python2dir' in env:
         fs += [str(env['python3dir'])]
 

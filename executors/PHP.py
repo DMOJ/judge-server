@@ -8,6 +8,7 @@ class Executor(ScriptExecutor):
     command = env['runtime'].get('php')
     address_grace = 131072
     test_program = '<?php while($f = fgets(STDIN)) echo $f;'
+
     fs = ['.*\.so', '/etc/localtime$', '.*/php[\w-]*\.ini$']
     if 'phpconfdir' in env['runtime']:
         fs += [env['runtime']['phpconfdir']]

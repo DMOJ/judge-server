@@ -197,7 +197,7 @@ class Judge(object):
                     # Launch an executor for the given language
                     # The executor is responsible for writing source files and compiling (if applicable)
                     if 'handler' in init_data:
-                        siggraders = ('C', 'CPP', 'CPP0X', 'CPP11')
+                        siggraders = ('C', 'CPP', 'CPP0X', 'CPP11', 'CPP14')
 
                         for i in xrange(3, -1, -1):
                             if siggraders[i] in executors:

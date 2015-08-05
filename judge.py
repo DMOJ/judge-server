@@ -199,9 +199,9 @@ class Judge(object):
                     if 'handler' in init_data:
                         siggraders = ('C', 'CPP', 'CPP0X', 'CPP11', 'CPP14')
 
-                        for i in xrange(len(siggraders) - 1, -1, -1):
-                            if siggraders[i] in executors:
-                                siggrader = siggraders[i]
+                        for i in reversed(siggraders):
+                            if i in executors:
+                                siggrader = i
                                 break
                         else:
                             raise CompileError("Can't signature grade. Why did I get this submission?")

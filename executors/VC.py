@@ -31,11 +31,12 @@ class Executor(ResourceProxy):
                 fo.write(source)
             sources.append(name)
         output_file = self._file('%s.exe' % problem_id)
-        cl_args = (['cl', '-nologo'] + sources + ['-W4', '-DONLINE_JUDGE', '-DWIN32', '-D_CRT_SECURE_NO_WARNINGS',
-                    '-Ox', '-link', '-stack:67108864', '-Fe%s' % output_file])
 
+        cl_args = ['cl', '-nologo'] + sources + ['-W4', '-DONLINE_JUDGE', '-DWIN32', '-D_CRT_SECURE_NO_WARNINGS',
+                   '-Ox', '-link', '-stack:67108864', '-Fe%s' % output_file]
         cl_process = subprocess.Popen(cl_args, stderr=subprocess.PIPE, executable=env['runtime']['cl.exe'],
                                       cwd=self._dir, env=VC_COMPILE)
+
         _, compile_error = cl_process.communicate()
         if cl_process.returncode != 0:
             raise CompileError(compile_error)

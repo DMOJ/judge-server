@@ -1,6 +1,3 @@
-__author__ = 'Quantum'
-
-
 class Result(object):
     AC = 0
     WA = 1 << 0

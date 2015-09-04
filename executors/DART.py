@@ -1,8 +1,9 @@
+from subprocess import Popen
+
 from .resource_proxy import ResourceProxy
 from .utils import test_executor
 from cptbox import SecurePopen, CHROOTSecurity, PIPE
 from judgeenv import env
-from subprocess import Popen, PIPE as sPIPE
 from cptbox.syscalls import *
 
 DART_FS = ['.*\.(so|dart)', '/proc/meminfo$', '/dev/urandom$']

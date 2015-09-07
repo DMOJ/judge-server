@@ -1,6 +1,7 @@
+from subprocess import check_output, CalledProcessError
+
 from GCCExecutor import GCCExecutor
 from judgeenv import env
-from subprocess import check_output, CalledProcessError
 
 
 class Executor(GCCExecutor):

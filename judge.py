@@ -43,6 +43,17 @@ from communicate import safe_communicate, OutputLimitExceeded
 from executors import executors
 import checkers
 import packet
+import re
+
+try:
+    import ansi2html
+
+    def format_ansi(s):
+        return ansi2html.Ansi2HTMLConverter().convert(s)
+except ImportError:
+    def format_ansi(s):
+        # http://stackoverflow.com/questions/13506033/filtering-out-ansi-escape-sequences
+        return re.sub(r'\x1b\[([0-9,A-Z]{1,2}(;[0-9]{1,2})?(;[0-9]{3})?)?[m|K]?', '', s)
 
 
 class CheckerResult(object):
@@ -177,9 +188,9 @@ class Judge(object):
         try:
             problem_root = get_problem_root(problem_id)
             if problem_root is None:
-                print>>sys.stderr, 'Unsupported problem:', problem_id
-                print>>sys.stderr, 'Please install watchdog so that the bridge can be notified of problems files' \
-                                   ' disappearing'
+                print>> sys.stderr, 'Unsupported problem:', problem_id
+                print>> sys.stderr, 'Please install watchdog so that the bridge can be notified of problems files' \
+                                    ' disappearing'
                 self.packet_manager.internal_error_packet(dedent('''\
                     Unsupported problem: %s.
 
@@ -219,9 +230,10 @@ class Judge(object):
                             with open(entry_path, 'r') as entry_point:
                                 with open(header_path, 'r') as header:
                                     aux_sources[problem_id + '_submission'] = (
-                                        '#include "%s"\n#define main main_%s\n' %
-                                        (handler_data['header'],
-                                        str(uuid.uuid4()).replace('-', ''))) + source_code
+                                                                                  '#include "%s"\n#define main main_%s\n' %
+                                                                                  (handler_data['header'],
+                                                                                   str(uuid.uuid4()).replace('-',
+                                                                                                             ''))) + source_code
                                     aux_sources[handler_data['header']] = header.read()
                                     entry = entry_point.read()
                             # Compile as CPP11 regardless of what the submission language is
@@ -237,7 +249,7 @@ class Judge(object):
                 except CompileError as e:
                     print 'Compile Error'
                     print e.args[0]
-                    self.packet_manager.compile_error_packet(e.args[0])
+                    self.packet_manager.compile_error_packet(format_ansi(e.args[0]))
                     return
 
                 try:
@@ -269,7 +281,7 @@ class Judge(object):
 
                 case = 1
                 if hasattr(executor, 'warning') and executor.warning:
-                    self.packet_manager.compile_message_packet(executor.warning)
+                    self.packet_manager.compile_message_packet(format_ansi(executor.warning))
                 for result in self.run(executor, init_data, check_adapter, problem_id,
                                        time=time_limit, memory=memory_limit,
                                        short_circuit=short_circuit, source_code=original_source,
@@ -501,8 +513,10 @@ class Judge(object):
                             # hanging the main thread
                             try:
                                 result = interactive_grader.grade(case_number, process,
-                                                                  case_input=input_data and cStringIO.StringIO(input_data),
-                                                                  case_output=output_data and cStringIO.StringIO(output_data),
+                                                                  case_input=input_data and cStringIO.StringIO(
+                                                                      input_data),
+                                                                  case_output=output_data and cStringIO.StringIO(
+                                                                      output_data),
                                                                   point_value=point_value,
                                                                   source_code=source_code)
                                 if isinstance(result, tuple) or isinstance(result, list):

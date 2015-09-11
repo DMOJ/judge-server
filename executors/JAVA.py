@@ -21,7 +21,7 @@ else:
     windows = True
 
 recomment = re.compile(r'/\*.*?\*/', re.DOTALL)
-restring = re.compile(r'''(["'])(?:\\.|[^"\\])*\1''', re.DOTALL)
+restring = re.compile(r''''(?:\\.|[^'\\])'|"(?:\\.|[^"\\])*"''', re.DOTALL)
 reinline_comment = re.compile('//.*$', re.MULTILINE)
 reclass = re.compile(r'\bpublic\s+class\s+([_a-zA-Z\$][_0-9a-zA-z\$]*?)\b')
 repackage = re.compile(r'\bpackage\s+([^.;]+(?:\.[^.;]+)*?);')

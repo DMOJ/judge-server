@@ -59,7 +59,7 @@ class GCCExecutor(CompiledExecutor):
         return defines
 
     def get_compile_args(self):
-        return ([self.command, '-Wall'] + self.sources + self.get_defines() + ['-O2', '-lm', '-march=native']
+        return ([self.command, '-Wall', '-fdiagnostics-color=always'] + self.sources + self.get_defines() + ['-O2', '-lm', '-march=native']
                + self.get_flags() + self.get_ldflags() + ['-s', '-o', self.get_compiled_file()])
 
     def get_compile_env(self):

@@ -50,7 +50,8 @@ try:
     import ansi2html
 
     def format_ansi(s):
-        return ansi2html.Ansi2HTMLConverter(inline=True).convert(s)
+        conv = ansi2html.Ansi2HTMLConverter(inline=True)
+        return '%s<pre class="ansi2html-content">%s</pre>' % (conv.produce_headers(), conv.convert(s, full=False))
 except ImportError:
     def format_ansi(s):
         escape = OrderedDict([

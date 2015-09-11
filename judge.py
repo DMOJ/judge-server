@@ -49,7 +49,7 @@ try:
     import ansi2html
 
     def format_ansi(s):
-        return ansi2html.Ansi2HTMLConverter().convert(s)
+        return ansi2html.Ansi2HTMLConverter(inline=True).convert(s)
 except ImportError:
     def format_ansi(s):
         # http://stackoverflow.com/questions/13506033/filtering-out-ansi-escape-sequences

@@ -439,6 +439,7 @@ class Judge(object):
             A Result instance representing the execution result of the submission program.
         """
         output_prefix_length = init_data.get('output_prefix_length', 32)
+        unbuffered = init_data.get('unbuffered', False)
         time_adjust = init_data.get('time_adjust', 1.0)
         forward_test_cases = []
         for case in init_data['test_cases']:
@@ -512,7 +513,7 @@ class Judge(object):
                             output_data = output_data.replace('\r\n', '\n')  # .replace('\r', '\n')
 
                         # Launch a process for the current test case
-                        self.current_proc = executor.launch(time=time, memory=memory, pipe_stderr=True)
+                        self.current_proc = executor.launch(time=time, memory=memory, pipe_stderr=True, unbuffered=unbuffered)
 
                         process = self.current_proc
 

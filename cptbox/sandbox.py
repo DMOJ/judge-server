@@ -6,6 +6,7 @@ import select
 import errno
 import signal
 import sys
+import pty
 from _cptbox import Process
 from .syscalls import translator, SYSCALL_COUNT, by_id
 
@@ -44,7 +45,7 @@ def _eintr_retry_call(func, *args):
 
 class _SecurePopen(Process):
     def __init__(self, bitness, args, executable=None, security=None, time=0, memory=0, stdin=PIPE, stdout=PIPE,
-                 stderr=None, env=None, nproc=0, address_grace=4096, cwd='', fds=None):
+                 stderr=None, env=None, nproc=0, address_grace=4096, cwd='', fds=None, unbuffered=False):
         self._bitness = bitness
         self._executable = executable or _find_exe(args[0])
         self._args = args
@@ -58,7 +59,7 @@ class _SecurePopen(Process):
         self._nproc = nproc
         self._tle = False
         self._fds = fds
-        self.__init_streams(stdin, stdout, stderr)
+        self.__init_streams(stdin, stdout, stderr, unbuffered)
 
         self._security = security
         self._callbacks = [None] * SYSCALL_COUNT
@@ -176,11 +177,11 @@ class _SecurePopen(Process):
             else:
                 time.sleep(0.01)
 
-    def __init_streams(self, stdin, stdout, stderr):
+    def __init_streams(self, stdin, stdout, stderr, unbuffered):
         self.stdin = self.stdout = self.stderr = None
 
         if stdin is PIPE:
-            self._child_stdin, self._stdin = os.pipe()
+            self._child_stdin, self._stdin = pty.openpty() if unbuffered else os.pipe()
             self.stdin = os.fdopen(self._stdin, 'w')
         elif isinstance(stdin, int):
             self._child_stdin, self._stdin = stdin, -1
@@ -190,7 +191,7 @@ class _SecurePopen(Process):
             self._child_stdin = self._stdin = -1
 
         if stdout is PIPE:
-            self._stdout, self._child_stdout = os.pipe()
+            self._stdout, self._child_stdout = pty.openpty() if unbuffered else os.pipe()
             self.stdout = os.fdopen(self._stdout, 'r')
         elif isinstance(stdout, int):
             self._stdout, self._child_stdout = -1, stdout
@@ -200,7 +201,7 @@ class _SecurePopen(Process):
             self._stdout = self._child_stdout = -1
 
         if stderr is PIPE:
-            self._stderr, self._child_stderr = os.pipe()
+            self._stderr, self._child_stderr = pty.openpty() if unbuffered else os.pipe()
             self.stderr = os.fdopen(self._stderr, 'r')
         elif isinstance(stderr, int):
             self._stderr, self._child_stderr = -1, stderr

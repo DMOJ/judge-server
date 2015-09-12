@@ -84,7 +84,8 @@ class BaseExecutor(ResourceProxy):
                                security=self.get_security(), address_grace=self.get_address_grace(),
                                time=kwargs.get('time'), memory=kwargs.get('memory'),
                                stderr=(PIPE if kwargs.get('pipe_stderr', False) else None),
-                               env=self.get_env(), cwd=self._dir, nproc=self.get_nproc())
+                               env=self.get_env(), cwd=self._dir, nproc=self.get_nproc(),
+                               unbuffered=kwargs.get('unbuffered', False))
 
     def launch_unsafe(self, *args, **kwargs):
         return Popen(self.get_cmdline() + list(args),

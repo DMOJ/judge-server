@@ -179,9 +179,12 @@ class _SecurePopen(Process):
 
     def __init_streams(self, stdin, stdout, stderr, unbuffered):
         self.stdin = self.stdout = self.stderr = None
+        
+        if unbuffered:
+            master, slave = pty.openpty()
 
         if stdin is PIPE:
-            self._child_stdin, self._stdin = pty.openpty() if unbuffered else os.pipe()
+            self._child_stdin, self._stdin = (slave, master) if unbuffered else os.pipe()
             self.stdin = os.fdopen(self._stdin, 'w')
         elif isinstance(stdin, int):
             self._child_stdin, self._stdin = stdin, -1
@@ -191,7 +194,7 @@ class _SecurePopen(Process):
             self._child_stdin = self._stdin = -1
 
         if stdout is PIPE:
-            self._stdout, self._child_stdout = pty.openpty() if unbuffered else os.pipe()
+            self._stdout, self._child_stdout = (master, slave) if unbuffered else os.pipe()
             self.stdout = os.fdopen(self._stdout, 'r')
         elif isinstance(stdout, int):
             self._stdout, self._child_stdout = -1, stdout
@@ -201,7 +204,7 @@ class _SecurePopen(Process):
             self._stdout = self._child_stdout = -1
 
         if stderr is PIPE:
-            self._stderr, self._child_stderr = pty.openpty() if unbuffered else os.pipe()
+            self._stderr, self._child_stderr = (master, slave) if unbuffered else os.pipe()
             self.stderr = os.fdopen(self._stderr, 'r')
         elif isinstance(stderr, int):
             self._stderr, self._child_stderr = -1, stderr

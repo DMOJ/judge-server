@@ -204,7 +204,7 @@ class _SecurePopen(Process):
             self._stdout = self._child_stdout = -1
 
         if stderr is PIPE:
-            self._stderr, self._child_stderr = (master, slave) if unbuffered else os.pipe()
+            self._stderr, self._child_stderr = os.pipe()
             self.stderr = os.fdopen(self._stderr, 'r')
         elif isinstance(stderr, int):
             self._stderr, self._child_stderr = -1, stderr

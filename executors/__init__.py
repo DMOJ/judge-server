@@ -3,6 +3,7 @@ __executors = ['TUR', 'OCAML', 'C', 'CPP', 'CPP0X', 'CPP11', 'CS', 'FS', 'MONOCS
                'LUA', 'V8JS', 'RKT', 'OBJC']
 executors = {}
 
+from judgeenv import env
 
 def __load(to_load):
     import traceback
@@ -24,7 +25,7 @@ def __load(to_load):
         executor = __load_module(name)
         if executor is None:
             continue
-        if hasattr(executor, 'initialize') and not executor.initialize():
+        if hasattr(executor, 'initialize') and not executor.initialize(sandbox=env.get('selftest_sandboxing', True)):
             continue
         if hasattr(executor, 'aliases'):
             for alias in executor.aliases():

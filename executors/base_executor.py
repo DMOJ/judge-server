@@ -97,7 +97,7 @@ class BaseExecutor(ResourceProxy):
         return cls.command
 
     @classmethod
-    def initialize(cls):
+    def initialize(cls, sandbox=True):
         if cls.get_command() is None:
             return False
         if not os.path.isfile(cls.get_command()):
@@ -108,7 +108,8 @@ class BaseExecutor(ResourceProxy):
         print 'Self-testing: %s executor:' % cls.name,
         try:
             executor = cls(cls.test_name, cls.test_program)
-            proc = executor.launch(time=cls.test_time, memory=cls.test_memory)
+            proc = executor.launch(time=cls.test_time, memory=cls.test_memory) \
+                    if sandbox else executor.launch_unsafe()
             test_message = 'echo: Hello, World!'
             stdout, stderr = proc.communicate(test_message)
             res = stdout.strip() == test_message and not stderr

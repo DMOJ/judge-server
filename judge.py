@@ -73,17 +73,17 @@ class CheckerResult(object):
 
 
 class TestCase(object):
-    def __init__(self, input_file, output_file, point_value):
-        self.list = [(input_file, output_file, int(point_value))]
+    def __init__(self, input_file, output_file, point_value, output_length):
+        self.list = [(input_file, output_file, int(point_value), output_length)]
 
     def __iter__(self):
         return iter(self.list)
 
 
 class BatchedTestCase(object):
-    def __init__(self, io_files, point_value):
+    def __init__(self, io_files, point_value, output_length):
         point = int(point_value)
-        self.list = [(i, o, point) for i, o in io_files]
+        self.list = [(i, o, point, output_length) for i, o in io_files]
 
     def __iter__(self):
         return iter(self.list)
@@ -448,9 +448,9 @@ class Judge(object):
                     # Data is batched, with multiple subcases for each parent case
                     # If one subcase fails, the main case fails too
                     subcases = [(subcase.get('in', None), subcase.get('out', None)) for subcase in case['data']]
-                    case = BatchedTestCase(subcases, int(case.get('points', 0)))
+                    case = BatchedTestCase(subcases, int(case.get('points', 0)), output_length=case.get('output_prefix_length', output_prefix_length))
                 else:
-                    case = TestCase(case.get('in', None), case.get('out', None), int(case.get('points', 0)))
+                    case = TestCase(case.get('in', None), case.get('out', None), int(case.get('points', 0)), case.get('output_prefix_length', output_prefix_length))
             else:
                 # Not sure what this does, but it was in run_interactive
                 case = (None, None, int(case))
@@ -480,7 +480,7 @@ class Judge(object):
             for test_case in forward_test_cases:
                 if isinstance(test_case, BatchedTestCase):
                     self.packet_manager.begin_batch_packet()
-                for input_file, output_file, point_value in test_case:
+                for input_file, output_file, point_value, output_length in test_case:
                     if self._terminate_grading:
                         raise TerminateGrading()
                     result = Result()
@@ -611,7 +611,7 @@ class Judge(object):
                     self.packet_manager.test_case_status_packet(
                         case_number, check.points, point_value, result.result_flag, result.execution_time,
                         result.max_memory,
-                        result.proc_output[:output_prefix_length].decode('utf-8', 'replace'), feedback)
+                        result.proc_output[:output_length].decode('utf-8', 'replace'), feedback)
 
                     if not short_circuited and result.result_flag != Result.AC:
                         short_circuited = True

@@ -81,7 +81,6 @@ class GCCExecutor(CompiledExecutor):
             version = float(subprocess.Popen([cls.command, '-dumpversion'],
                                   stdout=subprocess.PIPE,
                                   stderr=subprocess.PIPE).communicate()[0][:3])
-            print 'GCC version', version
             cls.has_color = version >= 4.9
         except:
             cls.has_color = False

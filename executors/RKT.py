@@ -52,7 +52,7 @@ class Executor(ResourceProxy):
                      **kwargs)
 
 
-def initialize():
+def initialize(sandbox=True):
     if 'racket' not in env['runtime']:
         return False
     return test_executor('RKT', Executor, '''\

@@ -41,7 +41,7 @@ class Executor(ResourceProxy):
                      **kwargs)
 
 
-def initialize():
+def initialize(sandbox=True):
     if 'dart' not in env['runtime']:
         return False
     return test_executor('DART', Executor, '''\

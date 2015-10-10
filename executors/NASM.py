@@ -45,7 +45,7 @@ class Executor(ResourceProxy):
                            env={}, cwd=self._dir)
 
 
-def initialize():
+def initialize(sandbox=True):
     if 'nasm' not in env['runtime'] or 'ld' not in env['runtime']:
         return False
     if not os.path.isfile(env['runtime']['nasm']) or not os.path.isfile(env['runtime']['ld']):

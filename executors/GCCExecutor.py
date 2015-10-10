@@ -8,6 +8,7 @@ except ImportError:
 
 from .base_executor import CompiledExecutor
 from judgeenv import env
+import subprocess
 
 C_FS = ['.*\.so', '/proc/meminfo', '/dev/null']
 GCC_ENV = env['runtime'].get('gcc_env', {})
@@ -59,7 +60,7 @@ class GCCExecutor(CompiledExecutor):
         return defines
 
     def get_compile_args(self):
-        return ([self.command, '-Wall', '-fdiagnostics-color=always'] + self.sources + self.get_defines() + ['-O2', '-lm', '-march=native']
+        return ([self.command, '-Wall'] + (['-fdiagnostics-color=always'] if self.has_color else []) + self.sources + self.get_defines() + ['-O2', '-lm', '-march=native']
                + self.get_flags() + self.get_ldflags() + ['-s', '-o', self.get_compiled_file()])
 
     def get_compile_env(self):
@@ -73,3 +74,15 @@ class GCCExecutor(CompiledExecutor):
 
     def get_env(self):
         return GCC_ENV
+
+    @classmethod
+    def initialize(cls, sandbox=True):
+        try:
+            version = float(subprocess.Popen([cls.command, '-dumpversion'],
+                                  stdout=subprocess.PIPE,
+                                  stderr=subprocess.PIPE).communicate()[0][:3])
+            print 'GCC version', version
+            cls.has_color = version >= 4.9
+        except:
+            cls.has_color = False
+        return super(CompiledExecutor, cls).initialize(sandbox=sandbox)

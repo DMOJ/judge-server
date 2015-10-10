@@ -150,17 +150,17 @@ class Judge(object):
         This method also handles notifying the server of judging results.
         :param id:
             The submission id to identify this submission with the server.
-        :param problem_id: 
+        :param problem_id:
             Problem code.
-        :param language: 
+        :param language:
             The submission language, e.g. "CPP", "CPP11", "PY2"
-        :param source_code: 
+        :param source_code:
             The source code for the submission.
-        :param time_limit: 
+        :param time_limit:
             Time limit for submission program, in seconds.
-        :param memory_limit: 
+        :param memory_limit:
             Memory limit for submission program, in kilobytes.
-        :param short_circuit: 
+        :param short_circuit:
             Whether to short-circuit batch testcases on WA.
         """
         print 'Grading %s in %s...' % (problem_id, language)
@@ -332,11 +332,11 @@ class Judge(object):
     def _resolve_open_call(self, init_data, problem_id, forward_test_cases=None):
         """
         Resolves the method for accessing testing data given the problem initialization data.
-        :param init_data: 
+        :param init_data:
             The problem initialization data.
-        :param problem_id: 
+        :param problem_id:
             The problem code.
-        :param forward_test_cases: 
+        :param forward_test_cases:
             A list of testcases contained in init_data.
         """
 
@@ -361,7 +361,7 @@ class Judge(object):
                 archive.close()
 
         if 'generator' in init_data and forward_test_cases:
-            generator_init = init_data['generator'] if isinstance(init_data['generator'], dict) else {'source': map(str, init_data['generator']), 'argv': [], 'flags': []}
+            generator_init = init_data['generator'] if isinstance(init_data['generator'], dict) else {'source': init_data['generator'], 'argv': [], 'flags': []}
             generator_path = os.path.join(get_problem_root(problem_id), generator_init['source'])
             if not os.path.exists(generator_path):
                 raise IOError('generator does not exist')
@@ -392,12 +392,12 @@ class Judge(object):
             clazz = lookup.get(ext, None)
             if not clazz:
                 raise IOError('could not identify generator extension')
-                
+
             def launch_generator():
                 gen = clazz.Executor('_%s_generator' % problem_id, generator_source)
                 if hasattr(gen, 'flags'):
                     gen.flags += generator_init['flags']
-                gen.launch_unsafe(generator_init['argv'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                return gen.launch_unsafe(*generator_init['argv'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
             test = 0
             if self._terminate_grading:
@@ -424,19 +424,19 @@ class Judge(object):
         Executes a submission in standard (static) mode.
         :param executor:
             Executor to launch the submission program.
-        :param init_data: 
+        :param init_data:
             The problem initialization data.
-        :param check_func: 
+        :param check_func:
             Callback to check validity of the submission program output.
-        :param problem_id: 
+        :param problem_id:
             The problem code.
         :param short_circuit:
             Whether to short-circuit batch testcases.
-        :param time: 
+        :param time:
             Time limit for submission program, in seconds.
-        :param memory: 
+        :param memory:
             Memory limit for submission program, in kilobytes.
-        :param interactive: 
+        :param interactive:
             Boolean to indicate whether this needs a custom grader and interactor.
         :return:
             A Result instance representing the execution result of the submission program.

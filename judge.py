@@ -522,19 +522,7 @@ class Judge(object):
                         process = self.current_proc
 
                         if interactive:
-                            # TODO: interactive grader should really run on another thread
-                            # if submission dies, interactive grader might get stuck on a process IO call,
-                            # hanging the main thread
                             try:
-                                '''
-                                result = interactive_grader.grade(case_number, process,
-                                                                  case_input=input_data and cStringIO.StringIO(
-                                                                      input_data),
-                                                                  case_output=output_data and cStringIO.StringIO(
-                                                                      output_data),
-                                                                  point_value=point_value,
-                                                                  source_code=source_code)
-                                '''
                                 return_queue = Queue.Queue()
                                 def interactive_thread(interactor, Q, case_number, process, case_input, case_output, point_value, source_code):
                                     Q.put_nowait(interactor(case_number, process, case_input=case_input, case_output=case_output, point_value=point_value, source_code=source_code))
@@ -630,10 +618,10 @@ class Judge(object):
                         result.proc_output[:output_length].decode('utf-8', 'replace'), feedback)
 
                     if not short_circuited and result.result_flag != Result.AC:
-                        short_circuited = True
+                        short_circuited = not init_data.get('run_all', False)
                         if point_value == 0:
                             # Pretests failed
-                            short_circuit = True
+                            short_circuit = not init_data.get('run_all', False)
 
                     case_number += 1
                     yield result

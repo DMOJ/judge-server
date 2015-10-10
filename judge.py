@@ -361,7 +361,8 @@ class Judge(object):
                 archive.close()
 
         if 'generator' in init_data and forward_test_cases:
-            generator_path = os.path.join(get_problem_root(problem_id), init_data['generator'])
+            generator_init = init_data['generator'] if isinstance(init_data['generator'], dict) else {'source': map(str, init_data['generator']), 'argv': [], 'flags': []}
+            generator_path = os.path.join(get_problem_root(problem_id), generator_init['source'])
             if not os.path.exists(generator_path):
                 raise IOError('generator does not exist')
             try:
@@ -391,21 +392,23 @@ class Judge(object):
             clazz = lookup.get(ext, None)
             if not clazz:
                 raise IOError('could not identify generator extension')
-            generator_launcher = clazz.Executor('_%s_generator' % problem_id, generator_source).launch_unsafe
+                
+            def launch_generator():
+                gen = clazz.Executor('_%s_generator' % problem_id, generator_source)
+                if hasattr(gen, 'flags'):
+                    gen.flags += generator_init['flags']
+                gen.launch_unsafe(generator_init['argv'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
             test = 0
             if self._terminate_grading:
                 raise TerminateGrading()
             for test_case in forward_test_cases:
-                for input_file, output_file, point_value in test_case:
+                for input_file, output_file, point_value, output_length in test_case:
                     test += 1
                     if input_file not in files or output_file not in files:
-                        generator_process = generator_launcher(stdin=subprocess.PIPE,
-                                                               stdout=subprocess.PIPE,
-                                                               stderr=subprocess.PIPE)
+                        generator_process = launch_generator()
                         self.current_proc = generator_process
-                        generator_output, generator_error = generator_process.communicate(
-                            '\n'.join((str(test), input_file, output_file, '')))
+                        generator_output, generator_error = generator_process.communicate('\n'.join((str(test), input_file, output_file, '')))
                         if self._terminate_grading:
                             raise TerminateGrading()
                         self.current_proc = None

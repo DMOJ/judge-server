@@ -5,6 +5,7 @@ from judgeenv import env
 class Executor(JavacExecutor):
     compiler = env['runtime'].get('javac')
     vm = env['runtime'].get('java')
+
     test_program = '''\
 public class self_test {
     public static void main(String[] args) throws java.io.IOException {

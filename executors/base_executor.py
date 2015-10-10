@@ -182,5 +182,8 @@ class CompiledExecutor(BaseExecutor):
     def get_cmdline(self):
         return [self.problem]
 
+    def get_executable_ext(self):
+        return ''
+
     def get_executable(self):
-        return self._executable
+        return self._executable + self.get_executable_ext()

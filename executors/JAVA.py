@@ -7,16 +7,12 @@ class Executor(JavacExecutor):
     vm = env['runtime'].get('java')
 
     test_program = '''\
-import java.io.IOException;
-import java.util.Scanner;
-
 public class self_test {
-    public static void main(String[] args) {
-        Runnable test = () -> {
-            Scanner in = new Scanner(System.in);
-            System.out.println(in.nextLine());
-        };
-        test.run();
+    public static void main(String[] args) throws java.io.IOException {
+        byte[] buffer = new byte[4096];
+        int read;
+        while ((read = System.in.read(buffer)) >= 0)
+            System.out.write(buffer, 0, read);
     }
 }'''
 

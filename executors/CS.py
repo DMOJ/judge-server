@@ -9,7 +9,8 @@ class Executor(CLRExecutor):
     compiler = 'csc'
 
 
-def initialize():
+def initialize(sandbox=True):
+    # TODO: sandbox is ignored
     if 'csc' not in env['runtime']:
         return False
     if not os.path.isfile(env['runtime']['csc']):

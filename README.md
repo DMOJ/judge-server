@@ -15,6 +15,45 @@ A modern online judge and contest platform system, supporting <b>IO-based</b>, <
 </tr>
 </table>
 
-Supports grading in Ada, AWK, C, Clang, Clang++, COBOL, C++/0x/11/14, D, Dart, Fortran, Go, Haskell, Java 7/8, Lua, Mono C#, Mono F#, Mono VB, NASM, Objective-C, OCaml, Pascal, Perl, PHP, Python 2/3, PyPy 2/3, Ruby 2.1, Rust, Scheme, Tcl, Turing, V8 JavaScript, and Brain****.
+Supported languages include:
+* C/++/0x/11/14/
+* Java 7/8
+* Python 2/3
+* PyPy 2/3
+* Pascal
+* Perl
+* Mono C#
+* Mono F#
+* Mono VB
+
+The following languages are also supported, but only on Windows machines:
+* VC 
+* C#
+* F#
+* VB.NET
+
+The Judge can also grade in the languages listed below. These languages are less tested and more likely to be buggy.
+* Ada
+* AWK
+* Clang
+* Clang++
+* COBOL
+* D
+* Dart
+* Fortran
+* Go
+* Haskell
+* Lua
+* NASM
+* Objective-C
+* OCaml
+* PHP
+* Ruby 2.1
+* Rust
+* Scheme
+* Tcl
+* Turing
+* V8 JavaScript
+* Brain**** 
 
 [Read the documentation.](https://github.com/DMOJ/docs)

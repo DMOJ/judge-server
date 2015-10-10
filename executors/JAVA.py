@@ -26,7 +26,7 @@ reinline_comment = re.compile('//.*$', re.MULTILINE)
 reclass = re.compile(r'\bpublic\s+class\s+([_a-zA-Z\$][_0-9a-zA-z\$]*?)\b')
 repackage = re.compile(r'\bpackage\s+([^.;]+(?:\.[^.;]+)*?);')
 redeunicode = re.compile(r'\\u([0-9a-f]{4})', re.I)
-deunicode = lambda x: redeunicode.sub(lambda a: unichr(int(a.group(1), 16), x))
+deunicode = lambda x: redeunicode.sub(lambda a: unichr(int(a.group(1), 16)), x)
 JAVA_EXECUTOR = os.path.abspath(os.path.join(os.path.dirname(__file__), 'java_executor.jar'))
 
 

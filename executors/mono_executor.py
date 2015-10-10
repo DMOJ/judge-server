@@ -107,7 +107,7 @@ class MonoExecutor(CompiledExecutor):
         return sec
 
     @classmethod
-    def initialize(cls):
+    def initialize(cls, sandbox=True):
         if 'mono' not in env['runtime'] or not os.path.isfile(env['runtime']['mono']):
             return False
-        return super(MonoExecutor, cls).initialize()
+        return super(MonoExecutor, cls).initialize(sandbox=sandbox)

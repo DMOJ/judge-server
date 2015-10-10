@@ -16,7 +16,9 @@ import cStringIO
 import re
 import sys
 import subprocess
+import threading
 import uuid
+import Queue
 
 from modload import load_module_from_file
 from result import Result
@@ -525,6 +527,7 @@ class Judge(object):
                             # if submission dies, interactive grader might get stuck on a process IO call,
                             # hanging the main thread
                             try:
+                                '''
                                 result = interactive_grader.grade(case_number, process,
                                                                   case_input=input_data and cStringIO.StringIO(
                                                                       input_data),
@@ -532,10 +535,21 @@ class Judge(object):
                                                                       output_data),
                                                                   point_value=point_value,
                                                                   source_code=source_code)
-                                if isinstance(result, tuple) or isinstance(result, list):
-                                    result, error = result
+                                '''
+                                return_queue = Queue.Queue()
+                                def interactive_thread(interactor, Q, case_number, process, case_input, case_output, point_value, source_code):
+                                    Q.put_nowait(interactor(case_number, process, case_input=case_input, case_output=case_output, point_value=point_value, source_code=source_code))
+                                ithread = threading.Thread(target=interactive_thread, args=(interactive_grader.grade, return_queue, case_number, process, input_data and cStringIO.StringIO(input_data), output_data and cStringIO.StringIO(output_data), point_value, source_code))
+                                ithread.start()
+                                ithread.join(time + 1.0)
+                                if ithread.is_alive():
+                                    result.result_flag = Result.TLE
                                 else:
-                                    error = ''
+                                    result = return_queue.get_nowait()
+                                    if isinstance(result, tuple) or isinstance(result, list):
+                                        result, error = result
+                                    else:
+                                        error = ''
                             except:
                                 traceback.print_exc()
                                 try:

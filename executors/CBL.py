@@ -34,7 +34,7 @@ class Executor(ResourceProxy):
                            env={}, cwd=self._dir)
 
 
-def initialize():
+def initialize(sandbox=True):
     if 'cobc' not in env['runtime']:
         return False
     return test_executor('CBL', Executor, '''\

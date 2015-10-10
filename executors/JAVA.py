@@ -173,7 +173,8 @@ public class self_test {
                      **kwargs)
 
     @classmethod
-    def initialize(cls):
+    def initialize(cls, sandbox=False):
+        #               ^ Java ignores sandboxing kwarg
         if cls.JAVA not in env['runtime'] or cls.JAVAC not in env['runtime']:
             return False
         if not os.path.isfile(env['runtime'][cls.JAVA]) or not os.path.isfile(env['runtime'][cls.JAVAC]):

@@ -24,9 +24,9 @@ put turing_sucks
         return None
 
     @classmethod
-    def initialize(cls):
+    def initialize(cls, sandbox=True):
         if 'tprolog' not in env['runtime'] or 'tprologc' not in env['runtime'] or 'turing_dir' not in env['runtime']:
             return False
-        return super(Executor, cls).initialize()
+        return super(Executor, cls).initialize(sandbox=sandbox)
 
 initialize = Executor.initialize

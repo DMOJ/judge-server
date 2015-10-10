@@ -16,7 +16,6 @@ import cStringIO
 import re
 import sys
 import subprocess
-import threading
 import uuid
 import Queue
 

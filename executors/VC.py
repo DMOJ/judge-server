@@ -54,7 +54,8 @@ class Executor(ResourceProxy):
                                 env=VC_ENV, cwd=self._dir, **kwargs)
 
 
-def initialize():
+def initialize(sandbox=True):
+    # TODO: sandbox is ignored
     if 'cl.exe' not in env['runtime']:
         return False
     if not os.path.isfile(env['runtime']['cl.exe']):

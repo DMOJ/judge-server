@@ -1,34 +1,27 @@
-from .java_executor import JavacExecutor, JavaProcess, deunicode, JAVA_EXECUTOR
-from judgeenv import env
-import time
 import os
-from subprocess import Popen, PIPE
+import errno
+
+from error import CompileError
+from .java_executor import JavaExecutor, JavaProcess, deunicode, JAVA_EXECUTOR
+from judgeenv import env
+
 
 class ScalaProcess(JavaProcess):
-    def __init__(self, java, class_name, cwd, time_limit, memory_limit, statefile, vm='client'):
-        java_env = os.environ.copy()
-        java_env.update({'JAVA_OPTS': '-Xmx%sK -%s' % (memory_limit, vm)})
-        self.process = Popen(['scala', JAVA_EXECUTOR, cwd,
-                             class_name, str(int(time_limit * 1000)), 'state'], executable=java, cwd=cwd,
-                             stdin=PIPE, stdout=PIPE, stderr=PIPE,
-                             env=java_env)
-        self.execution_time, self.tle = None, None
-        self.max_memory, self.mle = None, None
-        self.stderr = None
-        self.error_info, self.error = None, None
-        self.returncode = None
-        self.feedback = None
-        self.time_limit = time_limit
-        self.memory_limit = memory_limit
-        self.statefile = statefile
-        self._killed = False
-        self._start = time.time()
+    def get_command_line(self, class_name, cwd, memory_limit, time_limit, vm):
+        return ['scala', JAVA_EXECUTOR, cwd, class_name, str(int(time_limit * 1000)), 'state']
 
-class Executor(JavacExecutor):
+    def get_environ(self, class_name, cwd, java, memory_limit, time_limit, vm):
+        env = os.environ.copy()
+        env.update({'JAVA_OPTS': '-Xmx%sK -%s' % (memory_limit, vm)})
+        return env
+
+
+class Executor(JavaExecutor):
     name = 'SCALA'
     ext = '.scala'
     compiler = env['runtime'].get('scalac')
     vm = env['runtime'].get('scala')
+    process_class = ScalaProcess
     test_program = '''\
 object self_test {
   def main(args: Array[String]) {
@@ -51,9 +44,8 @@ object self_test {
             raise
         self._class_name = class_name
 
-    def launch(self, *args, **kwargs):
-        return ScalaProcess(java=self.get_vm(), class_name=self._class_name, cwd=self._dir,
-                           time_limit=kwargs.get('time'), memory_limit=kwargs.get('memory'), statefile=self.statefile)
+    def get_compile_args(self):
+        return [self.get_compiler(), self._code]
 
 
 

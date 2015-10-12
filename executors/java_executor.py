@@ -40,9 +40,7 @@ def find_class(source):
 
 class JavaProcess(object):
     def __init__(self, java, class_name, cwd, time_limit, memory_limit, statefile, vm='client'):
-        self.process = Popen(['java', '-%s' % vm, '-Xmx%sK' % memory_limit, '-jar', JAVA_EXECUTOR, cwd,
-                              class_name, str(int(time_limit * 1000)), 'state'], executable=java, cwd=cwd,
-                             stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        self.process = self.spawn_process(class_name, cwd, java, memory_limit, time_limit, vm)
         self.execution_time, self.tle = None, None
         self.max_memory, self.mle = None, None
         self.stderr = None
@@ -54,6 +52,18 @@ class JavaProcess(object):
         self.statefile = statefile
         self._killed = False
         self._start = time.time()
+
+    def spawn_process(self, class_name, cwd, java, memory_limit, time_limit, vm):
+        return Popen(self.get_command_line(class_name, cwd, memory_limit, time_limit, vm),
+                     executable=java, cwd=cwd, stdin=PIPE, stdout=PIPE, stderr=PIPE,
+                     env=self.get_environ(class_name, cwd, java, memory_limit, time_limit, vm))
+
+    def get_command_line(self, class_name, cwd, memory_limit, time_limit, vm):
+        return ['java', '-%s' % vm, '-Xmx%sK' % memory_limit, '-jar', JAVA_EXECUTOR, cwd,
+                class_name, str(int(time_limit * 1000)), 'state']
+
+    def get_environ(self, class_name, cwd, java, memory_limit, time_limit, vm):
+        return None
 
     def communicate(self, stdin=None):
         return self._communicate(*self.process.communicate(stdin))
@@ -127,6 +137,7 @@ class JavaExecutor(ResourceProxy):
 
     vm = None
     compiler = None
+    process_class = JavaProcess
 
     test_program = ''
     test_name = 'self_test'
@@ -178,8 +189,9 @@ class JavaExecutor(ResourceProxy):
         self.warning = output
 
     def launch(self, *args, **kwargs):
-        return JavaProcess(java=self.get_vm(), class_name=self._class_name, cwd=self._dir,
-                           time_limit=kwargs.get('time'), memory_limit=kwargs.get('memory'), statefile=self.statefile)
+        return self.process_class(java=self.get_vm(), class_name=self._class_name, cwd=self._dir,
+                                  time_limit=kwargs.get('time'), memory_limit=kwargs.get('memory'),
+                                  statefile=self.statefile)
 
     def launch_unsafe(self, *args, **kwargs):
         return Popen(['java', '-client', self._class_name] + list(args),

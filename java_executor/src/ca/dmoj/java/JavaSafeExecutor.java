@@ -1,7 +1,6 @@
 package ca.dmoj.java;
 
 import java.io.*;
-import java.lang.management.ManagementFactory;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -67,6 +66,8 @@ public class JavaSafeExecutor {
 
     static boolean isUnicode = false;
 
+    static long startupTime = 0;
+    
     static {
         /*
         Scanner needs to load some locale files before it can be used. Since "files" implies IO which is blocked by
@@ -86,13 +87,12 @@ public class JavaSafeExecutor {
         // UnsafePrintStream buffers
         System.out.flush();
 
-        long totalProgramTime = ManagementFactory.getRuntimeMXBean().getUptime();
+        long totalProgramTime = (System.nanoTime() - startupTime) / 1000000;
         boolean tle = submissionThread.isTle();
 
         /*
          Fetch the memory usage for the submission. This is a Linux-specific task, and will obviously
          fail on any other OS.
-
          We could periodically poll MemoryMXBean for heap usage etc, but that would require a third thread and would
          not be as accurate.
          */
@@ -143,6 +143,7 @@ public class JavaSafeExecutor {
                 return super.findClass(name);
             }
         };
+        startupTime = System.nanoTime();
         Class program;
         try {
             program = classLoader.loadClass(classname);
@@ -156,14 +157,6 @@ public class JavaSafeExecutor {
             return;
         }
         submissionThread = new SubmissionThread(program);
-
-        // Count runtime loading as part of time used
-        // Note that if the time here more than the TL, I will not take it away.
-        // If it is negative, the system is slow enough that you are penalized already.
-        long uptime = ManagementFactory.getRuntimeMXBean().getUptime();
-        if (TL > uptime)
-            TL -= uptime;
-        TL = Math.max(TL, 0);
 
         shockerThread = new ShockerThread(TL, submissionThread);
         System.setSecurityManager(new SubmissionSecurityManager());

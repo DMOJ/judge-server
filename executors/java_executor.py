@@ -112,7 +112,7 @@ class JavaProcess(object):
         if windows:
             self._update_windows_stats()
         else:
-            self.execution_time /= 1000.0
+            self.execution_time /= 1000000000.0
         if self.returncode == -1:
             self.returncode = 1
         if self.feedback == 'OK':

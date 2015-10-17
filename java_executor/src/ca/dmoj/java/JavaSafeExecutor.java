@@ -87,7 +87,7 @@ public class JavaSafeExecutor {
         // UnsafePrintStream buffers
         System.out.flush();
 
-        long totalProgramTime = (System.nanoTime() - startupTime) / 1000000;
+        long totalProgramTime = System.nanoTime() - startupTime;
         boolean tle = submissionThread.isTle();
 
         /*

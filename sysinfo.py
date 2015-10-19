@@ -1,10 +1,11 @@
-import os
 from multiprocessing import cpu_count
 
 _cpu_count = cpu_count()
 
 
 if hasattr(os, 'getloadavg'):
+    import os
+
     def load_fair():
         return 'load', os.getloadavg()[0] / _cpu_count
 else:

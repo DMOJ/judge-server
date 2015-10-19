@@ -56,4 +56,4 @@ The Judge can also grade in the languages listed below. These languages are less
 * V8 JavaScript
 * Brain**** 
 
-[Read the documentation.](https://github.com/DMOJ/docs)
+[Read the documentation.](https://dmoj.readthedocs.org/en/latest/)

@@ -18,9 +18,6 @@ runpy.run_path(sys.argv[0], run_name='__main__')\
     address_grace = 131072
     ext = '.py'
 
-    def __init__(self, problem_id, source_code):
-        super(PythonExecutor, self).__init__(problem_id, source_code)
-
     def get_cmdline(self):
         return [self.get_command(), '-BS', self._loader, self._code]
 

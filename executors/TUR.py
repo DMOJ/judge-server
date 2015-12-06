@@ -9,9 +9,9 @@ class Executor(CompiledExecutor):
     command = env['runtime'].get('tprologc')
     syscalls = ['getpid']
     test_program = '''\
-var turing_sucks : string
-get turing_sucks : *
-put turing_sucks
+var echo : string
+get echo : *
+put echo
 '''
 
     def get_compile_args(self):

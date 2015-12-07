@@ -15,6 +15,8 @@ A modern online judge and contest platform system, supporting <b>IO-based</b>, <
 </tr>
 </table>
 
+The DMOJ Judge does **not** need a root user to run on Linux machines: it will run just fine under a normal user.
+
 Supported languages include:
 * C/++/0x/11/14/
 * Java 7/8

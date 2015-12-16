@@ -8,7 +8,7 @@ class Executor(CompiledExecutor):
     fs = ['.*\.so', '/dev/tty$']
     command = env['runtime'].get('swiftc')
     syscalls = ['open']
-    test_program = 'print("echo: Hello, World!")'
+    test_program = 'print(readLine())'
 
     def get_compile_args(self):
         return [self.get_command(), self._code]

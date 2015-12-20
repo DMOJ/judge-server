@@ -229,7 +229,27 @@ class AMQPPacketManager(object):
         self._batch = 0
         self._id = None
 
+    def _broadcast_listener(self, chan, method, properties, body):
+        try:
+            packet = json.loads(body.decode('zlib'))
+            print packet
+            if packet['action'] == 'abort-submission':
+                if packet['id'] == self._id:
+                    logger.info('Received abortion request: %d', packet['id'])
+                    self.judge.terminate_grading()
+                else:
+                    logger.info('Ignored abortion request: %d', packet['id'])
+        except Exception:
+            logger.exception('Error in AMQP broadcast listener')
+            return
+
     def _run(self):
+        self.broadcast = self.conn.channel()
+        broadcast_queue = self.broadcast.queue_declare(exclusive=True).method.queue
+        self.broadcast.queue_bind(queue=broadcast_queue, exchange='broadcast')
+        self.broadcast.basic_consume(self._broadcast_listener, queue=broadcast_queue, no_ack=True)
+        threading.Thread(target=self.broadcast.start_consuming).start()
+
         for method, properties, body in self.chan.consume('submission'):
             print method, properties, body
             try:
@@ -332,9 +352,14 @@ class AMQPPacketManager(object):
 
     def stop(self):
         self.chan.cancel()
+        self.broadcast.stop_consuming()
 
     def run(self):
-        self._run()
+        try:
+            self._run()
+        finally:
+            self.chan.cancel()
+            self.broadcast.stop_consuming()
 
     def run_async(self):
         threading.Thread(target=self._run).start()
@@ -369,6 +394,9 @@ def _test_amqp():
             raw_input()
             self.packet.batch_end_packet()
             self.packet.grading_end_packet()
+
+        def terminate_grading(self):
+            self.packet.submission_terminated_packet()
 
     judge = FakeJudge()
     judge.packet.run()

@@ -228,6 +228,8 @@ class AMQPPacketManager(object):
         self._in_batch = False
         self._batch = 0
         self._id = None
+        self._start = time.time()
+        self._ping_terminate = threading.Event()
 
     def _broadcast_listener(self, chan, method, properties, body):
         try:
@@ -243,12 +245,18 @@ class AMQPPacketManager(object):
             logger.exception('Error in AMQP broadcast listener')
             return
 
+    def _ping_thread(self):
+        self.ping_packet()
+        while not self._ping_terminate.wait(10):
+            self.ping_packet()
+
     def _run(self):
         self.broadcast = self.conn.channel()
         broadcast_queue = self.broadcast.queue_declare(exclusive=True).method.queue
         self.broadcast.queue_bind(queue=broadcast_queue, exchange='broadcast')
         self.broadcast.basic_consume(self._broadcast_listener, queue=broadcast_queue, no_ack=True)
         threading.Thread(target=self.broadcast.start_consuming).start()
+        threading.Thread(target=self._ping_thread).start()
 
         for method, properties, body in self.chan.consume('submission'):
             print method, properties, body
@@ -290,13 +298,27 @@ class AMQPPacketManager(object):
 
     def _send_ping_packet(self, packet):
         packet['judge'] = self.name
-        self.chan.basic_publish(exchange='ping', body=json.dumps(packet).encode('zlib'))
+        self.chan.basic_publish(exchange='', routing_key='judge-ping', body=json.dumps(packet).encode('zlib'))
 
     def supported_problems_packet(self, problems):
         self._send_ping_packet({
-            'name': 'supported-problems',
+            'name': 'problem-update',
             'problems': problems,
         })
+
+    def supported_executors_packet(self, problems):
+        self._send_ping_packet({
+            'name': 'executor-update',
+            'executors': executors.keys(),
+        })
+
+    def ping_packet(self):
+        packet = {'name': 'ping', 'start': self._start}
+        for fn in sysinfo.report_callbacks:
+            key, value = fn()
+            packet[key] = value
+        print packet
+        self._send_ping_packet(packet)
 
     def begin_grading_packet(self):
         self._send_judge_packet({'name': 'grading-begin'})
@@ -353,20 +375,20 @@ class AMQPPacketManager(object):
     def stop(self):
         self.chan.cancel()
         self.broadcast.stop_consuming()
+        self._ping_terminate.set()
 
     def run(self):
         try:
             self._run()
         finally:
-            self.chan.cancel()
-            self.broadcast.stop_consuming()
+            self.stop()
 
     def run_async(self):
         threading.Thread(target=self._run).start()
 
 
 def _test_amqp():
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
 
     class FakeJudge(object):
         def __init__(self):

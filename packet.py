@@ -236,7 +236,6 @@ class AMQPPacketManager(object):
     def _broadcast_listener(self, chan, method, properties, body):
         try:
             packet = json.loads(body.decode('zlib'))
-            print packet
             if packet['action'] == 'abort-submission':
                 if packet['id'] == self._id:
                     logger.info('Received abortion request: %d', packet['id'])
@@ -278,6 +277,8 @@ class AMQPPacketManager(object):
                 return
 
             if packet['language'] not in executors or packet['problem'] not in self.problems:
+                logger.info('Reject submission: %d: executor: %s, code: %s',
+                            packet['id'], packet['language'], packet['problem'])
                 self.chan.basic_nack(delivery_tag=method.delivery_tag)
                 continue
 
@@ -286,11 +287,15 @@ class AMQPPacketManager(object):
             self._batch = 0
             self._id = packet['id']
             self._send_judge_packet({'name': 'acknowledged'})
+
+            logger.info('Accept submission: %d: executor: %s, code: %s',
+                        packet['id'], packet['language'], packet['problem'])
             self.judge.begin_grading(*args)
             self._submission_done.wait()
             self._submission_done.clear()
 
     def submission_done(self, ack=True):
+        logger.log('Finished submission: %d', self._id)
         if ack:
             self.chan.basic_ack(delivery_tag=self.submission_tag)
         else:
@@ -309,12 +314,14 @@ class AMQPPacketManager(object):
 
     def supported_problems_packet(self, problems):
         self.problems = set(map(itemgetter(0), problems))
+        logger.info('Update problems')
         self._send_ping_packet({
             'name': 'problem-update',
             'problems': problems,
         })
 
     def supported_executors_packet(self):
+        logger.info('Update executors: %s', executors.keys())
         self._send_ping_packet({
             'name': 'executor-update',
             'executors': executors.keys(),
@@ -325,37 +332,44 @@ class AMQPPacketManager(object):
         for fn in sysinfo.report_callbacks:
             key, value = fn()
             packet[key] = value
-        print packet
+        logger.debug('Ping packet: %s', packet)
         self._send_ping_packet(packet)
 
     def begin_grading_packet(self):
+        logger.info('Begin grading: %d', self._id)
         self._send_judge_packet({'name': 'grading-begin'})
 
     def grading_end_packet(self):
+        logger.info('End grading: %d', self._id)
         self._send_judge_packet({'name': 'grading-end'})
         self.submission_done()
 
     def begin_batch_packet(self):
         self._batch += 1
         self._in_batch = True
+        logger.info('Enter batch number %d: %d', self._batch, self._id)
 
     def batch_end_packet(self):
         self._in_batch = False
+        logger.info('Exit batch number %d: %d', self._batch, self._id)
 
     def compile_error_packet(self, log):
         self._send_judge_packet({
             'name': 'compile-error',
             'log': log,
         })
+        logger.info('Compile error: %d', self._id)
         self.submission_done()
 
     def compile_message_packet(self, log):
+        logger.info('Compile message: %d', self._id)
         self._send_judge_packet({
             'name': 'compile-message',
             'log': log,
         })
 
     def internal_error_packet(self, message):
+        logger.info('Internal error: %d', self._id)
         self._send_judge_packet({
             'name': 'internal-error',
             'message': message,
@@ -363,10 +377,12 @@ class AMQPPacketManager(object):
         self.submission_done(ack=False)
 
     def submission_terminated_packet(self):
+        logger.info('Submission aborted: %d', self._id)
         self._send_judge_packet({'name': 'aborted'})
         self.submission_done()
 
     def test_case_status_packet(self, position, points, total_points, status, time, memory, output, feedback=None):
+        logger.info('Submission test case #%d: %d', position, self._id)
         self._send_judge_packet({
             'name': 'test-case',
             'position': position,

@@ -260,6 +260,7 @@ class AMQPPacketManager(object):
         threading.Thread(target=self._ping_thread).start()
 
         self.supported_executors_packet()
+        self.supported_problems_packet(self.judge.supported_problems())
         for method, properties, body in self.chan.consume('submission'):
             try:
                 packet = json.loads(body.decode('zlib'))

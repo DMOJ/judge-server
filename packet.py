@@ -307,10 +307,12 @@ class AMQPPacketManager(object):
     def _send_judge_packet(self, packet):
         packet['id'] = self._id
         packet['judge'] = self.name
+        logger.debug('Judge channel: %s', packet)
         self.chan.basic_publish(exchange='', routing_key='sub-%d' % self._id, body=json.dumps(packet).encode('zlib'))
 
     def _send_ping_packet(self, packet):
         packet['judge'] = self.name
+        logger.debug('Ping channel: %s', packet)
         self.chan.basic_publish(exchange='', routing_key='judge-ping', body=json.dumps(packet).encode('zlib'))
 
     def supported_problems_packet(self, problems):
@@ -333,7 +335,6 @@ class AMQPPacketManager(object):
         for fn in sysinfo.report_callbacks:
             key, value = fn()
             packet[key] = value
-        logger.debug('Ping packet: %s', packet)
         self._send_ping_packet(packet)
 
     def begin_grading_packet(self):

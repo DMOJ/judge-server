@@ -433,6 +433,7 @@ class AMQPPacketManager(object):
                 self._run()
             except pika.exceptions.ConnectionClosed:
                 self.stop()
+                logger.error('Disconnected')
                 continue
             except KeyboardInterrupt:
                 logger.info('Terminating...')

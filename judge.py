@@ -104,8 +104,7 @@ class SendProblemsHandler(FileSystemEventHandler):
 
 
 class Judge(object):
-    def __init__(self, host, port, **kwargs):
-        self.packet_manager = packet.PacketManager(host, port, self, env['id'], env['key'])
+    def __init__(self, **kwargs):
         self.current_submission = None
         self.current_proc = None
         self.current_submission_thread = None
@@ -662,10 +661,27 @@ class Judge(object):
         self._stop_monitor()
 
 
+class ClassicJudge(Judge):
+    def __init__(self, host, port, **kwargs):
+        self.packet_manager = packet.PacketManager(host, port, self, env['id'], env['key'])
+        super(ClassicJudge, self).__init__(**kwargs)
+
+
+class AMQPJudge(Judge):
+    def __init__(self, url, **kwargs):
+        self.packet_manager = packet.AMQPPacketManager(self, url, env['id'], env['key'])
+        super(AMQPJudge, self).__init__(**kwargs)
+
+
 def main():
     print 'Running live judge...'
 
-    with Judge(judgeenv.server_host, judgeenv.server_port) as judge:
+    if judgeenv.server_host.startswith(('amqp://', 'amqps://')):
+        judge = AMQPJudge(judgeenv.server_host)
+    else:
+        judge = ClassicJudge(judgeenv.server_host, judgeenv.server_port)
+
+    with judge:
         try:
             judge.listen()
         finally:

@@ -37,8 +37,7 @@ def _get_default_model_file():
 _parser = argparse.ArgumentParser(description='''
     Spawns a judge for a submission server.
 ''')
-_parser.add_argument('server_host', nargs='?',
-                     help='host to listen for the server')
+_parser.add_argument('server_host', help='host to listen for the server')
 _parser.add_argument('-p', '--server-port', type=int, default=9999,
                      help='port to listen for the server')
 _parser.add_argument('-c', '--config', type=str, default=None,

@@ -42,10 +42,13 @@ _parser.add_argument('-p', '--server-port', type=int, default=9999,
                      help='port to listen for the server')
 _parser.add_argument('-c', '--config', type=str, default=None,
                      help='file to load judge configurations from')
+_parser.add_argument('-l', '--log-file',
+                     help='log file to use')
 _args = _parser.parse_args()
 
 server_host = _args.server_host
 server_port = _args.server_port
+log_file = _args.log_file
 
 model_file = _args.config
 if model_file is None:

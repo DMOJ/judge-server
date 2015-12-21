@@ -676,6 +676,10 @@ class AMQPJudge(Judge):
 def main():
     print 'Running live judge...'
 
+    import logging
+    logging.basicConfig(filename=judgeenv.log_file, level=logging.INFO,
+                        format='%(levelname)s %(asctime)s %(module)s %(message)s')
+
     if judgeenv.server_host.startswith(('amqp://', 'amqps://')):
         judge = AMQPJudge(judgeenv.server_host)
     else:

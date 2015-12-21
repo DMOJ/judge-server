@@ -320,7 +320,7 @@ class AMQPPacketManager(object):
         logger.info('Update problems')
         self._send_ping_packet({
             'name': 'problem-update',
-            'problems': self.problems,
+            'problems': list(self.problems),
         })
 
     def supported_executors_packet(self):

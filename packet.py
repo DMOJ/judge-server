@@ -221,10 +221,11 @@ class AMQPPacketManager(object):
         self.judge = judge
         self.name = name
 
-        params = pika.URLParameters(url)
-        params.credentials = pika.PlainCredentials(name, key)
-        self.conn = pika.BlockingConnection(params)
-        self.chan = self.conn.channel()
+        self.params = pika.URLParameters(url)
+        self.params.credentials = pika.PlainCredentials(name, key)
+
+    def _connect(self):
+        self.conn = pika.BlockingConnection(self.params)
         self.submission_tag = None
         self._submission_done = threading.Event()
         self._in_batch = False
@@ -271,6 +272,8 @@ class AMQPPacketManager(object):
             self._send_latency()
 
     def _run(self):
+        self._connect()
+        self.chan = self.conn.channel()
         self.receiver = self.conn.channel()
         broadcast_queue = self.receiver.queue_declare(exclusive=True).method.queue
         self.latency_queue = self.receiver.queue_declare(exclusive=True).method.queue

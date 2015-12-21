@@ -296,7 +296,7 @@ class AMQPPacketManager(object):
             self._submission_done.clear()
 
     def submission_done(self, ack=True):
-        logger.log('Finished submission: %d', self._id)
+        logger.info('Finished submission: %d', self._id)
         if ack:
             self.chan.basic_ack(delivery_tag=self.submission_tag)
         else:

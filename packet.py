@@ -405,6 +405,7 @@ class AMQPPacketManager(object):
         try:
             self._run()
         finally:
+            logger.info('Terminating...')
             self.stop()
 
     def run_async(self):

@@ -7,6 +7,7 @@ import threading
 import time
 import traceback
 import zlib
+from operator import itemgetter
 
 import pika
 
@@ -230,6 +231,7 @@ class AMQPPacketManager(object):
         self._id = None
         self._start = time.time()
         self._ping_terminate = threading.Event()
+        self.problems = set()
 
     def _broadcast_listener(self, chan, method, properties, body):
         try:
@@ -258,8 +260,8 @@ class AMQPPacketManager(object):
         threading.Thread(target=self.broadcast.start_consuming).start()
         threading.Thread(target=self._ping_thread).start()
 
+        self.supported_executors_packet()
         for method, properties, body in self.chan.consume('submission'):
-            print method, properties, body
             try:
                 packet = json.loads(body.decode('zlib'))
                 args = (
@@ -274,6 +276,11 @@ class AMQPPacketManager(object):
             except Exception:
                 logger.exception('Error in AMQP submission reception')
                 return
+
+            if packet['language'] not in executors or packet['problem'] not in self.problems:
+                self.chan.basic_nack(delivery_tag=method.delivery_tag)
+                continue
+
             self.submission_tag = method.delivery_tag
             self._in_batch = False
             self._batch = 0
@@ -301,12 +308,13 @@ class AMQPPacketManager(object):
         self.chan.basic_publish(exchange='', routing_key='judge-ping', body=json.dumps(packet).encode('zlib'))
 
     def supported_problems_packet(self, problems):
+        self.problems = set(map(itemgetter(0), problems))
         self._send_ping_packet({
             'name': 'problem-update',
             'problems': problems,
         })
 
-    def supported_executors_packet(self, problems):
+    def supported_executors_packet(self):
         self._send_ping_packet({
             'name': 'executor-update',
             'executors': executors.keys(),

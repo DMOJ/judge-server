@@ -42,8 +42,4 @@ def cpu_count():
     return 'cpu-count', _cpu_count
 
 
-def latency():
-    return 'latency', 1
-
-
-report_callbacks = [load_fair, cpu_count, latency]
+report_callbacks = [load_fair, cpu_count]

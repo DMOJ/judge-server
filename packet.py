@@ -232,6 +232,7 @@ class AMQPPacketManager(object):
         self._start = time.time()
         self._ping_terminate = threading.Event()
         self.problems = set()
+        self._latency = 1
 
     def _broadcast_listener(self, chan, method, properties, body):
         try:
@@ -246,17 +247,36 @@ class AMQPPacketManager(object):
             logger.exception('Error in AMQP broadcast listener')
             return
 
+    def _latency_listener(self, chan, method, properties, body):
+        try:
+            packet = json.loads(body.decode('zlib'))
+            if 'client' in packet:
+                self._latency = time.time() - packet['client']
+                logger.debug('Ping time measured: %.3fs', self._latency)
+        except Exception:
+            logger.exception('Error in AMQP latency listener')
+            return
+
+    def _send_latency(self):
+        self.receiver.basic_publish(exchange='', routing_key='latency', body=json.dumps({
+            'queue': self.latency_queue, 'time': time.time(),
+        }).encode('zlib'))
+
     def _ping_thread(self):
         self.ping_packet()
+        self._send_latency()
         while not self._ping_terminate.wait(10):
             self.ping_packet()
+            self._send_latency()
 
     def _run(self):
-        self.broadcast = self.conn.channel()
-        broadcast_queue = self.broadcast.queue_declare(exclusive=True).method.queue
-        self.broadcast.queue_bind(queue=broadcast_queue, exchange='broadcast')
-        self.broadcast.basic_consume(self._broadcast_listener, queue=broadcast_queue, no_ack=True)
-        threading.Thread(target=self.broadcast.start_consuming).start()
+        self.receiver = self.conn.channel()
+        broadcast_queue = self.receiver.queue_declare(exclusive=True).method.queue
+        self.latency_queue = self.receiver.queue_declare(exclusive=True).method.queue
+        self.receiver.queue_bind(queue=broadcast_queue, exchange='broadcast')
+        self.receiver.basic_consume(self._broadcast_listener, queue=broadcast_queue, no_ack=True)
+        self.receiver.basic_consume(self._latency_listener, queue=self.latency_queue, no_ack=True)
+        threading.Thread(target=self.receiver.start_consuming).start()
         threading.Thread(target=self._ping_thread).start()
 
         self.supported_executors_packet()
@@ -331,7 +351,7 @@ class AMQPPacketManager(object):
         })
 
     def ping_packet(self):
-        packet = {'name': 'ping', 'start': self._start}
+        packet = {'name': 'ping', 'start': self._start, 'latency': self._latency}
         for fn in sysinfo.report_callbacks:
             key, value = fn()
             packet[key] = value
@@ -400,7 +420,7 @@ class AMQPPacketManager(object):
 
     def stop(self):
         self.chan.cancel()
-        self.broadcast.stop_consuming()
+        self.receiver.stop_consuming()
         self._ping_terminate.set()
 
     def run(self):

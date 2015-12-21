@@ -10,6 +10,7 @@ import zlib
 from operator import itemgetter
 
 import pika
+import pika.exceptions
 
 import sysinfo
 
@@ -424,14 +425,19 @@ class AMQPPacketManager(object):
         self._ping_terminate.set()
 
     def run(self):
-        try:
-            self._run()
-        finally:
-            logger.info('Terminating...')
-            self.stop()
+        while True:
+            try:
+                self._run()
+            except pika.exceptions.ConnectionClosed:
+                self.stop()
+                continue
+            except KeyboardInterrupt:
+                logger.info('Terminating...')
+                self.stop()
+            break
 
     def run_async(self):
-        threading.Thread(target=self._run).start()
+        threading.Thread(target=self.run).start()
 
 
 def _test_amqp():

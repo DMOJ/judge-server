@@ -320,6 +320,7 @@ class AMQPPacketManager(object):
             self.judge.begin_grading(*args)
             self._submission_done.wait()
             self._submission_done.clear()
+            logger.info('Awaiting another submission...')
 
     def submission_done(self, ack=True):
         logger.info('Finished submission: %d', self._id)

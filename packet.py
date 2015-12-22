@@ -274,6 +274,8 @@ class AMQPPacketManager(object):
     def _run(self):
         self._connect()
         self.chan = self.conn.channel()
+        self.chan.basic_qos(prefetch_count=1)
+
         self.receiver = self.conn.channel()
         broadcast_queue = self.receiver.queue_declare(exclusive=True).method.queue
         self.latency_queue = self.receiver.queue_declare(exclusive=True).method.queue

@@ -305,6 +305,7 @@ class AMQPPacketManager(object):
 
         self.submission_chan = self.conn.channel()
         self.submission_chan.basic_qos(prefetch_count=1)
+        self.submission_chan.basic_consume(self._submission_listener, queue='submission')
 
         self.receiver = self.conn.channel()
         broadcast_queue = self.receiver.queue_declare(exclusive=True).method.queue

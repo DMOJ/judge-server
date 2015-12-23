@@ -158,7 +158,7 @@ class _SecurePopen(Process):
     def _protection_fault(self, syscall):
         callname = None
         index = self._syscall_index
-        for id, call in translator.iteritems():
+        for id, call in enumerate(translator):
             if call[index] == syscall:
                 callname = by_id[id]
                 break

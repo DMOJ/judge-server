@@ -20,6 +20,7 @@ UNLINK_FS = re.compile('/dev/shm/mono.\d+$')
 class MonoExecutor(CompiledExecutor):
     name = 'MONO'
     nproc = -1  # If you use Mono on Windows you are doing it wrong.
+    address_grace = 131072
 
     def get_compiled_file(self):
         return self._file('%s.exe' % self.problem)

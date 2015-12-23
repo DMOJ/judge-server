@@ -20,36 +20,36 @@
 #define UESP 15
 #define SS 16
 
-long pt_debugger32::peek_reg(int reg) {
+long pt_debugger_x86::peek_reg(int reg) {
     return ptrace(PTRACE_PEEKUSER, process->getpid(), 4 * reg, 0);
 }
 
-void pt_debugger32::poke_reg(int reg, long data) {
+void pt_debugger_x86::poke_reg(int reg, long data) {
     ptrace(PTRACE_POKEUSER, process->getpid(), 4 * reg, data);
 }
 
-int pt_debugger32::syscall() {
+int pt_debugger_x86::syscall() {
     return (int) peek_reg(ORIG_EAX);
 }
 
-void pt_debugger32::syscall(int id) {
+void pt_debugger_x86::syscall(int id) {
     poke_reg(ORIG_EAX, id);
 }
 
-long pt_debugger32::result() {
+long pt_debugger_x86::result() {
     return peek_reg(EAX);
 }
 
-void pt_debugger32::result(long value) {
+void pt_debugger_x86::result(long value) {
     poke_reg(EAX, value);
 }
 
 #define make_arg(id, reg) \
-    long pt_debugger32::arg##id() { \
+    long pt_debugger_x86::arg##id() { \
         return peek_reg(reg); \
     } \
     \
-    void pt_debugger32::arg##id(long data) {\
+    void pt_debugger_x86::arg##id(long data) {\
         poke_reg(reg, data); \
     }
 
@@ -61,16 +61,16 @@ make_arg(4, EDI);
 
 #undef make_arg
 
-long pt_debugger32::arg5() {
+long pt_debugger_x86::arg5() {
     return 0;
 }
 
-void pt_debugger32::arg5(long data) {}
+void pt_debugger_x86::arg5(long data) {}
 
-bool pt_debugger32::is_exit(int syscall) {
+bool pt_debugger_x86::is_exit(int syscall) {
     return syscall == 252 || syscall == 1;
 }
 
-int pt_debugger32::getpid_syscall() {
+int pt_debugger_x86::getpid_syscall() {
     return 20;
 }

@@ -1,5 +1,5 @@
 import os
-from platform import architecture
+import subprocess
 import threading
 import time
 import select
@@ -7,7 +7,10 @@ import errno
 import signal
 import sys
 import pty
-from _cptbox import Process
+
+import re
+
+from _cptbox import *
 from .syscalls import translator, SYSCALL_COUNT, by_id
 
 DISALLOW = 0
@@ -30,7 +33,35 @@ def _find_exe(path):
     raise OSError()
 
 
+def file_info(path, split=re.compile(r'[\s,]').split):
+    try:
+        return split(subprocess.check_output(['file', '-b', '-L', path]))
+    except subprocess.CalledProcessError:
+        return []
+
+
+X86 = 'x86'
+X64 = 'x64'
+X32 = 'x32'
+
+
+def file_arch(path):
+    info = file_info(path)
+
+    if '32-bit' in info:
+        return X32 if 'x86-64' in info else X86
+    elif '64-bit' in info:
+        return X64
+    return None
+
+PYTHON_ARCH = file_arch(sys.executable)
+
+
 _PIPE_BUF = getattr(select, 'PIPE_BUF', 512)
+_SYSCALL_INDICIES = [None] * 3
+_SYSCALL_INDICIES[DEBUGGER_X86] = 0
+_SYSCALL_INDICIES[DEBUGGER_X86_ON_X64] = 0
+_SYSCALL_INDICIES[DEBUGGER_X64] = 1
 
 
 def _eintr_retry_call(func, *args):
@@ -44,9 +75,10 @@ def _eintr_retry_call(func, *args):
 
 
 class _SecurePopen(Process):
-    def __init__(self, bitness, args, executable=None, security=None, time=0, memory=0, stdin=PIPE, stdout=PIPE,
+    def __init__(self, debugger, args, executable=None, security=None, time=0, memory=0, stdin=PIPE, stdout=PIPE,
                  stderr=None, env=None, nproc=0, address_grace=4096, cwd='', fds=None, unbuffered=False):
-        self._bitness = bitness
+        self._debugger_type = debugger
+        self._syscall_index = index = _SYSCALL_INDICIES[debugger]
         self._executable = executable or _find_exe(args[0])
         self._args = args
         self._chdir = cwd
@@ -69,7 +101,7 @@ class _SecurePopen(Process):
         else:
             for i in xrange(SYSCALL_COUNT):
                 handler = security.get(i, DISALLOW)
-                call = translator[i][bitness == 64]
+                call = translator[i][index]
                 if call is None:
                     continue
                 if not isinstance(handler, int):
@@ -106,10 +138,6 @@ class _SecurePopen(Process):
         return self._tle
 
     @property
-    def bitness(self):
-        return self._bitness
-
-    @property
     def r_execution_time(self):
         return self._start_time and ((self._died_time or time.time()) - self._start_time)
 
@@ -129,7 +157,7 @@ class _SecurePopen(Process):
 
     def _protection_fault(self, syscall):
         callname = None
-        index = self._bitness == 64
+        index = self._syscall_index
         for id, call in translator.iteritems():
             if call[index] == syscall:
                 callname = by_id[id]
@@ -315,7 +343,18 @@ class _SecurePopen(Process):
         return stdout, stderr
 
 
+# (python arch, executable arch) -> debugger
+_arch_map = {
+    (X86, X86): DEBUGGER_X86,
+    (X64, X64): DEBUGGER_X64,
+    (X64, X86): DEBUGGER_X86_ON_X64,
+}
+
+
 def SecurePopen(argv, executable=None, *args, **kwargs):
     executable = executable or _find_exe(argv[0])
-    bitness = int(architecture(executable)[0][:2])
-    return _SecurePopen(bitness, argv, executable, *args, **kwargs)
+    arch = file_arch(executable)
+    debugger = _arch_map.get((PYTHON_ARCH, arch))
+    if debugger is None:
+        raise RuntimeError('Executable type %s could not be debugged on Python type %s' % (arch, PYTHON_ARCH))
+    return _SecurePopen(debugger, argv, executable, *args, **kwargs)

@@ -8,6 +8,10 @@ from posix.resource cimport setrlimit, rlimit, rusage, \
 from posix.signal cimport kill
 from posix.types cimport pid_t
 
+
+__all__ = ['Process', 'Debugger', 'DEBUGGER_X86', 'DEBUGGER_X64', 'DEBUGGER_X86_ON_X64']
+
+
 cdef extern from 'ptbox.h' nogil:
     ctypedef int (*pt_handler_callback)(void *context, int syscall)
     ctypedef void (*pt_syscall_return_callback)(void *context, int syscall)
@@ -37,10 +41,13 @@ cdef extern from 'ptbox.h' nogil:
         int getpid_syscall()
         void on_return(pt_syscall_return_callback callback, void *context)
 
-    cdef cppclass pt_debugger32(pt_debugger):
+    cdef cppclass pt_debugger_x86(pt_debugger):
         pass
 
-    cdef cppclass pt_debugger64(pt_debugger):
+    cdef cppclass pt_debugger_x64(pt_debugger):
+        pass
+
+    cdef cppclass pt_debugger_x86_on_x64(pt_debugger):
         pass
 
     cdef cppclass pt_process:
@@ -90,6 +97,9 @@ cdef extern from 'signal.h' nogil:
     cdef int SIGXCPU
 
 SYSCALL_COUNT = MAX_SYSCALL
+DEBUGGER_X86 = 0
+DEBUGGER_X64 = 1
+DEBUGGER_X86_ON_X64 = 2
 
 cdef struct child_config:
     unsigned long memory # affects only sbrk heap
@@ -345,17 +355,21 @@ cdef class Process:
     cdef public int _nproc
     cdef unsigned long _max_memory
 
-    def __cinit__(self, int bitness, *args, **kwargs):
+    def __cinit__(self, int debugger, *args, **kwargs):
         self._child_memory = self._child_address = 0
         self._child_stdin = self._child_stdout = self._child_stderr = -1
         self._cpu_time = 0
         self._nproc = -1
-        if bitness == 32:
-            self._debugger = new pt_debugger32()
-        elif bitness == 64:
-            self._debugger = new pt_debugger64()
+
+        if debugger == DEBUGGER_X86:
+            self._debugger = new pt_debugger_x86()
+        elif debugger == DEBUGGER_X64:
+            self._debugger = new pt_debugger_x64()
+        elif debugger == DEBUGGER_X86_ON_X64:
+            self._debugger = new pt_debugger_x86_on_x64()
         else:
-            raise ValueError('Invalid bitness')
+            raise ValueError('Unsupported debugger configuration')
+
         self.debugger = Debugger()
         self.debugger.thisptr = self._debugger
         self.debugger._getpid_syscall = self._debugger.getpid_syscall()

@@ -35,36 +35,36 @@
 #define FS 25
 #define GS 26
 
-long pt_debugger64::peek_reg(int reg) {
+long pt_debugger_x64::peek_reg(int reg) {
     return ptrace(PTRACE_PEEKUSER, process->getpid(), 8 * reg, NULL);
 }
 
-void pt_debugger64::poke_reg(int reg, long data) {
+void pt_debugger_x64::poke_reg(int reg, long data) {
     ptrace(PTRACE_POKEUSER, process->getpid(), 8 * reg, data);
 }
 
-int pt_debugger64::syscall() {
+int pt_debugger_x64::syscall() {
     return (int) peek_reg(ORIG_RAX);
 }
 
-void pt_debugger64::syscall(int id) {
+void pt_debugger_x64::syscall(int id) {
     poke_reg(ORIG_RAX, id);
 }
 
-long pt_debugger64::result() {
+long pt_debugger_x64::result() {
     return peek_reg(RAX);
 }
 
-void pt_debugger64::result(long value) {
+void pt_debugger_x64::result(long value) {
     poke_reg(RAX, value);
 }
 
 #define make_arg(id, reg) \
-    long pt_debugger64::arg##id() { \
+    long pt_debugger_x64::arg##id() { \
         return peek_reg(reg); \
     } \
     \
-    void pt_debugger64::arg##id(long data) {\
+    void pt_debugger_x64::arg##id(long data) {\
         poke_reg(reg, data); \
     }
 
@@ -77,10 +77,10 @@ make_arg(5, R9);
 
 #undef make_arg
 
-bool pt_debugger64::is_exit(int syscall) {
+bool pt_debugger_x64::is_exit(int syscall) {
     return syscall == 231 || syscall == 60;
 }
 
-int pt_debugger64::getpid_syscall() {
+int pt_debugger_x64::getpid_syscall() {
     return 39;
 }

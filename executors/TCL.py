@@ -31,6 +31,7 @@ puts $input
         security[sys_tgkill] = True
         security[sys_write] = handle_write
         security[sys_socket] = handle_socket
+        security[sys_socketcall] = handle_socket
         security[sys_connect] = True
         security[sys_access] = True
         security[sys_getsockname] = True

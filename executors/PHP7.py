@@ -1,21 +1,10 @@
-from .base_executor import ScriptExecutor
+from .php_executor import PHPExecutor
 from judgeenv import env
 
 
-class Executor(ScriptExecutor):
-    ext = '.php'
+class Executor(PHPExecutor):
     name = 'PHP7'
     command = env['runtime'].get('php7')
-    address_grace = 131072
-    test_program = '<?php while($f = fgets(STDIN)) echo $f;'
-
-    fs = ['.*\.so', '/etc/localtime$', '.*\.ini$']
-
-    def get_cmdline(self):
-        return ['php', self._code]
-
-    def get_fs(self):
-        return self.fs + [self._code]
 
 
 initialize = Executor.initialize

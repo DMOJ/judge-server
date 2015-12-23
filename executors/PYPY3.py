@@ -1,6 +1,6 @@
 import os
 
-from .python import PythonExecutor
+from .python_executor import PythonExecutor
 from judgeenv import env
 
 

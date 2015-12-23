@@ -457,7 +457,7 @@ translator = {
     380: (None, 68),
     381: (None, 69),
     382: (340, None),
-    383: (0, 0), # old sys_setup
+    383: (0, None), # old sys_setup
 }
 
 SYSCALL_COUNT = 384

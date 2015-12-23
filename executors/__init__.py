@@ -46,4 +46,4 @@ def __load(to_load):
 
 
 __load(__executors)
-del __executors, __load
+del __executors, __load, env, only_executors, exclude_executors

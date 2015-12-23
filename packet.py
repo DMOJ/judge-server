@@ -426,7 +426,11 @@ class AMQPPacketManager(object):
         })
 
     def stop(self):
-        self.chan.cancel()
+        try:
+            self.chan.cancel()
+        except AssertionError:
+            # The consumer might be, for example, dead.
+            pass
         self.receiver.stop_consuming()
         self._ping_terminate.set()
 

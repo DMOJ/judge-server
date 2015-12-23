@@ -8,6 +8,6 @@ class Executor(ScriptExecutor):
     command = env['runtime'].get('cat', '/bin/cat')
     test_program = 'echo: Hello, World!\n'
     fs = ['.*\.(?:so|txt)']
-    syscalls = ['fadvise64_64']
+    syscalls = ['fadvise64_64', 'fadvise64']
 
 initialize = Executor.initialize

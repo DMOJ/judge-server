@@ -111,7 +111,7 @@ class BaseExecutor(ResourceProxy):
             proc = executor.launch(time=cls.test_time, memory=cls.test_memory) \
                     if sandbox else executor.launch_unsafe()
             test_message = 'echo: Hello, World!'
-            stdout, stderr = proc.communicate(test_message)
+            stdout, stderr = proc.communicate(test_message + '\n')
             res = stdout.strip() == test_message and not stderr
             print ['Failed', 'Success'][res]
             if stderr:

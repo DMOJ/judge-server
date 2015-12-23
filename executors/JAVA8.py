@@ -9,7 +9,6 @@ class Executor(JavacExecutor):
 
     test_program = '''\
 import java.io.IOException;
-import java.util.Scanner;
 
 interface IORunnable {
     public void run() throws IOException;
@@ -22,11 +21,15 @@ public class self_test {
 
     public static void main(String[] args) throws IOException {
         run(() -> {
-            Scanner in = new Scanner(System.in);
-            System.out.println(in.nextLine());
+            byte[] buffer = new byte[4096];
+            int read;
+            while ((read = System.in.read(buffer)) >= 0)
+                System.out.write(buffer, 0, read);
         });
     }
 }'''
 
+    def get_compile_args(self):
+        return [self.get_compiler(), '-profile', 'compact1', self._code]
 
 initialize = Executor.initialize

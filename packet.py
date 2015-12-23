@@ -224,15 +224,15 @@ class AMQPPacketManager(object):
         self.params = pika.URLParameters(url)
         self.params.credentials = pika.PlainCredentials(name, key)
 
+        self.running = False
+
     def _connect(self):
         self.conn = pika.BlockingConnection(self.params)
         self.submission_tag = None
-        self._submission_done = threading.Event()
         self._in_batch = False
         self._batch = 0
         self._id = None
         self._start = time.time()
-        self._ping_terminate = threading.Event()
         self.problems = set()
         self._latency = 1
 
@@ -264,17 +264,47 @@ class AMQPPacketManager(object):
             'queue': self.latency_queue, 'time': time.time(),
         }).encode('zlib'))
 
-    def _ping_thread(self):
-        self.ping_packet()
-        self._send_latency()
-        while not self._ping_terminate.wait(10):
-            self.ping_packet()
-            self._send_latency()
+    def _submission_listener(self, chan, method, properties, body):
+        assert self._id is None
+
+        try:
+            packet = json.loads(body.decode('zlib'))
+            args = (
+                packet['id'],
+                packet['problem'],
+                packet['language'],
+                packet['source'],
+                float(packet['time-limit']),
+                int(packet['memory-limit']),
+                packet['short-circuit']
+            )
+        except Exception:
+            logger.exception('Error in AMQP submission reception')
+            chan.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
+            return
+
+        if packet['language'] not in executors or packet['problem'] not in self.problems:
+            logger.info('Reject submission: %d: executor: %s, code: %s',
+                        packet['id'], packet['language'], packet['problem'])
+            chan.basic_nack(delivery_tag=method.delivery_tag)
+            return
+
+        self.submission_tag = method.delivery_tag
+        self._in_batch = False
+        self._batch = 0
+        self._id = packet['id']
+        self._send_judge_packet({'name': 'acknowledged'})
+
+        logger.info('Accept submission: %d: executor: %s, code: %s',
+                    packet['id'], packet['language'], packet['problem'])
+        self.judge.begin_grading(*args)
 
     def _run(self):
         self._connect()
-        self.chan = self.conn.channel()
-        self.chan.basic_qos(prefetch_count=1)
+        self.running = True
+
+        self.submission_chan = self.conn.channel()
+        self.submission_chan.basic_qos(prefetch_count=1)
 
         self.receiver = self.conn.channel()
         broadcast_queue = self.receiver.queue_declare(exclusive=True).method.queue
@@ -282,65 +312,38 @@ class AMQPPacketManager(object):
         self.receiver.queue_bind(queue=broadcast_queue, exchange='broadcast')
         self.receiver.basic_consume(self._broadcast_listener, queue=broadcast_queue, no_ack=True)
         self.receiver.basic_consume(self._latency_listener, queue=self.latency_queue, no_ack=True)
-        threading.Thread(target=self.receiver.start_consuming).start()
-        threading.Thread(target=self._ping_thread).start()
 
         self.supported_executors_packet()
         self.supported_problems_packet(self.judge.supported_problems())
-        for method, properties, body in self.chan.consume('submission'):
-            try:
-                packet = json.loads(body.decode('zlib'))
-                args = (
-                    packet['id'],
-                    packet['problem'],
-                    packet['language'],
-                    packet['source'],
-                    float(packet['time-limit']),
-                    int(packet['memory-limit']),
-                    packet['short-circuit']
-                )
-            except Exception:
-                logger.exception('Error in AMQP submission reception')
-                return
 
-            if packet['language'] not in executors or packet['problem'] not in self.problems:
-                logger.info('Reject submission: %d: executor: %s, code: %s',
-                            packet['id'], packet['language'], packet['problem'])
-                self.chan.basic_nack(delivery_tag=method.delivery_tag)
-                continue
+        last_ping = 0
+        while self.running:
+            now = time.time()
+            if last_ping + 10 < now:
+                self.ping_packet()
+                self._send_latency()
+                last_ping = now
 
-            self.submission_tag = method.delivery_tag
-            self._in_batch = False
-            self._batch = 0
-            self._id = packet['id']
-            self._send_judge_packet({'name': 'acknowledged'})
-
-            logger.info('Accept submission: %d: executor: %s, code: %s',
-                        packet['id'], packet['language'], packet['problem'])
-            self.judge.begin_grading(*args)
-            self._submission_done.wait()
-            self._submission_done.clear()
-            logger.info('Awaiting another submission...')
+            self.conn.process_data_events(time_limit=last_ping + 10 - now)
 
     def submission_done(self, ack=True):
         logger.info('Finished submission: %d', self._id)
-        if ack:
-            self.chan.basic_ack(delivery_tag=self.submission_tag)
-        else:
-            self.chan.basic_nack(delivery_tag=self.submission_tag)
-        self._submission_done.set()
         self._id = None
+        if ack:
+            self.submission_chan.basic_ack(delivery_tag=self.submission_tag)
+        else:
+            self.submission_chan.basic_nack(delivery_tag=self.submission_tag)
 
     def _send_judge_packet(self, packet):
         packet['id'] = self._id
         packet['judge'] = self.name
         logger.debug('Judge channel: %s', packet)
-        self.chan.basic_publish(exchange='', routing_key='sub-%d' % self._id, body=json.dumps(packet).encode('zlib'))
+        self.submission_chan.basic_publish(exchange='', routing_key='sub-%d' % self._id, body=json.dumps(packet).encode('zlib'))
 
     def _send_ping_packet(self, packet):
         packet['judge'] = self.name
         logger.debug('Ping channel: %s', packet)
-        self.chan.basic_publish(exchange='', routing_key='judge-ping', body=json.dumps(packet).encode('zlib'))
+        self.submission_chan.basic_publish(exchange='', routing_key='judge-ping', body=json.dumps(packet).encode('zlib'))
 
     def supported_problems_packet(self, problems):
         self.problems = set(map(itemgetter(0), problems))
@@ -426,66 +429,22 @@ class AMQPPacketManager(object):
         })
 
     def stop(self):
-        try:
-            self.chan.cancel()
-        except AssertionError:
-            # The consumer might be, for example, dead.
-            pass
+        self.submission_chan.stop_consuming()
         self.receiver.stop_consuming()
-        self._ping_terminate.set()
 
     def run(self):
         while True:
             try:
                 self._run()
             except pika.exceptions.ConnectionClosed:
-                self.stop()
                 logger.error('Disconnected')
                 continue
             except KeyboardInterrupt:
                 logger.info('Terminating...')
                 self.stop()
+            except Exception:
+                logger.exception('Exception in pika loop')
             break
 
     def run_async(self):
         threading.Thread(target=self.run).start()
-
-
-def _test_amqp():
-    logging.basicConfig(level=logging.INFO)
-
-    class FakeJudge(object):
-        def __init__(self):
-            self.packet = AMQPPacketManager(self, 'amqp://atlantis.dmoj.ca/dmoj', 'Xenon',
-                                            '!zS;SS+|_T:XUogOx0@~p|Ni<<%~aiE~.L7P{ulk~*tN6}H{y#|aS)UedcygW8hFo-tTi-kwq[0@Z.g$$zl)e:`3$;q3J8XXcjO~')
-
-        def begin_grading(self, id, problem_id, language, source_code, time_limit, memory_limit, short_circuit):
-            raw_input()
-            self.packet.begin_grading_packet()
-            raw_input()
-            self.packet.test_case_status_packet(1, 25, 25, 0, 1, 1534, 'Case 1')
-            raw_input()
-            self.packet.test_case_status_packet(2, 25, 25, 1, 1, 1534, 'Case 2')
-            self.packet.begin_batch_packet()
-            raw_input()
-            self.packet.test_case_status_packet(3, 25, 25, 0, 1, 1534, 'Case 3')
-            raw_input()
-            self.packet.test_case_status_packet(4, 25, 25, 1, 1, 1534, 'Case 4')
-            raw_input()
-            self.packet.batch_end_packet()
-            self.packet.begin_batch_packet()
-            self.packet.test_case_status_packet(5, 25, 25, 0, 1, 1534, 'Case 5')
-            raw_input()
-            self.packet.test_case_status_packet(6, 25, 25, 1, 1, 1534, 'Case 6')
-            raw_input()
-            self.packet.batch_end_packet()
-            self.packet.grading_end_packet()
-
-        def terminate_grading(self):
-            self.packet.submission_terminated_packet()
-
-    judge = FakeJudge()
-    judge.packet.run()
-
-if __name__ == '__main__':
-    _test_amqp()

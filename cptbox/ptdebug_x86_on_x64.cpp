@@ -77,3 +77,7 @@ long pt_debugger_x86_on_x64::arg5() {
 }
 
 void pt_debugger_x86_on_x64::arg5(long data) {}
+
+pt_debugger_x86_on_x64::pt_debugger_x86_on_x64() {
+    execve_id = 59;
+}

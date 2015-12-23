@@ -74,3 +74,7 @@ bool pt_debugger_x86::is_exit(int syscall) {
 int pt_debugger_x86::getpid_syscall() {
     return 20;
 }
+
+pt_debugger_x86::pt_debugger_x86() {
+    execve_id = 11;
+}

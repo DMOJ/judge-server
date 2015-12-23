@@ -71,7 +71,7 @@ int pt_process::protection_fault(int syscall) {
 }
 
 int pt_process::monitor() {
-    bool in_syscall = false, first = true;
+    bool in_syscall = false, first = true, spawned = false;
     struct timespec start, end, delta;
     int status, exit_reason = PTBOX_EXIT_NORMAL;
     siginfo_t si;
@@ -94,8 +94,13 @@ int pt_process::monitor() {
                 ptrace(PTRACE_GETSIGINFO, pid, NULL, &si);
                 if (si.si_code == SIGTRAP || si.si_code == (SIGTRAP|0x80)) {
                     int syscall = debugger->syscall();
-                    //printf("%s syscall %d\n", in_syscall ? "Exit" : "Enter", syscall);
-                    if (!in_syscall) {
+                    in_syscall ^= true;
+                    //printf("%s syscall %d\n", in_syscall ? "Enter" : "Exit", syscall);
+
+                    if (!spawned) {
+                        if (in_syscall && syscall == debugger->execve_syscall())
+                            spawned = true;
+                    } else if (in_syscall) {
                         switch (handler[syscall]) {
                             case PTBOX_HANDLER_ALLOW:
                                 break;
@@ -124,7 +129,6 @@ int pt_process::monitor() {
                         debugger->on_return_callback = NULL;
                         debugger->on_return_context = NULL;
                     }
-                    in_syscall ^= true;
                 }
             } else {
                 switch (WSTOPSIG(status)) {

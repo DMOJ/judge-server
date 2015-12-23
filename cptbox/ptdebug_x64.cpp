@@ -84,3 +84,7 @@ bool pt_debugger_x64::is_exit(int syscall) {
 int pt_debugger_x64::getpid_syscall() {
     return 39;
 }
+
+pt_debugger_x64::pt_debugger_x64() {
+    execve_id = 59;
+}

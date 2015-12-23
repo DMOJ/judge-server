@@ -1,12 +1,16 @@
 import os
 import re
-from judgeenv import env
+from judgeenv import env, only_executors, exclude_executors
 
 _reexecutor = re.compile('([A-Z0-9]+)\.py$')
-__executors = [i.group(1) for i in map(_reexecutor.match,
+__executors = set(i.group(1) for i in map(_reexecutor.match,
                                        os.listdir(os.path.dirname(__file__)))
-               if i is not None]
-__executors.sort()
+                  if i is not None)
+if only_executors:
+    __executors &= only_executors
+if exclude_executors:
+    __executors -= exclude_executors
+__executors = sorted(__executors)
 
 executors = {}
 

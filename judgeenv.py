@@ -44,11 +44,20 @@ _parser.add_argument('-c', '--config', type=str, default=None,
                      help='file to load judge configurations from')
 _parser.add_argument('-l', '--log-file',
                      help='log file to use')
+
+_group = _parser.add_mutually_exclusive_group()
+_group.add_argument('-e', '--only-executors',
+                    help='only listed executors will be loaded (comma-separated)')
+_group.add_argument('-x', '--exclude-executors',
+                    help='prevent listed executors from loading (comma-separated)')
+
 _args = _parser.parse_args()
 
 server_host = _args.server_host
 server_port = _args.server_port
 log_file = _args.log_file
+only_executors = _args.only_executors and set(_args.only_executors.split(','))
+exclude_executors = _args.exclude_executors and set(_args.exclude_executors.split(','))
 
 model_file = _args.config
 if model_file is None:

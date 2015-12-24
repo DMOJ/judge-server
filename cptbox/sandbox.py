@@ -58,10 +58,11 @@ PYTHON_ARCH = file_arch(sys.executable)
 
 
 _PIPE_BUF = getattr(select, 'PIPE_BUF', 512)
-_SYSCALL_INDICIES = [None] * 3
+_SYSCALL_INDICIES = [None] * 4
 _SYSCALL_INDICIES[DEBUGGER_X86] = 0
 _SYSCALL_INDICIES[DEBUGGER_X86_ON_X64] = 0
 _SYSCALL_INDICIES[DEBUGGER_X64] = 1
+_SYSCALL_INDICIES[DEBUGGER_X32] = 2
 
 
 def _eintr_retry_call(func, *args):
@@ -348,6 +349,7 @@ _arch_map = {
     (X86, X86): DEBUGGER_X86,
     (X64, X64): DEBUGGER_X64,
     (X64, X86): DEBUGGER_X86_ON_X64,
+    (X32, X32): DEBUGGER_X32,
 }
 
 

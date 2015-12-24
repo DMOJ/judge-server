@@ -150,6 +150,7 @@ public:
 };
 
 class pt_debugger_x64 : public pt_debugger {
+protected:
     long peek_reg(int);
     void poke_reg(int, long);
 public:
@@ -197,6 +198,11 @@ public:
     virtual void arg3(long);
     virtual void arg4(long);
     virtual void arg5(long);
+};
+
+class pt_debugger_x32 : public pt_debugger_x64 {
+public:
+    virtual int syscall();
 };
 
 pt_process *pt_alloc_process(pt_debugger *);

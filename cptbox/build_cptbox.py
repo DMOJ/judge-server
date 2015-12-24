@@ -18,7 +18,7 @@ os.environ['OPT'] = ' '.join(flag for flag in opt.split() if flag != '-Wstrict-p
 extra_compile_args = ['-march=native', '-O3']
 
 sources = ['_cptbox.pyx', 'ptdebug.cpp', 'ptdebug_x86.cpp', 'ptdebug_x64.cpp',
-           'ptdebug_x86_on_x64.cpp', 'ptproc.cpp']
+           'ptdebug_x86_on_x64.cpp', 'ptdebug_x32.cpp', 'ptproc.cpp']
 
 distribution = Distribution({
     'ext_modules': cythonize([Extension('_cptbox', sources=sources,

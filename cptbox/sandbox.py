@@ -350,6 +350,7 @@ _arch_map = {
     (X64, X64): DEBUGGER_X64,
     (X64, X86): DEBUGGER_X86_ON_X64,
     (X32, X32): DEBUGGER_X32,
+    (X32, X86): DEBUGGER_X86_ON_X64,
 }
 
 

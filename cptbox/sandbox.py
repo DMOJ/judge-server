@@ -95,7 +95,7 @@ class _SecurePopen(Process):
         self.__init_streams(stdin, stdout, stderr, unbuffered)
 
         self._security = security
-        self._callbacks = [None] * SYSCALL_COUNT
+        self._callbacks = [None] * MAX_SYSCALL_NUMBER
         if security is None:
             for i in xrange(SYSCALL_COUNT):
                 self._handler(i, ALLOW)

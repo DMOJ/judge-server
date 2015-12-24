@@ -9,7 +9,8 @@ from posix.signal cimport kill
 from posix.types cimport pid_t
 
 
-__all__ = ['Process', 'Debugger', 'DEBUGGER_X86', 'DEBUGGER_X64', 'DEBUGGER_X86_ON_X64', 'DEBUGGER_X32']
+__all__ = ['Process', 'Debugger', 'MAX_SYSCALL_NUMBER',
+           'DEBUGGER_X86', 'DEBUGGER_X64', 'DEBUGGER_X86_ON_X64', 'DEBUGGER_X32']
 
 
 cdef extern from 'ptbox.h' nogil:
@@ -99,7 +100,7 @@ cdef extern from 'sys/resource.h' nogil:
 cdef extern from 'signal.h' nogil:
     cdef int SIGXCPU
 
-SYSCALL_COUNT = MAX_SYSCALL
+MAX_SYSCALL_NUMBER = MAX_SYSCALL
 DEBUGGER_X86 = 0
 DEBUGGER_X64 = 1
 DEBUGGER_X86_ON_X64 = 2

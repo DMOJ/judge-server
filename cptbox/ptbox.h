@@ -6,7 +6,7 @@
 #include <sys/types.h>
 #include <sys/time.h>
 
-#define MAX_SYSCALL 341
+#define MAX_SYSCALL 546
 #define PTBOX_HANDLER_DENY 0
 #define PTBOX_HANDLER_ALLOW 1
 #define PTBOX_HANDLER_CALLBACK 2

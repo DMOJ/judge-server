@@ -333,7 +333,7 @@ class AMQPPacketManager(object):
         if ack:
             self.submission_chan.basic_ack(delivery_tag=self.submission_tag)
         else:
-            self.submission_chan.basic_nack(delivery_tag=self.submission_tag)
+            self.submission_chan.basic_nack(delivery_tag=self.submission_tag, requeue=False)
 
     def _send_judge_packet(self, packet):
         packet['id'] = self._id

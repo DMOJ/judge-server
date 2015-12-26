@@ -43,16 +43,24 @@ The Judge can also grade in the languages listed below. These languages are less
 * D
 * Dart
 * Fortran
+* Forth
 * Go
 * Haskell
+* INTERCAL
 * Lua
 * NASM
 * Objective-C
+* Octave
 * OCaml
-* PHP
+* PHP 5/7
+* Prolog
+* R
 * Ruby 2.1
 * Rust
+* Scala
 * Scheme
+* sed
+* Swift
 * Tcl
 * Turing
 * V8 JavaScript

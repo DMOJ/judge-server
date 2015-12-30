@@ -10,7 +10,7 @@ from posix.types cimport pid_t
 
 
 __all__ = ['Process', 'Debugger', 'MAX_SYSCALL_NUMBER',
-           'DEBUGGER_X86', 'DEBUGGER_X64', 'DEBUGGER_X86_ON_X64', 'DEBUGGER_X32']
+           'DEBUGGER_X86', 'DEBUGGER_X64', 'DEBUGGER_X86_ON_X64', 'DEBUGGER_X32', 'DEBUGGER_ARM']
 
 
 cdef extern from 'ptbox.h' nogil:
@@ -52,6 +52,9 @@ cdef extern from 'ptbox.h' nogil:
         pass
 
     cdef cppclass pt_debugger_x32(pt_debugger):
+        pass
+
+    cdef cppclass pt_debugger_arm(pt_debugger):
         pass
 
     cdef cppclass pt_process:
@@ -105,6 +108,7 @@ DEBUGGER_X86 = 0
 DEBUGGER_X64 = 1
 DEBUGGER_X86_ON_X64 = 2
 DEBUGGER_X32 = 3
+DEBUGGER_ARM = 4
 
 cdef struct child_config:
     unsigned long memory # affects only sbrk heap
@@ -374,6 +378,8 @@ cdef class Process:
             self._debugger = new pt_debugger_x86_on_x64()
         elif debugger == DEBUGGER_X32:
             self._debugger = new pt_debugger_x32()
+        elif debugger == DEBUGGER_ARM:
+            self._debugger = new pt_debugger_arm()
         else:
             raise ValueError('Unsupported debugger configuration')
 

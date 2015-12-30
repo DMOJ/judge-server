@@ -43,12 +43,15 @@ def file_info(path, split=re.compile(r'[\s,]').split):
 X86 = 'x86'
 X64 = 'x64'
 X32 = 'x32'
+ARM = 'arm'
 
 
 def file_arch(path):
     info = file_info(path)
 
     if '32-bit' in info:
+        if 'ARM' in info:
+            return ARM
         return X32 if 'x86-64' in info else X86
     elif '64-bit' in info:
         return X64
@@ -58,11 +61,12 @@ PYTHON_ARCH = file_arch(sys.executable)
 
 
 _PIPE_BUF = getattr(select, 'PIPE_BUF', 512)
-_SYSCALL_INDICIES = [None] * 4
+_SYSCALL_INDICIES = [None] * 5
 _SYSCALL_INDICIES[DEBUGGER_X86] = 0
 _SYSCALL_INDICIES[DEBUGGER_X86_ON_X64] = 0
 _SYSCALL_INDICIES[DEBUGGER_X64] = 1
 _SYSCALL_INDICIES[DEBUGGER_X32] = 2
+_SYSCALL_INDICIES[DEBUGGER_ARM] = 3
 
 
 def _eintr_retry_call(func, *args):
@@ -352,6 +356,7 @@ _arch_map = {
     (X64, X32): DEBUGGER_X32,
     (X32, X32): DEBUGGER_X32,
     (X32, X86): DEBUGGER_X86_ON_X64,
+    (ARM, ARM): DEBUGGER_ARM,
 }
 
 

@@ -86,51 +86,51 @@ int pt_process::monitor() {
         if (WIFEXITED(status) || WIFSIGNALED(status))
             break;
 
-        if (first)
+        if (first) {
             dispatch(PTBOX_EVENT_ATTACH, 0);
+            // This is right after SIGSTOP is received:
+            ptrace(PTRACE_SETOPTIONS, pid, NULL, PTRACE_O_TRACESYSGOOD);
+        }
 
         if (WIFSTOPPED(status)) {
-            if (WSTOPSIG(status) == SIGTRAP) {
-                ptrace(PTRACE_GETSIGINFO, pid, NULL, &si);
-                if (si.si_code == SIGTRAP || si.si_code == (SIGTRAP|0x80)) {
-                    int syscall = debugger->syscall();
-                    in_syscall ^= true;
-                    //printf("%s syscall %d\n", in_syscall ? "Enter" : "Exit", syscall);
+            if (WSTOPSIG(status) == (0x80 | SIGTRAP)) {
+                int syscall = debugger->syscall();
+                in_syscall ^= true;
+                //printf("%s syscall %d\n", in_syscall ? "Enter" : "Exit", syscall);
 
-                    if (!spawned) {
-                        if (in_syscall && syscall == debugger->execve_syscall())
-                            spawned = true;
-                    } else if (in_syscall) {
-                        if (syscall < MAX_SYSCALL) {
-                            switch (handler[syscall]) {
-                                case PTBOX_HANDLER_ALLOW:
-                                    break;
-                                case PTBOX_HANDLER_STDOUTERR: {
-                                    int arg0 = debugger->arg0();
-                                    if (arg0 != 1 && arg0 != 2)
-                                        exit_reason = protection_fault(syscall);
-                                    break;
-                                }
-                                case PTBOX_HANDLER_CALLBACK:
-                                    if (callback(context, syscall))
-                                        break;
-                                    //printf("Killed by callback: %d\n", syscall);
+                if (!spawned) {
+                    if (in_syscall && syscall == debugger->execve_syscall())
+                        spawned = true;
+                } else if (in_syscall) {
+                    if (syscall < MAX_SYSCALL) {
+                        switch (handler[syscall]) {
+                            case PTBOX_HANDLER_ALLOW:
+                                break;
+                            case PTBOX_HANDLER_STDOUTERR: {
+                                int arg0 = debugger->arg0();
+                                if (arg0 != 1 && arg0 != 2)
                                     exit_reason = protection_fault(syscall);
-                                    continue;
-                                default:
-                                    // Default is to kill, safety first.
-                                    //printf("Killed by DISALLOW or None: %d\n", syscall);
-                                    exit_reason = protection_fault(syscall);
-                                    continue;
+                                break;
                             }
-                            if (debugger->is_exit(syscall))
-                                dispatch(PTBOX_EVENT_EXITING, PTBOX_EXIT_NORMAL);
+                            case PTBOX_HANDLER_CALLBACK:
+                                if (callback(context, syscall))
+                                    break;
+                                //printf("Killed by callback: %d\n", syscall);
+                                exit_reason = protection_fault(syscall);
+                                continue;
+                            default:
+                                // Default is to kill, safety first.
+                                //printf("Killed by DISALLOW or None: %d\n", syscall);
+                                exit_reason = protection_fault(syscall);
+                                continue;
                         }
-                    } else if (debugger->on_return_callback) {
-                        debugger->on_return_callback(debugger->on_return_context, syscall);
-                        debugger->on_return_callback = NULL;
-                        debugger->on_return_context = NULL;
+                        if (debugger->is_exit(syscall))
+                            dispatch(PTBOX_EVENT_EXITING, PTBOX_EXIT_NORMAL);
                     }
+                } else if (debugger->on_return_callback) {
+                    debugger->on_return_callback(debugger->on_return_context, syscall);
+                    debugger->on_return_callback = NULL;
+                    debugger->on_return_context = NULL;
                 }
             } else {
                 switch (WSTOPSIG(status)) {

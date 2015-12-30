@@ -101,29 +101,31 @@ int pt_process::monitor() {
                         if (in_syscall && syscall == debugger->execve_syscall())
                             spawned = true;
                     } else if (in_syscall) {
-                        switch (handler[syscall]) {
-                            case PTBOX_HANDLER_ALLOW:
-                                break;
-                            case PTBOX_HANDLER_STDOUTERR: {
-                                int arg0 = debugger->arg0();
-                                if (arg0 != 1 && arg0 != 2)
-                                    exit_reason = protection_fault(syscall);
-                                break;
-                            }
-                            case PTBOX_HANDLER_CALLBACK:
-                                if (callback(context, syscall))
+                        if (syscall < MAX_SYSCALL) {
+                            switch (handler[syscall]) {
+                                case PTBOX_HANDLER_ALLOW:
                                     break;
-                                //printf("Killed by callback: %d\n", syscall);
-                                exit_reason = protection_fault(syscall);
-                                continue;
-                            default:
-                                // Default is to kill, safety first.
-                                //printf("Killed by DISALLOW or None: %d\n", syscall);
-                                exit_reason = protection_fault(syscall);
-                                continue;
+                                case PTBOX_HANDLER_STDOUTERR: {
+                                    int arg0 = debugger->arg0();
+                                    if (arg0 != 1 && arg0 != 2)
+                                        exit_reason = protection_fault(syscall);
+                                    break;
+                                }
+                                case PTBOX_HANDLER_CALLBACK:
+                                    if (callback(context, syscall))
+                                        break;
+                                    //printf("Killed by callback: %d\n", syscall);
+                                    exit_reason = protection_fault(syscall);
+                                    continue;
+                                default:
+                                    // Default is to kill, safety first.
+                                    //printf("Killed by DISALLOW or None: %d\n", syscall);
+                                    exit_reason = protection_fault(syscall);
+                                    continue;
+                            }
+                            if (debugger->is_exit(syscall))
+                                dispatch(PTBOX_EVENT_EXITING, PTBOX_EXIT_NORMAL);
                         }
-                        if (debugger->is_exit(syscall))
-                            dispatch(PTBOX_EVENT_EXITING, PTBOX_EXIT_NORMAL);
                     } else if (debugger->on_return_callback) {
                         debugger->on_return_callback(debugger->on_return_context, syscall);
                         debugger->on_return_callback = NULL;

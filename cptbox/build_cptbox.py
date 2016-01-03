@@ -17,7 +17,11 @@ log.set_verbosity(3)
 
 opt, = get_config_vars('OPT')
 os.environ['OPT'] = ' '.join(flag for flag in opt.split() if flag != '-Wstrict-prototypes')
-extra_compile_args = ['-march=native', '-O3']
+
+if os.uname()[4].startswith('arm'):
+    extra_compile_args = ['-O3']
+else:
+    extra_compile_args = ['-march=native', '-O3']
 
 sources = ['ptdebug.cpp', 'ptdebug_x86.cpp', 'ptdebug_x64.cpp',
            'ptdebug_x86_on_x64.cpp', 'ptdebug_x32.cpp', 'ptdebug_arm.cpp', 'ptproc.cpp']

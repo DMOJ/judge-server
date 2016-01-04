@@ -1,23 +1,37 @@
 import os
+import re
 import subprocess
 
 from .base_executor import CompiledExecutor
 from error import CompileError
 from judgeenv import env
 
-ASM_FS = ['.*\.so']#, '/proc/meminfo', '/dev/null']
+
+refeatures = re.compile('^[#;@|!]\s+features:\s*([\w\s,]+)', re.M)
+feature_split = re.compile('[\s,]+').split
 
 
 class GASExecutor(CompiledExecutor):
     as_path = None
     ld_path = None
     qemu_path = None
+    dynamic_linker = None
+    crt_pre = None
+    crt_post = None
+
     name = 'GAS'
     ext = '.asm'
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, problem_id, source_code, *args, **kwargs):
         self.use_qemu = self.qemu_path is not None and os.path.isfile(self.qemu_path)
-        super(GASExecutor, self).__init__(*args, **kwargs)
+
+        features = refeatures.search(source_code)
+        if features is not None:
+            self.features = set(filter(None, feature_split(features.group(1))))
+        else:
+            self.features = set()
+
+        super(GASExecutor, self).__init__(problem_id, source_code, *args, **kwargs)
 
     def compile(self):
         object = self._file('%s.o' % self.problem)
@@ -27,8 +41,12 @@ class GASExecutor(CompiledExecutor):
         if process.returncode != 0:
             raise CompileError(as_output)
 
+        to_link = [object]
+        if 'libc' in self.features:
+            to_link = ['-dynamic-linker', self.dynamic_linker] + self.crt_pre + ['-lc'] + to_link + self.crt_post
+
         executable = self._file(self.problem)
-        process = subprocess.Popen([self.ld_path, '-s', '-o', executable, object],
+        process = subprocess.Popen([self.ld_path, '-s', '-o', executable] + to_link,
                                    cwd=self._dir, stderr=subprocess.PIPE)
         ld_output = process.communicate()[1]
         if process.returncode != 0:
@@ -67,8 +85,10 @@ class GASExecutor(CompiledExecutor):
 
     @classmethod
     def initialize(cls, sandbox=True):
-        if cls.as_path is None or cls.ld_path is None:
+        if any(i is None for i in (cls.as_path, cls.ld_path, cls.dynamic_linker, cls.crt_pre, cls.crt_post)):
             return False
-        if not os.path.isfile(cls.as_path) or not os.path.isfile(cls.ld_path):
+        if any(not os.path.isfile(i) for i in (cls.as_path, cls.ld_path, cls.dynamic_linker)):
+            return False
+        if any(not os.path.isfile(i) for i in cls.crt_pre) or any(not os.path.isfile(i) for i in cls.crt_post):
             return False
         return cls.run_self_test(sandbox)

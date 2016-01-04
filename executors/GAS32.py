@@ -12,21 +12,30 @@ class Executor(GASExecutor):
 .global  _start
 
 _start:
-        mov     eax,    4
-        xor     ebx,    ebx
-        inc     ebx
-        mov     ecx,    offset msg
-        mov     edx,    offset len
-        int     0x80
+	mov	eax,	3
+	xor	ebx,	ebx
+	mov	ecx,	offset	buffer
+	mov	edx,	4096
+	int	0x80
 
-        xor     eax,    eax
-        inc     eax
-        int     0x80
+	test	eax,	eax
+	jz	_exit
 
-.data
-msg:
-        .ascii  "echo: Hello, World!\n"
-        len = . - msg
+	mov	edx,	eax
+	inc	ebx
+	mov	eax,	4
+	int	0x80
+
+	jmp	_start
+_exit:
+	xor	eax,	eax
+	xor	ebx,	ebx
+	inc	eax
+	int	0x80
+
+.bss
+buffer:
+	.skip	4096
 '''
 
 initialize = Executor.initialize

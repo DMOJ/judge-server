@@ -7,7 +7,7 @@ from error import CompileError
 from judgeenv import env
 
 
-refeatures = re.compile('^[#;@|!]\s+features:\s*([\w\s,]+)', re.M)
+refeatures = re.compile('^[#;@|!]\s*features:\s*([\w\s,]+)', re.M)
 feature_split = re.compile('[\s,]+').split
 
 
@@ -31,7 +31,7 @@ class GASExecutor(CompiledExecutor):
         else:
             self.features = set()
 
-        super(GASExecutor, self).__init__(problem_id, source_code, *args, **kwargs)
+        super(GASExecutor, self).__init__(problem_id, source_code + '\n', *args, **kwargs)
 
     def compile(self):
         object = self._file('%s.o' % self.problem)
@@ -52,7 +52,7 @@ class GASExecutor(CompiledExecutor):
         if process.returncode != 0:
             raise CompileError(ld_output)
 
-        self.warning = '%s\n%s' % (as_output, ld_output)
+        self.warning = ('%s\n%s' % (as_output, ld_output)).strip()
         return executable
 
     def get_cmdline(self):

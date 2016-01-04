@@ -102,6 +102,10 @@ class BaseExecutor(ResourceProxy):
             return False
         if not os.path.isfile(cls.get_command()):
             return False
+        return cls.run_self_test(sandbox)
+
+    @classmethod
+    def run_self_test(cls, sandbox=True):
         if not cls.test_program:
             return True
 

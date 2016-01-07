@@ -66,7 +66,9 @@ class JavaProcess(object):
         return None
 
     def communicate(self, stdin=None):
-        return self._communicate(*self.process.communicate(stdin))
+        output = self.process.communicate(stdin)
+        self._update_stats()
+        return output
 
     def _update_windows_stats(self):
         handle = int(self.process._handle)
@@ -86,20 +88,23 @@ class JavaProcess(object):
 
     def safe_communicate(self, stdin=None, outlimit=None, errlimit=None):
         try:
-            return self._communicate(*safe_communicate(self.process, stdin, outlimit, errlimit))
+            output = safe_communicate(self.process, stdin, outlimit, errlimit)
         except OutputLimitExceeded:
             if windows:
                 self._update_windows_stats()
             else:
                 self._fallback_unix_stats()
             raise
+        else:
+            self._update_stats()
+            return output
 
-    def _communicate(self, stdout, stderr):
+    def _update_stats(self):
         try:
             with open(self.statefile, 'r') as proc:
                 self.error_info = proc.read().strip()
         except Exception:
-            return stdout, stderr
+            return
         try:
             data = self.error_info.split(None, 5)
             self.execution_time, self.tle, self.max_memory, self.mle, self.returncode = map(int, data[:5])
@@ -108,7 +113,7 @@ class JavaProcess(object):
             if not windows:
                 print>> sys.stderr, self.error_info
                 self._fallback_unix_stats()
-                return stdout, stderr
+                return
         if windows:
             self._update_windows_stats()
         else:
@@ -117,11 +122,22 @@ class JavaProcess(object):
             self.returncode = 1
         if self.feedback == 'OK':
             self.feedback = None
-        return stdout, stderr
 
     def kill(self):
         self._killed = True
         return self.process.kill()
+
+    def wait(self):
+        self.process.wait()
+        self._update_stats()
+        return self.returncode
+
+    def poll(self):
+        if self.returncode is None:
+            if self.process.poll() is None:
+                return None
+            self._update_stats()
+        return self.returncode
 
     @property
     def r_execution_time(self):

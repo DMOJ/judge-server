@@ -5,6 +5,7 @@ from judgeenv import env
 class Executor(GASExecutor):
     as_path = env['runtime'].get('as_x86', None)
     ld_path = env['runtime'].get('ld_x86', None)
+    qemu_path = env['runtime'].get('qemu_x86', None)
     dynamic_linker = env['runtime'].get('ld.so_x86', '/lib/ld-linux.so.2')
     crt_pre = env['runtime'].get('crt_pre_x86', ['/usr/lib/i386-linux-gnu/crt1.o', '/usr/lib/i386-linux-gnu/crti.o'])
     crt_post = env['runtime'].get('crt_post_x86', ['/usr/lib/i386-linux-gnu/crtn.o'])

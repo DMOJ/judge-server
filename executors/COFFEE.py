@@ -1,18 +1,36 @@
-from .base_executor import CompiledExecutor
+import os
+
+from .base_executor import ScriptExecutor
 from judgeenv import env
 
 
-class Executor(CompiledExecutor):
+class Executor(ScriptExecutor):
     ext = '.coffee'
     name = 'COFFEE'
-    fs = ['.*\.so', '/usr/', '/etc/localtime$', '/dev/null$']
-    command = env['runtime'].get('chicken-csc')
+    nproc = -1
+    fs = ['.*\.(?:so|js$)', '/etc/(?:resolv|nsswitch).conf$', '/dev/urandom$', '/$']
+    command = env['runtime'].get('node')
     syscalls = ['getpid', 'getppid', 'clock_getres', 'timer_create', 'timer_settime',
-                'timer_delete', 'newselect', 'select']
-    test_program = '(declare (uses extras)) (map print (read-lines))'
+                'timer_delete', 'newselect', 'select', 'pipe2', 'write', 'epoll_create1',
+                'eventfd2', 'epoll_ctl', 'epoll_wait']
+    test_program = '''\
+process.stdin.on 'readable', () ->
+  chunk = process.stdin.read()
+  if chunk != null
+    process.stdout.write chunk
+'''
+    address_grace = 131072
 
-    def get_compile_args(self):
-        return [self.get_command(), self._code]
+    @classmethod
+    def initialize(cls, sandbox=True):
+        if 'coffee' not in env['runtime'] or not os.path.isfile(env['runtime']['coffee']):
+            return False
+        return super(Executor, cls).initialize(sandbox=sandbox)
 
+    def get_cmdline(self):
+        return [self.get_command(), env['runtime']['coffee'], self._code]
+
+    def get_fs(self):
+        return super(Executor, self).get_fs() + [env['runtime']['coffee']]
 
 initialize = Executor.initialize

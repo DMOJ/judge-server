@@ -25,7 +25,8 @@ def __load(to_load):
         except ImportError as e:
             if e.message not in ('No module named _cptbox',
                                  'No module named msvcrt',
-                                 'No module named _wbox'):
+                                 'No module named _wbox',
+								 'No module named termios'):
                 traceback.print_exc()
             return None
         for part in path:

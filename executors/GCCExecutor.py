@@ -13,7 +13,7 @@ import subprocess
 C_FS = ['.*\.so', '/proc/meminfo', '/dev/null']
 GCC_ENV = env['runtime'].get('gcc_env', {})
 GCC_COMPILE = os.environ.copy()
-IS_ARM = os.uname()[4].startswith('arm')
+IS_ARM = hasattr(os, 'uname') and os.uname()[4].startswith('arm')
 
 if os.name == 'nt':
     GCC_COMPILE.update((k.encode('mbcs'), v.encode('mbcs')) for k, v in

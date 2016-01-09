@@ -20,6 +20,11 @@ runpy.run_path(sys.argv[0], run_name='__main__')\
 
     def get_cmdline(self):
         return [self.get_command(), '-BS', self._loader, self._code]
+        
+    def get_allowed_syscalls(self):
+        syscalls = super(PythonExecutor, self).get_allowed_syscalls()
+        syscalls += ['statfs', 'statfs64']
+        return syscalls
 
     def create_files(self, problem_id, source_code):
         self._loader = self._file('-loader.py')

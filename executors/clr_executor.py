@@ -93,6 +93,8 @@ class CLRProcess(object):
             raise WinError()
 
         self._port = CreateIoCompletionPort(INVALID_HANDLE_VALUE, None, 0, 1)
+        if not self._port:
+            raise WinError()
 
         if not SetInformationJobObject(job, JobObjectExtendedLimitInformation, byref(limits),
                                        sizeof(JOBOBJECT_EXTENDED_LIMIT_INFORMATION)):

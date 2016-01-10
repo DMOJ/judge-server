@@ -6,6 +6,7 @@
 #include <windows.h>
 #include <cinttypes>
 #include "helpers.h"
+#include "getaddr.h"
 
 class JobbedProcessManager {
 	AutoHandle hProcess, hShocker;
@@ -16,7 +17,8 @@ class JobbedProcessManager {
 	GUID guid;
 	WCHAR szGuid[40];
 	LPWSTR szUsername, szPassword, szDirectory, szExecutable, szEnvBlock;
-	LPWSTR szCmdLine;
+	LPWSTR szCmdLine, szInjectX86, szInjectX64;
+    LPSTR szInjectFunction;
 	bool tle_, mle_, terminate_shocker;
 	unsigned long long memory_, memory_limit;
 	DWORD cpu_time_;
@@ -25,6 +27,28 @@ class JobbedProcessManager {
 
 	static DWORD CALLBACK s_ShockerProc(LPVOID lpParam);
 	DWORD CALLBACK ShockerProc();
+    
+    static bool canX86, canX64;
+    
+    static struct _init {
+        _init() {
+            SYSTEM_INFO si;
+            
+            GetNativeSystemInfo(&si);
+            switch (si.wProcessorArchitecture) {
+#ifdef _WIN64
+                case PROCESSOR_ARCHITECTURE_AMD64:
+                    canX64 = TRUE;
+#endif
+                case PROCESSOR_ARCHITECTURE_INTEL:
+                    canX86 = TRUE;
+                    break;
+            }
+        }
+    } _initializer;
+
+    static BYTE asmX86[], asmX64[];
+    static bool inject(HANDLE hProcess, BOOL x64, LPCWSTR szDllPath, LPCSTR szFunctionName);
 public:
 	JobbedProcessManager();
 	virtual ~JobbedProcessManager();
@@ -39,6 +63,9 @@ public:
 	JobbedProcessManager &command(LPCWSTR szCmdLine);
 	JobbedProcessManager &executable(LPCWSTR szExecutable);
 	JobbedProcessManager &directory(LPCWSTR szDirectory);
+	JobbedProcessManager &injectX86(LPCWSTR szExecutable);
+	JobbedProcessManager &injectX64(LPCWSTR szExecutable);
+	JobbedProcessManager &injectFunction(LPCSTR szFunction);
 	JobbedProcessManager &environment(LPCWSTR szEnvBlock, size_t cbBytes);
 
 	unsigned long long memory() { return memory_; }
@@ -54,6 +81,9 @@ public:
 	AutoHandle &stdIn() { return hStdin; }
 	AutoHandle &stdOut() { return hStdout; }
 	AutoHandle &stdErr() { return hStderr; }
+    
+    static void updateAsmX86(LPCWSTR szExecutable);
+    static void updateAsmX64(LPCWSTR szExecutable);
 };
 
 #endif

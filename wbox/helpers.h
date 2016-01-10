@@ -67,4 +67,24 @@ public:
 	HRESULT code() { return error; }
 };
 
+inline void writeQword(BYTE *buf, DWORD64 qword)
+{
+    buf[0] = qword & 0xFF;
+    buf[1] = (qword >> 8) & 0xFF;
+    buf[2] = (qword >> 16) & 0xFF;
+    buf[3] = (qword >> 24) & 0xFF;
+    buf[4] = (qword >> 32) & 0xFF;
+    buf[5] = (qword >> 40) & 0xFF;
+    buf[6] = (qword >> 48) & 0xFF;
+    buf[7] = (qword >> 56) & 0xFF;
+}
+
+inline void writeDword(BYTE *buf, DWORD dword)
+{
+    buf[0] = dword & 0xFF;
+    buf[1] = (dword >> 8) & 0xFF;
+    buf[2] = (dword >> 16) & 0xFF;
+    buf[3] = (dword >> 24) & 0xFF;
+}
+
 #endif

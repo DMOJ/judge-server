@@ -3,6 +3,7 @@ from subprocess import Popen
 import subprocess
 import sys
 from error import CompileError
+from judgeenv import env
 
 from .resource_proxy import ResourceProxy
 
@@ -25,6 +26,9 @@ class BaseExecutor(ResourceProxy):
     syscalls = []
     command = None
     name = '(unknown)'
+    inject32 = env.get('inject32', None)
+    inject64 = env.get('inject64', None)
+    inject_func = env.get('inject_func', None)
     test_program = ''
     test_name = 'self_test'
     test_time = 1
@@ -70,6 +74,15 @@ class BaseExecutor(ResourceProxy):
 
     def get_nproc(self):
         return self.nproc
+    
+    def get_inject32(self):
+        return self.inject32
+    
+    def get_inject64(self):
+        return self.inject64
+    
+    def get_inject_func(self):
+        return self.inject_func
 
     if SecurePopen is None:
         def launch(self, *args, **kwargs):
@@ -77,7 +90,10 @@ class BaseExecutor(ResourceProxy):
                              time=kwargs.get('time'), memory=kwargs.get('memory'),
                              cwd=self._dir, executable=self.get_executable(),
                              network_block=True, env=self.get_env(),
-                             nproc=self.get_nproc() + 1)
+                             nproc=self.get_nproc() + 1,
+                             inject32=self.get_inject32(),
+                             inject64=self.get_inject64(),
+                             inject_func=self.get_inject_func())
     else:
         def launch(self, *args, **kwargs):
             return SecurePopen(self.get_cmdline() + list(args), executable=self.get_executable(),

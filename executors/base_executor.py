@@ -2,9 +2,10 @@ import os
 from subprocess import Popen
 import subprocess
 import sys
+from shutil import copyfile
+
 from error import CompileError
 from judgeenv import env
-
 from .resource_proxy import ResourceProxy
 
 
@@ -12,9 +13,9 @@ try:
     from cptbox import SecurePopen, PIPE, CHROOTSecurity, ALLOW, syscalls
 except ImportError:
     SecurePopen, PIPE, CHROOTSecurity, ALLOW, syscalls = None, None, None, None, None
-    from wbox import WBoxPopen
+    from wbox import WBoxPopen, default_inject32, default_inject64, default_inject_func
 else:
-    WBoxPopen = None
+    WBoxPopen = default_inject32 = default_inject64 = default_inject_func = None
 
 
 class BaseExecutor(ResourceProxy):
@@ -26,9 +27,9 @@ class BaseExecutor(ResourceProxy):
     syscalls = []
     command = None
     name = '(unknown)'
-    inject32 = env.get('inject32', None)
-    inject64 = env.get('inject64', None)
-    inject_func = env.get('inject_func', None)
+    inject32 = env.get('inject32', default_inject32)
+    inject64 = env.get('inject64', default_inject64)
+    inject_func = env.get('inject_func', default_inject_func)
     test_program = ''
     test_name = 'self_test'
     test_time = 1
@@ -76,10 +77,14 @@ class BaseExecutor(ResourceProxy):
         return self.nproc
     
     def get_inject32(self):
-        return self.inject32
+        file = self._file('dmsec32.dll')
+        copyfile(self.inject32, file)
+        return file
     
     def get_inject64(self):
-        return self.inject64
+        file = self._file('dmsec64.dll')
+        copyfile(self.inject64, file)
+        return file
     
     def get_inject_func(self):
         return self.inject_func

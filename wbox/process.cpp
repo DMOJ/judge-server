@@ -133,6 +133,10 @@ bool JobbedProcessManager::inject(HANDLE hProcess, BOOL x64, LPCWSTR szDllPath, 
         return false;
     
     WaitForSingleObject(hInject, INFINITE);
+
+    VirtualFreeEx(hProcess, lpDllPath, cbDllPath, MEM_RELEASE);
+    VirtualFreeEx(hProcess, lpFunctionName, cbFunctionName, MEM_RELEASE);
+    VirtualFreeEx(hProcess, lpCode, sizeof asmCode, MEM_RELEASE);
     return true;
 }
 

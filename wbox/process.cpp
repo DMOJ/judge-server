@@ -375,6 +375,7 @@ DWORD JobbedProcessManager::return_code() {
 bool JobbedProcessManager::wait(DWORD time) {
 	switch (WaitForSingleObject(hProcess, time)) {
 	case WAIT_OBJECT_0:
+        WaitForSingleObject(hShocker, INFINITE);
 		return true;
 	case WAIT_FAILED:
 		throw WindowsException("WaitForSingleObject");
@@ -391,9 +392,10 @@ JobbedProcessManager::~JobbedProcessManager() {
 DWORD JobbedProcessManager::ShockerProc() {
 	JOBOBJECT_EXTENDED_LIMIT_INFORMATION extLimit;
 	LARGE_INTEGER qpc;
-	DWORD result;
+	DWORD result = WAIT_TIMEOUT;
 	
-	do {
+	while (!terminate_shocker && result == WAIT_TIMEOUT) {
+		result = WaitForSingleObject(hProcess, 100);
 		QueryPerformanceCounter(&qpc);
 		execution_time = (qpc.QuadPart - liStart.QuadPart) * qpc_freq;
 		if (time_limit && execution_time > time_limit) {
@@ -404,8 +406,6 @@ DWORD JobbedProcessManager::ShockerProc() {
 		QueryInformationJobObject(hJob, JobObjectExtendedLimitInformation, &extLimit, sizeof extLimit, nullptr);
 		memory_ = extLimit.PeakJobMemoryUsed;
 		mle_ |= memory_limit && memory_ > memory_limit;
-		Sleep(100);
-		result = WaitForSingleObject(hProcess, 0);
-	} while (!terminate_shocker && result == WAIT_TIMEOUT);
+	}
 	return 0;
 }

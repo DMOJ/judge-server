@@ -7,6 +7,7 @@ import threading
 import time
 import traceback
 import zlib
+import os
 from operator import itemgetter
 
 import pika
@@ -17,6 +18,7 @@ import sysinfo
 from executors import executors
 
 logger = logging.getLogger('dmoj.judge')
+timer = time.clock if os.name == 'nt' else time.time
 
 
 class JudgeAuthenticationFailed(Exception):
@@ -253,7 +255,7 @@ class AMQPPacketManager(object):
         try:
             packet = json.loads(body.decode('zlib'))
             if 'client' in packet:
-                self._latency = time.time() - packet['client']
+                self._latency = timer() - packet['client']
                 logger.debug('Ping time measured: %.3fs', self._latency)
         except Exception:
             logger.exception('Error in AMQP latency listener')
@@ -261,7 +263,7 @@ class AMQPPacketManager(object):
 
     def _send_latency(self):
         self.receiver.basic_publish(exchange='', routing_key='latency', body=json.dumps({
-            'queue': self.latency_queue, 'time': time.time(),
+            'queue': self.latency_queue, 'time': timer(),
         }).encode('zlib'))
 
     def _submission_listener(self, chan, method, properties, body):

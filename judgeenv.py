@@ -38,6 +38,8 @@ _parser = argparse.ArgumentParser(description='''
     Spawns a judge for a submission server.
 ''')
 _parser.add_argument('server_host', help='host to listen for the server')
+_parser.add_argument('judge_name', nargs='?', help='judge name (overrides configuration)')
+_parser.add_argument('judge_key', nargs='?', help='judge key (overrides configuration)')
 _parser.add_argument('-p', '--server-port', type=int, default=9999,
                      help='port to listen for the server')
 _parser.add_argument('-c', '--config', type=str, default=None,
@@ -71,11 +73,19 @@ with open(model_file) as init_file:
         env = yaml.safe_load(init_file)
     else:
         raise ValueError('Unknown judge model path')
+
+    if _args.judge_name is not None:
+        env['id'] = _args.judge_name
+
+    if _args.judge_key is not None:
+        env['key'] = _args.judge_key
+
     dirs = env.get('problem_storage_root', os.path.join('data', 'problems'))
     if isinstance(dirs, list):
         _judge_dirs = tuple(unicodify(os.path.normpath(os.path.join(_root, dir))) for dir in dirs)
     else:
-        _judge_dirs = unicodify(os.path.normpath(os.path.join(_root, dirs)))
+        _judge_dirs = os.path.join(_root, dirs)
+        _judge_dirs = tuple(unicodify(os.path.normpath(os.path.join(_judge_dirs, dir))) for dir in os.listdir(_judge_dirs))
 
 
 def get_problem_root(pid):

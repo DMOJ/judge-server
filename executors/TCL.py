@@ -26,10 +26,8 @@ puts $input
             debugger.on_return(socket_return)
             return True
 
-        def handle_write(debugger):
-            return debugger.arg0 <= 4 # TCL uses some handles internally
         security[sys_tgkill] = True
-        security[sys_write] = handle_write
+        security[sys_write] = lambda debugger: debugger.arg0 <= 4 # TCL uses some handles internally
         security[sys_socket] = handle_socket
         security[sys_socketcall] = handle_socket
         security[sys_connect] = True

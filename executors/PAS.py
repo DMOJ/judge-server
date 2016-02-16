@@ -1,5 +1,3 @@
-import subprocess
-
 from executors.base_executor import CompiledExecutor
 from judgeenv import env
 
@@ -16,9 +14,6 @@ begin
     writeln(line);
 end.
 '''
-
-    # def get_compile_popen_kwargs(self):
-    #     return {'stdout': subprocess.PIPE, 'stderr': None}
 
     def get_compile_args(self):
         return [env['runtime']['fpc'], '-Fe/dev/stderr', '-So', '-O2', self._code, '-o' + self.get_compiled_file()]

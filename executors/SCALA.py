@@ -47,6 +47,4 @@ object self_test {
     def get_compile_args(self):
         return [self.get_compiler(), self._code]
 
-
-
 initialize = Executor.initialize

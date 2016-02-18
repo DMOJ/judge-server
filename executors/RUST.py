@@ -7,7 +7,7 @@ class Executor(CompiledExecutor):
     name = 'RUST'
     fs = ['.*\.alias', '.*\.so', '/usr/', '/etc/localtime$', '/dev/null$', '/sys/devices/system/cpu/online$', '/proc/stat$', '/proc/self/maps$']
     command = env['runtime'].get('rustc')
-    syscalls = ['sched_getaffinity']
+    syscalls = ['sched_getaffinity', 'madvise']
     test_program = 'fn main() { println!("echo: Hello, World!"); }'
 
     def get_compile_args(self):

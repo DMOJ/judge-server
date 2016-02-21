@@ -11,6 +11,6 @@ RUN mkdir /problems
 COPY . /judge
 WORKDIR /judge
 
-RUN python cptbox/build_cptbox.py && \
-    python checkers/build_checker.py && \
+RUN python cptbox/build_cptbox.py redist && \
+    python checkers/build_checker.py redist && \
     rm -rf checkers/build/ cptbox/build/

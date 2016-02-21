@@ -1,11 +1,12 @@
+import os
+import sys
+import shutil
+
 from distutils.core import Extension
 from distutils.command.build_ext import build_ext
 from distutils.dist import Distribution
 from distutils.msvccompiler import MSVCCompiler
 from distutils import log
-
-import os
-import shutil
 
 if os.path.dirname(__file__):
     os.chdir(os.path.dirname(__file__))
@@ -27,7 +28,12 @@ class Command(build_ext):
             self.compiler.compile_options += ['/Ox', '/W4', '/EHsc', '/GL', '/MT']
             self.compiler.ldflags_shared += ['/OPT:REF,ICF', '/LTCG']
         else:
-            self.distribution.ext_modules[0].extra_compile_args = ['-march=native', '-O3']
+            if os.uname()[4].startswith('arm') or 'redist' in sys.argv:
+                extra_compile_args = ['-O3']
+            else:
+                extra_compile_args = ['-march=native', '-O3']
+            self.distribution.ext_modules[0].extra_compile_args = extra_compile_args
+
         build_ext.build_extensions(self)
 
 command = Command(distribution)

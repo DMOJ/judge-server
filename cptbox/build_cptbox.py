@@ -1,4 +1,5 @@
 import os
+import sys
 import shutil
 from distutils import log
 from distutils.command.build_ext import build_ext
@@ -18,7 +19,7 @@ log.set_verbosity(3)
 opt, = get_config_vars('OPT')
 os.environ['OPT'] = ' '.join(flag for flag in opt.split() if flag != '-Wstrict-prototypes')
 
-if os.uname()[4].startswith('arm'):
+if os.uname()[4].startswith('arm') or 'redist' in sys.argv:
     extra_compile_args = ['-O3']
 else:
     extra_compile_args = ['-march=native', '-O3']

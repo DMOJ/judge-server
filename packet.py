@@ -478,6 +478,7 @@ class AMQPPacketManager(object):
 
     def run(self):
         logger.info('Starting packet manager...')
+        self.running = True
         self._connect()
         try:
             logger.info('Starting IO loop...')

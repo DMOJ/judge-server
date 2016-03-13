@@ -487,6 +487,7 @@ class AMQPPacketManager(object):
             self.stop()
         except Exception:
             logger.exception('Exception in pika loop')
+            raise SystemExit(1)
 
     def run_async(self):
         threading.Thread(target=self.run).start()

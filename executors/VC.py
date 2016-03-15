@@ -55,7 +55,6 @@ class Executor(ResourceProxy):
 
 
 def initialize(sandbox=True):
-    # TODO: sandbox is ignored
     if 'cl.exe' not in env['runtime']:
         return False
     if not os.path.isfile(env['runtime']['cl.exe']):
@@ -68,4 +67,4 @@ int main() {
     std::cout << message;
     return 0;
 }
-''')
+''', sandbox=sandbox)

@@ -33,7 +33,7 @@ class Executor(ResourceProxy):
         output_file = self._file('%s.exe' % problem_id)
 
         cl_args = ['cl', '-nologo'] + sources + ['-W4', '-DONLINE_JUDGE', '-DWIN32', '-D_CRT_SECURE_NO_WARNINGS',
-                   '-Ox', '-Fe%s' % output_file, '-link', '-stack:67108864']
+                   '-EHsc', '-Ox', '-Fe%s' % output_file, '-link', '-stack:67108864']
         cl_process = subprocess.Popen(cl_args, stderr=subprocess.PIPE, executable=env['runtime']['cl.exe'],
                                       cwd=self._dir, env=VC_COMPILE)
 

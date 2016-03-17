@@ -32,7 +32,7 @@ class BaseExecutor(ResourceProxy):
     inject_func = env.get('inject_func', default_inject_func)
     test_program = ''
     test_name = 'self_test'
-    test_time = 1
+    test_time = 10
     test_memory = 65536
 
     def __init__(self, problem_id, source_code):

@@ -55,9 +55,7 @@ class Executor(ResourceProxy):
 
 
 def initialize(sandbox=True):
-    if 'cl.exe' not in env['runtime']:
-        return False
-    if not os.path.isfile(env['runtime']['cl.exe']):
+    if 'cl.exe' not in env['runtime'] or not os.path.isfile(env['runtime']['cl.exe']):
         return False
     return test_executor('VC', Executor, r'''
 #include <iostream>

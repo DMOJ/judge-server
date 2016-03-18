@@ -47,11 +47,11 @@ class Executor(ResourceProxy):
     def launch(self, *args, **kwargs):
         return WBoxPopen([self.name] + list(args), executable=self._executable,
                          time=kwargs.get('time'), memory=kwargs.get('memory'),
-                         cwd=self._dir, env=VC_ENV, network_block=True)
+                         cwd=self._dir, env=VC_ENV or None, network_block=True)
 
     def launch_unsafe(self, *args, **kwargs):
         return subprocess.Popen([self.name] + list(args), executable=self._executable,
-                                env=VC_ENV, cwd=self._dir, **kwargs)
+                                env=VC_ENV or None, cwd=self._dir, **kwargs)
 
 
 def initialize(sandbox=True):

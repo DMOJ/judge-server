@@ -59,4 +59,4 @@ def initialize(sandbox=True):
     return test_executor('RKT', Executor, '''\
 #lang racket
 (displayln "Hello, World!")
-''')
+''', sandbox=sandbox)

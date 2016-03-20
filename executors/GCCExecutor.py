@@ -48,9 +48,6 @@ class GCCExecutor(CompiledExecutor):
             return ['-Wl,--stack,67108864']
         return []
 
-    def get_executable_ext(self):
-        return ['', '.exe'][os.name == 'nt']
-
     def get_flags(self):
         return self.flags
 

@@ -208,7 +208,7 @@ class CompiledExecutor(BaseExecutor):
         return [self.problem]
 
     def get_executable_ext(self):
-        return ''
+        return ['', '.exe'][os.name == 'nt']
 
     def get_executable(self):
         return self._executable + self.get_executable_ext()

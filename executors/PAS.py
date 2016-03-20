@@ -16,7 +16,7 @@ end.
 '''
 
     def get_compile_args(self):
-        return [env['runtime']['fpc'], '-Fe/dev/stderr', '-So', '-O2', self._code, '-o' + self.get_compiled_file()]
+        return [env['runtime']['fpc'], '-Fe/dev/stderr', '-So', '-O2', self._code, '-o' + self.problem]
 
     def get_compile_output(self, process):
         output = process.communicate()[1]

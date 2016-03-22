@@ -84,8 +84,9 @@ public class JavaSafeExecutor {
     }
 
     static void printStateAndExit() throws IOException {
-        // UnsafePrintStream buffers
-        System.out.flush();
+        // Flush on exit, unless TLE (avoids a potential deadlock on Windows; see https://github.com/DMOJ/judge/issues/146)
+        if(!submissionThread.tle)
+            System.out.flush();
 
         long totalProgramTime = System.nanoTime() - startupTime;
         boolean tle = submissionThread.isTle();

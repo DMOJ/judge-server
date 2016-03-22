@@ -2,7 +2,6 @@ import errno
 
 from .python_executor import PythonExecutor
 from judgeenv import env
-from cptbox.syscalls import *
 
 
 class Executor(PythonExecutor):
@@ -14,6 +13,7 @@ class Executor(PythonExecutor):
 
     def get_security(self):
         security = super(Executor, self).get_security()
+        from cptbox.syscalls import sys_unlink
 
         def eaccess(debugger):
             def handle_return():

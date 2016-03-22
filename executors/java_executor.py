@@ -74,6 +74,8 @@ class JavaProcess(object):
         handle = int(self.process._handle)
         if self.execution_time is None:
             self.execution_time = execution_time(handle)
+        else:
+            self.execution_time /= 1000000000.0
         if self.tle is None:
             self.tie = self.execution_time > self.time_limit
         self.max_memory = max_memory(handle) / 1024.

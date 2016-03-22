@@ -72,8 +72,10 @@ class JavaProcess(object):
 
     def _update_windows_stats(self):
         handle = int(self.process._handle)
-        self.execution_time = execution_time(handle)
-        self.tie = self.execution_time > self.time_limit
+        if self.execution_time is None:
+            self.execution_time = execution_time(handle)
+        if self.tle is None:
+            self.tie = self.execution_time > self.time_limit
         self.max_memory = max_memory(handle) / 1024.
         self.mle = self.max_memory > self.memory_limit
         if self.returncode is None:

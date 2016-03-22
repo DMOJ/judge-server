@@ -558,7 +558,13 @@ class Judge(object):
                                 stream, result.proc_output, error = e.args
                                 print>> sys.stderr, 'OLE:', stream
                                 result.result_flag |= Result.OLE
-                                process.kill()
+                                try:
+                                    process.kill()
+                                except RuntimeError as e:
+                                    if e.args[0] != 'TerminateProcess: 5':
+                                        raise
+                                    # Otherwise it's a race between this kill and the shocker,
+                                    # and failed kill means nothing.
                                 process.wait()
                         if error:
                             sys.stderr.write(error)

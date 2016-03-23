@@ -11,8 +11,8 @@ public class SubmissionThread extends Thread {
     private int error = 0;
     private Throwable exception;
 
-    public SubmissionThread(Class process) {
-        super(null, null, "Submission-Grading-Thread(" + process.getSimpleName() + ")", 1<<27 /* Some pretty large stack size */);
+    public SubmissionThread(Class process, ThreadGroup group) {
+        super(group, null, "Submission-Grading-Thread(" + process.getSimpleName() + ")", 1<<27 /* Some pretty large stack size */);
         this.submission = process;
     }
 

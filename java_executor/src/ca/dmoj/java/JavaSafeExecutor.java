@@ -157,7 +157,10 @@ public class JavaSafeExecutor {
             writeState("\n%d %d %d %d %d CNF\n", 0, 0, 0, 0, NO_CLASS_DEF_ERROR_CODE);
             return;
         }
-        submissionThread = new SubmissionThread(program);
+
+        // Isolate our Threads from the submission Threads, further safeguard against https://github.com/DMOJ/judge/issues/151
+        ThreadGroup threadBox = new ThreadGroup("Submission Threads");
+        submissionThread = new SubmissionThread(program, threadBox);
 
         shockerThread = new ShockerThread(TL, submissionThread);
         System.setSecurityManager(new SubmissionSecurityManager());

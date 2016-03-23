@@ -22,7 +22,9 @@ public class SubmissionSecurityManager extends SecurityManager {
         // potentially have somehow modified System.out and overridden the flush() call with malicious code that would
         // be executed as trusted.
         // setAccessible is never used in JavaSafeExecutor, so it is prudent to put it behind this check as well.
-        if (perm instanceof ReflectPermission) {
+        // Likewise, disable createClassLoader for null packages to a void a definition of "ca.dmoj.java.JavaSafeExecutor" being
+        // malicious.
+        if (perm instanceof ReflectPermission || (perm instanceof RuntimePermission && perm.getName().equals("createClassLoader"))) {
             if (Reflection.getCallerClass().getPackage() == null)
                 throw new AccessControlException("fail suppressAccessChecks");
         }

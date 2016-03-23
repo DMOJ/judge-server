@@ -60,8 +60,7 @@ public class SubmissionThread extends Thread {
             e.printStackTrace();
             error = JavaSafeExecutor.NO_ENTRY_POINT_ERROR_CODE;
         }
-        JavaSafeExecutor._safeBlock = true;
-        JavaSafeExecutor.shockerThread.stop();
+        JavaSafeExecutor.shockerThread.terminate();
     }
 
     public Class getSubmission() {

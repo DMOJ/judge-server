@@ -51,13 +51,6 @@ public class JavaSafeExecutor {
     static SubmissionThread submissionThread;
     static Thread selfThread;
     /**
-     * Flag to indicate that the security manager should be deactivated.
-     * Should be set to false before running the user's submission, and false after it has finished running.
-     * If this flag somehow is set to false while a user's submission is running, the judging server may be
-     * compromised: the submission gains the same access level as the user the judge is running under.
-     */
-    static boolean _safeBlock = false;
-    /**
      * The current working directory of the submission, used for classpath adding.
      */
     static String cwd;

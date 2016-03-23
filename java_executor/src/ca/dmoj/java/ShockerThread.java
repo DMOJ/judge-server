@@ -8,6 +8,7 @@ import java.io.IOException;
 public class ShockerThread extends Thread {
     private final long timelimit;
     private final SubmissionThread target;
+    private boolean terminated = false;
 
     public ShockerThread(long timelimit, SubmissionThread target) {
         super("Grader-TL-Thread");
@@ -27,6 +28,9 @@ public class ShockerThread extends Thread {
         } catch (InterruptedException ignored) {
         }
 
+        // Don't consider TLE if we're already exiting
+        if(terminated) return;
+
         target.tle = true;
 
         try {
@@ -34,5 +38,12 @@ public class ShockerThread extends Thread {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public void terminate() {
+        // Flag as terminated
+        // Actually stopping this Thread would require more permissions from the SecurityManager from calling
+        // classes, so this is the simplest and safest solution
+        terminated = true;
     }
 }

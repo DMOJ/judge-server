@@ -17,14 +17,22 @@ public class ShockerThread extends Thread {
 
     @Override
     public void run() {
+        // Fix for https://github.com/DMOJ/judge/issues/151 - printStateAndExit outside InterruptedException
+        // monitoring, otherwise a submission that is able to gain a reference to this object via ThreadGroup
+        // is able to interrupt() this Thread and therefore bypass time limit.
         try {
             // Wait for TL
             Thread.sleep(timelimit);
-            target.tle = true;
-            JavaSafeExecutor.printStateAndExit();
         } catch (ThreadDeath ouch) {
         } catch (InterruptedException ignored) {
-        } catch (IOException wtf) {
+        }
+
+        target.tle = true;
+
+        try {
+            JavaSafeExecutor.printStateAndExit();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

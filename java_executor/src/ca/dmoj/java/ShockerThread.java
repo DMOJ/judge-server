@@ -40,10 +40,11 @@ public class ShockerThread extends Thread {
         }
     }
 
-    public void terminate() {
-        // Flag as terminated
+    void terminate() {
+        // Flag as terminated.
         // Actually stopping this Thread would require more permissions from the SecurityManager from calling
-        // classes, so this is the simplest and safest solution
+        // classes, so this is the simplest and safest solution.
+        // Package-local so a submission can't call this with reflection.
         terminated = true;
     }
 }

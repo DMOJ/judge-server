@@ -59,6 +59,8 @@ public class SubmissionSecurityManager extends SecurityManager {
             /*
                 Java's Date API requires reflection.
              */
+            
+            if (((ReflectPermission)perm).getActions().contains("ca.dmoj")) break;
             return;
         }
         if (perm instanceof PropertyPermission) {

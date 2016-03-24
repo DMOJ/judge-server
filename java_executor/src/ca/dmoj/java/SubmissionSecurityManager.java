@@ -47,7 +47,8 @@ public class SubmissionSecurityManager extends SecurityManager {
             if (perm.getActions().equals("read") &&
                     (fname.endsWith(".class") ||
                             fname.startsWith("/usr/lib/jvm/") ||
-                            fname.contains("/jre/lib/zi/")
+                            fname.contains("/jre/lib/zi/") || 
+                            fname.endsWith("/jre/lib/rt.jar")
                     )) // Date
                 return;
             if (perm.getActions().equals("read") &&

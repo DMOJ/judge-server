@@ -20,9 +20,9 @@ void pt_free_process(pt_process *process) {
     delete process;
 }
 
-pt_process::pt_process(pt_debugger *debugger, bool trace_syscalls) :
+pt_process::pt_process(pt_debugger *debugger) :
     pid(0), callback(NULL), context(NULL), debugger(debugger),
-    event_proc(NULL), event_context(NULL), trace_syscalls(trace_syscalls)
+    event_proc(NULL), event_context(NULL), _trace_syscalls(true)
 {
     memset(&exec_time, 0, sizeof exec_time);
     memset(handler, 0, sizeof handler);
@@ -152,7 +152,7 @@ int pt_process::monitor() {
                 dispatch(PTBOX_EVENT_SIGNAL, WSTOPSIG(status));
             }
         }
-        ptrace(trace_syscalls ? PTRACE_SYSCALL : PTRACE_CONT, pid, NULL, NULL);
+        ptrace(_trace_syscalls ? PTRACE_SYSCALL : PTRACE_CONT, pid, NULL, NULL);
         first = false;
     }
     dispatch(PTBOX_EVENT_EXITED, exit_reason);

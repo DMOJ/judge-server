@@ -62,6 +62,8 @@ cdef extern from 'ptbox.h' nogil:
         void set_callback(pt_handler_callback callback, void* context)
         void set_event_proc(pt_event_callback, void *context)
         int set_handler(int syscall, int handler)
+        bint trace_syscalls()
+        void trace_syscalls(bint value)
         int spawn(pt_fork_handler, void *context)
         int monitor()
         int getpid()
@@ -457,6 +459,13 @@ cdef class Process:
         self._exitcode = exitcode
         self._exited = True
         return self._exitcode
+
+    property _trace_syscalls:
+        def __get__(self):
+            return self.process.trace_syscalls()
+
+        def __set__(self, bint value):
+            self.process.trace_syscalls(value)
 
     property pid:
         def __get__(self):

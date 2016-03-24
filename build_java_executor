@@ -1,5 +1,5 @@
 #!/bin/sh
-cd $(dirname "$0")/java-sandbox
+cd $(dirname "$0")/java_sandbox
 rm -rf objs
 mkdir objs
 cd src

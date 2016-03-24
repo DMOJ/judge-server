@@ -15,7 +15,6 @@ import java.io.IOException;
 
 public class SubmissionSecurityManager extends SecurityManager {
     @Override
-//    @CallerSensitive
     public void checkPermission(Permission perm) {
         StackTraceElement[] stack = Thread.currentThread().getStackTrace();
 
@@ -27,13 +26,9 @@ public class SubmissionSecurityManager extends SecurityManager {
         // Likewise, disable createClassLoader for null packages to a void a definition of "ca.dmoj.java.JavaSafeExecutor" being
         // malicious.
         if (perm instanceof ReflectPermission || (perm instanceof RuntimePermission && perm.getName().equals("createClassLoader"))) {
-            // Fails on Java 8
-//            if (Reflection.getCallerClass().getPackage() == null)
-//                throw new AccessControlException("fail suppressAccessChecks");
-            for (StackTraceElement ste : stack) {
-                if (!ste.getClassName().contains(".")) // Null package
-                    throw new AccessControlException("fail access to " + perm + " for " + ste.getClassName());
-            }
+            Class caller = getCallerClass();
+            if (caller.getPackage() == null)
+                throw new AccessControlException("fail access to " + perm + " for " + caller);
         }
 
         if (Thread.currentThread() == JavaSafeExecutor.selfThread || Thread.currentThread() == JavaSafeExecutor.shockerThread)
@@ -96,5 +91,51 @@ public class SubmissionSecurityManager extends SecurityManager {
             return;
         }
         throw new AccessControlException(perm.getClass() + " - " + perm.getName() + ": " + perm.getActions(), perm);
+    }
+
+    // Shim for Reflection.getCallerClass that should work on Java 8
+    private static Class getCallerClass() {
+        StackTraceElement[] stack = Thread.currentThread().getStackTrace();
+        for (int i = 2; i < stack.length; i++) {
+            StackTraceElement elem = stack[i];
+            if (!isValid(stack[i])) continue;
+            try {
+                return Class.forName(elem.getClassName());
+            } catch (ClassNotFoundException e) {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    // From log4j ReflectionUtil
+    private static boolean isValid(StackTraceElement element) {
+        // ignore native methods (oftentimes are repeated frames)
+        if (element.isNativeMethod()) {
+            return false;
+        }
+        final String cn = element.getClassName();
+        // ignore OpenJDK internal classes involved with reflective invocation
+        if (cn.startsWith("sun.reflect.")) {
+            return false;
+        }
+        final String mn = element.getMethodName();
+        // ignore use of reflection including:
+        // Method.invoke
+        // InvocationHandler.invoke
+        // Constructor.newInstance
+        if (cn.startsWith("java.lang.reflect.") && (mn.equals("invoke") || mn.equals("newInstance"))) {
+            return false;
+        }
+        // ignore Class.newInstance
+        if (cn.equals("java.lang.Class") && mn.equals("newInstance")) {
+            return false;
+        }
+        // ignore use of Java 1.7+ MethodHandle.invokeFoo() methods
+        if (cn.equals("java.lang.invoke.MethodHandle") && mn.startsWith("invoke")) {
+            return false;
+        }
+        // any others?
+        return true;
     }
 }

@@ -89,7 +89,7 @@ int pt_process::monitor() {
         if (first) {
             dispatch(PTBOX_EVENT_ATTACH, 0);
             // This is right after SIGSTOP is received:
-            ptrace(PTRACE_SETOPTIONS, pid, NULL, PTRACE_O_TRACESYSGOOD);
+            ptrace(PTRACE_SETOPTIONS, pid, NULL, PTRACE_O_TRACESYSGOOD | PTRACE_O_TRACEEXIT);
         }
 
         if (WIFSTOPPED(status)) {
@@ -124,8 +124,6 @@ int pt_process::monitor() {
                                 exit_reason = protection_fault(syscall);
                                 continue;
                         }
-                        if (debugger->is_exit(syscall))
-                            dispatch(PTBOX_EVENT_EXITING, PTBOX_EXIT_NORMAL);
                     }
                 } else if (debugger->on_return_callback) {
                     debugger->on_return_callback(debugger->on_return_context, syscall);
@@ -142,6 +140,13 @@ int pt_process::monitor() {
                     case SIGFPE:
                         puts("Child SIGFPE");
                         kill(pid, SIGKILL);
+                        break;
+                    case SIGTRAP:
+                        switch (status >> 16) {
+                            case PTRACE_EVENT_EXIT:
+                                if (exit_reason != PTBOX_EXIT_NORMAL)
+                                    dispatch(PTBOX_EVENT_EXITING, PTBOX_EXIT_NORMAL);
+                        }
                         break;
                 }
                 dispatch(PTBOX_EVENT_SIGNAL, WSTOPSIG(status));

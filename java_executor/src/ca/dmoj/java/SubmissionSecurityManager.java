@@ -1,16 +1,11 @@
 package ca.dmoj.java;
 
-import sun.reflect.CallerSensitive;
-import sun.reflect.Reflection;
-
-import java.io.File;
 import java.io.FilePermission;
 import java.lang.reflect.ReflectPermission;
 import java.security.AccessControlException;
 import java.security.Permission;
 import java.util.PropertyPermission;
 import java.util.logging.LoggingPermission;
-import java.lang.reflect.*;
 import java.io.IOException;
 
 public class SubmissionSecurityManager extends SecurityManager {
@@ -23,12 +18,12 @@ public class SubmissionSecurityManager extends SecurityManager {
         // potentially have somehow modified System.out and overridden the flush() call with malicious code that would
         // be executed as trusted.
         // setAccessible is never used in JavaSafeExecutor, so it is prudent to put it behind this check as well.
-        // Likewise, disable createClassLoader for null packages to a void a definition of "ca.dmoj.java.JavaSafeExecutor" being
-        // malicious.
-        if (perm instanceof ReflectPermission || (perm instanceof RuntimePermission && perm.getName().equals("createClassLoader"))) {
+        if (perm instanceof ReflectPermission) {
             Class caller = getCallerClass();
-            if (caller.getPackage() == null)
+            // Null class here means it came from the submission ClassLoader
+            if (caller == null || caller.getPackage() == null)
                 throw new AccessControlException("fail access to " + perm + " for " + caller);
+            // System.err.println("Allowed " + perm + " for " + caller);
         }
 
         if (Thread.currentThread() == JavaSafeExecutor.selfThread || Thread.currentThread() == JavaSafeExecutor.shockerThread)
@@ -47,15 +42,10 @@ public class SubmissionSecurityManager extends SecurityManager {
             if (perm.getActions().equals("read") &&
                     (fname.endsWith(".class") ||
                             fname.startsWith("/usr/lib/jvm/") ||
-                            fname.contains("/jre/lib/zi/") || 
+                            fname.contains("/jre/lib/zi/") ||
                             fname.endsWith("/jre/lib/rt.jar")
                     )) // Date
                 return;
-            if (perm.getActions().equals("read") &&
-                    (fname.toLowerCase().endsWith("/ext/nashorn.jar") ||
-                            fname.toLowerCase().endsWith("/ext/rhino.jar") ||
-                            fname.toLowerCase().endsWith("/jre/lib/content-types.properties")))
-                return; // JS
         }
         if (perm instanceof RuntimePermission) {
             if (fname.contains("exitVM")) {
@@ -74,8 +64,6 @@ public class SubmissionSecurityManager extends SecurityManager {
                     fname.equals("getProtectionDomain") ||
                     fname.equals("accessDeclaredMembers") ||
                     fname.equals("shutdownHooks") ||
-                    fname.equals("setContextClassLoader") ||
-                    fname.equals("createClassLoader") || // This one is scary
                     fname.equals("setFactory"))
                 return;
             if (fname.startsWith("accessClassInPackage")) {
@@ -107,6 +95,7 @@ public class SubmissionSecurityManager extends SecurityManager {
             try {
                 return Class.forName(elem.getClassName());
             } catch (ClassNotFoundException e) {
+                e.printStackTrace();
                 return null;
             }
         }
@@ -120,6 +109,9 @@ public class SubmissionSecurityManager extends SecurityManager {
             return false;
         }
         final String cn = element.getClassName();
+        if(cn.equals("java.lang.SecurityManager")) return false;
+        if(cn.equals("java.lang.ClassLoader")) return false;
+
         // ignore OpenJDK internal classes involved with reflective invocation
         if (cn.startsWith("sun.reflect.")) {
             return false;
@@ -129,7 +121,7 @@ public class SubmissionSecurityManager extends SecurityManager {
         // Method.invoke
         // InvocationHandler.invoke
         // Constructor.newInstance
-        if (cn.startsWith("java.lang.reflect.") && (mn.equals("invoke") || mn.equals("newInstance"))) {
+        if (cn.startsWith("java.lang.reflect.")) {
             return false;
         }
         // ignore Class.newInstance

@@ -56,7 +56,8 @@ typedef int (*pt_event_callback)(void *context, int event, unsigned long param);
 
 class pt_process {
 public:
-    pt_process(pt_debugger *debugger);
+    pt_process(pt_debugger *debugger) : pt_process(debugger, true) {}
+    pt_process(pt_debugger *debugger, bool trace_syscalls);
     void set_callback(pt_handler_callback, void *context);
     void set_event_proc(pt_event_callback, void *context);
     int set_handler(int syscall, int handler);
@@ -78,6 +79,7 @@ private:
     pt_debugger *debugger;
     pt_event_callback event_proc;
     void *event_context;
+    bool trace_syscalls;
 };
 
 class pt_debugger {

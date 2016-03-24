@@ -32,7 +32,7 @@ public class SubmissionSecurityManager extends SecurityManager {
 //                throw new AccessControlException("fail suppressAccessChecks");
             for (StackTraceElement ste : stack) {
                 if (!ste.getClassName().contains(".")) // Null package
-                    throw new AccessControlException("fail suppressAccessChecks");
+                    throw new AccessControlException("fail access to " + perm + " for " + ste.getClassName());
             }
         }
 

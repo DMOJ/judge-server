@@ -15,8 +15,10 @@ import java.io.IOException;
 
 public class SubmissionSecurityManager extends SecurityManager {
     @Override
-    @CallerSensitive
+//    @CallerSensitive
     public void checkPermission(Permission perm) {
+        StackTraceElement[] stack = Thread.currentThread().getStackTrace();
+
         // Disable setAccessible(false)
         // This is done before checking anything else because a malicious submission could
         // potentially have somehow modified System.out and overridden the flush() call with malicious code that would
@@ -25,8 +27,13 @@ public class SubmissionSecurityManager extends SecurityManager {
         // Likewise, disable createClassLoader for null packages to a void a definition of "ca.dmoj.java.JavaSafeExecutor" being
         // malicious.
         if (perm instanceof ReflectPermission || (perm instanceof RuntimePermission && perm.getName().equals("createClassLoader"))) {
-            if (Reflection.getCallerClass().getPackage() == null)
-                throw new AccessControlException("fail suppressAccessChecks");
+            // Fails on Java 8
+//            if (Reflection.getCallerClass().getPackage() == null)
+//                throw new AccessControlException("fail suppressAccessChecks");
+            for (StackTraceElement ste : stack) {
+                if (!ste.getClassName().contains(".")) // Null package
+                    throw new AccessControlException("fail suppressAccessChecks");
+            }
         }
 
         if (Thread.currentThread() == JavaSafeExecutor.selfThread || Thread.currentThread() == JavaSafeExecutor.shockerThread)
@@ -34,7 +41,7 @@ public class SubmissionSecurityManager extends SecurityManager {
 
         // We have to allow all permissions to printStateAndExit, since it may be called through a proxied
         // System.exit call
-        for (StackTraceElement ste : Thread.currentThread().getStackTrace()) {
+        for (StackTraceElement ste : stack) {
             if (ste.getClassName().equals("ca.dmoj.java.JavaSafeExecutor") && ste.getMethodName().equals("printStateAndExit"))
                 return;
         }
@@ -72,7 +79,7 @@ public class SubmissionSecurityManager extends SecurityManager {
                     fname.equals("accessDeclaredMembers") ||
                     fname.equals("shutdownHooks") ||
                     fname.equals("setContextClassLoader") ||
-                    fname.equals("createClassLoader") ||
+                    fname.equals("createClassLoader") || // This one is scary
                     fname.equals("setFactory"))
                 return;
             if (fname.startsWith("accessClassInPackage")) {

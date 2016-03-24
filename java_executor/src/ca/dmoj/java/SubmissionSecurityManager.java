@@ -82,6 +82,10 @@ public class SubmissionSecurityManager extends SecurityManager {
                     return;
             }
         }
+
+        // If it's gotten this far it is trusted
+        if (perm instanceof ReflectPermission) return;
+
         if (perm instanceof PropertyPermission) {
             if (perm.getActions().contains("write")) {
                 if (fname.equals("user.timezone")) return; // Date

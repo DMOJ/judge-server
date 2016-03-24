@@ -16,7 +16,7 @@ public class SubmissionAgent {
             for (String opt : argv.split(",")) {
                 if (opt.equals("unicode")) unicode = true;
                 if (opt.equals("nobiginteger")) noBigInt = true;
-                if (opt.startsWith("policy:")) policy = opt.split(":")[1];
+                if (opt.startsWith("policy:")) policy = opt.split(":", 2)[1];
             }
 
         if (policy == null) throw new IllegalStateException("must specify policy file");

@@ -100,7 +100,7 @@ public class SubmissionSecurityManager extends SecurityManager {
     // Shim for Reflection.getCallerClass that should work on Java 8
     private static Class getCallerClass() {
         StackTraceElement[] stack = Thread.currentThread().getStackTrace();
-        for (int i = 2; i < stack.length; i++) {
+        for (int i = 3; i < stack.length; i++) {
             StackTraceElement elem = stack[i];
             if (!isValid(stack[i])) continue;
             try {

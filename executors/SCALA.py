@@ -2,13 +2,13 @@ import os
 import errno
 
 from error import CompileError
-from .java_executor import JavaExecutor, JavaProcess, deunicode, JAVA_EXECUTOR
+from .java_executor import JavaExecutor, JavaProcess, deunicode, JAVA_SANDBOX
 from judgeenv import env
 
 
 class ScalaProcess(JavaProcess):
     def get_command_line(self, class_name, cwd, memory_limit, time_limit, vm):
-        return ['scala', JAVA_EXECUTOR, cwd, class_name, str(int(time_limit * 1000)), 'state']
+        return ['scala', JAVA_SANDBOX, cwd, class_name, str(int(time_limit * 1000)), 'state']
 
     def get_environ(self, class_name, cwd, java, memory_limit, time_limit, vm):
         env = os.environ.copy()

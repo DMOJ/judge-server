@@ -198,12 +198,18 @@ class CompiledExecutor(BaseExecutor):
     def get_compiled_file(self):
         return self._file(self.problem)
 
+    def is_failed_compile(self, process):
+        return process.returncode != 0
+
+    def handle_compile_error(self, output):
+        raise CompileError(output)
+
     def compile(self):
         process = self.get_compile_process()
         output = self.get_compile_output(process)
 
-        if process.returncode != 0:
-            raise CompileError(output)
+        if self.is_failed_compile(process):
+            self.handle_compile_error(output)
         self.warning = output
         return self.get_compiled_file()
 

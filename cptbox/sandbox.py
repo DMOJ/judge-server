@@ -89,10 +89,10 @@ class _SecurePopen(Process):
         self._chdir = cwd
         self._env = ['%s=%s' % i for i in (env if env is not None else os.environ).iteritems()]
         self._time = time
-        self._cpu_time = time + 5
+        self._cpu_time = time + 5 if time else 0
         self._memory = memory
         self._child_memory = memory * 1024
-        self._child_address = self._child_memory + address_grace * 1024
+        self._child_address = self._child_memory + address_grace * 1024 if memory else 0
         self._nproc = nproc
         self._tle = False
         self._fds = fds
@@ -101,8 +101,7 @@ class _SecurePopen(Process):
         self._security = security
         self._callbacks = [None] * MAX_SYSCALL_NUMBER
         if security is None:
-            for i in xrange(SYSCALL_COUNT):
-                self._handler(i, ALLOW)
+            self._trace_syscalls = False
         else:
             for i in xrange(SYSCALL_COUNT):
                 handler = security.get(i, DISALLOW)
@@ -136,7 +135,7 @@ class _SecurePopen(Process):
 
     @property
     def mle(self):
-        return self._memory is not None and self.max_memory > self._memory
+        return self._memory and self.max_memory > self._memory
 
     @property
     def tle(self):

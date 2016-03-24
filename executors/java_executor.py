@@ -1,6 +1,7 @@
 import errno
 import os
 import re
+from shutil import copyfile
 from subprocess import Popen
 
 from error import CompileError
@@ -56,6 +57,12 @@ class JavaExecutor(CompiledExecutor):
         with open(self._policy_file, 'w') as file:
             file.write(policy)
 
+        if os.name == 'nt':
+            self._agent_file = self._file('java-sandbox.jar')
+            copyfile(JAVA_SANDBOX, self._agent_file)
+        else:
+            self._agent_file = JAVA_SANDBOX
+
     def get_compile_popen_kwargs(self):
         return {'executable': self.get_compiler()}
 
@@ -69,7 +76,7 @@ class JavaExecutor(CompiledExecutor):
         return self.get_vm()
 
     def get_cmdline(self):
-        return ['java', '-client', '-javaagent:%s=policy:%s' % (JAVA_SANDBOX, self._policy_file),
+        return ['java', '-client', '-javaagent:%s=policy:%s' % (self._agent_file, self._policy_file),
                 '-Xmx%dK' % self.__memory_limit, self._class_name]
 
     def launch(self, *args, **kwargs):

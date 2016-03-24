@@ -162,6 +162,9 @@ class ScriptExecutor(BaseExecutor):
     def get_cmdline(self):
         return [self.get_command(), self._code]
 
+    def get_executable(self):
+        return self.get_command()
+
 
 class CompiledExecutor(BaseExecutor):
     def __init__(self, problem_id, source_code, *args, **kwargs):

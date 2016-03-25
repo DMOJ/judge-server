@@ -530,6 +530,7 @@ class Judge(object):
                                 ithread.join(time + 1.0)
                                 if ithread.is_alive():
                                     result.result_flag = Result.TLE
+                                    error = ''
                                 else:
                                     result = return_queue.get_nowait()
                                     if isinstance(result, tuple) or isinstance(result, list):

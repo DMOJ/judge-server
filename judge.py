@@ -134,7 +134,7 @@ class Judge(object):
             for problem in os.listdir(dir):
                 if isinstance(problem, str):
                     problem = problem.decode(fs_encoding)
-                if any(os.access(os.path.join(dir, problem, 'init.%s' % ext), os.R_OK) for ext in ['json', 'yml', yaml']):
+                if any(os.access(os.path.join(dir, problem, 'init.%s' % ext), os.R_OK) for ext in ['json', 'yml', 'yaml']):
                     problems.append((problem, os.path.getmtime(os.path.join(dir, problem))))
         return problems
 

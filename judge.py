@@ -134,7 +134,7 @@ class Judge(object):
             for problem in os.listdir(dir):
                 if isinstance(problem, str):
                     problem = problem.decode(fs_encoding)
-                if os.access(os.path.join(dir, problem, 'init.json'), os.R_OK):
+                if any(os.access(os.path.join(dir, problem, 'init.%s' % ext), os.R_OK) for ext in ['json', 'yml', yaml']):
                     problems.append((problem, os.path.getmtime(os.path.join(dir, problem))))
         return problems
 
@@ -206,8 +206,17 @@ class Judge(object):
                     Please install watchdog so that the bridge can be notified of problem files disappearing.''')
                                                           % problem_id)
                 return
-            with open(os.path.join(problem_root, 'init.json'), 'r') as init_file:
-                init_data = json.load(init_file)
+
+            for ext in ['json', 'yml', 'yaml']:
+                init_path = os.path.join(problem_root, 'init.%s' % ext)
+                if os.access(init_path, os.R_OK):
+                    break
+            else:
+                self.packet_manager.internal_error_packet("no init file for %s" % problem_id)
+                return
+
+            with open(init_path, 'r') as init_file:
+                init_data = json.load(init_file) if init_path.endswith('json') else yaml.load(init_file)
 
                 if isinstance(original_source, unicode):
                     source_code = original_source.encode('utf-8')

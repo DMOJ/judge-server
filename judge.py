@@ -18,6 +18,7 @@ import sys
 import subprocess
 import uuid
 import Queue
+import yaml
 
 from modload import load_module_from_file
 from result import Result

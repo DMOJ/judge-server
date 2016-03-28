@@ -7,6 +7,8 @@ from subprocess import Popen
 from error import CompileError
 from .base_executor import CompiledExecutor
 
+from result import Result
+
 try:
     from winutils import max_memory, execution_time
 except ImportError:

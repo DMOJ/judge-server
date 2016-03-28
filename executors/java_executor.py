@@ -10,14 +10,6 @@ from .base_executor import CompiledExecutor
 from result import Result
 from collections import deque
 
-try:
-    from winutils import max_memory, execution_time
-except ImportError:
-    windows = False
-    max_memory, execution_time = None, None
-else:
-    windows = True
-
 recomment = re.compile(r'/\*.*?\*/', re.DOTALL)
 restring = re.compile(r''''(?:\\.|[^'\\])'|"(?:\\.|[^"\\])*"''', re.DOTALL)
 reinline_comment = re.compile(r'//.*?(?=[\r\n])')

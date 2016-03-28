@@ -99,7 +99,7 @@ class JavaExecutor(CompiledExecutor):
         if not match:
             return ''
         exception = match[0].group(1)
-        return '' if len(exception) > 20 else exception
+        return exception
 
     @classmethod
     def get_vm(cls):

@@ -7,6 +7,8 @@ import java.lang.instrument.Instrumentation;
 import java.security.ProtectionDomain;
 
 public class SubmissionAgent {
+    private static final String UNCAUGHT_EXCEPTION_UUID = "d4519cd6-6270-4bbb-a040-9bf4bcbd5938";
+    private static Throwable lastError;
 
     public static void premain(String argv, Instrumentation inst) throws UnsupportedEncodingException {
         boolean unicode = false;
@@ -14,12 +16,15 @@ public class SubmissionAgent {
         String policy = null;
         if (argv != null)
             for (String opt : argv.split(",")) {
+                opt = opt.toLowerCase();
                 if (opt.equals("unicode")) unicode = true;
                 if (opt.equals("nobiginteger")) noBigInt = true;
-                if (opt.startsWith("policy:")) policy = opt.split(":", 2)[1];
+                if (opt.startsWith("policy:")) policy = opt.split(":")[1];
             }
 
         if (policy == null) throw new IllegalStateException("must specify policy file");
+
+        final Thread selfThread = Thread.currentThread();
 
         if (noBigInt)
             inst.addTransformer(new ClassFileTransformer() {
@@ -30,8 +35,8 @@ public class SubmissionAgent {
                         // Python side detects fatal exception by checking last stacktrace when error code is nonzero
                         // This will trick the site into displaying "ca.dmoj.java.BigIntegerDisallowedForProblemException"
                         // in the judge message field.
-                        new BigIntegerDisallowedForProblemException().printStackTrace();
-                        System.exit(1);
+                        selfThread.getUncaughtExceptionHandler()
+                                .uncaughtException(selfThread, new BigIntegerDisallowedForProblemException());
                     }
 
                     // Don't actually retransform anything
@@ -43,12 +48,24 @@ public class SubmissionAgent {
         // Requires setIO and writeFileDescriptor permissions
         System.setOut(new UnsafePrintStream(new FileOutputStream(FileDescriptor.out), unicode));
 
+        selfThread.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+            @Override
+            public void uncaughtException(Thread t, Throwable e) {
+                lastError = e;
+                System.exit(1);
+            }
+        });
+
         // UnsafePrintStream buffers heavily, so we must make sure to flush it at the end of execution.
         // Requires addShutdownHook permission
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
             @Override
             public void run() {
                 System.out.flush();
+                if (lastError != null) {
+                    System.err.println(UNCAUGHT_EXCEPTION_UUID + ":" + lastError.getClass().getName());
+                    System.err.flush();
+                }
             }
         }));
 
@@ -57,5 +74,4 @@ public class SubmissionAgent {
         System.setProperty("java.security.policy", policy);
         System.setSecurityManager(new SecurityManager());
     }
-
 }

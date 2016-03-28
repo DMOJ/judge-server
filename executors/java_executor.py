@@ -8,6 +8,7 @@ from error import CompileError
 from .base_executor import CompiledExecutor
 
 from result import Result
+from collections import deque
 
 try:
     from winutils import max_memory, execution_time

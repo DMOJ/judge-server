@@ -21,7 +21,10 @@ reinline_comment = re.compile(r'//.*?(?=[\r\n])')
 reclass = re.compile(r'\bpublic\s+class\s+([_a-zA-Z\$][_0-9a-zA-z\$]*?)\b')
 repackage = re.compile(r'\bpackage\s+([^.;]+(?:\.[^.;]+)*?);')
 redeunicode = re.compile(r'\\u([0-9a-f]{4})', re.I)
+reexception
 deunicode = lambda x: redeunicode.sub(lambda a: unichr(int(a.group(1), 16)), x)
+
+UNCAUGHT_EXCEPTION_UUID = "d4519cd6-6270-4bbb-a040-9bf4bcbd5938"
 
 JAVA_SANDBOX = os.path.abspath(os.path.join(os.path.dirname(__file__), 'java-sandbox.jar'))
 with open(os.path.join(os.path.dirname(__file__), 'java-security.policy')) as policy_file:
@@ -87,6 +90,15 @@ class JavaExecutor(CompiledExecutor):
     def launch_unsafe(self, *args, **kwargs):
         return Popen(['java', '-client', self._class_name] + list(args),
                      executable=self.get_vm(), cwd=self._dir, **kwargs)
+                     
+    def get_feedback(self, stderr, result):
+        if not result.result_flag & Result.IR or not stderr or len(stderr) > 2048:
+            return ''
+        match = deque(reexception.finditer(stderr), maxlen=1)
+        if not match:
+            return ''
+        exception = match[0].group(1)
+        return '' if len(exception) > 20 else exception
 
     @classmethod
     def get_vm(cls):

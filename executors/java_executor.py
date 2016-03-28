@@ -21,10 +21,8 @@ reinline_comment = re.compile(r'//.*?(?=[\r\n])')
 reclass = re.compile(r'\bpublic\s+class\s+([_a-zA-Z\$][_0-9a-zA-z\$]*?)\b')
 repackage = re.compile(r'\bpackage\s+([^.;]+(?:\.[^.;]+)*?);')
 redeunicode = re.compile(r'\\u([0-9a-f]{4})', re.I)
-reexception
+reexception = re.compile('d4519cd6-6270-4bbb-a040-9bf4bcbd5938:(.*?)$')
 deunicode = lambda x: redeunicode.sub(lambda a: unichr(int(a.group(1), 16)), x)
-
-UNCAUGHT_EXCEPTION_UUID = "d4519cd6-6270-4bbb-a040-9bf4bcbd5938"
 
 JAVA_SANDBOX = os.path.abspath(os.path.join(os.path.dirname(__file__), 'java-sandbox.jar'))
 with open(os.path.join(os.path.dirname(__file__), 'java-security.policy')) as policy_file:

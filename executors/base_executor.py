@@ -21,7 +21,7 @@ else:
 class BaseExecutor(ResourceProxy):
     ext = None
     network_block = True
-    address_grace = 4096
+    address_grace = 65536
     nproc = 0
     fs = ['.*\.so']
     syscalls = []

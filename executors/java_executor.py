@@ -73,7 +73,7 @@ class JavaExecutor(CompiledExecutor):
 
     def get_cmdline(self):
         return ['java', '-client', '-javaagent:%s=policy:%s' % (self._agent_file, self._policy_file),
-                '-Xss131072m', '-Xmx%dK' % self.__memory_limit, self._class_name] # 131072m is equivalent to 1<<27 in Thread constructor
+                '-Xss128m', '-Xmx%dK' % self.__memory_limit, self._class_name] # 128m is equivalent to 1<<27 in Thread constructor
 
     def launch(self, *args, **kwargs):
         self.__memory_limit = kwargs['memory']

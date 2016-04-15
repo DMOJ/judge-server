@@ -70,4 +70,4 @@ section .data
 
 msg     db      'Hello, World!', 0xA
 len     equ     $ - msg
-''')
+''', sandbox=sandbox)

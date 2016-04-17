@@ -3,6 +3,7 @@
 from .base_executor import ScriptExecutor
 from judgeenv import env
 
+
 class Executor(ScriptExecutor):
     ext = '.m'
     name = 'OCTAVE'
@@ -15,7 +16,7 @@ class Executor(ScriptExecutor):
           '/etc/nsswitch\.conf$', '/etc/passwd$', '/etc/localtime$', '/usr/share/', '/usr/lib/', '/etc/fltk/']
 
     def get_cmdline(self):
-        return [self.get_command(), '--no-gui', '--no-history', '--no-init-file', '--no-site-file' ,
+        return [self.get_command(), '--no-gui', '--no-history', '--no-init-file', '--no-site-file',
                 '--no-window-system', '--norc', '--quiet', self._code]
 
 initialize = Executor.initialize

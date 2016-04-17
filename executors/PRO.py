@@ -1,6 +1,7 @@
 from .base_executor import ScriptExecutor
 from judgeenv import env
 
+
 class Executor(ScriptExecutor):
     ext = '.pl'
     name = 'PRO'

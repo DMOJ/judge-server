@@ -1,6 +1,6 @@
 Judge
 =====
-Python [AGPLv3](https://github.com/DMOJ/judge/blob/master/LICENSE) contest judge backend for the [DMOJ site](http://github.com/DMOJ/site) interface.
+Python [AGPLv3](https://github.com/DMOJ/judge/blob/master/LICENSE) contest judge backend for the [DMOJ site](http://github.com/DMOJ/site) interface. The judge implements secure grading on both Linux and Windows machines.
 
 <table>
 <tr>

@@ -22,7 +22,7 @@ void pt_free_process(pt_process *process) {
 
 pt_process::pt_process(pt_debugger *debugger) :
     pid(0), callback(NULL), context(NULL), debugger(debugger),
-    event_proc(NULL), event_context(NULL)
+    event_proc(NULL), event_context(NULL), _trace_syscalls(true)
 {
     memset(&exec_time, 0, sizeof exec_time);
     memset(handler, 0, sizeof handler);
@@ -71,7 +71,7 @@ int pt_process::protection_fault(int syscall) {
 }
 
 int pt_process::monitor() {
-    bool in_syscall = false, first = true;
+    bool in_syscall = false, first = true, spawned = false;
     struct timespec start, end, delta;
     int status, exit_reason = PTBOX_EXIT_NORMAL;
     siginfo_t si;
@@ -86,16 +86,23 @@ int pt_process::monitor() {
         if (WIFEXITED(status) || WIFSIGNALED(status))
             break;
 
-        if (first)
+        if (first) {
             dispatch(PTBOX_EVENT_ATTACH, 0);
+            // This is right after SIGSTOP is received:
+            ptrace(PTRACE_SETOPTIONS, pid, NULL, PTRACE_O_TRACESYSGOOD | PTRACE_O_TRACEEXIT);
+        }
 
         if (WIFSTOPPED(status)) {
-            if (WSTOPSIG(status) == SIGTRAP) {
-                ptrace(PTRACE_GETSIGINFO, pid, NULL, &si);
-                if (si.si_code == SIGTRAP || si.si_code == (SIGTRAP|0x80)) {
-                    int syscall = debugger->syscall();
-                    //printf("%s syscall %d\n", in_syscall ? "Exit" : "Enter", syscall);
-                    if (!in_syscall) {
+            if (WSTOPSIG(status) == (0x80 | SIGTRAP)) {
+                int syscall = debugger->syscall();
+                in_syscall ^= true;
+                //printf("%s syscall %d\n", in_syscall ? "Enter" : "Exit", syscall);
+
+                if (!spawned) {
+                    if (in_syscall && syscall == debugger->execve_syscall())
+                        spawned = true;
+                } else if (in_syscall) {
+                    if (syscall < MAX_SYSCALL) {
                         switch (handler[syscall]) {
                             case PTBOX_HANDLER_ALLOW:
                                 break;
@@ -117,14 +124,11 @@ int pt_process::monitor() {
                                 exit_reason = protection_fault(syscall);
                                 continue;
                         }
-                        if (debugger->is_exit(syscall))
-                            dispatch(PTBOX_EVENT_EXITING, PTBOX_EXIT_NORMAL);
-                    } else if (debugger->on_return_callback) {
-                        debugger->on_return_callback(debugger->on_return_context, syscall);
-                        debugger->on_return_callback = NULL;
-                        debugger->on_return_context = NULL;
                     }
-                    in_syscall ^= true;
+                } else if (debugger->on_return_callback) {
+                    debugger->on_return_callback(debugger->on_return_context, syscall);
+                    debugger->on_return_callback = NULL;
+                    debugger->on_return_context = NULL;
                 }
             } else {
                 switch (WSTOPSIG(status)) {
@@ -137,11 +141,18 @@ int pt_process::monitor() {
                         puts("Child SIGFPE");
                         kill(pid, SIGKILL);
                         break;
+                    case SIGTRAP:
+                        switch (status >> 16) {
+                            case PTRACE_EVENT_EXIT:
+                                if (exit_reason != PTBOX_EXIT_NORMAL)
+                                    dispatch(PTBOX_EVENT_EXITING, PTBOX_EXIT_NORMAL);
+                        }
+                        break;
                 }
                 dispatch(PTBOX_EVENT_SIGNAL, WSTOPSIG(status));
             }
         }
-        ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
+        ptrace(_trace_syscalls ? PTRACE_SYSCALL : PTRACE_CONT, pid, NULL, NULL);
         first = false;
     }
     dispatch(PTBOX_EVENT_EXITED, exit_reason);

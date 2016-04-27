@@ -12,7 +12,7 @@ from judgeenv import env
 
 CS_FS = ['.*\.so', '/proc/(?:self/|xen)', '/dev/shm/', '/proc/stat', '/usr/lib/mono',
          '/etc/nsswitch.conf$', '/etc/passwd$', '/etc/mono/', '/dev/null$', '.*/.mono/',
-         '/sys/']
+         '/sys/', '/proc/uptime$']
 WRITE_FS = ['/proc/self/task/\d+/comm$', '/dev/shm/mono\.\d+$']
 UNLINK_FS = re.compile('/dev/shm/mono.\d+$')
 
@@ -20,6 +20,7 @@ UNLINK_FS = re.compile('/dev/shm/mono.\d+$')
 class MonoExecutor(CompiledExecutor):
     name = 'MONO'
     nproc = -1  # If you use Mono on Windows you are doing it wrong.
+    address_grace = 131072
 
     def get_compiled_file(self):
         return self._file('%s.exe' % self.problem)
@@ -107,7 +108,7 @@ class MonoExecutor(CompiledExecutor):
         return sec
 
     @classmethod
-    def initialize(cls):
+    def initialize(cls, sandbox=True):
         if 'mono' not in env['runtime'] or not os.path.isfile(env['runtime']['mono']):
             return False
-        return super(MonoExecutor, cls).initialize()
+        return super(MonoExecutor, cls).initialize(sandbox=sandbox)

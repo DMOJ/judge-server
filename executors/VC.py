@@ -33,7 +33,7 @@ class Executor(ResourceProxy):
         output_file = self._file('%s.exe' % problem_id)
 
         cl_args = ['cl', '-nologo'] + sources + ['-W4', '-DONLINE_JUDGE', '-DWIN32', '-D_CRT_SECURE_NO_WARNINGS',
-                   '-Ox', '-link', '-stack:67108864', '-Fe%s' % output_file]
+                   '-EHsc', '-Ox', '-Fe%s' % output_file, '-link', '-stack:67108864']
         cl_process = subprocess.Popen(cl_args, stderr=subprocess.PIPE, executable=env['runtime']['cl.exe'],
                                       cwd=self._dir, env=VC_COMPILE)
 
@@ -47,17 +47,15 @@ class Executor(ResourceProxy):
     def launch(self, *args, **kwargs):
         return WBoxPopen([self.name] + list(args), executable=self._executable,
                          time=kwargs.get('time'), memory=kwargs.get('memory'),
-                         cwd=self._dir, env=VC_ENV, network_block=True)
+                         cwd=self._dir, env=VC_ENV or None, network_block=True)
 
     def launch_unsafe(self, *args, **kwargs):
         return subprocess.Popen([self.name] + list(args), executable=self._executable,
-                                env=VC_ENV, cwd=self._dir, **kwargs)
+                                env=VC_ENV or None, cwd=self._dir, **kwargs)
 
 
-def initialize():
-    if 'cl.exe' not in env['runtime']:
-        return False
-    if not os.path.isfile(env['runtime']['cl.exe']):
+def initialize(sandbox=True):
+    if 'cl.exe' not in env['runtime'] or not os.path.isfile(env['runtime']['cl.exe']):
         return False
     return test_executor('VC', Executor, r'''
 #include <iostream>
@@ -67,4 +65,4 @@ int main() {
     std::cout << message;
     return 0;
 }
-''')
+''', sandbox=sandbox)

@@ -10,7 +10,8 @@ class Executor(CLRExecutor):
     compile_args = ['--nologo', '--out:{exe}', '{source}']
 
 
-def initialize():
+def initialize(sandbox=True):
+    # TODO: sandbox is ignored
     if 'fsc' not in env['runtime']:
         return False
     if not os.path.isfile(env['runtime']['fsc']):

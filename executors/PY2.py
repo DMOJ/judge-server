@@ -1,5 +1,5 @@
 from judgeenv import env
-from .python import PythonExecutor
+from .python_executor import PythonExecutor
 
 
 class Executor(PythonExecutor):

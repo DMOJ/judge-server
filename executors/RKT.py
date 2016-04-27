@@ -1,11 +1,11 @@
+from subprocess import Popen
+import errno
+
 from .resource_proxy import ResourceProxy
 from .utils import test_executor
 from cptbox import SecurePopen, CHROOTSecurity, PIPE
 from cptbox.syscalls import *
 from judgeenv import env
-from subprocess import Popen
-import errno
-import os
 
 RACKET_FS = ['.*\.(?:so|rkt?$)', '/dev/tty$', '/proc/meminfo$', '.*racket.*', '/proc/stat$',
              '/proc/self/maps$', '/usr/lib/i386-linux-gnu', '/etc/nsswitch.conf$',
@@ -26,6 +26,7 @@ class Executor(ResourceProxy):
         def handle_socketcall(debugger):
             def socket_return():
                 debugger.result = -errno.EACCES
+
             debugger.syscall = debugger.getpid_syscall
             debugger.on_return(socket_return)
             return True
@@ -52,10 +53,10 @@ class Executor(ResourceProxy):
                      **kwargs)
 
 
-def initialize():
+def initialize(sandbox=True):
     if 'racket' not in env['runtime']:
         return False
     return test_executor('RKT', Executor, '''\
 #lang racket
 (displayln "Hello, World!")
-''')
+''', sandbox=sandbox)

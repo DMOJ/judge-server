@@ -1,9 +1,9 @@
 #!/bin/sh
-cd $(dirname "$0")/java_executor
+cd $(dirname "$0")/java_sandbox
 rm -rf objs
 mkdir objs
 cd src
 find . -name '*.java' -print0 | xargs -0 javac -d ../objs
 cd ../objs
-rm -f ../../executors/java_executor.jar
-find . -name '*.class' -print0 | xargs -0 jar cmf ../src/META-INF/MANIFEST.MF ../../executors/java_executor.jar
+rm -f ../../executors/java-sandbox.jar
+find . -name '*.class' -print0 | xargs -0 jar cmf ../src/META-INF/MANIFEST.MF ../../executors/java-sandbox.jar

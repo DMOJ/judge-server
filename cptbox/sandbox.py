@@ -1,5 +1,5 @@
 import os
-from platform import architecture
+import subprocess
 import threading
 import time
 import select
@@ -7,7 +7,10 @@ import errno
 import signal
 import sys
 import pty
-from _cptbox import Process
+
+import re
+
+from _cptbox import *
 from .syscalls import translator, SYSCALL_COUNT, by_id
 
 DISALLOW = 0
@@ -30,7 +33,40 @@ def _find_exe(path):
     raise OSError()
 
 
+def file_info(path, split=re.compile(r'[\s,]').split):
+    try:
+        return split(subprocess.check_output(['file', '-b', '-L', path]))
+    except subprocess.CalledProcessError:
+        return []
+
+
+X86 = 'x86'
+X64 = 'x64'
+X32 = 'x32'
+ARM = 'arm'
+
+
+def file_arch(path):
+    info = file_info(path)
+
+    if '32-bit' in info:
+        if 'ARM' in info:
+            return ARM
+        return X32 if 'x86-64' in info else X86
+    elif '64-bit' in info:
+        return X64
+    return None
+
+PYTHON_ARCH = file_arch(sys.executable)
+
+
 _PIPE_BUF = getattr(select, 'PIPE_BUF', 512)
+_SYSCALL_INDICIES = [None] * 5
+_SYSCALL_INDICIES[DEBUGGER_X86] = 0
+_SYSCALL_INDICIES[DEBUGGER_X86_ON_X64] = 0
+_SYSCALL_INDICIES[DEBUGGER_X64] = 1
+_SYSCALL_INDICIES[DEBUGGER_X32] = 2
+_SYSCALL_INDICIES[DEBUGGER_ARM] = 3
 
 
 def _eintr_retry_call(func, *args):
@@ -44,32 +80,32 @@ def _eintr_retry_call(func, *args):
 
 
 class _SecurePopen(Process):
-    def __init__(self, bitness, args, executable=None, security=None, time=0, memory=0, stdin=PIPE, stdout=PIPE,
+    def __init__(self, debugger, args, executable=None, security=None, time=0, memory=0, stdin=PIPE, stdout=PIPE,
                  stderr=None, env=None, nproc=0, address_grace=4096, cwd='', fds=None, unbuffered=False):
-        self._bitness = bitness
+        self._debugger_type = debugger
+        self._syscall_index = index = _SYSCALL_INDICIES[debugger]
         self._executable = executable or _find_exe(args[0])
         self._args = args
         self._chdir = cwd
         self._env = ['%s=%s' % i for i in (env if env is not None else os.environ).iteritems()]
         self._time = time
-        self._cpu_time = time + 5
+        self._cpu_time = time + 5 if time else 0
         self._memory = memory
         self._child_memory = memory * 1024
-        self._child_address = self._child_memory + address_grace * 1024
+        self._child_address = self._child_memory + address_grace * 1024 if memory else 0
         self._nproc = nproc
         self._tle = False
         self._fds = fds
         self.__init_streams(stdin, stdout, stderr, unbuffered)
 
         self._security = security
-        self._callbacks = [None] * SYSCALL_COUNT
+        self._callbacks = [None] * MAX_SYSCALL_NUMBER
         if security is None:
-            for i in xrange(SYSCALL_COUNT):
-                self._handler(i, ALLOW)
+            self._trace_syscalls = False
         else:
             for i in xrange(SYSCALL_COUNT):
                 handler = security.get(i, DISALLOW)
-                call = translator[i][bitness == 64]
+                call = translator[i][index]
                 if call is None:
                     continue
                 if not isinstance(handler, int):
@@ -99,15 +135,11 @@ class _SecurePopen(Process):
 
     @property
     def mle(self):
-        return self._memory is not None and self.max_memory > self._memory
+        return self._memory and self.max_memory > self._memory
 
     @property
     def tle(self):
         return self._tle
-
-    @property
-    def bitness(self):
-        return self._bitness
 
     @property
     def r_execution_time(self):
@@ -129,8 +161,8 @@ class _SecurePopen(Process):
 
     def _protection_fault(self, syscall):
         callname = None
-        index = self._bitness == 64
-        for id, call in translator.iteritems():
+        index = self._syscall_index
+        for id, call in enumerate(translator):
             if call[index] == syscall:
                 callname = by_id[id]
                 break
@@ -315,7 +347,22 @@ class _SecurePopen(Process):
         return stdout, stderr
 
 
+# (python arch, executable arch) -> debugger
+_arch_map = {
+    (X86, X86): DEBUGGER_X86,
+    (X64, X64): DEBUGGER_X64,
+    (X64, X86): DEBUGGER_X86_ON_X64,
+    (X64, X32): DEBUGGER_X32,
+    (X32, X32): DEBUGGER_X32,
+    (X32, X86): DEBUGGER_X86_ON_X64,
+    (ARM, ARM): DEBUGGER_ARM,
+}
+
+
 def SecurePopen(argv, executable=None, *args, **kwargs):
     executable = executable or _find_exe(argv[0])
-    bitness = int(architecture(executable)[0][:2])
-    return _SecurePopen(bitness, argv, executable, *args, **kwargs)
+    arch = file_arch(executable)
+    debugger = _arch_map.get((PYTHON_ARCH, arch))
+    if debugger is None:
+        raise RuntimeError('Executable type %s could not be debugged on Python type %s' % (arch, PYTHON_ARCH))
+    return _SecurePopen(debugger, argv, executable, *args, **kwargs)

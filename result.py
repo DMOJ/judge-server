@@ -15,4 +15,13 @@ class Result(object):
         self.r_execution_time = 0
         self.max_memory = 0
         self.proc_output = ''
+        self.feedback = ''
+        self.case = None
         self.points = 0
+
+    def readable_codes(self):
+        execution_verdict = []
+        for flag in ['IR', 'WA', 'RTE', 'TLE', 'MLE', 'SC', 'IE']:
+            if self.result_flag & getattr(Result, flag):
+                execution_verdict.append(flag)
+        return execution_verdict or ['AC']

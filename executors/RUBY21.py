@@ -1,5 +1,6 @@
 import os
-from .ruby import RubyExecutor
+
+from .ruby_executor import RubyExecutor
 
 
 class Executor(RubyExecutor):

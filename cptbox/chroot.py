@@ -8,16 +8,15 @@ class CHROOTSecurity(dict):
     def __init__(self, filesystem, writable=(1, 2)):
         super(CHROOTSecurity, self).__init__()
         self.fs_jail = re.compile('|'.join(filesystem) if filesystem else '^')
-        self.execve_count = 0
         self._writable = writable
 
         self.update({
-            sys_execve: self.do_execve,
             sys_read: ALLOW,
             sys_write: STDOUTERR if writable == (1, 2) else self.do_write,
             sys_writev: self.do_write,
             sys_open: self.do_access,
             sys_access: self.do_access,
+            sys_faccessat: self.do_faccessat,
             sys_close: ALLOW,
             sys_stat: ALLOW,
             sys_dup: ALLOW,
@@ -79,12 +78,15 @@ class CHROOTSecurity(dict):
     def do_write(self, debugger):
         return debugger.arg0 in self._writable
 
-    def do_execve(self, debugger):
-        self.execve_count += 1
-        return self.execve_count < 2
-
     def do_access(self, debugger):
         file = debugger.readstr(debugger.uarg0)
+        if self.fs_jail.match(file) is None:
+            print>>sys.stderr, 'Not allowed to access:', file
+            return False
+        return True
+
+    def do_faccessat(self, debugger):
+        file = debugger.readstr(debugger.uarg1)
         if self.fs_jail.match(file) is None:
             print>>sys.stderr, 'Not allowed to access:', file
             return False

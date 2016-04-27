@@ -2,8 +2,10 @@ import os
 from subprocess import Popen
 import subprocess
 import sys
-from error import CompileError
+from shutil import copyfile
 
+from error import CompileError
+from judgeenv import env
 from .resource_proxy import ResourceProxy
 
 
@@ -11,23 +13,26 @@ try:
     from cptbox import SecurePopen, PIPE, CHROOTSecurity, ALLOW, syscalls
 except ImportError:
     SecurePopen, PIPE, CHROOTSecurity, ALLOW, syscalls = None, None, None, None, None
-    from wbox import WBoxPopen
+    from wbox import WBoxPopen, default_inject32, default_inject64, default_inject_func
 else:
-    WBoxPopen = None
+    WBoxPopen = default_inject32 = default_inject64 = default_inject_func = None
 
 
 class BaseExecutor(ResourceProxy):
     ext = None
     network_block = True
-    address_grace = 4096
+    address_grace = 65536
     nproc = 0
     fs = ['.*\.so']
     syscalls = []
     command = None
     name = '(unknown)'
+    inject32 = env.get('inject32', default_inject32)
+    inject64 = env.get('inject64', default_inject64)
+    inject_func = env.get('inject_func', default_inject_func)
     test_program = ''
     test_name = 'self_test'
-    test_time = 1
+    test_time = 10
     test_memory = 65536
 
     def __init__(self, problem_id, source_code):
@@ -70,6 +75,19 @@ class BaseExecutor(ResourceProxy):
 
     def get_nproc(self):
         return self.nproc
+    
+    def get_inject32(self):
+        file = self._file('dmsec32.dll')
+        copyfile(self.inject32, file)
+        return file
+    
+    def get_inject64(self):
+        file = self._file('dmsec64.dll')
+        copyfile(self.inject64, file)
+        return file
+    
+    def get_inject_func(self):
+        return self.inject_func
 
     if SecurePopen is None:
         def launch(self, *args, **kwargs):
@@ -77,7 +95,10 @@ class BaseExecutor(ResourceProxy):
                              time=kwargs.get('time'), memory=kwargs.get('memory'),
                              cwd=self._dir, executable=self.get_executable(),
                              network_block=True, env=self.get_env(),
-                             nproc=self.get_nproc() + 1)
+                             nproc=self.get_nproc() + 1,
+                             inject32=self.get_inject32(),
+                             inject64=self.get_inject64(),
+                             inject_func=self.get_inject_func())
     else:
         def launch(self, *args, **kwargs):
             return SecurePopen(self.get_cmdline() + list(args), executable=self.get_executable(),
@@ -97,20 +118,25 @@ class BaseExecutor(ResourceProxy):
         return cls.command
 
     @classmethod
-    def initialize(cls):
+    def initialize(cls, sandbox=True):
         if cls.get_command() is None:
             return False
         if not os.path.isfile(cls.get_command()):
             return False
+        return cls.run_self_test(sandbox)
+
+    @classmethod
+    def run_self_test(cls, sandbox=True):
         if not cls.test_program:
             return True
 
         print 'Self-testing: %s executor:' % cls.name,
         try:
             executor = cls(cls.test_name, cls.test_program)
-            proc = executor.launch(time=cls.test_time, memory=cls.test_memory)
+            proc = executor.launch(time=cls.test_time, memory=cls.test_memory) \
+                    if sandbox else executor.launch_unsafe()
             test_message = 'echo: Hello, World!'
-            stdout, stderr = proc.communicate(test_message)
+            stdout, stderr = proc.communicate(test_message + '\n')
             res = stdout.strip() == test_message and not stderr
             print ['Failed', 'Success'][res]
             if stderr:
@@ -135,6 +161,9 @@ class ScriptExecutor(BaseExecutor):
 
     def get_cmdline(self):
         return [self.get_command(), self._code]
+
+    def get_executable(self):
+        return self.get_command()
 
 
 class CompiledExecutor(BaseExecutor):
@@ -169,17 +198,26 @@ class CompiledExecutor(BaseExecutor):
     def get_compiled_file(self):
         return self._file(self.problem)
 
+    def is_failed_compile(self, process):
+        return process.returncode != 0
+
+    def handle_compile_error(self, output):
+        raise CompileError(output)
+
     def compile(self):
         process = self.get_compile_process()
         output = self.get_compile_output(process)
 
-        if process.returncode != 0:
-            raise CompileError(output)
+        if self.is_failed_compile(process):
+            self.handle_compile_error(output)
         self.warning = output
         return self.get_compiled_file()
 
     def get_cmdline(self):
         return [self.problem]
 
+    def get_executable_ext(self):
+        return ['', '.exe'][os.name == 'nt']
+
     def get_executable(self):
-        return self._executable
+        return self._executable + self.get_executable_ext()

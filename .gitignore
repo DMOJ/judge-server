@@ -1,5 +1,8 @@
 *.py[cod]
 
+# IntelliJ/PyCharm
+.idea/
+
 # C extensions
 *.so
 

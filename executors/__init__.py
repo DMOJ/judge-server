@@ -1,8 +1,18 @@
-__executors = ['TUR', 'OCAML', 'C', 'CPP', 'CPP0X', 'CPP11', 'CS', 'FS', 'MONOCS', 'JAVA', 'JAVA8', 'PY2', 'PY3',
-               'PYPY', 'PYPY3', 'PAS', 'PERL', 'RUBY18', 'RUBY19', 'RUBY21', 'HASK', 'GO', 'F95', 'NASM', 'PHP',
-               'LUA', 'V8JS', 'RKT', 'OBJC']
-executors = {}
+import os
+import re
+from judgeenv import env, only_executors, exclude_executors
 
+_reexecutor = re.compile('([A-Z0-9]+)\.py$')
+__executors = set(i.group(1) for i in map(_reexecutor.match,
+                                       os.listdir(os.path.dirname(__file__)))
+                  if i is not None)
+if only_executors:
+    __executors &= only_executors
+if exclude_executors:
+    __executors -= exclude_executors
+__executors = sorted(__executors)
+
+executors = {}
 
 def __load(to_load):
     import traceback
@@ -13,7 +23,10 @@ def __load(to_load):
         try:
             module = __import__('%s.%s' % (__name__, executor))
         except ImportError as e:
-            if e.message not in ('No module named _cptbox', 'No module named msvcrt'):
+            if e.message not in ('No module named _cptbox',
+                                 'No module named msvcrt',
+                                 'No module named _wbox',
+								 'No module named termios'):
                 traceback.print_exc()
             return None
         for part in path:
@@ -24,7 +37,7 @@ def __load(to_load):
         executor = __load_module(name)
         if executor is None:
             continue
-        if hasattr(executor, 'initialize') and not executor.initialize():
+        if hasattr(executor, 'initialize') and not executor.initialize(sandbox=env.get('selftest_sandboxing', True)):
             continue
         if hasattr(executor, 'aliases'):
             for alias in executor.aliases():
@@ -34,4 +47,4 @@ def __load(to_load):
 
 
 __load(__executors)
-del __executors, __load
+del __executors, __load, env, only_executors, exclude_executors

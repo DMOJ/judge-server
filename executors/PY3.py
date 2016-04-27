@@ -1,5 +1,5 @@
 from judgeenv import env
-from .python import PythonExecutor
+from .python_executor import PythonExecutor
 
 PYTHON_FS = ['/etc/localtime$', '/dev/urandom$', '.*\.(?:so|py[co]?$)', '.*/lib(?:32|64)?/python[\d.]+/.*',
              '.*/lib/locale/', '/usr/lib64', '.*/?pyvenv.cfg$', '/proc/meminfo$']

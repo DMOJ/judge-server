@@ -9,9 +9,9 @@ class Executor(CompiledExecutor):
     command = env['runtime'].get('tprologc')
     syscalls = ['getpid']
     test_program = '''\
-var turing_sucks : string
-get turing_sucks : *
-put turing_sucks
+var echo : string
+get echo : *
+put echo
 '''
 
     def get_compile_args(self):
@@ -24,9 +24,9 @@ put turing_sucks
         return None
 
     @classmethod
-    def initialize(cls):
+    def initialize(cls, sandbox=True):
         if 'tprolog' not in env['runtime'] or 'tprologc' not in env['runtime'] or 'turing_dir' not in env['runtime']:
             return False
-        return super(Executor, cls).initialize()
+        return super(Executor, cls).initialize(sandbox=sandbox)
 
 initialize = Executor.initialize

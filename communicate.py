@@ -11,6 +11,8 @@ class OutputLimitExceeded(Exception):
 
 
 if os.name == 'nt':
+    from winutils import get_handle_of_thread, SYNCHRONIZE, wait_for_multiple_objects
+
     def _readerthread(fh, buffer, limit, ole):
         read = 0
         while True:
@@ -22,7 +24,7 @@ if os.name == 'nt':
                 ole[0] = True
                 break
             buffer.append(buf)
-
+    
     def safe_communicate(proc, input, outlimit=None, errlimit=None):
         if outlimit is None:
             outlimit = 10485760
@@ -34,18 +36,25 @@ if os.name == 'nt':
 
         out_ole = [False]
         err_ole = [False]
+        waits = []
 
         if proc.stdout:
             stdout = []
             stdout_thread = threading.Thread(target=_readerthread, args=(proc.stdout, stdout, outlimit, out_ole))
             stdout_thread.daemon = True
             stdout_thread.start()
+            handle = get_handle_of_thread(stdout_thread, SYNCHRONIZE)
+            if handle is not None:
+                waits.append(handle)
 
         if proc.stderr:
             stderr = []
             stderr_thread = threading.Thread(target=_readerthread, args=(proc.stderr, stderr, errlimit, err_ole))
             stderr_thread.daemon = True
             stderr_thread.start()
+            handle = get_handle_of_thread(stderr_thread, SYNCHRONIZE)
+            if handle is not None:
+                waits.append(handle)
 
         if proc.stdin:
             if input is not None:
@@ -62,11 +71,10 @@ if os.name == 'nt':
                 # See above.
                 pass
 
-        if proc.stdout:
-            stdout_thread.join()
-
-        if proc.stderr:
-            stderr_thread.join()
+        while waits:
+            del waits[wait_for_multiple_objects(waits)]
+            if out_ole[0] or err_ole[0]:
+                break
 
         # All data exchanged.  Translate lists into strings.
         if stdout is not None:

@@ -1,11 +1,26 @@
-from _wbox import UserManager, ProcessManager, NetworkManager
+from _wbox import UserManager, ProcessManager, NetworkManager, \
+    update_address_x86, update_address_x64
 from subprocess import list2cmdline, Popen
 from winutils import execution_time
 from uuid import uuid1
+import os
+
+
+def unicodify(path):
+    if path is None:
+        return None
+    if isinstance(path, unicode):
+        return path
+    return path.decode('mbcs')
+
+dirname = os.path.dirname(__file__)
+update_address_x86(os.path.join(dirname, u'getaddr32.exe'))
+update_address_x64(os.path.join(dirname, u'getaddr64.exe'))
 
 
 class WBoxPopen(object):
-    def __init__(self, argv, time, memory, nproc=1, executable=None, cwd=None, env=None, network_block=False):
+    def __init__(self, argv, time, memory, nproc=1, executable=None, cwd=None, env=None,
+                 network_block=False, inject32=None, inject64=None, inject_func=None):
         self.user = UserManager()
         self.process = ProcessManager(self.user.username, self.user.password)
         argv = list2cmdline(argv)
@@ -17,14 +32,18 @@ class WBoxPopen(object):
                 executable = executable.decode('mbcs')
             self.process.executable = executable
         if cwd is not None:
-            if not isinstance(cwd, unicode):
-                cwd = cwd.decode('mbcs')
-            self.process.dir = cwd
+            self.process.dir = unicodify(cwd)
         if env is not None:
             self.process.set_environment(self._encode_environment(env))
         self.process.time_limit = time
         self.process.memory_limit = memory * 1024
         self.process.process_limit = nproc
+        if inject32 is not None:
+            self.process.inject32 = unicodify(inject32)
+        if inject64 is not None:
+            self.process.inject64 = unicodify(inject64)
+        if inject_func is not None:
+            self.process.inject_func = str(inject_func)
         self.returncode = None
         self.universal_newlines = False
         if executable is not None and network_block:

@@ -6,7 +6,7 @@
 #include <sys/types.h>
 #include <sys/time.h>
 
-#define MAX_SYSCALL 341
+#define MAX_SYSCALL 546
 #define PTBOX_HANDLER_DENY 0
 #define PTBOX_HANDLER_ALLOW 1
 #define PTBOX_HANDLER_CALLBACK 2
@@ -60,6 +60,8 @@ public:
     void set_callback(pt_handler_callback, void *context);
     void set_event_proc(pt_event_callback, void *context);
     int set_handler(int syscall, int handler);
+    bool trace_syscalls() { return _trace_syscalls; }
+    void trace_syscalls(bool value) { _trace_syscalls = value; }
     int spawn(pt_fork_handler child, void *context);
     int monitor();
     int getpid() { return pid; }
@@ -78,11 +80,13 @@ private:
     pt_debugger *debugger;
     pt_event_callback event_proc;
     void *event_context;
+    bool _trace_syscalls;
 };
 
 class pt_debugger {
 public:
     pt_debugger();
+
     virtual int syscall() = 0;
     virtual void syscall(int) = 0;
     virtual long result() = 0;
@@ -99,8 +103,11 @@ public:
     virtual void arg3(long) = 0;
     virtual void arg4(long) = 0;
     virtual void arg5(long) = 0;
+
     virtual bool is_exit(int syscall) = 0;
     virtual int getpid_syscall() = 0;
+    int execve_syscall() { return execve_id; }
+
     void set_process(pt_process *);
     virtual void new_process();
     virtual char *readstr(unsigned long addr);
@@ -115,13 +122,16 @@ protected:
     pt_process *process;
     pt_syscall_return_callback on_return_callback;
     void *on_return_context;
+    int execve_id;
     friend class pt_process;
 };
 
-class pt_debugger32 : public pt_debugger {
+class pt_debugger_x86 : public pt_debugger {
     long peek_reg(int);
     void poke_reg(int, long);
 public:
+    pt_debugger_x86();
+
     virtual int syscall();
     virtual void syscall(int);
     virtual long result();
@@ -142,10 +152,68 @@ public:
     virtual int getpid_syscall();
 };
 
-class pt_debugger64 : public pt_debugger {
+class pt_debugger_x64 : public pt_debugger {
+protected:
     long peek_reg(int);
     void poke_reg(int, long);
 public:
+    pt_debugger_x64();
+
+    virtual int syscall();
+    virtual void syscall(int);
+    virtual long result();
+    virtual void result(long);
+    virtual long arg0();
+    virtual long arg1();
+    virtual long arg2();
+    virtual long arg3();
+    virtual long arg4();
+    virtual long arg5();
+    virtual void arg0(long);
+    virtual void arg1(long);
+    virtual void arg2(long);
+    virtual void arg3(long);
+    virtual void arg4(long);
+    virtual void arg5(long);
+    virtual bool is_exit(int syscall);
+    virtual int getpid_syscall();
+};
+
+class pt_debugger_x86_on_x64 : public pt_debugger_x86 {
+    long peek_reg(int);
+    void poke_reg(int, long);
+public:
+    pt_debugger_x86_on_x64();
+
+    virtual int syscall();
+    virtual void syscall(int);
+    virtual long result();
+    virtual void result(long);
+    virtual long arg0();
+    virtual long arg1();
+    virtual long arg2();
+    virtual long arg3();
+    virtual long arg4();
+    virtual long arg5();
+    virtual void arg0(long);
+    virtual void arg1(long);
+    virtual void arg2(long);
+    virtual void arg3(long);
+    virtual void arg4(long);
+    virtual void arg5(long);
+};
+
+class pt_debugger_x32 : public pt_debugger_x64 {
+public:
+    virtual int syscall();
+};
+
+class pt_debugger_arm : public pt_debugger {
+    long peek_reg(int);
+    void poke_reg(int, long);
+public:
+    pt_debugger_arm();
+
     virtual int syscall();
     virtual void syscall(int);
     virtual long result();

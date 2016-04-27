@@ -4,6 +4,8 @@ from msvcrt import open_osfhandle
 
 ctypedef const Py_UNICODE *LPCWSTR
 ctypedef Py_UNICODE *LPWSTR
+ctypedef const char *LPCSTR
+ctypedef char *LPSTR
 ctypedef void *HANDLE
 ctypedef unsigned long DWORD
 
@@ -51,6 +53,9 @@ cdef extern from 'process.h' nogil:
         JobbedProcessManager &command(LPCWSTR cmdline);
         JobbedProcessManager &executable(LPCWSTR executable)
         JobbedProcessManager &directory(LPCWSTR directory)
+        JobbedProcessManager &injectX86(LPCWSTR szExecutable)
+        JobbedProcessManager &injectX64(LPCWSTR szExecutable)
+        JobbedProcessManager &injectFunction(LPCSTR szFunction)
         JobbedProcessManager &environment(LPCWSTR env, size_t cb)
 
         unsigned long long memory()
@@ -66,6 +71,12 @@ cdef extern from 'process.h' nogil:
         AutoHandle &stdIn()
         AutoHandle &stdOut()
         AutoHandle &stdErr()
+        
+        @staticmethod
+        void updateAsmX86(LPCWSTR szExecutable)
+        
+        @staticmethod
+        void updateAsmX64(LPCWSTR szExecutable)
 
 
 cdef extern from 'firewall.h' nogil:
@@ -163,6 +174,9 @@ cdef class ProcessManager:
     cdef unicode _executable
     cdef unicode _command
     cdef unicode _dir
+    cdef unicode _inject32
+    cdef unicode _inject64
+    cdef str _inject_func
     cdef object _stdin, _stdout, _stderr
 
     def __cinit__(self, username, password):
@@ -173,6 +187,8 @@ cdef class ProcessManager:
         self._username = username
         self._password = password
         self._executable = self._dir = u''
+        self._inject32 = self._inject64 = None
+        self._inject_func = None
         self._stdin = self._stdout = self._stderr = None
         self.thisptr.withLogin(username, password)
 
@@ -280,6 +296,30 @@ cdef class ProcessManager:
             self._dir = value
             self.thisptr.directory(value)
 
+    property inject32:
+        def __get__(self):
+            return self._inject32
+
+        def __set__(self, value):
+            self._inject32 = value
+            self.thisptr.injectX86(value)
+
+    property inject64:
+        def __get__(self):
+            return self._inject64
+
+        def __set__(self, value):
+            self._inject64 = value
+            self.thisptr.injectX64(value)
+
+    property inject_func:
+        def __get__(self):
+            return self._inject_func
+
+        def __set__(self, value):
+            self._inject_func = value
+            self.thisptr.injectFunction(value)
+
     property username:
         def __get__(self):
             return self._username
@@ -315,3 +355,11 @@ cdef class ProcessManager:
     property _handle:
         def __get__(self):
             return <unsigned long long>self.thisptr.process().get()
+
+
+cpdef update_address_x86(unicode executable):
+    JobbedProcessManager.updateAsmX86(executable)
+
+
+cpdef update_address_x64(unicode executable):
+    JobbedProcessManager.updateAsmX64(executable)

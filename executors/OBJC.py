@@ -35,7 +35,7 @@ int main (int argc, const char * argv[]) {
         return super(Executor, self).get_fs() + ['/proc/\d+/cmdline', '/usr/lib', '/dev/urandom$']
 
     @classmethod
-    def initialize(cls):
+    def initialize(cls, sandbox=True):
         if 'gnustep-config' not in env['runtime']:
             return False
         try:
@@ -43,6 +43,6 @@ int main (int argc, const char * argv[]) {
             cls.objc_ldflags = check_output([env['runtime']['gnustep-config'], '--base-libs']).split()
         except CalledProcessError as e:
             return False
-        return super(Executor, cls).initialize()
+        return super(Executor, cls).initialize(sandbox=sandbox)
 
 initialize = Executor.initialize

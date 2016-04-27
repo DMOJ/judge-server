@@ -19,6 +19,14 @@ SetInformationJobObject = _kernel32.SetInformationJobObject
 QueryInformationJobObject = _kernel32.QueryInformationJobObject
 GetCurrentProcess = _kernel32.GetCurrentProcess
 CreateIoCompletionPort = _kernel32.CreateIoCompletionPort
+DuplicateHandle = _kernel32.DuplicateHandle
+
+DuplicateHandle.argtypes = [HANDLE, HANDLE, HANDLE, POINTER(HANDLE), DWORD, BOOL, DWORD]
+GetCurrentProcess.restype = HANDLE
+
+CreateIoCompletionPort.argtypes = [HANDLE, HANDLE, LPVOID, DWORD]
+CreateIoCompletionPort.restype = HANDLE
+
 
 
 def CreatePipe(buf=0):
@@ -30,8 +38,8 @@ def CreatePipe(buf=0):
 
 def make_inheritable(handle):
     out = HANDLE()
-    _kernel32.DuplicateHandle(GetCurrentProcess(), handle, GetCurrentProcess(), byref(out), 0, True,
-                              DUPLICATE_CLOSE_SOURCE | DUPLICATE_SAME_ACCESS)
+    DuplicateHandle(GetCurrentProcess(), handle, GetCurrentProcess(), byref(out), 0, True,
+                    DUPLICATE_CLOSE_SOURCE | DUPLICATE_SAME_ACCESS)
     return out.value
 
 
@@ -43,6 +51,7 @@ def GetExitCodeProcess(process):
 
 LPSTR = ctypes.c_char_p
 LPBYTE = LPSTR
+LPWSTR = ctypes.c_wchar_p
 LPHANDLE = POINTER(HANDLE)
 LPDWORD = POINTER(DWORD)
 
@@ -196,12 +205,11 @@ class SECURITY_ATTRIBUTES(Structure):
 
 
 class STARTUPINFO(ctypes.Structure):
-    _pack_ = 1
     _fields_ = [
         ('cb', DWORD),
         ('lpReserved', c_void_p),
-        ('lpDesktop', LPSTR),
-        ('lpTitle', LPSTR),
+        ('lpDesktop', LPWSTR),
+        ('lpTitle', LPWSTR),
         ('dwX', DWORD),
         ('dwY', DWORD),
         ('dwXSize', DWORD),

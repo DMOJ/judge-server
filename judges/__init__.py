@@ -1,2 +1,3 @@
-from judges.standard import StandardJudge
-
+from .standard import StandardGrader
+from .standard import InteractiveGrader
+from .standard import SignatureGrader

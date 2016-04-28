@@ -11,6 +11,7 @@ import os
 import traceback
 import threading
 import sys
+import judges
 from result import Result
 
 from judgeenv import env, get_problem_roots, fs_encoding
@@ -86,7 +87,7 @@ class SendProblemsHandler(FileSystemEventHandler):
 class Judge(object):
     def __init__(self, **kwargs):
         self.current_submission = None
-        self.current_proc = None
+        self.current_grader = None
         self.current_submission_thread = None
         self._terminate_grading = False
         if Observer is not None:
@@ -145,31 +146,38 @@ class Judge(object):
         """
         if self.current_submission_thread:
             self._terminate_grading = True
-            if self.current_proc:
-                try:
-                    self.current_proc.kill()
-                except OSError:
-                    pass
+            if self.current_grader:
+                self.current_grader.terminate()
             self.current_submission_thread.join()
             self.current_submission_thread = None
 
     def _begin_grading(self, problem_id, language, original_source, time_limit, memory_limit, short_circuit):
         submission_id = self.current_submission
 
-        binary = self.generate_binary(problem_id, language, original_source)
-        if not binary:
-            return
-
         try:
-            problem = Problem(problem_id)
+            problem = Problem(problem_id, time_limit, memory_limit)
         except InvalidInitException:
             traceback.print_exc()
             self.packet_manager.internal_error_packet(traceback.format_exc())
             return
 
+        if 'grader' in problem.config:
+            grader_class = judges.InteractiveGrader
+        elif 'handler' in problem.config:
+            grader_class = judges.SignatureGrader
+        else:
+            grader_class = judges.StandardGrader
+
+        self.current_grader = grader_class(self, problem, language, original_source)
+        grader = self.current_grader
+
+        binary = grader.binary
+        if not binary:
+            return
+
         self.packet_manager.begin_grading_packet()
         try:
-            for case_number, result in enumerate(self.grade_cases(binary, problem.cases, time_limit, memory_limit,
+            for case_number, result in enumerate(self.grade_cases(grader, problem.cases,
                                                                   short_circuit=short_circuit)):
                 if isinstance(result, BatchBegin):
                     self.packet_manager.batch_begin_packet()
@@ -205,17 +213,17 @@ class Judge(object):
             self.current_submission_thread = None
             self.current_submission = None
 
-    def grade_cases(self, binary, cases, time_limit, memory_limit, short_circuit=False):
+    def grade_cases(self, grader, cases, short_circuit=False):
+        binary = grader.binary
 
         # Whether we're set to skip all cases, is set to True on WA in batch
         is_short_circuiting = False
 
         for case in cases:
-            result = Result()
-            result.case = case
-
             # Stop grading if we're short circuiting
             if is_short_circuiting:
+                result = Result()
+                result.case = case
                 result.result_flag = Result.SC
                 yield result
                 continue
@@ -223,28 +231,10 @@ class Judge(object):
             # Yield notifying objects for batch begin/end, and unwrap all cases inside the batches
             if isinstance(case, BatchedTestCase):
                 yield BatchBegin()
-                for _ in self.grade_cases(binary, case.batched_cases, time_limit, memory_limit, short_circuit=True):
+                for _ in self.grade_cases(binary, case.batched_cases, short_circuit=True):
                     yield _
                 yield BatchEnd()
                 continue
-
-            process = binary.launch(time=time_limit, memory=memory_limit, pipe_stderr=True,
-                                    unbuffered=case.config.unbuffered)
-            self.current_proc = process
-
-            # Assume AC unless proven otherwise
-
-            communicate = process.safe_communicate if hasattr(process, 'safe_communicate') else \
-                partial(safe_communicate, process)
-
-            try:
-                result.proc_output, error = communicate(case.input_data(), outlimit=25165824, errlimit=1048576)
-            except OutputLimitExceeded as ole:
-                stream, result.proc_output, error = ole.args
-                print 'OLE:', stream
-                result.result_flag |= Result.OLE
-                process.kill()
-                process.wait()
 
             # Must check here because we might be interrupted mid-execution
             # If we don't bail out, we get an IR.
@@ -252,77 +242,12 @@ class Judge(object):
             if self._terminate_grading:
                 raise TerminateGrading()
 
-            result.max_memory = process.max_memory or 0.0
-            result.execution_time = process.execution_time or 0.0
-            result.r_execution_time = process.r_execution_time or 0.0
+            result = grader.grade(case)
 
-            # C standard checker will crash if not given a string
-            proc_output = result.proc_output or ''
-
-            check = case.checker()(proc_output, case.output_data(),
-                                   submission_source=binary.source,
-                                   judge_input=case.input_data(),
-                                   point_value=case.points)
-
-            # checkers must either return a boolean (True: full points, False: 0 points)
-            # or a CheckerResult, so convert to CheckerResult if it returned bool
-            if not isinstance(check, CheckerResult):
-                check = CheckerResult(check, case.points if check else 0.0)
-
-            if not check.passed:
-                result.result_flag |= Result.WA
-                if short_circuit:
-                    is_short_circuiting = True
-            else:
-                result.result_flag |= Result.AC
-
-            if not check.passed:
-                result.result_flag |= Result.WA
-
-            # Translate status codes/process results into Result object for status codes
-            if not case.config.swallow_ir and process.returncode > 0:
-                print>> sys.stderr, 'Exited with error: %d' % process.returncode
-                result.result_flag |= Result.IR
-            if not case.config.swallow_rte and process.returncode < 0:
-                # None < 0 == True
-                if process.returncode is not None:
-                    print>> sys.stderr, 'Killed by signal %d' % -process.returncode
-                result.result_flag |= Result.RTE  # Killed by signal
-            if not case.config.swallow_tle and process.tle:
-                result.result_flag |= Result.TLE
-            if process.mle:
-                result.result_flag |= Result.MLE
-
-            if result.result_flag & ~Result.WA:
-                check.points = 0
-
-            result.points = check.points
-            result.feedback = (check.feedback or
-                               (process.feedback if hasattr(process, 'feedback') else
-                                getattr(binary, 'get_feedback', lambda x, y: '')(error, result)))
+            if (result.result_flag & Result.WA) > 0 and short_circuit:
+                is_short_circuiting = True
 
             yield result
-
-    def generate_binary(self, problem_id, language, original_source):
-
-        # If the executor requires compilation, compile and send any errors/warnings to the site
-        executor = executors[language].Executor
-        if issubclass(executor, CompiledExecutor):
-            try:
-                # Fetch an appropriate executor for the language
-                binary = executor(problem_id, original_source)
-            except CompileError as compilation_error:
-                self.packet_manager.compile_error_packet(compilation_error.message)
-
-                # Compile error is fatal
-                return None
-        else:
-            binary = executor(problem_id, original_source)
-
-        # Carry on grading in case of compile warning
-        if hasattr(binary, 'warning') and binary.warning:
-            self.packet_manager.compile_message_packet(format_ansi(binary.warning))
-        return binary
 
     def listen(self):
         """

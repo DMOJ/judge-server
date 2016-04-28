@@ -101,7 +101,8 @@ class ConfigNode(object):
 
 
 class TestCase(object):
-    def __init__(self, config, problem):
+    def __init__(self, count, config, problem):
+        self.position = count
         self.config = config
         self.problem = problem
         self.points = config.points
@@ -182,10 +183,13 @@ class _iofile_fetcher(dict):
 
 
 class Problem(object):
-    def __init__(self, problem_id):
-        self.problem_id = problem_id
+    def __init__(self, problem_id, time_limit, memory_limit):
+        self.id = problem_id
+        self.time_limit = time_limit
+        self.memory_limit = memory_limit
 
         self.problem_data = _iofile_fetcher(problem_id)
+        self._testcase_counter = 0
 
         try:
             self.config = ConfigNode(yaml.safe_load(self.problem_data['init.yml']), defaults={
@@ -201,7 +205,7 @@ class Problem(object):
         files = dict()
 
         if self.config.archive:
-            archive_path = os.path.join(get_problem_root(self.problem_id), self.config.archive)
+            archive_path = os.path.join(get_problem_root(self.id), self.config.archive)
             if not os.path.exists(archive_path):
                 raise InvalidInitException('archive file "%s" does not exist' % archive_path)
             try:
@@ -222,7 +226,8 @@ class Problem(object):
             if 'batched' in case_config.raw_config:
                 cases.append(BatchedTestCase(case_config, self))
             else:
-                cases.append(TestCase(case_config, self))
+                cases.append(TestCase(self._testcase_counter, case_config, self))
+        self._testcase_counter += 1
         return cases
 
 

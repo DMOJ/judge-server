@@ -10,13 +10,14 @@ from yaml.scanner import ScannerError
 
 import checkers
 from judgeenv import get_problem_root
-from utils.module import load_module
+from utils.module import load_module, load_module_from_file
 
 
 class InvalidInitException(Exception):
     """
     Your init.yml is bad and you should feel bad.
     """
+
     def __init__(self, message):
         super(InvalidInitException, self).__init__(message)
 
@@ -77,6 +78,7 @@ class ConfigNode(object):
                     exec self.raw_config[dynamic_key] in local
                 except Exception as e:
                     import traceback
+
                     traceback.print_exc()
                     raise InvalidInitException('exception executing dynamic key ' + dynamic_key + ': ' + e.message)
                 cfg = local['node']
@@ -144,8 +146,8 @@ class TestCase(object):
                 params = {}
             if '.' in name:
                 try:
-                    checker = load_module(os.path.splitext(os.path.split(name)[1])[0],
-                                          self.problem.problem_data[name], name)
+                    modname, ext = os.path.splitext(name)
+                    checker = load_module_from_file(os.path.join(get_problem_root(self.problem.id), name))
                 except IOError:
                     raise InvalidInitException('checker module path does not exist: %s' % name)
             else:
@@ -155,7 +157,6 @@ class TestCase(object):
         if not hasattr(checker, 'check') or not callable(checker.check):
             raise InvalidInitException('malformed checker: no check method found')
 
-        print 'loaded checker', checker.check
         return partial(checker.check, **params)
 
     def __str__(self):

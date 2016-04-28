@@ -6,7 +6,7 @@ from communicate import safe_communicate, OutputLimitExceeded
 from error import CompileError
 from executors import executors
 from executors.base_executor import CompiledExecutor
-from judge import format_ansi, CheckerResult
+import judge
 from judges.base import BaseGrader
 from result import Result
 
@@ -38,8 +38,8 @@ class StandardGrader(BaseGrader):
 
         # checkers must either return a boolean (True: full points, False: 0 points)
         # or a CheckerResult, so convert to CheckerResult if it returned bool
-        if not isinstance(check, CheckerResult):
-            check = CheckerResult(check, case.points if check else 0.0)
+        if not isinstance(check, judge.CheckerResult):
+            check = judge.CheckerResult(check, case.points if check else 0.0)
 
         result.result_flag |= [Result.WA, Result.AC][check.passed]
 
@@ -104,7 +104,7 @@ class StandardGrader(BaseGrader):
 
         # Carry on grading in case of compile warning
         if hasattr(binary, 'warning') and binary.warning:
-            self.judge.packet_manager.compile_message_packet(format_ansi(binary.warning))
+            self.judge.packet_manager.compile_message_packet(judge.format_ansi(binary.warning))
         return binary
 
 

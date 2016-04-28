@@ -1,43 +1,14 @@
-import Queue
 from functools import partial
 import sys
-import threading
-import traceback
-import uuid
-import cStringIO
+
 from communicate import safe_communicate, OutputLimitExceeded
+
 from error import CompileError
 from executors import executors
 from executors.base_executor import CompiledExecutor
 from judge import format_ansi, CheckerResult
+from judges.base import BaseGrader
 from result import Result
-from utils.module import load_module
-
-
-class BaseGrader(object):
-    def __init__(self, judge, problem, language, source):
-        self.source = source
-        self.language = language
-        self.problem = problem
-        self.judge = judge
-        self.binary = self._generate_binary()
-        self._terminate_grading = False
-        self._current_proc = None
-
-    def grade(self, case):
-        raise NotImplementedError
-
-    def _generate_binary(self):
-        raise NotImplementedError
-
-    def terminate_grading(self):
-        self._terminate_grading = True
-        if self._current_proc:
-            try:
-                self._current_proc.kill()
-            except OSError:
-                pass
-        pass
 
 
 class StandardGrader(BaseGrader):
@@ -137,82 +108,3 @@ class StandardGrader(BaseGrader):
         return binary
 
 
-class SignatureGrader(StandardGrader):
-    def _generate_binary(self):
-        siggraders = ('C', 'CPP', 'CPP0X', 'CPP11', 'CPP14')
-
-        for i in reversed(siggraders):
-            if i in executors:
-                siggrader = i
-                break
-        else:
-            raise CompileError("can't signature grade, why did I get this submission?")
-        if self.language in siggraders:
-            aux_sources = {}
-            handler_data = self.problem.config['handler']
-
-            entry_point = self.problem.problem_data[handler_data['entry']]
-            header = self.problem.problem_data[handler_data['header']]
-
-            aux_sources[self.problem.id + '_submission'] = (
-                                                               '#include "%s"\n#define main main_%s\n' %
-                                                               (handler_data['header'],
-                                                                str(uuid.uuid4()).replace('-',
-                                                                                          ''))) + self.source
-            aux_sources[handler_data['header']] = header.read()
-            entry = entry_point.read()
-            # Compile as CPP11 regardless of what the submission language is
-            return executors[siggrader].Executor(self.problem.id, entry, aux_sources=aux_sources,
-                                                 writable=handler_data.get('writable', (1, 2)),
-                                                 fds=handler_data.get('fds', None))
-        else:
-            raise CompileError('no valid handler compiler exists')
-
-
-class InteractiveGrader(StandardGrader):
-    def _interact_with_process(self, case, result):
-        process = self._current_proc
-
-        try:
-            grader_filename = self.problem.config.grader
-            interactive_grader = load_module('<interactive grader>', self.problem.problem_data[grader_filename], filename=grader_filename)
-        except:
-            traceback.print_exc()
-            raise IOError('could not load grader module')
-
-        try:
-            return_queue = Queue.Queue()
-
-            def interactive_thread(interactor, Q, case_number, process, case_input, case_output, point_value,
-                                   source_code):
-                Q.put_nowait(interactor(case_number, process, case_input=case_input, case_output=case_output,
-                                        point_value=point_value, source_code=source_code))
-
-            input_data = case.input_data()
-            output_data = case.output_data()
-            ithread = threading.Thread(target=interactive_thread, args=(
-                interactive_grader.grade, return_queue, case.position, process,
-                input_data and cStringIO.StringIO(input_data),
-                output_data and cStringIO.StringIO(output_data), case.points, self.source))
-            ithread.start()
-            ithread.join(self.problem.time_limit + 1.0)
-            if ithread.is_alive():
-                result.result_flag = Result.TLE
-                error = ''
-            else:
-                result = return_queue.get_nowait()
-                if isinstance(result, tuple) or isinstance(result, list):
-                    result, error = result
-                else:
-                    error = ''
-        except:
-            traceback.print_exc()
-            try:
-                process.kill()
-            except:  # The process might've already exited
-                pass
-            self.judge.packet_manager.internal_error_packet(self.problem.id + '\n\n' + traceback.format_exc())
-            return
-        else:
-            process.wait()
-        return error

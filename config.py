@@ -2,6 +2,7 @@ from functools import partial
 import os
 import zipfile
 import copy
+import cStringIO
 
 import yaml
 from yaml.parser import ParserError
@@ -134,7 +135,6 @@ class TestCase(object):
 
     def checker(self):
         try:
-
             name = self.config['checker'] or 'standard'
             if isinstance(name, ConfigNode):
                 # TODO: remove legacy 'parameters'
@@ -155,6 +155,7 @@ class TestCase(object):
         if not hasattr(checker, 'check') or not callable(checker.check):
             raise InvalidInitException('malformed checker: no check method found')
 
+        print 'loaded checker', checker.check
         return partial(checker.check, **params)
 
     def __str__(self):
@@ -179,7 +180,7 @@ class _iofile_fetcher(dict):
         self.problem_id = problem_id
 
     def __missing__(self, key):
-        return open(os.path.join(get_problem_root(self.problem_id), key), 'r')
+        return open(os.path.join(get_problem_root(self.problem_id), key), 'r').read()
 
 
 class Problem(object):

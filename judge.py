@@ -16,11 +16,6 @@ from result import Result
 
 from judgeenv import env, get_problem_roots, fs_encoding
 
-if os.name == 'nt':
-    import ctypes
-
-    ctypes.windll.kernel32.SetErrorMode(0x8000 | 0x0002 | 0x0004 | 0x0001)
-
 try:
     from watchdog.observers import Observer
     from watchdog.events import FileSystemEventHandler

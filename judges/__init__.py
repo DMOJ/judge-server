@@ -1,3 +1,3 @@
 from .standard import StandardGrader
-from .standard import InteractiveGrader
-from .standard import SignatureGrader
+from .interactive import InteractiveGrader
+from .signature import SignatureGrader

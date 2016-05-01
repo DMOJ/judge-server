@@ -43,12 +43,12 @@ class StandardGrader(BaseGrader):
 
         # Translate status codes/process results into Result object for status codes
         if not case.config.swallow_ir and process.returncode > 0:
-            print>> sys.stderr, 'Exited with error: %d' % process.returncode
+            # print>> sys.stderr, 'Exited with error: %d' % process.returncode
             result.result_flag |= Result.IR
         if not case.config.swallow_rte and process.returncode < 0:
             # None < 0 == True
-            if process.returncode is not None:
-                print>> sys.stderr, 'Killed by signal %d' % -process.returncode
+            # if process.returncode is not None:
+            #     print>> sys.stderr, 'Killed by signal %d' % -process.returncode
             result.result_flag |= Result.RTE  # Killed by signal
         if not case.config.swallow_tle and process.tle:
             result.result_flag |= Result.TLE

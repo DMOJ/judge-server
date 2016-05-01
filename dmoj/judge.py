@@ -243,14 +243,14 @@ class AMQPJudge(Judge):
 
 
 def main():
-    print 'Running live judge...'
-
     import logging
     import judgeenv
     import executors
 
     judgeenv.load_env()
     executors.load_executors()
+
+    print 'Running live judge...'
 
     if os.name == 'nt' and not judgeenv.no_ansi_emu:
         try:

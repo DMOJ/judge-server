@@ -32,10 +32,11 @@ class Result(object):
 
     def readable_codes(self):
         execution_verdict = []
-        for flag in ['IR', 'WA', 'RTE', 'TLE', 'MLE', 'SC', 'IE']:
+        for flag in ['IE', 'TLE', 'MLE', 'OLE', 'RTE', 'IR', 'WA', 'SC']:
             if self.result_flag & getattr(Result, flag):
                 execution_verdict.append(flag)
         return execution_verdict or ['AC']
+
 
 class CheckerResult(object):
     def __init__(self, passed, points, feedback=None):

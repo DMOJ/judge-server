@@ -137,15 +137,7 @@ class TestCase(object):
         executor = self.problem.generator_manager.get_generator(filename, flags)
         proc = executor.launch_unsafe(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-        input_file = self.problem.problem_data[self.config['in']]
-        input = None
-        if input_file is not None:
-            try:
-                with open(input_file) as file:
-                    input = file.read()
-            except IOError:
-                pass
-        self._generated = map(self._normalize, proc.communicate(input))
+        self._generated = map(self._normalize, proc.communicate(self.problem.problem_data.get(self.config['in'])))
 
     def input_data(self):
         gen = self.config.generator

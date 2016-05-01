@@ -3,3 +3,4 @@ pyyaml
 ansi2html
 pika
 termcolor
+colorama

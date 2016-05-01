@@ -131,7 +131,8 @@ class Judge(object):
         except CompileError as e:
             print 'Compile Error'
             print e.args[0]
-            self.packet_manager.compile_error_packet(format_ansi(e.args[0]))
+            error = e.args[0].decode('mbcs') if os.name == 'nt' and isinstance(e.args[0], str) else e.args[0]
+            self.packet_manager.compile_error_packet(format_ansi(error))
             return
 
         binary = grader.binary

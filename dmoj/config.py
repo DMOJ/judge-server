@@ -158,8 +158,7 @@ class TestCase(object):
         try:
             name = self.config['checker'] or 'standard'
             if isinstance(name, ConfigNode):
-                # TODO: remove legacy 'parameters'
-                params = name['args'] or name['parameters'] or {}
+                params = name['args'] or {}
                 name = name['name']
             else:
                 params = {}

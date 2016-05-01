@@ -1,9 +1,9 @@
 import os
-if os.name != 'nt':
-    raise ImportError('No module named winutils')
-
 from ctypes import windll, c_size_t, Structure, sizeof, byref, c_uint64
 from ctypes.wintypes import DWORD, HANDLE, POINTER, BOOL, WinError
+
+if os.name != 'nt':
+    raise ImportError('No module named winutils')
 
 __all__ = ['max_memory', 'execution_time']
 
@@ -54,15 +54,16 @@ WaitForMultipleObjects = windll.kernel32.WaitForMultipleObjects
 WaitForMultipleObjects.argtypes = (DWORD, POINTER(HANDLE), BOOL, DWORD)
 WaitForMultipleObjects.restype = DWORD
 
+
 def get_handle_of_thread(thread, access):
-	return OpenThread(access, False, thread.ident)
+    return OpenThread(access, False, thread.ident)
 
 
 def wait_for_multiple_objects(handles, timeout=INFINITE, all=False):
-	array = (HANDLE * len(handles))(*handles)
-	res = WaitForMultipleObjects(len(handles), array, all, timeout)
-	if res == INFINITE:
-		raise WinError()
-	elif res == WAIT_TIMEOUT:
-		return None
-	return res
+    array = (HANDLE * len(handles))(*handles)
+    res = WaitForMultipleObjects(len(handles), array, all, timeout)
+    if res == INFINITE:
+        raise WinError()
+    elif res == WAIT_TIMEOUT:
+        return None
+    return res

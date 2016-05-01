@@ -9,7 +9,6 @@ from dmoj.error import CompileError
 from .base_executor import CompiledExecutor
 from dmoj.result import Result
 
-
 recomment = re.compile(r'/\*.*?\*/', re.DOTALL)
 restring = re.compile(r''''(?:\\.|[^'\\])'|"(?:\\.|[^"\\])*"''', re.DOTALL)
 reinline_comment = re.compile(r'//.*?(?=[\r\n])')
@@ -73,7 +72,8 @@ class JavaExecutor(CompiledExecutor):
 
     def get_cmdline(self):
         return ['java', '-client', '-javaagent:%s=policy:%s' % (self._agent_file, self._policy_file),
-                '-Xss128m', '-Xmx%dK' % self.__memory_limit, self._class_name] # 128m is equivalent to 1<<27 in Thread constructor
+                '-Xss128m', '-Xmx%dK' % self.__memory_limit,
+                self._class_name]  # 128m is equivalent to 1<<27 in Thread constructor
 
     def launch(self, *args, **kwargs):
         self.__memory_limit = kwargs['memory']
@@ -83,7 +83,7 @@ class JavaExecutor(CompiledExecutor):
     def launch_unsafe(self, *args, **kwargs):
         return Popen(['java', '-client', self._class_name] + list(args),
                      executable=self.get_vm(), cwd=self._dir, **kwargs)
-                     
+
     def get_feedback(self, stderr, result):
         if not result.result_flag & Result.IR or not stderr or len(stderr) > 2048:
             return ''

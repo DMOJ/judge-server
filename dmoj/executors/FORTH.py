@@ -14,6 +14,7 @@ HELLO
     fs = ['.*?\.(?:so|fs|fi|gforth-history)']
 
     def get_cmdline(self):
-         return [self.get_command(), self._code, '-e', 'bye']
+        return [self.get_command(), self._code, '-e', 'bye']
+
 
 initialize = Executor.initialize

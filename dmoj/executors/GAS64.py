@@ -7,7 +7,8 @@ class Executor(GASExecutor):
     ld_path = env['runtime'].get('ld_x64', None)
     qemu_path = env['runtime'].get('qemu_x64', None)
     dynamic_linker = env['runtime'].get('ld.so_x64', '/lib64/ld-linux-x86-64.so.2')
-    crt_pre = env['runtime'].get('crt_pre_x64', ['/usr/lib/x86_64-linux-gnu/crt1.o', '/usr/lib/x86_64-linux-gnu/crti.o'])
+    crt_pre = env['runtime'].get('crt_pre_x64',
+                                 ['/usr/lib/x86_64-linux-gnu/crt1.o', '/usr/lib/x86_64-linux-gnu/crti.o'])
     crt_post = env['runtime'].get('crt_post_x64', ['/usr/lib/x86_64-linux-gnu/crtn.o'])
     name = 'GAS64'
 
@@ -42,5 +43,6 @@ _exit:
 buffer:
 	.skip	4096
 '''
+
 
 initialize = Executor.initialize

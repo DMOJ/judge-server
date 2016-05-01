@@ -22,12 +22,13 @@ puts $input
         def handle_socket(debugger):
             def socket_return():
                 debugger.result = -errno.EACCES
+
             debugger.syscall = debugger.getpid_syscall
             debugger.on_return(socket_return)
             return True
 
         security[sys_tgkill] = True
-        security[sys_write] = lambda debugger: debugger.arg0 <= 4 # TCL uses some handles internally
+        security[sys_write] = lambda debugger: debugger.arg0 <= 4  # TCL uses some handles internally
         security[sys_socket] = handle_socket
         security[sys_socketcall] = handle_socket
         security[sys_connect] = True

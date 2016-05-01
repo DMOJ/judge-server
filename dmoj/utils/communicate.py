@@ -13,6 +13,7 @@ class OutputLimitExceeded(Exception):
 if os.name == 'nt':
     from dmoj.utils.winutils import get_handle_of_thread, SYNCHRONIZE, wait_for_multiple_objects
 
+
     def _readerthread(fh, buffer, limit, ole):
         read = 0
         while True:
@@ -24,7 +25,8 @@ if os.name == 'nt':
                 ole[0] = True
                 break
             buffer.append(buf)
-    
+
+
     def safe_communicate(proc, input, outlimit=None, errlimit=None):
         if outlimit is None:
             outlimit = 10485760
@@ -101,8 +103,8 @@ else:
             if not input:
                 proc.stdin.close()
 
-        stdout = None # Return
-        stderr = None # Return
+        stdout = None  # Return
+        stderr = None  # Return
         fd2file = {}
         fd2output = {}
         fd2length = {}
@@ -165,7 +167,7 @@ else:
                     if fd2length[fd] > fd2limit[fd]:
                         if stdout is not None:
                             stdout = ''.join(stdout)
-                
+
                         if stderr is not None:
                             stderr = ''.join(stderr)
 

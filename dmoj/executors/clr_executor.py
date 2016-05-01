@@ -13,7 +13,6 @@ from dmoj.judgeenv import env
 from dmoj.utils.winutils import execution_time, max_memory
 from dmoj.utils.pywinjob import *
 
-
 reexc = re.compile(r'E1AE1B1F-C5FE-4335-B642-9446634350A0:\r?\n(.*?):')
 
 
@@ -68,7 +67,7 @@ class CLRProcess(object):
     def _shocker(self):
         time.sleep(self.time_limit)
         if WaitForSingleObject(self._process, 0) == WAIT_TIMEOUT:
-            print>>sys.stderr, 'Ouch, shocker activated!'
+            print>> sys.stderr, 'Ouch, shocker activated!'
             TerminateProcess(self._process, 0xDEADBEEF)
             WaitForSingleObject(self._process, INFINITE)
 
@@ -145,9 +144,12 @@ class CLRProcess(object):
         self.stdout = os.fdopen(msvcrt.open_osfhandle(stdout, 0), 'rb')
         self.stderr = os.fdopen(msvcrt.open_osfhandle(stderr, 0), 'rb')
 
-        if not CloseHandle(stdin_):  raise WinError()
-        if not CloseHandle(stdout_): raise WinError()
-        if not CloseHandle(stderr_): raise WinError()
+        if not CloseHandle(stdin_):
+            raise WinError()
+        if not CloseHandle(stdout_):
+            raise WinError()
+        if not CloseHandle(stderr_):
+            raise WinError()
 
         self._shocker_thread = Thread(target=self._shocker)
         self._shocker_thread.daemon = True

@@ -25,6 +25,7 @@ distribution = Distribution({
     ])
 })
 
+
 class Command(build_ext):
     def build_extensions(self):
         self.compiler.initialize()
@@ -37,9 +38,10 @@ class Command(build_ext):
             self.compiler.ldflags_shared += ['/OPT:REF,ICF', '/LTCG']
         build_ext.build_extensions(self)
 
+
 command = Command(distribution)
 command.finalize_options()
 command.run()
 
-#shutil.copy2(command.get_ext_fullpath('_wbox'),
+# shutil.copy2(command.get_ext_fullpath('_wbox'),
 #             command.get_ext_filename('_wbox'))

@@ -1,7 +1,7 @@
-__author__ = 'Quantum'
-
 import os
 import sys
+
+__author__ = 'Quantum'
 
 
 def make_unicode_path(s):

@@ -9,7 +9,7 @@ class Executor(PythonExecutor):
     test_program = "print __import__('sys').stdin.read()"
     name = 'PYPY'
     fs = ['.*\.(?:so|py[co]?$)', '/proc/cpuinfo$', '/proc/meminfo$', '/etc/localtime$', '/dev/urandom$'] + [command] \
-      + ([env['runtime']['pypydir']] if 'pypydir' in env['runtime'] else [])
+         + ([env['runtime']['pypydir']] if 'pypydir' in env['runtime'] else [])
 
     def get_security(self):
         security = super(Executor, self).get_security()
@@ -18,6 +18,7 @@ class Executor(PythonExecutor):
         def eaccess(debugger):
             def handle_return():
                 debugger.result = -errno.EACCES
+
             debugger.syscall = debugger.getpid_syscall
             debugger.on_return(handle_return)
             return True
@@ -25,5 +26,5 @@ class Executor(PythonExecutor):
         security[sys_unlink] = eaccess
         return security
 
-initialize = Executor.initialize
 
+initialize = Executor.initialize

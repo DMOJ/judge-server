@@ -17,8 +17,8 @@ def check(process_output, judge_output, precision, **kwargs):
                         return False
                 else:
                     process_float = float(process_token)
-                    if ((abs(judge_float) < epsilon and abs(process_float) >= epsilon) or \
-                           (abs(judge_float) >= epsilon and abs(1.0 - process_float / judge_float) > epsilon)):
+                    if ((abs(judge_float) < epsilon <= abs(process_float)) or
+                            (abs(judge_float) >= epsilon and abs(1.0 - process_float / judge_float) > epsilon)):
                         return False
     except:
         return False

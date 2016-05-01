@@ -16,7 +16,6 @@ import pika.exceptions
 from dmoj import sysinfo
 from executors import executors
 
-
 logger = logging.getLogger('dmoj.judge')
 timer = time.clock if os.name == 'nt' else time.time
 
@@ -119,13 +118,13 @@ class PacketManager(object):
         elif name == 'submission-request':
             self.submission_acknowledged_packet(packet['submission-id'])
             self.judge.begin_grading(
-                    packet['submission-id'],
-                    packet['problem-id'],
-                    packet['language'],
-                    packet['source'],
-                    float(packet['time-limit']),
-                    int(packet['memory-limit']),
-                    packet['short-circuit']
+                packet['submission-id'],
+                packet['problem-id'],
+                packet['language'],
+                packet['source'],
+                float(packet['time-limit']),
+                int(packet['memory-limit']),
+                packet['short-circuit']
             )
         elif name == 'terminate-submission':
             self.judge.terminate_grading()
@@ -378,12 +377,14 @@ class AMQPPacketManager(object):
         packet['id'] = self._id
         packet['judge'] = self.name
         logger.debug('Judge channel: %s', packet)
-        self.submission_chan.basic_publish(exchange='', routing_key='sub-%d' % self._id, body=json.dumps(packet).encode('zlib'))
+        self.submission_chan.basic_publish(exchange='', routing_key='sub-%d' % self._id,
+                                           body=json.dumps(packet).encode('zlib'))
 
     def _send_ping_packet(self, packet):
         packet['judge'] = self.name
         logger.debug('Ping channel: %s', packet)
-        self.submission_chan.basic_publish(exchange='', routing_key='judge-ping', body=json.dumps(packet).encode('zlib'))
+        self.submission_chan.basic_publish(exchange='', routing_key='judge-ping',
+                                           body=json.dumps(packet).encode('zlib'))
 
     def supported_problems_packet(self, problems):
         self.problems = set(map(itemgetter(0), problems))

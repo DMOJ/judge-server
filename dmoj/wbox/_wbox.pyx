@@ -46,17 +46,17 @@ cdef extern from 'process.h' nogil:
         bint spawn() except +
         bint terminate(unsigned code) except +
 
-        JobbedProcessManager &time(double seconds)
-        JobbedProcessManager &memory(size_t bytes)
-        JobbedProcessManager &processes(int count)
-        JobbedProcessManager &withLogin(LPCWSTR username, LPCWSTR password);
-        JobbedProcessManager &command(LPCWSTR cmdline);
-        JobbedProcessManager &executable(LPCWSTR executable)
-        JobbedProcessManager &directory(LPCWSTR directory)
-        JobbedProcessManager &injectX86(LPCWSTR szExecutable)
-        JobbedProcessManager &injectX64(LPCWSTR szExecutable)
-        JobbedProcessManager &injectFunction(LPCSTR szFunction)
-        JobbedProcessManager &environment(LPCWSTR env, size_t cb)
+        JobbedProcessManager & time(double seconds)
+        JobbedProcessManager & memory(size_t bytes)
+        JobbedProcessManager & processes(int count)
+        JobbedProcessManager & withLogin(LPCWSTR username, LPCWSTR password);
+        JobbedProcessManager & command(LPCWSTR cmdline);
+        JobbedProcessManager & executable(LPCWSTR executable)
+        JobbedProcessManager & directory(LPCWSTR directory)
+        JobbedProcessManager & injectX86(LPCWSTR szExecutable)
+        JobbedProcessManager & injectX64(LPCWSTR szExecutable)
+        JobbedProcessManager & injectFunction(LPCSTR szFunction)
+        JobbedProcessManager & environment(LPCWSTR env, size_t cb)
 
         unsigned long long memory()
         double executionTime()
@@ -66,16 +66,16 @@ cdef extern from 'process.h' nogil:
         bint wait()
         bint wait(DWORD time)
 
-        AutoHandle &process()
-        AutoHandle &job()
-        AutoHandle &stdIn()
-        AutoHandle &stdOut()
-        AutoHandle &stdErr()
-        
-        @staticmethod
+        AutoHandle & process()
+        AutoHandle & job()
+        AutoHandle & stdIn()
+        AutoHandle & stdOut()
+        AutoHandle & stdErr()
+
+        @ staticmethod
         void updateAsmX86(LPCWSTR szExecutable)
-        
-        @staticmethod
+
+        @ staticmethod
         void updateAsmX64(LPCWSTR szExecutable)
 
 
@@ -122,7 +122,6 @@ cdef class UserManager:
                 raise ValueError('already destroyed')
             return self.thisptr.password()
 
-
 cdef class NetworkManager:
     cdef CNetworkManager *thisptr
     cdef unicode _name, _executable
@@ -162,7 +161,6 @@ cdef class NetworkManager:
             if not self.thisptr:
                 raise ValueError('already destroyed')
             return self._executable
-
 
 cdef class ProcessManager:
     cdef JobbedProcessManager *thisptr
@@ -204,9 +202,9 @@ cdef class ProcessManager:
         stdin = self.thisptr.stdIn().detach()
         stdout = self.thisptr.stdOut().detach()
         stderr = self.thisptr.stdErr().detach()
-        self._stdin = fdopen(open_osfhandle(<unsigned long long>stdin, O_WRONLY), 'w')
-        self._stdout = fdopen(open_osfhandle(<unsigned long long>stdout, O_RDONLY), 'r')
-        self._stderr = fdopen(open_osfhandle(<unsigned long long>stderr, O_RDONLY), 'r')
+        self._stdin = fdopen(open_osfhandle(<unsigned long long> stdin, O_WRONLY), 'w')
+        self._stdout = fdopen(open_osfhandle(<unsigned long long> stdout, O_RDONLY), 'r')
+        self._stderr = fdopen(open_osfhandle(<unsigned long long> stderr, O_RDONLY), 'r')
 
     def terminate(self, code):
         return self.thisptr.terminate(code)
@@ -354,12 +352,10 @@ cdef class ProcessManager:
 
     property _handle:
         def __get__(self):
-            return <unsigned long long>self.thisptr.process().get()
-
+            return <unsigned long long> self.thisptr.process().get()
 
 cpdef update_address_x86(unicode executable):
     JobbedProcessManager.updateAsmX86(executable)
-
 
 cpdef update_address_x64(unicode executable):
     JobbedProcessManager.updateAsmX64(executable)

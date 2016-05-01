@@ -8,7 +8,6 @@ from dmoj.error import CompileError
 from dmoj.judgeenv import env
 from dmoj.executors.resource_proxy import ResourceProxy
 
-
 try:
     from dmoj.cptbox import SecurePopen, PIPE, CHROOTSecurity, ALLOW, syscalls
 except ImportError:
@@ -75,17 +74,17 @@ class BaseExecutor(ResourceProxy):
 
     def get_nproc(self):
         return self.nproc
-    
+
     def get_inject32(self):
         file = self._file('dmsec32.dll')
         copyfile(self.inject32, file)
         return file
-    
+
     def get_inject64(self):
         file = self._file('dmsec64.dll')
         copyfile(self.inject64, file)
         return file
-    
+
     def get_inject_func(self):
         return self.inject_func
 
@@ -133,14 +132,13 @@ class BaseExecutor(ResourceProxy):
         print 'Self-testing: %s executor:' % cls.name,
         try:
             executor = cls(cls.test_name, cls.test_program)
-            proc = executor.launch(time=cls.test_time, memory=cls.test_memory) \
-                    if sandbox else executor.launch_unsafe()
+            proc = executor.launch(time=cls.test_time, memory=cls.test_memory) if sandbox else executor.launch_unsafe()
             test_message = 'echo: Hello, World!'
             stdout, stderr = proc.communicate(test_message + '\n')
             res = stdout.strip() == test_message and not stderr
             print ['Failed', 'Success'][res]
             if stderr:
-                print>>sys.stderr, stderr
+                print>> sys.stderr, stderr
             return res
         except Exception:
             print 'Failed'

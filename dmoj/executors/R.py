@@ -8,7 +8,7 @@ from dmoj.cptbox.syscalls import *
 class Executor(ScriptExecutor):
     ext = '.R'
     name = 'R'
-    nproc = -1 # needs a bunch
+    nproc = -1  # needs a bunch
     command = env['runtime'].get('Rscript')
     test_program = 'writeLines(readLines(file("stdin")))'
     syscalls = ['mkdir', 'setup', 'fork', 'waitpid', 'getpgrp', 'dup2', 'nanosleep',
@@ -24,6 +24,7 @@ class Executor(ScriptExecutor):
         def handle_socket(debugger):
             def socket_return():
                 debugger.result = -errno.EACCES
+
             debugger.syscall = debugger.getpid_syscall
             debugger.on_return(socket_return)
             return True
@@ -34,5 +35,6 @@ class Executor(ScriptExecutor):
 
     def get_cmdline(self):
         return [self.get_command(), '--vanilla', self._code]
+
 
 initialize = Executor.initialize

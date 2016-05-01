@@ -12,7 +12,6 @@ import re
 from _cptbox import *
 from dmoj.cptbox.syscalls import translator, SYSCALL_COUNT, by_id
 
-
 DISALLOW = 0
 ALLOW = 1
 _CALLBACK = 2
@@ -57,8 +56,8 @@ def file_arch(path):
         return X64
     return None
 
-PYTHON_ARCH = file_arch(sys.executable)
 
+PYTHON_ARCH = file_arch(sys.executable)
 
 _PIPE_BUF = getattr(select, 'PIPE_BUF', 512)
 _SYSCALL_INDICIES = [None] * 5
@@ -146,7 +145,7 @@ class _SecurePopen(Process):
         return self._start_time and ((self._died_time or time.time()) - self._start_time)
 
     def kill(self):
-        print>>sys.stderr, 'Child is requested to be killed'
+        print>> sys.stderr, 'Child is requested to be killed'
         try:
             os.kill(self.pid, signal.SIGKILL)
         except OSError:
@@ -166,22 +165,25 @@ class _SecurePopen(Process):
             if call[index] == syscall:
                 callname = by_id[id]
                 break
-        print>>sys.stderr, 'Protection fault on: %d (%s)' % (syscall, callname)
-        print>>sys.stderr, 'Arg0: 0x%016x' % self.debugger.uarg0
-        print>>sys.stderr, 'Arg1: 0x%016x' % self.debugger.uarg1
-        print>>sys.stderr, 'Arg2: 0x%016x' % self.debugger.uarg2
-        print>>sys.stderr, 'Arg3: 0x%016x' % self.debugger.uarg3
-        print>>sys.stderr, 'Arg4: 0x%016x' % self.debugger.uarg4
-        print>>sys.stderr, 'Arg5: 0x%016x' % self.debugger.uarg5
+        print>> sys.stderr, 'Protection fault on: %d (%s)' % (syscall, callname)
+        print>> sys.stderr, 'Arg0: 0x%016x' % self.debugger.uarg0
+        print>> sys.stderr, 'Arg1: 0x%016x' % self.debugger.uarg1
+        print>> sys.stderr, 'Arg2: 0x%016x' % self.debugger.uarg2
+        print>> sys.stderr, 'Arg3: 0x%016x' % self.debugger.uarg3
+        print>> sys.stderr, 'Arg4: 0x%016x' % self.debugger.uarg4
+        print>> sys.stderr, 'Arg5: 0x%016x' % self.debugger.uarg5
 
     def _cpu_time_exceeded(self):
         self._tle = True
 
     def _run_process(self):
         self._spawn(self._executable, self._args, self._env, self._chdir, self._fds)
-        if self._child_stdin >= 0: os.close(self._child_stdin)
-        if self._child_stdout >= 0: os.close(self._child_stdout)
-        if self._child_stderr >= 0: os.close(self._child_stderr)
+        if self._child_stdin >= 0:
+            os.close(self._child_stdin)
+        if self._child_stdout >= 0:
+            os.close(self._child_stdout)
+        if self._child_stderr >= 0:
+            os.close(self._child_stderr)
         self._started.set()
         self._start_time = time.time()
         code = self._monitor()
@@ -197,7 +199,7 @@ class _SecurePopen(Process):
 
         while not self._exited:
             if self.execution_time > self._time:
-                print>>sys.stderr, 'Shocker activated, ouch!'
+                print>> sys.stderr, 'Shocker activated, ouch!'
                 os.kill(self.pid, signal.SIGKILL)
                 self._tle = True
                 break
@@ -211,7 +213,7 @@ class _SecurePopen(Process):
 
     def __init_streams(self, stdin, stdout, stderr, unbuffered):
         self.stdin = self.stdout = self.stderr = None
-        
+
         if unbuffered:
             master, slave = pty.openpty()
 
@@ -279,8 +281,8 @@ class _SecurePopen(Process):
             if not input:
                 self.stdin.close()
 
-        stdout = None # Return
-        stderr = None # Return
+        stdout = None  # Return
+        stderr = None  # Return
         fd2file = {}
         fd2output = {}
 

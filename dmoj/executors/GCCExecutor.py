@@ -22,7 +22,7 @@ if os.name == 'nt':
 else:
     GCC_COMPILE.update(env['runtime'].get('gcc_compile', {}))
 
-print CompiledExecutor
+
 class GCCExecutor(CompiledExecutor):
     defines = []
     flags = []
@@ -59,8 +59,8 @@ class GCCExecutor(CompiledExecutor):
 
     def get_compile_args(self):
         return ([self.command, '-Wall'] + (['-fdiagnostics-color=always'] if self.has_color else []) + self.sources
-               + self.get_defines() + ['-O2', '-lm'] + ([] if IS_ARM else ['-march=native'])
-               + self.get_flags() + self.get_ldflags() + ['-s', '-o', self.get_compiled_file()])
+                + self.get_defines() + ['-O2', '-lm'] + ([] if IS_ARM else ['-march=native'])
+                + self.get_flags() + self.get_ldflags() + ['-s', '-o', self.get_compiled_file()])
 
     def get_compile_env(self):
         return GCC_COMPILE
@@ -78,8 +78,8 @@ class GCCExecutor(CompiledExecutor):
     def initialize(cls, sandbox=True):
         try:
             version = float(subprocess.Popen([cls.command, '-dumpversion'],
-                                  stdout=subprocess.PIPE,
-                                  stderr=subprocess.PIPE).communicate()[0][:3])
+                                             stdout=subprocess.PIPE,
+                                             stderr=subprocess.PIPE).communicate()[0][:3])
             cls.has_color = version >= 4.9
         except:
             cls.has_color = False

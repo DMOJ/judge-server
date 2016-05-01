@@ -28,7 +28,6 @@ CreateIoCompletionPort.argtypes = [HANDLE, HANDLE, LPVOID, DWORD]
 CreateIoCompletionPort.restype = HANDLE
 
 
-
 def CreatePipe(buf=0):
     read, write = HANDLE(), HANDLE()
     if not _kernel32.CreatePipe(byref(read), byref(write), None, buf):
@@ -48,6 +47,7 @@ def GetExitCodeProcess(process):
     if not _kernel32.GetExitCodeProcess(process, byref(code)):
         raise WinError()
     return None if code.value == 259 else code.value
+
 
 LPSTR = ctypes.c_char_p
 LPBYTE = LPSTR
@@ -99,7 +99,6 @@ CREATE_NEW_CONSOLE = 0x00000010
 NORMAL_PRIORITY_CLASS = 0x00000020
 IDLE_PRIORITY_CLASS = 0x00000040
 HIGH_PRIORITY_CLASS = 0x00000080
-
 
 STD_INPUT_HANDLE = -10
 STD_OUTPUT_HANDLE = -11
@@ -245,6 +244,7 @@ class OVERLAPPED(ctypes.Structure):
         ('OffsetHigh', DWORD),
         ('hEvent', HANDLE)
     ]
+
 
 GetQueuedCompletionStatus = _kernel32.GetQueuedCompletionStatus
 GetQueuedCompletionStatus.restype = BOOL

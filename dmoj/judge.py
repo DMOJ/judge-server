@@ -6,7 +6,8 @@ import sys
 
 from config import Problem, InvalidInitException, BatchedTestCase
 from dmoj import packet, graders
-from dmoj.utils.ansi import ansi_style
+from dmoj.error import CompileError
+from dmoj.utils.ansi import ansi_style, format_ansi
 from result import Result
 from dmoj.judgeenv import env, get_problem_roots, fs_encoding
 
@@ -125,8 +126,13 @@ class Judge(object):
         else:
             grader_class = graders.StandardGrader
 
-        self.current_grader = grader_class(self, problem, language, original_source)
-        grader = self.current_grader
+        try:
+            grader = self.current_grader = grader_class(self, problem, language, original_source)
+        except CompileError as e:
+            print 'Compile Error'
+            print e.args[0]
+            self.packet_manager.compile_error_packet(format_ansi(e.args[0]))
+            return
 
         binary = grader.binary
         if not binary:

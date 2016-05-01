@@ -1,0 +1,124 @@
+from subprocess import list2cmdline, Popen
+from uuid import uuid1
+import os
+
+from dmoj.wbox._wbox import UserManager, ProcessManager, NetworkManager, \
+    update_address_x86, update_address_x64
+from dmoj.utils.winutils import execution_time
+
+
+def unicodify(path):
+    if path is None:
+        return None
+    if isinstance(path, unicode):
+        return path
+    return path.decode('mbcs')
+
+dirname = os.path.dirname(__file__)
+update_address_x86(os.path.join(dirname, u'getaddr32.exe'))
+update_address_x64(os.path.join(dirname, u'getaddr64.exe'))
+
+
+class WBoxPopen(object):
+    def __init__(self, argv, time, memory, nproc=1, executable=None, cwd=None, env=None,
+                 network_block=False, inject32=None, inject64=None, inject_func=None):
+        self.user = UserManager()
+        self.process = ProcessManager(self.user.username, self.user.password)
+        argv = list2cmdline(argv)
+        if not isinstance(argv, unicode):
+            argv = argv.decode('mbcs')
+        self.process.command = argv
+        if executable is not None:
+            if not isinstance(executable, unicode):
+                executable = executable.decode('mbcs')
+            self.process.executable = executable
+        if cwd is not None:
+            self.process.dir = unicodify(cwd)
+        if env is not None:
+            self.process.set_environment(self._encode_environment(env))
+        self.process.time_limit = time
+        self.process.memory_limit = memory * 1024
+        self.process.process_limit = nproc
+        if inject32 is not None:
+            self.process.inject32 = unicodify(inject32)
+        if inject64 is not None:
+            self.process.inject64 = unicodify(inject64)
+        if inject_func is not None:
+            self.process.inject_func = str(inject_func)
+        self.returncode = None
+        self.universal_newlines = False
+        if executable is not None and network_block:
+            self.network_block = NetworkManager('wbox_%s' % uuid1(), executable)
+        else:
+            self.network_block = None
+        self.process.spawn()
+
+    @staticmethod
+    def _encode_environment(env):
+        buf = []
+        for key, value in env.iteritems():
+            if not isinstance(key, unicode):
+                key = key.decode('mbcs')
+            if not isinstance(value, unicode):
+                value = value.decode('mbcs')
+            buf.append(u'%s=%s' % (key, value))
+        return u'\0'.join(buf) + u'\0\0'
+
+    def wait(self, timeout=None):
+        self.process.wait(timeout)
+        return self.poll()
+
+    def poll(self):
+        self.returncode = self.process.get_exit_code()
+        if self.returncode is not None and self.network_block is not None:
+            self.network_block.dispose()
+        return self.returncode
+
+    def kill(self, code=0xDEADBEEF):
+        self.process.terminate(code)
+
+    @property
+    def stdin(self):
+        return self.process.stdin
+
+    @property
+    def stdout(self):
+        return self.process.stdout
+
+    @property
+    def stderr(self):
+        return self.process.stderr
+
+    @property
+    def mle(self):
+        return self.process.mle
+
+    @property
+    def max_memory(self):
+        return self.process.memory / 1024.
+
+    @property
+    def max_memory_bytes(self):
+        return self.process.memory
+
+    @property
+    def tle(self):
+        return self.process.tle
+
+    @property
+    def execution_time(self):
+        return self.process.execution_time
+
+    @property
+    def cpu_time(self):
+        return execution_time(self.process._handle)
+
+    @property
+    def r_execution_time(self):
+        return self.process.execution_time
+
+    def communicate(self, stdin=None):
+        return self._communicate(stdin)
+
+    _communicate = Popen._communicate.im_func
+    _readerthread = Popen._readerthread.im_func

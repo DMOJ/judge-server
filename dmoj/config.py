@@ -69,22 +69,28 @@ class ConfigNode(object):
 
     def __getitem__(self, item):
         try:
-            dynamic_key = item + '+'
-            if dynamic_key in self.raw_config:
+            def run_dynamic_key(dynamic_key, run_func):
                 # Wrap in a ConfigNode so dynamic keys can benefit from the nice features of ConfigNode
                 local = {'node': ConfigNode(self.raw_config.get(item, {}), self)}
                 try:
-                    exec self.raw_config[dynamic_key] in local
+                    cfg = run_func(self.raw_config[dynamic_key], local)
                 except Exception as e:
                     import traceback
 
                     traceback.print_exc()
-                    raise InvalidInitException('exception executing dynamic key ' + dynamic_key + ': ' + e.message)
-                cfg = local['node']
+                    raise InvalidInitException('exception executing dynamic key ' + str(dynamic_key) + ': ' + e.message)
                 del self.raw_config[dynamic_key]
                 self.raw_config[item] = cfg
-            else:
-                cfg = self.raw_config[item]
+
+            if item + '+' in self.raw_config:
+                def full(code, local):
+                    exec code in local
+                    return local['node']
+
+                run_dynamic_key(item + '+', full)
+            elif item + '++' in self.raw_config:
+                run_dynamic_key(item + '++', lambda code, local: eval(code, local))
+            cfg = self.raw_config[item]
 
             if isinstance(cfg, list) or isinstance(cfg, dict):
                 cfg = ConfigNode(cfg, self)
@@ -234,4 +240,3 @@ class Problem(object):
 
 def _generate_data(src, flags, argv, input_feed):
     pass
-

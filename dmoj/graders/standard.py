@@ -86,23 +86,20 @@ class StandardGrader(BaseGrader):
         return error
 
     def _generate_binary(self):
-        # If the executor requires compilation, compile and send any errors/warnings to the site
-        executor = executors[self.language].Executor
-        if issubclass(executor, CompiledExecutor):
-            try:
-                # Fetch an appropriate executor for the language
-                binary = executor(self.problem.id, self.source)
-            except CompileError as compilation_error:
-                self.judge.packet_manager.compile_error_packet(compilation_error.message)
+        from dmoj.utils import ansi
 
-                # Compile error is fatal
-                return None
-        else:
-            binary = executor(self.problem.id, self.source)
+        # If the executor requires compilation, compile and send any errors/warnings to the site
+        try:
+            # Fetch an appropriate executor for the language
+            binary = executors[self.language].Executor(self.problem.id, self.source)
+        except CompileError as compilation_error:
+            self.judge.packet_manager.compile_error_packet(ansi.format_ansi(compilation_error.message))
+
+            # Compile error is fatal
+            return None
 
         # Carry on grading in case of compile warning
         if hasattr(binary, 'warning') and binary.warning:
-            from dmoj.utils import ansi
             self.judge.packet_manager.compile_message_packet(ansi.format_ansi(binary.warning))
         return binary
 

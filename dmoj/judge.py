@@ -142,21 +142,12 @@ class Judge(object):
                     self.packet_manager.batch_end_packet()
                 else:
                     codes = result.readable_codes()
-                    print ansi_style('Test case %2d #ansi[%-3s](%s|bold) [%.3fs | %dkb] %s%s' % (case_number + 1,
-                                                                                                 codes[0],
-                                                                                                 Result.COLORS_BYID[
-                                                                                                     codes[0]],
-                                                                                                 result.execution_time,
-                                                                                                 result.max_memory,
-                                                                                                 '(#ansi[%s](,on_grey)) ' % result.feedback if result.feedback else '',
-                                                                                                 '{%s}' %
-                                                                                                 ', '.join(map(lambda
-                                                                                                                   x: '#ansi[%s](%s|bold)' % (
-                                                                                                 x,
-                                                                                                 Result.COLORS_BYID[x]),
-                                                                                                               codes[
-                                                                                                               1:])) if len(
-                                                                                                     codes) > 1 else ''))
+                    format_data = (case_number + 1, codes[0], Result.COLORS_BYID[codes[0]],
+                                   result.execution_time, result.max_memory,
+                                   '(#ansi[%s](|underline)) ' % result.feedback if result.feedback else '',
+                                   '{%s}' % ', '.join(map(lambda x: '#ansi[%s](%s|bold)' % (x, Result.COLORS_BYID[x]),
+                                                          codes[1:])) if len(codes) > 1 else '')
+                    print ansi_style('Test case %2d #ansi[%-3s](%s|bold) [%.3fs | %dkb] %s%s' % format_data)
 
                     self.packet_manager.test_case_status_packet(
                         case_number + 1, result.points, result.case.points, result.result_flag, result.execution_time,
@@ -256,9 +247,6 @@ def main():
     import executors
 
     judgeenv.load_env()
-    executors.load_executors()
-
-    print 'Running live judge...'
 
     if os.name == 'nt' and not judgeenv.no_ansi_emu:
         try:
@@ -266,6 +254,10 @@ def main():
             init()
         except ImportError as ignored:
             pass
+
+    executors.load_executors()
+
+    print 'Running live judge...'
 
     logging.basicConfig(filename=judgeenv.log_file, level=logging.INFO,
                         format='%(levelname)s %(asctime)s %(module)s %(message)s')

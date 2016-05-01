@@ -1,3 +1,4 @@
+import os
 from functools import partial
 import sys
 
@@ -93,7 +94,9 @@ class StandardGrader(BaseGrader):
             # Fetch an appropriate executor for the language
             binary = executors[self.language].Executor(self.problem.id, self.source)
         except CompileError as compilation_error:
-            self.judge.packet_manager.compile_error_packet(ansi.format_ansi(compilation_error.message))
+            error = compilation_error.args[0]
+            error = error.decode('mbcs') if os.name == 'nt' and isinstance(error, str) else error
+            self.judge.packet_manager.compile_error_packet(ansi.format_ansi(error))
 
             # Compile error is fatal
             return None

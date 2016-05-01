@@ -11,12 +11,12 @@ class Result(object):
     COLORS_BYID = {
         'AC': 'green',
         'WA': 'red',
-        'RTE': 'orange',
+        'RTE': 'yellow',
         'TLE': 'grey',
-        'MLE': 'orange',
-        'IR': 'orange',
+        'MLE': 'yellow',
+        'IR': 'yellow',
         'SC': 'magenta',
-        'OLE': 'orange',
+        'OLE': 'yellow',
         'IE': 'red'
     }
 

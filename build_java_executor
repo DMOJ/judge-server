@@ -5,5 +5,5 @@ mkdir objs
 cd src
 find . -name '*.java' -print0 | xargs -0 javac -d ../objs
 cd ../objs
-rm -f ../../executors/java-sandbox.jar
-find . -name '*.class' -print0 | xargs -0 jar cmf ../src/META-INF/MANIFEST.MF ../../executors/java-sandbox.jar
+rm -f ../../dmoj/executors/java-sandbox.jar
+find . -name '*.class' -print0 | xargs -0 jar cmf ../src/META-INF/MANIFEST.MF ../../dmoj/executors/java-sandbox.jar

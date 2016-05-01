@@ -82,14 +82,14 @@ class ConfigNode(object):
                 del self.raw_config[dynamic_key]
                 self.raw_config[item] = cfg
 
-            if item + '+' in self.raw_config:
+            if item + '++' in self.raw_config:
                 def full(code, local):
                     exec code in local
                     return local['node']
 
-                run_dynamic_key(item + '+', full)
-            elif item + '++' in self.raw_config:
-                run_dynamic_key(item + '++', lambda code, local: eval(code, local))
+                run_dynamic_key(item + '++', full)
+            elif item + '+' in self.raw_config:
+                run_dynamic_key(item + '+', lambda code, local: eval(code, local))
             cfg = self.raw_config[item]
 
             if isinstance(cfg, list) or isinstance(cfg, dict):

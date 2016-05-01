@@ -1,12 +1,11 @@
 #!/usr/bin/python
-from collections import OrderedDict
 import os
 import traceback
 import threading
 import sys
 
 from config import Problem, InvalidInitException, BatchedTestCase
-from dmoj import judgeenv, packet, graders
+from dmoj import packet, graders
 from result import Result
 from dmoj.judgeenv import env, get_problem_roots, fs_encoding
 
@@ -73,8 +72,7 @@ class Judge(object):
             for problem in os.listdir(dir):
                 if isinstance(problem, str):
                     problem = problem.decode(fs_encoding)
-                if any(os.access(os.path.join(dir, problem, 'init.%s' % ext), os.R_OK) for ext in
-                       ['json', 'yml', 'yaml']):
+                if os.access(os.path.join(dir, problem, 'init.yml'), os.R_OK):
                     problems.append((problem, os.path.getmtime(os.path.join(dir, problem))))
         return problems
 

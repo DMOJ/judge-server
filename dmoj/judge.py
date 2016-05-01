@@ -6,9 +6,9 @@ import sys
 
 from config import Problem, InvalidInitException, BatchedTestCase
 from dmoj import packet, graders
+from dmoj.utils.ansi import ansi_style
 from result import Result
 from dmoj.judgeenv import env, get_problem_roots, fs_encoding
-
 
 try:
     from watchdog.observers import Observer
@@ -16,6 +16,7 @@ try:
 except ImportError:
     print>> sys.stderr, 'No Watchdog!'
     Observer = None
+
 
     class FileSystemEventHandler(object):
         pass
@@ -141,13 +142,13 @@ class Judge(object):
                     self.packet_manager.batch_end_packet()
                 else:
                     codes = result.readable_codes()
-                    print 'Test case %d %s [%.3fs | %dkb] %s%s' % (case_number + 1,
-                                                                   codes[0],
-                                                                   result.execution_time,
-                                                                   result.max_memory,
+                    print ansi_style('Test case %d #ansi[%s](%s|bold) [%.3fs | %dkb] %s%s' % (case_number + 1,
+                                                                                              codes[0], Result.COLORS_BYID[codes[0]],
+                                                                                              result.execution_time,
+                                                                                              result.max_memory,
                                                                    '(%s) ' % result.feedback if result.feedback else '',
-                                                                   '{%s}' % ', '.join(codes[1:]) if len(
-                                                                       codes) > 1 else '')
+                                                                                              '{%s}' % ', '.join(codes[1:]) if len(
+                                                                       codes) > 1 else ''))
 
                     self.packet_manager.test_case_status_packet(
                         case_number + 1, result.points, result.case.points, result.result_flag, result.execution_time,
@@ -250,6 +251,13 @@ def main():
 
     judgeenv.load_env()
     executors.load_executors()
+
+    if os.name == 'nt' and not judgeenv.no_ansi_emu:
+        try:
+            from colorama import init
+            init()
+        except ImportError as ignored:
+            pass
 
     logging.basicConfig(filename=judgeenv.log_file, level=logging.INFO,
                         format='%(levelname)s %(asctime)s %(module)s %(message)s')

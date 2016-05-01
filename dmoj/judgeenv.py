@@ -5,18 +5,17 @@ import sys
 import yaml
 
 __all__ = ['env', 'get_problem_root', 'get_problem_roots', 'only_executors', 'exclude_executors', 'log_file',
-           'server_port', 'server_host']
+           'server_port', 'server_host', 'no_ansi', 'no_ansi_emu']
 
 _judge_dirs = ()
 env = {}
 _root = os.path.dirname(__file__)
 fs_encoding = os.environ.get('DMOJ_ENCODING', sys.getfilesystemencoding())
 
-log_file = server_host = server_port = None
+log_file = server_host = server_port = no_ansi = no_ansi_emu = None
 
 only_executors = set()
 exclude_executors = set()
-
 
 def unicodify(string):
     if isinstance(string, str):
@@ -25,7 +24,7 @@ def unicodify(string):
 
 
 def load_env():
-    global _judge_dirs, only_executors, exclude_executors, log_file, server_host, server_port, env
+    global _judge_dirs, only_executors, exclude_executors, log_file, server_host, server_port, no_ansi, no_ansi_emu, env
     _parser = argparse.ArgumentParser(description='''
         Spawns a judge for a submission server.
     ''')
@@ -45,10 +44,18 @@ def load_env():
     _group.add_argument('-x', '--exclude-executors',
                         help='prevent listed executors from loading (comma-separated)')
 
+    _parser.add_argument('--no-ansi', action='store_true', help='disable ANSI output')
+    if os.name == 'nt':
+        _parser.add_argument('--no-ansi-emu', action='store_true', help='disable ANSI emulation on Windows')
+
     _args = _parser.parse_args()
 
     server_host = _args.server_host
     server_port = _args.server_port
+
+    no_ansi_emu = _args.no_ansi_emu if os.name == 'nt' else True
+    no_ansi = _args.no_ansi
+
     log_file = _args.log_file
     only_executors |= _args.only_executors and set(_args.only_executors.split(',')) or set()
     exclude_executors |= _args.exclude_executors and set(_args.exclude_executors.split(',')) or set()

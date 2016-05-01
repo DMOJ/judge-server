@@ -7,7 +7,6 @@ from dmoj.executors import executors
 from dmoj.result import Result, CheckerResult
 from dmoj.executors.base_executor import CompiledExecutor
 from dmoj.graders.base import BaseGrader
-from dmoj.utils import ansi
 
 
 class StandardGrader(BaseGrader):
@@ -103,6 +102,7 @@ class StandardGrader(BaseGrader):
 
         # Carry on grading in case of compile warning
         if hasattr(binary, 'warning') and binary.warning:
+            from dmoj.utils import ansi
             self.judge.packet_manager.compile_message_packet(ansi.format_ansi(binary.warning))
         return binary
 

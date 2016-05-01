@@ -7,6 +7,7 @@ from shutil import copyfile
 from dmoj.error import CompileError
 from dmoj.judgeenv import env
 from dmoj.executors.resource_proxy import ResourceProxy
+from dmoj.utils.ansi import ansi_style
 
 try:
     from dmoj.cptbox import SecurePopen, PIPE, CHROOTSecurity, ALLOW, syscalls
@@ -129,14 +130,14 @@ class BaseExecutor(ResourceProxy):
         if not cls.test_program:
             return True
 
-        print 'Self-testing: %s executor:' % cls.name,
+        print ansi_style('Self-testing: #ansi[%s](|underline) executor:' % cls.name),
         try:
             executor = cls(cls.test_name, cls.test_program)
             proc = executor.launch(time=cls.test_time, memory=cls.test_memory) if sandbox else executor.launch_unsafe()
             test_message = 'echo: Hello, World!'
             stdout, stderr = proc.communicate(test_message + '\n')
             res = stdout.strip() == test_message and not stderr
-            print ['Failed', 'Success'][res]
+            print ansi_style(['#ansi[Failed](red|bold)', '#ansi[Success](green|bold)'][res])
             if stderr:
                 print>> sys.stderr, stderr
             return res

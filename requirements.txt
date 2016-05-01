@@ -2,3 +2,4 @@ watchdog
 pyyaml
 ansi2html
 pika
+termcolor

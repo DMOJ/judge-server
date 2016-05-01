@@ -8,6 +8,17 @@ class Result(object):
     SC = 1 << 5
     OLE = 1 << 6
     IE = 1 << 30
+    COLORS_BYID = {
+        'AC': 'green',
+        'WA': 'red',
+        'RTE': 'orange',
+        'TLE': 'grey',
+        'MLE': 'orange',
+        'IR': 'orange',
+        'SC': 'magenta',
+        'OLE': 'orange',
+        'IE': 'red'
+    }
 
     def __init__(self):
         self.result_flag = 0
@@ -25,7 +36,6 @@ class Result(object):
             if self.result_flag & getattr(Result, flag):
                 execution_verdict.append(flag)
         return execution_verdict or ['AC']
-
 
 class CheckerResult(object):
     def __init__(self, passed, points, feedback=None):

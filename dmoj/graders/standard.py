@@ -6,14 +6,16 @@ from dmoj.utils.communicate import safe_communicate, OutputLimitExceeded
 from dmoj.error import CompileError
 from dmoj.executors import executors
 from dmoj.result import Result, CheckerResult
-from dmoj.executors.base_executor import CompiledExecutor
 from dmoj.graders.base import BaseGrader
+import dmoj.checkers as checkers
 
 
 class StandardGrader(BaseGrader):
     def grade(self, case):
         result = Result()
         result.case = case
+
+        case.input_data()  # cache generator data
 
         self._current_proc = self.binary.launch(time=self.problem.time_limit, memory=self.problem.memory_limit,
                                                 pipe_stderr=True,

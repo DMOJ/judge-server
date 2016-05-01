@@ -179,7 +179,6 @@ class TestCase(object):
             raise InvalidInitException('error loading checker')
         if not hasattr(checker, 'check') or not callable(checker.check):
             raise InvalidInitException('malformed checker: no check method found')
-
         return partial(checker.check, **params)
 
     def __str__(self):

@@ -194,13 +194,24 @@ class BatchedTestCase(object):
         return 'BatchedTestCase{cases=%s}' % str(self.batched_cases)
 
 
-class _iofile_fetcher(dict):
+class ProblemDataManager(dict):
     def __init__(self, problem_id, **kwargs):
-        super(_iofile_fetcher, self).__init__(**kwargs)
+        super(ProblemDataManager, self).__init__(**kwargs)
         self.problem_id = problem_id
+        self.archive = None
 
     def __missing__(self, key):
-        return open(os.path.join(get_problem_root(self.problem_id), key), 'r').read()
+        try:
+            return open(os.path.join(get_problem_root(self.problem_id), key), 'r').read()
+        except IOError:
+            if self.archive:
+                zipinfo = self.archive.getinfo(key)
+                return self.archive.open(zipinfo).read()
+            raise KeyError()
+
+    def __del__(self):
+        if self.archive:
+            self.archive.close()
 
 
 class Problem(object):
@@ -210,7 +221,7 @@ class Problem(object):
         self.memory_limit = memory_limit
         self.generator_manager = GeneratorManager()
 
-        self.problem_data = _iofile_fetcher(problem_id)
+        self.problem_data = ProblemDataManager(problem_id)
         self._testcase_counter = 0
 
         try:
@@ -220,12 +231,10 @@ class Problem(object):
         except (IOError, ParserError, ScannerError) as e:
             raise InvalidInitException(str(e))
 
-        self.problem_data.update(self._resolve_archive_files())
+        self.problem_data.archive = self._resolve_archive_files()
         self.cases = self._resolve_testcases(self.config['test_cases'])
 
     def _resolve_archive_files(self):
-        files = dict()
-
         if self.config.archive:
             archive_path = os.path.join(get_problem_root(self.id), self.config.archive)
             if not os.path.exists(archive_path):
@@ -234,13 +243,8 @@ class Problem(object):
                 archive = zipfile.ZipFile(archive_path, 'r')
             except zipfile.BadZipfile:
                 raise InvalidInitException('bad archive: "%s"' % archive_path)
-            try:
-                for name in archive.infolist():
-                    files[name.filename] = archive.read(name)
-            finally:
-                archive.close()
-
-        return files
+            return archive
+        return None
 
     def _resolve_testcases(self, cfg):
         cases = []

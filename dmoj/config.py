@@ -1,13 +1,15 @@
-from functools import partial
-import os
-import zipfile
 import copy
+import os
+import subprocess
+import zipfile
+from functools import partial
 
 import yaml
 from yaml.parser import ParserError
 from yaml.scanner import ScannerError
 
 from dmoj import checkers
+from dmoj.generator import GeneratorManager
 from dmoj.judgeenv import get_problem_root
 from dmoj.utils.module import load_module_from_file
 
@@ -115,29 +117,41 @@ class TestCase(object):
         self.problem = problem
         self.points = config.points
         self.output_prefix_length = config.output_prefix_length
+        self._generated = None
 
     def _normalize(self, data):
         return data.replace('\r\n', '\n')
 
-    def input_data(self):
-        _in = self.problem.problem_data[self.config['in']]
+    def _run_generator(self, gen):
+        flags = []  # default flags
+        args = []  # default args - maybe pass WINDOWS_JUDGE or LINUX_JUDGE
+        if isinstance(gen, str):
+            filename = gen
+        else:
+            filename = gen.source
+            if gen.flags:
+                flags += gen.flags
+            if gen.args:
+                args += gen.args
 
+        executor = self.problem.generator_manager.get_generator(filename, flags)
+        executor.launch_unsafe(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self._generated = map(self._normalize, executor.communicate())
+
+    def input_data(self):
         gen = self.config.generator
         if gen:
-            flags = []  # default flags
-            args = []  # default args - maybe pass WINDOWS_JUDGE or LINUX_JUDGE
-            if isinstance(gen, str):
-                source = gen
-            else:
-                source = gen.source
-                if gen.flags:
-                    flags += gen.flags
-                if gen.args:
-                    args += gen.args
-            return _generate_data(source, flags, self.config.generator_args or args, _in)
-        return self._normalize(_in)
+            if self._generated is None:
+                self._run_generator(gen)
+            return self._generated[0]
+        return self._normalize(self.problem.problem_data[self.config['in']])
 
     def output_data(self):
+        gen = self.config.generator
+        if gen:
+            if self._generated is None:
+                self._run_generator(gen)
+            return self._generated[1]
         return self._normalize(self.problem.problem_data[self.config.out])
 
     def checker(self):
@@ -194,6 +208,7 @@ class Problem(object):
         self.id = problem_id
         self.time_limit = time_limit
         self.memory_limit = memory_limit
+        self.generator_manager = GeneratorManager()
 
         self.problem_data = _iofile_fetcher(problem_id)
         self._testcase_counter = 0
@@ -236,7 +251,3 @@ class Problem(object):
                 cases.append(TestCase(self._testcase_counter, case_config, self))
         self._testcase_counter += 1
         return cases
-
-
-def _generate_data(src, flags, argv, input_feed):
-    pass

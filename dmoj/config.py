@@ -201,14 +201,13 @@ class ProblemDataManager(dict):
         self.archive = None
 
     def __missing__(self, key):
-        if self.archive:
-            try:
+        try:
+            return open(os.path.join(get_problem_root(self.problem_id), key), 'r').read()
+        except IOError:
+            if self.archive:
                 zipinfo = self.archive.getinfo(key)
-            except KeyError:
-                pass
-            else:
                 return self.archive.open(zipinfo).read()
-        return open(os.path.join(get_problem_root(self.problem_id), key), 'r').read()
+            raise KeyError()
 
     def __del__(self):
         if self.archive:

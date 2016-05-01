@@ -36,7 +36,7 @@ class GeneratorManager(object):
             '.java': executors.get('JAVA', None),
             '.rb': executors.get('RUBY', None)
         }
-        clazz = lookup.get(os.path.splitext(filename), None)
+        clazz = lookup.get(os.path.splitext(filename)[1], None)
         if not clazz:
             raise IOError('could not identify generator extension')
 
@@ -45,4 +45,4 @@ class GeneratorManager(object):
             executor.flags += flags
 
         self._cache[filename, flags] = executor
-        return executors
+        return executor

@@ -126,7 +126,7 @@ class TestCase(object):
         flags = []  # default flags
         args = []  # default args - maybe pass WINDOWS_JUDGE or LINUX_JUDGE
         if isinstance(gen, str):
-            filename = gen
+            filename = os.path.join(get_problem_root(self.problem.id), gen)
         else:
             filename = gen.source
             if gen.flags:
@@ -135,8 +135,8 @@ class TestCase(object):
                 args += gen.args
 
         executor = self.problem.generator_manager.get_generator(filename, flags)
-        executor.launch_unsafe(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        self._generated = map(self._normalize, executor.communicate())
+        proc = executor.launch_unsafe(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self._generated = map(self._normalize, proc.communicate())
 
     def input_data(self):
         gen = self.config.generator

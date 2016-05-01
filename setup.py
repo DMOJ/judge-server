@@ -1,5 +1,7 @@
 import os
 import sys
+import traceback
+from distutils.errors import DistutilsPlatformError
 from distutils.msvccompiler import MSVCCompiler
 
 from setuptools import setup, Extension
@@ -13,6 +15,12 @@ except ImportError:
 
 
 class build_ext_dmoj(build_ext_old):
+    def run(self):
+        try:
+            build_ext_old.run(self)
+        except DistutilsPlatformError as e:
+            self.unavailable(e)
+
     def build_extensions(self):
         if isinstance(self.compiler, MSVCCompiler):
             self.compiler.initialize()
@@ -30,6 +38,12 @@ class build_ext_dmoj(build_ext_old):
             self.distribution.ext_modules[0].extra_compile_args = extra_compile_args
 
         build_ext_old.build_extensions(self)
+
+    def unavailable(self, e):
+        print '*' * 79
+        print 'Please procure the necessary *.pyd or *.so files yourself.'
+        traceback.print_exc()
+        print '*' * 79
 
 
 build_ext.build_ext = build_ext_dmoj

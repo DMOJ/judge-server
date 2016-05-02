@@ -14,7 +14,7 @@ import pika
 import pika.exceptions
 
 from dmoj import sysinfo
-from executors import executors
+from dmoj.executors import executors
 
 logger = logging.getLogger('dmoj.judge')
 timer = time.clock if os.name == 'nt' else time.time

@@ -1,13 +1,11 @@
 import os
 from functools import partial
-import sys
 
-from dmoj.utils.communicate import safe_communicate, OutputLimitExceeded
 from dmoj.error import CompileError
 from dmoj.executors import executors
-from dmoj.result import Result, CheckerResult
 from dmoj.graders.base import BaseGrader
-import dmoj.checkers as checkers
+from dmoj.result import Result, CheckerResult
+from dmoj.utils.communicate import safe_communicate, OutputLimitExceeded
 
 
 class StandardGrader(BaseGrader):

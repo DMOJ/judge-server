@@ -9,7 +9,7 @@ import sys
 import pty
 import re
 
-from _cptbox import *
+from dmoj.cptbox._cptbox import *
 from dmoj.cptbox.syscalls import translator, SYSCALL_COUNT, by_id
 
 DISALLOW = 0

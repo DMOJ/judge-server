@@ -1,15 +1,14 @@
 #!/usr/bin/python
 import os
-import traceback
-import threading
 import sys
+import threading
+import traceback
 
-from config import Problem, InvalidInitException, BatchedTestCase
 from dmoj import packet, graders
-from dmoj.error import CompileError
-from dmoj.utils.ansi import ansi_style, format_ansi
-from result import Result
+from dmoj.config import Problem, InvalidInitException, BatchedTestCase
 from dmoj.judgeenv import env, get_problem_roots, fs_encoding
+from dmoj.result import Result
+from dmoj.utils.ansi import ansi_style
 
 try:
     from watchdog.observers import Observer
@@ -243,8 +242,7 @@ class AMQPJudge(Judge):
 
 def main():
     import logging
-    import judgeenv
-    import executors
+    from dmoj import judgeenv, executors
 
     judgeenv.load_env()
 

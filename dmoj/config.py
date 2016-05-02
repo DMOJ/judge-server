@@ -107,7 +107,7 @@ class ConfigNode(object):
             yield cfg
 
     def __str__(self):
-        return str(self.raw_config)
+        return '<ConfigNode(%s)>' % str(self.raw_config)
 
 
 class TestCase(object):

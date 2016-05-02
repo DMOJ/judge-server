@@ -186,7 +186,7 @@ class Judge(object):
             # Yield notifying objects for batch begin/end, and unwrap all cases inside the batches
             if isinstance(case, BatchedTestCase):
                 yield BatchBegin()
-                for _ in self.grade_cases(binary, case.batched_cases, short_circuit=True):
+                for _ in self.grade_cases(grader, case.batched_cases, short_circuit=True):
                     yield _
                 yield BatchEnd()
                 continue

@@ -34,7 +34,7 @@ def ansi_style(text):
         data = attrs.split('|')
         colors = data[0].split(',')
         if not colors[0]:
-            colors = [None, None]
+            colors[0] = None
         attrs = data[1].split(',') if len(data) > 1 else []
         return colored(text, *colors, attrs=attrs)
 

@@ -1,7 +1,1 @@
-from dmoj.checkers import easy, standard, floatsrel
-import floats
-import floatsabs
-import dmoj.checkers.floatsrel
-import rstripped
-import sorted
-import dmoj.checkers.standard
+from dmoj.checkers import easy, floats, floatsrel, floatsabs, rstripped, sorted, standard

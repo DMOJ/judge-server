@@ -11,9 +11,9 @@ class GeneratorManager(object):
         from dmoj.config import InvalidInitException
 
         filename = os.path.abspath(filename)
-        flags = tuple(flags)
-        if (filename, flags) in self._cache:
-            return self._cache[filename, flags]
+        cache_key = filename, tuple(flags)
+        if cache_key in self._cache:
+            return self._cache[cache_key]
 
         try:
             with open(filename) as file:
@@ -23,10 +23,10 @@ class GeneratorManager(object):
             raise IOError('could not read generator source')
 
         def find_cpp():
-            for grader in ('CPP11', 'CPP0X', 'CPP'):
+            for grader in ('CPP14', 'CPP11', 'CPP0X', 'CPP'):
                 if grader in executors:
                     return grader
-            raise InvalidInitException("Can't grade with generator. Why did I get this submission?")
+            raise InvalidInitException("can't grade with generator; why did I get this submission?")
 
         lookup = {
             '.py': executors.get('PY2', None),
@@ -36,7 +36,13 @@ class GeneratorManager(object):
             '.java': executors.get('JAVA', None),
             '.rb': executors.get('RUBY', None)
         }
-        clazz = lookup.get(os.path.splitext(filename)[1], None)
+        ext = os.path.splitext(filename)[1]
+        pass_platform_flags = ['.c', '.cpp']
+
+        if pass_platform_flags:
+            flags += ['-DWINDOWS_JUDGE', '-DWIN32'] if os.name == 'nt' else ['-DLINUX_JUDGE']
+
+        clazz = lookup.get(ext, None)
         if not clazz:
             raise IOError('could not identify generator extension')
 
@@ -44,5 +50,5 @@ class GeneratorManager(object):
         if hasattr(executor, 'flags'):
             executor.flags += flags
 
-        self._cache[filename, flags] = executor
+        self._cache[cache_key] = executor
         return executor

@@ -163,7 +163,7 @@ class TestCase(object):
         try:
             name = self.config['checker'] or 'standard'
             if isinstance(name, ConfigNode):
-                params = name['args'] or {}
+                params = name['args'].raw_config or {}
                 name = name['name']
             else:
                 params = {}
@@ -179,6 +179,7 @@ class TestCase(object):
             raise InvalidInitException('error loading checker')
         if not hasattr(checker, 'check') or not callable(checker.check):
             raise InvalidInitException('malformed checker: no check method found')
+
         return partial(checker.check, **params)
 
     def __str__(self):

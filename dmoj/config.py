@@ -152,12 +152,13 @@ class TestCase(object):
         return self._normalize(self.problem.problem_data[self.config['in']])
 
     def output_data(self):
+        if self.config.out:
+            return self._normalize(self.problem.problem_data[self.config.out])
         gen = self.config.generator
         if gen:
             if self._generated is None:
                 self._run_generator(gen)
             return self._generated[1]
-        return self._normalize(self.problem.problem_data[self.config.out])
 
     def checker(self):
         try:

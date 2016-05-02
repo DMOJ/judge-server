@@ -100,6 +100,9 @@ class ConfigNode(object):
             cfg = self.parent[item] if self.parent else None
         return cfg
 
+    def keys(self):
+        return self.raw_config.keys()
+
     def __iter__(self):
         for cfg in self.raw_config:
             if isinstance(cfg, list) or isinstance(cfg, dict):
@@ -164,7 +167,7 @@ class TestCase(object):
         try:
             name = self.config['checker'] or 'standard'
             if isinstance(name, ConfigNode):
-                params = name['args'].raw_config or {}
+                params = name['args'] or {}
                 name = name['name']
             else:
                 params = {}
@@ -176,8 +179,8 @@ class TestCase(object):
                     raise InvalidInitException('checker module path does not exist: %s' % name)
             else:
                 checker = getattr(checkers, name)
-        except AttributeError:
-            raise InvalidInitException('error loading checker')
+        except AttributeError as e:
+            raise InvalidInitException('error loading checker: ' + e.message)
         if not hasattr(checker, 'check') or not callable(checker.check):
             raise InvalidInitException('malformed checker: no check method found')
 

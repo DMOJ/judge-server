@@ -76,8 +76,9 @@ def load_env():
             _judge_dirs = tuple(unicodify(os.path.normpath(os.path.join(_root, dir))) for dir in dirs)
         else:
             _judge_dirs = os.path.join(_root, dirs)
-            _judge_dirs = tuple(
-                unicodify(os.path.normpath(os.path.join(_judge_dirs, dir))) for dir in os.listdir(_judge_dirs))
+            _judge_dirs = [unicodify(os.path.normpath(os.path.join(_judge_dirs, dir)))
+                           for dir in os.listdir(_judge_dirs)]
+            _judge_dirs = tuple(dir for dir in _judge_dirs if os.path.isdir(dir))
 
 
 def get_problem_root(pid):

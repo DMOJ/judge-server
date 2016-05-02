@@ -17,7 +17,7 @@ class SignatureGrader(StandardGrader):
             raise CompileError("can't signature grade, why did I get this submission?")
         if self.language in siggraders:
             aux_sources = {}
-            handler_data = self.problem.config['handler']
+            handler_data = self.problem.config['signature_grader']
 
             entry_point = self.problem.problem_data[handler_data['entry']]
             header = self.problem.problem_data[handler_data['header']]

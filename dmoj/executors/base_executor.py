@@ -130,7 +130,7 @@ class BaseExecutor(ResourceProxy):
         if not cls.test_program:
             return True
 
-        print ansi_style("%-49s%s" % ('Self-testing: #ansi[%s](|underline) executor:' % cls.name, '')),
+        print ansi_style("%-39s%s" % ('Self-testing #ansi[%s](|underline):' % cls.name, '')),
         try:
             executor = cls(cls.test_name, cls.test_program)
             proc = executor.launch(time=cls.test_time, memory=cls.test_memory) if sandbox else executor.launch_unsafe()

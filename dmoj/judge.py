@@ -115,9 +115,7 @@ class Judge(object):
         try:
             problem = Problem(problem_id, time_limit, memory_limit)
         except InvalidInitException:
-            traceback.print_exc()
-            self.packet_manager.internal_error_packet(traceback.format_exc())
-            return
+            return self.internal_error()
 
         if 'grader' in problem.config:
             grader_class = graders.InteractiveGrader
@@ -182,6 +180,39 @@ class Judge(object):
         self.current_submission = None
         self.current_grader = None
 
+    def grade_cases(self, grader, cases, short_circuit=False):
+        # Whether we're set to skip all cases, is set to True on WA in batch
+        is_short_circuiting = False
+
+        for case in cases:
+            # Stop grading if we're short circuiting
+            if is_short_circuiting:
+                result = Result(case)
+                result.result_flag = Result.SC
+                yield result
+                continue
+
+            # Yield notifying objects for batch begin/end, and unwrap all cases inside the batches
+            if isinstance(case, BatchedTestCase):
+                yield BatchBegin()
+                for _ in self.grade_cases(grader, case.batched_cases, short_circuit=True):
+                    yield _
+                yield BatchEnd()
+                continue
+
+            # Must check here because we might be interrupted mid-execution
+            # If we don't bail out, we get an IR.
+            # In Java's case, all the code after this will crash.
+            if self._terminate_grading:
+                raise TerminateGrading()
+
+            result = grader.grade(case)
+
+            if (result.result_flag & Result.WA) > 0 and short_circuit:
+                is_short_circuiting = True
+
+            yield result
+
     def internal_error(self, exc=None):
         if exc:
             try:
@@ -193,67 +224,28 @@ class Judge(object):
         traceback.print_exception(*exc)
         self.packet_manager.internal_error_packet(traceback.format_exception(*exc))
 
+    def listen(self):
+        """
+        Attempts to connect to the handler server specified in command line.
+        """
+        self.packet_manager.run()
 
-def grade_cases(self, grader, cases, short_circuit=False):
-    # Whether we're set to skip all cases, is set to True on WA in batch
-    is_short_circuiting = False
+    def __del__(self):
+        self._stop_monitor()
+        del self.packet_manager
 
-    for case in cases:
-        # Stop grading if we're short circuiting
-        if is_short_circuiting:
-            result = Result(case)
-            result.result_flag = Result.SC
-            yield result
-            continue
+    def __enter__(self):
+        return self
 
-        # Yield notifying objects for batch begin/end, and unwrap all cases inside the batches
-        if isinstance(case, BatchedTestCase):
-            yield BatchBegin()
-            for _ in self.grade_cases(grader, case.batched_cases, short_circuit=True):
-                yield _
-            yield BatchEnd()
-            continue
+    def __exit__(self, exception_type, exception_value, traceback):
+        pass
 
-        # Must check here because we might be interrupted mid-execution
-        # If we don't bail out, we get an IR.
-        # In Java's case, all the code after this will crash.
-        if self._terminate_grading:
-            raise TerminateGrading()
-
-        result = grader.grade(case)
-
-        if (result.result_flag & Result.WA) > 0 and short_circuit:
-            is_short_circuiting = True
-
-        yield result
-
-
-def listen(self):
-    """
-    Attempts to connect to the handler server specified in command line.
-    """
-    self.packet_manager.run()
-
-
-def __del__(self):
-    self._stop_monitor()
-    del self.packet_manager
-
-
-def __enter__(self):
-    return self
-
-
-def __exit__(self, exception_type, exception_value, traceback):
-    pass
-
-
-def murder(self):
-    """
-    End any submission currently executing, and exit the judge.
-    """
-    self.terminate_grading()
-    self._stop_monitor()
+    def murder(self):
+        """
+        End any submission currently executing, and exit the judge.
+        """
+        self.terminate_grading()
+        self._stop_monitor()
 
 
 class ClassicJudge(Judge):

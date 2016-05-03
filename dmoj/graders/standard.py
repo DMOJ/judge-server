@@ -27,12 +27,11 @@ class StandardGrader(BaseGrader):
         result.execution_time = process.execution_time or 0.0
         result.r_execution_time = process.r_execution_time or 0.0
 
-        # C standard checker will crash if not given a string
-        proc_output = result.proc_output or ''
-
-        check = case.checker()(proc_output, case.output_data(),
+        # checkers might crash if any data is None, so force at least empty string
+        check = case.checker()(result.proc_output or '',
+                               case.output_data() or '',
                                submission_source=self.source,
-                               judge_input=case.input_data(),
+                               judge_input=case.input_data() or '',
                                point_value=case.points)
 
         # checkers must either return a boolean (True: full points, False: 0 points)

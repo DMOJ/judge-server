@@ -7,7 +7,7 @@ import traceback
 from dmoj import packet, graders
 from dmoj.config import Problem, InvalidInitException, BatchedTestCase
 from dmoj.error import CompileError
-from dmoj.judgeenv import env, get_problem_roots
+from dmoj.judgeenv import env, get_problem_roots, get_supported_problems
 from dmoj.result import Result
 from dmoj.utils.ansi import ansi_style
 
@@ -67,7 +67,7 @@ class Judge(object):
         """
         Pushes current problem set to server.
         """
-        self.packet_manager.supported_problems_packet(self.supported_problems())
+        self.packet_manager.supported_problems_packet(get_supported_problems())
 
     def begin_grading(self, id, problem_id, language, source_code, time_limit, memory_limit, short_circuit):
         try:
@@ -154,7 +154,7 @@ class Judge(object):
                             result.feedback)
             except TerminateGrading:
                 self.packet_manager.submission_terminated_packet()
-                print 'Forcefully terminating grading. Temporary files may not be deleted.'
+                print ansi_style('#ansi[Forcefully terminating grading. Temporary files may not be deleted.](red|bold)')
                 pass
             except:
                 self.internal_error()

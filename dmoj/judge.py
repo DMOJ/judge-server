@@ -261,13 +261,18 @@ def main():
             import wbox
         except ImportError:
             print >> sys.stderr, "wbox must be compiled to grade!"
-            return
+            return 1
+
+        import ctypes
+        if ctypes.windll.shell32.IsUserAnAdmin() == 0:
+            print >> sys.stderr, "can't start, the DMOJ judge must be ran as admin"
+            return 1
     else:
         try:
             import cptbox
         except ImportError:
             print >> sys.stderr, "cptbox must be compiled to grade!"
-            return
+            return 1
 
     import logging
     from dmoj import judgeenv, executors

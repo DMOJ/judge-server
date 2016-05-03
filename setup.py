@@ -74,6 +74,7 @@ setup(
     entry_points={
         'console_scripts': [
             'dmoj = dmoj.judge:main',
+            'dmoj-cli = dmoj.cli:main',
         ]
     },
     ext_modules=extensions if cythonize is None else cythonize(extensions),

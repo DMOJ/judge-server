@@ -84,8 +84,6 @@ class Judge(object):
         self.packet_manager.supported_problems_packet(self.supported_problems())
 
     def begin_grading(self, id, problem_id, language, source_code, time_limit, memory_limit, short_circuit):
-
-        print 'Grading %s in %s...' % (problem_id, language)
         try:
             self.current_submission_thread.join()
         except AttributeError:
@@ -110,6 +108,7 @@ class Judge(object):
 
     def _begin_grading(self, problem_id, language, original_source, time_limit, memory_limit, short_circuit):
         submission_id = self.current_submission
+        print ansi_style('Start grading #ansi[%s](yellow)/#ansi[%s](green|bold) in %s...' % (problem_id, submission_id, language))
 
         try:
             problem = Problem(problem_id, time_limit, memory_limit)
@@ -163,7 +162,8 @@ class Judge(object):
         else:
             self.packet_manager.grading_end_packet()
         finally:
-            print '===========Done Grading: %s===========' % submission_id
+            print ansi_style('Done grading #ansi[%s](yellow)/#ansi[%s](green|bold).' % (problem_id, submission_id))
+            print
             self._terminate_grading = False
             self.current_submission_thread = None
             self.current_submission = None
@@ -255,7 +255,9 @@ def main():
 
     executors.load_executors()
 
+    print
     print 'Running live judge...'
+    print
 
     logging.basicConfig(filename=judgeenv.log_file, level=logging.INFO,
                         format='%(levelname)s %(asctime)s %(module)s %(message)s')

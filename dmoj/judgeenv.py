@@ -14,6 +14,8 @@ fs_encoding = os.environ.get('DMOJ_ENCODING', sys.getfilesystemencoding())
 
 log_file = server_host = server_port = no_ansi = no_ansi_emu = None
 
+startup_warnings = []
+
 only_executors = set()
 exclude_executors = set()
 
@@ -25,7 +27,7 @@ def unicodify(string):
 
 
 def load_env():
-    global _judge_dirs, only_executors, exclude_executors, log_file, server_host, server_port, no_ansi, no_ansi_emu, env
+    global _judge_dirs, only_executors, exclude_executors, log_file, server_host, server_port, no_ansi, no_ansi_emu, env, startup_warnings
     _parser = argparse.ArgumentParser(description='''
         Spawns a judge for a submission server.
     ''')
@@ -81,6 +83,14 @@ def load_env():
                            for dir in os.listdir(_judge_dirs)]
             _judge_dirs = tuple(dir for dir in _judge_dirs if os.path.isdir(dir))
 
+        cleaned_dirs = []
+        for dir in _judge_dirs:
+            if not os.path.exists(dir) or not os.path.isdir(dir):
+                startup_warnings.append('cannot access problem directory %s (does it exist?)' % dir)
+                continue
+            cleaned_dirs.append(dir)
+        _judge_dirs = cleaned_dirs
+
 
 def get_problem_root(pid):
     for dir in _judge_dirs:
@@ -102,8 +112,6 @@ def get_supported_problems():
     """
     problems = []
     for dir in get_problem_roots():
-        if not os.path.exists(dir) or not os.path.isdir(dir):
-            continue
         for problem in os.listdir(dir):
             if isinstance(problem, str):
                 problem = problem.decode(fs_encoding)

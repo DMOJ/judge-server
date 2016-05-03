@@ -12,8 +12,7 @@ def check(process_output, judge_output, **kwargs):
 try:
     from ._checker import standard
 except ImportError as e:
-    import sys
-    print>> sys.stderr, 'Compile _checker for optimal performance'
+    pass
 else:
     def check(process_output, judge_output, _checker=standard, **kwargs):
         return _checker(judge_output, process_output)

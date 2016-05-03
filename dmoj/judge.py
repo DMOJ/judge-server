@@ -7,7 +7,7 @@ import traceback
 from dmoj import packet, graders
 from dmoj.config import Problem, InvalidInitException, BatchedTestCase
 from dmoj.error import CompileError
-from dmoj.judgeenv import env, get_problem_roots, get_supported_problems
+from dmoj.judgeenv import env, get_problem_roots, get_supported_problems, startup_warnings
 from dmoj.result import Result
 from dmoj.utils.ansi import ansi_style
 
@@ -15,7 +15,7 @@ try:
     from watchdog.observers import Observer
     from watchdog.events import FileSystemEventHandler
 except ImportError:
-    print>> sys.stderr, 'No Watchdog!'
+    startup_warnings.append('watchdog module not found, install it to automatically update problems')
     Observer = None
 
 
@@ -53,10 +53,7 @@ class Judge(object):
             handler = SendProblemsHandler(self)
             self._monitor = monitor = Observer()
             for dir in get_problem_roots():
-                if os.path.exists(dir) and os.path.isdir(dir):
-                    monitor.schedule(handler, dir, recursive=True)
-                else:
-                    print ansi_style("#ansi[Warning: cannot monitor folder %s (does it exist?)](yellow)" % dir)
+                monitor.schedule(handler, dir, recursive=True)
             monitor.start()
         else:
             self._monitor = None
@@ -254,25 +251,44 @@ class AMQPJudge(Judge):
         super(AMQPJudge, self).__init__()
 
 
-def main():
+def sanity_check():
     # Don't allow starting up without wbox/cptbox, saves cryptic errors later on
     if os.name == 'nt':
         try:
             import wbox
         except ImportError:
             print >> sys.stderr, "wbox must be compiled to grade!"
-            return 1
+            return False
 
+        # DMOJ needs to be run as admin on Windows
         import ctypes
         if ctypes.windll.shell32.IsUserAnAdmin() == 0:
             print >> sys.stderr, "can't start, the DMOJ judge must be ran as admin"
-            return 1
+            return False
     else:
         try:
             import cptbox
         except ImportError:
             print >> sys.stderr, "cptbox must be compiled to grade!"
-            return 1
+            return False
+
+        # However running as root on Linux is a Bad Idea
+        if os.getuid() == 0:
+            startup_warnings.append('running the judge as root can be potentially unsafe, '
+                                    'consider using an unprivileged user instead')
+
+    # _checker implements standard checker functions in C
+    # we fall back to a Python implementation if it's not compiled, but it's slower
+    try:
+        from checkers import _checker
+    except ImportError:
+        startup_warnings.append('native checker module not found, compile _checker for optimal performance')
+    return True
+
+
+def main():
+    if not sanity_check():
+        return 1
 
     import logging
     from dmoj import judgeenv, executors
@@ -290,6 +306,9 @@ def main():
     executors.load_executors()
 
     print 'Running live judge...'
+    for warning in judgeenv.startup_warnings:
+        print ansi_style('#ansi[Warning: %s](yellow)' % warning)
+    del judgeenv.startup_warnings
 
     logging.basicConfig(filename=judgeenv.log_file, level=logging.INFO,
                         format='%(levelname)s %(asctime)s %(module)s %(message)s')

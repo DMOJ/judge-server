@@ -69,7 +69,8 @@ class Judge(object):
         """
         self.packet_manager.supported_problems_packet(get_supported_problems())
 
-    def begin_grading(self, id, problem_id, language, source_code, time_limit, memory_limit, short_circuit):
+    def begin_grading(self, id, problem_id, language, source_code, time_limit, memory_limit, short_circuit,
+                      blocking=False):
         try:
             self.current_submission_thread.join()
         except AttributeError:
@@ -80,6 +81,8 @@ class Judge(object):
                                                                 time_limit, memory_limit, short_circuit))
         self.current_submission_thread.daemon = True
         self.current_submission_thread.start()
+        if blocking:
+            self.current_submission_thread.join()
 
     def terminate_grading(self):
         """
@@ -130,23 +133,34 @@ class Judge(object):
         if binary:
             self.packet_manager.begin_grading_packet()
 
+            batch_counter = 1
+            in_batch = False
             try:
                 for case_number, result in enumerate(self.grade_cases(grader, problem.cases,
                                                                       short_circuit=short_circuit)):
                     if isinstance(result, BatchBegin):
                         self.packet_manager.batch_begin_packet()
+                        print ansi_style("#ansi[Batch #%d](yellow|bold)" % batch_counter)
+                        in_batch = True
                     elif isinstance(result, BatchEnd):
                         self.packet_manager.batch_end_packet()
+                        batch_counter += 1
+                        in_batch = False
                     else:
                         codes = result.readable_codes()
 
-                        format_data = (case_number + 1, codes[0], Result.COLORS_BYID[codes[0]],
-                                       result.execution_time, result.max_memory,
-                                       '(#ansi[%s](|underline)) ' % result.feedback if result.feedback else '',
-                                       '{%s}' % ', '.join(
-                                           map(lambda x: '#ansi[%s](%s|bold)' % (x, Result.COLORS_BYID[x]),
-                                               codes[1:])) if len(codes) > 1 else '')
-                        print ansi_style('Test case %2d #ansi[%-3s](%s|bold) [%.3fs | %dkb] %s%s' % format_data)
+                        # here be cancer
+                        is_sc = (result.result_flag & Result.SC)
+                        colored_codes = map(lambda x: '#ansi[%s](%s|bold)' % ('--' if x == 'SC' else x,
+                                                                              Result.COLORS_BYID[x]), codes)
+                        colored_aux_codes = '{%s}' % ', '.join(colored_codes[1:]) if len(codes) > 1 else ''
+                        colored_feedback = '(#ansi[%s](|underline)) ' % result.feedback if result.feedback else ''
+                        case_info = '[%.3fs | %dkb] %s%s' % (result.execution_time, result.max_memory,
+                                                             colored_feedback,
+                                                             colored_aux_codes) if not is_sc else ''
+                        case_padding = '  ' * in_batch
+                        print ansi_style('%sTest case %2d %-3s %s' % (case_padding, case_number + 1,
+                                                                      colored_codes[0], case_info))
 
                         # cases are indexed at 1
                         self.packet_manager.test_case_status_packet(

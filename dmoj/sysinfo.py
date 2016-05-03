@@ -6,7 +6,11 @@ _cpu_count = cpu_count()
 
 if hasattr(os, 'getloadavg'):
     def load_fair():
-        return 'load', os.getloadavg()[0] / _cpu_count
+        try:
+            load = os.getloadavg()[0] / _cpu_count
+        except OSError:  # as of May 2016, Windows' Linux subsystem throws OSError on getloadavg
+            load = -1
+        return 'load', load
 else:
     from dmoj.utils.winperfmon import PerformanceCounter
     from threading import Thread

@@ -243,12 +243,25 @@ class ClassicJudge(Judge):
 
 
 class AMQPJudge(Judge):
-    def __init__(self, url, **kwargs):
+    def __init__(self, url):
         self.packet_manager = packet.AMQPPacketManager(self, url, env['id'], env['key'])
         super(AMQPJudge, self).__init__()
 
 
 def main():
+    if os.name == 'nt':
+        try:
+            import wbox
+        except ImportError:
+            print >> sys.stderr, "wbox must be compiled to grade!"
+            return
+    else:
+        try:
+            import cptbox
+        except ImportError:
+            print >> sys.stderr, "cptbox must be compiled to grade!"
+            return
+
     import logging
     from dmoj import judgeenv, executors
 
@@ -263,7 +276,6 @@ def main():
 
     executors.load_executors()
 
-    print
     print 'Running live judge...'
     print
 

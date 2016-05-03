@@ -12,7 +12,7 @@ class Result(object):
         'AC': 'green',
         'WA': 'red',
         'RTE': 'yellow',
-        'TLE': 'grey',
+        'TLE': 'white',
         'MLE': 'yellow',
         'IR': 'yellow',
         'SC': 'magenta',

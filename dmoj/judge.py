@@ -106,7 +106,7 @@ class Judge(object):
             self.current_submission_thread.join()
             self.current_submission_thread = None
 
-    def _begin_grading(self, problem_id, language, original_source, time_limit, memory_limit, short_circuit):
+    def _begin_grading(self, problem_id, language, source, time_limit, memory_limit, short_circuit):
         submission_id = self.current_submission
         print ansi_style('Start grading #ansi[%s](yellow)/#ansi[%s](green|bold) in %s...' % (problem_id, submission_id, language))
 
@@ -121,10 +121,15 @@ class Judge(object):
             grader_class = graders.InteractiveGrader
         elif 'handler' in problem.config:
             grader_class = graders.SignatureGrader
+        elif 'custom_judge' in problem.config:
+            grader_class = graders.CustomGrader
         else:
             grader_class = graders.StandardGrader
 
-        grader = self.current_grader = grader_class(self, problem, language, original_source)
+        if isinstance(source, unicode):
+            source = source.encode('utf-8')
+
+        grader = self.current_grader = grader_class(self, problem, language, source)
 
         binary = grader.binary
         if not binary:

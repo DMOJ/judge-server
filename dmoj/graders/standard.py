@@ -10,8 +10,7 @@ from dmoj.utils.communicate import safe_communicate, OutputLimitExceeded
 
 class StandardGrader(BaseGrader):
     def grade(self, case):
-        result = Result()
-        result.case = case
+        result = Result(case)
 
         case.input_data()  # cache generator data
 

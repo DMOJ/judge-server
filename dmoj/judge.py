@@ -43,7 +43,7 @@ class SendProblemsHandler(FileSystemEventHandler):
 
 
 class Judge(object):
-    def __init__(self, **kwargs):
+    def __init__(self):
         self.current_submission = None
         self.current_grader = None
         self.current_submission_thread = None
@@ -178,18 +178,16 @@ class Judge(object):
             self._terminate_grading = False
             self.current_submission_thread = None
             self.current_submission = None
+            self.current_grader = None
 
     def grade_cases(self, grader, cases, short_circuit=False):
-        binary = grader.binary
-
         # Whether we're set to skip all cases, is set to True on WA in batch
         is_short_circuiting = False
 
         for case in cases:
             # Stop grading if we're short circuiting
             if is_short_circuiting:
-                result = Result()
-                result.case = case
+                result = Result(case)
                 result.result_flag = Result.SC
                 yield result
                 continue
@@ -240,15 +238,15 @@ class Judge(object):
 
 
 class ClassicJudge(Judge):
-    def __init__(self, host, port, **kwargs):
+    def __init__(self, host, port):
         self.packet_manager = packet.PacketManager(host, port, self, env['id'], env['key'])
-        super(ClassicJudge, self).__init__(**kwargs)
+        super(ClassicJudge, self).__init__()
 
 
 class AMQPJudge(Judge):
-    def __init__(self, url, **kwargs):
+    def __init__(self, url):
         self.packet_manager = packet.AMQPPacketManager(self, url, env['id'], env['key'])
-        super(AMQPJudge, self).__init__(**kwargs)
+        super(AMQPJudge, self).__init__()
 
 
 def main():

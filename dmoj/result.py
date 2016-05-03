@@ -20,14 +20,14 @@ class Result(object):
         'IE': 'red'
     }
 
-    def __init__(self):
+    def __init__(self, case):
         self.result_flag = 0
         self.execution_time = 0
         self.r_execution_time = 0
         self.max_memory = 0
         self.proc_output = ''
         self.feedback = ''
-        self.case = None
+        self.case = case
         self.points = 0
 
     def readable_codes(self):

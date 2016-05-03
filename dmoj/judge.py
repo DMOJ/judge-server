@@ -6,6 +6,7 @@ import traceback
 
 from dmoj import packet, graders
 from dmoj.config import Problem, InvalidInitException, BatchedTestCase
+from dmoj.error import CompileError
 from dmoj.judgeenv import env, get_problem_roots, fs_encoding
 from dmoj.result import Result
 from dmoj.utils.ansi import ansi_style
@@ -131,110 +132,128 @@ class Judge(object):
             source = source.encode('utf-8')
 
         try:
-            grader = self.current_grader = grader_class(self, problem, language, source)
+            grader = grader_class(self, problem, language, source)
+        except CompileError as ce:
+            print ansi_style('#ansi[Failed compiling submission!](red|bold)')
+            print ce.message,  # don't print extra newline
+            grader = None
         except:  # if custom grader failed to initialize, report it to the site
-            traceback.print_exc()
-            self.packet_manager.internal_error_packet(traceback.format_exc())
-            return
+            return self.internal_error()
 
-        binary = grader.binary
-        if not binary:
-            return
+        binary = grader.binary if grader else None
+        if binary:
+            self.packet_manager.begin_grading_packet()
+            try:
+                for case_number, result in enumerate(self.grade_cases(grader, problem.cases,
+                                                                      short_circuit=short_circuit)):
+                    if isinstance(result, BatchBegin):
+                        self.packet_manager.batch_begin_packet()
+                    elif isinstance(result, BatchEnd):
+                        self.packet_manager.batch_end_packet()
+                    else:
+                        codes = result.readable_codes()
+                        format_data = (case_number + 1, codes[0], Result.COLORS_BYID[codes[0]],
+                                       result.execution_time, result.max_memory,
+                                       '(#ansi[%s](|underline)) ' % result.feedback if result.feedback else '',
+                                       '{%s}' % ', '.join(
+                                           map(lambda x: '#ansi[%s](%s|bold)' % (x, Result.COLORS_BYID[x]),
+                                               codes[1:])) if len(codes) > 1 else '')
+                        print ansi_style('Test case %2d #ansi[%-3s](%s|bold) [%.3fs | %dkb] %s%s' % format_data)
 
-        self.packet_manager.begin_grading_packet()
-        try:
-            for case_number, result in enumerate(self.grade_cases(grader, problem.cases,
-                                                                  short_circuit=short_circuit)):
-                if isinstance(result, BatchBegin):
-                    self.packet_manager.batch_begin_packet()
-                elif isinstance(result, BatchEnd):
-                    self.packet_manager.batch_end_packet()
-                else:
-                    codes = result.readable_codes()
-                    format_data = (case_number + 1, codes[0], Result.COLORS_BYID[codes[0]],
-                                   result.execution_time, result.max_memory,
-                                   '(#ansi[%s](|underline)) ' % result.feedback if result.feedback else '',
-                                   '{%s}' % ', '.join(map(lambda x: '#ansi[%s](%s|bold)' % (x, Result.COLORS_BYID[x]),
-                                                          codes[1:])) if len(codes) > 1 else '')
-                    print ansi_style('Test case %2d #ansi[%-3s](%s|bold) [%.3fs | %dkb] %s%s' % format_data)
+                        self.packet_manager.test_case_status_packet(
+                            case_number + 1, result.points, result.case.points, result.result_flag,
+                            result.execution_time,
+                            result.max_memory,
+                            result.proc_output[:result.case.output_prefix_length].decode('utf-8', 'replace'),
+                            result.feedback)
+            except TerminateGrading:
+                self.packet_manager.submission_terminated_packet()
+                print 'Forcefully terminating grading. Temporary files may not be deleted.'
+                pass
+            except:
+                self.internal_error()
+            else:
+                self.packet_manager.grading_end_packet()
 
-                    self.packet_manager.test_case_status_packet(
-                        case_number + 1, result.points, result.case.points, result.result_flag, result.execution_time,
-                        result.max_memory,
-                        result.proc_output[:result.case.output_prefix_length].decode('utf-8', 'replace'),
-                        result.feedback)
-        except TerminateGrading:
-            self.packet_manager.submission_terminated_packet()
-            print 'Forcefully terminating grading. Temporary files may not be deleted.'
-            pass
-        except:
-            traceback.print_exc()
-            self.packet_manager.internal_error_packet(traceback.format_exc())
-        else:
-            self.packet_manager.grading_end_packet()
-        finally:
-            print ansi_style('Done grading #ansi[%s](yellow)/#ansi[%s](green|bold).' % (problem_id, submission_id))
-            print
-            self._terminate_grading = False
-            self.current_submission_thread = None
-            self.current_submission = None
-            self.current_grader = None
+        print ansi_style('Done grading #ansi[%s](yellow)/#ansi[%s](green|bold).' % (problem_id, submission_id))
+        print
+        self._terminate_grading = False
+        self.current_submission_thread = None
+        self.current_submission = None
+        self.current_grader = None
 
-    def grade_cases(self, grader, cases, short_circuit=False):
-        # Whether we're set to skip all cases, is set to True on WA in batch
-        is_short_circuiting = False
+    def internal_error(self, exc=None):
+        if exc:
+            try:
+                raise exc
+            except:
+                pass
+        exc = sys.exc_info()
 
-        for case in cases:
-            # Stop grading if we're short circuiting
-            if is_short_circuiting:
-                result = Result(case)
-                result.result_flag = Result.SC
-                yield result
-                continue
+        traceback.print_exception(*exc)
+        self.packet_manager.internal_error_packet(traceback.format_exception(*exc))
 
-            # Yield notifying objects for batch begin/end, and unwrap all cases inside the batches
-            if isinstance(case, BatchedTestCase):
-                yield BatchBegin()
-                for _ in self.grade_cases(grader, case.batched_cases, short_circuit=True):
-                    yield _
-                yield BatchEnd()
-                continue
 
-            # Must check here because we might be interrupted mid-execution
-            # If we don't bail out, we get an IR.
-            # In Java's case, all the code after this will crash.
-            if self._terminate_grading:
-                raise TerminateGrading()
+def grade_cases(self, grader, cases, short_circuit=False):
+    # Whether we're set to skip all cases, is set to True on WA in batch
+    is_short_circuiting = False
 
-            result = grader.grade(case)
-
-            if (result.result_flag & Result.WA) > 0 and short_circuit:
-                is_short_circuiting = True
-
+    for case in cases:
+        # Stop grading if we're short circuiting
+        if is_short_circuiting:
+            result = Result(case)
+            result.result_flag = Result.SC
             yield result
+            continue
 
-    def listen(self):
-        """
-        Attempts to connect to the handler server specified in command line.
-        """
-        self.packet_manager.run()
+        # Yield notifying objects for batch begin/end, and unwrap all cases inside the batches
+        if isinstance(case, BatchedTestCase):
+            yield BatchBegin()
+            for _ in self.grade_cases(grader, case.batched_cases, short_circuit=True):
+                yield _
+            yield BatchEnd()
+            continue
 
-    def __del__(self):
-        self._stop_monitor()
-        del self.packet_manager
+        # Must check here because we might be interrupted mid-execution
+        # If we don't bail out, we get an IR.
+        # In Java's case, all the code after this will crash.
+        if self._terminate_grading:
+            raise TerminateGrading()
 
-    def __enter__(self):
-        return self
+        result = grader.grade(case)
 
-    def __exit__(self, exception_type, exception_value, traceback):
-        pass
+        if (result.result_flag & Result.WA) > 0 and short_circuit:
+            is_short_circuiting = True
 
-    def murder(self):
-        """
-        End any submission currently executing, and exit the judge.
-        """
-        self.terminate_grading()
-        self._stop_monitor()
+        yield result
+
+
+def listen(self):
+    """
+    Attempts to connect to the handler server specified in command line.
+    """
+    self.packet_manager.run()
+
+
+def __del__(self):
+    self._stop_monitor()
+    del self.packet_manager
+
+
+def __enter__(self):
+    return self
+
+
+def __exit__(self, exception_type, exception_value, traceback):
+    pass
+
+
+def murder(self):
+    """
+    End any submission currently executing, and exit the judge.
+    """
+    self.terminate_grading()
+    self._stop_monitor()
 
 
 class ClassicJudge(Judge):
@@ -244,7 +263,7 @@ class ClassicJudge(Judge):
 
 
 class AMQPJudge(Judge):
-    def __init__(self, url):
+    def __init__(self, url, **kwargs):
         self.packet_manager = packet.AMQPPacketManager(self, url, env['id'], env['key'])
         super(AMQPJudge, self).__init__()
 

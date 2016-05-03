@@ -15,12 +15,10 @@ class CustomGrader(object):
         try:
             return self.custom_judge.grade(case)
         except:
-            traceback.print_exc()
-            self.packet_manager.internal_error_packet(traceback.format_exc())
+            self.judge.internal_error()
 
     def terminate_grading(self):
         try:
             return self.custom_judge.terminate_grading()
         except:
-            traceback.print_exc()
-            self.packet_manager.internal_error_packet(traceback.format_exc())
+            self.judge.internal_error()

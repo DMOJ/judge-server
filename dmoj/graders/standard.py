@@ -98,7 +98,7 @@ class StandardGrader(BaseGrader):
             self.judge.packet_manager.compile_error_packet(ansi.format_ansi(error))
 
             # Compile error is fatal
-            return None
+            raise
 
         # Carry on grading in case of compile warning
         if hasattr(binary, 'warning') and binary.warning:

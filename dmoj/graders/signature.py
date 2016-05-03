@@ -38,6 +38,6 @@ class SignatureGrader(StandardGrader):
                 self.judge.packet_manager.compile_error_packet(compilation_error.message)
 
                 # Compile error is fatal
-                return None
+                raise
 
         self.judge.packet_manager.compile_error_packet('no valid handler compiler exists')

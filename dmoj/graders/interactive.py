@@ -46,12 +46,11 @@ class InteractiveGrader(StandardGrader):
                 else:
                     error = ''
         except:
-            traceback.print_exc()
+            self.judge.internal_error()
             try:
                 process.kill()
             except:  # The process might've already exited
                 pass
-            self.judge.packet_manager.internal_error_packet(self.problem.id + '\n\n' + traceback.format_exc())
             return
         else:
             process.wait()

@@ -102,6 +102,8 @@ def get_supported_problems():
     """
     problems = []
     for dir in get_problem_roots():
+        if not os.path.exists(dir) or not os.path.isdir(dir):
+            continue
         for problem in os.listdir(dir):
             if isinstance(problem, str):
                 problem = problem.decode(fs_encoding)

@@ -53,7 +53,10 @@ class Judge(object):
             handler = SendProblemsHandler(self)
             self._monitor = monitor = Observer()
             for dir in get_problem_roots():
-                monitor.schedule(handler, dir, recursive=True)
+                if os.path.exists(dir) and os.path.isdir(dir):
+                    monitor.schedule(handler, dir, recursive=True)
+                else:
+                    print ansi_style("#ansi[Warning: cannot monitor folder %s (does it exist?)](yellow)" % dir)
             monitor.start()
         else:
             self._monitor = None
@@ -252,6 +255,7 @@ class AMQPJudge(Judge):
 
 
 def main():
+    # Don't allow starting up without wbox/cptbox, saves cryptic errors later on
     if os.name == 'nt':
         try:
             import wbox
@@ -270,6 +274,7 @@ def main():
 
     judgeenv.load_env()
 
+    # Emulate ANSI colors with colorama
     if os.name == 'nt' and not judgeenv.no_ansi_emu:
         try:
             from colorama import init
@@ -280,7 +285,6 @@ def main():
     executors.load_executors()
 
     print 'Running live judge...'
-    print
 
     logging.basicConfig(filename=judgeenv.log_file, level=logging.INFO,
                         format='%(levelname)s %(asctime)s %(module)s %(message)s')
@@ -289,10 +293,13 @@ def main():
         judge = AMQPJudge(judgeenv.server_host)
     else:
         judge = ClassicJudge(judgeenv.server_host, judgeenv.server_port)
+    print
 
     with judge:
         try:
             judge.listen()
+        except:
+            traceback.print_exc()
         finally:
             judge.murder()
 

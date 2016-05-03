@@ -108,7 +108,8 @@ class Judge(object):
 
     def _begin_grading(self, problem_id, language, source, time_limit, memory_limit, short_circuit):
         submission_id = self.current_submission
-        print ansi_style('Start grading #ansi[%s](yellow)/#ansi[%s](green|bold) in %s...' % (problem_id, submission_id, language))
+        print ansi_style('Start grading #ansi[%s](yellow)/#ansi[%s](green|bold) in %s...'
+                         % (problem_id, submission_id, language))
 
         try:
             problem = Problem(problem_id, time_limit, memory_limit)
@@ -129,7 +130,12 @@ class Judge(object):
         if isinstance(source, unicode):
             source = source.encode('utf-8')
 
-        grader = self.current_grader = grader_class(self, problem, language, source)
+        try:
+            grader = self.current_grader = grader_class(self, problem, language, source)
+        except:  # if custom grader failed to initialize, report it to the site
+            traceback.print_exc()
+            self.packet_manager.internal_error_packet(traceback.format_exc())
+            return
 
         binary = grader.binary
         if not binary:

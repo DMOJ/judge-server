@@ -124,6 +124,9 @@ class Judge(object):
             return self.internal_error()
 
         binary = grader.binary if grader else None
+
+        # the compiler may have failed, or an error could have happened while initializing a custom judge
+        # either way, we can't continue
         if binary:
             self.packet_manager.begin_grading_packet()
 
@@ -196,6 +199,8 @@ class Judge(object):
 
             result = grader.grade(case)
 
+            # If the WA bit of result_flag is set and we are set to short-circuit (e.g., in a batch),
+            # short circuit the rest of the cases
             if (result.result_flag & Result.WA) > 0 and short_circuit:
                 is_short_circuiting = True
 
@@ -219,7 +224,6 @@ class Judge(object):
         self.packet_manager.run()
 
     def __del__(self):
-        self._stop_monitor()
         del self.packet_manager
 
     def __enter__(self):
@@ -233,7 +237,6 @@ class Judge(object):
         End any submission currently executing, and exit the judge.
         """
         self.terminate_grading()
-        self._stop_monitor()
 
 
 class ClassicJudge(Judge):

@@ -26,20 +26,23 @@ def unicodify(string):
     return string
 
 
-def load_env():
+def load_env(cli=False):
     global _judge_dirs, only_executors, exclude_executors, log_file, server_host, server_port, no_ansi, no_ansi_emu, env, startup_warnings
     _parser = argparse.ArgumentParser(description='''
         Spawns a judge for a submission server.
     ''')
-    _parser.add_argument('server_host', help='host to listen for the server')
-    _parser.add_argument('judge_name', nargs='?', help='judge name (overrides configuration)')
-    _parser.add_argument('judge_key', nargs='?', help='judge key (overrides configuration)')
-    _parser.add_argument('-p', '--server-port', type=int, default=9999,
-                         help='port to listen for the server')
+    if not cli:
+        _parser.add_argument('server_host', help='host to listen for the server')
+        _parser.add_argument('judge_name', nargs='?', help='judge name (overrides configuration)')
+        _parser.add_argument('judge_key', nargs='?', help='judge key (overrides configuration)')
+        _parser.add_argument('-p', '--server-port', type=int, default=9999,
+                             help='port to listen for the server')
     _parser.add_argument('-c', '--config', type=str, default=None, required=True,
                          help='file to load judge configurations from')
-    _parser.add_argument('-l', '--log-file',
-                         help='log file to use')
+
+    if not cli:
+        _parser.add_argument('-l', '--log-file',
+                             help='log file to use')
 
     _group = _parser.add_mutually_exclusive_group()
     _group.add_argument('-e', '--only-executors',
@@ -53,13 +56,13 @@ def load_env():
 
     _args = _parser.parse_args()
 
-    server_host = _args.server_host
-    server_port = _args.server_port
+    server_host = getattr(_args, 'server_host', None)
+    server_port = getattr(_args, 'server_port', None)
 
     no_ansi_emu = _args.no_ansi_emu if os.name == 'nt' else True
     no_ansi = _args.no_ansi
 
-    log_file = _args.log_file
+    log_file = getattr(_args, 'log_file', None)
     only_executors |= _args.only_executors and set(_args.only_executors.split(',')) or set()
     exclude_executors |= _args.exclude_executors and set(_args.exclude_executors.split(',')) or set()
 
@@ -68,10 +71,10 @@ def load_env():
     with open(model_file) as init_file:
         env.update(yaml.safe_load(init_file))
 
-        if _args.judge_name is not None:
+        if getattr(_args, 'judge_name', None):
             env['id'] = _args.judge_name
 
-        if _args.judge_key is not None:
+        if getattr(_args, 'judge_key', None):
             env['key'] = _args.judge_key
 
         dirs = env.get('problem_storage_root', os.path.join('data', 'problems'))

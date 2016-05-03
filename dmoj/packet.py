@@ -15,6 +15,7 @@ import pika.exceptions
 
 from dmoj import sysinfo
 from dmoj.executors import executors
+from dmoj.judgeenv import get_supported_problems
 
 logger = logging.getLogger('dmoj.judge')
 timer = time.clock if os.name == 'nt' else time.time
@@ -44,7 +45,7 @@ class PacketManager(object):
         self.conn.connect((self.host, self.port))
         self.input = self.conn.makefile('r')
         self.output = self.conn.makefile('w', 0)
-        self.handshake(self.judge.supported_problems(), self.name, self.key)
+        self.handshake(get_supported_problems(), self.name, self.key)
 
     def _reconnect(self):
         if self.fallback > 65536:
@@ -281,7 +282,7 @@ class AMQPPacketManager(object):
             self._send_latency()
 
             self.supported_executors_packet()
-            self.supported_problems_packet(self.judge.supported_problems())
+            self.supported_problems_packet(get_supported_problems())
 
         def on_broadcast_queue_bind(frame):
             channel.basic_consume(self.on_broadcast_message, queue=self.broadcast_queue, no_ack=True)

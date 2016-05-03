@@ -17,6 +17,7 @@ log_file = server_host = server_port = no_ansi = no_ansi_emu = None
 only_executors = set()
 exclude_executors = set()
 
+
 def unicodify(string):
     if isinstance(string, str):
         return string.decode(fs_encoding)
@@ -91,3 +92,19 @@ def get_problem_root(pid):
 
 def get_problem_roots():
     return _judge_dirs
+
+
+def get_supported_problems():
+    """
+    Fetches a list of all problems supported by this judge.
+    :return:
+        A list of all problems in tuple format: (problem id, mtime)
+    """
+    problems = []
+    for dir in get_problem_roots():
+        for problem in os.listdir(dir):
+            if isinstance(problem, str):
+                problem = problem.decode(fs_encoding)
+            if os.access(os.path.join(dir, problem, 'init.yml'), os.R_OK):
+                problems.append((problem, os.path.getmtime(os.path.join(dir, problem))))
+    return problems

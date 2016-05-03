@@ -7,7 +7,7 @@ import traceback
 from dmoj import packet, graders
 from dmoj.config import Problem, InvalidInitException, BatchedTestCase
 from dmoj.error import CompileError
-from dmoj.judgeenv import env, get_problem_roots, fs_encoding
+from dmoj.judgeenv import env, get_problem_roots
 from dmoj.result import Result
 from dmoj.utils.ansi import ansi_style
 
@@ -62,21 +62,6 @@ class Judge(object):
         if self._monitor is not None:
             self._monitor.stop()
             self._monitor.join(1)
-
-    def supported_problems(self):
-        """
-        Fetches a list of all problems supported by this judge.
-        :return:
-            A list of all problems in tuple format: (problem id, mtime)
-        """
-        problems = []
-        for dir in get_problem_roots():
-            for problem in os.listdir(dir):
-                if isinstance(problem, str):
-                    problem = problem.decode(fs_encoding)
-                if os.access(os.path.join(dir, problem, 'init.yml'), os.R_OK):
-                    problems.append((problem, os.path.getmtime(os.path.join(dir, problem))))
-        return problems
 
     def update_problems(self):
         """
@@ -141,6 +126,7 @@ class Judge(object):
         binary = grader.binary if grader else None
         if binary:
             self.packet_manager.begin_grading_packet()
+
             try:
                 for case_number, result in enumerate(self.grade_cases(grader, problem.cases,
                                                                       short_circuit=short_circuit)):
@@ -150,6 +136,7 @@ class Judge(object):
                         self.packet_manager.batch_end_packet()
                     else:
                         codes = result.readable_codes()
+
                         format_data = (case_number + 1, codes[0], Result.COLORS_BYID[codes[0]],
                                        result.execution_time, result.max_memory,
                                        '(#ansi[%s](|underline)) ' % result.feedback if result.feedback else '',
@@ -158,6 +145,7 @@ class Judge(object):
                                                codes[1:])) if len(codes) > 1 else '')
                         print ansi_style('Test case %2d #ansi[%-3s](%s|bold) [%.3fs | %dkb] %s%s' % format_data)
 
+                        # cases are indexed at 1
                         self.packet_manager.test_case_status_packet(
                             case_number + 1, result.points, result.case.points, result.result_flag,
                             result.execution_time,

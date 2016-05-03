@@ -126,8 +126,8 @@ class TestCase(object):
         return data.replace('\r\n', '\n')
 
     def _run_generator(self, gen):
-        flags = []  # default flags
-        args = []  # default args - maybe pass WINDOWS_JUDGE or LINUX_JUDGE
+        flags = []
+        args = []
         if isinstance(gen, str):
             filename = os.path.join(get_problem_root(self.problem.id), gen)
         else:
@@ -152,7 +152,8 @@ class TestCase(object):
             if self._generated is None:
                 self._run_generator(gen)
             return self._generated[0]
-        return self._normalize(self.problem.problem_data[self.config['in']])
+        # in file is optional
+        return self._normalize(self.problem.problem_data[self.config['in']]) if self.config['in'] else ''
 
     def output_data(self):
         if self.config.out:
@@ -173,7 +174,6 @@ class TestCase(object):
                 params = {}
             if '.' in name:
                 try:
-                    modname, ext = os.path.splitext(name)
                     checker = load_module_from_file(os.path.join(get_problem_root(self.problem.id), name))
                 except IOError:
                     raise InvalidInitException('checker module path does not exist: %s' % name)

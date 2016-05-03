@@ -34,15 +34,18 @@ def load_executors():
             return None
         return module
 
+    print 'Self-testing executors...'
+
     for name in __executors:
         executor = __load_module(name)
         if executor is None:
             continue
-        if hasattr(executor, 'initialize') and not executor.initialize(
-                sandbox=env.get('selftest_sandboxing', True)):
+        if hasattr(executor, 'initialize') and not executor.initialize(sandbox=env.get('selftest_sandboxing', True)):
             continue
         if hasattr(executor, 'aliases'):
             for alias in executor.aliases():
                 executors[alias] = executor
         else:
             executors[name] = executor
+
+    print

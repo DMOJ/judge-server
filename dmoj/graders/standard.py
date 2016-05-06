@@ -1,11 +1,18 @@
 import os
 from functools import partial
 
+import sys
+
 from dmoj.error import CompileError
 from dmoj.executors import executors
 from dmoj.graders.base import BaseGrader
 from dmoj.result import Result, CheckerResult
 from dmoj.utils.communicate import safe_communicate, OutputLimitExceeded
+
+try:
+    from dmoj.utils.nixutils import strsignal
+except ImportError:
+    strsignal = lambda x: ''
 
 
 class StandardGrader(BaseGrader):
@@ -43,12 +50,16 @@ class StandardGrader(BaseGrader):
         # Translate status codes/process results into Result object for status codes
 
         if process.returncode > 0:
-            # print>> sys.stderr, 'Exited with error: %d' % process.returncode
+            print>> sys.stderr, 'Exited with error: %d' % process.returncode
             result.result_flag |= Result.IR
+            if result.get_main_code() == Result.IR:
+                check.feedback = strsignal(process.returncode)
         if process.returncode < 0:
             # None < 0 == True
-            # if process.returncode is not None:
-            #     print>> sys.stderr, 'Killed by signal %d' % -process.returncode
+            if process.returncode is not None:
+                print>> sys.stderr, 'Killed by signal %d' % -process.returncode
+                if result.get_main_code() == Result.IR:
+                    check.feedback = strsignal(-process.returncode)
             result.result_flag |= Result.RTE  # Killed by signal
         if process.tle:
             result.result_flag |= Result.TLE
@@ -104,5 +115,3 @@ class StandardGrader(BaseGrader):
         if hasattr(binary, 'warning') and binary.warning:
             self.judge.packet_manager.compile_message_packet(ansi.format_ansi(binary.warning))
         return binary
-
-

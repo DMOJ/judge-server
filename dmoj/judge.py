@@ -11,6 +11,12 @@ from dmoj.judgeenv import env, get_problem_roots, get_supported_problems, startu
 from dmoj.result import Result
 from dmoj.utils.ansi import ansi_style
 
+if os.name == 'posix':
+    try:
+        import readline
+    except ImportError:
+        pass
+
 try:
     from watchdog.observers import Observer
     from watchdog.events import FileSystemEventHandler

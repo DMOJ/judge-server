@@ -52,14 +52,10 @@ class StandardGrader(BaseGrader):
         if process.returncode > 0:
             print>> sys.stderr, 'Exited with error: %d' % process.returncode
             result.result_flag |= Result.IR
-            if result.get_main_code() == Result.IR:
-                check.feedback = strsignal(process.returncode)
         if process.returncode < 0:
             # None < 0 == True
             if process.returncode is not None:
                 print>> sys.stderr, 'Killed by signal %d' % -process.returncode
-                if result.get_main_code() == Result.RTE:
-                    check.feedback = strsignal(-process.returncode)
             result.result_flag |= Result.RTE  # Killed by signal
         if process.tle:
             result.result_flag |= Result.TLE
@@ -68,6 +64,11 @@ class StandardGrader(BaseGrader):
 
         if result.result_flag & ~Result.WA:
             check.points = 0
+
+        if result.get_main_code() == Result.IR:
+            check.feedback = strsignal(process.returncode)
+        elif result.get_main_code() == Result.RTE and process.returncode is not None:
+            check.feedback = strsignal(-process.returncode)
 
         result.points = check.points
         result.feedback = (check.feedback or

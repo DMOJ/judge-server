@@ -270,20 +270,20 @@ def main():
     executors.load_executors()
 
     print 'Running local judge...'
-    for warning in judgeenv.startup_warnings:
-        print ansi_style('#ansi[Warning: %s](yellow)' % warning)
-    del judgeenv.startup_warnings
 
     logging.basicConfig(filename=judgeenv.log_file, level=logging.INFO,
                         format='%(levelname)s %(asctime)s %(module)s %(message)s')
 
     judge = LocalJudge()
 
+    for warning in judgeenv.startup_warnings:
+        print ansi_style('#ansi[Warning: %s](yellow)' % warning)
+    del judgeenv.startup_warnings
+    print
+
     for command in [ListProblemsCommand, ListSubmissionsCommand, SubmitCommand, ResubmitCommand, RejudgeCommand,
                     HelpCommand, QuitCommand]:
         register(command(judge))
-
-    print
 
     with judge:
         try:

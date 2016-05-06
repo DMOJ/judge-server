@@ -51,6 +51,7 @@ class SendProblemsHandler(FileSystemEventHandler):
 
 class Judge(object):
     def __init__(self):
+        global startup_warnings
         self.current_submission = None
         self.current_grader = None
         self.current_submission_thread = None
@@ -60,7 +61,11 @@ class Judge(object):
             self._monitor = monitor = Observer()
             for dir in get_problem_roots():
                 monitor.schedule(handler, dir, recursive=True)
-            monitor.start()
+            try:
+                monitor.start()
+            except OSError:
+                startup_warnings.append('failed to start filesystem monitor')
+                self._monitor = None
         else:
             self._monitor = None
 
@@ -326,9 +331,6 @@ def main():
     executors.load_executors()
 
     print 'Running live judge...'
-    for warning in judgeenv.startup_warnings:
-        print ansi_style('#ansi[Warning: %s](yellow)' % warning)
-    del judgeenv.startup_warnings
 
     logging.basicConfig(filename=judgeenv.log_file, level=logging.INFO,
                         format='%(levelname)s %(asctime)s %(module)s %(message)s')
@@ -337,6 +339,10 @@ def main():
         judge = AMQPJudge(judgeenv.server_host)
     else:
         judge = ClassicJudge(judgeenv.server_host, judgeenv.server_port)
+
+    for warning in judgeenv.startup_warnings:
+        print ansi_style('#ansi[Warning: %s](yellow)' % warning)
+    del judgeenv.startup_warnings
     print
 
     with judge:

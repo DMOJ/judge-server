@@ -58,7 +58,7 @@ class StandardGrader(BaseGrader):
             # None < 0 == True
             if process.returncode is not None:
                 print>> sys.stderr, 'Killed by signal %d' % -process.returncode
-                if result.get_main_code() == Result.IR:
+                if result.get_main_code() == Result.RTE:
                     check.feedback = strsignal(-process.returncode)
             result.result_flag |= Result.RTE  # Killed by signal
         if process.tle:

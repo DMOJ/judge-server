@@ -47,6 +47,11 @@ class Result(object):
 
 class CheckerResult(object):
     def __init__(self, passed, points, feedback=None):
+        # Make sure we don't kill the site bridge
+        assert isinstance(passed, bool)
+        assert isinstance(points, int) or isinstance(points, float)
+        assert not feedback or isinstance(feedback, str) or isinstance(feedback, unicode)
+
         self.passed = passed
         self.points = points
         self.feedback = feedback

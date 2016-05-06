@@ -30,6 +30,13 @@ class Result(object):
         self.case = case
         self.points = 0
 
+    def get_main_code(self):
+        for flag in ['IE', 'TLE', 'MLE', 'OLE', 'RTE', 'IR', 'WA', 'SC']:
+            code = getattr(Result, flag)
+            if self.result_flag & code:
+                return code
+        return Result.AC
+
     def readable_codes(self):
         execution_verdict = []
         for flag in ['IE', 'TLE', 'MLE', 'OLE', 'RTE', 'IR', 'WA', 'SC']:

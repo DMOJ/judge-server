@@ -65,15 +65,16 @@ class StandardGrader(BaseGrader):
         if result.result_flag & ~Result.WA:
             check.points = 0
 
-        if result.get_main_code() == Result.IR:
-            check.feedback = strsignal(process.returncode)
-        elif result.get_main_code() == Result.RTE and process.returncode is not None:
-            check.feedback = strsignal(-process.returncode)
-
         result.points = check.points
         result.feedback = (check.feedback or
                            (process.feedback if hasattr(process, 'feedback') else
                             getattr(self.binary, 'get_feedback', lambda x, y: '')(error, result)))
+
+        if not result.feedback:
+            if result.get_main_code() == Result.IR:
+                result.feedback = strsignal(process.returncode)
+            elif result.get_main_code() == Result.RTE and process.returncode is not None:
+                result.feedback = strsignal(-process.returncode)
 
         return result
 

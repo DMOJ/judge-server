@@ -240,7 +240,7 @@ class Judge(object):
         exc = sys.exc_info()
 
         traceback.print_exception(*exc)
-        self.packet_manager.internal_error_packet('\n'.join(traceback.format_exception(*exc)))
+        self.packet_manager.internal_error_packet(''.join(traceback.format_exception(*exc)))
 
     def listen(self):
         """

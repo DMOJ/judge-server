@@ -62,7 +62,7 @@ class PacketManager(object):
             self._reconnect()
 
     def __del__(self):
-        self.conn.shutdown()
+        self.conn.shutdown(socket.SHUT_RDWR)
 
     def _read_async(self):
         try:

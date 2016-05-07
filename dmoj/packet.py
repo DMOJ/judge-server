@@ -36,6 +36,7 @@ class PacketManager(object):
         self.key = key
         self._lock = threading.RLock()
         self._connect()
+        self._batch = 0
         # Exponential backoff: starting at 4 seconds.
         # Certainly hope it won't stack overflow, since it will take days if not years.
         self.fallback = 4
@@ -99,18 +100,12 @@ class PacketManager(object):
         threading.Thread(target=self._read_async).start()
 
     def _send_packet(self, packet):
-        if packet['name'] not in ['ping-response', 'handshake', 'test-case-status']:
-            print '%s:%s => %s' % (self.host, self.port, json.dumps(packet, indent=4))
-
         raw = json.dumps(packet).encode('zlib')
         with self._lock:
             self.output.write(PacketManager.SIZE_PACK.pack(len(raw)))
             self.output.write(raw)
 
     def _receive_packet(self, packet):
-        if packet['name'] != 'ping':
-            print '%s:%s <= %s' % (self.host, self.port, json.dumps(packet, indent=4))
-
         name = packet['name']
         if name == 'ping':
             self.ping_packet(packet['when'])
@@ -127,6 +122,9 @@ class PacketManager(object):
                 int(packet['memory-limit']),
                 packet['short-circuit']
             )
+            self._batch = 0
+            logger.info('Accept submission: %d: executor: %s, code: %s',
+                        packet['submission-id'], packet['language'], packet['problem-id'])
         elif name == 'terminate-submission':
             self.judge.terminate_grading()
         else:
@@ -148,6 +146,7 @@ class PacketManager(object):
                 raise JudgeAuthenticationFailed()
 
     def supported_problems_packet(self, problems):
+        logger.info('Update problems')
         self._send_packet({'name': 'supported-problems',
                            'problems': problems})
 
@@ -164,43 +163,53 @@ class PacketManager(object):
                            'feedback': feedback})
 
     def compile_error_packet(self, log):
+        logger.info('Compile error: %d', self.judge.current_submission)
         self.fallback = 4
         self._send_packet({'name': 'compile-error',
                            'submission-id': self.judge.current_submission,
                            'log': log})
 
     def compile_message_packet(self, log):
+        logger.info('Compile message: %d', self.judge.current_submission)
         self._send_packet({'name': 'compile-message',
                            'submission-id': self.judge.current_submission,
                            'log': log})
 
     def internal_error_packet(self, message):
+        logger.info('Internal error: %d', self.judge.current_submission)
         self._send_packet({'name': 'internal-error',
                            'submission-id': self.judge.current_submission,
                            'message': message})
 
     def begin_grading_packet(self):
+        logger.info('Begin grading: %d', self.judge.current_submission)
         self._send_packet({'name': 'grading-begin',
                            'submission-id': self.judge.current_submission})
 
     def grading_end_packet(self):
+        logger.info('End grading: %d', self.judge.current_submission)
         self.fallback = 4
         self._send_packet({'name': 'grading-end',
                            'submission-id': self.judge.current_submission})
 
     def batch_begin_packet(self):
+        self._batch += 1
+        logger.info('Enter batch number %d: %d', self._batch, self.judge.current_submission)
         self._send_packet({'name': 'batch-begin',
                            'submission-id': self.judge.current_submission})
 
     def batch_end_packet(self):
+        logger.info('Exit batch number %d: %d', self._batch, self.judge.current_submission)
         self._send_packet({'name': 'batch-end',
                            'submission-id': self.judge.current_submission})
 
     def current_submission_packet(self):
+        logger.info('Current submission query: %d', self.judge.current_submission)
         self._send_packet({'name': 'current-submission-id',
                            'submission-id': self.judge.current_submission})
 
     def submission_terminated_packet(self):
+        logger.info('Submission aborted: %d', self.judge.current_submission)
         self._send_packet({'name': 'submission-terminated',
                            'submission-id': self.judge.current_submission})
 

@@ -1,7 +1,7 @@
 from libc.stdio cimport FILE, fopen, fclose, fgets, sprintf
 from libc.stdlib cimport atoi, malloc, free, strtoul
 from libc.string cimport strncmp, strlen
-from libc.signal cimport SIGSTOP
+from libc.signal cimport SIGSTOP, SIGTRAP
 from posix.unistd cimport close, dup2, getpid, execve, chdir
 from posix.resource cimport setrlimit, rlimit, rusage, \
     RLIMIT_AS, RLIMIT_DATA, RLIMIT_CPU, RLIMIT_STACK, RLIMIT_CORE, RLIM_INFINITY
@@ -360,6 +360,7 @@ cdef class Process:
     cdef public Debugger debugger
     cdef readonly bint _exited
     cdef readonly int _exitcode
+    cdef unsigned int _signal
     cdef public int _child_stdin, _child_stdout, _child_stderr
     cdef public unsigned long _child_memory, _child_address
     cdef public unsigned int _cpu_time
@@ -371,6 +372,7 @@ cdef class Process:
         self._child_stdin = self._child_stdout = self._child_stderr = -1
         self._cpu_time = 0
         self._nproc = -1
+        self._signal = 0
 
         if debugger == DEBUGGER_X86:
             self._debugger = new pt_debugger_x86()
@@ -408,11 +410,14 @@ cdef class Process:
         if event == PTBOX_EVENT_PROTECTION:
             with gil:
                 self._protection_fault(param)
-        if event == PTBOX_EVENT_SIGNAL and param == SIGXCPU:
-            with gil:
-                import sys
-                print>>sys.stderr, 'SIGXCPU in child'
-                self._cpu_time_exceeded()
+        if event == PTBOX_EVENT_SIGNAL:
+            if param != SIGTRAP:
+                self._signal = param
+            if param == SIGXCPU:
+                with gil:
+                    import sys
+                    print>>sys.stderr, 'SIGXCPU in child'
+                    self._cpu_time_exceeded()
         return 0
 
     cpdef _handler(self, syscall, handler):
@@ -488,6 +493,12 @@ cdef class Process:
             if memory > 0:
                 self._max_memory = memory
             return self._max_memory
+    
+    property signal:
+        def __get__(self):
+            if not self._exited:
+                return None
+            return self._signal
 
     property returncode:
         def __get__(self):

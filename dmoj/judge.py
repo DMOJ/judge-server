@@ -312,6 +312,7 @@ def sanity_check():
 
 
 def main():
+    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
     if not sanity_check():
         return 1
 

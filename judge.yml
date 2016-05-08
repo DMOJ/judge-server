@@ -1,0 +1,33 @@
+id: Yellowknife
+key: "vT!R!og.%/-uq>QY2uBKpD2p)CPi^SawR@I|n[KD]-Ci]+hN#c(>J}[B3rYejQtuI;DX<pG:dex4<].=rn`w<hKJtcGXwZuL%5uT"
+problem_storage_root:
+#  - "/mnt/c/Users/Tudor/OneDrive/problems/judge2"
+#  - "/mnt/c/Users/Tudor/OneDrive/problems/default"
+#  - "/mnt/c/Users/Tudor/OneDrive/problems/herculaneum"
+#  - "/mnt/c/Users/Tudor/OneDrive/problems/massive"
+#  - "/mnt/c/Users/Tudor/OneDrive/problems/dmopc"
+#  - "/mnt/c/Users/Tudor/OneDrive/problems/herculaneum"
+#
+  - "/mnt/c/Users/Tudor/OneDrive/problems/ccc"
+  - "/mnt/c/Users/Tudor/OneDrive/problems/cco"
+  - "/mnt/c/Users/Tudor/OneDrive/problems/coci"
+  - "/mnt/c/Users/Tudor/OneDrive/problems/default"
+  - "/mnt/c/Users/Tudor/OneDrive/problems/dmopc"
+  - "/mnt/c/Users/Tudor/OneDrive/problems/dwite"
+  - "/mnt/c/Users/Tudor/OneDrive/problems/ecoo"
+  - "/mnt/c/Users/Tudor/OneDrive/problems/ioi"
+  - "/mnt/c/Users/Tudor/OneDrive/problems/mackenzie"
+  - "/mnt/c/Users/Tudor/OneDrive/problems/massive"
+  - "/mnt/c/Users/Tudor/OneDrive/problems/mmcc"
+  - "/mnt/c/Users/Tudor/OneDrive/problems/olympiads"
+  - "/mnt/c/Users/Tudor/OneDrive/problems/tsoc"
+  - "/mnt/c/Users/Tudor/OneDrive/problems/swords"
+  - "/mnt/c/Users/Tudor/OneDrive/problems/peths"
+  - "/mnt/c/Users/Tudor/OneDrive/problems/judge2"
+
+runtime:
+  python: /usr/bin/python
+  gcc: /usr/bin/gcc
+  g++: /usr/bin/g++
+
+

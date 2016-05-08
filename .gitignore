@@ -48,5 +48,6 @@ nosetests.xml
 *.exp
 *.pdb
 
-wbox/_wbox.cpp
-wbox/_wbox.html
+dmoj/wbox/_wbox.cpp
+dmoj/wbox/_wbox.html
+dmoj/cptbox/_cptbox.cpp

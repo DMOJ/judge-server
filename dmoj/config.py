@@ -174,7 +174,7 @@ class TestCase(object):
                 params = {}
             if '.' in name:
                 try:
-                    checker = load_module_from_file(os.path.join(get_problem_root(self.problem.id), name))
+                    checker = self.problem.load_checker(name)
                 except IOError:
                     raise InvalidInitException('checker module path does not exist: %s' % name)
             else:
@@ -230,6 +230,10 @@ class Problem(object):
         self.generator_manager = GeneratorManager()
 
         self.problem_data = ProblemDataManager(problem_id)
+
+        # Checkers modules must be stored in a dict, for the duration of execution,
+        # lest globals be deleted with the module.
+        self._checkers = {}
         self._testcase_counter = 0
 
         try:
@@ -241,6 +245,12 @@ class Problem(object):
 
         self.problem_data.archive = self._resolve_archive_files()
         self.cases = self._resolve_testcases(self.config['test_cases'])
+
+    def load_checker(self, name):
+        if name in self._checkers:
+            return self._checkers[name]
+        self._checkers[name] = checker = load_module_from_file(os.path.join(get_problem_root(self.id), name))
+        return checker
 
     def _resolve_archive_files(self):
         if self.config.archive:

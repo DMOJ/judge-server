@@ -240,7 +240,7 @@ class Judge(object):
         exc = sys.exc_info()
 
         traceback.print_exception(*exc)
-        self.packet_manager.internal_error_packet(traceback.format_exception(*exc))
+        self.packet_manager.internal_error_packet(''.join(traceback.format_exception(*exc)))
 
     def listen(self):
         """
@@ -312,6 +312,7 @@ def sanity_check():
 
 
 def main():
+    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
     if not sanity_check():
         return 1
 

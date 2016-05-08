@@ -50,12 +50,12 @@ class StandardGrader(BaseGrader):
         # Translate status codes/process results into Result object for status codes
 
         if process.returncode > 0:
-            print>> sys.stderr, 'Exited with error: %d' % process.returncode
+            # print>> sys.stderr, 'Exited with error: %d' % process.returncode
             result.result_flag |= Result.IR
         if process.returncode < 0:
             # None < 0 == True
-            if process.returncode is not None:
-                print>> sys.stderr, 'Killed by signal %d' % -process.returncode
+            # if process.returncode is not None:
+               # print>> sys.stderr, 'Killed by signal %d' % -process.returncode
             result.result_flag |= Result.RTE  # Killed by signal
         if process.tle:
             result.result_flag |= Result.TLE
@@ -70,11 +70,8 @@ class StandardGrader(BaseGrader):
                            (process.feedback if hasattr(process, 'feedback') else
                             getattr(self.binary, 'get_feedback', lambda x, y: '')(error, result)))
 
-        if not result.feedback:
-            if result.get_main_code() == Result.IR:
-                result.feedback = strsignal(process.returncode)
-            elif result.get_main_code() == Result.RTE and process.returncode is not None:
-                result.feedback = strsignal(-process.returncode)
+        if not result.feedback and hasattr(process, 'signal') and process.signal and result.get_main_code() in [Result.IR, Result.RTE]:
+            result.feedback = strsignal(process.signal)
 
         return result
 

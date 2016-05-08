@@ -270,12 +270,6 @@ class ClassicJudge(Judge):
         super(ClassicJudge, self).__init__()
 
 
-class AMQPJudge(Judge):
-    def __init__(self, url):
-        self.packet_manager = packet.AMQPPacketManager(self, url, env['id'], env['key'])
-        super(AMQPJudge, self).__init__()
-
-
 def sanity_check():
     # Don't allow starting up without wbox/cptbox, saves cryptic errors later on
     if os.name == 'nt':
@@ -336,10 +330,7 @@ def main():
     logging.basicConfig(filename=judgeenv.log_file, level=logging.INFO,
                         format='%(levelname)s %(asctime)s %(module)s %(message)s')
 
-    if judgeenv.server_host.startswith(('amqp://', 'amqps://')):
-        judge = AMQPJudge(judgeenv.server_host)
-    else:
-        judge = ClassicJudge(judgeenv.server_host, judgeenv.server_port)
+    judge = ClassicJudge(judgeenv.server_host, judgeenv.server_port)
 
     for warning in judgeenv.startup_warnings:
         print ansi_style('#ansi[Warning: %s](yellow)' % warning)

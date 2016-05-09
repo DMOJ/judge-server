@@ -78,7 +78,7 @@ setup(
         ]
     },
     ext_modules=extensions if cythonize is None else cythonize(extensions),
-    install_requires=['watchdog', 'pyyaml', 'ansi2html', 'pika', 'termcolor'],
+    install_requires=['watchdog', 'pyyaml', 'ansi2html', 'termcolor'],
 
     author='quantum5',
     author_email='quantum2048@gmail.com',

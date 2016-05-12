@@ -53,12 +53,10 @@ class GeneratorManager(object):
 
         try:
             executor = clazz.Executor('_generator', source)
-        except CompileError:
+        except CompileError as err:
             # Strip ansi codes from CompileError message so we don't get wacky displays on the site like
             # 01m[K_generator.cpp:26:23:[m[K [01;31m[Kerror: [m[K'[01m[Kgets[m[K' was not declared in this scope
-            exc_class, exc, tb = sys.exc_info()
-            exc = ansi.strip_ansi(exc)
-            raise exc_class, exc, tb
+            raise CompileError(ansi.strip_ansi(err.message))
 
         if hasattr(executor, 'flags'):
             executor.flags += flags

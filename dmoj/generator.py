@@ -1,6 +1,11 @@
 import os
 import traceback
 
+import sys
+
+from dmoj.error import CompileError
+from dmoj.utils import ansi
+
 
 class GeneratorManager(object):
     def __init__(self):
@@ -46,7 +51,15 @@ class GeneratorManager(object):
         if not clazz:
             raise IOError('could not identify generator extension')
 
-        executor = clazz.Executor('_generator', source)
+        try:
+            executor = clazz.Executor('_generator', source)
+        except CompileError:
+            # Strip ansi codes from CompileError message so we don't get wacky displays on the site like
+            # 01m[K_generator.cpp:26:23:[m[K [01;31m[Kerror: [m[K'[01m[Kgets[m[K' was not declared in this scope
+            exc_class, exc, tb = sys.exc_info()
+            exc = ansi.strip_ansi(exc)
+            raise exc_class, exc, tb
+
         if hasattr(executor, 'flags'):
             executor.flags += flags
 

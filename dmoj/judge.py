@@ -201,19 +201,19 @@ class Judge(object):
         is_short_circuiting = False
 
         for case in cases:
-            # Stop grading if we're short circuiting
-            if is_short_circuiting:
-                result = Result(case)
-                result.result_flag = Result.SC
-                yield result
-                continue
-
             # Yield notifying objects for batch begin/end, and unwrap all cases inside the batches
             if isinstance(case, BatchedTestCase):
                 yield BatchBegin()
                 for _ in self.grade_cases(grader, case.batched_cases, short_circuit=True):
                     yield _
                 yield BatchEnd()
+                continue
+
+            # Stop grading if we're short circuiting
+            if is_short_circuiting:
+                result = Result(case)
+                result.result_flag = Result.SC
+                yield result
                 continue
 
             # Must check here because we might be interrupted mid-execution

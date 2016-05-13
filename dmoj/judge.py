@@ -196,15 +196,14 @@ class Judge(object):
         self.current_submission = None
         self.current_grader = None
 
-    def grade_cases(self, grader, cases, short_circuit=False):
-        # Whether we're set to skip all cases, is set to True on WA in batch
-        is_short_circuiting = False
+    def grade_cases(self, grader, cases, short_circuit=False, is_short_circuiting=False):
 
         for case in cases:
             # Yield notifying objects for batch begin/end, and unwrap all cases inside the batches
             if isinstance(case, BatchedTestCase):
                 yield BatchBegin()
-                for _ in self.grade_cases(grader, case.batched_cases, short_circuit=True):
+                for _ in self.grade_cases(grader, case.batched_cases, short_circuit=True,
+                                          is_short_circuiting=is_short_circuiting):
                     yield _
                 yield BatchEnd()
                 continue

@@ -225,8 +225,9 @@ class Judge(object):
             result = grader.grade(case)
 
             # If the WA bit of result_flag is set and we are set to short-circuit (e.g., in a batch),
-            # short circuit the rest of the cases
-            if (result.result_flag & Result.WA) > 0 and short_circuit:
+            # short circuit the rest of the cases.
+            # Do the same if the case is a pretest (i.e. has 0 points)
+            if (result.result_flag & Result.WA) > 0 and (short_circuit or case.points == 0):
                 is_short_circuiting = True
 
             yield result

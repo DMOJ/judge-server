@@ -134,7 +134,7 @@ class TestCase(object):
             filename = gen.source
             if gen.flags:
                 flags += gen.flags
-            if gen.args:
+            if not args and gen.args:
                 args += gen.args
 
         executor = self.problem.generator_manager.get_generator(filename, flags)

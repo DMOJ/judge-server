@@ -141,7 +141,7 @@ class TestCase(object):
         proc = executor.launch_unsafe(*args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         try:
-            input = self.problem.problem_data[self.config['in']]
+            input = self.problem.problem_data[self.config['in']] if self.config['in'] else None
         except KeyError:
             input = None
         self._generated = map(self._normalize, proc.communicate(input))

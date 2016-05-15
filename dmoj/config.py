@@ -125,9 +125,9 @@ class TestCase(object):
     def _normalize(self, data):
         return data.replace('\r\n', '\n')
 
-    def _run_generator(self, gen):
+    def _run_generator(self, gen, args=None):
         flags = []
-        args = []
+        args = args or []
         if isinstance(gen, str):
             filename = os.path.join(get_problem_root(self.problem.id), gen)
         else:
@@ -150,7 +150,7 @@ class TestCase(object):
         gen = self.config.generator
         if gen:
             if self._generated is None:
-                self._run_generator(gen)
+                self._run_generator(gen, args=self.config.generator_args)
             return self._generated[0]
         # in file is optional
         return self._normalize(self.problem.problem_data[self.config['in']]) if self.config['in'] else ''
@@ -161,7 +161,7 @@ class TestCase(object):
         gen = self.config.generator
         if gen:
             if self._generated is None:
-                self._run_generator(gen)
+                self._run_generator(gen, args=self.config.generator_args)
             return self._generated[1]
 
     def checker(self):

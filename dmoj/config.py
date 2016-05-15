@@ -151,7 +151,8 @@ class TestCase(object):
         if gen:
             if self._generated is None:
                 self._run_generator(gen, args=self.config.generator_args)
-            return self._generated[0]
+            if self._generated[0]:
+                return self._generated[0]
         # in file is optional
         return self._normalize(self.problem.problem_data[self.config['in']]) if self.config['in'] else ''
 

@@ -22,11 +22,14 @@ class SignatureGrader(StandardGrader):
             entry_point = self.problem.problem_data[handler_data['entry']]
             header = self.problem.problem_data[handler_data['header']]
 
-            aux_sources[self.problem.id + '_submission'] = (
-                                                               '#include "%s"\n#define main main_%s\n' %
-                                                               (handler_data['header'],
-                                                                str(uuid.uuid4()).replace('-',
-                                                                                          ''))) + self.source
+            submission_template = '''#include "%s"
+#define main main_%s
+%s
+'''
+
+            aux_sources[self.problem.id + '_submission'] = \
+                (submission_template % (handler_data['header'], str(uuid.uuid4()).replace('-', '')), self.source)
+
             aux_sources[handler_data['header']] = header
             entry = entry_point
             # Compile as CPP11 regardless of what the submission language is

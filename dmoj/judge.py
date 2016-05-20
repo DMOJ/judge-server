@@ -118,7 +118,7 @@ class Judge(object):
 
         if 'grader' in problem.config:
             grader_class = graders.InteractiveGrader
-        elif 'handler' in problem.config:
+        elif 'signature_grader' in problem.config:
             grader_class = graders.SignatureGrader
         elif 'custom_judge' in problem.config:
             grader_class = graders.CustomGrader

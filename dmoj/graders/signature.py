@@ -28,7 +28,7 @@ class SignatureGrader(StandardGrader):
 '''
 
             aux_sources[self.problem.id + '_submission'] = \
-                (submission_template % (handler_data['header'], str(uuid.uuid4()).replace('-', '')), self.source)
+                (submission_template % (handler_data['header'], str(uuid.uuid4()).replace('-', ''), self.source))
 
             aux_sources[handler_data['header']] = header
             entry = entry_point

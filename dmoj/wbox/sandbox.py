@@ -48,6 +48,10 @@ class WBoxPopen(object):
         self.returncode = None
         self.universal_newlines = False
         if executable is not None and network_block:
+            # INetFwRules expects \, not / in paths, and fails with E_INVALIDARG if a path contains \
+            # (even though this is valid in most other places in Windows)
+            # See https://github.com/DMOJ/judge/issues/166 for more details
+            executable.replace('/', '\\')
             self.network_block = NetworkManager('wbox_%s' % uuid1(), executable)
         else:
             self.network_block = None

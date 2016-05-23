@@ -6,6 +6,11 @@ from dmoj.judgeenv import env, only_executors, exclude_executors
 
 _reexecutor = re.compile('([A-Z0-9]+)\.py$')
 
+# List of executors that exist for historical purposes, but which shouldn't ever be run on a normal system
+# We keep them for compatibility purposes, but they are not important enough to have a commandline flag for enabling
+# them; instead, removing them from this list suffices.
+_unsupported_executors = ['CPP0X']
+
 executors = {}
 
 
@@ -37,6 +42,8 @@ def load_executors():
     print 'Self-testing executors...'
 
     for name in __executors:
+        if name in _unsupported_executors:
+            continue
         executor = __load_module(name)
         if executor is None:
             continue

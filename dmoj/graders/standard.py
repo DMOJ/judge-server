@@ -1,8 +1,6 @@
 import os
 from functools import partial
 
-import sys
-
 from dmoj.error import CompileError
 from dmoj.executors import executors
 from dmoj.graders.base import BaseGrader
@@ -22,8 +20,7 @@ class StandardGrader(BaseGrader):
         case.input_data()  # cache generator data
 
         self._current_proc = self.binary.launch(time=self.problem.time_limit, memory=self.problem.memory_limit,
-                                                pipe_stderr=True,
-                                                unbuffered=case.config.unbuffered)
+                                                pipe_stderr=True, unbuffered=case.config.unbuffered)
 
         error = self._interact_with_process(case, result)
 
@@ -33,20 +30,6 @@ class StandardGrader(BaseGrader):
         result.execution_time = process.execution_time or 0.0
         result.r_execution_time = process.r_execution_time or 0.0
 
-        # checkers might crash if any data is None, so force at least empty string
-        check = case.checker()(result.proc_output or '',
-                               case.output_data() or '',
-                               submission_source=self.source,
-                               judge_input=case.input_data() or '',
-                               point_value=case.points)
-
-        # checkers must either return a boolean (True: full points, False: 0 points)
-        # or a CheckerResult, so convert to CheckerResult if it returned bool
-        if not isinstance(check, CheckerResult):
-            check = CheckerResult(check, case.points if check else 0.0)
-
-        result.result_flag |= [Result.WA, Result.AC][check.passed]
-
         # Translate status codes/process results into Result object for status codes
 
         if process.returncode > 0:
@@ -55,22 +38,43 @@ class StandardGrader(BaseGrader):
         if process.returncode < 0:
             # None < 0 == True
             # if process.returncode is not None:
-               # print>> sys.stderr, 'Killed by signal %d' % -process.returncode
+            # print>> sys.stderr, 'Killed by signal %d' % -process.returncode
             result.result_flag |= Result.RTE  # Killed by signal
         if process.tle:
             result.result_flag |= Result.TLE
         if process.mle:
             result.result_flag |= Result.MLE
 
-        if result.result_flag & ~Result.WA:
-            check.points = 0
+        # If the submission didn't crash and didn't time out, there's a chance it might be AC
+        # We shouldn't run checkers if the submission is already known to be incorrect, because some checkers
+        # might be very computationally expensive.
+        # See https://github.com/DMOJ/judge/issues/170
+        if not result.result_flag:
+            # Checkers might crash if any data is None, so force at least empty string
+            check = case.checker()(result.proc_output or '',
+                                   case.output_data() or '',
+                                   submission_source=self.source,
+                                   judge_input=case.input_data() or '',
+                                   point_value=case.points,
+                                   case_position=case.position)
+        else:
+            # Solution is guaranteed to receive 0 points
+            check = False
+
+        # checkers must either return a boolean (True: full points, False: 0 points)
+        # or a CheckerResult, so convert to CheckerResult if it returned bool
+        if not isinstance(check, CheckerResult):
+            check = CheckerResult(check, case.points if check else 0.0)
+
+        result.result_flag |= [Result.WA, Result.AC][check.passed]
 
         result.points = check.points
         result.feedback = (check.feedback or
                            (process.feedback if hasattr(process, 'feedback') else
                             getattr(self.binary, 'get_feedback', lambda x, y: '')(error, result)))
 
-        if not result.feedback and hasattr(process, 'signal') and process.signal and result.get_main_code() in [Result.IR, Result.RTE]:
+        if not result.feedback and hasattr(process, 'signal') and process.signal and result.get_main_code() in [
+            Result.IR, Result.RTE]:
             result.feedback = strsignal(process.signal)
 
         return result

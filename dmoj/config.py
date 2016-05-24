@@ -240,7 +240,8 @@ class Problem(object):
 
         try:
             self.config = ConfigNode(yaml.safe_load(self.problem_data['init.yml']), defaults={
-                'output_prefix_length': 64
+                'output_prefix_length': 64,
+                'output_limit_length': 25165824,
             })
         except (IOError, ParserError, ScannerError) as e:
             raise InvalidInitException(str(e))

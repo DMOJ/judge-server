@@ -50,7 +50,7 @@ class CheckerResult(object):
         # Make sure we don't kill the site bridge
         assert isinstance(passed, bool)
         assert isinstance(points, int) or isinstance(points, float)
-        assert not feedback or isinstance(feedback, str) or isinstance(feedback, unicode)
+        assert feedback is None or isinstance(feedback, str) or isinstance(feedback, unicode)
 
         self.passed = passed
         self.points = points

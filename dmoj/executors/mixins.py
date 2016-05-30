@@ -13,5 +13,5 @@ class NullStdoutMixin(object):
 
     def get_compile_popen_kwargs(self):
         result = super(NullStdoutMixin, self).get_compile_popen_kwargs()
-        result['stdout'] = self.devnull
+        result['stdout'] = self._devnull
         return result

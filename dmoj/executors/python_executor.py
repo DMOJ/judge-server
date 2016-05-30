@@ -4,7 +4,6 @@ import re
 from .base_executor import ScriptExecutor
 from dmoj.result import Result
 
-
 retraceback = re.compile(r'Traceback \(most recent call last\):\n.*?\n([a-zA-Z_]\w*)(?::[^\n]*?)?$', re.S | re.M)
 
 
@@ -21,7 +20,7 @@ runpy.run_path(sys.argv[0], run_name='__main__')\
 
     def get_cmdline(self):
         return [self.get_command(), '-BS', self._loader, self._code]
-        
+
     def get_allowed_syscalls(self):
         syscalls = super(PythonExecutor, self).get_allowed_syscalls()
         syscalls += ['statfs', 'statfs64']
@@ -35,7 +34,7 @@ runpy.run_path(sys.argv[0], run_name='__main__')\
             fo.write(source_code)
             loader.write(self.loader_script)
 
-    def get_feedback(self, stderr, result):
+    def get_feedback(self, stderr, result, process):
         if not result.result_flag & Result.IR or not stderr or len(stderr) > 2048:
             return ''
         match = deque(retraceback.finditer(stderr), maxlen=1)

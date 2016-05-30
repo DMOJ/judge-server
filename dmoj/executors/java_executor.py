@@ -5,7 +5,7 @@ from shutil import copyfile
 from subprocess import Popen
 from collections import deque
 
-from dmoj.error import CompileError
+from dmoj.error import CompileError, InternalError
 from .base_executor import CompiledExecutor
 from dmoj.result import Result
 
@@ -72,7 +72,7 @@ class JavaExecutor(CompiledExecutor):
 
     def get_cmdline(self):
         return ['java', '-client', '-javaagent:%s=policy:%s' % (self._agent_file, self._policy_file),
-                '-Xss128m', '-Xmx%dK' % self.__memory_limit,
+                '-Xss128m', '-Xmx%dK' % self.__memory_limit, '-XX:ErrorFile=submission_jvm_crash.log',
                 self._class_name]  # 128m is equivalent to 1<<27 in Thread constructor
 
     def launch(self, *args, **kwargs):
@@ -84,9 +84,17 @@ class JavaExecutor(CompiledExecutor):
         return Popen(['java', '-client', self._class_name] + list(args),
                      executable=self.get_vm(), cwd=self._dir, **kwargs)
 
-    def get_feedback(self, stderr, result):
+    def get_feedback(self, stderr, result, process):
+        if process.returncode:
+            try:
+                print stderr
+                with open(os.path.join(self._dir, 'submission_jvm_crash.log'), 'r') as err:
+                    raise InternalError(err.read())
+            except IOError:
+                pass
         if not result.result_flag & Result.IR or not stderr or len(stderr) > 2048:
             return ''
+
         match = deque(reexception.finditer(stderr), maxlen=1)
         if not match:
             return ''

@@ -71,7 +71,7 @@ class StandardGrader(BaseGrader):
         result.points = check.points
         result.feedback = (check.feedback or
                            (process.feedback if hasattr(process, 'feedback') else
-                            getattr(self.binary, 'get_feedback', lambda x, y: '')(error, result)))
+                            getattr(self.binary, 'get_feedback', lambda x, y, z: '')(error, result, process)))
 
         if not result.feedback and hasattr(process, 'signal') and process.signal and result.get_main_code() in [
             Result.IR, Result.RTE]:

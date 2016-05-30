@@ -87,9 +87,8 @@ class JavaExecutor(CompiledExecutor):
     def get_feedback(self, stderr, result, process):
         if process.returncode:
             try:
-                print stderr
                 with open(os.path.join(self._dir, 'submission_jvm_crash.log'), 'r') as err:
-                    raise InternalError(err.read())
+                    raise InternalError('\n\n' + err.read())
             except IOError:
                 pass
         if not result.result_flag & Result.IR or not stderr or len(stderr) > 2048:

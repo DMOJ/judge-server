@@ -61,9 +61,8 @@ class ConfigNode(object):
     """
 
     def __init__(self, raw_config, parent=None, defaults=None):
-        self.raw_config = copy.deepcopy(raw_config)
-        if defaults:
-            self.raw_config.update(defaults)
+        self.raw_config = copy.deepcopy(defaults) if defaults else {}
+        self.raw_config.update(raw_config)
         self.parent = parent
 
     def __getattr__(self, item):

@@ -109,12 +109,12 @@ class StandardGrader(BaseGrader):
         except CompileError as compilation_error:
             error = compilation_error.args[0]
             error = error.decode('mbcs') if os.name == 'nt' and isinstance(error, str) else error
-            self.judge.packet_manager.compile_error_packet(ansi.format_ansi(error))
+            self.judge.packet_manager.compile_error_packet(ansi.format_ansi(error or ''))
 
             # Compile error is fatal
             raise
 
         # Carry on grading in case of compile warning
         if hasattr(binary, 'warning') and binary.warning:
-            self.judge.packet_manager.compile_message_packet(ansi.format_ansi(binary.warning))
+            self.judge.packet_manager.compile_message_packet(ansi.format_ansi(binary.warning or ''))
         return binary

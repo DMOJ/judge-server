@@ -1,8 +1,9 @@
-from .base_executor import CompiledExecutor
+from dmoj.executors.base_executor import CompiledExecutor
+from dmoj.executors.mixins import NullStdoutMixin
 from dmoj.judgeenv import env
 
 
-class Executor(CompiledExecutor):
+class Executor(NullStdoutMixin, CompiledExecutor):
     ext = '.hs'
     name = 'HASK'
     fs = ['.*\.so', '/usr/']

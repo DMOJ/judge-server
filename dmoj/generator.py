@@ -50,16 +50,21 @@ class GeneratorManager(object):
         clazz = lookup.get(ext, None)
         if not clazz:
             raise IOError('could not identify generator extension')
+        clazz = clazz.Executor
+
+        if hasattr(clazz, 'flags'):
+            # We shouldn't be mutating the base class flags
+            # See https://github.com/DMOJ/judge/issues/174
+            clazz = type('FlaggedExecutor', (clazz,), {'flags': flags + list(clazz.flags)})
 
         try:
-            executor = clazz.Executor('_generator', source)
+            # _ so we can't possibly conflict with submission source file name (e.g. /problem/generator submitted in C++)
+            # _ is not a valid char in problem codes
+            executor = clazz('_generator', source)
         except CompileError as err:
             # Strip ansi codes from CompileError message so we don't get wacky displays on the site like
             # 01m[K_generator.cpp:26:23:[m[K [01;31m[Kerror: [m[K'[01m[Kgets[m[K' was not declared in this scope
             raise CompileError(ansi.strip_ansi(err.message))
-
-        if hasattr(executor, 'flags'):
-            executor.flags += flags
 
         self._cache[cache_key] = executor
         return executor

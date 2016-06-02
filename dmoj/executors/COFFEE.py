@@ -8,7 +8,8 @@ class Executor(ScriptExecutor):
     ext = '.coffee'
     name = 'COFFEE'
     nproc = -1
-    fs = ['.*\.(?:so|js$)', '/etc/(?:resolv|nsswitch).conf$', '/dev/urandom$', '/$']
+    fs = ['.*\.(?:so|js$)', '/etc/(?:resolv|nsswitch).conf$', '/dev/urandom$',
+          '/$', '/proc/meminfo$']
     command = env['runtime'].get('node')
     syscalls = ['getpid', 'getppid', 'clock_getres', 'timer_create', 'timer_settime',
                 'timer_delete', 'newselect', 'select', 'pipe2', 'write', 'epoll_create1',
@@ -19,7 +20,7 @@ process.stdin.on 'readable', () ->
   if chunk != null
     process.stdout.write chunk
 '''
-    address_grace = 131072
+    address_grace = 262144
 
     @classmethod
     def initialize(cls, sandbox=True):

@@ -11,21 +11,30 @@ section .text
 global  _start
 
 _start:
-        mov     eax,    4
+        mov     eax,    3
         xor     ebx,    ebx
+        mov     ecx,    buffer
+        mov     edx,    4096
+        int     0x80
+
+        test    eax,    eax
+        jz      _exit
+
+        mov     edx,    eax
         inc     ebx
-        mov     ecx,    msg
-        mov     edx,    len
+        mov     eax,    4
         int     80h
 
+        jmp     _start
+_exit:
         xor     eax,    eax
+        xor     ebx,    ebx
         inc     eax
         int     80h
 
-section .data
 
-msg     db      'Hello, World!', 0xA
-len     equ     $ - msg
+section .bss
+    buffer  resb    4096
 '''
 
 

@@ -77,7 +77,18 @@ class CHROOTSecurity(dict):
             sys_time: ALLOW,
             sys_prlimit64: ALLOW,
             sys_getdents64: ALLOW,
+
+            # Deny with report
+            sys_mkdir: self.deny_with_file_path('mkdir', 0),
         })
+
+    def deny_with_file_path(self, syscall, argument):
+        def check(debugger):
+            file = debugger.readstr(getattr(debugger, 'uarg%d' % argument))
+            print>>sys.stderr, '%s: not allowed to access: %s' % (syscall, file)
+            return False
+
+        return check
 
     def do_write(self, debugger):
         return debugger.arg0 in self._writable

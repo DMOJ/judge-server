@@ -1,15 +1,9 @@
-from dmoj.executors.gas_executor import GASExecutor
+from dmoj.executors.asm_executor import GASExecutor, PlatformX64Mixin
 from dmoj.judgeenv import env
 
 
-class Executor(GASExecutor):
+class Executor(PlatformX64Mixin, GASExecutor):
     as_path = env['runtime'].get('as_x64', None)
-    ld_path = env['runtime'].get('ld_x64', None)
-    qemu_path = env['runtime'].get('qemu_x64', None)
-    dynamic_linker = env['runtime'].get('ld.so_x64', '/lib64/ld-linux-x86-64.so.2')
-    crt_pre = env['runtime'].get('crt_pre_x64',
-                                 ['/usr/lib/x86_64-linux-gnu/crt1.o', '/usr/lib/x86_64-linux-gnu/crti.o'])
-    crt_post = env['runtime'].get('crt_post_x64', ['/usr/lib/x86_64-linux-gnu/crtn.o'])
     name = 'GAS64'
 
     test_program = r'''.intel_syntax noprefix

@@ -1,4 +1,4 @@
-from dmoj.executors.gas_executor import GASExecutor
+from dmoj.executors.asm_executor import GASExecutor
 from dmoj.judgeenv import env
 
 

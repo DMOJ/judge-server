@@ -119,6 +119,7 @@ class GASExecutor(ASMExecutor):
 
 class NASMExecutor(ASMExecutor):
     name = 'NASM'
+    nasm_format = None
 
     def find_features(self, source_code):
         features = super(NASMExecutor, self).find_features(source_code)
@@ -127,7 +128,7 @@ class NASMExecutor(ASMExecutor):
         return features
 
     def get_as_args(self, object):
-        return [self.as_path, '-f', 'elf32', self._code, '-o', object]
+        return [self.as_path, '-f', self.nasm_format, self._code, '-o', object]
 
 
 class PlatformX86Mixin(object):

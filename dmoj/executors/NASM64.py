@@ -6,7 +6,7 @@ class Executor(PlatformX64Mixin, NASMExecutor):
     as_path = env['runtime'].get('nasm', None)
     nasm_format = 'elf64'
 
-    name = 'NASM'
+    name = 'NASM64'
 
     test_program = '''\
 section .text

@@ -7,7 +7,6 @@ class Executor(CompiledExecutor):
     name = 'SWIFT'
     fs = ['.*\.so', '/dev/tty$']
     command = env['runtime'].get('swiftc')
-    syscalls = ['clock_getres']
     test_program = 'print(readLine()!)'
 
     def get_compile_args(self):

@@ -8,7 +8,7 @@ class Executor(NullStdoutMixin, CompiledExecutor):
     name = 'HASK'
     fs = ['.*\.so', '/usr/']
     command = env['runtime'].get('ghc')
-    syscalls = ['getpid', 'getppid', 'clock_getres', 'timer_create', 'timer_settime',
+    syscalls = ['timer_create', 'timer_settime',
                 'timer_delete', 'newselect', 'select']
     test_program = '''\
 main = do

@@ -8,7 +8,7 @@ class Executor(CompiledExecutor):
     address_grace = 32768
     fs = ['.*\.so', '/proc/self/maps$']
     syscalls = ['sched_getaffinity', 'sched_getparam', 'sched_getscheduler',
-                'sched_get_priority_min', 'sched_get_priority_max', 'clock_getres']
+                'sched_get_priority_min', 'sched_get_priority_max']
     command = env['runtime'].get('dmd')
     test_program = '''\
 import std.stdio;

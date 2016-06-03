@@ -37,7 +37,6 @@ class MonoExecutor(CompiledExecutor):
         sec[sys_sched_getaffinity] = ALLOW
         sec[sys_statfs] = ALLOW
         sec[sys_ftruncate64] = ALLOW
-        sec[sys_clock_getres] = ALLOW
         sec[sys_socketcall] = ALLOW
         sec[sys_sched_yield] = ALLOW
 

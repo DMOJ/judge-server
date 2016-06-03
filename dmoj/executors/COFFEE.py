@@ -11,9 +11,8 @@ class Executor(ScriptExecutor):
     fs = ['.*\.(?:so|js$)', '/etc/(?:resolv|nsswitch).conf$', '/dev/urandom$',
           '/$', '/proc/meminfo$']
     command = env['runtime'].get('node')
-    syscalls = ['getpid', 'getppid', 'clock_getres', 'timer_create', 'timer_settime',
-                'timer_delete', 'newselect', 'select', 'pipe2', 'write', 'epoll_create1',
-                'eventfd2', 'epoll_ctl', 'epoll_wait']
+    syscalls = ['timer_create', 'timer_settime', 'timer_delete', 'newselect', 'select', 'pipe2',
+                'write', 'epoll_create1', 'eventfd2', 'epoll_ctl', 'epoll_wait']
     test_program = '''\
 process.stdin.on 'readable', () ->
   chunk = process.stdin.read()

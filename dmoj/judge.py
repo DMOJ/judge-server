@@ -262,6 +262,7 @@ class Judge(object):
         End any submission currently executing, and exit the judge.
         """
         self.terminate_grading()
+        self._stop_monitor()
 
 
 class ClassicJudge(Judge):
@@ -340,6 +341,8 @@ def main():
     with judge:
         try:
             judge.listen()
+        except KeyboardInterrupt:
+            pass
         except:
             traceback.print_exc()
         finally:

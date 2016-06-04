@@ -288,24 +288,24 @@ def main():
     with judge:
         try:
             judge.listen()
-        except:
-            traceback.print_exc()
+
+            while True:
+                command = raw_input(ansi_style("#ansi[dmoj](magenta)#ansi[>](green) ")).strip()
+
+                line = command.split(' ')
+                if line[0] in commands:
+                    cmd = commands[line[0]]
+                    try:
+                        cmd.execute(line[1:])
+                    except InvalidCommandException:
+                        print
+                else:
+                    print ansi_style('#ansi[Unrecognized command %s](red|bold)' % line[0])
+                    print
+        except (EOFError, KeyboardInterrupt):
+            pass
         finally:
             judge.murder()
-
-    while True:
-        command = raw_input(ansi_style("#ansi[dmoj](magenta)#ansi[>](green) ")).strip()
-
-        line = command.split(' ')
-        if line[0] in commands:
-            cmd = commands[line[0]]
-            try:
-                cmd.execute(line[1:])
-            except InvalidCommandException:
-                print
-        else:
-            print ansi_style('#ansi[Unrecognized command %s](red|bold)' % line[0])
-            print
 
 
 if __name__ == '__main__':

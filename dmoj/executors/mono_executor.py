@@ -82,7 +82,7 @@ class MonoExecutor(CompiledExecutor):
         def unlink(debugger):
             path = debugger.readstr(debugger.uarg0)
             if UNLINK_FS.match(path) is None:
-                print 'Not allowed to unlink:', UNLINK_FS
+                print 'Not allowed to unlink:', path
                 return False
             return True
 

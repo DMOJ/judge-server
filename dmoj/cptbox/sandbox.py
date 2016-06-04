@@ -96,6 +96,7 @@ class _SecurePopen(Process):
         self._tle = False
         self._fds = fds
         self.__init_streams(stdin, stdout, stderr, unbuffered)
+        self.protection_fault = None
 
         self._security = security
         self._callbacks = [None] * MAX_SYSCALL_NUMBER
@@ -165,6 +166,8 @@ class _SecurePopen(Process):
             if call[index] == syscall:
                 callname = by_id[id]
                 break
+
+        self.protection_fault = (syscall, callname)
         print>> sys.stderr, 'Protection fault on: %d (%s)' % (syscall, callname)
         print>> sys.stderr, 'Arg0: 0x%016x' % self.debugger.uarg0
         print>> sys.stderr, 'Arg1: 0x%016x' % self.debugger.uarg1

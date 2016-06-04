@@ -77,6 +77,18 @@ class StandardGrader(BaseGrader):
             Result.IR, Result.RTE]:
             result.feedback = strsignal(process.signal)
 
+        # On Linux we can provide better help messages
+        if hasattr(process, 'protection_fault') and process.protection_fault:
+            sigid, callname = process.protection_fault
+            callname.replace('sys_', '', 1)
+            message = {
+                'open':         'opening files is not allowed',
+                'socketcall':   'accessing the network is not allowed',
+                'socket':       'accessing the network is not allowed',
+                'clone':        'threading is not allowed'
+            }.get(callname,     '%s syscall disallowed' % callname)
+            result.feedback = message
+
         return result
 
     def _interact_with_process(self, case, result):

@@ -6,7 +6,7 @@ class Executor(PythonExecutor):
     command = env['runtime'].get('python')
     test_program = "print __import__('sys').stdin.read()"
     name = 'PY2'
-
+    syscalls = ['sysinfo']
     fs = ['.*\.(?:so|py[co]?$)', '.*/lib(?:32|64)?/python[\d.]+/.*', '.*/lib/locale/', '/proc/meminfo$',
           '/etc/localtime$', '/dev/urandom$']
     if 'python2dir' in env:

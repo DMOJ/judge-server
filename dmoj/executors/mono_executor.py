@@ -37,7 +37,6 @@ class MonoExecutor(CompiledExecutor):
         sec[sys_sched_getaffinity] = ALLOW
         sec[sys_statfs] = ALLOW
         sec[sys_ftruncate64] = ALLOW
-        sec[sys_socketcall] = ALLOW
         sec[sys_sched_yield] = ALLOW
 
         fs = sec.fs_jail
@@ -104,6 +103,7 @@ class MonoExecutor(CompiledExecutor):
         sec[sys_tgkill] = handle_kill
         sec[sys_unlink] = unlink
         sec[sys_socket] = handle_socket
+        sec[sys_socketcall] = handle_socket
         return sec
 
     @classmethod

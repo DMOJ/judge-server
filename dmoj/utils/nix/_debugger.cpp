@@ -21,7 +21,7 @@ static void print_traceback_on_sigusr1(int signum)
             if (frame == NULL)
                 continue;
 
-            print_err("\n# Thread %ld (most recent call first):\n", t->thread_id);
+            print_err("# Thread %ld (most recent call first):\n", t->thread_id);
 
             do {
                 int line = frame->f_lineno;
@@ -29,6 +29,7 @@ static void print_traceback_on_sigusr1(int signum)
                 const char *func_name = PyString_AsString(frame->f_code->co_name);
                 print_err("   File: \"%s\", line %d, in %s\n", file_name, line, func_name);
             } while ((frame = frame->f_back) != NULL);
+            print_err("\n")
         }
     }
 }

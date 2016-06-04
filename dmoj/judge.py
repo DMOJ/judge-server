@@ -14,8 +14,8 @@ from dmoj.utils.ansi import ansi_style
 if os.name == 'posix':
     try:
         import readline
-        from dmoj.utils.nix.signal_debugger import setup_native_traceback
-        setup_native_traceback()
+        from dmoj.utils.nix.signal_debugger import setup_all_debuggers
+        setup_all_debuggers()
     except ImportError:
         pass
 

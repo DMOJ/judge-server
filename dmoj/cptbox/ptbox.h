@@ -110,7 +110,7 @@ public:
 
     void set_process(pt_process *);
     virtual void new_process();
-    virtual char *readstr(unsigned long addr);
+    virtual char *readstr(unsigned long addr, size_t max_size);
     virtual void freestr(char *);
     virtual ~pt_debugger();
     pid_t getpid() { return process->getpid(); }

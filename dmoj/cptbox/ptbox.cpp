@@ -22,7 +22,7 @@ void pt_syscall_return(void *context, int syscall) {
 int pt_syscall_handler(void *context, int syscall) {
     pt_debugger* debugger = (pt_debugger*) context;
     if (syscall == 5) {
-        char *file = debugger->readstr((unsigned long) debugger->arg0());
+        char *file = debugger->readstr((unsigned long) debugger->arg0(), 4096);
         printf("Opening: %s\n", file);
         debugger->freestr(file);
     }

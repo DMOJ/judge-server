@@ -24,7 +24,7 @@ void pt_debugger::set_process(pt_process *proc) {
 
 void pt_debugger::new_process() {}
 
-char *pt_debugger::readstr(unsigned long addr) {
+char *pt_debugger::readstr(unsigned long addr, size_t max_size) {
     size_t size = 4096, read = 0;
     char *buf = (char *) malloc(size);
     union {
@@ -34,8 +34,21 @@ char *pt_debugger::readstr(unsigned long addr) {
 
     while (true) {
         if (read + sizeof(long) > size) {
+            if (max_size && size >= max_size) {
+                buf[max_size-1] = 0;
+                break;
+            }
+
             size += 4096;
-            buf = (char *) realloc(buf, size);
+            if (max_size && size > max_size)
+                size = max_size;
+
+            void *nbuf = realloc(buf, size);
+            if (!nbuf) {
+                buf[size-4097] = 0;
+                break;
+            }
+            buf = (char *) nbuf;
         }
         data.val = ptrace(PTRACE_PEEKDATA, process->getpid(), addr + read, NULL);
         memcpy(buf + read, data.byte, sizeof(long));

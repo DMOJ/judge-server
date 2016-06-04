@@ -36,7 +36,7 @@ cdef extern from 'ptbox.h' nogil:
         void arg3(long)
         void arg4(long)
         void arg5(long)
-        char *readstr(unsigned long)
+        char *readstr(unsigned long, size_t)
         void freestr(char*)
         pid_t getpid()
         int getpid_syscall()
@@ -335,8 +335,8 @@ cdef class Debugger:
         def __set__(self, value):
             self.thisptr.arg5(<long><unsigned long>value)
 
-    def readstr(self, unsigned long address):
-        cdef char* str = self.thisptr.readstr(address)
+    def readstr(self, unsigned long address, size_t max_size=4096):
+        cdef char* str = self.thisptr.readstr(address, max_size)
         pystr = <object>str
         self.thisptr.freestr(str)
         return pystr

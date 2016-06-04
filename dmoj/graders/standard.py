@@ -80,7 +80,7 @@ class StandardGrader(BaseGrader):
         # On Linux we can provide better help messages
         if hasattr(process, 'protection_fault') and process.protection_fault:
             sigid, callname = process.protection_fault
-            callname.replace('sys_', '', 1)
+            callname = callname.replace('sys_', '', 1)
             message = {
                 'open':         'opening files is not allowed',
                 'socketcall':   'accessing the network is not allowed',

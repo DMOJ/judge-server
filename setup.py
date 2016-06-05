@@ -8,11 +8,6 @@ from setuptools import setup, Extension
 from setuptools.command import build_ext
 from setuptools.command.build_ext import build_ext as build_ext_old
 
-try:
-    from Cython.Build import cythonize
-except ImportError:
-    cythonize = None
-
 
 class build_ext_dmoj(build_ext_old):
     def run(self):
@@ -49,10 +44,8 @@ class build_ext_dmoj(build_ext_old):
 build_ext.build_ext = build_ext_dmoj
 
 extensions = [Extension('dmoj.checkers._checker', sources=['dmoj/checkers/_checker.c'])]
-wbox_sources = ['_wbox.cpp' if cythonize is None else '_wbox.pyx',
-                'handles.cpp', 'process.cpp', 'user.cpp', 'helpers.cpp', 'firewall.cpp']
-cptbox_sources = ['_cptbox.cpp' if cythonize is None else '_cptbox.pyx',
-                  'ptdebug.cpp', 'ptdebug_x86.cpp', 'ptdebug_x64.cpp',
+wbox_sources = ['_wbox.pyx', 'handles.cpp', 'process.cpp', 'user.cpp', 'helpers.cpp', 'firewall.cpp']
+cptbox_sources = ['_cptbox.pyx', 'ptdebug.cpp', 'ptdebug_x86.cpp', 'ptdebug_x64.cpp',
                   'ptdebug_x86_on_x64.cpp', 'ptdebug_x32.cpp', 'ptdebug_arm.cpp', 'ptproc.cpp']
 
 SOURCE_DIR = os.path.dirname(__file__)
@@ -69,6 +62,30 @@ else:
                    Extension('dmoj.utils.nix._debugger', sources=['_debugger.cpp'],
                              language='c++', libraries=['rt'])]
 
+
+class cythonized(list):
+    def __init__(self, extensions):
+        super(cythonized, self).__init__()
+        self._list = None
+        self.extensions = extensions
+
+    def c_list(self):
+        if self._list is None:
+            from Cython.Build import cythonize
+            self._list = cythonize(self.extensions)
+        return self._list
+
+    def __iter__(self):
+        for e in self.c_list():
+            yield e
+
+    def __getitem__(self, i):
+        return self.c_list()[i]
+
+    def __len__(self):
+        return len(self.extensions)
+
+
 setup(
     name='dmoj',
     version='0.1',
@@ -79,8 +96,9 @@ setup(
             'dmoj-cli = dmoj.cli:main',
         ]
     },
-    ext_modules=extensions if cythonize is None else cythonize(extensions),
-    install_requires=['watchdog', 'pyyaml', 'ansi2html', 'termcolor'],
+    ext_modules=cythonized(extensions),
+    setup_requires=['cython'],
+    install_requires=['cython', 'watchdog', 'pyyaml', 'ansi2html', 'termcolor'],
 
     author='quantum5, Xyene',
     author_email='admin@dmoj.ca',

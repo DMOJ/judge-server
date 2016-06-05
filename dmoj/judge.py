@@ -7,14 +7,20 @@ import traceback
 from dmoj import packet, graders
 from dmoj.config import Problem, InvalidInitException, BatchedTestCase
 from dmoj.error import CompileError
-from dmoj.judgeenv import env, get_problem_roots, get_supported_problems, startup_warnings
+from dmoj.judgeenv import env, get_problem_roots, get_supported_problems
 from dmoj.result import Result
 from dmoj.utils.ansi import ansi_style
 
 if os.name == 'posix':
     try:
         import readline
-        from dmoj.utils.nix.signal_debugger import setup_all_debuggers
+        from dmoj.utils.debugger.nix import setup_all_debuggers
+        setup_all_debuggers()
+    except ImportError:
+        pass
+else:
+    try:
+        from dmoj.utils.debugger.win import setup_all_debuggers
         setup_all_debuggers()
     except ImportError:
         pass

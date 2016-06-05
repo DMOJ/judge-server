@@ -76,8 +76,7 @@ class cythonized(list):
         return self._list
 
     def __iter__(self):
-        for e in self.c_list():
-            yield e
+        return iter(self.c_list())
 
     def __getitem__(self, i):
         return self.c_list()[i]

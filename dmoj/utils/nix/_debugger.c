@@ -1,8 +1,7 @@
 #include <Python.h>
+#include <signal.h>
 #include "pythread.h"
 #include "frameobject.h"
-#include <cstdio>
-#include <signal.h>
 
 void print_err(const char *message, ...) {
     char buffer[256];
@@ -15,8 +14,10 @@ void print_err(const char *message, ...) {
 
 static void print_traceback_on_sigusr1(int signum)
 {
-    for (PyInterpreterState *i = PyInterpreterState_Head(); i != NULL; i = PyInterpreterState_Next(i)) {
-        for (PyThreadState *t = PyInterpreterState_ThreadHead(i); t != NULL; t = PyThreadState_Next(t)) {
+    PyInterpreterState *i;
+    for (i = PyInterpreterState_Head(); i != NULL; i = PyInterpreterState_Next(i)) {
+        PyThreadState *t;
+        for (t = PyInterpreterState_ThreadHead(i); t != NULL; t = PyThreadState_Next(t)) {
             PyFrameObject *frame = t->frame;
             if (frame == NULL)
                 continue;
@@ -29,7 +30,7 @@ static void print_traceback_on_sigusr1(int signum)
                 const char *func_name = PyString_AsString(frame->f_code->co_name);
                 print_err("   File: \"%s\", line %d, in %s\n", file_name, line, func_name);
             } while ((frame = frame->f_back) != NULL);
-            print_err("\n")
+            print_err("\n");
         }
     }
 }

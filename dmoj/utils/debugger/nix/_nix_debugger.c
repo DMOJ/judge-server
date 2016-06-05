@@ -20,7 +20,10 @@ static PyObject *debugger_setup(PyObject *self, PyObject *args) {
     sa.sa_handler = &print_traceback_on_sigusr1;
     sa.sa_flags = SA_RESTART;
     sigfillset(&sa.sa_mask);
-    return sigaction(SIGUSR1, &sa, NULL) == -1 ? Py_False : Py_True;
+
+    PyObject *result = sigaction(SIGUSR1, &sa, NULL) == -1 ? Py_False : Py_True;
+    Py_INCREF(result);
+    return result;
 }
 
 static PyMethodDef setup_methods[] = {

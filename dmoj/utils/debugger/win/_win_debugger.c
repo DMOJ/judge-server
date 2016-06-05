@@ -19,7 +19,9 @@ BOOL WINAPI CtrlHandler(DWORD fdwCtrlType)
 }
 
 static PyObject *debugger_setup(PyObject *self, PyObject *args) {
-    return SetConsoleCtrlHandler(CtrlHandler, TRUE) ? Py_True : Py_False;
+    PyObject *result = SetConsoleCtrlHandler(CtrlHandler, TRUE) ? Py_True : Py_False;
+    Py_INCREF(result);
+    return result;
 }
 
 static PyMethodDef setup_methods[] = {

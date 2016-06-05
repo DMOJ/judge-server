@@ -20,10 +20,11 @@ def setup_interactive_debugger():
         console = code.InteractiveConsole(_locals)
         console.interact(message)
 
-    signal.signal(signal.SIGUSR1, handle_sigusr2)
+    signal.signal(signal.SIGUSR2, handle_sigusr2)
 
 
 def setup_all_debuggers():
     if setup_native_traceback:
-        setup_native_traceback()
+        if not setup_native_traceback():
+            pass #
     setup_interactive_debugger()

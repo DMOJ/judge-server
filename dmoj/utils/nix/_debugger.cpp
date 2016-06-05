@@ -39,19 +39,11 @@ static PyObject *debugger_setup(PyObject *self, PyObject *args) {
     sa.sa_handler = &print_traceback_on_sigusr1;
     sa.sa_flags = SA_RESTART;
     sigfillset(&sa.sa_mask);
-    if(sigaction(SIGUSR1, &sa, NULL) == -1)
-        fprintf(stderr, "Error: cannot handle SIGUSR1\n");  // TODO: raising exception might be more appropriate
-    return Py_BuildValue("");
-}
-
-static PyObject *debugger_hang(PyObject *self, PyObject *args) {
-    while (1);
-    return Py_BuildValue("");
+    return sigaction(SIGUSR1, &sa, NULL) == -1 ? Py_False : Py_True;
 }
 
 static PyMethodDef setup_methods[] = {
     {"setup_native_traceback", debugger_setup, METH_VARARGS, "SIGUSR1 debugger."},
-    {"hang", debugger_hang, METH_VARARGS, "Hang forever."},
     {NULL, NULL, 0, NULL}
 };
 

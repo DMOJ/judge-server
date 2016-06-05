@@ -64,6 +64,70 @@ The Judge can also grade in the languages listed below. These languages are less
 * Tcl
 * Turing
 * V8 JavaScript
-* Brain**** 
+* Brain****
 
-[Read the documentation.](https://github.com/DMOJ/docs)
+## Installation
+```
+$ git clone https://github.com/DMOJ/judge.git
+$ cd judge
+$ python setup.py develop
+```
+
+This will create two executables in your Python's script directory: `dmoj` and `dmoj-cli`. `dmoj` is used to connect a judge to a DMOJ site instance, while `dmoj-cli` provides a command-line interface to a local judge, useful for testing problems.
+
+## Usage
+### Running a Judge Server
+```
+$ dmoj --help
+usage: dmoj [-h] [-p SERVER_PORT] -c CONFIG [-l LOG_FILE]
+            [-e ONLY_EXECUTORS | -x EXCLUDE_EXECUTORS] [--no-ansi]
+            server_host [judge_name] [judge_key]
+
+Spawns a judge for a submission server.
+
+positional arguments:
+  server_host           host to listen for the server
+  judge_name            judge name (overrides configuration)
+  judge_key             judge key (overrides configuration)
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -p SERVER_PORT, --server-port SERVER_PORT
+                        port to listen for the server
+  -c CONFIG, --config CONFIG
+                        file to load judge configurations from
+  -l LOG_FILE, --log-file LOG_FILE
+                        log file to use
+  -e ONLY_EXECUTORS, --only-executors ONLY_EXECUTORS
+                        only listed executors will be loaded (comma-separated)
+  -x EXCLUDE_EXECUTORS, --exclude-executors EXCLUDE_EXECUTORS
+                        prevent listed executors from loading (comma-
+                        separated)
+  --no-ansi             disable ANSI output
+```
+
+### Running a CLI Judge
+```
+$ dmoj-cli --help
+usage: dmoj-cli [-h] -c CONFIG
+                [-e ONLY_EXECUTORS | -x EXCLUDE_EXECUTORS]
+                [--no-ansi] [--no-ansi-emu]
+
+Spawns a judge for a submission server.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -c CONFIG, --config CONFIG
+                        file to load judge configurations from
+  -e ONLY_EXECUTORS, --only-executors ONLY_EXECUTORS
+                        only listed executors will be loaded (comma-separated)
+  -x EXCLUDE_EXECUTORS, --exclude-executors EXCLUDE_EXECUTORS
+                        prevent listed executors from loading (comma-
+                        separated)
+  --no-ansi             disable ANSI output
+  --no-ansi-emu         disable ANSI emulation on Windows
+```
+
+## More Help
+For info on the problem file format and more, 
+[read the documentation.](https://github.com/DMOJ/docs)

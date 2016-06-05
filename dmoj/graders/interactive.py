@@ -32,8 +32,7 @@ class InteractiveGrader(StandardGrader):
             output_data = case.output_data()
             ithread = threading.Thread(target=interactive_thread, args=(
                 interactive_grader.grade, return_queue, case.position, process,
-                input_data and cStringIO.StringIO(input_data),
-                output_data and cStringIO.StringIO(output_data), case.points, self.source))
+                input_data, output_data, case.points, self.source))
             ithread.start()
             ithread.join(self.problem.time_limit + 1.0)
             if ithread.is_alive():

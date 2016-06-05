@@ -48,8 +48,8 @@ cptbox_sources = ['_cptbox.pyx', 'ptdebug.cpp', 'ptdebug_x86.cpp', 'ptdebug_x64.
                   'ptdebug_x86_on_x64.cpp', 'ptdebug_x32.cpp', 'ptdebug_arm.cpp', 'ptproc.cpp']
 
 SOURCE_DIR = os.path.dirname(__file__)
-wbox_sources = [os.path.join(SOURCE_DIR, 'dmoj', 'wbox', file) for _ in wbox_sources]
-cptbox_sources = [os.path.join(SOURCE_DIR, 'dmoj', 'cptbox', file) for _ in cptbox_sources]
+wbox_sources = [os.path.join(SOURCE_DIR, 'dmoj', 'wbox', f) for f in wbox_sources]
+cptbox_sources = [os.path.join(SOURCE_DIR, 'dmoj', 'cptbox', f) for f in cptbox_sources]
 
 extensions = [Extension('dmoj.checkers._checker', sources=['dmoj/checkers/_checker.c'])]
 if os.name == 'nt':

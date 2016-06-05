@@ -9,7 +9,7 @@ try:
     #
     # In that case, a native signal handler is the only hope to get some sort of meaningful data out of the dead
     # Python process.
-    from ._debugger import setup_native_traceback
+    from ._nix_debugger import setup_native_traceback
 except ImportError as e:
     setup_native_traceback = None
 

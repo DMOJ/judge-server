@@ -55,11 +55,14 @@ extensions = [Extension('dmoj.checkers._checker', sources=['dmoj/checkers/_check
 if os.name == 'nt':
     extensions += [Extension('dmoj.wbox._wbox', sources=wbox_sources, language='c++',
                              libraries=['netapi32', 'advapi32', 'ole32'],
-                             define_macros=[('UNICODE', None)])]
+                             define_macros=[('UNICODE', None)]),
+                   Extension('dmoj.utils.debugger.win._win_debugger',
+                             sources=['dmoj/utils/debugger/win/_win_debugger.c'], libraries=['kernel32'])]
 else:
     extensions += [Extension('dmoj.cptbox._cptbox', sources=cptbox_sources,
                              language='c++', libraries=['rt']),
-                   Extension('dmoj.utils.nix._debugger', sources=['dmoj/utils/nix/_debugger.c'], libraries=['rt'])]
+                   Extension('dmoj.utils.debugger.nix._nix_debugger',
+                             sources=['dmoj/utils/debugger/nix/_nix_debugger.c'], libraries=['rt'])]
 
 
 class cythonized(list):

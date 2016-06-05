@@ -1,19 +1,16 @@
+#ifndef _THREAD_DUMPER
+#define _THREAD_DUMPER
+
 #include <Python.h>
-#include <signal.h>
 #include "pythread.h"
 #include "frameobject.h"
 
-void print_err(const char *message, ...) {
-    char buffer[256];
-    va_list args;
-    va_start(args, message);
-    vsnprintf(buffer, sizeof buffer, message, args);
-    write(2, buffer, strlen(buffer));
-    va_end(args);
-}
+void print_err(const char *message, ...);
 
-static void print_traceback_on_sigusr1(int signum)
+inline void dump_threads()
 {
+PyGILState_STATE gstate;
+  gstate = PyGILState_Ensure();
     PyInterpreterState *i;
     for (i = PyInterpreterState_Head(); i != NULL; i = PyInterpreterState_Next(i)) {
         PyThreadState *t;
@@ -33,21 +30,7 @@ static void print_traceback_on_sigusr1(int signum)
             print_err("\n");
         }
     }
+  PyGILState_Release(gstate);
 }
 
-static PyObject *debugger_setup(PyObject *self, PyObject *args) {
-    struct sigaction sa;
-    sa.sa_handler = &print_traceback_on_sigusr1;
-    sa.sa_flags = SA_RESTART;
-    sigfillset(&sa.sa_mask);
-    return sigaction(SIGUSR1, &sa, NULL) == -1 ? Py_False : Py_True;
-}
-
-static PyMethodDef setup_methods[] = {
-    {"setup_native_traceback", debugger_setup, METH_VARARGS, "SIGUSR1 debugger."},
-    {NULL, NULL, 0, NULL}
-};
-
-PyMODINIT_FUNC init_debugger(void) {
-    (void) Py_InitModule("_debugger", setup_methods);
-}
+#endif

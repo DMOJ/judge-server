@@ -4,7 +4,7 @@
 void print_err(const char *message, ...) {
     va_list args;
     va_start(args, message);
-    fprintf(stderr, message, args);
+    vfprintf(stderr, message, args);
     va_end(args);
 }
 

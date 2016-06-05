@@ -219,7 +219,7 @@ class ProblemDataManager(dict):
             if self.archive:
                 zipinfo = self.archive.getinfo(key)
                 return self.archive.open(zipinfo).read()
-            raise KeyError()
+            raise KeyError('file "%s" could not be found' % key)
 
     def __del__(self):
         if self.archive:

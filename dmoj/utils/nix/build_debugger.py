@@ -5,7 +5,6 @@ import shutil
 from distutils.core import Extension
 from distutils.command.build_ext import build_ext
 from distutils.dist import Distribution
-from distutils.msvccompiler import MSVCCompiler
 from distutils import log
 
 if os.path.dirname(__file__):

@@ -17,12 +17,12 @@ class StandardGrader(BaseGrader):
     def grade(self, case):
         result = Result(case)
 
-        case.input_data()  # cache generator data
+        input = case.input_data()  # cache generator data
 
         self._current_proc = self.binary.launch(time=self.problem.time_limit, memory=self.problem.memory_limit,
                                                 pipe_stderr=True, unbuffered=case.config.unbuffered)
 
-        error = self._interact_with_process(case, result)
+        error = self._interact_with_process(case, result, input)
 
         process = self._current_proc
 
@@ -91,12 +91,12 @@ class StandardGrader(BaseGrader):
 
         return result
 
-    def _interact_with_process(self, case, result):
+    def _interact_with_process(self, case, result, input):
         process = self._current_proc
         communicate = process.safe_communicate if hasattr(process, 'safe_communicate') else partial(safe_communicate,
                                                                                                     process)
         try:
-            result.proc_output, error = communicate(case.input_data(), outlimit=case.config.output_limit_length, errlimit=1048576)
+            result.proc_output, error = communicate(input, outlimit=case.config.output_limit_length, errlimit=1048576)
         except OutputLimitExceeded as ole:
             stream, result.proc_output, error = ole.args
             print 'OLE:', stream

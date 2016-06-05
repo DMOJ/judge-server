@@ -65,6 +65,8 @@ if os.name == 'nt':
                              define_macros=[('UNICODE', None)])]
 else:
     extensions += [Extension('dmoj.cptbox._cptbox', sources=cptbox_sources,
+                             language='c++', libraries=['rt']),
+                   Extension('dmoj.utils.nix._debugger', sources=['_debugger.cpp'],
                              language='c++', libraries=['rt'])]
 
 setup(
@@ -80,8 +82,8 @@ setup(
     ext_modules=extensions if cythonize is None else cythonize(extensions),
     install_requires=['watchdog', 'pyyaml', 'ansi2html', 'termcolor'],
 
-    author='quantum5',
-    author_email='quantum2048@gmail.com',
+    author='quantum5, Xyene',
+    author_email='admin@dmoj.ca',
     url='https://github.com/DMOJ/judge',
     description='The judge component of the Don Mills Online Judge platform',
     keywords='online-judge',

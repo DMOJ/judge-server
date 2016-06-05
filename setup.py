@@ -43,15 +43,15 @@ class build_ext_dmoj(build_ext_old):
 
 build_ext.build_ext = build_ext_dmoj
 
-extensions = [Extension('dmoj.checkers._checker', sources=['dmoj/checkers/_checker.c'])]
 wbox_sources = ['_wbox.pyx', 'handles.cpp', 'process.cpp', 'user.cpp', 'helpers.cpp', 'firewall.cpp']
 cptbox_sources = ['_cptbox.pyx', 'ptdebug.cpp', 'ptdebug_x86.cpp', 'ptdebug_x64.cpp',
                   'ptdebug_x86_on_x64.cpp', 'ptdebug_x32.cpp', 'ptdebug_arm.cpp', 'ptproc.cpp']
 
 SOURCE_DIR = os.path.dirname(__file__)
-wbox_sources = [os.path.join(SOURCE_DIR, 'dmoj', 'wbox', file) for file in wbox_sources]
-cptbox_sources = [os.path.join(SOURCE_DIR, 'dmoj', 'cptbox', file) for file in cptbox_sources]
+wbox_sources = [os.path.join(SOURCE_DIR, 'dmoj', 'wbox', file) for _ in wbox_sources]
+cptbox_sources = [os.path.join(SOURCE_DIR, 'dmoj', 'cptbox', file) for _ in cptbox_sources]
 
+extensions = [Extension('dmoj.checkers._checker', sources=['dmoj/checkers/_checker.c'])]
 if os.name == 'nt':
     extensions += [Extension('dmoj.wbox._wbox', sources=wbox_sources, language='c++',
                              libraries=['netapi32', 'advapi32', 'ole32'],
@@ -59,8 +59,7 @@ if os.name == 'nt':
 else:
     extensions += [Extension('dmoj.cptbox._cptbox', sources=cptbox_sources,
                              language='c++', libraries=['rt']),
-                   Extension('dmoj.utils.nix._debugger', sources=['_debugger.cpp'],
-                             language='c++', libraries=['rt'])]
+                   Extension('dmoj.utils.nix._debugger', sources=['dmoj/utils/nix/_debugger.c'], libraries=['rt'])]
 
 
 class cythonized(list):

@@ -12,7 +12,7 @@ if os.path.dirname(__file__):
 log.set_verbosity(3)
 
 distribution = Distribution({
-    'ext_modules': [Extension('_debugger', sources=['_debugger.cpp'])]
+    'ext_modules': [Extension('_debugger', sources=['_debugger.c'])]
 })
 
 

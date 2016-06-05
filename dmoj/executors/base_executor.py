@@ -142,7 +142,7 @@ class BaseExecutor(ResourceProxy):
                 print>> sys.stderr, stderr
             return res
         except Exception:
-            print 'Failed'
+            print ansi_style('#ansi[Failed](red|bold)')
             import traceback
             traceback.print_exc()
             return False

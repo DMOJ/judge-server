@@ -9,8 +9,6 @@ void print_err(const char *message, ...);
 
 inline void dump_threads()
 {
-PyGILState_STATE gstate;
-  gstate = PyGILState_Ensure();
     PyInterpreterState *i;
     for (i = PyInterpreterState_Head(); i != NULL; i = PyInterpreterState_Next(i)) {
         PyThreadState *t;
@@ -30,7 +28,6 @@ PyGILState_STATE gstate;
             print_err("\n");
         }
     }
-  PyGILState_Release(gstate);
 }
 
 #endif

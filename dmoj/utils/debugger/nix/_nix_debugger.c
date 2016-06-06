@@ -31,6 +31,6 @@ static PyMethodDef setup_methods[] = {
     {NULL, NULL, 0, NULL}
 };
 
-PyMODINIT_FUNC init_debugger(void) {
+PyMODINIT_FUNC init_nix_debugger(void) {
     (void) Py_InitModule("_nix_debugger", setup_methods);
 }

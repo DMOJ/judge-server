@@ -10,18 +10,13 @@ from dmoj.error import CompileError
 from dmoj.judgeenv import env, get_problem_roots, get_supported_problems
 from dmoj.result import Result
 from dmoj.utils.ansi import ansi_style
+from dmoj.utils.debugger.nix import setup_all_debuggers
+
+setup_all_debuggers()
 
 if os.name == 'posix':
     try:
         import readline
-        from dmoj.utils.debugger.nix import setup_all_debuggers
-        setup_all_debuggers()
-    except ImportError:
-        pass
-else:
-    try:
-        from dmoj.utils.debugger.win import setup_all_debuggers
-        setup_all_debuggers()
     except ImportError:
         pass
 

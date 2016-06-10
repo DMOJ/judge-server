@@ -10,7 +10,7 @@ from dmoj.error import CompileError
 from dmoj.judgeenv import env, get_problem_roots, get_supported_problems
 from dmoj.result import Result
 from dmoj.utils.ansi import ansi_style
-from dmoj.utils.debugger.nix import setup_all_debuggers
+from dmoj.utils.debugger import setup_all_debuggers
 
 setup_all_debuggers()
 

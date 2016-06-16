@@ -51,8 +51,7 @@ class StandardGrader(BaseGrader):
         result.feedback = (check.feedback or
                            (process.feedback if hasattr(process, 'feedback') else
                             getattr(self.binary, 'get_feedback', lambda x, y, z: '')(error, result, process)))
-        if not result.feedback and hasattr(process, 'signal') and process.signal and result.get_main_code() in [
-            Result.IR, Result.RTE]:
+        if not result.feedback and hasattr(process, 'signal') and process.signal and result.get_main_code() == Result.RTE:
             result.feedback = strsignal(process.signal)
 
         # On Linux we can provide better help messages

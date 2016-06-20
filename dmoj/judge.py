@@ -7,7 +7,7 @@ import traceback
 from dmoj import packet, graders
 from dmoj.config import Problem, InvalidInitException, BatchedTestCase
 from dmoj.error import CompileError
-from dmoj.judgeenv import env, get_problem_roots, get_supported_problems
+from dmoj.judgeenv import env, get_problem_roots, get_supported_problems, startup_warnings
 from dmoj.result import Result
 from dmoj.utils.ansi import ansi_style
 from dmoj.utils.debugger import setup_all_debuggers

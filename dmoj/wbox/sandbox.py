@@ -5,6 +5,7 @@ import os
 from dmoj.wbox._wbox import UserManager, ProcessManager, NetworkManager, \
     update_address_x86, update_address_x64
 from dmoj.utils.winutils import execution_time
+from dmoj.utils.communicate import safe_communicate as _safe_communicate
 
 
 def unicodify(path):
@@ -13,6 +14,7 @@ def unicodify(path):
     if isinstance(path, unicode):
         return path
     return path.decode('mbcs')
+
 
 dirname = os.path.dirname(__file__)
 update_address_x86(os.path.join(dirname, u'getaddr32.exe'))
@@ -126,3 +128,5 @@ class WBoxPopen(object):
 
     _communicate = Popen._communicate.im_func
     _readerthread = Popen._readerthread.im_func
+
+    safe_communicate = _safe_communicate

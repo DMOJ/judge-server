@@ -11,6 +11,7 @@ import re
 
 from dmoj.cptbox._cptbox import *
 from dmoj.cptbox.syscalls import translator, SYSCALL_COUNT, by_id
+from dmoj.utils.communicate import safe_communicate as _safe_communicate
 
 DISALLOW = 0
 ALLOW = 1
@@ -350,6 +351,8 @@ class _SecurePopen(Process):
 
         self.wait()
         return stdout, stderr
+
+    safe_communicate = _safe_communicate
 
 
 # (python arch, executable arch) -> debugger

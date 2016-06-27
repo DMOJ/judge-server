@@ -9,7 +9,7 @@ from dmoj.config import Problem, InvalidInitException, BatchedTestCase
 from dmoj.error import CompileError
 from dmoj.judgeenv import env, get_problem_roots, get_supported_problems, startup_warnings
 from dmoj.result import Result
-from dmoj.utils.ansi import ansi_style
+from dmoj.utils.ansi import ansi_style, strip_ansi
 from dmoj.utils.debugger import setup_all_debuggers
 
 setup_all_debuggers()
@@ -235,6 +235,7 @@ class Judge(object):
             yield result
 
     def internal_error(self, exc=None):
+        # If exc is exists, raise it so that sys.exc_info() is populated with its data
         if exc:
             try:
                 raise exc
@@ -242,8 +243,16 @@ class Judge(object):
                 pass
         exc = sys.exc_info()
 
-        traceback.print_exception(*exc)
-        self.packet_manager.internal_error_packet(''.join(traceback.format_exception(*exc)))
+        message = ''.join(traceback.format_exception(*exc))
+        
+        # Strip ANSI from the message, since this might be a checker's CompileError
+        # ...we don't want to see the raw ANSI codes from GCC/Clang on the site.
+        # We could use format_ansi and send HTML to the site, but the site doesn't presently support HTML
+        # internal error formatting.
+        self.packet_manager.internal_error_packet(strip_ansi(message))
+        
+        # Logs can contain ANSI, and it'll display fine
+        print >>sys.stderr, message
 
     def listen(self):
         """

@@ -13,7 +13,7 @@ class Executor(CompiledExecutor):
     test_program = 'fn main() { println!("echo: Hello, World!"); }'
 
     def get_compile_args(self):
-        return [self.get_command(), self._code]
+        return [self.get_command(), '-O', self._code]
 
 
 initialize = Executor.initialize

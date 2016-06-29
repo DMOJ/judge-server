@@ -1,8 +1,6 @@
-import errno
-
-from .base_executor import ScriptExecutor
+from dmoj.cptbox.handlers import ACCESS_DENIED
 from dmoj.judgeenv import env
-from dmoj.cptbox.syscalls import *
+from .base_executor import ScriptExecutor
 
 
 class Executor(ScriptExecutor):
@@ -12,26 +10,13 @@ class Executor(ScriptExecutor):
     command = env['runtime'].get('Rscript')
     test_program = 'writeLines(readLines(file("stdin")))'
     syscalls = ['mkdir', 'setup', 'fork', 'waitpid', 'getpgrp', 'dup2', 'nanosleep',
-               'sched_getaffinity', 'execve']
+                'sched_getaffinity', 'execve',
+                ('socket', ACCESS_DENIED),
+                ('socketcall', ACCESS_DENIED)]
 
     fs = ['stdin', '.*\.(?:so|rdb|rdx|rds|R)', '/lib/', '/etc/ld\.so\.(?:cache|preload|nohwcap)$', '/proc/stat$',
           '/usr/lib/', '/usr/local/lib/', '/etc/passwd$', '/proc/meminfo$', '/sys/devices/system/cpu/online$',
           '/etc/nsswitch.conf$', '/etc/group$', '/dev/(?:null|urandom|random|tty|stdin|stdout|stderr)$']
-
-    def get_security(self):
-        security = super(Executor, self).get_security()
-
-        def handle_socket(debugger):
-            def socket_return():
-                debugger.result = -errno.EACCES
-
-            debugger.syscall = debugger.getpid_syscall
-            debugger.on_return(socket_return)
-            return True
-
-        security[sys_socket] = handle_socket
-        security[sys_socketcall] = handle_socket
-        return security
 
     def get_cmdline(self):
         return [self.get_command(), '--vanilla', self._code]

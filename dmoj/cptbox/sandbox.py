@@ -160,6 +160,7 @@ class _SecurePopen(Process):
     def _protection_fault(self, syscall):
         # When signed, 0xFFFFFFFF is equal to -1, meaning that ptrace failed to read the syscall for some reason.
         # We can't continue debugging as this could potentially be unsafe, so we should exit loudly.
+        # See <https://github.com/DMOJ/judge/issues/181> for more details.
         if syscall == 0xFFFFFFFF:
             raise InternalError('ptrace failed')
             # TODO: this would be more useful if we had access to a proper errno

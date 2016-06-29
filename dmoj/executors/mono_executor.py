@@ -10,7 +10,7 @@ from .base_executor import CompiledExecutor
 from dmoj.judgeenv import env
 
 
-CS_FS = ['.*\.so', '/proc/(?:self/|xen)', '/dev/shm/', '/proc/stat', '/usr/lib/mono',
+CS_FS = ['.*\.so', '/proc/(?:self/|xen)', '/dev/shm/', '/proc/stat', '/usr/lib/mono', 'mono',
          '/etc/nsswitch.conf$', '/etc/passwd$', '/etc/mono/', '/dev/null$', '.*/.mono/',
          '/sys/', '/proc/uptime$']
 WRITE_FS = ['/proc/self/task/\d+/comm$', '/dev/shm/mono\.\d+$']

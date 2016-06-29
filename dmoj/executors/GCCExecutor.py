@@ -1,4 +1,7 @@
 import os
+import re
+import subprocess
+from collections import deque
 
 try:
     from dmoj.cptbox import CHROOTSecurity, SecurePopen, PIPE
@@ -8,7 +11,7 @@ except ImportError:
 
 from .base_executor import CompiledExecutor
 from dmoj.judgeenv import env
-import subprocess
+from dmoj.result import Result
 
 C_FS = ['.*\.so', '/proc/meminfo', '/dev/null']
 GCC_ENV = env['runtime'].get('gcc_env', {})
@@ -21,6 +24,8 @@ if os.name == 'nt':
     GCC_ENV = dict((k.encode('mbcs'), v.encode('mbcs')) for k, v in GCC_ENV.iteritems())
 else:
     GCC_COMPILE.update(env['runtime'].get('gcc_compile', {}))
+
+recppexc = re.compile(r"terminate called after throwing an instance of \'([A-Za-z0-9_:]+)\'$", re.M)
 
 
 class GCCExecutor(CompiledExecutor):
@@ -73,6 +78,15 @@ class GCCExecutor(CompiledExecutor):
 
     def get_env(self):
         return GCC_ENV
+
+    def get_feedback(self, stderr, result, process):
+        if not result.result_flag & Result.RTE or not stderr or len(stderr) > 2048:
+            return ''
+        match = deque(recppexc.finditer(stderr), maxlen=1)
+        if not match:
+            return ''
+        exception = match[0].group(1)
+        return '' if len(exception) > 40 else exception
 
     @classmethod
     def initialize(cls, sandbox=True):

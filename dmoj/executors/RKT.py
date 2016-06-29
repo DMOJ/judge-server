@@ -10,18 +10,14 @@ class Executor(ScriptExecutor):
           '/proc/self/maps$', '/usr/lib/i386-linux-gnu', '/etc/nsswitch.conf$',
           '/etc/passwd$', '/dev/null$', '/sys/devices/system/cpu/online$']
     command = env['runtime'].get('racket')
-    syscalls = ['epoll_create', 'sigprocmask',
+    syscalls = ['epoll_create', 'sigprocmask', 'rt_sigreturn', 'epoll_wait', 'poll',
                 ('socketcall', ACCESS_DENIED),
                 ('prctl', lambda debugger: debugger.arg0 in (15,))]
     address_grace = 131072
 
     test_program = '''\
 #lang racket
-(displayln "Hello, World!")
+(displayln (read-line))
 '''
-
-    def get_cmdline(self):
-        return ['racket', self._code]
-
 
 initialize = Executor.initialize

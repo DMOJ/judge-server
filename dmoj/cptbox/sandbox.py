@@ -13,6 +13,7 @@ from dmoj.cptbox._cptbox import *
 from dmoj.cptbox.handlers import DISALLOW, _CALLBACK
 from dmoj.cptbox.syscalls import translator, SYSCALL_COUNT, by_id
 from dmoj.utils.communicate import safe_communicate as _safe_communicate
+from dmoj.errors import InternalError
 
 PIPE = object()
 
@@ -157,21 +158,29 @@ class _SecurePopen(Process):
         return False
 
     def _protection_fault(self, syscall):
-        callname = None
-        index = self._syscall_index
-        for id, call in enumerate(translator):
-            if call[index] == syscall:
-                callname = by_id[id]
-                break
-
-        self.protection_fault = (syscall, callname)
-        print>> sys.stderr, 'Protection fault on: %d (%s)' % (syscall, callname)
-        print>> sys.stderr, 'Arg0: 0x%016x' % self.debugger.uarg0
-        print>> sys.stderr, 'Arg1: 0x%016x' % self.debugger.uarg1
-        print>> sys.stderr, 'Arg2: 0x%016x' % self.debugger.uarg2
-        print>> sys.stderr, 'Arg3: 0x%016x' % self.debugger.uarg3
-        print>> sys.stderr, 'Arg4: 0x%016x' % self.debugger.uarg4
-        print>> sys.stderr, 'Arg5: 0x%016x' % self.debugger.uarg5
+        if syscall == 4294967295:
+            raise InternalError('ptrace failed')
+            # TODO: this would be more useful if we had access to a proper errno
+            # import errno, os
+            # err = ...
+            # raise InternalError('ptrace error: %d (%s: %s)' % (err, errno.errorcode[err], os.strerror(err)))
+        else:
+            callname = 'unknown'
+            index = self._syscall_index
+            for id, call in enumerate(translator):
+                if call[index] == syscall:
+                    callname = by_id[id]
+                    break
+    
+            print>> sys.stderr, 'Protection fault on: %d (%s)' % (syscall, callname)
+            print>> sys.stderr, 'Arg0: 0x%016x' % self.debugger.uarg0
+            print>> sys.stderr, 'Arg1: 0x%016x' % self.debugger.uarg1
+            print>> sys.stderr, 'Arg2: 0x%016x' % self.debugger.uarg2
+            print>> sys.stderr, 'Arg3: 0x%016x' % self.debugger.uarg3
+            print>> sys.stderr, 'Arg4: 0x%016x' % self.debugger.uarg4
+            print>> sys.stderr, 'Arg5: 0x%016x' % self.debugger.uarg5
+            
+            self.protection_fault = (syscall, callname)
 
     def _cpu_time_exceeded(self):
         self._tle = True

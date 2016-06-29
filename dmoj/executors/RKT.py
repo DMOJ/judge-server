@@ -1,28 +1,28 @@
-from subprocess import Popen
 import errno
 
-from dmoj.executors.resource_proxy import ResourceProxy
-from .utils import test_executor
-from dmoj.cptbox import SecurePopen, CHROOTSecurity, PIPE
 from dmoj.cptbox.syscalls import *
+from dmoj.executors.base_executor import ScriptExecutor
 from dmoj.judgeenv import env
 
 
-RACKET_FS = ['.*\.(?:so|rkt?$)', '/dev/tty$', '/proc/meminfo$', '.*racket.*', '/proc/stat$',
-             '/proc/self/maps$', '/usr/lib/i386-linux-gnu', '/etc/nsswitch.conf$',
-             '/etc/passwd$', '/dev/null$']
+class Executor(ScriptExecutor):
+    ext = '.rkt'
+    name = 'RKT'
+    fs = ['.*\.(?:so|rkt?$)', '/dev/tty$', '/proc/meminfo$', '.*racket.*', '/proc/stat$',
+          '/proc/self/maps$', '/usr/lib/i386-linux-gnu', '/etc/nsswitch.conf$',
+          '/etc/passwd$', '/dev/null$', '/sys/devices/system/cpu/online$']
+    command = env['runtime'].get('racket')
+    syscalls = ['timer_create', 'timer_settime',
+                'timer_delete', 'newselect', 'select']
+    address_grace = 131072
 
+    test_program = '''\
+#lang racket
+(displayln "Hello, World!")
+'''
 
-class Executor(ResourceProxy):
-    def __init__(self, problem_id, source_code):
-        super(Executor, self).__init__()
-        self._script = source_code_file = self._file('%s.rkt' % problem_id)
-
-        with open(source_code_file, 'wb') as fo:
-            fo.write(source_code)
-
-    def _security(self):
-        security = CHROOTSecurity(RACKET_FS)
+    def get_security(self):
+        security = super(Executor, self).get_security()
 
         def handle_socketcall(debugger):
             def socket_return():
@@ -38,26 +38,8 @@ class Executor(ResourceProxy):
         security[sys_prctl] = lambda debugger: debugger.arg0 in (15,)
         return security
 
-    def launch(self, *args, **kwargs):
-        return SecurePopen([env['runtime']['racket'], self._script] + list(args),
-                           security=self._security(),
-                           time=kwargs.get('time'),
-                           memory=kwargs.get('memory'),
-                           address_grace=131072,
-                           stderr=(PIPE if kwargs.get('pipe_stderr', False) else None),
-                           env={'LANG': 'C'}, cwd=self._dir)
-
-    def launch_unsafe(self, *args, **kwargs):
-        return Popen([env['runtime']['racket'], self._script] + list(args),
-                     env={'LANG': 'C'},
-                     cwd=self._dir,
-                     **kwargs)
+    def get_cmdline(self):
+        return ['racket', self._code]
 
 
-def initialize(sandbox=True):
-    if 'racket' not in env['runtime']:
-        return False
-    return test_executor('RKT', Executor, '''\
-#lang racket
-(displayln "Hello, World!")
-''', sandbox=sandbox)
+initialize = Executor.initialize

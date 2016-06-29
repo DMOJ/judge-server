@@ -79,12 +79,6 @@ class ASMExecutor(CompiledExecutor):
             fs += ['/usr/lib', '/proc', self._executable]
         return fs
 
-    def get_allowed_syscalls(self):
-        syscalls = super(ASMExecutor, self).get_allowed_syscalls()
-        if self.use_qemu:
-            syscalls += ['madvise']
-        return syscalls
-
     def get_address_grace(self):
         grace = super(ASMExecutor, self).get_address_grace()
         if self.use_qemu:

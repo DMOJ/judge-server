@@ -9,7 +9,7 @@ class Executor(CompiledExecutor):
           '/sys/devices/system/cpu/online$', '/proc/stat$', '/proc/self/maps$',
           '/dev/urandom$']
     command = env['runtime'].get('rustc')
-    syscalls = ['sched_getaffinity', 'madvise', 'getrandom']
+    syscalls = ['sched_getaffinity', 'getrandom']
     test_program = 'fn main() { println!("echo: Hello, World!"); }'
 
     def get_compile_args(self):

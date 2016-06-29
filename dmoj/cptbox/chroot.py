@@ -29,6 +29,7 @@ class CHROOTSecurity(dict):
             sys_mmap: ALLOW,
             sys_mremap: ALLOW,
             sys_mprotect: ALLOW,
+            sys_madvise: ALLOW,
             sys_munmap: ALLOW,
             sys_brk: ALLOW,
             sys_fcntl: ALLOW,

@@ -374,3 +374,7 @@ def SecurePopen(argv, executable=None, *args, **kwargs):
     if debugger is None:
         raise RuntimeError('Executable type %s could not be debugged on Python type %s' % (arch, PYTHON_ARCH))
     return _SecurePopen(debugger, argv, executable, *args, **kwargs)
+
+
+def can_debug(arch):
+    return (PYTHON_ARCH, arch) in _arch_map

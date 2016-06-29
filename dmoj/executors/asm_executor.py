@@ -2,6 +2,7 @@ import os
 import re
 import subprocess
 
+from dmoj.cptbox.sandbox import X86, X64, can_debug
 from dmoj.executors.base_executor import CompiledExecutor
 from dmoj.error import CompileError
 from dmoj.judgeenv import env
@@ -11,6 +12,7 @@ feature_split = re.compile('[\s,]+').split
 
 
 class ASMExecutor(CompiledExecutor):
+    arch = None
     as_path = None
     ld_path = None
     qemu_path = None
@@ -91,6 +93,8 @@ class ASMExecutor(CompiledExecutor):
 
     @classmethod
     def initialize(cls, sandbox=True):
+        if cls.qemu_path is None and not can_debug(cls.arch):
+            return False
         if any(i is None for i in (cls.as_path, cls.ld_path, cls.dynamic_linker, cls.crt_pre, cls.crt_post)):
             return False
         if any(not os.path.isfile(i) for i in (cls.as_path, cls.ld_path, cls.dynamic_linker)):
@@ -132,6 +136,7 @@ class NASMExecutor(ASMExecutor):
 
 
 class PlatformX86Mixin(object):
+    arch = X86
     ld_path = env['runtime'].get('ld_x86', None)
     qemu_path = env['runtime'].get('qemu_x86', None)
     dynamic_linker = env['runtime'].get('ld.so_x86', '/lib/ld-linux.so.2')
@@ -145,6 +150,7 @@ class PlatformX86Mixin(object):
 
 
 class PlatformX64Mixin(object):
+    arch = X64
     ld_path = env['runtime'].get('ld_x64', None)
     qemu_path = env['runtime'].get('qemu_x64', None)
     dynamic_linker = env['runtime'].get('ld.so_x64', '/lib64/ld-linux-x86-64.so.2')

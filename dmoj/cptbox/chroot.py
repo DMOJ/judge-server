@@ -1,7 +1,7 @@
 import re
 import sys
 
-from .sandbox import ALLOW, STDOUTERR
+from dmoj.cptbox.handlers import ALLOW, STDOUTERR
 from dmoj.cptbox.syscalls import *
 
 

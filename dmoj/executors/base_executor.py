@@ -10,7 +10,8 @@ from dmoj.executors.resource_proxy import ResourceProxy
 from dmoj.utils.ansi import ansi_style
 
 try:
-    from dmoj.cptbox import SecurePopen, PIPE, CHROOTSecurity, ALLOW, syscalls
+    from dmoj.cptbox import SecurePopen, PIPE, CHROOTSecurity, syscalls
+    from dmoj.cptbox.handlers import ALLOW
 except ImportError:
     SecurePopen, PIPE, CHROOTSecurity, ALLOW, syscalls = None, None, None, None, None
     from dmoj.wbox import WBoxPopen, default_inject32, default_inject64, default_inject_func

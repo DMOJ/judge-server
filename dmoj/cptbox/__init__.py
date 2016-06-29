@@ -1,7 +1,8 @@
 from collections import defaultdict
 
-from .sandbox import SecurePopen, DISALLOW, ALLOW, PIPE
-from .chroot import CHROOTSecurity
+from dmoj.cptbox.sandbox import SecurePopen, PIPE
+from dmoj.cptbox.handlers import DISALLOW, ALLOW
+from dmoj.cptbox.chroot import CHROOTSecurity
 from dmoj.cptbox.syscalls import SYSCALL_COUNT
 
 

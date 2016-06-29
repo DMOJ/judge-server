@@ -1,22 +1,18 @@
-import os
-import subprocess
-import threading
-import time
-import select
 import errno
-import signal
-import sys
+import os
 import pty
 import re
+import select
+import signal
+import subprocess
+import sys
+import threading
+import time
 
 from dmoj.cptbox._cptbox import *
+from dmoj.cptbox.handlers import DISALLOW, _CALLBACK
 from dmoj.cptbox.syscalls import translator, SYSCALL_COUNT, by_id
 from dmoj.utils.communicate import safe_communicate as _safe_communicate
-
-DISALLOW = 0
-ALLOW = 1
-_CALLBACK = 2
-STDOUTERR = 3
 
 PIPE = object()
 

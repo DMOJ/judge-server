@@ -11,7 +11,7 @@ class Executor(RubyExecutor):
 
     def get_security(self):
         from dmoj.cptbox.syscalls import sys_write, sys_sched_getaffinity, sys_pipe2
-        from dmoj.cptbox import ALLOW
+        from dmoj.cptbox.handlers import ALLOW
 
         sec = super(Executor, self).get_security()
         sec[sys_sched_getaffinity] = ALLOW

@@ -5,19 +5,10 @@ from .ruby_executor import RubyExecutor
 
 class Executor(RubyExecutor):
     name = 'RUBY21'
+    syscalls = ['pipe2', 'sched_getaffinity', ('write', lambda debugger: debugger.arg0 in (1, 2, 4))]
 
     def get_nproc(self):
         return [-1, 1][os.name == 'nt']
-
-    def get_security(self):
-        from dmoj.cptbox.syscalls import sys_write, sys_sched_getaffinity, sys_pipe2
-        from dmoj.cptbox.handlers import ALLOW
-
-        sec = super(Executor, self).get_security()
-        sec[sys_sched_getaffinity] = ALLOW
-        sec[sys_pipe2] = ALLOW
-        sec[sys_write] = lambda debugger: debugger.arg0 in (1, 2, 4)
-        return sec
 
 
 initialize = Executor.initialize

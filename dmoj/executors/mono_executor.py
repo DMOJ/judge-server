@@ -4,7 +4,8 @@ import re
 import errno
 from collections import defaultdict
 
-from dmoj.cptbox import CHROOTSecurity, ALLOW
+from dmoj.cptbox import CHROOTSecurity
+from dmoj.cptbox.handlers import ALLOW, ACCESS_DENIED
 from dmoj.cptbox.syscalls import *
 from .base_executor import CompiledExecutor
 from dmoj.judgeenv import env
@@ -86,13 +87,6 @@ class MonoExecutor(CompiledExecutor):
                 return False
             return True
 
-        def handle_socket(debugger):
-            def socket_return():
-                debugger.result = -errno.EACCES
-            debugger.syscall = debugger.getpid_syscall
-            debugger.on_return(socket_return)
-            return True
-
         sec[sys_open] = handle_open
         sec[sys_close] = handle_close
         sec[sys_dup2] = handle_dup
@@ -102,8 +96,8 @@ class MonoExecutor(CompiledExecutor):
         sec[sys_kill] = handle_kill
         sec[sys_tgkill] = handle_kill
         sec[sys_unlink] = unlink
-        sec[sys_socket] = handle_socket
-        sec[sys_socketcall] = handle_socket
+        sec[sys_socket] = ACCESS_DENIED
+        sec[sys_socketcall] = ACCESS_DENIED
         return sec
 
     @classmethod

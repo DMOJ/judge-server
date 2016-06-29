@@ -82,6 +82,7 @@ int pt_process::monitor() {
         clock_gettime(CLOCK_MONOTONIC, &end);
         timespec_sub(&end, &start, &delta);
         timespec_add(&exec_time, &delta, &exec_time);
+        int signal = 0;
 
         if (WIFEXITED(status) || WIFSIGNALED(status))
             break;
@@ -132,15 +133,6 @@ int pt_process::monitor() {
                 }
             } else {
                 switch (WSTOPSIG(status)) {
-                    case SIGSEGV:
-                        dispatch(PTBOX_EVENT_EXITING, exit_reason = PTBOX_EXIT_SEGFAULT);
-                        puts("Child Segfault");
-                        kill(pid, SIGKILL);
-                        break;
-                    case SIGFPE:
-                        puts("Child SIGFPE");
-                        kill(pid, SIGKILL);
-                        break;
                     case SIGTRAP:
                         switch (status >> 16) {
                             case PTRACE_EVENT_EXIT:
@@ -148,11 +140,13 @@ int pt_process::monitor() {
                                     dispatch(PTBOX_EVENT_EXITING, PTBOX_EXIT_NORMAL);
                         }
                         break;
+                    default:
+                        signal = WSTOPSIG(status);
                 }
                 dispatch(PTBOX_EVENT_SIGNAL, WSTOPSIG(status));
             }
         }
-        ptrace(_trace_syscalls ? PTRACE_SYSCALL : PTRACE_CONT, pid, NULL, NULL);
+        ptrace(_trace_syscalls ? PTRACE_SYSCALL : PTRACE_CONT, pid, NULL, (void*) signal);
         first = false;
     }
     dispatch(PTBOX_EVENT_EXITED, exit_reason);

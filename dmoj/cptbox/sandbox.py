@@ -13,7 +13,7 @@ from dmoj.cptbox._cptbox import *
 from dmoj.cptbox.handlers import DISALLOW, _CALLBACK
 from dmoj.cptbox.syscalls import translator, SYSCALL_COUNT, by_id
 from dmoj.utils.communicate import safe_communicate as _safe_communicate
-from dmoj.errors import InternalError
+from dmoj.error import InternalError
 
 PIPE = object()
 

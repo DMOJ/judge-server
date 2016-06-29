@@ -18,6 +18,10 @@ class CHROOTSecurity(dict):
             sys_open: self.do_access,
             sys_access: self.do_access,
             sys_faccessat: self.do_faccessat,
+            # Deny with report
+            sys_mkdir: self.deny_with_file_path('mkdir', 0),
+            sys_tgkill: self.do_tgkill,
+            
             sys_close: ALLOW,
             sys_stat: ALLOW,
             sys_dup: ALLOW,
@@ -77,9 +81,6 @@ class CHROOTSecurity(dict):
             sys_time: ALLOW,
             sys_prlimit64: ALLOW,
             sys_getdents64: ALLOW,
-
-            # Deny with report
-            sys_mkdir: self.deny_with_file_path('mkdir', 0),
         })
 
     def deny_with_file_path(self, syscall, argument):
@@ -106,3 +107,10 @@ class CHROOTSecurity(dict):
             print>>sys.stderr, 'Not allowed to access:', file
             return False
         return True
+    
+    def do_tgkill(self, debugger):
+        tgid = debugger.uarg0
+        
+        # Allow tgkill to execute as long as the target thread group is the debugged process
+        # libstdc++ seems to use this to signal itself, see <https://github.com/DMOJ/judge/issues/183>
+        return tgid == debugger.pid

@@ -158,7 +158,9 @@ class _SecurePopen(Process):
         return False
 
     def _protection_fault(self, syscall):
-        if syscall == 4294967295:
+        # When signed, 0xFFFFFFFF is equal to -1, meaning that ptrace failed to read the syscall for some reason.
+        # We can't continue debugging as this could potentially be unsafe, so we should exit loudly.
+        if syscall == 0xFFFFFFFF:
             raise InternalError('ptrace failed')
             # TODO: this would be more useful if we had access to a proper errno
             # import errno, os

@@ -51,7 +51,11 @@ class BaseExecutor(ResourceProxy):
             raise NotImplementedError('No security manager on Windows')
         sec = CHROOTSecurity(self.get_fs())
         for name in self.get_allowed_syscalls():
-            sec[getattr(syscalls, 'sys_' + name)] = ALLOW
+            if isinstance(name, tuple) and len(name) == 2:
+                name, handler = name
+            else:
+                handler = ALLOW
+            sec[getattr(syscalls, 'sys_' + name)] = handler
         return sec
 
     def get_executable(self):

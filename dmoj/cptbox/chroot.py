@@ -121,7 +121,7 @@ class CHROOTSecurity(dict):
                 if is_valid_read or is_valid_write:
                     # Duplicate the handle so that in case a program decides to close it, the original will not
                     # be closed as well.
-                    debugger.syscall = translator[sys_dup][_SYSCALL_INDICIES[debugger]]
+                    debugger.syscall = debugger.get_syscall_id(sys_dup)
 
                     def on_return():
                         handle = debugger.result

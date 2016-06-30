@@ -30,6 +30,8 @@ class CHROOTSecurity(dict):
             sys_close: ALLOW,
             sys_stat: ALLOW,
             sys_dup: ALLOW,
+            sys_dup2: ALLOW,
+            sys_dup3: ALLOW,
             sys_fstat: ALLOW,
             sys_mmap: ALLOW,
             sys_mremap: ALLOW,

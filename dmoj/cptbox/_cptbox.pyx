@@ -351,8 +351,8 @@ cdef class Debugger:
             return self.thisptr.getpid()
 
     def get_syscall_id(self, syscall):
-        # x86, x86 on x64, x64, x32, ARM
-        return translator[syscall][[0, 0, 1, 2, 3][self._debugger_type]]
+        # x86, x64, x86 on x64, x32, ARM
+        return translator[syscall][[0, 1, 0, 2, 3][self._debugger_type]]
 
     def on_return(self, callback):
         self.on_return_callback = callback

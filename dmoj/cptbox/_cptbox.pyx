@@ -8,6 +8,8 @@ from posix.resource cimport setrlimit, rlimit, rusage, \
 from posix.signal cimport kill
 from posix.types cimport pid_t
 
+from dmoj.cptbox.syscalls import translator
+from dmoj.cptbox.sandbox import _SYSCALL_INDICIES
 
 __all__ = ['Process', 'Debugger', 'MAX_SYSCALL_NUMBER',
            'DEBUGGER_X86', 'DEBUGGER_X64', 'DEBUGGER_X86_ON_X64', 'DEBUGGER_X32', 'DEBUGGER_ARM']
@@ -225,6 +227,11 @@ cdef class Debugger:
     cdef pt_debugger *thisptr
     cdef object on_return_callback
     cdef int _getpid_syscall
+    cdef int _debugger_type
+
+    property type:
+        def __get__(self):
+            return self._debugger_type
 
     property getpid_syscall:
         def __get__(self):
@@ -345,6 +352,9 @@ cdef class Debugger:
         def __get__(self):
             return self.thisptr.getpid()
 
+    def get_syscall_id(self, syscall):
+        return translator[syscall][_SYSCALL_INDICIES[self._debugger_type]]
+
     def on_return(self, callback):
         self.on_return_callback = callback
         self.thisptr.on_return(pt_syscall_return_handler, <void*>self)
@@ -390,6 +400,7 @@ cdef class Process:
         self.debugger = Debugger()
         self.debugger.thisptr = self._debugger
         self.debugger._getpid_syscall = self._debugger.getpid_syscall()
+        self.debugger._debugger_type = debugger
         self.process = new pt_process(self._debugger)
         self.process.set_callback(pt_syscall_handler, <void*>self)
         self.process.set_event_proc(pt_event_handler, <void*>self)

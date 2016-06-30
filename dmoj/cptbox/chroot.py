@@ -2,8 +2,11 @@ import re
 import sys
 import os
 
+from dmoj.cptbox import syscalls
 from dmoj.cptbox.handlers import ALLOW, STDOUTERR
 from dmoj.cptbox.syscalls import *
+from dmoj.cptbox.sandbox import _SYSCALL_INDICIES
+from dmoj.cptbox.syscalls import translator
 
 
 class CHROOTSecurity(dict):
@@ -118,18 +121,16 @@ class CHROOTSecurity(dict):
                 if is_valid_read or is_valid_write:
                     # Duplicate the handle so that in case a program decides to close it, the original will not
                     # be closed as well.
-                    handle = os.dup(redirect)
-                    self._writable.append(handle)
-
-                    # dup overrides the ebx register with the redirect fd, but we should return it back to the
-                    # file pointer in case some program requires it to remain in the register post-syscall,
-                    # even though an open syscall isn't actually executed (a no-arg getpid is, instead)
-                    debugger.uarg0 = file_ptr
+                    debugger.syscall = translator[sys_dup][_SYSCALL_INDICIES[debugger]]
 
                     def on_return():
-                        debugger.result = handle
+                        handle = debugger.result
+                        self._writable.append(handle)
 
-                    debugger.syscall = debugger.getpid_syscall
+                        # dup overrides the ebx register with the redirect fd, but we should return it back to the
+                        # file pointer in case some program requires it to remain in the register post-syscall,
+                        # even though an open syscall isn't actually executed (a no-arg getpid is, instead)
+                        debugger.uarg0 = file_ptr
                     debugger.on_return(on_return)
 
                     return True

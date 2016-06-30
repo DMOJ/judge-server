@@ -115,7 +115,8 @@ class CHROOTSecurity(dict):
                 user_mode, redirect = data
                 kernel_flags = debugger.uarg1
 
-                is_valid_read = 'r' in user_mode and (kernel_flags == os.O_RDONLY or kernel_flags & os.O_RDWR)
+                # File is open for read if it is not open for write, unless it's open for both read/write
+                is_valid_read = 'r' in user_mode and (not (kernel_flags & os.O_WRONLY) or kernel_flags & os.O_RDWR)
                 is_valid_write = 'w' in user_mode and (kernel_flags & os.O_WRONLY or kernel_flags & os.O_RDWR) \
                                  and redirect in self._writable
 

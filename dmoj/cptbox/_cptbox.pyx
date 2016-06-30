@@ -9,8 +9,6 @@ from posix.signal cimport kill
 from posix.types cimport pid_t
 
 from dmoj.cptbox.syscalls import translator
-from dmoj.cptbox.sandbox import _SYSCALL_INDICIES
-
 __all__ = ['Process', 'Debugger', 'MAX_SYSCALL_NUMBER',
            'DEBUGGER_X86', 'DEBUGGER_X64', 'DEBUGGER_X86_ON_X64', 'DEBUGGER_X32', 'DEBUGGER_ARM']
 
@@ -353,7 +351,8 @@ cdef class Debugger:
             return self.thisptr.getpid()
 
     def get_syscall_id(self, syscall):
-        return translator[syscall][_SYSCALL_INDICIES[self._debugger_type]]
+        # x86, x86 on x64, x64, x32, ARM
+        return translator[syscall][[0, 0, 1, 2, 3][self._debugger_type]]
 
     def on_return(self, callback):
         self.on_return_callback = callback

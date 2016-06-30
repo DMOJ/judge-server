@@ -7,11 +7,11 @@ class Executor(ScriptExecutor):
     ext = '.rkt'
     name = 'RKT'
     fs = ['.*\.(?:so|rkt?$)', '/dev/tty$', '/proc/meminfo$', '.*racket.*', '/proc/stat$',
-          '/proc/self/maps$', '/usr/lib/i386-linux-gnu', '/etc/nsswitch.conf$',
+          '/proc/self/maps$', '/usr/lib', '/etc/nsswitch.conf$',
           '/etc/passwd$', '/dev/null$', '/sys/devices/system/cpu/online$']
     command = env['runtime'].get('racket')
     syscalls = ['epoll_create', 'sigprocmask', 'rt_sigreturn', 'epoll_wait', 'poll',
-                ('socketcall', ACCESS_DENIED),
+                ('socketcall', ACCESS_DENIED), ('socket', ACCESS_DENIED),
                 ('prctl', lambda debugger: debugger.arg0 in (15,))]
     address_grace = 131072
 

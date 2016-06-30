@@ -15,6 +15,7 @@ class Executor(CompiledExecutor):
 
     syscalls = ['epoll_create', 'sigprocmask', 'rt_sigreturn', 'epoll_wait', 'poll',
                 ('socketcall', ACCESS_DENIED), ('socket', ACCESS_DENIED),
+                # PR_SET_NAME = 15
                 ('prctl', lambda debugger: debugger.arg0 in (15,))]
     address_grace = 131072
 

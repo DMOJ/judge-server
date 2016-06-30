@@ -111,8 +111,8 @@ class CHROOTSecurity(dict):
                 user_mode, redirect = data
                 kernel_mode = debugger.uarg1
 
-                is_valid_read = user_mode == 'r' and (kernel_mode & os.O_RDONLY)
-                is_valid_write = user_mode == 'w' and (kernel_mode & os.O_WRONLY) and redirect in self._writable
+                is_valid_read = 'r' in user_mode and (kernel_mode & os.O_RDONLY)
+                is_valid_write = 'w' in user_mode and (kernel_mode & os.O_WRONLY) and redirect in self._writable
 
                 if is_valid_read or is_valid_write:
 

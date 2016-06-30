@@ -99,7 +99,7 @@ class CHROOTSecurity(dict):
 
     def do_access(self, debugger):
         file = debugger.readstr(debugger.uarg0)
-        self._file_access_check(file)
+        return self._file_access_check(file)
 
     def do_open(self, debugger):
         file = debugger.readstr(debugger.uarg0)
@@ -123,7 +123,7 @@ class CHROOTSecurity(dict):
 
                     return True
 
-        self._file_access_check(file)
+        return self._file_access_check(file)
 
     def _file_access_check(self, file):
         if self.fs_jail.match(file) is None:

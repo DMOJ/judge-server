@@ -1,27 +1,29 @@
 import re
 import sys
+import os
 
 from dmoj.cptbox.handlers import ALLOW, STDOUTERR
 from dmoj.cptbox.syscalls import *
 
 
 class CHROOTSecurity(dict):
-    def __init__(self, filesystem, writable=(1, 2)):
+    def __init__(self, filesystem, writable=(1, 2), io_redirects=None):
         super(CHROOTSecurity, self).__init__()
         self.fs_jail = re.compile('|'.join(filesystem) if filesystem else '^')
         self._writable = writable
+        self._io_redirects = io_redirects
 
         self.update({
             sys_read: ALLOW,
             sys_write: STDOUTERR if writable == (1, 2) else self.do_write,
             sys_writev: self.do_write,
-            sys_open: self.do_access,
+            sys_open: self.do_open,
             sys_access: self.do_access,
             sys_faccessat: self.do_faccessat,
             # Deny with report
             sys_mkdir: self.deny_with_file_path('mkdir', 0),
             sys_tgkill: self.do_tgkill,
-            
+
             sys_close: ALLOW,
             sys_stat: ALLOW,
             sys_dup: ALLOW,
@@ -97,6 +99,33 @@ class CHROOTSecurity(dict):
 
     def do_access(self, debugger):
         file = debugger.readstr(debugger.uarg0)
+        self._file_access_check(file)
+
+    def do_open(self, debugger):
+        file = debugger.readstr(debugger.uarg0)
+
+        if self._io_redirects:
+            user_mode, redirect = self._io_redirects.get(file, (None, None))
+
+            if redirect == file:
+                kernel_mode = debugger.uarg2
+
+                is_valid_read = user_mode == 'r' and kernel_mode == os.O_RDONLY
+                is_valid_write = user_mode == 'w' and kernel_mode == os.O_WRONLY and redirect in self._writable
+
+                if is_valid_read or is_valid_write:
+
+                    def on_return():
+                        debugger.result = redirect
+
+                    debugger.syscall = debugger.getpid_syscall
+                    debugger.on_return(on_return)
+
+                    return True
+
+        self._file_access_check(file)
+
+    def _file_access_check(self, file):
         if self.fs_jail.match(file) is None:
             print>>sys.stderr, 'Not allowed to access:', file
             return False
@@ -108,10 +137,10 @@ class CHROOTSecurity(dict):
             print>>sys.stderr, 'Not allowed to access:', file
             return False
         return True
-    
+
     def do_tgkill(self, debugger):
         tgid = debugger.uarg0
-        
+
         # Allow tgkill to execute as long as the target thread group is the debugged process
         # libstdc++ seems to use this to signal itself, see <https://github.com/DMOJ/judge/issues/183>
         return tgid == debugger.pid

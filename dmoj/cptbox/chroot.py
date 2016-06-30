@@ -102,22 +102,31 @@ class CHROOTSecurity(dict):
         return self._file_access_check(file)
 
     def do_open(self, debugger):
-        file = debugger.readstr(debugger.uarg0)
+        file_ptr = debugger.uarg0
+        file = debugger.readstr(file_ptr)
 
         if self._io_redirects:
             data = self._io_redirects.get(file, None)
 
             if data:
                 user_mode, redirect = data
-                kernel_mode = debugger.uarg1
+                kernel_flags = debugger.uarg1
 
-                is_valid_read = 'r' in user_mode and (kernel_mode & os.O_RDONLY)
-                is_valid_write = 'w' in user_mode and (kernel_mode & os.O_WRONLY) and redirect in self._writable
+                is_valid_read = 'r' in user_mode and (kernel_flags & os.O_RDONLY)
+                is_valid_write = 'w' in user_mode and (kernel_flags & os.O_WRONLY) and redirect in self._writable
 
                 if is_valid_read or is_valid_write:
+                    # Duplicate the handle so that in case a program decides to close it, the original will not
+                    # be closed as well.
+                    handle = os.dup(redirect)
+
+                    # dup overrides the ebx register with the redirect fd, but we should return it back to the
+                    # file pointer in case some program requires it to remain in the register post-syscall,
+                    # even though an open syscall isn't actually executed (a no-arg getpid is, instead)
+                    debugger.uarg0 = file_ptr
 
                     def on_return():
-                        debugger.result = redirect
+                        debugger.result = handle
 
                     debugger.syscall = debugger.getpid_syscall
                     debugger.on_return(on_return)

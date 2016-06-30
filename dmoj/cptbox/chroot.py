@@ -92,7 +92,7 @@ class CHROOTSecurity(dict):
     def deny_with_file_path(self, syscall, argument):
         def check(debugger):
             file = debugger.readstr(getattr(debugger, 'uarg%d' % argument))
-            print>>sys.stderr, '%s: not allowed to access: %s' % (syscall, file)
+            print>> sys.stderr, '%s: not allowed to access: %s' % (syscall, file)
             return False
 
         return check
@@ -115,8 +115,9 @@ class CHROOTSecurity(dict):
                 user_mode, redirect = data
                 kernel_flags = debugger.uarg1
 
-                is_valid_read = 'r' in user_mode and (kernel_flags & os.O_RDONLY)
-                is_valid_write = 'w' in user_mode and (kernel_flags & os.O_WRONLY) and redirect in self._writable
+                is_valid_read = 'r' in user_mode and (kernel_flags == os.O_RDONLY or kernel_flags & os.O_RDWR)
+                is_valid_write = 'w' in user_mode and (kernel_flags & os.O_WRONLY or kernel_flags & os.O_RDWR) \
+                                 and redirect in self._writable
 
                 if is_valid_read or is_valid_write:
                     # We have to duplicate the handle so that in case a program decides to close it,
@@ -136,6 +137,7 @@ class CHROOTSecurity(dict):
                         # The final two args for sys_open (flags & mode) are untouched by sys_dup, so we can leave
                         # them as-is.
                         debugger.uarg0 = file_ptr
+
                     debugger.on_return(on_return)
 
                     return True
@@ -144,14 +146,14 @@ class CHROOTSecurity(dict):
 
     def _file_access_check(self, file):
         if self.fs_jail.match(file) is None:
-            print>>sys.stderr, 'Not allowed to access:', file
+            print>> sys.stderr, 'Not allowed to access:', file
             return False
         return True
 
     def do_faccessat(self, debugger):
         file = debugger.readstr(debugger.uarg1)
         if self.fs_jail.match(file) is None:
-            print>>sys.stderr, 'Not allowed to access:', file
+            print>> sys.stderr, 'Not allowed to access:', file
             return False
         return True
 

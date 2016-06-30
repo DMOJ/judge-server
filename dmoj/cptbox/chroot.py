@@ -105,10 +105,11 @@ class CHROOTSecurity(dict):
         file = debugger.readstr(debugger.uarg0)
 
         if self._io_redirects:
-            user_mode, redirect = self._io_redirects.get(file, (None, None))
+            data = self._io_redirects.get(file, None)
 
-            if redirect == file:
-                kernel_mode = debugger.uarg2
+            if data:
+                user_mode, redirect = data
+                kernel_mode = debugger.uarg1
 
                 is_valid_read = user_mode == 'r' and kernel_mode == os.O_RDONLY
                 is_valid_write = user_mode == 'w' and kernel_mode == os.O_WRONLY and redirect in self._writable

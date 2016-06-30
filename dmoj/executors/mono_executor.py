@@ -32,9 +32,9 @@ class MonoExecutor(CompiledExecutor):
     def get_executable(self):
         return env['runtime']['mono']
 
-    def get_security(self):
+    def get_security(self, launch_kwargs=None):
         fs = CS_FS + [self._dir]
-        sec = CHROOTSecurity(fs)
+        sec = CHROOTSecurity(fs, io_redirects=launch_kwargs.get('io_redirects', None))
         sec[sys_sched_getaffinity] = ALLOW
         sec[sys_statfs] = ALLOW
         sec[sys_ftruncate64] = ALLOW

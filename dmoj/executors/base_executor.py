@@ -36,11 +36,10 @@ class BaseExecutor(ResourceProxy):
     test_time = 10
     test_memory = 65536
 
-    def __init__(self, problem_id, source_code, io_redirects=None, **kwargs):
+    def __init__(self, problem_id, source_code, **kwargs):
         super(BaseExecutor, self).__init__()
         self.problem = problem_id
         self.source = source_code
-        self.io_redirects = io_redirects
 
     def get_fs(self):
         return self.fs
@@ -48,10 +47,10 @@ class BaseExecutor(ResourceProxy):
     def get_allowed_syscalls(self):
         return self.syscalls
 
-    def get_security(self):
+    def get_security(self, launch_kwargs=None):
         if CHROOTSecurity is None:
             raise NotImplementedError('No security manager on Windows')
-        sec = CHROOTSecurity(self.get_fs(), io_redirects=self.io_redirects)
+        sec = CHROOTSecurity(self.get_fs(), io_redirects=launch_kwargs.get('io_redirects', None))
         for name in self.get_allowed_syscalls():
             if isinstance(name, tuple) and len(name) == 2:
                 name, handler = name
@@ -108,12 +107,11 @@ class BaseExecutor(ResourceProxy):
     else:
         def launch(self, *args, **kwargs):
             return SecurePopen(self.get_cmdline() + list(args), executable=self.get_executable(),
-                               security=self.get_security(), address_grace=self.get_address_grace(),
+                               security=self.get_security(launch_kwargs=kwargs), address_grace=self.get_address_grace(),
                                time=kwargs.get('time'), memory=kwargs.get('memory'),
                                stderr=(PIPE if kwargs.get('pipe_stderr', False) else None),
                                env=self.get_env(), cwd=self._dir, nproc=self.get_nproc(),
-                               unbuffered=kwargs.get('unbuffered', False),
-                               io_redirects=kwargs.get('io_redirects', None))
+                               unbuffered=kwargs.get('unbuffered', False))
 
     def launch_unsafe(self, *args, **kwargs):
         return Popen(self.get_cmdline() + list(args),

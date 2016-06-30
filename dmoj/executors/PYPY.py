@@ -11,8 +11,8 @@ class Executor(PythonExecutor):
     fs = ['.*\.(?:so|py[co]?$)', '/proc/cpuinfo$', '/proc/meminfo$', '/etc/localtime$', '/dev/urandom$'] + [command] \
          + ([env['runtime']['pypydir']] if 'pypydir' in env['runtime'] else [])
 
-    def get_security(self):
-        security = super(Executor, self).get_security()
+    def get_security(self, **kwargs):
+        security = super(Executor, self).get_security(**kwargs)
         from dmoj.cptbox.syscalls import sys_unlink
 
         def eaccess(debugger):

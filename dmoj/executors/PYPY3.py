@@ -11,10 +11,10 @@ class Executor(PythonExecutor):
     fs = ['.*\.(?:so|py[co]?$)', '/proc/cpuinfo$', '/proc/meminfo$', '/etc/localtime$', '/dev/urandom$'] + [command] \
          + ([env['runtime']['pypy3dir']] if 'pypy3dir' in env['runtime'] else [])
 
-    def get_security(self):
+    def get_security(self, **kwargs):
         from dmoj.cptbox.syscalls import sys_mkdir, sys_unlink
 
-        sec = super(Executor, self).get_security()
+        sec = super(Executor, self).get_security(**kwargs)
 
         def unsafe_pypy3dir(debugger):
             # Relies on the fact this user can't access here.

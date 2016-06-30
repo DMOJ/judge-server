@@ -16,8 +16,8 @@ gets stdin input
 puts $input
 '''
 
-    def get_security(self):
-        security = super(Executor, self).get_security()
+    def get_security(self, **kwargs):
+        security = super(Executor, self).get_security(**kwargs)
 
         def handle_socket(debugger):
             def socket_return():

@@ -73,8 +73,9 @@ class GCCExecutor(CompiledExecutor):
     def get_fs(self):
         return ['.*\.so', '/proc/meminfo', '/dev/null']
 
-    def get_security(self):
-        return CHROOTSecurity(self.get_fs(), writable=self._writable)
+    def get_security(self, launch_kwargs=None):
+        return CHROOTSecurity(self.get_fs(), writable=self._writable,
+                              io_redirects=launch_kwargs.get('io_redirects', None))
 
     def get_env(self):
         return GCC_ENV

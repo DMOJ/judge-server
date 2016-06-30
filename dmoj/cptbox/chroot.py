@@ -119,7 +119,7 @@ class CHROOTSecurity(dict):
                     # Duplicate the handle so that in case a program decides to close it, the original will not
                     # be closed as well.
                     handle = os.dup(redirect)
-                    self._writable += handle
+                    self._writable.append(handle)
 
                     # dup overrides the ebx register with the redirect fd, but we should return it back to the
                     # file pointer in case some program requires it to remain in the register post-syscall,

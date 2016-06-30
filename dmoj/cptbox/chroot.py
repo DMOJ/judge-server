@@ -10,12 +10,12 @@ class CHROOTSecurity(dict):
     def __init__(self, filesystem, writable=(1, 2), io_redirects=None):
         super(CHROOTSecurity, self).__init__()
         self.fs_jail = re.compile('|'.join(filesystem) if filesystem else '^')
-        self._writable = writable
+        self._writable = list(writable)
         self._io_redirects = io_redirects
 
         self.update({
             sys_read: ALLOW,
-            sys_write: STDOUTERR if writable == (1, 2) else self.do_write,
+            sys_write: STDOUTERR if writable == (1, 2) and not io_redirects else self.do_write,
             sys_writev: self.do_write,
             sys_open: self.do_open,
             sys_access: self.do_access,
@@ -119,6 +119,7 @@ class CHROOTSecurity(dict):
                     # Duplicate the handle so that in case a program decides to close it, the original will not
                     # be closed as well.
                     handle = os.dup(redirect)
+                    self._writable += handle
 
                     # dup overrides the ebx register with the redirect fd, but we should return it back to the
                     # file pointer in case some program requires it to remain in the register post-syscall,

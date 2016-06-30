@@ -119,18 +119,22 @@ class CHROOTSecurity(dict):
                 is_valid_write = 'w' in user_mode and (kernel_flags & os.O_WRONLY) and redirect in self._writable
 
                 if is_valid_read or is_valid_write:
-                    # Duplicate the handle so that in case a program decides to close it, the original will not
-                    # be closed as well.
-                    debugger.uarg0 = redirect
+                    # We have to duplicate the handle so that in case a program decides to close it,
+                    # the original will not be closed as well.
+                    # To do this, we can hijack the current open call and replace it with a dup call.
+                    # The structure of a dup call is syscall=sys_dup, arg0=id to dup, so let's set that up.
                     debugger.syscall = debugger.get_syscall_id(sys_dup)
+                    debugger.uarg0 = redirect
 
+                    # Once the syscall executes, the result will be our dup'd handle.
                     def on_return():
                         handle = debugger.result
                         self._writable.append(handle)
 
                         # dup overrides the ebx register with the redirect fd, but we should return it back to the
-                        # file pointer in case some program requires it to remain in the register post-syscall,
-                        # even though an open syscall isn't actually executed (a no-arg getpid is, instead)
+                        # file pointer in case some program requires it to remain in the register post-syscall.
+                        # The final two args for sys_open (flags & mode) are untouched by sys_dup, so we can leave
+                        # them as-is.
                         debugger.uarg0 = file_ptr
                     debugger.on_return(on_return)
 

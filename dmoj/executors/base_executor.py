@@ -36,10 +36,11 @@ class BaseExecutor(ResourceProxy):
     test_time = 10
     test_memory = 65536
 
-    def __init__(self, problem_id, source_code):
+    def __init__(self, problem_id, source_code, io_redirects=None, **kwargs):
         super(BaseExecutor, self).__init__()
         self.problem = problem_id
         self.source = source_code
+        self.io_redirects = io_redirects
 
     def get_fs(self):
         return self.fs
@@ -50,7 +51,7 @@ class BaseExecutor(ResourceProxy):
     def get_security(self):
         if CHROOTSecurity is None:
             raise NotImplementedError('No security manager on Windows')
-        sec = CHROOTSecurity(self.get_fs())
+        sec = CHROOTSecurity(self.get_fs(), io_redirects=self.io_redirects)
         for name in self.get_allowed_syscalls():
             if isinstance(name, tuple) and len(name) == 2:
                 name, handler = name
@@ -154,8 +155,8 @@ class BaseExecutor(ResourceProxy):
 
 
 class ScriptExecutor(BaseExecutor):
-    def __init__(self, problem_id, source_code):
-        super(ScriptExecutor, self).__init__(problem_id, source_code)
+    def __init__(self, problem_id, source_code, **kwargs):
+        super(ScriptExecutor, self).__init__(problem_id, source_code, **kwargs)
         self._code = self._file(problem_id + self.ext)
         self.create_files(problem_id, source_code)
 
@@ -172,7 +173,7 @@ class ScriptExecutor(BaseExecutor):
 
 class CompiledExecutor(BaseExecutor):
     def __init__(self, problem_id, source_code, *args, **kwargs):
-        super(CompiledExecutor, self).__init__(problem_id, source_code)
+        super(CompiledExecutor, self).__init__(problem_id, source_code, **kwargs)
         self.create_files(problem_id, source_code, *args, **kwargs)
         self.warning = None
         self._executable = self.compile()

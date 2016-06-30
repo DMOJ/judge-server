@@ -25,11 +25,11 @@ class Executor(CExecutor):
     name = 'BF'
     test_program = ',+[-.,+]'
 
-    def __init__(self, problem_id, source_code):
+    def __init__(self, problem_id, source_code, **kwargs):
         if source_code.count('[') != source_code.count(']'):
             raise CompileError('Unmatched brackets')
         code = template % (''.join(itertools.imap(trans.get, source_code, itertools.repeat(''))))
-        super(Executor, self).__init__(problem_id, code)
+        super(Executor, self).__init__(problem_id, code, **kwargs)
 
 
 initialize = Executor.initialize

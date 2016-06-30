@@ -213,7 +213,7 @@ class CLRExecutor(ResourceProxy):
     compiler = None
     compile_args = ['-nologo', '-out:{exe}', '{source}']
 
-    def __init__(self, problem_id, source_code):
+    def __init__(self, problem_id, source_code, **kwargs):
         super(CLRExecutor, self).__init__()
         self.source = self._file('%s.%s' % (problem_id, self.extension))
         self.name = self._file('%s.exe' % problem_id)

@@ -16,7 +16,7 @@ VC_ENV = dict((k.encode('mbcs'), v.encode('mbcs')) for k, v in VC_ENV.iteritems(
 
 
 class Executor(ResourceProxy):
-    def __init__(self, problem_id, main_source, aux_sources=None):
+    def __init__(self, problem_id, main_source, aux_sources=None, **kwargs):
         super(Executor, self).__init__()
 
         if not aux_sources:

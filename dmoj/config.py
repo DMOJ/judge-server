@@ -124,6 +124,39 @@ class TestCase(object):
         self.output_prefix_length = config.output_prefix_length
         self._generated = None
 
+    def io_redirects(self):
+        redirects = self.config.io_redirects
+        if not redirects:
+            return None
+
+        # io_redirects:
+        #   DATA01.in:
+        #     fd: 0
+        #     mode: "r"
+        #   DATA01.out:
+        #     fd: 1
+        #     mode: "w"
+
+        filtered_data = {}
+
+        for redirect in redirects:
+            mapping = redirects[redirect]
+            if 'fd' not in mapping:
+                raise InvalidInitException("no fd specified for redirect '%s'" % redirect)
+            if 'mode' not in mapping:
+                raise InvalidInitException("no mode specified for redirect '%s'" % redirect)
+            if mapping.mode not in 'rw':
+                raise InvalidInitException("invalid mode for redirect '%s': valid options are 'r', 'w'" % redirect)
+            if isinstance(mapping.fd, str):
+                mapped = {'stdin': 0, 'stdout': 1, 'stderr': 2}.get(mapping.fd, None)
+                if mapped is None:
+                    raise InvalidInitException("unknown named fd for redirect '%s'" % redirect)
+                mapping.fd = mapped
+
+            filtered_data[redirect] = (mapping.mode, mapping.fd)
+
+        return filtered_data
+
     def _normalize(self, data):
         return data.replace('\r\n', '\n')
 
@@ -141,7 +174,8 @@ class TestCase(object):
 
         executor = self.problem.generator_manager.get_generator(filename, flags)
         # convert all args to str before launching; allows for smoother int passing
-        proc = executor.launch_unsafe(*map(str, args), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc = executor.launch_unsafe(*map(str, args), stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                      stderr=subprocess.PIPE)
 
         try:
             input = self.problem.problem_data[self.config['in']] if self.config['in'] else None

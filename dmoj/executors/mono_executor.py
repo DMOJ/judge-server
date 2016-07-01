@@ -1,15 +1,13 @@
-import sys
+import errno
 import os
 import re
-import errno
+import sys
 from collections import defaultdict
 
 from dmoj.cptbox import CHROOTSecurity
 from dmoj.cptbox.handlers import ALLOW, ACCESS_DENIED
 from dmoj.cptbox.syscalls import *
 from .base_executor import CompiledExecutor
-from dmoj.judgeenv import env
-
 
 CS_FS = ['.*\.so', '/proc/(?:self/|xen)', '/dev/shm/', '/proc/stat', '/usr/lib/mono', 'mono',
          '/etc/nsswitch.conf$', '/etc/passwd$', '/etc/mono/', '/dev/null$', '.*/.mono/',
@@ -30,7 +28,7 @@ class MonoExecutor(CompiledExecutor):
         return ['mono', self._executable]
 
     def get_executable(self):
-        return env['runtime']['mono']
+        return self.runtime_dict['mono']
 
     def get_security(self, launch_kwargs=None):
         fs = CS_FS + [self._dir]
@@ -108,6 +106,6 @@ class MonoExecutor(CompiledExecutor):
 
     @classmethod
     def initialize(cls, sandbox=True):
-        if 'mono' not in env['runtime'] or not os.path.isfile(env['runtime']['mono']):
+        if 'mono' not in cls.runtime_dict or not os.path.isfile(cls.runtime_dict['mono']):
             return False
         return super(MonoExecutor, cls).initialize(sandbox=sandbox)

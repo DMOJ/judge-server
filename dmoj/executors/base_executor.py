@@ -138,25 +138,28 @@ class BaseExecutor(ResourceProxy):
         return cls.run_self_test(sandbox)
 
     @classmethod
-    def run_self_test(cls, sandbox=True):
+    def run_self_test(cls, sandbox=True, output=True):
         if not cls.test_program:
             return True
 
-        print ansi_style("%-39s%s" % ('Self-testing #ansi[%s](|underline):' % cls.name, '')),
+        if output:
+            print ansi_style("%-39s%s" % ('Self-testing #ansi[%s](|underline):' % cls.name, '')),
         try:
             executor = cls(cls.test_name, cls.test_program)
             proc = executor.launch(time=cls.test_time, memory=cls.test_memory) if sandbox else executor.launch_unsafe()
             test_message = 'echo: Hello, World!'
             stdout, stderr = proc.communicate(test_message + '\n')
             res = stdout.strip() == test_message and not stderr
-            print ansi_style(['#ansi[Failed](red|bold)', '#ansi[Success](green|bold)'][res])
+            if output:
+                print ansi_style(['#ansi[Failed](red|bold)', '#ansi[Success](green|bold)'][res])
             if stderr:
                 print>> sys.stderr, stderr
             return res
         except Exception:
-            print ansi_style('#ansi[Failed](red|bold)')
-            import traceback
-            traceback.print_exc()
+            if output:
+                print ansi_style('#ansi[Failed](red|bold)')
+                import traceback
+                traceback.print_exc()
             return False
 
     @classmethod
@@ -171,7 +174,7 @@ class BaseExecutor(ResourceProxy):
                 return None
 
         executor = type('Executor', (cls,), {'runtime_dict': result})
-        return result if executor.run_self_test() else None
+        return result if executor.run_self_test(output=False) else None
 
     @classmethod
     def get_find_first_mapping(cls):

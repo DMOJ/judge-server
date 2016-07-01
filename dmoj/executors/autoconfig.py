@@ -10,6 +10,7 @@ from dmoj.utils.ansi import ansi_style
 
 def main():
     result = {}
+    env['id'] = 'autoconfig'
     env['runtime'] = {}
 
     for name in get_available():

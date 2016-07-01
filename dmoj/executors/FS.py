@@ -7,6 +7,7 @@ class Executor(CLRExecutor):
 
     compiler = 'fsc'
     compile_args = ['--nologo', '--out:{exe}', '{source}']
+    compiler_time_limit = 20
 
     test_program = '''\
 open System

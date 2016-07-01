@@ -1,5 +1,6 @@
 import os
 import re
+import traceback
 from importlib import import_module
 
 from dmoj.judgeenv import env, only_executors, exclude_executors
@@ -9,50 +10,48 @@ _reexecutor = re.compile('([A-Z0-9]+)\.py$')
 # List of executors that exist for historical purposes, but which shouldn't ever be run on a normal system
 # We keep them for compatibility purposes, but they are not important enough to have a commandline flag for enabling
 # them; instead, removing them from this list suffices.
-_unsupported_executors = ['CPP0X']
+_unsupported_executors = {'CPP0X'}
 
 executors = {}
 
 
 def load_executors():
-    __executors = set(i.group(1) for i in map(_reexecutor.match,
-                                              os.listdir(os.path.dirname(__file__)))
-                      if i is not None)
+    to_load = set(i.group(1) for i in map(_reexecutor.match,
+                                          os.listdir(os.path.dirname(__file__)))
+                  if i is not None)
 
     if only_executors:
-        __executors &= only_executors
+        to_load &= only_executors
     if exclude_executors:
-        __executors -= exclude_executors
-    __executors = sorted(__executors)
+        to_load -= exclude_executors
+    to_load -= _unsupported_executors
+    to_load = sorted(to_load)
 
-    import traceback
+    print 'Self-testing executors...'
 
-    def __load_module(executor):
+    for name in to_load:
         try:
-            module = import_module('%s.%s' % (__name__, executor))
+            executor = import_module('%s.%s' % (__name__, name))
         except ImportError as e:
             if e.message not in ('No module named _cptbox',
                                  'No module named msvcrt',
                                  'No module named _wbox',
                                  'No module named termios'):
                 traceback.print_exc()
-            return None
-        return module
+            continue
 
-    print 'Self-testing executors...'
+        if not hasattr(executor, 'Executor'):
+            continue
 
-    for name in __executors:
-        if name in _unsupported_executors:
+        cls = executor.Executor
+        if hasattr(cls, 'initialize') and not cls.initialize(sandbox=env.get('selftest_sandboxing', True)):
             continue
-        executor = __load_module(name)
-        if executor is None:
-            continue
-        if hasattr(executor, 'initialize') and not executor.initialize(sandbox=env.get('selftest_sandboxing', True)):
-            continue
+
         if hasattr(executor, 'aliases'):
             for alias in executor.aliases():
-                executors[alias] = executor
+                if alias not in _unsupported_executors:
+                    executors[alias] = cls
         else:
-            executors[name] = executor
+            executors[name] = cls
 
     print

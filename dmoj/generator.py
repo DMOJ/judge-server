@@ -50,7 +50,6 @@ class GeneratorManager(object):
         clazz = lookup.get(ext, None)
         if not clazz:
             raise IOError('could not identify generator extension')
-        clazz = clazz.Executor
 
         if hasattr(clazz, 'flags'):
             # We shouldn't be mutating the base class flags

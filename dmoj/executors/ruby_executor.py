@@ -12,3 +12,7 @@ class RubyExecutor(ScriptExecutor):
     @classmethod
     def get_command(cls):
         return env['runtime'].get(cls.name.lower())
+
+    @classmethod
+    def get_find_first_mapping(cls):
+        return {cls.name.lower(): cls.command_paths}

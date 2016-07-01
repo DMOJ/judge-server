@@ -238,7 +238,7 @@ class CompiledExecutor(BaseExecutor):
         try:
             import resource
             def limit_executable_size():
-                resource.setrlimit(resource.RLIMIT_FSIZE, self.executable_size)
+                resource.setrlimit(resource.RLIMIT_FSIZE, (self.executable_size, self.executable_size))
 
             kwargs['preexec_fn'] = limit_executable_size
         except ImportError:

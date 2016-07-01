@@ -58,5 +58,5 @@ object self_test {
 
         data = cls.autoconfig_run_test(result)
         if data[1]:
-            data[2] = 'Using %s' % scala
+            data = data[:2] + ('Using %s' % scala,) + data[3:]
         return data

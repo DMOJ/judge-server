@@ -129,7 +129,12 @@ class JavaExecutor(CompiledExecutor):
         JVM_DIR = '/usr/lib/jvm'
         regex = re.compile(cls.jvm_regex)
 
-        for item in os.listdir('/usr/lib/jvm'):
+        try:
+            vms = os.listdir('/usr/lib/jvm')
+        except OSError:
+            vms = []
+
+        for item in vms:
             path = os.path.join(JVM_DIR, item)
             if not os.path.isdir(path) or os.path.islink(path):
                 continue

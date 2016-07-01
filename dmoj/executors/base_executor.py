@@ -255,6 +255,15 @@ class CompiledExecutor(BaseExecutor):
                 self._shocker.start()
 
         def _shocker_thread(self):
+            # Though this shares a name with the shocker thread used for submissions, where the process shocker thread
+            # is a fine scalpel that ends a TLE process with surgical precision, this is more like a rusty hatchet
+            # that beheads a misbehaving compiler.
+            #
+            # It's not very accurate: time starts ticking in the next line, regardless of whether the process is actually
+            # running, and the time is updated in 0.25s intervals. Nonetheless, it serves the purpose of not allowing
+            # the judge to die.
+            #
+            # See <https://github.com/DMOJ/judge/issues/141>
             start_time = time.time()
 
             while self.returncode is None:

@@ -13,12 +13,13 @@ feature_split = re.compile('[\s,]+').split
 
 class ASMExecutor(CompiledExecutor):
     arch = None
-    as_path = None
-    ld_path = None
+    as_name = None
+    ld_name = None
     qemu_path = None
     dynamic_linker = None
     crt_pre = None
     crt_post = None
+    platform_prefix = None
 
     name = 'ASM'
     ext = '.asm'
@@ -34,6 +35,14 @@ class ASMExecutor(CompiledExecutor):
         if features is not None:
             return set(filter(None, feature_split(features.group(1))))
         return set()
+
+    @classmethod
+    def get_as_path(cls):
+        return cls.runtime_dict.get(cls.as_name)
+
+    @classmethod
+    def get_ld_path(cls):
+        return cls.runtime_dict.get(cls.ld_name)
 
     def get_as_args(self, object):
         raise NotImplementedError()
@@ -54,7 +63,7 @@ class ASMExecutor(CompiledExecutor):
             to_link = ['-dynamic-linker', self.dynamic_linker] + self.crt_pre + ['-lc'] + to_link + self.crt_post
 
         executable = self._file(self.problem)
-        process = subprocess.Popen([self.ld_path, '-s', '-o', executable] + to_link,
+        process = subprocess.Popen([self.get_ld_path(), '-s', '-o', executable] + to_link,
                                    cwd=self._dir, stderr=subprocess.PIPE, preexec_fn=self.create_executable_fslimit())
         ld_output = process.communicate()[1]
         if process.returncode != 0:
@@ -89,9 +98,9 @@ class ASMExecutor(CompiledExecutor):
     def initialize(cls, sandbox=True):
         if cls.qemu_path is None and not can_debug(cls.arch):
             return False
-        if any(i is None for i in (cls.as_path, cls.ld_path, cls.dynamic_linker, cls.crt_pre, cls.crt_post)):
+        if any(i is None for i in (cls.get_as_path(), cls.get_ld_path(), cls.dynamic_linker, cls.crt_pre, cls.crt_post)):
             return False
-        if any(not os.path.isfile(i) for i in (cls.as_path, cls.ld_path, cls.dynamic_linker)):
+        if any(not os.path.isfile(i) for i in (cls.get_as_path(), cls.get_ld_path(), cls.dynamic_linker)):
             return False
         if any(not os.path.isfile(i) for i in cls.crt_pre) or any(not os.path.isfile(i) for i in cls.crt_post):
             return False
@@ -102,11 +111,11 @@ class GASExecutor(ASMExecutor):
     name = 'GAS'
 
     def get_as_args(self, object):
-        return [self.as_path, '-o', object, self._code]
+        return [self.get_as_path(), '-o', object, self._code]
 
     def assemble(self):
         object = self._file('%s.o' % self.problem)
-        process = subprocess.Popen([self.as_path, '-o', object, self._code],
+        process = subprocess.Popen([self.get_as_path(), '-o', object, self._code],
                                    cwd=self._dir, stderr=subprocess.PIPE)
         as_output = process.communicate()[1]
         if process.returncode != 0:
@@ -114,9 +123,16 @@ class GASExecutor(ASMExecutor):
 
         return as_output, [object]
 
+    @classmethod
+    def get_find_first_mapping(cls):
+        if cls.platform_prefix is None:
+            return None
+        return {'as': '%s-as' % cls.platform_prefix, 'ld': '%s-ld' % cls.platform_prefix}
+
 
 class NASMExecutor(ASMExecutor):
     name = 'NASM'
+    as_name = 'nasm'
     nasm_format = None
 
     def find_features(self, source_code):
@@ -126,12 +142,18 @@ class NASMExecutor(ASMExecutor):
         return features
 
     def get_as_args(self, object):
-        return [self.as_path, '-f', self.nasm_format, self._code, '-o', object]
+        return [self.get_as_path(), '-f', self.nasm_format, self._code, '-o', object]
+
+    @classmethod
+    def get_find_first_mapping(cls):
+        if cls.platform_prefix is None:
+            return None
+        return {'ld': '%s-ld' % cls.platform_prefix, 'nasm': 'nasm'}
 
 
 class PlatformX86Mixin(object):
     arch = X86
-    ld_path = env['runtime'].get('ld_x86', None)
+    ld_name = 'ld_x86'
     qemu_path = env['runtime'].get('qemu_x86', None)
     dynamic_linker = env['runtime'].get('ld.so_x86', '/lib/ld-linux.so.2')
 
@@ -145,7 +167,7 @@ class PlatformX86Mixin(object):
 
 class PlatformX64Mixin(object):
     arch = X64
-    ld_path = env['runtime'].get('ld_x64', None)
+    ld_name = 'ld_x64'
     qemu_path = env['runtime'].get('qemu_x64', None)
     dynamic_linker = env['runtime'].get('ld.so_x64', '/lib64/ld-linux-x86-64.so.2')
     crt_pre = env['runtime'].get('crt_pre_x64',

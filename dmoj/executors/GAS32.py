@@ -1,9 +1,8 @@
 from dmoj.executors.asm_executor import GASExecutor, PlatformX86Mixin
-from dmoj.judgeenv import env
 
 
 class Executor(PlatformX86Mixin, GASExecutor):
-    as_path = env['runtime'].get('as_x86', None)
+    as_name = 'as_x86'
     name = 'GAS32'
 
     test_program = r'''.intel_syntax noprefix

@@ -1,9 +1,7 @@
 from dmoj.executors.asm_executor import NASMExecutor, PlatformX64Mixin
-from dmoj.judgeenv import env
 
 
 class Executor(PlatformX64Mixin, NASMExecutor):
-    as_path = env['runtime'].get('nasm', None)
     nasm_format = 'elf64'
 
     name = 'NASM64'

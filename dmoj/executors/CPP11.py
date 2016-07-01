@@ -3,7 +3,7 @@ from dmoj.judgeenv import env
 
 
 class Executor(CPPExecutor):
-    command = env['runtime'].get('g++11')
+    command = 'g++11'
     std = 'c++11'
     name = 'CPP11'
     test_program = '''

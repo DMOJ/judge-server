@@ -6,7 +6,7 @@ from dmoj.judgeenv import env
 class Executor(ScriptExecutor):
     ext = '.sed'
     name = 'SED'
-    command = env['runtime'].get('sed', '/bin/sed')
+    command = 'sed', '/bin/sed'
     test_program = '''s/.*/echo: Hello, World!/
 q'''
     fs = ['.*\.(so|sed)', '/dev/urandom$', '/proc/self/maps$', '/proc/filesystems$', '/+lib/charset.alias$']

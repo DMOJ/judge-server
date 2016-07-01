@@ -6,7 +6,7 @@ class Executor(CompiledExecutor):
     ext = '.t'
     name = 'TUR'
     fs = ['.*\.(?:so|tbc$)']
-    command = env['runtime'].get('tprologc')
+    command = 'tprologc'
     test_program = '''\
 var echo : string
 get echo : *

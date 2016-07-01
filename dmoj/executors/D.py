@@ -7,7 +7,7 @@ class Executor(CompiledExecutor):
     name = 'D'
     address_grace = 32768
     fs = ['.*\.so', '/proc/self/maps$']
-    command = env['runtime'].get('dmd')
+    command = 'dmd'
     test_program = '''\
 import std.stdio;
 

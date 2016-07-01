@@ -5,7 +5,7 @@ from dmoj.judgeenv import env
 
 
 class Executor(PythonExecutor):
-    command = env['runtime'].get('pypy3')
+    command = 'pypy3'
     test_program = "print(__import__('sys').stdin.read(), end='')"
     name = 'PYPY3'
     fs = ['.*\.(?:so|py[co]?$)', '/proc/cpuinfo$', '/proc/meminfo$', '/etc/localtime$', '/dev/urandom$'] + [command] \

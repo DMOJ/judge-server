@@ -4,7 +4,7 @@ from .base_executor import ScriptExecutor
 
 class Executor(ScriptExecutor):
     name = 'FORTH'
-    command = env['runtime'].get('gforth')
+    command = 'gforth'
     ext = '.fs'
     test_program = '''\
 : HELLO  ( -- ) ." echo: Hello, World!" CR ;

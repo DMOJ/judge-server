@@ -5,7 +5,7 @@ from dmoj.judgeenv import env
 class Executor(CompiledExecutor):
     ext = '.i'
     name = 'ICK'
-    command = env['runtime'].get('ick')
+    command = 'ick'
     test_program = '''\
         PLEASE DO ,1 <- #1
         DO .4 <- #0

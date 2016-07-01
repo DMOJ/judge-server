@@ -6,7 +6,7 @@ class Executor(ScriptExecutor):
     ext = '.dart'
     name = 'DART'
     nproc = 50
-    command = env['runtime'].get('dart')
+    command = 'dart'
     test_program = '''
 void main() {
     print("echo: Hello, World!");

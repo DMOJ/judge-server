@@ -7,7 +7,7 @@ class Executor(NullStdoutMixin, CompiledExecutor):
     ext = '.hs'
     name = 'HASK'
     fs = ['.*\.so', '/usr/']
-    command = env['runtime'].get('ghc')
+    command = 'ghc'
     syscalls = ['newselect', 'select']
     test_program = '''\
 main = do

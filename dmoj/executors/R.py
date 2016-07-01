@@ -7,7 +7,7 @@ class Executor(ScriptExecutor):
     ext = '.R'
     name = 'R'
     nproc = -1  # needs a bunch
-    command = env['runtime'].get('Rscript')
+    command = 'Rscript'
     test_program = 'writeLines(readLines(file("stdin")))'
     syscalls = ['mkdir', 'setup', 'fork', 'waitpid', 'getpgrp', 'execve']
 

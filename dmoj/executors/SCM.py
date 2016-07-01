@@ -6,7 +6,7 @@ class Executor(CompiledExecutor):
     ext = '.scm'
     name = 'SCM'
     fs = ['.*\.so', '/usr/', '/etc/localtime$', '/dev/null$']
-    command = env['runtime'].get('chicken-csc')
+    command = 'chicken-csc'
     syscalls = ['newselect', 'select']
     test_program = '(declare (uses extras)) (map print (read-lines))'
 

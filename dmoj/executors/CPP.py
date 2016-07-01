@@ -3,7 +3,7 @@ from dmoj.judgeenv import env
 
 
 class Executor(GCCExecutor):
-    command = env['runtime'].get('g++')
+    command = 'g++'
     std = None
     ext = '.cpp'
     name = 'CPP'

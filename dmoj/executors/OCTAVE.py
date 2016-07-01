@@ -3,7 +3,7 @@ from dmoj.judgeenv import env
 class Executor(ScriptExecutor):
     ext = '.m'
     name = 'OCTAVE'
-    command = env['runtime'].get('octave')
+    command = 'octave'
     address_grace = 131072
     test_program = "disp(input('', 's'))"
 

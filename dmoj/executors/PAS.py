@@ -7,7 +7,7 @@ class Executor(NullStdoutMixin, CompiledExecutor):
     ext = '.pas'
     name = 'PAS'
     fs = ['.*\.so']
-    command = env['runtime'].get('fpc')
+    command = 'fpc'
     test_program = '''\
 var line : string;
 begin

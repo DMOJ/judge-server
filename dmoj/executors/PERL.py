@@ -5,7 +5,7 @@ from dmoj.judgeenv import env
 class Executor(ScriptExecutor):
     ext = '.pl'
     name = 'PERL'
-    command = env['runtime'].get('perl')
+    command = 'perl'
     test_program = 'print<>'
     fs = ['.*\.(?:so|p[lm]$)', '/dev/urandom$']
 

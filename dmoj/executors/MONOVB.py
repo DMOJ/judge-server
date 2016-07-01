@@ -7,7 +7,7 @@ from dmoj.judgeenv import env
 class Executor(MonoExecutor):
     ext = '.vb'
     name = 'MONOVB'
-    command = env['runtime'].get('mono-vbnc')
+    command = 'mono-vbnc'
 
     test_program = '''\
 Imports System

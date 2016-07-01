@@ -5,7 +5,7 @@ from dmoj.judgeenv import env
 class Executor(ScriptExecutor):
     ext = '.pl'
     name = 'PRO'
-    command = env['runtime'].get('swipl')
+    command = 'swipl'
     test_program = '''
     :- set_prolog_flag(verbose,silent).
     :- prompt(_, '').

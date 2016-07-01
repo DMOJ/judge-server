@@ -120,7 +120,7 @@ class BaseExecutor(ResourceProxy):
 
     @classmethod
     def get_command(cls):
-        return cls.command
+        return env['runtime'].get(cls.command)
 
     @classmethod
     def initialize(cls, sandbox=True):

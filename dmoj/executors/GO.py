@@ -10,7 +10,7 @@ class Executor(CompiledExecutor):
     address_grace = 786432
     fs = ['.*\.so', '/proc/stat$']
     syscalls = ['modify_ldt']
-    command = env['runtime'].get('go')
+    command = 'go'
     test_name = 'echo'
     test_program = '''\
 package main

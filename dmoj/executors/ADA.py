@@ -4,7 +4,7 @@ from .GCCExecutor import GCCExecutor
 
 class Executor(GCCExecutor):
     name = 'ADA'
-    command = env['runtime'].get('gnatmake')
+    command = 'gnatmake'
     ext = '.adb'
     test_program = '''\
 with Ada.Text_IO; use Ada.Text_IO;

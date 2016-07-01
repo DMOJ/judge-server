@@ -3,5 +3,5 @@ from dmoj.judgeenv import env
 
 
 class Executor(CExecutor):
-    command = env['runtime'].get('clang')
+    command = 'clang'
     name = 'CLANG'

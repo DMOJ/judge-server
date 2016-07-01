@@ -3,7 +3,7 @@ from dmoj.judgeenv import env
 
 
 class Executor(GCCExecutor):
-    command = env['runtime'].get('gcc')
+    command = 'gcc'
     flags = ['-std=c99']
     ext = '.c'
     name = 'C'

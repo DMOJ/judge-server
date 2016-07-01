@@ -10,7 +10,7 @@ class Executor(CompiledExecutor):
           '/etc/passwd$', '/dev/null$', '/sys/devices/system/cpu/online$']
 
     raco = env['runtime'].get('raco')
-    command = env['runtime'].get('racket')
+    command = 'racket'
 
     syscalls = ['epoll_create', 'epoll_wait', 'poll',
                 # PR_SET_NAME = 15

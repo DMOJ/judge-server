@@ -3,5 +3,5 @@ from dmoj.judgeenv import env
 
 
 class Executor(CPP11Executor):
-    command = env['runtime'].get('clang++')
+    command = 'clang++'
     name = 'CLANG++'

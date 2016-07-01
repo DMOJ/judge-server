@@ -7,7 +7,7 @@ class Executor(GCCExecutor):
     ext = '.m'
     objc_flags = []
     objc_ldflags = []
-    command = env['runtime'].get('gobjc')
+    command = 'gobjc'
     name = 'OBJC'
     address_grace = 131072
 

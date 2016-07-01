@@ -5,7 +5,7 @@ from dmoj.judgeenv import env
 class Executor(ScriptExecutor):
     ext = '.awk'
     name = 'AWK'
-    command = env['runtime'].get('awk')
+    command = 'awk'
     test_program = '{ print $0 }'
     fs = ['.*\.(?:so|awk)', '/dev/(?:urandom|null)$', '/proc/self/maps$']
 

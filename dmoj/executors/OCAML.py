@@ -6,7 +6,7 @@ class Executor(CompiledExecutor):
     ext = '.ml'
     name = 'OCAML'
     fs = ['.*\.so']
-    command = env['runtime'].get('ocaml')
+    command = 'ocaml'
     test_program = 'print_endline (input_line stdin)'
 
     def get_compile_args(self):

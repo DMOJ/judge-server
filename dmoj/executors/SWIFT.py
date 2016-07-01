@@ -6,7 +6,7 @@ class Executor(CompiledExecutor):
     ext = '.swift'
     name = 'SWIFT'
     fs = ['.*\.so', '/dev/tty$']
-    command = env['runtime'].get('swiftc')
+    command = 'swiftc'
     test_program = 'print(readLine()!)'
 
     def get_compile_args(self):

@@ -5,7 +5,7 @@ from dmoj.judgeenv import env
 class Executor(MonoExecutor):
     ext = '.cs'
     name = 'MONOCS'
-    command = env['runtime'].get('mono-csc')
+    command = 'mono-csc'
 
     test_program = '''\
 using System;

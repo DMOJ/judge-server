@@ -14,7 +14,7 @@ VC_ENV = dict((k.encode('mbcs'), v.encode('mbcs')) for k, v in VC_ENV.iteritems(
 class Executor(CompiledExecutor):
     name = 'VC'
     ext = '.cpp'
-    command = env['runtime'].get('cl.exe')
+    command = 'cl.exe'
 
     test_program = r'''
 #include <iostream>

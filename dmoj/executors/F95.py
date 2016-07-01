@@ -4,7 +4,7 @@ from .GCCExecutor import GCCExecutor
 
 class Executor(GCCExecutor):
     name = 'F95'
-    command = env['runtime'].get('gfortran')
+    command = 'gfortran'
     ext = '.f95'
     test_program = '''\
 character(100) :: line

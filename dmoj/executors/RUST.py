@@ -8,7 +8,7 @@ class Executor(CompiledExecutor):
     fs = ['.*\.alias', '.*\.so', '/usr/', '/etc/localtime$', '/dev/null$', 
           '/sys/devices/system/cpu/online$', '/proc/stat$', '/proc/self/maps$',
           '/dev/urandom$']
-    command = env['runtime'].get('rustc')
+    command = 'rustc'
     test_program = 'fn main() { println!("echo: Hello, World!"); }'
 
     def get_compile_args(self):

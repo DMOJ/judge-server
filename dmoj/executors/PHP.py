@@ -4,7 +4,7 @@ from dmoj.judgeenv import env
 
 class Executor(PHPExecutor):
     name = 'PHP'
-    command = env['runtime'].get('php')
+    command = 'php'
 
     fs = PHPExecutor.fs
     if 'phpconfdir' in env['runtime']:

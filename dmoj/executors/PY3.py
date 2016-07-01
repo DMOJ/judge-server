@@ -8,7 +8,7 @@ if 'python3dir' in env['runtime']:
 
 
 class Executor(PythonExecutor):
-    command = env['runtime'].get('python3')
+    command = 'python3'
     test_program = "print(__import__('sys').stdin.read(), end='')"
     name = 'PY3'
 

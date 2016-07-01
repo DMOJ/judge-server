@@ -7,7 +7,7 @@ from dmoj.judgeenv import env
 class Executor(CompiledExecutor):
     ext = '.cbl'
     name = 'CBL'
-    command = env['runtime'].get('cobc')
+    command = 'cobc'
     fs = ['.*\.so']
     address_grace = 131072
     test_program = '''\

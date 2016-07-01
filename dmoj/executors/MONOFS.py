@@ -5,7 +5,7 @@ from dmoj.judgeenv import env
 class Executor(MonoExecutor):
     ext = '.fs'
     name = 'MONOFS'
-    command = env['runtime'].get('fsharpc')
+    command = 'fsharpc'
 
     test_program = '''\
 open System

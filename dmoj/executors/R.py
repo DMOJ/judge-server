@@ -9,10 +9,7 @@ class Executor(ScriptExecutor):
     nproc = -1  # needs a bunch
     command = env['runtime'].get('Rscript')
     test_program = 'writeLines(readLines(file("stdin")))'
-    syscalls = ['mkdir', 'setup', 'fork', 'waitpid', 'getpgrp', 'dup2', 'nanosleep',
-                'sched_getaffinity', 'execve',
-                ('socket', ACCESS_DENIED),
-                ('socketcall', ACCESS_DENIED)]
+    syscalls = ['mkdir', 'setup', 'fork', 'waitpid', 'getpgrp', 'execve']
 
     fs = ['stdin', '.*\.(?:so|rdb|rdx|rds|R)', '/lib/', '/etc/ld\.so\.(?:cache|preload|nohwcap)$', '/proc/stat$',
           '/usr/lib/', '/usr/local/lib/', '/etc/passwd$', '/proc/meminfo$', '/sys/devices/system/cpu/online$',

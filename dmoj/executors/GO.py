@@ -9,8 +9,7 @@ class Executor(CompiledExecutor):
     name = 'GO'
     address_grace = 786432
     fs = ['.*\.so', '/proc/stat$']
-    syscalls = ['timer_create', 'timer_settime',
-                'timer_delete', 'modify_ldt', 'sched_getaffinity']
+    syscalls = ['modify_ldt']
     command = env['runtime'].get('go')
     test_name = 'echo'
     test_program = '''\

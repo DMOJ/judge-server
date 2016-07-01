@@ -21,8 +21,6 @@ class Executor(ScriptExecutor):
 
     :- main.
 '''
-    syscalls = ['nanosleep']
-
     fs = ['.*\.(?:so|pl|pro)', '/etc/localtime$', '/usr/lib/', command]
 
     def get_cmdline(self):

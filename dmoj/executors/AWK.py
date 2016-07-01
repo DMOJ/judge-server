@@ -8,7 +8,6 @@ class Executor(ScriptExecutor):
     command = env['runtime'].get('awk')
     test_program = '{ print $0 }'
     fs = ['.*\.(?:so|awk)', '/dev/(?:urandom|null)$', '/proc/self/maps$']
-    syscalls = ['getgroups32', 'dup2']
 
     def get_cmdline(self):
         return [self.get_command(), '-f', self._code]

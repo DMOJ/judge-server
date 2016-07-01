@@ -2,11 +2,8 @@ import re
 import sys
 import os
 
-from dmoj.cptbox import syscalls
-from dmoj.cptbox.handlers import ALLOW, STDOUTERR
+from dmoj.cptbox.handlers import ALLOW, STDOUTERR, ACCESS_DENIED
 from dmoj.cptbox.syscalls import *
-from dmoj.cptbox.sandbox import _SYSCALL_INDICIES
-from dmoj.cptbox.syscalls import translator
 
 
 class CHROOTSecurity(dict):
@@ -26,6 +23,26 @@ class CHROOTSecurity(dict):
             # Deny with report
             sys_mkdir: self.deny_with_file_path('mkdir', 0),
             sys_tgkill: self.do_tgkill,
+
+            sys_getgroups32: ALLOW,
+            sys_sched_getaffinity: ALLOW,
+            sys_sched_getparam: ALLOW,
+            sys_sched_getscheduler: ALLOW,
+            sys_sched_get_priority_min: ALLOW,
+            sys_sched_get_priority_max: ALLOW,
+            sys_timerfd_create: ALLOW,
+            sys_timer_create: ALLOW,
+            sys_timer_settime: ALLOW,
+            sys_timer_delete: ALLOW,
+
+            sys_sigprocmask: ALLOW,
+            sys_rt_sigreturn: ALLOW,
+            sys_nanosleep: ALLOW,
+            sys_sysinfo: ALLOW,
+            sys_getrandom: ALLOW,
+
+            sys_socket: ACCESS_DENIED,
+            sys_socketcall: ACCESS_DENIED,
 
             sys_close: ALLOW,
             sys_stat: ALLOW,

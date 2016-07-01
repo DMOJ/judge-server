@@ -14,5 +14,5 @@ void main() {
 '''
     address_grace = 786432
 
-    syscalls = ['epoll_create', 'epoll_ctl', 'timerfd_create', 'tgkill']
+    syscalls = ['epoll_create', 'epoll_ctl']
     fs = ['.*\.(so|dart)', '/proc/meminfo$', '/dev/urandom$']

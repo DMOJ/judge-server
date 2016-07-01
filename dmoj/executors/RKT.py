@@ -1,4 +1,3 @@
-from dmoj.cptbox.handlers import ACCESS_DENIED
 from dmoj.executors.base_executor import CompiledExecutor
 from dmoj.judgeenv import env
 
@@ -13,8 +12,7 @@ class Executor(CompiledExecutor):
     raco = env['runtime'].get('raco')
     command = env['runtime'].get('racket')
 
-    syscalls = ['epoll_create', 'sigprocmask', 'rt_sigreturn', 'epoll_wait', 'poll',
-                ('socketcall', ACCESS_DENIED), ('socket', ACCESS_DENIED),
+    syscalls = ['epoll_create', 'epoll_wait', 'poll',
                 # PR_SET_NAME = 15
                 ('prctl', lambda debugger: debugger.arg0 in (15,))]
     address_grace = 131072

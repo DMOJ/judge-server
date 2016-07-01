@@ -11,8 +11,10 @@ class PythonExecutor(ScriptExecutor):
     loader_script = '''\
 import runpy, sys, os
 del sys.argv[0]
-sys.stdin = os.fdopen(0, 'r', 65536)
-sys.stdout = os.fdopen(1, 'w', 65536)
+if not sys.stdin.isatty():
+    sys.stdin = os.fdopen(0, 'r', 65536)
+if not sys.stdout.isatty():
+    sys.stdout = os.fdopen(1, 'w', 65536)
 runpy.run_path(sys.argv[0], run_name='__main__')\
 '''
     address_grace = 131072

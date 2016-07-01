@@ -177,10 +177,11 @@ class BaseExecutor(ResourceProxy):
                         result[key] = os.path.abspath(path)
                         break
             else:
-                return None
+                return result, False, 'Failed to find "%s"' % key
 
         executor = type('Executor', (cls,), {'runtime_dict': result})
-        return result if executor.run_self_test(output=False) else None
+        success = executor.run_self_test(output=False)
+        return result, success, '' if success else 'Failed self-test'
 
     @classmethod
     def get_find_first_mapping(cls):

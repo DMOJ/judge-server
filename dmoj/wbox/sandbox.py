@@ -1,11 +1,11 @@
 from subprocess import list2cmdline, Popen
-from uuid import uuid1
 import os
 
 from dmoj.wbox._wbox import UserManager, ProcessManager, NetworkManager, \
     update_address_x86, update_address_x64
 from dmoj.utils.winutils import execution_time
 from dmoj.utils.communicate import safe_communicate as _safe_communicate
+from dmoj.judgeenv import env as judge_config
 
 
 def unicodify(path):
@@ -54,7 +54,7 @@ class WBoxPopen(object):
             # (even though this is valid in most other places in Windows)
             # See https://github.com/DMOJ/judge/issues/166 for more details
             executable.replace('/', '\\')
-            self.network_block = NetworkManager('wbox_%s' % uuid1(), executable)
+            self.network_block = NetworkManager('wbox_%s' % judge_config['id'], executable)
         else:
             self.network_block = None
         self.process.spawn()

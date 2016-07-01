@@ -37,6 +37,7 @@ class CHROOTSecurity(dict):
 
             sys_sigprocmask: ALLOW,
             sys_rt_sigreturn: ALLOW,
+            sys_sigreturn: ALLOW,
             sys_nanosleep: ALLOW,
             sys_sysinfo: ALLOW,
             sys_getrandom: ALLOW,

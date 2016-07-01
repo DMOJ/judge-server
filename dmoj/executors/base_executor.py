@@ -185,7 +185,7 @@ class BaseExecutor(ResourceProxy):
 
     @classmethod
     def get_find_first_mapping(cls):
-        return {cls.command: cls.command_paths}
+        return {cls.command: cls.command_paths or [cls.command]}
 
     @classmethod
     def autoconfig(cls):

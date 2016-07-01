@@ -1,4 +1,5 @@
 from collections import OrderedDict
+import yaml
 
 from dmoj.judgeenv import env
 from dmoj.executors import get_available, load_executor
@@ -21,6 +22,9 @@ def main():
             print ansi_style(['#ansi[Failed](red|bold)', '#ansi[Success](green|bold)'][bool(config)])
             if config:
                 result.update(config)
+
+    print ansi_style('#ansi[Configuration result](green|bold|underline):')
+    print yaml.dump({'runtime': result}, default_flow_style=False)
 
 if __name__ == '__main__':
     main()

@@ -25,8 +25,9 @@ def main():
                 result.update(config)
 
     yaml.add_representer(OrderedDict, yaml.representer.SafeRepresenter.represent_dict)
+    print
     print ansi_style('#ansi[Configuration result](green|bold|underline):')
-    print yaml.dump({'runtime': result}, default_flow_style=False)
+    print yaml.dump({'runtime': result}, default_flow_style=False).rstrip()
 
 if __name__ == '__main__':
     main()

@@ -32,6 +32,8 @@ class BaseExecutor(ResourceProxy):
     fs = ['.*\.so']
     syscalls = []
     command = None
+    command_paths = []
+    runtime_dict = env['runtime']
     name = '(unknown)'
     inject32 = env.get('inject32', default_inject32)
     inject64 = env.get('inject64', default_inject64)
@@ -125,7 +127,7 @@ class BaseExecutor(ResourceProxy):
 
     @classmethod
     def get_command(cls):
-        return env['runtime'].get(cls.command)
+        return cls.runtime_dict.get(cls.command)
 
     @classmethod
     def initialize(cls, sandbox=True):
@@ -156,6 +158,28 @@ class BaseExecutor(ResourceProxy):
             import traceback
             traceback.print_exc()
             return False
+
+    @classmethod
+    def autoconfig_find_first(cls, mapping):
+        result = {}
+        for key, files in mapping.iteritems():
+            for file in files:
+                if os.path.exists(file):
+                    result[key] = file
+                    break
+            else:
+                return None
+
+        executor = type('Executor', (cls,), {'runtime_dist': result})
+        return result if executor.initialize() else None
+
+    @classmethod
+    def get_find_first_mapping(cls):
+        return {cls.command: cls.command_paths}
+
+    @classmethod
+    def autoconfig(cls):
+        return cls.autoconfig_find_first(cls.get_find_first_mapping())
 
 
 class ScriptExecutor(BaseExecutor):

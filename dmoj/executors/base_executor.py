@@ -164,6 +164,8 @@ class BaseExecutor(ResourceProxy):
 
     @classmethod
     def autoconfig_find_first(cls, mapping):
+        if mapping is None:
+            return {}, False, 'Unimplemented'
         result = {}
         for key, files in mapping.iteritems():
             for file in files:
@@ -185,6 +187,8 @@ class BaseExecutor(ResourceProxy):
 
     @classmethod
     def get_find_first_mapping(cls):
+        if cls.command is None:
+            return None
         return {cls.command: cls.command_paths or [cls.command]}
 
     @classmethod

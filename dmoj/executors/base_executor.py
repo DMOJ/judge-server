@@ -3,6 +3,7 @@ from subprocess import Popen
 import subprocess
 import sys
 from shutil import copyfile
+from distutils.spawn import find_executable
 
 from dmoj.error import CompileError
 from dmoj.judgeenv import env
@@ -166,9 +167,15 @@ class BaseExecutor(ResourceProxy):
         result = {}
         for key, files in mapping.iteritems():
             for file in files:
-                if os.path.exists(file):
-                    result[key] = file
-                    break
+                if os.path.isabs(file):
+                    if os.path.exists(file):
+                        result[key] = file
+                        break
+                else:
+                    path = find_executable(file)
+                    if path is not None:
+                        result[key] = os.path.abspath(path)
+                        break
             else:
                 return None
 

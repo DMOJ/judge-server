@@ -5,6 +5,7 @@ class Executor(ScriptExecutor):
     ext = '.awk'
     name = 'AWK'
     command = 'awk'
+    command_paths = ['gawk', 'mawk', 'awk']
     test_program = '{ print $0 }'
     fs = ['.*\.awk']
 

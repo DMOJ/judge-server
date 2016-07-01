@@ -3,6 +3,7 @@ from .GCCExecutor import GCCExecutor
 
 class Executor(GCCExecutor):
     command = 'g++'
+    command_paths = ['g++']
     std = None
     ext = '.cpp'
     name = 'CPP'

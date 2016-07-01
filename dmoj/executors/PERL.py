@@ -5,6 +5,7 @@ class Executor(ScriptExecutor):
     ext = '.pl'
     name = 'PERL'
     command = 'perl'
+    command_paths = ['perl']
     test_program = 'print<>'
     fs = ['.*\.p[lm]$']
 

@@ -7,6 +7,7 @@ class Executor(NullStdoutMixin, CompiledExecutor):
     ext = '.pas'
     name = 'PAS'
     command = 'fpc'
+    command_paths = ['fpc']
     test_program = '''\
 var line : string;
 begin

@@ -9,5 +9,3 @@ class Executor(ScriptExecutor):
     test_program = 'echo: Hello, World!\n'
     fs = ['.*\.(?:so|txt)']
     syscalls = ['fadvise64_64', 'fadvise64']
-
-initialize = Executor.initialize

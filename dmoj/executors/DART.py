@@ -16,5 +16,3 @@ void main() {
 
     syscalls = ['epoll_create', 'epoll_ctl', 'timerfd_create', 'tgkill']
     fs = ['.*\.(so|dart)', '/proc/meminfo$', '/dev/urandom$']
-
-initialize = Executor.initialize

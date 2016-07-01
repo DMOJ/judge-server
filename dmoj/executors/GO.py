@@ -31,6 +31,3 @@ func main() {
 
     def get_nproc(self):
         return [-1, 1][os.name == 'nt']
-
-
-initialize = Executor.initialize

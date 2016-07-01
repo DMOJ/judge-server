@@ -13,5 +13,3 @@ begin
   Put_Line ("echo: Hello, World!");
 end Hello;
 '''
-
-initialize = Executor.initialize

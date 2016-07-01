@@ -13,6 +13,3 @@ open System
 let input = System.Console.ReadLine()
 Console.WriteLine(input)
 '''
-
-
-initialize = Executor.initialize

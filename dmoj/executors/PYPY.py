@@ -25,6 +25,3 @@ class Executor(PythonExecutor):
 
         security[sys_unlink] = eaccess
         return security
-
-
-initialize = Executor.initialize

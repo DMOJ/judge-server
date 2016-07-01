@@ -27,5 +27,3 @@ class Executor(ScriptExecutor):
 
     def get_cmdline(self):
         return [self.get_command(), '--goal=main', '-c', self._code]
-
-initialize = Executor.initialize

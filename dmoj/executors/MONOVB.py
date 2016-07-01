@@ -27,5 +27,3 @@ End Module
 
     def get_compile_output(self, process):
         return process.communicate()[0]
-
-initialize = Executor.initialize

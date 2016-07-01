@@ -15,6 +15,3 @@ HELLO
 
     def get_cmdline(self):
         return [self.get_command(), self._code, '-e', 'bye']
-
-
-initialize = Executor.initialize

@@ -30,6 +30,3 @@ class Executor(CExecutor):
             raise CompileError('Unmatched brackets')
         code = template % (''.join(itertools.imap(trans.get, source_code, itertools.repeat(''))))
         super(Executor, self).__init__(problem_id, code, **kwargs)
-
-
-initialize = Executor.initialize

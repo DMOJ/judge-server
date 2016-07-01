@@ -37,6 +37,3 @@ _exit:
 section .bss
     buffer  resb    4096
 '''
-
-
-initialize = Executor.initialize

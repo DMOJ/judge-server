@@ -12,6 +12,3 @@ read(*,'(A)') line
 write(*,'(A)') line
 end
 '''
-
-initialize = Executor.initialize
-

@@ -37,6 +37,3 @@ _exit:
 buffer:
 	.skip	4096
 '''
-
-
-initialize = Executor.initialize

@@ -24,6 +24,3 @@ class Executor(PythonExecutor):
             sec[sys_mkdir] = unsafe_pypy3dir
             sec[sys_unlink] = unsafe_pypy3dir
         return sec
-
-
-initialize = Executor.initialize

@@ -14,6 +14,3 @@ class test {
         Console.WriteLine(Console.ReadLine());
     }
 }'''
-
-
-initialize = Executor.initialize

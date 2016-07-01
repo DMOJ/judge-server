@@ -11,6 +11,3 @@ class Executor(PythonExecutor):
           '/etc/localtime$', '/dev/urandom$']
     if 'python2dir' in env:
         fs += [str(env['python3dir'])]
-
-
-initialize = Executor.initialize

@@ -9,6 +9,3 @@ class Executor(ScriptExecutor):
     address_grace = 131072
     test_program = "io.write(io.read('*all'))"
     fs = ['.*\.(so|lua$)']
-
-
-initialize = Executor.initialize

@@ -38,6 +38,3 @@ class Executor(CompiledExecutor):
         if cls.raco is None:
             return False
         return super(Executor, cls).initialize(sandbox)
-
-
-initialize = Executor.initialize

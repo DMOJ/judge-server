@@ -11,6 +11,3 @@ class Executor(CompiledExecutor):
 
     def get_compile_args(self):
         return [env['runtime']['ocaml'], self._code, '-o', self.problem]
-
-
-initialize = Executor.initialize

@@ -27,6 +27,3 @@ _start:
 string:
   .ascii "echo: Hello, World!\n"
 '''
-
-
-initialize = Executor.initialize

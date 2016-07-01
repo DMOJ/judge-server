@@ -11,5 +11,3 @@ class Executor(ScriptExecutor):
 
     def get_cmdline(self):
         return ['perl', '-Mre=eval', self._code]
-
-initialize = Executor.initialize

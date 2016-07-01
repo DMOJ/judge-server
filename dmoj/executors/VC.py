@@ -57,5 +57,3 @@ int main() {
 
     def get_env(self):
         return VC_ENV
-
-initialize = Executor.initialize

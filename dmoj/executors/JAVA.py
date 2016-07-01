@@ -15,6 +15,3 @@ public class self_test {
             System.out.write(buffer, 0, read);
     }
 }'''
-
-
-initialize = Executor.initialize

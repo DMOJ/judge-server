@@ -14,5 +14,3 @@ q'''
 
     def get_cmdline(self):
         return [self.get_command(), '-f', self._code]
-
-initialize = Executor.initialize

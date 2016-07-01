@@ -32,5 +32,3 @@ process.stdin.on 'readable', () ->
 
     def get_fs(self):
         return super(Executor, self).get_fs() + [env['runtime']['coffee']]
-
-initialize = Executor.initialize

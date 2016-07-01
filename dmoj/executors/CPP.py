@@ -18,5 +18,3 @@ int main() {
 
     def get_flags(self):
         return (['-std=%s' % self.std] if self.std else []) + super(Executor, self).get_flags()
-
-initialize = Executor.initialize

@@ -43,6 +43,3 @@ int main (int argc, const char * argv[]) {
         except CalledProcessError as e:
             return False
         return super(Executor, cls).initialize(sandbox=sandbox)
-
-
-initialize = Executor.initialize

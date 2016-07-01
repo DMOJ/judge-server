@@ -14,5 +14,3 @@ class Executor(PythonExecutor):
 
     def get_fs(self):
         return PYTHON_FS + [self._dir + '$']
-
-initialize = Executor.initialize

@@ -27,6 +27,3 @@ class Executor(CompiledExecutor):
     def get_compile_output(self, process):
         output = process.communicate()[0]
         return output if 'Error:' in output or 'Note:' in output or 'Warning:' in output else None
-
-
-initialize = Executor.initialize

@@ -20,5 +20,3 @@ class test {
 
     def get_compile_args(self):
         return [self.get_command(), self._code, '-r:System.Numerics.dll', '-out:%s' % self.get_compiled_file()]
-
-initialize = Executor.initialize

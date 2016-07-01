@@ -15,5 +15,3 @@ int main() {
     return 0;
 }
 '''
-
-initialize = Executor.initialize

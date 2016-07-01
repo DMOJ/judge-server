@@ -9,6 +9,3 @@ class Executor(ScriptExecutor):
     test_program = 'print(gets());'
     address_grace = 786432
     fs = []  # v8dmoj binaries are distributed statically linked
-
-
-initialize = Executor.initialize

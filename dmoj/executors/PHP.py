@@ -9,6 +9,3 @@ class Executor(PHPExecutor):
     fs = PHPExecutor.fs
     if 'phpconfdir' in env['runtime']:
         fs += [env['runtime']['phpconfdir']]
-
-
-initialize = Executor.initialize

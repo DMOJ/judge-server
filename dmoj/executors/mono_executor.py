@@ -16,7 +16,7 @@ UNLINK_FS = re.compile('/dev/shm/mono.\d+$')
 class MonoExecutor(CompiledExecutor):
     name = 'MONO'
     nproc = -1  # If you use Mono on Windows you are doing it wrong.
-    address_grace = 131072
+    address_grace = 262144
     fs = ['/proc/(?:self/|xen)', '/dev/shm/', '/proc/stat', 'mono', '/etc/nsswitch.conf$', '/etc/passwd$',
           '/etc/mono/', '.*/.mono/', '/sys/', '/proc/uptime$']
 

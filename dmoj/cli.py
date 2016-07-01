@@ -116,6 +116,10 @@ class ListProblemsCommand(Command):
         _args = self.arg_parser.parse_args(line)
         all_problems = judgeenv.get_supported_problems()
 
+        if _args.limit <= 0:
+            print "--limit must be >= 0\n"
+            return
+
         if _args.filter:
             r = re.compile(_args.filter)
             all_problems = filter(lambda x: r.match(x[0]) is not None, all_problems)

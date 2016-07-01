@@ -5,6 +5,7 @@ class Executor(CompiledExecutor):
     ext = '.scm'
     name = 'SCM'
     command = 'chicken-csc'
+    command_paths = ['chicken-csc', 'csc']
     syscalls = ['newselect', 'select']
     test_program = '(declare (uses extras)) (map print (read-lines))'
 

@@ -135,7 +135,6 @@ class QuitCommand(Command):
     help = 'Exits the DMOJ command-line interface.'
 
     def execute(self, line):
-        super(QuitCommand, self).execute(line)
         sys.exit(0)
 
 

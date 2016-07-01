@@ -241,24 +241,29 @@ class ScriptExecutor(BaseExecutor):
 
 class CompiledExecutor(BaseExecutor):
     executable_size = 131072 * 1024  # 128mb
-    compiler_time_limit = 10
+    compiler_time_limit = 5
 
     class TimedPopen(subprocess.Popen):
-        def __init__(self, time_limit=None, *args, **kwargs):
+        def __init__(self, *args, **kwargs):
+            self._time = kwargs.pop('time_limit', None)
             super(CompiledExecutor.TimedPopen, self).__init__(*args, **kwargs)
-            self._time = time_limit
+
             self._killed = False
-            if time_limit:
+            if self._time:
                 # Spawn thread to kill process after it times out
                 self._shocker = threading.Thread(target=self._shocker_thread)
                 self._shocker.start()
 
         def _shocker_thread(self):
-            start_time = time.clock()
+            start_time = time.time()
 
             while self.returncode is None:
-                if time.clock() - start_time > self._time:
-                    os.kill(self.pid, signal.SIGKILL)
+                if time.time() - start_time > self._time:
+                    # Give the process a bit of time to clean up after itself
+                    self.terminate()
+                    if os.name != 'nt':
+                        time.sleep(0.5)
+                        self.kill()  # On Windows this is an alias for terminate()
                     self._killed = True
                     break
                 time.sleep(0.25)
@@ -266,7 +271,7 @@ class CompiledExecutor(BaseExecutor):
         def communicate(self, input=None):
             ret = super(CompiledExecutor.TimedPopen, self).communicate(input=input)
             if self._killed:
-                return ret[0], 'compiler timed out'
+                return ret[0], 'compiler timed out (> %d seconds)\n' % self._time
             return ret
 
     def __init__(self, problem_id, source_code, *args, **kwargs):
@@ -301,10 +306,10 @@ class CompiledExecutor(BaseExecutor):
 
     def get_compile_process(self):
         kwargs = {'stderr': subprocess.PIPE, 'cwd': self._dir, 'env': self.get_compile_env(),
-                  'preexec_fn': self.create_executable_fslimit()}
+                  'preexec_fn': self.create_executable_fslimit(), 'time_limit': self.compiler_time_limit}
         kwargs.update(self.get_compile_popen_kwargs())
 
-        return CompiledExecutor.TimedPopen(self.get_compile_args(), time_limit=self.compiler_time_limit, **kwargs)
+        return self.TimedPopen(self.get_compile_args(), **kwargs)
 
     def get_compile_output(self, process):
         return process.communicate()[1]

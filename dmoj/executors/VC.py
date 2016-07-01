@@ -1,7 +1,8 @@
 import os
 
 from dmoj.judgeenv import env
-from .base_executor import CompiledExecutor
+from dmoj.executors.base_executor import CompiledExecutor
+from dmoj.executors.mixins import NullStdoutMixin
 
 VC_ENV = env['runtime'].get('vc_env', {})
 VC_COMPILE = os.environ.copy()
@@ -11,7 +12,7 @@ VC_COMPILE.update((k.encode('mbcs'), v.encode('mbcs')) for k, v in
 VC_ENV = dict((k.encode('mbcs'), v.encode('mbcs')) for k, v in VC_ENV.iteritems())
 
 
-class Executor(CompiledExecutor):
+class Executor(NullStdoutMixin, CompiledExecutor):
     name = 'VC'
     ext = '.cpp'
     command = 'cl.exe'
@@ -38,11 +39,6 @@ int main() {
                 fo.write(source)
             sources.append(name)
         self.sources = sources
-        self.devnull = open(os.devnull, 'w')
-
-    def cleanup(self):
-        self.devnull.close()
-        super(Executor, self).cleanup()
 
     def get_compile_args(self):
         return ['cl', '-nologo'] + self.sources + ['-W4', '-DONLINE_JUDGE', '-DWIN32', '-D_CRT_SECURE_NO_WARNINGS',
@@ -50,7 +46,9 @@ int main() {
                                                    '-link', '-stack:67108864']
 
     def get_compile_popen_kwargs(self):
-        return {'executable': self.get_command(), 'stdout': self.devnull}
+        result = super(Executor, self).get_compile_popen_kwargs()
+        result['executable'] = self.get_command()
+        return result
 
     def get_compile_env(self):
         return VC_COMPILE

@@ -187,7 +187,7 @@ class SubmitCommand(Command):
         memory_limit = args.memory_limit
 
         err = None
-        if problem_id not in judgeenv.get_supported_problems():
+        if problem_id not in map(itemgetter(0), judgeenv.get_supported_problems()):
             err = "unknown problem '%s'" % problem_id
         elif language_id not in executors:
             err = "unknown language '%s'" % language_id
@@ -247,7 +247,7 @@ class ResubmitCommand(Command):
         ml = args.memory_limit or ml
 
         err = None
-        if id not in judgeenv.get_supported_problems():
+        if id not in map(itemgetter(0), judgeenv.get_supported_problems()):
             err = "unknown problem '%s'" % id
         elif lang not in executors:
             err = "unknown language '%s'" % lang

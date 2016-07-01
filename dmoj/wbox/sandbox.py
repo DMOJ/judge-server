@@ -6,6 +6,8 @@ from dmoj.wbox._wbox import UserManager, ProcessManager, NetworkManager, \
 from dmoj.utils.winutils import execution_time
 from dmoj.utils.communicate import safe_communicate as _safe_communicate
 from dmoj.judgeenv import env as judge_config
+import ctypes
+import sys
 
 
 def unicodify(path):
@@ -24,7 +26,11 @@ update_address_x64(os.path.join(dirname, u'getaddr64.exe'))
 class WBoxPopen(object):
     def __init__(self, argv, time, memory, nproc=1, executable=None, cwd=None, env=None,
                  network_block=False, inject32=None, inject64=None, inject_func=None):
-        self.user = UserManager('wboxusr_%s' % judge_config['id'])
+        username = 'wboxusr_%s' % judge_config['id']
+        if not ctypes.windll.netapi32.NetUserDel(None, username):
+            print>> sys.stderr, "found uncleaned wbox user '%s'; deleted." % username
+        self.user = UserManager(username)
+
         self.process = ProcessManager(self.user.username, self.user.password)
         argv = list2cmdline(argv)
         if not isinstance(argv, unicode):

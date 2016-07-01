@@ -1,7 +1,6 @@
 import os
 
 from .base_executor import ScriptExecutor
-from dmoj.judgeenv import env
 
 
 class Executor(ScriptExecutor):
@@ -22,12 +21,19 @@ process.stdin.on 'readable', () ->
 
     @classmethod
     def initialize(cls, sandbox=True):
-        if 'coffee' not in env['runtime'] or not os.path.isfile(env['runtime']['coffee']):
+        if 'coffee' not in cls.runtime_dict or not os.path.isfile(cls.runtime_dict['coffee']):
             return False
         return super(Executor, cls).initialize(sandbox=sandbox)
 
     def get_cmdline(self):
-        return [self.get_command(), env['runtime']['coffee'], self._code]
+        return [self.get_command(), self.runtime_dict['coffee'], self._code]
 
     def get_fs(self):
-        return super(Executor, self).get_fs() + [env['runtime']['coffee']]
+        return super(Executor, self).get_fs() + [self.runtime_dict['coffee']]
+
+    @classmethod
+    def get_find_first_mapping(cls):
+        return {
+            'node': ['nodejs', 'node'],
+            'coffee': ['coffee']
+        }

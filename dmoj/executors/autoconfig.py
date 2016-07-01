@@ -18,7 +18,7 @@ def main():
             continue
 
         if hasattr(executor.Executor, 'autoconfig'):
-            print ansi_style('%-43s%s' % ('Self-testing #ansi[%s](|underline):' % name, '')),
+            print ansi_style('%-43s%s' % ('Auto-configuring #ansi[%s](|underline):' % name, '')),
             config = executor.Executor.autoconfig()
             print ansi_style(['#ansi[Failed](red|bold)', '#ansi[Success](green|bold)'][bool(config)])
             if config:

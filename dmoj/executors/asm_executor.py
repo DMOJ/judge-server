@@ -149,7 +149,7 @@ class NASMExecutor(ASMExecutor):
     def get_find_first_mapping(cls):
         if cls.platform_prefixes is None:
             return None
-        return {cls.ld_name: ['%s-ld' % i for i in cls.platform_prefixes], 'nasm': 'nasm'}
+        return {cls.ld_name: ['%s-ld' % i for i in cls.platform_prefixes], 'nasm': ['nasm']}
 
 
 class PlatformX86Mixin(object):

@@ -11,6 +11,7 @@ class Executor(PythonExecutor):
     command = 'python3'
     test_program = "print(__import__('sys').stdin.read(), end='')"
     name = 'PY3'
+    fs = PYTHON_FS
 
     def get_fs(self):
-        return PYTHON_FS + [self._dir + '$']
+        return super(PythonExecutor, self).get_fs() + [self._dir + '$']

@@ -12,4 +12,4 @@ class PHPExecutor(ScriptExecutor):
         return ['php', self._code]
 
     def get_fs(self):
-        return self.fs + [self._code]
+        return super(PHPExecutor, self).get_fs() + [self._code]

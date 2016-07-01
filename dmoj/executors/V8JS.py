@@ -1,5 +1,4 @@
 from .base_executor import ScriptExecutor
-from dmoj.judgeenv import env
 
 
 class Executor(ScriptExecutor):
@@ -8,4 +7,4 @@ class Executor(ScriptExecutor):
     command = 'v8dmoj'
     test_program = 'print(gets());'
     address_grace = 786432
-    fs = []  # v8dmoj binaries are distributed statically linked
+    fs = ['*.\.js']  # v8dmoj binaries are distributed statically linked

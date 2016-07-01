@@ -6,7 +6,7 @@ class Executor(CompiledExecutor):
     ext = '.d'
     name = 'D'
     address_grace = 32768
-    command = env['runtime'].get('dmd')
+    command = 'dmd'
     test_program = '''\
 import std.stdio;
 

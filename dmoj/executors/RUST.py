@@ -6,7 +6,7 @@ class Executor(CompiledExecutor):
     ext = '.rs'
     name = 'RUST'
     fs = ['.*\.alias']
-    command = env['runtime'].get('rustc')
+    command = 'rustc'
     test_program = 'fn main() { println!("echo: Hello, World!"); }'
 
     def get_compile_args(self):

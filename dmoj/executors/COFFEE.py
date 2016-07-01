@@ -9,7 +9,7 @@ class Executor(ScriptExecutor):
     name = 'COFFEE'
     nproc = -1
     fs = ['.*\.js$', '/etc/(?:resolv|nsswitch).conf$']
-    command = env['runtime'].get('node')
+    command = 'node'
     syscalls = ['newselect', 'select', 'pipe2', 'write', 'epoll_create1',
                 'eventfd2', 'epoll_ctl', 'epoll_wait']
     test_program = '''\

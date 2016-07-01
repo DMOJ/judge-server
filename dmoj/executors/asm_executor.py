@@ -106,6 +106,12 @@ class ASMExecutor(CompiledExecutor):
             return False
         return cls.run_self_test(sandbox)
 
+    @classmethod
+    def autoconfig(cls):
+        if not can_debug(cls.arch):
+            return {}, False, 'Unable to natively debug'
+        return super(ASMExecutor, cls).autoconfig()
+
 
 class GASExecutor(ASMExecutor):
     name = 'GAS'

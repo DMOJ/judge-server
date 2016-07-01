@@ -9,9 +9,6 @@ from dmoj.cptbox.handlers import ALLOW, ACCESS_DENIED
 from dmoj.cptbox.syscalls import *
 from .base_executor import CompiledExecutor
 
-CS_FS = ['.*\.so', '/proc/(?:self/|xen)', '/dev/shm/', '/proc/stat', '/usr/lib/mono', 'mono',
-         '/etc/nsswitch.conf$', '/etc/passwd$', '/etc/mono/', '/dev/null$', '.*/.mono/',
-         '/sys/', '/proc/uptime$']
 WRITE_FS = ['/proc/self/task/\d+/comm$', '/dev/shm/mono\.\d+$']
 UNLINK_FS = re.compile('/dev/shm/mono.\d+$')
 
@@ -20,6 +17,8 @@ class MonoExecutor(CompiledExecutor):
     name = 'MONO'
     nproc = -1  # If you use Mono on Windows you are doing it wrong.
     address_grace = 131072
+    fs = ['/proc/(?:self/|xen)', '/dev/shm/', '/proc/stat', 'mono', '/etc/nsswitch.conf$', '/etc/passwd$',
+          '/etc/mono/', '.*/.mono/', '/sys/', '/proc/uptime$']
 
     def get_compiled_file(self):
         return self._file('%s.exe' % self.problem)
@@ -31,7 +30,7 @@ class MonoExecutor(CompiledExecutor):
         return self.runtime_dict['mono']
 
     def get_security(self, launch_kwargs=None):
-        fs = CS_FS + [self._dir]
+        fs = self.get_fs() + [self._dir]
         sec = CHROOTSecurity(fs, io_redirects=launch_kwargs.get('io_redirects', None))
         sec[sys_sched_getaffinity] = ALLOW
         sec[sys_statfs] = ALLOW

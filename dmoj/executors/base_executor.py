@@ -49,7 +49,8 @@ class BaseExecutor(ResourceProxy):
         self.source = source_code
 
     def get_fs(self):
-        return BASE_FILESYSTEM + self.fs
+        name = self.__class__.__module__.split('.')[-1]
+        return BASE_FILESYSTEM + self.fs + env.get('extra_fs', {}).get(name, [])
 
     def get_allowed_syscalls(self):
         return self.syscalls

@@ -55,7 +55,7 @@ class ASMExecutor(CompiledExecutor):
 
         executable = self._file(self.problem)
         process = subprocess.Popen([self.ld_path, '-s', '-o', executable] + to_link,
-                                   cwd=self._dir, stderr=subprocess.PIPE)
+                                   cwd=self._dir, stderr=subprocess.PIPE, preexec_fn=self.create_executable_fslimit())
         ld_output = process.communicate()[1]
         if process.returncode != 0:
             raise CompileError(ld_output)

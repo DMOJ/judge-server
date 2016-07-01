@@ -231,18 +231,20 @@ class CompiledExecutor(BaseExecutor):
     def get_compile_popen_kwargs(self):
         return {}
 
-    def get_compile_process(self):
-        kwargs = {'stderr': subprocess.PIPE, 'cwd': self._dir, 'env': self.get_compile_env()}
-        kwargs.update(self.get_compile_popen_kwargs())
-
+    def create_executable_fslimit(self):
         try:
             import resource
             def limit_executable_size():
                 resource.setrlimit(resource.RLIMIT_FSIZE, (self.executable_size, self.executable_size))
 
-            kwargs['preexec_fn'] = limit_executable_size
+            return limit_executable_size
         except ImportError:
-            pass
+            return None
+
+    def get_compile_process(self):
+        kwargs = {'stderr': subprocess.PIPE, 'cwd': self._dir, 'env': self.get_compile_env(),
+                  'preexec_fn': self.create_executable_fslimit()}
+        kwargs.update(self.get_compile_popen_kwargs())
 
         return subprocess.Popen(self.get_compile_args(), **kwargs)
 

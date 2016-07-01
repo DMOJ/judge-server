@@ -1,14 +1,13 @@
-from collections import OrderedDict
 import yaml
 import yaml.representer
 
-from dmoj.judgeenv import env
 from dmoj.executors import get_available, load_executor
+from dmoj.judgeenv import env
 from dmoj.utils.ansi import ansi_style
 
 
 def main():
-    result = OrderedDict()
+    result = {}
     env['runtime'] = {}
 
     for name in get_available():
@@ -34,7 +33,6 @@ def main():
                 if config and success:
                     result.update(config)
 
-    yaml.add_representer(OrderedDict, yaml.representer.SafeRepresenter.represent_dict)
     print
     print ansi_style('#ansi[Configuration result](green|bold|underline):')
     print yaml.dump({'runtime': result}, default_flow_style=False).rstrip()

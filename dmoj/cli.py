@@ -8,6 +8,7 @@ from operator import itemgetter
 import re
 
 from dmoj import judgeenv
+from dmoj.executors import executors
 from dmoj.judge import Judge
 import sys
 from dmoj.utils.ansi import ansi_style
@@ -114,11 +115,12 @@ class ListProblemsCommand(Command):
 
     def execute(self, line):
         _args = self.arg_parser.parse_args(line)
-        all_problems = judgeenv.get_supported_problems()
 
         if _args.limit <= 0:
-            print "--limit must be >= 0\n"
+            ansi_style("#ansi[--limit must be >= 0\n](red|bold)")
             return
+
+        all_problems = judgeenv.get_supported_problems()
 
         if _args.filter:
             r = re.compile(_args.filter)
@@ -133,7 +135,7 @@ class ListProblemsCommand(Command):
             for row in izip_longest(*[problems] * 4, fillvalue=''):
                 print ' '.join(('%*s' % (-max_len, row[i])) for i in xrange(4))
         else:
-            print "No problems matching filter found."
+            print ansi_style("#ansi[No problems matching filter found.](red|bold)")
         print
 
 
@@ -179,6 +181,24 @@ class SubmitCommand(Command):
 
         args = self.arg_parser.parse_args(line)
 
+        problem_id = args.problem_id
+        language_id = args.language_id
+        time_limit = args.time_limit
+        memory_limit = args.memory_limit
+
+        err = None
+        if problem_id not in judgeenv.get_supported_problems():
+            err = "unknown problem '%s'" % problem_id
+        elif language_id not in executors:
+            err = "unknown language '%s'" % language_id
+        elif time_limit <= 0:
+            err = '--time-limit must be >= 0'
+        elif memory_limit <= 0:
+            err = '--memory-limit must be >= 0'
+        if err:
+            print ansi_style('#ansi[%s](red|bold)\n' % err)
+            return
+
         src = []
         try:
             while True:
@@ -190,9 +210,9 @@ class SubmitCommand(Command):
             src = '\n'.join(src)
 
         submission_id_counter += 1
-        graded_submissions.append((args.problem_id, args.language_id, src, args.time_limit, args.memory_limit))
-        self.judge.begin_grading(submission_id_counter, args.problem_id, args.language_id, src, args.time_limit,
-                                 args.memory_limit, False, blocking=True)
+        graded_submissions.append((problem_id, language_id, src, time_limit, memory_limit))
+        self.judge.begin_grading(submission_id_counter, problem_id, language_id, src, time_limit,
+                                 memory_limit, False, blocking=True)
 
 
 class ResubmitCommand(Command):
@@ -215,11 +235,30 @@ class ResubmitCommand(Command):
         args = self.arg_parser.parse_args(line)
 
         submission_id_counter += 1
-        id, lang, src, tl, ml = graded_submissions[args.submission_id - 1]
+        try:
+            id, lang, src, tl, ml = graded_submissions[args.submission_id - 1]
+        except IndexError:
+            print "invalid submission '%d'\n" % (args.submission_id - 1)
+            return
+
         id = args.problem or id
         lang = args.language or lang
         tl = args.time_limit or tl
         ml = args.memory_limit or ml
+
+        err = None
+        if id not in judgeenv.get_supported_problems():
+            err = "unknown problem '%s'" % id
+        elif lang not in executors:
+            err = "unknown language '%s'" % lang
+        elif tl <= 0:
+            err = '--time-limit must be >= 0'
+        elif ml <= 0:
+            err = '--memory-limit must be >= 0'
+        if err:
+            print ansi_style('#ansi[%s](red|bold)\n' % err)
+            return
+
         graded_submissions.append((id, lang, src, tl, ml))
         self.judge.begin_grading(submission_id_counter, id, lang, src, tl, ml, False, blocking=True)
 
@@ -235,8 +274,11 @@ class RejudgeCommand(Command):
         global graded_submissions
 
         args = self.arg_parser.parse_args(line)
-
-        problem, lang, src, tl, ml = graded_submissions[args.submission_id - 1]
+        try:
+            problem, lang, src, tl, ml = graded_submissions[args.submission_id - 1]
+        except IndexError:
+            print ansi_style("#ansi[invalid submission '%d'](red|bold)\n" % (args.submission_id - 1))
+            return
         self.judge.begin_grading(submission_id_counter, problem, lang, src, tl, ml, False, blocking=True)
 
 
@@ -250,6 +292,10 @@ class ListSubmissionsCommand(Command):
 
     def execute(self, line):
         args = self.arg_parser.parse_args(line)
+
+        if args.limit <= 0:
+            print ansi_style('#ansi[--limit must be >= 0](red|bold)\n')
+            return
 
         for i, data in enumerate(
                 graded_submissions if not args.limit else graded_submissions[:args.limit]):

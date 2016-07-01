@@ -19,18 +19,27 @@ def main():
         if hasattr(executor.Executor, 'autoconfig'):
             print ansi_style('%-43s%s' % ('Auto-configuring #ansi[%s](|underline):' % name, '')),
             try:
-                config, success, feedback = executor.Executor.autoconfig()
-            except (ValueError, TypeError):
+                result = executor.Executor.autoconfig()
+                config = result[0]
+                success = result[1]
+                feedback = result[2]
+                errors = '' if len(result) < 4 else result[3]
+            except (TypeError, IndexError):
                 print ansi_style('#ansi[Not supported](red|bold)')
             else:
                 print ansi_style(['#ansi[%s](red|bold)', '#ansi[%s](green|bold)'][success] %
                                  (feedback or ['Failed', 'Success'][success]))
 
-                if not success and config:
-                    print '    Attempted:'
-                    print ' ' * 7, yaml.dump(config, default_flow_style=False).rstrip().replace('\n', '\n' + ' ' * 8)
+                if not success:
+                    if config:
+                        print '    Attempted:'
+                        print ' ' * 7, yaml.dump(config, default_flow_style=False).rstrip().replace('\n', '\n' + ' ' * 8)
 
-                if config and success:
+                    if errors:
+                        print '    Errors:'
+                        print ' ' * 7, errors.replace('\n', '\n' + ' ' * 8)
+
+                if success:
                     result.update(config)
 
     print

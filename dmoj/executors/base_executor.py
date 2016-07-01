@@ -1,13 +1,14 @@
 import os
-from subprocess import Popen
 import subprocess
 import sys
-from shutil import copyfile
+import traceback
 from distutils.spawn import find_executable
+from shutil import copyfile
+from subprocess import Popen
 
 from dmoj.error import CompileError
-from dmoj.judgeenv import env
 from dmoj.executors.resource_proxy import ResourceProxy
+from dmoj.judgeenv import env
 from dmoj.utils.ansi import ansi_style
 
 try:
@@ -139,7 +140,7 @@ class BaseExecutor(ResourceProxy):
         return cls.run_self_test(sandbox)
 
     @classmethod
-    def run_self_test(cls, sandbox=True, output=True):
+    def run_self_test(cls, sandbox=True, output=True, error_callback=None):
         if not cls.test_program:
             return True
 
@@ -154,13 +155,17 @@ class BaseExecutor(ResourceProxy):
             if output:
                 print ansi_style(['#ansi[Failed](red|bold)', '#ansi[Success](green|bold)'][res])
             if stderr:
-                print>> sys.stderr, stderr
+                if error_callback:
+                    error_callback('Got unexpected stderr output:\n' + stderr)
+                else:
+                    print>> sys.stderr, stderr
             return res
         except Exception:
             if output:
                 print ansi_style('#ansi[Failed](red|bold)')
-                import traceback
                 traceback.print_exc()
+            if error_callback:
+                error_callback(traceback.format_exc())
             return False
 
     @classmethod
@@ -183,14 +188,15 @@ class BaseExecutor(ResourceProxy):
                 return result, False, 'Failed to find "%s"' % key
 
         executor = type('Executor', (cls,), {'runtime_dict': result})
-        success = executor.run_self_test(output=False)
+        errors = []
+        success = executor.run_self_test(output=False, error_callback=errors.append)
         if success:
             message = ''
             if len(result) == 1:
                 message = 'Using %s' % result.values()[0]
         else:
             message = 'Failed self-test'
-        return result, success, message
+        return result, success, message, '\n'.join(errors)
 
     @classmethod
     def get_find_first_mapping(cls):

@@ -1,8 +1,6 @@
-# WARNING: this executor may be unsafe due to socketcall!
-
 from .base_executor import ScriptExecutor
 from dmoj.judgeenv import env
-
+from dmoj.cptbox.handlers import ACCESS_DENIED
 
 class Executor(ScriptExecutor):
     ext = '.m'
@@ -10,7 +8,7 @@ class Executor(ScriptExecutor):
     command = env['runtime'].get('octave')
     address_grace = 131072
     test_program = "disp(input('', 's'))"
-    syscalls = ['sched_getaffinity', 'socketcall']
+    syscalls = ['sched_getaffinity', ('socketcall', ACCESS_DENIED)]
 
     fs = ['.*\.(?:so|m)', '/lib/', '/dev/urandom$', '/sys/devices/system/cpu/online$', '/proc/stat$',
           '/etc/nsswitch\.conf$', '/etc/passwd$', '/etc/localtime$', '/usr/share/', '/usr/lib/', '/etc/fltk/']

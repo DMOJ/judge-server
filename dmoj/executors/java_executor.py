@@ -180,6 +180,6 @@ class JavacExecutor(JavaExecutor):
         if os.path.isfile(vm_path) and os.path.isfile(compiler_path):
             executor = type('Executor', (cls,), {'runtime_dict': result})
             success = executor.run_self_test(output=False)
-            return result, success, '' if success else 'Failed self-test'
+            return result, success, 'Using %s' % name if success else 'Failed self-test'
         else:
             return result, False, 'Invalid JDK'

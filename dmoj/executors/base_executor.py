@@ -183,7 +183,13 @@ class BaseExecutor(ResourceProxy):
 
         executor = type('Executor', (cls,), {'runtime_dict': result})
         success = executor.run_self_test(output=False)
-        return result, success, '' if success else 'Failed self-test'
+        if success:
+            message = ''
+            if len(result) == 1:
+                message = 'Using %s' % result.values()[0]
+        else:
+            message = 'Failed self-test'
+        return result, success, message
 
     @classmethod
     def get_find_first_mapping(cls):

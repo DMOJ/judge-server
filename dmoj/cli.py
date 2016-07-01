@@ -264,7 +264,7 @@ def main():
         try:
             from colorama import init
             init()
-        except ImportError as ignored:
+        except ImportError:
             pass
 
     executors.load_executors()

@@ -10,7 +10,7 @@ class Executor(ScriptExecutor):
     name = 'TCL'
     address_grace = 131072
     command = 'tclsh'
-    fs = ['.*\.so', '/etc/nsswitch\.conf$', '/etc/passwd$']
+    fs = ['.*\.tcl', '/etc/nsswitch\.conf$', '/etc/passwd$']
     test_program = '''\
 gets stdin input
 puts $input

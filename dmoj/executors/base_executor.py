@@ -170,8 +170,8 @@ class BaseExecutor(ResourceProxy):
             else:
                 return None
 
-        executor = type('Executor', (cls,), {'runtime_dist': result})
-        return result if executor.initialize() else None
+        executor = type('Executor', (cls,), {'runtime_dict': result})
+        return result if executor.run_self_test() else None
 
     @classmethod
     def get_find_first_mapping(cls):

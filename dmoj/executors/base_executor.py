@@ -271,7 +271,7 @@ class CompiledExecutor(BaseExecutor):
         def communicate(self, input=None):
             ret = super(CompiledExecutor.TimedPopen, self).communicate(input=input)
             if self._killed:
-                return ret[0], 'compiler timed out (> %d seconds)\n' % self._time
+                return ret[0], 'compiler timed out (> %d seconds)\n%s' % (self._time, ret[1])
             return ret
 
     def __init__(self, problem_id, source_code, *args, **kwargs):

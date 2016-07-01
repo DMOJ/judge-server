@@ -5,6 +5,7 @@ class Executor(MonoExecutor):
     ext = '.fs'
     name = 'MONOFS'
     command = 'fsharpc'
+    compiler_time_limit = 20
 
     test_program = '''\
 open System

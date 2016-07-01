@@ -26,7 +26,7 @@ update_address_x64(os.path.join(dirname, u'getaddr64.exe'))
 class WBoxPopen(object):
     def __init__(self, argv, time, memory, nproc=1, executable=None, cwd=None, env=None,
                  network_block=False, inject32=None, inject64=None, inject_func=None):
-        username = 'wboxusr_%s' % judge_config['id']
+        username = u'wboxusr_%s' % judge_config['id']
         if not ctypes.windll.netapi32.NetUserDel(None, username):
             print>> sys.stderr, "found uncleaned wbox user '%s'; deleted." % username
         self.user = UserManager(username)

@@ -101,6 +101,12 @@ class MonoExecutor(CompiledExecutor):
         return sec
 
     @classmethod
+    def get_find_first_mapping(cls):
+        res = super(MonoExecutor, cls).get_find_first_mapping()
+        res['mono'] = ['mono']
+        return res
+
+    @classmethod
     def initialize(cls, sandbox=True):
         if 'mono' not in env['runtime'] or not os.path.isfile(env['runtime']['mono']):
             return False

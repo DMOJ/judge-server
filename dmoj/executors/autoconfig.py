@@ -19,11 +19,11 @@ def main():
         if hasattr(executor.Executor, 'autoconfig'):
             print ansi_style('%-43s%s' % ('Auto-configuring #ansi[%s](|underline):' % name, '')),
             try:
-                result = executor.Executor.autoconfig()
-                config = result[0]
-                success = result[1]
-                feedback = result[2]
-                errors = '' if len(result) < 4 else result[3]
+                data = executor.Executor.autoconfig()
+                config = data[0]
+                success = data[1]
+                feedback = data[2]
+                errors = '' if len(data) < 4 else data[3]
             except (TypeError, IndexError):
                 print ansi_style('#ansi[Not supported](red|bold)')
             else:

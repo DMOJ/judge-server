@@ -124,9 +124,12 @@ class ListProblemsCommand(Command):
             all_problems = all_problems[:_args.limit]
 
         problems = iter(map(itemgetter(0), all_problems))
-        max_len = max(len(p[0]) for p in all_problems)
-        for row in izip_longest(*[problems] * 4, fillvalue=''):
-            print ' '.join(('%*s' % (-max_len, row[i])) for i in xrange(4))
+        if len(problems):
+            max_len = max(len(p[0]) for p in all_problems)
+            for row in izip_longest(*[problems] * 4, fillvalue=''):
+                print ' '.join(('%*s' % (-max_len, row[i])) for i in xrange(4))
+        else:
+            print "No problems matching filter found."
         print
 
 

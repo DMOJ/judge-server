@@ -7,6 +7,8 @@ class Executor(GASExecutor):
     arch = ARM
     as_name = 'as_arm'
     ld_name = 'ld_arm'
+    platform_prefixes = ['arm-linux-gnueabihf']
+
     qemu_path = env['runtime'].get('qemu_arm', None)
     dynamic_linker = env['runtime'].get('ld.so_x86', '/lib/ld-linux-armhf.so.3')
     crt_pre = env['runtime'].get('crt_pre_x86',

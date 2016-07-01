@@ -117,7 +117,7 @@ class ListProblemsCommand(Command):
         _args = self.arg_parser.parse_args(line)
 
         if _args.limit is not None and _args.limit <= 0:
-            print ansi_style("#ansi[--limit must be >= 0\n](red|bold)")
+            print ansi_style("#ansi[--limit must be >= 0](red|bold)\n")
             return
 
         all_problems = judgeenv.get_supported_problems()
@@ -238,7 +238,7 @@ class ResubmitCommand(Command):
         try:
             id, lang, src, tl, ml = graded_submissions[args.submission_id - 1]
         except IndexError:
-            print "invalid submission '%d'\n" % (args.submission_id - 1)
+            print ansi_style("#ansi[invalid submission '%d'](red|bold)\n" % (args.submission_id - 1))
             return
 
         id = args.problem or id

@@ -90,6 +90,11 @@ class GCCExecutor(CompiledExecutor):
         return '' if len(exception) > 40 else exception
 
     @classmethod
+    def autoconfig(cls):
+        cls.has_color = False
+        return super(GCCExecutor, cls).autoconfig()
+
+    @classmethod
     def initialize(cls, sandbox=True):
         try:
             version = float(subprocess.Popen([cls.get_command(), '-dumpversion'],

@@ -169,24 +169,32 @@ class BaseExecutor(ResourceProxy):
             return False
 
     @classmethod
+    def find_command_from_list(cls, files):
+        for file in files:
+            if os.path.isabs(file):
+                if os.path.exists(file):
+                    return file
+            else:
+                path = find_executable(file)
+                if path is not None:
+                    return os.path.abspath(path)
+
+    @classmethod
     def autoconfig_find_first(cls, mapping):
         if mapping is None:
             return {}, False, 'Unimplemented'
         result = {}
-        for key, files in mapping.iteritems():
-            for file in files:
-                if os.path.isabs(file):
-                    if os.path.exists(file):
-                        result[key] = file
-                        break
-                else:
-                    path = find_executable(file)
-                    if path is not None:
-                        result[key] = os.path.abspath(path)
-                        break
-            else:
-                return result, False, 'Failed to find "%s"' % key
 
+        for key, files in mapping.iteritems():
+            file = cls.find_command_from_list(files)
+            if file is None:
+                return result, False, 'Failed to find "%s"' % key
+            result[key] = file
+
+        return cls.autoconfig_run_test(result)
+
+    @classmethod
+    def autoconfig_run_test(cls, result):
         executor = type('Executor', (cls,), {'runtime_dict': result})
         errors = []
         success = executor.run_self_test(output=False, error_callback=errors.append)

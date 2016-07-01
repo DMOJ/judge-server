@@ -209,6 +209,8 @@ class ScriptExecutor(BaseExecutor):
 
 
 class CompiledExecutor(BaseExecutor):
+    executable_size = 131072  # 128mb
+
     def __init__(self, problem_id, source_code, *args, **kwargs):
         super(CompiledExecutor, self).__init__(problem_id, source_code, **kwargs)
         self.create_files(problem_id, source_code, *args, **kwargs)
@@ -232,6 +234,16 @@ class CompiledExecutor(BaseExecutor):
     def get_compile_process(self):
         kwargs = {'stderr': subprocess.PIPE, 'cwd': self._dir, 'env': self.get_compile_env()}
         kwargs.update(self.get_compile_popen_kwargs())
+
+        try:
+            import resource
+            def limit_executable_size():
+                resource.setrlimit(resource.RLIMIT_FSIZE, self.executable_size)
+
+            kwargs['preexec_fn'] = limit_executable_size
+        except ImportError:
+            pass
+
         return subprocess.Popen(self.get_compile_args(), **kwargs)
 
     def get_compile_output(self, process):

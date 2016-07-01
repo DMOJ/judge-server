@@ -64,7 +64,7 @@ class JavaExecutor(CompiledExecutor):
     def get_compiled_file(self):
         return None
 
-    def get_security(self):
+    def get_security(self, launch_kwargs=None):
         return None
 
     def get_executable(self):

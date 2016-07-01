@@ -32,12 +32,12 @@ def main():
 
                 if not success:
                     if config:
-                        print '    Attempted:'
-                        print ' ' * 7, yaml.dump(config, default_flow_style=False).rstrip().replace('\n', '\n' + ' ' * 8)
+                        print '  Attempted:'
+                        print '   ', yaml.dump(config, default_flow_style=False).rstrip().replace('\n', '\n' + ' ' * 4)
 
                     if errors:
-                        print '    Errors:'
-                        print ' ' * 7, errors.replace('\n', '\n' + ' ' * 8)
+                        print '  Errors:'
+                        print '   ', errors.replace('\n', '\n' + ' ' * 4)
 
                 if success:
                     result.update(config)

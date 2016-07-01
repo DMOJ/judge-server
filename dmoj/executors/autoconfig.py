@@ -2,6 +2,7 @@ from collections import OrderedDict
 
 from dmoj.judgeenv import env
 from dmoj.executors import get_available, load_executor
+from dmoj.utils.ansi import ansi_style
 
 
 def main():
@@ -15,9 +16,9 @@ def main():
             continue
 
         if hasattr(executor.Executor, 'autoconfig'):
-            print 'Auto-configuring %-6s...' % name,
+            print ansi_style('%-43s%s' % ('Self-testing #ansi[%s](|underline):' % name, '')),
             config = executor.Executor.autoconfig()
-            print ['Failed', 'Success'][bool(config)]
+            print ansi_style(['#ansi[Failed](red|bold)', '#ansi[Success](green|bold)'][bool(config)])
             if config:
                 result.update(config)
 

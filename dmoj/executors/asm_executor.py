@@ -63,10 +63,11 @@ class ASMExecutor(CompiledExecutor):
             to_link = ['-dynamic-linker', self.dynamic_linker] + self.crt_pre + ['-lc'] + to_link + self.crt_post
 
         executable = self._file(self.problem)
-        process = subprocess.Popen([self.get_ld_path(), '-s', '-o', executable] + to_link,
-                                   cwd=self._dir, stderr=subprocess.PIPE, preexec_fn=self.create_executable_fslimit())
+        process = self.TimedPopen([self.get_ld_path(), '-s', '-o', executable] + to_link,
+                                  cwd=self._dir, stderr=subprocess.PIPE, preexec_fn=self.create_executable_fslimit(),
+                                  time_limit=self.compiler_time_limit)
         ld_output = process.communicate()[1]
-        if process.returncode != 0:
+        if process.returncode != 0 or (hasattr(process, '_killed') and process._killed):
             raise CompileError(ld_output)
 
         self.warning = ('%s\n%s' % (as_output, ld_output)).strip()
@@ -98,7 +99,8 @@ class ASMExecutor(CompiledExecutor):
     def initialize(cls, sandbox=True):
         if cls.qemu_path is None and not can_debug(cls.arch):
             return False
-        if any(i is None for i in (cls.get_as_path(), cls.get_ld_path(), cls.dynamic_linker, cls.crt_pre, cls.crt_post)):
+        if any(i is None for i in
+               (cls.get_as_path(), cls.get_ld_path(), cls.dynamic_linker, cls.crt_pre, cls.crt_post)):
             return False
         if any(not os.path.isfile(i) for i in (cls.get_as_path(), cls.get_ld_path(), cls.dynamic_linker)):
             return False
@@ -170,7 +172,8 @@ class PlatformX86Mixin(object):
         crt_pre = env['runtime'].get('crt_pre_x86', ['/usr/lib32/crt1.o', '/usr/lib32/crti.o'])
         crt_post = env['runtime'].get('crt_post_x86', ['/usr/lib32/crtn.o'])
     else:
-        crt_pre = env['runtime'].get('crt_pre_x86', ['/usr/lib/i386-linux-gnu/crt1.o', '/usr/lib/i386-linux-gnu/crti.o'])
+        crt_pre = env['runtime'].get('crt_pre_x86',
+                                     ['/usr/lib/i386-linux-gnu/crt1.o', '/usr/lib/i386-linux-gnu/crti.o'])
         crt_post = env['runtime'].get('crt_post_x86', ['/usr/lib/i386-linux-gnu/crtn.o'])
 
 

@@ -19,7 +19,7 @@ class ASMExecutor(CompiledExecutor):
     dynamic_linker = None
     crt_pre = None
     crt_post = None
-    platform_prefix = None
+    platform_prefixes = None
 
     name = 'ASM'
     ext = '.asm'
@@ -125,9 +125,10 @@ class GASExecutor(ASMExecutor):
 
     @classmethod
     def get_find_first_mapping(cls):
-        if cls.platform_prefix is None:
+        if cls.platform_prefixes is None:
             return None
-        return {'as': '%s-as' % cls.platform_prefix, 'ld': '%s-ld' % cls.platform_prefix}
+        return {cls.as_name: ['%s-as' % i for i in cls.platform_prefixes],
+                cls.ld_name: ['%s-ld' % i for i in cls.platform_prefixes]}
 
 
 class NASMExecutor(ASMExecutor):
@@ -146,15 +147,15 @@ class NASMExecutor(ASMExecutor):
 
     @classmethod
     def get_find_first_mapping(cls):
-        if cls.platform_prefix is None:
+        if cls.platform_prefixes is None:
             return None
-        return {'ld': '%s-ld' % cls.platform_prefix, 'nasm': 'nasm'}
+        return {cls.ld_name: ['%s-ld' % i for i in cls.platform_prefixes], 'nasm': 'nasm'}
 
 
 class PlatformX86Mixin(object):
     arch = X86
     ld_name = 'ld_x86'
-    platform_prefix = 'i586-linux-gnu'
+    platform_prefixes = ['i586-linux-gnu']
 
     qemu_path = env['runtime'].get('qemu_x86', None)
     dynamic_linker = env['runtime'].get('ld.so_x86', '/lib/ld-linux.so.2')
@@ -170,7 +171,7 @@ class PlatformX86Mixin(object):
 class PlatformX64Mixin(object):
     arch = X64
     ld_name = 'ld_x64'
-    platform_prefix = 'x86_64-linux-gnu'
+    platform_prefixes = ['x86_64-linux-gnu']
 
     qemu_path = env['runtime'].get('qemu_x64', None)
     dynamic_linker = env['runtime'].get('ld.so_x64', '/lib64/ld-linux-x86-64.so.2')

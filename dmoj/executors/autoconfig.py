@@ -1,3 +1,5 @@
+import traceback
+
 import yaml
 import yaml.representer
 
@@ -24,8 +26,9 @@ def main():
                 success = data[1]
                 feedback = data[2]
                 errors = '' if len(data) < 4 else data[3]
-            except (TypeError, IndexError):
+            except Exception:
                 print ansi_style('#ansi[Not supported](red|bold)')
+                traceback.print_exc()
             else:
                 print ansi_style(['#ansi[%s](red|bold)', '#ansi[%s](green|bold)'][success] %
                                  (feedback or ['Failed', 'Success'][success]))

@@ -7,4 +7,4 @@ class Executor(ScriptExecutor):
     command = 'v8dmoj'
     test_program = 'print(gets());'
     address_grace = 786432
-    fs = ['*.\.js']  # v8dmoj binaries are distributed statically linked
+    fs = ['.*\.js']  # v8dmoj binaries are distributed statically linked

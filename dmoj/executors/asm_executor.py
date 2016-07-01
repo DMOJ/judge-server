@@ -154,6 +154,8 @@ class NASMExecutor(ASMExecutor):
 class PlatformX86Mixin(object):
     arch = X86
     ld_name = 'ld_x86'
+    platform_prefix = 'i586-linux-gnu'
+
     qemu_path = env['runtime'].get('qemu_x86', None)
     dynamic_linker = env['runtime'].get('ld.so_x86', '/lib/ld-linux.so.2')
 
@@ -168,6 +170,8 @@ class PlatformX86Mixin(object):
 class PlatformX64Mixin(object):
     arch = X64
     ld_name = 'ld_x64'
+    platform_prefix = 'x86_64-linux-gnu'
+
     qemu_path = env['runtime'].get('qemu_x64', None)
     dynamic_linker = env['runtime'].get('ld.so_x64', '/lib64/ld-linux-x86-64.so.2')
     crt_pre = env['runtime'].get('crt_pre_x64',

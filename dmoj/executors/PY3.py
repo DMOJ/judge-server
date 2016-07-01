@@ -1,8 +1,8 @@
 from dmoj.judgeenv import env
 from .python_executor import PythonExecutor
 
-PYTHON_FS = ['/etc/localtime$', '/dev/urandom$', '.*\.(?:so|py[co]?$)', '.*/lib(?:32|64)?/python[\d.]+/.*',
-             '.*/lib/locale/', '/usr/lib64', '.*/?pyvenv.cfg$', '/proc/meminfo$']
+PYTHON_FS = ['.*\.(?:py[co]?$)', '.*/lib(?:32|64)?/python[\d.]+/.*',
+             '.*/lib/locale/', '/usr/lib64', '.*/?pyvenv.cfg$']
 if 'python3dir' in env['runtime']:
     PYTHON_FS += [str(env['runtime']['python3dir'])]
 

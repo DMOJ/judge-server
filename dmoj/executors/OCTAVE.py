@@ -7,8 +7,7 @@ class Executor(ScriptExecutor):
     address_grace = 131072
     test_program = "disp(input('', 's'))"
 
-    fs = ['.*\.(?:so|m)', '/lib/', '/dev/urandom$', '/sys/devices/system/cpu/online$', '/proc/stat$',
-          '/etc/nsswitch\.conf$', '/etc/passwd$', '/etc/localtime$', '/usr/share/', '/usr/lib/', '/etc/fltk/']
+    fs = ['.*\.m', '/lib/', '/etc/nsswitch\.conf$', '/etc/passwd$', '/usr/share/', '/etc/fltk/']
 
     def get_cmdline(self):
         return [self.get_command(), '--no-gui', '--no-history', '--no-init-file', '--no-site-file',

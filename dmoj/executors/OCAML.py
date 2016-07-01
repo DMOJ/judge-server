@@ -5,8 +5,7 @@ from dmoj.judgeenv import env
 class Executor(CompiledExecutor):
     ext = '.ml'
     name = 'OCAML'
-    fs = ['.*\.so']
-    command = 'ocaml'
+    command = env['runtime'].get('ocaml')
     test_program = 'print_endline (input_line stdin)'
 
     def get_compile_args(self):

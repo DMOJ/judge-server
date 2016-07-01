@@ -8,7 +8,7 @@ class Executor(PythonExecutor):
     command = 'pypy3'
     test_program = "print(__import__('sys').stdin.read(), end='')"
     name = 'PYPY3'
-    fs = ['.*\.(?:so|py[co]?$)', '/proc/cpuinfo$', '/proc/meminfo$', '/etc/localtime$', '/dev/urandom$'] + [command] \
+    fs = ['.*\.(?:py[co]?$)'] + [command] \
          + ([env['runtime']['pypy3dir']] if 'pypy3dir' in env['runtime'] else [])
 
     def get_security(self, **kwargs):

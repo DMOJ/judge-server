@@ -24,7 +24,10 @@ class BaseExecutor(ResourceProxy):
     network_block = True
     address_grace = 65536
     nproc = 0
-    fs = ['.*\.so']
+    fs = ['.*\.so', '/dev/(?:null|zero|full|random|urandom|stdin|stdout|stderr|tty$)',
+          '/proc/self/maps$', '/proc/self$', '/proc/(?:meminfo|stat|cpuinfo$)',
+          '/usr/lib', '/usr/', '/sys/devices/system/cpu/online$',
+          '/etc/(?:localtime$)', '/$']
     syscalls = []
     command = None
     name = '(unknown)'

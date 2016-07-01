@@ -6,7 +6,7 @@ class PHPExecutor(ScriptExecutor):
     address_grace = 131072
     test_program = '<?php while($f = fgets(STDIN)) echo $f;'
 
-    fs = ['.*\.so', '/etc/localtime$', '.*/php[\w-]*\.ini$']
+    fs = ['.*/php[\w-]*\.ini$']
 
     def get_cmdline(self):
         return ['php', self._code]

@@ -5,8 +5,7 @@ from dmoj.judgeenv import env
 class Executor(CompiledExecutor):
     ext = '.swift'
     name = 'SWIFT'
-    fs = ['.*\.so', '/dev/tty$']
-    command = 'swiftc'
+    command = env['runtime'].get('swiftc')
     test_program = 'print(readLine()!)'
 
     def get_compile_args(self):

@@ -5,8 +5,7 @@ from dmoj.judgeenv import env
 class Executor(CompiledExecutor):
     ext = '.scm'
     name = 'SCM'
-    fs = ['.*\.so', '/usr/', '/etc/localtime$', '/dev/null$']
-    command = 'chicken-csc'
+    command = env['runtime'].get('chicken-csc')
     syscalls = ['newselect', 'select']
     test_program = '(declare (uses extras)) (map print (read-lines))'
 

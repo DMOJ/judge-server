@@ -7,7 +7,7 @@ class Executor(ScriptExecutor):
     name = 'AWK'
     command = 'awk'
     test_program = '{ print $0 }'
-    fs = ['.*\.(?:so|awk)', '/dev/(?:urandom|null)$', '/proc/self/maps$']
+    fs = ['.*\.awk']
 
     def get_cmdline(self):
         return [self.get_command(), '-f', self._code]

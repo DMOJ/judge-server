@@ -6,8 +6,7 @@ from dmoj.judgeenv import env
 class Executor(NullStdoutMixin, CompiledExecutor):
     ext = '.pas'
     name = 'PAS'
-    fs = ['.*\.so']
-    command = 'fpc'
+    command = env['runtime'].get('fpc')
     test_program = '''\
 var line : string;
 begin

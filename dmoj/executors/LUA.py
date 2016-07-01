@@ -8,4 +8,4 @@ class Executor(ScriptExecutor):
     command = 'lua'
     address_grace = 131072
     test_program = "io.write(io.read('*all'))"
-    fs = ['.*\.(so|lua$)']
+    fs = ['.*\.lua']

@@ -7,7 +7,7 @@ class Executor(ScriptExecutor):
     name = 'PERL'
     command = 'perl'
     test_program = 'print<>'
-    fs = ['.*\.(?:so|p[lm]$)', '/dev/urandom$']
+    fs = ['.*\.p[lm]$']
 
     def get_cmdline(self):
         return ['perl', '-Mre=eval', self._code]

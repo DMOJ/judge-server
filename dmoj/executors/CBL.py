@@ -8,7 +8,6 @@ class Executor(CompiledExecutor):
     ext = '.cbl'
     name = 'CBL'
     command = 'cobc'
-    fs = ['.*\.so']
     address_grace = 131072
     test_program = '''\
 	IDENTIFICATION DIVISION.

@@ -9,8 +9,8 @@ class Executor(ScriptExecutor):
     ext = '.tcl'
     name = 'TCL'
     address_grace = 131072
-    command = 'tclsh'
-    fs = ['.*\.(so|tcl)', '/etc/nsswitch\.conf$', '/etc/passwd$']
+    command = env['runtime'].get('tclsh')
+    fs = ['.*\.so', '/etc/nsswitch\.conf$', '/etc/passwd$']
     test_program = '''\
 gets stdin input
 puts $input

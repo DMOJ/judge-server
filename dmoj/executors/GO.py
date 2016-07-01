@@ -8,7 +8,6 @@ class Executor(CompiledExecutor):
     ext = '.go'
     name = 'GO'
     address_grace = 786432
-    fs = ['.*\.so', '/proc/stat$']
     syscalls = ['modify_ldt']
     command = 'go'
     test_name = 'echo'

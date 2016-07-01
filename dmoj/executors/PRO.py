@@ -21,7 +21,7 @@ class Executor(ScriptExecutor):
 
     :- main.
 '''
-    fs = ['.*\.(?:so|pl|pro)', '/etc/localtime$', '/usr/lib/', command]
+    fs = ['.*\.(?:pl|pro)', command]
 
     def get_cmdline(self):
         return [self.get_command(), '--goal=main', '-c', self._code]

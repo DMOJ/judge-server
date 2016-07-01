@@ -5,9 +5,7 @@ from dmoj.judgeenv import env
 class Executor(CompiledExecutor):
     ext = '.rkt'
     name = 'RKT'
-    fs = ['.*\.(?:so|rkt?$|zo$)', '/dev/tty$', '/proc/meminfo$', '.*racket.*', '/proc/stat$',
-          '/proc/self/maps$', '/usr/lib', '/etc/nsswitch.conf$',
-          '/etc/passwd$', '/dev/null$', '/sys/devices/system/cpu/online$']
+    fs = ['.*\.(?:rkt?$|zo$)', '.*racket.*', '/etc/nsswitch.conf$', '/etc/passwd$']
 
     raco = env['runtime'].get('raco')
     command = 'racket'

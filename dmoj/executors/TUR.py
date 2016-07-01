@@ -5,8 +5,8 @@ from dmoj.judgeenv import env
 class Executor(CompiledExecutor):
     ext = '.t'
     name = 'TUR'
-    fs = ['.*\.(?:so|tbc$)']
-    command = 'tprologc'
+    fs = ['.*\.tbc$']
+    command = env['runtime'].get('tprologc')
     test_program = '''\
 var echo : string
 get echo : *

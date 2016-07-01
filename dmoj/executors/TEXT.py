@@ -7,5 +7,5 @@ class Executor(ScriptExecutor):
     name = 'TEXT'
     command = 'cat', '/bin/cat'
     test_program = 'echo: Hello, World!\n'
-    fs = ['.*\.(?:so|txt)']
+    fs = ['.*\.txt']
     syscalls = ['fadvise64_64', 'fadvise64']

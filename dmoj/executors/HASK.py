@@ -6,8 +6,7 @@ from dmoj.judgeenv import env
 class Executor(NullStdoutMixin, CompiledExecutor):
     ext = '.hs'
     name = 'HASK'
-    fs = ['.*\.so', '/usr/']
-    command = 'ghc'
+    command = env['runtime'].get('ghc')
     syscalls = ['newselect', 'select']
     test_program = '''\
 main = do

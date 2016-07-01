@@ -9,7 +9,7 @@ class Executor(ScriptExecutor):
     command = 'sed', '/bin/sed'
     test_program = '''s/.*/echo: Hello, World!/
 q'''
-    fs = ['.*\.(so|sed)', '/dev/urandom$', '/proc/self/maps$', '/proc/filesystems$', '/+lib/charset.alias$']
+    fs = ['.*\.so', '/proc/filesystems$', '/+lib/charset.alias$']
     syscalls = ['statfs64', 'statfs']
 
     def get_cmdline(self):

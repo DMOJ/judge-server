@@ -8,11 +8,10 @@ class Executor(ScriptExecutor):
     ext = '.coffee'
     name = 'COFFEE'
     nproc = -1
-    fs = ['.*\.(?:so|js$)', '/etc/(?:resolv|nsswitch).conf$', '/dev/urandom$',
-          '/$', '/proc/meminfo$']
-    command = 'node'
-    syscalls = ['timer_create', 'timer_settime', 'timer_delete', 'newselect', 'select', 'pipe2',
-                'write', 'epoll_create1', 'eventfd2', 'epoll_ctl', 'epoll_wait']
+    fs = ['.*\.js$', '/etc/(?:resolv|nsswitch).conf$']
+    command = env['runtime'].get('node')
+    syscalls = ['newselect', 'select', 'pipe2', 'write', 'epoll_create1',
+                'eventfd2', 'epoll_ctl', 'epoll_wait']
     test_program = '''\
 process.stdin.on 'readable', () ->
   chunk = process.stdin.read()

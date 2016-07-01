@@ -42,6 +42,8 @@ class JavaExecutor(CompiledExecutor):
     compiler = None
     nproc = -1
 
+    jvm_regex = None
+
     def __init__(self, problem_id, source_code):
         self._class_name = None
         super(JavaExecutor, self).__init__(problem_id, source_code)
@@ -102,11 +104,11 @@ class JavaExecutor(CompiledExecutor):
 
     @classmethod
     def get_vm(cls):
-        return cls.vm
+        return cls.runtime_dict.get(cls.vm)
 
     @classmethod
     def get_compiler(cls):
-        return cls.compiler
+        return cls.runtime_dict.get(cls.compiler)
 
     @classmethod
     def initialize(cls, sandbox=True):
@@ -115,6 +117,31 @@ class JavaExecutor(CompiledExecutor):
         if not os.path.isfile(cls.get_vm()) or not os.path.isfile(cls.get_compiler()):
             return False
         return cls.run_self_test(sandbox)
+
+    @classmethod
+    def test_jvm(cls, name, path):
+        raise NotImplementedError()
+
+    @classmethod
+    def autoconfig(cls):
+        if cls.jvm_regex is None:
+            return {}, False, 'Unimplemented'
+
+        JVM_DIR = '/usr/lib/jvm'
+        for item in os.listdir('/usr/lib/jvm'):
+            path = os.path.join(JVM_DIR, item)
+            if not os.path.isdir(path) or os.path.islink(path):
+                continue
+
+            if cls.jvm_regex.match(item):
+                try:
+                    config, success, message = cls.test_jvm(item, path)
+                except (NotImplementedError, TypeError, ValueError):
+                    return {}, False, 'Unimplemented'
+                else:
+                    if success:
+                        return config, success, message
+        return {}, False, 'Could not find JVM'
 
 
 class JavacExecutor(JavaExecutor):
@@ -141,3 +168,16 @@ class JavacExecutor(JavaExecutor):
             raise CompileError('You are a troll. Trolls are not welcome. '
                                'As a judge, I sentence your code to death.')
         raise CompileError(output)
+
+    @classmethod
+    def test_jvm(cls, name, path):
+        vm_path = os.path.join(path, 'bin', 'java')
+        compiler_path = os.path.join(path, 'bin', 'javac')
+        result = {cls.vm: vm_path, cls.compiler: compiler_path}
+
+        if os.path.isfile(vm_path) and os.path.isfile(compiler_path):
+            executor = type('Executor', (cls,), {'runtime_dict': result})
+            success = executor.run_self_test(output=False)
+            return result, success, '' if success else 'Failed self-test'
+        else:
+            return result, False, 'Invalid JDK'

@@ -1,10 +1,9 @@
 from dmoj.executors.java_executor import JavacExecutor
-from dmoj.judgeenv import env
 
 
 class Executor(JavacExecutor):
-    compiler = env['runtime'].get('javac9')
-    vm = env['runtime'].get('java9')
+    compiler = 'javac9'
+    vm = 'java9'
     name = 'JAVA9'
 
     test_program = '''\

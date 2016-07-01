@@ -20,8 +20,7 @@ else:
 
 BASE_FILESYSTEM = ['.*\.so', '/dev/(?:null|zero|full|random|urandom|stdin|stdout|stderr|tty$)',
                    '/proc/self/maps$', '/proc/self$', '/proc/(?:meminfo|stat|cpuinfo$)',
-                   '/usr/', '/sys/devices/system/cpu/online$', '/etc/(?:localtime$)', '/$',
-                   '/etc/ld\.so\.(?:cache|preload|nohwcap)$']
+                   '/usr/', '/sys/devices/system/cpu/online$', '/etc/(?:localtime$)', '/$']
 
 
 class BaseExecutor(ResourceProxy):

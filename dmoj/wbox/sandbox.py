@@ -24,7 +24,7 @@ update_address_x64(os.path.join(dirname, u'getaddr64.exe'))
 class WBoxPopen(object):
     def __init__(self, argv, time, memory, nproc=1, executable=None, cwd=None, env=None,
                  network_block=False, inject32=None, inject64=None, inject_func=None):
-        self.user = UserManager()
+        self.user = UserManager('wboxusr_%s' % judge_config['id'])
         self.process = ProcessManager(self.user.username, self.user.password)
         argv = list2cmdline(argv)
         if not isinstance(argv, unicode):

@@ -15,32 +15,39 @@ _unsupported_executors = {'CPP0X'}
 executors = {}
 
 
-def load_executors():
+def get_available():
     to_load = set(i.group(1) for i in map(_reexecutor.match,
                                           os.listdir(os.path.dirname(__file__)))
                   if i is not None)
-
     if only_executors:
         to_load &= only_executors
     if exclude_executors:
         to_load -= exclude_executors
     to_load -= _unsupported_executors
     to_load = sorted(to_load)
+    return to_load
+
+
+def load_executor(name):
+    try:
+        return import_module('%s.%s' % (__name__, name))
+    except ImportError as e:
+        if e.message not in ('No module named _cptbox',
+                             'No module named msvcrt',
+                             'No module named _wbox',
+                             'No module named termios'):
+            traceback.print_exc()
+
+
+def load_executors():
+    to_load = get_available()
 
     print 'Self-testing executors...'
 
     for name in to_load:
-        try:
-            executor = import_module('%s.%s' % (__name__, name))
-        except ImportError as e:
-            if e.message not in ('No module named _cptbox',
-                                 'No module named msvcrt',
-                                 'No module named _wbox',
-                                 'No module named termios'):
-                traceback.print_exc()
-            continue
+        executor = load_executor(name)
 
-        if not hasattr(executor, 'Executor'):
+        if executor is None or not hasattr(executor, 'Executor'):
             continue
 
         cls = executor.Executor

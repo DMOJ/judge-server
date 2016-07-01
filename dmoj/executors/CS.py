@@ -6,21 +6,17 @@ from dmoj.judgeenv import env
 
 
 class Executor(CLRExecutor):
-    extension = 'cs'
+    ext = '.cs'
+    name = 'CS'
     compiler = 'csc'
 
-
-def initialize(sandbox=True):
-    # TODO: sandbox is ignored
-    if 'csc' not in env['runtime']:
-        return False
-    if not os.path.isfile(env['runtime']['csc']):
-        return False
-    return test_executor('CS', Executor, '''\
+    test_program = '''\
 using System;
 
 class test {
     public static void Main(string[] args) {
-        Console.WriteLine("Hello, World!");
+        Console.WriteLine(Console.ReadLine());
     }
-}''')
+}'''
+
+initialize = Executor.initialize

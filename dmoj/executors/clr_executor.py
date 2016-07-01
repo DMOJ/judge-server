@@ -8,7 +8,7 @@ import sys
 
 from dmoj.utils.communicate import safe_communicate
 from dmoj.error import CompileError
-from dmoj.executors.resource_proxy import ResourceProxy
+from dmoj.executors.base_executor import CompiledExecutor
 from dmoj.judgeenv import env
 from dmoj.utils.winutils import execution_time, max_memory
 from dmoj.utils.pywinjob import *
@@ -208,34 +208,23 @@ class CLRProcess(object):
             self._update_stats()
 
 
-class CLRExecutor(ResourceProxy):
-    extension = None
+class CLRExecutor(CompiledExecutor):
     compiler = None
     compile_args = ['-nologo', '-out:{exe}', '{source}']
 
-    def __init__(self, problem_id, source_code, **kwargs):
-        super(CLRExecutor, self).__init__()
-        self.source = self._file('%s.%s' % (problem_id, self.extension))
-        self.name = self._file('%s.exe' % problem_id)
-        with open(self.source, 'wb') as fo:
-            fo.write(source_code)
-        self.warning = None
-        self.compile()
+    @classmethod
+    def get_command(cls):
+        return env['runtime'].get(cls.compiler)
 
     def get_compile_args(self):
-        return [env['runtime'][self.compiler]] + [arg.format(exe=self.name, source=self.source)
+        return [env['runtime'][self.compiler]] + [arg.format(exe=self.get_compiled_file() + 
+                                                                 self.get_executable_ext(),
+                                                             source=self._code)
                                                   for arg in self.compile_args]
 
-    def compile(self):
-        compile_process = subprocess.Popen(self.get_compile_args(), stderr=subprocess.STDOUT,
-                                           stdout=subprocess.PIPE, cwd=self._dir)
-        compile_error = compile_process.communicate()[0]
-        if compile_process.returncode != 0:
-            raise CompileError(compile_error)
-        self.warning = compile_error
-
     def launch(self, *args, **kwargs):
-        return CLRProcess(self.name, self._dir, kwargs.get('time'), kwargs.get('memory'))
+        return CLRProcess(self.get_executable(), self._dir, kwargs.get('time'), kwargs.get('memory'))
 
     def launch_unsafe(self, *args, **kwargs):
-        return subprocess.Popen([self.name] + list(args), cwd=self._dir, **kwargs)
+        return subprocess.Popen(self.get_cmdline() + list(args), cwd=self._dir,
+                                executable=self.get_executable(), **kwargs)

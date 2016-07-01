@@ -214,13 +214,13 @@ class CLRExecutor(CompiledExecutor):
 
     @classmethod
     def get_command(cls):
-        return env['runtime'].get(cls.compiler)
+        return cls.runtime_dict.get(cls.compiler)
 
     def get_compile_args(self):
-        return [env['runtime'][self.compiler]] + [arg.format(exe=self.get_compiled_file() + 
-                                                                 self.get_executable_ext(),
-                                                             source=self._code)
-                                                  for arg in self.compile_args]
+        return [self.runtime_dict[self.compiler]] + [arg.format(exe=self.get_compiled_file() +
+                                                                    self.get_executable_ext(),
+                                                                source=self._code)
+                                                     for arg in self.compile_args]
 
     def launch(self, *args, **kwargs):
         return CLRProcess(self.get_executable(), self._dir, kwargs.get('time'), kwargs.get('memory'))

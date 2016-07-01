@@ -63,7 +63,7 @@ class GCCExecutor(CompiledExecutor):
         return defines
 
     def get_compile_args(self):
-        return ([self.command, '-Wall'] + (['-fdiagnostics-color=always'] if self.has_color else []) + self.sources
+        return ([self.get_command(), '-Wall'] + (['-fdiagnostics-color=always'] if self.has_color else []) + self.sources
                 + self.get_defines() + ['-O2', '-lm'] + ([] if IS_ARM else ['-march=native'])
                 + self.get_flags() + self.get_ldflags() + ['-s', '-o', self.get_compiled_file()])
 
@@ -92,7 +92,7 @@ class GCCExecutor(CompiledExecutor):
     @classmethod
     def initialize(cls, sandbox=True):
         try:
-            version = float(subprocess.Popen([cls.command, '-dumpversion'],
+            version = float(subprocess.Popen([cls.get_command(), '-dumpversion'],
                                              stdout=subprocess.PIPE,
                                              stderr=subprocess.PIPE).communicate()[0][:3])
             cls.has_color = version >= 4.9

@@ -18,15 +18,17 @@ except ImportError:
 else:
     WBoxPopen = default_inject32 = default_inject64 = default_inject_func = None
 
+BASE_FILESYSTEM = ['.*\.so', '/dev/(?:null|zero|full|random|urandom|stdin|stdout|stderr|tty$)',
+                   '/proc/self/maps$', '/proc/self$', '/proc/(?:meminfo|stat|cpuinfo$)',
+                   '/usr/', '/sys/devices/system/cpu/online$', '/etc/(?:localtime$)', '/$']
+
 
 class BaseExecutor(ResourceProxy):
     ext = None
     network_block = True
     address_grace = 65536
     nproc = 0
-    fs = ['.*\.so', '/dev/(?:null|zero|full|random|urandom|stdin|stdout|stderr|tty$)',
-          '/proc/self/maps$', '/proc/self$', '/proc/(?:meminfo|stat|cpuinfo$)',
-          '/usr/', '/sys/devices/system/cpu/online$', '/etc/(?:localtime$)', '/$']
+    fs = ['.*\.so']
     syscalls = []
     command = None
     name = '(unknown)'
@@ -44,7 +46,7 @@ class BaseExecutor(ResourceProxy):
         self.source = source_code
 
     def get_fs(self):
-        return self.fs
+        return BASE_FILESYSTEM + self.fs
 
     def get_allowed_syscalls(self):
         return self.syscalls

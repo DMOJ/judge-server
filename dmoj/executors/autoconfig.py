@@ -28,8 +28,8 @@ def main():
                                  (feedback or ['Failed', 'Success'][success]))
 
                 if not success and config:
-                    print 'Attempted:'
-                    print yaml.dump(config, default_flow_style=False).rstrip()
+                    print '    Attempted:'
+                    print ' ' * 7, yaml.dump(config, default_flow_style=False).rstrip().replace('\n', '\n' + ' ' * 8)
 
                 if config and success:
                     result.update(config)

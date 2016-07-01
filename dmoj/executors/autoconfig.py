@@ -1,10 +1,12 @@
 from collections import OrderedDict
 
+from dmoj.judgeenv import env
 from dmoj.executors import get_available, load_executor
 
 
 def main():
     result = OrderedDict()
+    env['runtime'] = {}
 
     for name in get_available():
         executor = load_executor(name)

@@ -1,8 +1,4 @@
-import os
-
 from dmoj.executors.clr_executor import CLRExecutor
-from dmoj.executors.utils import test_executor
-from dmoj.judgeenv import env
 
 
 class Executor(CLRExecutor):
@@ -17,5 +13,6 @@ open System
 let input = System.Console.ReadLine()
 Console.WriteLine(input)
 '''
+
 
 initialize = Executor.initialize

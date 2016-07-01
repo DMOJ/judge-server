@@ -1,8 +1,4 @@
-import os
-
 from dmoj.executors.clr_executor import CLRExecutor
-from dmoj.executors.utils import test_executor
-from dmoj.judgeenv import env
 
 
 class Executor(CLRExecutor):
@@ -18,5 +14,6 @@ class test {
         Console.WriteLine(Console.ReadLine());
     }
 }'''
+
 
 initialize = Executor.initialize

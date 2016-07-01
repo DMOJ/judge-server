@@ -228,3 +228,14 @@ class CLRExecutor(CompiledExecutor):
     def launch_unsafe(self, *args, **kwargs):
         return subprocess.Popen(self.get_cmdline() + list(args), cwd=self._dir,
                                 executable=self.get_executable(), **kwargs)
+
+    @classmethod
+    def get_compiler_basename(cls):
+        return '%s.exe' % cls.compiler
+
+    @classmethod
+    def get_find_first_mapping(cls):
+        versions = ['v4.0.30319', 'v3.5', 'v3.0', 'v2.0.50727']
+        return {cls.compiler: [
+            os.path.join(os.environ.get('WINDIR', r'C:\Windows'), 'Microsoft.NET', 'Framework',
+                         version, cls.get_compiler_basename()) for version in versions]}

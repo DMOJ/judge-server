@@ -1,10 +1,15 @@
 import os
+import threading
 import subprocess
 import sys
 import traceback
 from distutils.spawn import find_executable
 from shutil import copyfile
 from subprocess import Popen
+
+import signal
+
+import time
 
 from dmoj.error import CompileError
 from dmoj.executors.resource_proxy import ResourceProxy
@@ -236,6 +241,33 @@ class ScriptExecutor(BaseExecutor):
 
 class CompiledExecutor(BaseExecutor):
     executable_size = 131072 * 1024  # 128mb
+    compiler_time_limit = 10
+
+    class TimedPopen(subprocess.Popen):
+        def __init__(self, time_limit=None, *args, **kwargs):
+            super(CompiledExecutor.TimedPopen, self).__init__(*args, **kwargs)
+            self._time = time_limit
+            self._killed = False
+            if time_limit:
+                # Spawn thread to kill process after it times out
+                self._shocker = threading.Thread(target=self._shocker_thread)
+                self._shocker.start()
+
+        def _shocker_thread(self):
+            start_time = time.clock()
+
+            while self.returncode is None:
+                if time.clock() - start_time > self._time:
+                    os.kill(self.pid, signal.SIGKILL)
+                    self._killed = True
+                    break
+                time.sleep(0.25)
+
+        def communicate(self, input=None):
+            ret = super(CompiledExecutor.TimedPopen, self).communicate(input=input)
+            if self._killed:
+                return ret[0], 'compiler timed out'
+            return ret
 
     def __init__(self, problem_id, source_code, *args, **kwargs):
         super(CompiledExecutor, self).__init__(problem_id, source_code, **kwargs)
@@ -272,7 +304,7 @@ class CompiledExecutor(BaseExecutor):
                   'preexec_fn': self.create_executable_fslimit()}
         kwargs.update(self.get_compile_popen_kwargs())
 
-        return subprocess.Popen(self.get_compile_args(), **kwargs)
+        return CompiledExecutor.TimedPopen(self.get_compile_args(), time_limit=self.compiler_time_limit, **kwargs)
 
     def get_compile_output(self, process):
         return process.communicate()[1]
@@ -281,7 +313,7 @@ class CompiledExecutor(BaseExecutor):
         return self._file(self.problem)
 
     def is_failed_compile(self, process):
-        return process.returncode != 0
+        return process.returncode != 0 or (hasattr(process, '_killed') and process._killed)
 
     def handle_compile_error(self, output):
         raise CompileError(output)

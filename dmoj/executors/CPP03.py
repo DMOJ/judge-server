@@ -6,7 +6,7 @@ class Executor(GCCExecutor):
     command_paths = ['g++']
     std = None
     ext = '.cpp'
-    name = 'CPP'
+    name = 'CPP03'
     test_program = '''
 #include <iostream>
 

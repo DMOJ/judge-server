@@ -1,6 +1,5 @@
 from dmoj.executors.base_executor import CompiledExecutor
 from dmoj.executors.mixins import NullStdoutMixin
-from dmoj.judgeenv import env
 
 
 class Executor(NullStdoutMixin, CompiledExecutor):
@@ -17,7 +16,7 @@ end.
 '''
 
     def get_compile_args(self):
-        return [env['runtime']['fpc'], '-Fe/dev/stderr', '-So', '-O2', self._code]
+        return [self.get_command(), '-Fe/dev/stderr', '-So', '-O2', self._code]
 
     def get_compile_output(self, process):
         output = process.communicate()[1]

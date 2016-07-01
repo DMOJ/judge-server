@@ -1,4 +1,3 @@
-from dmoj.judgeenv import env
 from .GCCExecutor import GCCExecutor
 
 

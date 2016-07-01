@@ -1,5 +1,4 @@
 from dmoj.executors.CPP import Executor as CPPExecutor
-from dmoj.judgeenv import env
 
 
 class Executor(CPPExecutor):

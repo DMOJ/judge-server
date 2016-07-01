@@ -1,8 +1,7 @@
 import errno
 
-from dmoj.executors.base_executor import ScriptExecutor
-from dmoj.judgeenv import env
 from dmoj.cptbox.syscalls import *
+from dmoj.executors.base_executor import ScriptExecutor
 
 
 class Executor(ScriptExecutor):

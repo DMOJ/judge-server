@@ -1,7 +1,6 @@
 import subprocess
 
 from dmoj.executors.mono_executor import MonoExecutor
-from dmoj.judgeenv import env
 
 
 class Executor(MonoExecutor):

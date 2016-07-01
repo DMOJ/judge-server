@@ -1,7 +1,6 @@
 import os
 
 from .base_executor import CompiledExecutor
-from dmoj.judgeenv import env
 
 
 class Executor(CompiledExecutor):

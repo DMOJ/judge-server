@@ -1,4 +1,3 @@
-from dmoj.judgeenv import env
 from .base_executor import ScriptExecutor
 
 

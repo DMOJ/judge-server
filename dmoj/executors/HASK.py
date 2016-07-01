@@ -1,6 +1,5 @@
 from dmoj.executors.base_executor import CompiledExecutor
 from dmoj.executors.mixins import NullStdoutMixin
-from dmoj.judgeenv import env
 
 
 class Executor(NullStdoutMixin, CompiledExecutor):

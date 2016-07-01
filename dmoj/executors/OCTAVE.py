@@ -1,5 +1,6 @@
 from .base_executor import ScriptExecutor
-from dmoj.judgeenv import env
+
+
 class Executor(ScriptExecutor):
     ext = '.m'
     name = 'OCTAVE'

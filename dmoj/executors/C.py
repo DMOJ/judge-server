@@ -1,5 +1,4 @@
 from .GCCExecutor import GCCExecutor
-from dmoj.judgeenv import env
 
 
 class Executor(GCCExecutor):

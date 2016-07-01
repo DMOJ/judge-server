@@ -1,5 +1,3 @@
-from dmoj.cptbox.handlers import ACCESS_DENIED
-from dmoj.judgeenv import env
 from .base_executor import ScriptExecutor
 
 

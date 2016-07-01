@@ -4,8 +4,8 @@ import traceback
 import yaml
 import yaml.representer
 
+from dmoj import judgeenv
 from dmoj.executors import get_available, load_executor
-from dmoj.judgeenv import env, load_env
 from dmoj.utils.ansi import ansi_style
 
 
@@ -13,9 +13,15 @@ def main():
     result = {}
 
     if os.name == 'nt':
-        load_env(cli=True)
+        judgeenv.load_env(cli=True)
+        if not judgeenv.no_ansi_emu:
+            try:
+                from colorama import init
+                init()
+            except ImportError:
+                pass
 
-    env['runtime'] = {}
+    judgeenv.env['runtime'] = {}
 
     for name in get_available():
         executor = load_executor(name)

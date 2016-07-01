@@ -4,6 +4,7 @@ from dmoj.executors.java_executor import JavacExecutor
 class Executor(JavacExecutor):
     compiler = 'javac'
     vm = 'java'
+    jvm_regex = r'java-7-'
 
     test_program = '''\
 public class self_test {

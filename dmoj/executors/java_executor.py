@@ -128,12 +128,14 @@ class JavaExecutor(CompiledExecutor):
             return {}, False, 'Unimplemented'
 
         JVM_DIR = '/usr/lib/jvm'
+        regex = re.compile(cls.jvm_regex)
+
         for item in os.listdir('/usr/lib/jvm'):
             path = os.path.join(JVM_DIR, item)
             if not os.path.isdir(path) or os.path.islink(path):
                 continue
 
-            if cls.jvm_regex.match(item):
+            if regex.match(item):
                 try:
                     config, success, message = cls.test_jvm(item, path)
                 except (NotImplementedError, TypeError, ValueError):

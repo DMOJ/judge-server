@@ -50,8 +50,8 @@ def load_executors():
         if hasattr(executor, 'aliases'):
             for alias in executor.aliases():
                 if alias not in _unsupported_executors:
-                    executors[alias] = cls
+                    executors[alias] = executor
         else:
-            executors[name] = cls
+            executors[name] = executor
 
     print

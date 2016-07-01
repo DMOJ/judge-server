@@ -34,9 +34,9 @@ class SignatureGrader(StandardGrader):
             entry = entry_point
             # Compile as CPP11 regardless of what the submission language is
             try:
-                return executors[siggrader](self.problem.id, entry, aux_sources=aux_sources,
-                                            writable=handler_data['writable'] or (1, 2),
-                                            fds=handler_data['fds'])
+                return executors[siggrader].Executor(self.problem.id, entry, aux_sources=aux_sources,
+                                                     writable=handler_data['writable'] or (1, 2),
+                                                     fds=handler_data['fds'])
             except CompileError as compilation_error:
                 self.judge.packet_manager.compile_error_packet(compilation_error.message)
 

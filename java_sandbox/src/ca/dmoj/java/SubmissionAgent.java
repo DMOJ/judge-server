@@ -44,9 +44,21 @@ public class SubmissionAgent {
                 }
             });
 
-        // Swap System.out for a faster alternative.
-        // Requires setIO and writeFileDescriptor permissions
-        System.setOut(new UnsafePrintStream(new FileOutputStream(FileDescriptor.out), unicode));
+        // System.console() is not-null if both the input and output streams are connected to a terminal. Specifically,
+        // > isatty(fileno(stdin)) && isatty(fileno(stdout))
+        // If we are connected to a pty, it's because we're doing interactive grading - we shouldn't be buffering
+        // our output in that case.
+        // See <https://github.com/DMOJ/judge/issues/28>
+        // Both branches require the setIO and writeFileDescriptor permissions.
+        if (System.console() == null)
+            // Swap System.out for a faster alternative.
+            System.setOut(new UnsafePrintStream(new FileOutputStream(FileDescriptor.out), unicode));
+        else
+            // Create output PrintStream set to autoflush:
+            // > the output buffer will be flushed whenever a byte array is written, one of the println
+            // > methods is invoked, or a newline character or byte ('\n') is written
+            // This should be sufficient for interactive problems.
+            System.setOut(new PrintStream(new FileOutputStream(FileDescriptor.out), true));
 
         selfThread.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             @Override

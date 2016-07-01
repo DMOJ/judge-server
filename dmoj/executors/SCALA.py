@@ -1,8 +1,6 @@
 import os
-import re
 import subprocess
 
-from dmoj.judgeenv import env
 from dmoj.executors.java_executor import JavaExecutor
 
 
@@ -10,12 +8,8 @@ class Executor(JavaExecutor):
     name = 'SCALA'
     ext = '.scala'
 
-    compiler = env['runtime'].get('scalac')
-    vm = env['runtime'].get('scala_vm')
-
-    # Simply run bash -x $(which scala) and copy all arguments after -Xmx and -Xms
-    # and add it as a list in the configuration.
-    args = env['runtime'].get('scala_args')
+    compiler = 'scalac'
+    vm = 'scala_vm'
 
     test_program = '''\
 object self_test {
@@ -31,7 +25,10 @@ object self_test {
 
     def get_cmdline(self):
         res = super(Executor, self).get_cmdline()
-        res[-2:-1] = self.args
+
+        # Simply run bash -x $(which scala) and copy all arguments after -Xmx and -Xms
+        # and add it as a list in the configuration.
+        res[-2:-1] = self.runtime_dict.get('scala_args')
         return res
 
     def get_compile_args(self):

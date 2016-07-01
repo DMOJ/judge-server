@@ -209,7 +209,7 @@ class ScriptExecutor(BaseExecutor):
 
 
 class CompiledExecutor(BaseExecutor):
-    executable_size = 131072  # 128mb
+    executable_size = 131072 * 1024  # 128mb
 
     def __init__(self, problem_id, source_code, *args, **kwargs):
         super(CompiledExecutor, self).__init__(problem_id, source_code, **kwargs)

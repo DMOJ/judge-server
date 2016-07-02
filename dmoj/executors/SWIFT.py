@@ -2,7 +2,7 @@ from .base_executor import CompiledExecutor
 from dmoj.executors.mixins import EmulateTerminalMixin
 
 
-class Executor(CompiledExecutor, EmulateTerminalMixin):
+class Executor(EmulateTerminalMixin, CompiledExecutor):
     ext = '.swift'
     name = 'SWIFT'
     command = 'swiftc'

@@ -241,7 +241,7 @@ class ScriptExecutor(BaseExecutor):
 
 class CompiledExecutor(BaseExecutor):
     executable_size = 131072 * 1024  # 128mb
-    compiler_time_limit = 5
+    compiler_time_limit = 10
 
     class TimedPopen(subprocess.Popen):
         def __init__(self, *args, **kwargs):
@@ -269,10 +269,14 @@ class CompiledExecutor(BaseExecutor):
             while self.returncode is None:
                 if time.time() - start_time > self._time:
                     # Give the process a bit of time to clean up after itself
-                    self.terminate()
-                    if os.name != 'nt':
-                        time.sleep(0.5)
-                        self.kill()  # On Windows this is an alias for terminate()
+                    try:
+                        self.terminate()
+                        if os.name != 'nt':
+                            time.sleep(0.5)
+                            self.kill()  # On Windows this is an alias for terminate()
+                    except OSError:
+                        # This can happen if the process exits quickly
+                        pass
                     self._killed = True
                     break
                 time.sleep(0.25)

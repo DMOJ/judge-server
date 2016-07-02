@@ -268,8 +268,8 @@ class CompiledExecutor(BaseExecutor):
 
             while self.returncode is None:
                 if time.time() - start_time > self._time:
-                    # Give the process a bit of time to clean up after itself
                     try:
+                        # Give the process a bit of time to clean up after itself
                         self.terminate()
                         if os.name != 'nt':
                             time.sleep(0.5)

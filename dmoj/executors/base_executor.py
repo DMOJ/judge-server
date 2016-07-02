@@ -7,8 +7,6 @@ from distutils.spawn import find_executable
 from shutil import copyfile
 from subprocess import Popen
 
-import signal
-
 import time
 
 from dmoj.error import CompileError
@@ -259,9 +257,9 @@ class CompiledExecutor(BaseExecutor):
             # is a fine scalpel that ends a TLE process with surgical precision, this is more like a rusty hatchet
             # that beheads a misbehaving compiler.
             #
-            # It's not very accurate: time starts ticking in the next line, regardless of whether the process is actually
-            # running, and the time is updated in 0.25s intervals. Nonetheless, it serves the purpose of not allowing
-            # the judge to die.
+            # It's not very accurate: time starts ticking in the next line, regardless of whether the process is
+            # actually running, and the time is updated in 0.25s intervals. Nonetheless, it serves the purpose of
+            # not allowing the judge to die.
             #
             # See <https://github.com/DMOJ/judge/issues/141>
             start_time = time.time()
@@ -310,6 +308,7 @@ class CompiledExecutor(BaseExecutor):
     def create_executable_fslimit(self):
         try:
             import resource
+
             def limit_executable_size():
                 resource.setrlimit(resource.RLIMIT_FSIZE, (self.executable_size, self.executable_size))
 

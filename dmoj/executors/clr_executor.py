@@ -7,7 +7,6 @@ import time
 import sys
 
 from dmoj.utils.communicate import safe_communicate
-from dmoj.error import CompileError
 from dmoj.executors.base_executor import CompiledExecutor
 from dmoj.judgeenv import env
 from dmoj.utils.winutils import execution_time, max_memory

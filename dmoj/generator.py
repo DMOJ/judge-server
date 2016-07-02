@@ -1,8 +1,6 @@
 import os
 import traceback
 
-import sys
-
 from dmoj.error import CompileError
 from dmoj.utils import ansi
 
@@ -58,8 +56,6 @@ class GeneratorManager(object):
             clazz = type('FlaggedExecutor', (clazz,), {'flags': flags + list(clazz.flags)})
 
         try:
-            # _ so we can't possibly conflict with submission source file name (e.g. /problem/generator submitted in C++)
-            # _ is not a valid char in problem codes
             executor = clazz('_generator', source)
         except CompileError as err:
             # Strip ansi codes from CompileError message so we don't get wacky displays on the site like

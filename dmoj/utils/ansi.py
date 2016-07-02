@@ -1,4 +1,6 @@
 from collections import OrderedDict
+from termcolor import colored
+import re
 
 
 def strip_ansi(s):
@@ -22,9 +24,6 @@ except ImportError:
         for a, b in escape.items():
             s = s.replace(a, b)
         return strip_ansi(s)
-
-from termcolor import colored
-import re
 
 
 def ansi_style(text):

@@ -27,7 +27,8 @@ def unicodify(string):
 
 
 def load_env(cli=False):
-    global _judge_dirs, only_executors, exclude_executors, log_file, server_host, server_port, no_ansi, no_ansi_emu, env, startup_warnings
+    global _judge_dirs, only_executors, exclude_executors, log_file, server_host, \
+        server_port, no_ansi, no_ansi_emu, env, startup_warnings
     _parser = argparse.ArgumentParser(description='''
         Spawns a judge for a submission server.
     ''')

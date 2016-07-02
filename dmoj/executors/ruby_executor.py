@@ -1,5 +1,4 @@
 from .base_executor import ScriptExecutor
-from dmoj.judgeenv import env
 
 
 class RubyExecutor(ScriptExecutor):

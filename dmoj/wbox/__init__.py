@@ -1,6 +1,7 @@
 import os
 
 from dmoj.wbox.sandbox import WBoxPopen
+
 _dir = os.path.dirname(__file__)
 
 default_inject32 = os.path.abspath(os.path.join(_dir, u'dmsec32.dll'))

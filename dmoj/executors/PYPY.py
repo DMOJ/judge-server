@@ -8,8 +8,7 @@ class Executor(PythonExecutor):
     command = 'pypy'
     test_program = "print __import__('sys').stdin.read()"
     name = 'PYPY'
-    fs = ['.*\.(?:py[co]?$)'] + [command] \
-         + ([env['runtime']['pypydir']] if 'pypydir' in env['runtime'] else [])
+    fs = ['.*\.(?:py[co]?$)'] + [command] + ([env['runtime']['pypydir']] if 'pypydir' in env['runtime'] else [])
 
     def get_security(self, **kwargs):
         security = super(Executor, self).get_security(**kwargs)

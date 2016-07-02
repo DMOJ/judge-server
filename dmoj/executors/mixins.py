@@ -24,7 +24,7 @@ class EmulateTerminalMixin(object):
             return {'stderr': self._slave, 'stdout': self._slave, 'stdin': self._slave}
 
         def get_compile_env(self):
-            env = os.environ.copy()
+            env = super(EmulateTerminalMixin, self).get_compile_env() or os.environ.copy()
             env['TERM'] = 'xterm'
             return env
 

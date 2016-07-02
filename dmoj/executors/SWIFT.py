@@ -16,6 +16,11 @@ class Executor(CompiledExecutor):
     def get_compile_popen_kwargs(self):
         return {'stderr': self._slave, 'stdout': self._slave, 'stdin': self._slave}
 
+    def get_compile_env(self):
+        env = os.environ.copy()
+        env['TERM'] = 'xterm'
+        return env
+
     def get_compile_process(self):
         self._master, self._slave = pty.openpty()
         proc = super(Executor, self).get_compile_process()

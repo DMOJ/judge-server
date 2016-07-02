@@ -32,6 +32,7 @@ class GCCExecutor(CompiledExecutor):
     defines = []
     flags = []
     name = 'GCC'
+    has_color = False
 
     def create_files(self, problem_id, main_source, aux_sources=None, fds=None, writable=(1, 2)):
         if not aux_sources:
@@ -91,16 +92,15 @@ class GCCExecutor(CompiledExecutor):
 
     @classmethod
     def autoconfig(cls):
-        cls.has_color = False
         return super(GCCExecutor, cls).autoconfig()
 
     @classmethod
     def initialize(cls, sandbox=True):
-        try:
-            version = float(subprocess.Popen([cls.get_command(), '-dumpversion'],
-                                             stdout=subprocess.PIPE,
-                                             stderr=subprocess.PIPE).communicate()[0][:3])
-            cls.has_color = version >= 4.9
-        except:
-            cls.has_color = False
-        return super(CompiledExecutor, cls).initialize(sandbox=sandbox)
+        res = super(CompiledExecutor, cls).initialize(sandbox=sandbox)
+        if res:
+            try:
+                version = float(subprocess.check_output([cls.get_command(), '-dumpversion'])[:3])
+                cls.has_color = version >= 4.9
+            except (subprocess.CalledProcessError, ValueError):
+                pass
+        return res

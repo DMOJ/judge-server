@@ -119,9 +119,7 @@ class Judge(object):
         except InvalidInitException:
             return self.internal_error()
 
-        if 'grader' in problem.config:
-            grader_class = graders.InteractiveGrader
-        elif 'signature_grader' in problem.config:
+        if 'signature_grader' in problem.config:
             grader_class = graders.SignatureGrader
         elif 'custom_judge' in problem.config:
             grader_class = graders.CustomGrader

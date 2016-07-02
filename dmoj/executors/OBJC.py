@@ -40,6 +40,6 @@ int main (int argc, const char * argv[]) {
         try:
             cls.objc_flags = check_output([env['runtime']['gnustep-config'], '--objc-flags']).split()
             cls.objc_ldflags = check_output([env['runtime']['gnustep-config'], '--base-libs']).split()
-        except CalledProcessError as e:
+        except CalledProcessError:
             return False
         return super(Executor, cls).initialize(sandbox=sandbox)

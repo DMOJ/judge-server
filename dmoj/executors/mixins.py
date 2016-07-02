@@ -26,6 +26,10 @@ class EmulateTerminalMixin(object):
     """
     if os.name != 'nt':
         def get_compile_process(self):
+            """
+            Creates a compiler process with the stderr stream swapped for a master pty opened for read.
+            """
+
             proc = super(EmulateTerminalMixin, self).get_compile_process()
 
             class io_error_wrapper(object):
@@ -46,6 +50,7 @@ class EmulateTerminalMixin(object):
                     return getattr(self.fd, attr)
 
             self._master, self._slave = pty.openpty()
+
             # Since stderr and stdout are connected to the same slave pty, proc.stderr will contain the merged stdout
             # of the process as well.
             proc.stderr = io_error_wrapper(os.fdopen(self._master, 'r'))

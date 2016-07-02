@@ -55,6 +55,7 @@ The Judge can also grade in the languages listed below. These languages are less
 * PHP 5/7
 * Prolog
 * R
+* Racket
 * Ruby 2.1
 * Rust
 * Scala

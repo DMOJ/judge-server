@@ -98,9 +98,11 @@ class GCCExecutor(CompiledExecutor):
     def initialize(cls, sandbox=True):
         res = super(CompiledExecutor, cls).initialize(sandbox=sandbox)
         if res:
-            try:
-                version = float(subprocess.check_output([cls.get_command(), '-dumpversion'])[:3])
-                cls.has_color = version >= 4.9
-            except (subprocess.CalledProcessError, ValueError):
-                pass
+            with open(os.devnull, 'w') as null:
+                try:
+                    version = float(subprocess.check_output([cls.get_command(), '-dumpversion'],
+                                                            stderr=null)[:3])
+                    cls.has_color = version >= 4.9
+                except (subprocess.CalledProcessError, ValueError):
+                    pass
         return res

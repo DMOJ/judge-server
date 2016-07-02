@@ -1,4 +1,4 @@
-from .GCCExecutor import GCCExecutor
+from .gcc_executor import GCCExecutor
 
 
 class Executor(GCCExecutor):

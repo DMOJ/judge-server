@@ -19,32 +19,33 @@ class NullStdoutMixin(object):
 
 
 class EmulateTerminalMixin(object):
-    def get_compile_popen_kwargs(self):
-        return {'stderr': self._slave, 'stdout': self._slave, 'stdin': self._slave}
+    if os.name != 'nt':
+        def get_compile_popen_kwargs(self):
+            return {'stderr': self._slave, 'stdout': self._slave, 'stdin': self._slave}
 
-    def get_compile_env(self):
-        env = os.environ.copy()
-        env['TERM'] = 'xterm'
-        return env
+        def get_compile_env(self):
+            env = os.environ.copy()
+            env['TERM'] = 'xterm'
+            return env
 
-    def get_compile_process(self):
-        self._master, self._slave = pty.openpty()
-        proc = super(EmulateTerminalMixin, self).get_compile_process()
+        def get_compile_process(self):
+            self._master, self._slave = pty.openpty()
+            proc = super(EmulateTerminalMixin, self).get_compile_process()
 
-        class io_error_wrapper(object):
-            def __init__(self, fd):
-                self.fd = fd
+            class io_error_wrapper(object):
+                def __init__(self, fd):
+                    self.fd = fd
 
-            def read(self, *args, **kwargs):
-                try:
-                    return self.fd.read(*args, **kwargs)
-                except (IOError, OSError):
-                    return ''
+                def read(self, *args, **kwargs):
+                    try:
+                        return self.fd.read(*args, **kwargs)
+                    except (IOError, OSError):
+                        return ''
 
-            def __getattr__(self, attr):
-                return getattr(self.fd, attr)
+                def __getattr__(self, attr):
+                    return getattr(self.fd, attr)
 
-        proc.stderr = io_error_wrapper(os.fdopen(self._master, 'r'))
+            proc.stderr = io_error_wrapper(os.fdopen(self._master, 'r'))
 
-        os.close(self._slave)
-        return proc
+            os.close(self._slave)
+            return proc

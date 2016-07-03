@@ -67,9 +67,6 @@ class StandardGrader(BaseGrader):
             callname = callname.replace('sys_', '', 1)
             message = {
                 'open': 'opening files is not allowed',
-                'socketcall': 'accessing the network is not allowed',
-                'socket': 'accessing the network is not allowed',
-                'clone': 'threading is not allowed'
             }.get(callname, '%s syscall disallowed' % callname)
             result.feedback = message
 

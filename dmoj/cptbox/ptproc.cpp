@@ -143,11 +143,14 @@ int pt_process::monitor() {
                     default:
                         signal = WSTOPSIG(status);
                 }
-                if(!first) // Don't set _signal to SIGSTOP
+                if(!first) // *** Don't set _signal to SIGSTOP if this is the /first/ SIGSTOP
                     dispatch(PTBOX_EVENT_SIGNAL, WSTOPSIG(status));
             }
         }
-        ptrace(_trace_syscalls ? PTRACE_SYSCALL : PTRACE_CONT, pid, NULL, (void*) signal);
+        // Pass NULL as signal in case of our first SIGSTOP because the runtime tends to resend it, making all our
+        // work for naught. Like abort(), it catches the signal, prints something (^Z?) and then resends it.
+        // Doing this prevents a second SIGSTOP from being dispatched to our event handler above. ***
+        ptrace(_trace_syscalls ? PTRACE_SYSCALL : PTRACE_CONT, pid, NULL, first ? NULL : (void*) signal);
         first = false;
     }
     dispatch(PTBOX_EVENT_EXITED, exit_reason);

@@ -69,6 +69,7 @@ cdef extern from 'ptbox.h' nogil:
         int getpid()
         double execution_time()
         const rusage *getrusage()
+        bint was_initialized()
 
     cdef int MAX_SYSCALL
 

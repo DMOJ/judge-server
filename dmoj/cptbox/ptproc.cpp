@@ -72,7 +72,7 @@ int pt_process::protection_fault(int syscall) {
 }
 
 int pt_process::monitor() {
-    bool in_syscall = false, first = true;
+    bool in_syscall = false, first = true, spawned = false;
     struct timespec start, end, delta;
     int status, exit_reason = PTBOX_EXIT_NORMAL;
     siginfo_t si;
@@ -100,7 +100,7 @@ int pt_process::monitor() {
                 in_syscall ^= true;
                 //printf("%s syscall %d\n", in_syscall ? "Enter" : "Exit", syscall);
 
-                if (!this->_initialized) {
+                if (!spawned) {
                     // This might seem odd, and you may ask yourself: "does execve not return if the process hits an
                     // rlimit and gets SIGKILLed?"
                     //
@@ -115,7 +115,7 @@ int pt_process::monitor() {
                     // initialize, so we don't need to wait until the next non-execve syscall to set
                     // _initialized to true - if it exited execve, it's good to go.
                     if (!in_syscall && syscall == debugger->execve_syscall())
-                        this->_initialized = true;
+                        spawned = this->_initialized = true;
                 } else if (in_syscall) {
                     if (syscall < MAX_SYSCALL) {
                         switch (handler[syscall]) {

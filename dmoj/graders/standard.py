@@ -52,13 +52,14 @@ class StandardGrader(BaseGrader):
         result.feedback = (check.feedback or
                            (process.feedback if hasattr(process, 'feedback') else
                             getattr(self.binary, 'get_feedback', lambda x, y, z: '')(error, result, process)))
-        if not result.feedback and result.get_main_code() == Result.RTE and hasattr(process, 'signal'):
-            # The only time the signal may be 0 while the process is RTE'd (nonzero negative returncode) is
-            # when the process failed to initialize (e.g., because it had an array defined in global scope that
-            # exceeded the memory limit allocated to the problem).
-            #
-            # See <https://github.com/DMOJ/judge/issues/179> for more details.
-            result.feedback = strsignal(process.signal) if process.signal else 'failed initializing'
+        if not result.feedback and result.get_main_code() == Result.RTE:
+            if hasattr(process, 'was_initialized') and not process.was_initialized:
+                # Process may failed to initialize, resulting in a SIGKILL without any prior signals.
+                # See <https://github.com/DMOJ/judge/issues/179> for more details.
+                result.feedback = 'failed initializing'
+            elif hasattr(process, 'signal'):
+                # I suppose generate a SIGKILL message is better when we don't know the signal that caused it.
+                result.feedback = strsignal(process.signal) if process.signal else 'Killed'
 
         # On Linux we can provide better help messages
         if hasattr(process, 'protection_fault') and process.protection_fault:

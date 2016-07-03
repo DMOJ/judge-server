@@ -101,6 +101,19 @@ int pt_process::monitor() {
                 //printf("%s syscall %d\n", in_syscall ? "Enter" : "Exit", syscall);
 
                 if (!this->_initialized) {
+                    // This might seem odd, and you may ask yourself: "does execve not return if the process hits an
+                    // rlimit and gets SIGKILLed?"
+                    //
+                    // No, it doesn't. See the session below.
+                    //      $ ulimit -Sv50000
+                    //      $ strace ./a.out
+                    //      execve("./a.out", ["./a.out"], [/* 17 vars */] <unfinished ...>
+                    //      +++ killed by SIGKILL +++
+                    //      Killed
+                    //
+                    // From this we can see that execve doesn't return (<unfinished ...>) if the process fails to
+                    // initialize, so we don't need to wait until the next non-execve syscall to set
+                    // _initialized to true - if it exited execve, it's good to go.
                     if (!in_syscall && syscall == debugger->execve_syscall())
                         this->_initialized = true;
                 } else if (in_syscall) {

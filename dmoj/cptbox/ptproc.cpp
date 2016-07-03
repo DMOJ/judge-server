@@ -143,7 +143,8 @@ int pt_process::monitor() {
                     default:
                         signal = WSTOPSIG(status);
                 }
-                dispatch(PTBOX_EVENT_SIGNAL, WSTOPSIG(status));
+                if(!first) // Don't set _signal to SIGSTOP
+                    dispatch(PTBOX_EVENT_SIGNAL, WSTOPSIG(status));
             }
         }
         ptrace(_trace_syscalls ? PTRACE_SYSCALL : PTRACE_CONT, pid, NULL, (void*) signal);

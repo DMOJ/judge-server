@@ -52,11 +52,8 @@ class StandardGrader(BaseGrader):
         result.feedback = (check.feedback or
                            (process.feedback if hasattr(process, 'feedback') else
                             getattr(self.binary, 'get_feedback', lambda x, y, z: '')(error, result, process)))
-        if not result.feedback and result.get_main_code() == Result.RTE:
-            if hasattr(process, 'signal') and process.signal:
-                result.feedback = strsignal(process.signal)
-            else:
-                result.feedback = 'failed initializing'
+        if not result.feedback and result.get_main_code() == Result.RTE and hasattr(process, 'signal'):
+            result.feedback = strsignal(process.signal) if process.signal else 'failed initializing'
 
         # On Linux we can provide better help messages
         if hasattr(process, 'protection_fault') and process.protection_fault:

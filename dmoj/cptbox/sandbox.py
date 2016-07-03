@@ -192,7 +192,7 @@ class _SecurePopen(Process):
     def _run_process(self):
         self._spawn(self._executable, self._args, self._env, self._chdir, self._fds)
 
-        # Clear SIGSTOP from self._signal
+        # Make _signal nonzero
         os.kill(self.pid, signal.SIGWINCH)
 
         if self._child_stdin >= 0:
@@ -209,9 +209,6 @@ class _SecurePopen(Process):
         if self._time and self.execution_time > self._time:
             self._tle = True
         self._died.set()
-
-        if self._signal == signal.SIGSTOP and self.returncode == -signal.SIGKILL:
-            self.returncode = None
 
         return code
 

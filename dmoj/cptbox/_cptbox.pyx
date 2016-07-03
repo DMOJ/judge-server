@@ -369,7 +369,7 @@ cdef class Process:
     cdef public Debugger debugger
     cdef readonly bint _exited
     cdef readonly int _exitcode
-    cdef public unsigned int _signal
+    cdef unsigned int _signal
     cdef public int _child_stdin, _child_stdout, _child_stderr
     cdef public unsigned long _child_memory, _child_address
     cdef public unsigned int _cpu_time

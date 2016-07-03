@@ -105,10 +105,9 @@ class StandardGrader(BaseGrader):
 
     def _interact_with_process(self, case, result, input):
         process = self._current_proc
-        communicate = process.safe_communicate if hasattr(process, 'safe_communicate') else partial(safe_communicate,
-                                                                                                    process)
         try:
-            result.proc_output, error = communicate(input, outlimit=case.config.output_limit_length, errlimit=1048576)
+            result.proc_output, error = process.safe_communicate(input, outlimit=case.config.output_limit_length,
+                                                                 errlimit=1048576)
         except OutputLimitExceeded as ole:
             stream, result.proc_output, error = ole.args
             print 'OLE:', stream

@@ -71,7 +71,7 @@ int pt_process::protection_fault(int syscall) {
 }
 
 int pt_process::monitor() {
-    bool in_syscall = false, first = true, spawned = false;
+    bool in_syscall = false, first = true;
     struct timespec start, end, delta;
     int status, exit_reason = PTBOX_EXIT_NORMAL;
     siginfo_t si;
@@ -99,9 +99,9 @@ int pt_process::monitor() {
                 in_syscall ^= true;
                 //printf("%s syscall %d\n", in_syscall ? "Enter" : "Exit", syscall);
 
-                if (!spawned) {
-                    if (in_syscall && syscall == debugger->execve_syscall())
-                        spawned = true;
+                if (!this->_initialized) {
+                    if (!in_syscall && syscall == debugger->execve_syscall())
+                        this->_initialized = true;
                 } else if (in_syscall) {
                     if (syscall < MAX_SYSCALL) {
                         switch (handler[syscall]) {

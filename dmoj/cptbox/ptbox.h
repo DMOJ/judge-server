@@ -67,6 +67,7 @@ public:
     int getpid() { return pid; }
     double execution_time() { return exec_time.tv_sec + exec_time.tv_nsec / 1000000000.0; }
     const rusage *getrusage() { return &_rusage; }
+    bool was_initialized() { return _initialized; }
 protected:
     int dispatch(int event, unsigned long param);
     int protection_fault(int syscall);
@@ -81,6 +82,7 @@ private:
     pt_event_callback event_proc;
     void *event_context;
     bool _trace_syscalls;
+    bool _initialized;
 };
 
 class pt_debugger {

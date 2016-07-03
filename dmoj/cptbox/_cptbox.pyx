@@ -475,6 +475,10 @@ cdef class Process:
         self._exited = True
         return self._exitcode
 
+    property was_initialized:
+        def __get__(self):
+            return self.process.was_initialized()
+
     property _trace_syscalls:
         def __get__(self):
             return self.process.trace_syscalls()
@@ -508,7 +512,7 @@ cdef class Process:
         def __get__(self):
             if not self._exited:
                 return None
-            return self._signal
+            return self._signal if self.was_initialized else 0
 
     property returncode:
         def __get__(self):

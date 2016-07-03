@@ -192,9 +192,6 @@ class _SecurePopen(Process):
     def _run_process(self):
         self._spawn(self._executable, self._args, self._env, self._chdir, self._fds)
 
-        # Make _signal nonzero
-        os.kill(self.pid, signal.SIGWINCH)
-
         if self._child_stdin >= 0:
             os.close(self._child_stdin)
         if self._child_stdout >= 0:

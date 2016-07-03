@@ -22,7 +22,8 @@ void pt_free_process(pt_process *process) {
 
 pt_process::pt_process(pt_debugger *debugger) :
     pid(0), callback(NULL), context(NULL), debugger(debugger),
-    event_proc(NULL), event_context(NULL), _trace_syscalls(true)
+    event_proc(NULL), event_context(NULL), _trace_syscalls(true),
+    _initialized(false)
 {
     memset(&exec_time, 0, sizeof exec_time);
     memset(handler, 0, sizeof handler);

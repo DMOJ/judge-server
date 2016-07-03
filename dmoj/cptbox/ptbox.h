@@ -82,7 +82,7 @@ private:
     pt_event_callback event_proc;
     void *event_context;
     bool _trace_syscalls;
-    bool _initialized;
+    bool _initialized = 0;
 };
 
 class pt_debugger {

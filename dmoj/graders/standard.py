@@ -59,7 +59,7 @@ class StandardGrader(BaseGrader):
                 result.feedback = 'failed initializing'
             elif hasattr(process, 'signal'):
                 # I suppose generate a SIGKILL message is better when we don't know the signal that caused it.
-                result.feedback = strsignal(process.signal) if process.signal else 'Killed'
+                result.feedback = strsignal(process.signal).lower() if process.signal else 'killed'
 
         # On Linux we can provide better help messages
         if hasattr(process, 'protection_fault') and process.protection_fault:

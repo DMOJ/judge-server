@@ -22,6 +22,7 @@ public class SubmissionAgent {
             }
 
         if (policy == null) throw new IllegalStateException("must specify policy file");
+        if (!new File(policy).exists()) throw new IllegalStateException("policy file does not exist");
 
         final Thread selfThread = Thread.currentThread();
 

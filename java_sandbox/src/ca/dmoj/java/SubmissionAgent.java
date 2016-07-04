@@ -16,7 +16,6 @@ public class SubmissionAgent {
         String policy = null;
         if (argv != null)
             for (String opt : argv.split(",")) {
-                opt = opt.toLowerCase();
                 if (opt.equals("unicode")) unicode = true;
                 if (opt.equals("nobiginteger")) noBigInt = true;
                 if (opt.startsWith("policy:")) policy = opt.split(":")[1];

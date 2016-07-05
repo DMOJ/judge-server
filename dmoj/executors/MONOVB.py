@@ -26,3 +26,9 @@ End Module
 
     def get_compile_output(self, process):
         return process.communicate()[0]
+
+    @classmethod
+    def get_find_first_mapping(cls):
+        res = super(Executor, cls).get_find_first_mapping()
+        res['mono-vbnc'] = ['mono-vbnc', 'vbnc']
+        return res

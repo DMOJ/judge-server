@@ -1,0 +1,82 @@
+grant {
+    // Basic Threads
+    permission java.lang.RuntimePermission "stopThread";
+    permission java.lang.RuntimePermission "modifyThread";
+    permission java.lang.RuntimePermission "createClassLoader";
+    permission java.lang.RuntimePermission "setContextClassLoader";
+    permission java.lang.RuntimePermission "accessDeclaredMembers";
+    permission java.lang.RuntimePermission "exitVM.*";
+    permission java.lang.RuntimePermission "getProtectionDomain";
+    permission java.lang.RuntimePermission "accessClassInPackage.sun.reflect";
+
+    // Locale.setDefault
+    permission java.util.PropertyPermission "user.language", "write";
+
+    // Date timezone
+    permission java.util.PropertyPermission "user.timezone", "write";
+
+    permission java.io.FilePermission ".", "read";
+    permission java.io.FilePermission "${groovy.starter.conf}", "read";
+    permission java.io.FilePermission "${groovy.home}/lib", "read";
+    permission java.io.FilePermission "${groovy.home}/lib/asm3.jar", "read";
+    permission java.io.FilePermission "${groovy.home}/lib/ant.jar", "read";
+    permission java.io.FilePermission "${groovy.home}/lib/ant-launcher.jar", "read";
+    permission java.io.FilePermission "${groovy.home}/lib/ant-junit.jar", "read";
+    permission java.io.FilePermission "${groovy.home}/lib/antlr.jar", "read";
+    permission java.io.FilePermission "${groovy.home}/lib/ivy.jar", "read";
+    permission java.io.FilePermission "${groovy.home}/lib/asm3-util.jar", "read";
+    permission java.io.FilePermission "${groovy.home}/lib/asm3-analysis.jar", "read";
+    permission java.io.FilePermission "${groovy.home}/lib/jsp-api.jar", "read";
+    permission java.io.FilePermission "${groovy.home}/lib/asm3-tree.jar", "read";
+    permission java.io.FilePermission "${groovy.home}/lib/bsf.jar", "read";
+    permission java.io.FilePermission "${groovy.home}/lib/mockobjects-core.jar", "read";
+    permission java.io.FilePermission "${groovy.home}/lib/xstream.jar", "read";
+    permission java.io.FilePermission "${groovy.home}/lib/jline.jar", "read";
+    permission java.io.FilePermission "${groovy.home}/lib/commons-logging.jar", "read";
+    permission java.io.FilePermission "${groovy.home}/lib/commons-cli.jar", "read";
+    permission java.io.FilePermission "${groovy.home}/lib/servlet-api.jar", "read";
+    permission java.io.FilePermission "${groovy.home}/lib/regexp.jar", "read";
+    permission java.io.FilePermission "${groovy.home}/lib/jansi.jar", "read";
+    permission java.io.FilePermission "${groovy.home}/lib/junit4.jar", "read";
+
+    permission java.io.FilePermission "${user.home}/.groovy/lib", "read";
+    permission java.io.FilePermission "${tools.jar}", "read";
+
+    permission java.io.FilePermission "${submission.file}", "read";
+    permission java.io.FilePermission "${submission.file}.groovy", "read";
+    permission java.io.FilePermission "${submission.file}.gvy", "read";
+    permission java.io.FilePermission "${submission.file}.gy", "read";
+    permission java.io.FilePermission "${submission.file}.gsh", "read";
+
+    permission java.util.logging.LoggingPermission "control";
+
+
+    permission java.util.PropertyPermission "user.dir", "read";
+    permission java.util.PropertyPermission "user.home", "read";
+    permission java.util.PropertyPermission "groovy.starter.conf.override", "read";
+    permission java.util.PropertyPermission "groovy.home", "read";
+    permission java.util.PropertyPermission "*", "read,write";
+    permission java.util.PropertyPermission "groovy.starter.conf", "read";
+    permission java.util.PropertyPermission "tools.jar", "read";
+
+    // Standard properties
+    permission java.util.PropertyPermission "java.version", "read";
+    permission java.util.PropertyPermission "java.vendor", "read";
+    permission java.util.PropertyPermission "java.vendor.url", "read";
+    permission java.util.PropertyPermission "java.class.version", "read";
+    permission java.util.PropertyPermission "os.name", "read";
+    permission java.util.PropertyPermission "os.version", "read";
+    permission java.util.PropertyPermission "os.arch", "read";
+    permission java.util.PropertyPermission "line.separator", "read";
+
+    permission java.util.PropertyPermission "java.specification.version", "read";
+    permission java.util.PropertyPermission "java.specification.vendor", "read";
+    permission java.util.PropertyPermission "java.specification.name", "read";
+
+    permission java.util.PropertyPermission "java.vm.specification.version", "read";
+    permission java.util.PropertyPermission "java.vm.specification.vendor", "read";
+    permission java.util.PropertyPermission "java.vm.specification.name", "read";
+    permission java.util.PropertyPermission "java.vm.version", "read";
+    permission java.util.PropertyPermission "java.vm.vendor", "read";
+    permission java.util.PropertyPermission "java.vm.name", "read";
+};

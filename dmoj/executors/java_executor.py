@@ -42,6 +42,7 @@ class JavaExecutor(CompiledExecutor):
     nproc = -1
 
     jvm_regex = None
+    security_policy = policy
 
     def __init__(self, problem_id, source_code):
         self._class_name = None
@@ -51,7 +52,7 @@ class JavaExecutor(CompiledExecutor):
         super(JavaExecutor, self).create_files(problem_id, source_code, *args, **kwargs)
         self._policy_file = self._file('security.policy')
         with open(self._policy_file, 'w') as file:
-            file.write(policy)
+            file.write(self.security_policy)
 
         if os.name == 'nt':
             self._agent_file = self._file('java-sandbox.jar')

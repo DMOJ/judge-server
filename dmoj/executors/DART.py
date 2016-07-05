@@ -4,7 +4,7 @@ from .base_executor import ScriptExecutor
 class Executor(ScriptExecutor):
     ext = '.dart'
     name = 'DART'
-    nproc = 50
+    nproc = -1  # Dart uses a really, really large number of threads
     command = 'dart'
     test_program = '''
 void main() {
@@ -13,5 +13,7 @@ void main() {
 '''
     address_grace = 786432
 
-    syscalls = ['epoll_create', 'epoll_ctl']
+    syscalls = ['epoll_create', 'epoll_ctl',
+                ('write', lambda debugger: debugger.uarg0 <= 4)]
+
     fs = ['.*\.(so|dart)', '/proc/meminfo$', '/dev/urandom$']

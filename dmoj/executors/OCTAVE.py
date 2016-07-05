@@ -5,7 +5,7 @@ class Executor(ScriptExecutor):
     ext = '.m'
     name = 'OCTAVE'
     command = 'octave'
-    address_grace = 131072
+    address_grace = 262144
     test_program = "disp(input('', 's'))"
 
     fs = ['.*\.m', '/lib/', '/etc/nsswitch\.conf$', '/etc/passwd$', '/usr/share/', '/etc/fltk/']

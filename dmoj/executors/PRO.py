@@ -15,7 +15,7 @@ class Executor(ScriptExecutor):
         halt.
 
     process:-
-        write('echo: Hello, World!'), nl.
+        write('echo: Hello, World!'), nl,
         true.
 
     :- main.

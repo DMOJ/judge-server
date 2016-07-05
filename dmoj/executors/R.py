@@ -7,7 +7,7 @@ class Executor(ScriptExecutor):
     nproc = -1  # needs a bunch
     command = 'Rscript'
     test_program = 'writeLines(readLines(file("stdin")))'
-    syscalls = ['mkdir', 'setup', 'fork', 'waitpid', 'getpgrp', 'execve']
+    syscalls = ['mkdir', 'setup', 'fork', 'waitpid', 'wait4', 'getpgrp', 'execve']
 
     fs = ['stdin', '.*\.(?:rdb|rdx|rds|R)', '/lib/', '/etc/ld\.so\.(?:cache|preload|nohwcap)$',
           '/usr/local/lib/', '/etc/passwd$', '/etc/nsswitch.conf$', '/etc/group$']

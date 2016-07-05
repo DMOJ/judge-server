@@ -26,7 +26,7 @@ println System.in.newReader().readLine()
     def get_cmdline(self):
         res = super(Executor, self).get_cmdline()
 
-        res[-2:-1] = self.runtime_dict.get('groovy_args') + ['-Dsubmission.file=%s' % self._class_name]
+        res[-2:-1] = ['-Dsubmission.file=%s' % self._class_name] + self.runtime_dict.get('groovy_args')
         return res
 
     def get_compile_args(self):
@@ -51,7 +51,7 @@ println System.in.newReader().readLine()
             return result, False, 'Failed to parse: %s' % groovy
 
         cmdline = log[-1].lstrip('+ ').split()
-        print cmdline
+
         result['groovy_vm'] = cls.find_command_from_list([cmdline[1]])
         result['groovy_args'] = [i for i in cmdline[2:-1]]
 

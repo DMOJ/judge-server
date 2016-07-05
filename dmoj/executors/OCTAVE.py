@@ -13,3 +13,9 @@ class Executor(ScriptExecutor):
     def get_cmdline(self):
         return [self.get_command(), '--no-gui', '--no-history', '--no-init-file', '--no-site-file',
                 '--no-window-system', '--norc', '--quiet', self._code]
+
+    @classmethod
+    def get_find_first_mapping(cls):
+        return {
+            'octave': ['octave-cli'],
+        }

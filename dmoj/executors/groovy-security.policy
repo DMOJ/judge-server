@@ -1,20 +1,13 @@
 grant {
-    // Basic Threads
-    permission java.lang.RuntimePermission "stopThread";
-    permission java.lang.RuntimePermission "modifyThread";
+    // Groovy needs a lot of reflection-related permissions
     permission java.lang.RuntimePermission "createClassLoader";
     permission java.lang.RuntimePermission "setContextClassLoader";
     permission java.lang.RuntimePermission "accessDeclaredMembers";
-    permission java.lang.RuntimePermission "exitVM.*";
     permission java.lang.RuntimePermission "getProtectionDomain";
     permission java.lang.RuntimePermission "accessClassInPackage.sun.reflect";
+    permission java.lang.RuntimePermission "exitVM.*";
 
-    // Locale.setDefault
-    permission java.util.PropertyPermission "user.language", "write";
-
-    // Date timezone
-    permission java.util.PropertyPermission "user.timezone", "write";
-
+    // A lot of files, too
     permission java.io.FilePermission ".", "read";
     permission java.io.FilePermission "${groovy.starter.conf}", "read";
     permission java.io.FilePermission "${groovy.home}/lib", "read";
@@ -38,11 +31,13 @@ grant {
     permission java.io.FilePermission "${groovy.home}/lib/regexp.jar", "read";
     permission java.io.FilePermission "${groovy.home}/lib/jansi.jar", "read";
     permission java.io.FilePermission "${groovy.home}/lib/junit4.jar", "read";
-
     permission java.io.FilePermission "${user.home}/.groovy/lib", "read";
     permission java.io.FilePermission "${tools.jar}", "read";
 
+    // Submission file isn't allowed by default as it is when it's run through Java
     permission java.io.FilePermission "${submission.file}", "read";
+
+    // Various alternates that Groovy may attempt to read
     permission java.io.FilePermission "${submission.file}.groovy", "read";
     permission java.io.FilePermission "${submission.file}.gvy", "read";
     permission java.io.FilePermission "${submission.file}.gy", "read";
@@ -50,14 +45,20 @@ grant {
 
     permission java.util.logging.LoggingPermission "control";
 
-
-    permission java.util.PropertyPermission "user.dir", "read";
-    permission java.util.PropertyPermission "user.home", "read";
-    permission java.util.PropertyPermission "groovy.starter.conf.override", "read";
-    permission java.util.PropertyPermission "groovy.home", "read";
+    // Groovy explicitly asks for R/W *
     permission java.util.PropertyPermission "*", "read,write";
-    permission java.util.PropertyPermission "groovy.starter.conf", "read";
-    permission java.util.PropertyPermission "tools.jar", "read";
+
+    // Everything below is used for regular Java submissions, and is not Groovy-specific
+
+    // Basic Threads
+    permission java.lang.RuntimePermission "stopThread";
+    permission java.lang.RuntimePermission "modifyThread";
+
+    // Locale.setDefault
+    permission java.util.PropertyPermission "user.language", "write";
+
+    // Date timezone
+    permission java.util.PropertyPermission "user.timezone", "write";
 
     // Standard properties
     permission java.util.PropertyPermission "java.version", "read";

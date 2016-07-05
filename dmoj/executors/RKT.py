@@ -7,7 +7,6 @@ class Executor(CompiledExecutor):
     name = 'RKT'
     fs = ['.*\.(?:rkt?$|zo$)', '.*racket.*', '/etc/nsswitch.conf$', '/etc/passwd$']
 
-    raco = env['runtime'].get('raco')
     command = 'racket'
 
     syscalls = ['epoll_create', 'epoll_wait', 'poll',
@@ -21,7 +20,7 @@ class Executor(CompiledExecutor):
 '''
 
     def get_compile_args(self):
-        return [self.raco, 'make', self._code]
+        return [self.runtime_dict['raco'], 'make', self._code]
 
     def get_cmdline(self):
         return [self.get_command(), self._code]
@@ -31,6 +30,13 @@ class Executor(CompiledExecutor):
 
     @classmethod
     def initialize(cls, sandbox=True):
-        if cls.raco is None:
+        if 'raco' not in cls.runtime_dict:
             return False
         return super(Executor, cls).initialize(sandbox)
+
+    @classmethod
+    def get_find_first_mapping(cls):
+        return {
+            'racket': ['racket'],
+            'raco': ['raco']
+        }

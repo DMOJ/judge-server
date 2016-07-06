@@ -9,9 +9,7 @@ class Executor(CompiledExecutor):
 
     command = 'racket'
 
-    syscalls = ['epoll_create', 'epoll_wait', 'poll',
-                # PR_SET_NAME = 15
-                ('prctl', lambda debugger: debugger.arg0 in (15,))]
+    syscalls = ['epoll_create', 'epoll_wait', 'poll']
     address_grace = 131072
 
     test_program = '''\

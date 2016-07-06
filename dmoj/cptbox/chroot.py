@@ -23,6 +23,7 @@ class CHROOTSecurity(dict):
             # Deny with report
             sys_mkdir: self.deny_with_file_path('mkdir', 0),
             sys_tgkill: self.do_tgkill,
+            sys_prctl: self.do_prctl,
 
             sys_getgroups32: ALLOW,
             sys_sched_getaffinity: ALLOW,
@@ -184,3 +185,7 @@ class CHROOTSecurity(dict):
         # Allow tgkill to execute as long as the target thread group is the debugged process
         # libstdc++ seems to use this to signal itself, see <https://github.com/DMOJ/judge/issues/183>
         return tgid == debugger.pid
+
+    def do_prctl(self, debugger):
+        # PR_SET_NAME = 15
+        return debugger.arg0 in (15,)

@@ -13,7 +13,7 @@ void main() {
 '''
     address_grace = 786432
 
-    syscalls = ['epoll_create', 'epoll_ctl',
+    syscalls = ['epoll_create', 'epoll_ctl', 'epoll_wait',
                 ('write', lambda debugger: debugger.uarg0 <= 4)]
 
     fs = ['.*\.(so|dart)', '/proc/meminfo$', '/dev/urandom$']

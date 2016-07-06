@@ -7,7 +7,7 @@ class Executor(ScriptExecutor):
     nproc = -1  # TCL uses a bunch of threads internally
     address_grace = 131072
     command = 'tclsh'
-    syscalls = ['connect', 'access', 'getsockname',
+    syscalls = ['connect', 'access', 'getsockname', 'select',
                 # TCL uses some handles internally
                 ('write', lambda debugger: debugger.arg0 <= 4)]
     fs = ['.*\.tcl', '/etc/nsswitch\.conf$', '/etc/passwd$']

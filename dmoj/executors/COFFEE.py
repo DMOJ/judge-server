@@ -10,7 +10,7 @@ class Executor(ScriptExecutor):
     fs = ['.*\.js$', '/etc/(?:resolv|nsswitch).conf$']
     command = 'node'
     syscalls = ['newselect', 'select', 'pipe2', 'write', 'epoll_create1',
-                'eventfd2', 'epoll_ctl', 'epoll_wait']
+                'eventfd2', 'epoll_ctl', 'epoll_wait', 'sched_yield', 'restart_syscall']
     test_program = '''\
 process.stdin.on 'readable', () ->
   chunk = process.stdin.read()
@@ -29,7 +29,7 @@ process.stdin.on 'readable', () ->
         return [self.get_command(), self.runtime_dict['coffee'], self._code]
 
     def get_fs(self):
-        return super(Executor, self).get_fs() + [self.runtime_dict['coffee']]
+        return super(Executor, self).get_fs() + [self.runtime_dict['coffee'], self._code]
 
     @classmethod
     def get_find_first_mapping(cls):

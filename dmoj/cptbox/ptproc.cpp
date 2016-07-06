@@ -1,5 +1,6 @@
 #define _BSD_SOURCE
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -57,8 +58,10 @@ int pt_process::spawn(pt_fork_handler child, void *context) {
     pid_t pid = fork();
     if (pid == -1)
         return 1;
-    if (pid == 0)
+    if (pid == 0) {
+        setpgid(0, 0);
         _exit(child(context));
+    }
     this->pid = pid;
     debugger->new_process();
     return 0;
@@ -76,29 +79,43 @@ int pt_process::monitor() {
     struct timespec start, end, delta;
     int status, exit_reason = PTBOX_EXIT_NORMAL;
     siginfo_t si;
+    // Set pgid to -this->pid such that -pgid becomes pid, resulting
+    // in the initial wait be on the main thread. This allows it a chance
+    // of creating a new process group.
+    pid_t pid, pgid = -this->pid;
 
     while (true) {
         clock_gettime(CLOCK_MONOTONIC, &start);
-        wait4(pid, &status, 0, &_rusage);
+        pid = wait4(-pgid, &status, __WALL, &_rusage);
         clock_gettime(CLOCK_MONOTONIC, &end);
         timespec_sub(&end, &start, &delta);
         timespec_add(&exec_time, &delta, &exec_time);
         int signal = 0;
 
-        if (WIFEXITED(status) || WIFSIGNALED(status))
-            break;
+        //printf("pid: %d (%d)\n", pid, this->pid);
+
+        if (WIFEXITED(status) || WIFSIGNALED(status)) {
+            if (first || pid == pgid)
+                break;
+            //else printf("Thread exit: %d\n", pid);
+        }
 
         if (first) {
             dispatch(PTBOX_EVENT_ATTACH, 0);
+
             // This is right after SIGSTOP is received:
-            ptrace(PTRACE_SETOPTIONS, pid, NULL, PTRACE_O_TRACESYSGOOD | PTRACE_O_TRACEEXIT);
+            ptrace(PTRACE_SETOPTIONS, pid, NULL, PTRACE_O_TRACESYSGOOD | PTRACE_O_TRACEEXIT | PTRACE_O_TRACECLONE);
+
+            // We now set the process group to the actual pgid.
+            pgid = pid;
         }
 
         if (WIFSTOPPED(status)) {
             if (WSTOPSIG(status) == (0x80 | SIGTRAP)) {
+                debugger->settid(pid);
                 int syscall = debugger->syscall();
                 in_syscall ^= true;
-                //printf("%s syscall %d\n", in_syscall ? "Enter" : "Exit", syscall);
+                //printf("%d: %s syscall %d\n", pid, in_syscall ? "Enter" : "Exit", syscall);
 
                 if (!spawned) {
                     // This might seem odd, and you may ask yourself: "does execve not return if the process hits an
@@ -152,12 +169,18 @@ int pt_process::monitor() {
                             case PTRACE_EVENT_EXIT:
                                 if (exit_reason != PTBOX_EXIT_NORMAL)
                                     dispatch(PTBOX_EVENT_EXITING, PTBOX_EXIT_NORMAL);
+                            case PTRACE_EVENT_CLONE: {
+                                unsigned long tid;
+                                ptrace(PTRACE_GETEVENTMSG, pid, NULL, &tid);
+                                //printf("Created thread: %d\n", tid);
+                                break;
+                            }
                         }
                         break;
                     default:
                         signal = WSTOPSIG(status);
                 }
-                if(!first) // *** Don't set _signal to SIGSTOP if this is the /first/ SIGSTOP
+                if (!first) // *** Don't set _signal to SIGSTOP if this is the /first/ SIGSTOP
                     dispatch(PTBOX_EVENT_SIGNAL, WSTOPSIG(status));
             }
         }

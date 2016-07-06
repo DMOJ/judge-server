@@ -39,6 +39,7 @@ cdef extern from 'ptbox.h' nogil:
         char *readstr(unsigned long, size_t)
         void freestr(char*)
         pid_t getpid()
+        pid_t gettid()
         int getpid_syscall()
         void on_return(pt_syscall_return_callback callback, void *context)
 
@@ -346,6 +347,10 @@ cdef class Debugger:
         pystr = <object>str
         self.thisptr.freestr(str)
         return pystr
+
+    property tid:
+        def __get__(self):
+            return self.thisptr.gettid()
 
     property pid:
         def __get__(self):

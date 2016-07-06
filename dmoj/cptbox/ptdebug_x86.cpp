@@ -21,11 +21,11 @@
 #define SS 16
 
 long pt_debugger_x86::peek_reg(int reg) {
-    return ptrace(PTRACE_PEEKUSER, process->getpid(), 4 * reg, 0);
+    return ptrace(PTRACE_PEEKUSER, tid, 4 * reg, 0);
 }
 
 void pt_debugger_x86::poke_reg(int reg, long data) {
-    ptrace(PTRACE_POKEUSER, process->getpid(), 4 * reg, data);
+    ptrace(PTRACE_POKEUSER, tid, 4 * reg, data);
 }
 
 int pt_debugger_x86::syscall() {

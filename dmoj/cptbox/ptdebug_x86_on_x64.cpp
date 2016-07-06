@@ -32,11 +32,11 @@
 #define GS 26
 
 long pt_debugger_x86_on_x64::peek_reg(int reg) {
-    return (int32_t) ptrace(PTRACE_PEEKUSER, process->getpid(), 8 * reg, 0);
+    return (int32_t) ptrace(PTRACE_PEEKUSER, tid, 8 * reg, 0);
 }
 
 void pt_debugger_x86_on_x64::poke_reg(int reg, long data) {
-    ptrace(PTRACE_POKEUSER, process->getpid(), 8 * reg, (int32_t) data);
+    ptrace(PTRACE_POKEUSER, tid, 8 * reg, (int32_t) data);
 }
 
 int pt_debugger_x86_on_x64::syscall() {

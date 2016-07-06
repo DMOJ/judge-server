@@ -115,7 +115,11 @@ public:
     virtual char *readstr(unsigned long addr, size_t max_size);
     virtual void freestr(char *);
     virtual ~pt_debugger();
+
+    void settid(pid_t tid) { this->tid = tid; }
+    pid_t gettid() { return tid; }
     pid_t getpid() { return process->getpid(); }
+
     void on_return(pt_syscall_return_callback callback, void *context) {
         on_return_callback = callback;
         on_return_context = context;
@@ -125,6 +129,7 @@ protected:
     pt_syscall_return_callback on_return_callback;
     void *on_return_context;
     int execve_id;
+    pid_t tid;
     friend class pt_process;
 };
 

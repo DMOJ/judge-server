@@ -50,7 +50,7 @@ char *pt_debugger::readstr(unsigned long addr, size_t max_size) {
             }
             buf = (char *) nbuf;
         }
-        data.val = ptrace(PTRACE_PEEKDATA, process->getpid(), addr + read, NULL);
+        data.val = ptrace(PTRACE_PEEKDATA, tid, addr + read, NULL);
         memcpy(buf + read, data.byte, sizeof(long));
         if (has_null(data.byte, sizeof(long)))
             break;

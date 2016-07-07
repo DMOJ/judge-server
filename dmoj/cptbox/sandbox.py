@@ -89,6 +89,13 @@ _arch_map = {
 }
 
 
+# SecurePopen is a subclass of a cython class, _cptbox.Process. Since it is exceedingly unwise
+# to do everything in cython, determining the debugger class is left to do here. However, since
+# the debugger is constructed in __cinit__, we have to pass the determined debugger class to
+# SecurePopen.__new__. While we can simply override __new__, many complication arises from having
+# differnt parameters to __new__ and __init__, the latter of which is given the *original* arguments
+# as passed to type.__call__. Hence, we use a metaclass to pass the extra debugger argument to both
+# __new__ and __init__.
 class SecurePopenMeta(type):
     def __call__(self, argv, executable=None, *args, **kwargs):
         executable = executable or _find_exe(argv[0])

@@ -104,15 +104,26 @@ int pt_process::monitor() {
         if (first) {
             dispatch(PTBOX_EVENT_ATTACH, 0);
 
+#if defined(__FreeBSD__)
+            // No FreeBSD equivalent that I know of
+            // * TRACESYSGOOD is only for bit 7 of SIGTRAP, we can do without
+            // * TRACECLONE makes no sense since FreeBSD has no clone(2)
+            // * TRACEEXIT... I'm not sure about
+#else
             // This is right after SIGSTOP is received:
             ptrace(PTRACE_SETOPTIONS, pid, NULL, PTRACE_O_TRACESYSGOOD | PTRACE_O_TRACEEXIT | PTRACE_O_TRACECLONE);
-
+#endif
             // We now set the process group to the actual pgid.
             pgid = pid;
         }
 
         if (WIFSTOPPED(status)) {
+#if defined(__FreeBSD__)
+            // FreeBSD has no PTRACE_O_TRACESYSGOOD equivalent
+            if (WSTOPSIG(status) == SIGTRAP) {
+else
             if (WSTOPSIG(status) == (0x80 | SIGTRAP)) {
+#endif
                 debugger->settid(pid);
                 int syscall = debugger->syscall();
                 in_syscall ^= true;
@@ -163,6 +174,11 @@ int pt_process::monitor() {
                     debugger->on_return_context = NULL;
                 }
             } else {
+#if defined(__FreeBSD__)
+                // No events aside from signal event on FreeBSD
+                // (TODO: maybe check for PL_SIGNAL instead of both PL_SIGNAL and PL_NONE?)
+                signal = WSTOPSIG(status);
+#else
                 switch (WSTOPSIG(status)) {
                     case SIGTRAP:
                         switch (status >> 16) {
@@ -180,6 +196,7 @@ int pt_process::monitor() {
                     default:
                         signal = WSTOPSIG(status);
                 }
+#endif
                 if (!first) // *** Don't set _signal to SIGSTOP if this is the /first/ SIGSTOP
                     dispatch(PTBOX_EVENT_SIGNAL, WSTOPSIG(status));
             }

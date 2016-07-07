@@ -9,6 +9,8 @@
 
 #include <sys/ptrace.h>
 
+#include <map>
+
 #if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
 #   define PTBOX_FREEBSD 1
 #else
@@ -138,6 +140,7 @@ public:
     pid_t gettid() { return tid; }
     pid_t tid; // TODO maybe call super instead
     pid_t getpid() { return process->getpid(); }
+    bool is_enter() { return syscall_[tid] != -1; }
 
     void on_return(pt_syscall_return_callback callback, void *context) {
         on_return_callback = callback;
@@ -148,6 +151,7 @@ protected:
     pt_syscall_return_callback on_return_callback;
     void *on_return_context;
     int execve_id;
+    std::map<pid_t, int> syscall_;
 #if PTBOX_FREEBSD
     linux_pt_reg bsd_converted_regs;
 #endif

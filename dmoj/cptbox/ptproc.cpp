@@ -72,6 +72,12 @@ int pt_process::protection_fault(int syscall) {
     dispatch(PTBOX_EVENT_PROTECTION, syscall);
     dispatch(PTBOX_EVENT_EXITING, PTBOX_EXIT_PROTECTION);
     kill(pid, SIGKILL);
+#if PTBOX_FREEBSD
+    // FreeBSD SIGKILL doesn't under ptrace.
+    // ptrace(PT_KILL) doesn't work when not under signal-stop.
+    // Solution? Use both!
+    ptrace(PT_KILL, pid, (caddr_t) 1, 0);
+#endif
     return PTBOX_EXIT_PROTECTION;
 }
 
@@ -128,7 +134,7 @@ int pt_process::monitor() {
 #endif
                 debugger->settid(pid);
                 int syscall = debugger->syscall();
-                in_syscall ^= true;
+                in_syscall = debugger->is_enter();
                 //printf("%d: %s syscall %d\n", pid, in_syscall ? "Enter" : "Exit", syscall);
 
                 if (!spawned) {

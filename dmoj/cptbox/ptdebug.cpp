@@ -26,11 +26,20 @@ void pt_debugger::new_process() {}
 
 void pt_debugger::settid(pid_t tid) {
     this->tid = tid;
+    if (!syscall_.count(tid)) syscall_[tid] = -1;
 #if PTBOX_FREEBSD
     struct reg bsd_regs;
     ptrace(PT_GETREGS, tid, (caddr_t) &bsd_regs, 0);
     map_regs_to_linux(&bsd_regs, &bsd_converted_regs);
 #endif
+    if (syscall_[tid] == -1)
+        syscall_[tid] = this->syscall();
+    else {
+#if PTBOX_FREEBSD
+        bsd_converted_regs.orig_rax = syscall_[tid];
+#endif
+        syscall_[tid] = -1;
+    }
 }
 
 long pt_debugger::peek_reg(int idx) {

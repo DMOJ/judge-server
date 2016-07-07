@@ -85,6 +85,7 @@ class CHROOTSecurity(dict):
             sys_gettimeofday: ALLOW,
             sys_getpid: ALLOW,
             sys_getppid: ALLOW,
+            sys_sched_yield: ALLOW,
 
             sys_clone: ALLOW,
             sys_exit: ALLOW,
@@ -108,7 +109,18 @@ class CHROOTSecurity(dict):
             sys_time: ALLOW,
             sys_prlimit64: ALLOW,
             sys_getdents64: ALLOW,
+
+            # FreeBSD specific
+            sys_obreak: ALLOW,
+            sys_sysarch: ALLOW,
+            sys_thr_self: ALLOW,
         })
+
+        # kFreeBSD only, do not know if it's GNU/kFreeBSD specific
+        if 'freebsd' in sys.platform:
+            self.update({
+                sys_sysctl: ALLOW, # TODO: More strict?
+            })
 
     def deny_with_file_path(self, syscall, argument):
         def check(debugger):

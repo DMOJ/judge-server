@@ -8,7 +8,7 @@ class Executor(ScriptExecutor):
     command_paths = ['cat']
     test_program = 'echo: Hello, World!\n'
     fs = ['.*\.txt']
-    syscalls = ['fadvise64_64', 'fadvise64']
+    syscalls = ['fadvise64_64', 'fadvise64', 'posix_fadvise']
 
     @classmethod
     def get_command(cls):

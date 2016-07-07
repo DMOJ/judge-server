@@ -1,3 +1,5 @@
+import os
+
 from subprocess import check_output, CalledProcessError
 from .gcc_executor import GCCExecutor
 from dmoj.judgeenv import env
@@ -35,7 +37,7 @@ int main (int argc, const char * argv[]) {
 
     @classmethod
     def initialize(cls, sandbox=True):
-        if 'gnustep-config' not in env['runtime']:
+        if 'gnustep-config' not in env['runtime'] or not os.path.isfile(env['runtime']['gnustep-config']):
             return False
         try:
             cls.objc_flags = check_output([env['runtime']['gnustep-config'], '--objc-flags']).split()

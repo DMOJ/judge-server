@@ -13,7 +13,6 @@ from .base_executor import CompiledExecutor
 from dmoj.judgeenv import env
 from dmoj.result import Result
 
-C_FS = ['.*\.so', '/proc/meminfo', '/dev/null']
 GCC_ENV = env['runtime'].get('gcc_env', {})
 GCC_COMPILE = os.environ.copy()
 IS_ARM = hasattr(os, 'uname') and os.uname()[4].startswith('arm')
@@ -70,9 +69,6 @@ class GCCExecutor(CompiledExecutor):
 
     def get_compile_env(self):
         return GCC_COMPILE
-
-    def get_fs(self):
-        return ['.*\.so', '/proc/meminfo', '/dev/null']
 
     def get_security(self, launch_kwargs=None):
         return CHROOTSecurity(self.get_fs(), writable=self._writable,

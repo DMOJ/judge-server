@@ -70,11 +70,19 @@ make_arg(5, R9);
 #undef make_arg
 
 bool pt_debugger_x64::is_exit(int syscall) {
+#if defined(__FreeBSD__)
+    return syscall == 1;
+#else
     return syscall == 231 || syscall == 60;
+#endif
 }
 
 int pt_debugger_x64::getpid_syscall() {
+#if defined(__FreeBSD__)
+    return 20;
+#else
     return 39;
+#endif
 }
 
 pt_debugger_x64::pt_debugger_x64() {

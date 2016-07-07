@@ -36,7 +36,7 @@ long pt_debugger_x86_on_x64::peek_reg(int reg) {
 }
 
 void pt_debugger_x86_on_x64::poke_reg(int reg, long data) {
-    pt_debugger::poke_reg(reg, (int32_t) data)
+    pt_debugger::poke_reg(reg, (int32_t) data);
 }
 
 int pt_debugger_x86_on_x64::syscall() {

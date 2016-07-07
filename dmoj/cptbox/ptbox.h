@@ -5,10 +5,11 @@
 #include <sys/resource.h>
 #include <sys/types.h>
 #include <sys/time.h>
+#include <sys/param.h>
 
 #include <sys/ptrace.h>
 
-#if __FreeBSD__
+#if defined(__FreeBSD__)
 #include "ext_freebsd.h"
 #else
 #include "ext_linux.h"

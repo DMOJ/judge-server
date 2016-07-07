@@ -122,15 +122,3 @@ inline void map_regs_from_linux(struct reg *bsd_r, struct linux_pt_reg *linux_r)
     /** the rest aren't copied **/
 }
 #endif  /* __WORDSIZE */
-
-inline long get_reg(pt_debugger *debugger, int idx) {
-    return (int*)((char *)&debugger->bsd_converted_regs + idx * sizeof(long));
-}
-
-inline void set_reg(pt_debugger *debugger, int idx, long data) {
-    *(int*)((char *)&debugger->bsd_converted_regs + idx * sizeof(long)) = (int) data;
-
-    reg bsd_regs;
-    map_regs_from_linux(&bsd_regs, &debugger->bsd_converted_regs);
-    ptrace(PT_SETREGS, debugger->tid, &bsd_regs, 0);
-}

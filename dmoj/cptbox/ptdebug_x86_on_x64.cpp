@@ -32,11 +32,11 @@
 #define GS 26
 
 long pt_debugger_x86_on_x64::peek_reg(int reg) {
-    return (int32_t) get_reg(this, reg);
+    return (int32_t) pt_debugger::peek_reg(reg);
 }
 
 void pt_debugger_x86_on_x64::poke_reg(int reg, long data) {
-    set_reg(this, reg, (int32_t) data);
+    pt_debugger::poke_reg(reg, (int32_t) data)
 }
 
 int pt_debugger_x86_on_x64::syscall() {

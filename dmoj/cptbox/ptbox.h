@@ -9,6 +9,12 @@
 
 #include <sys/ptrace.h>
 
+#if defined(__FreeBSD__)
+#include "ext_freebsd.h"
+#else
+#include "ext_linux.h"
+#endif
+
 #define MAX_SYSCALL 546
 #define PTBOX_HANDLER_DENY 0
 #define PTBOX_HANDLER_ALLOW 1
@@ -252,10 +258,4 @@ public:
 
 pt_process *pt_alloc_process(pt_debugger *);
 void pt_free_process(pt_process *);
-#endif
-
-#if defined(__FreeBSD__)
-#include "ext_freebsd.h"
-#else
-#include "ext_linux.h"
 #endif

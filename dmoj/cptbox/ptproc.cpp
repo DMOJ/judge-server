@@ -85,11 +85,14 @@ int pt_process::monitor() {
     bool in_syscall = false, first = true, spawned = false;
     struct timespec start, end, delta;
     int status, exit_reason = PTBOX_EXIT_NORMAL;
-    siginfo_t si;
     // Set pgid to -this->pid such that -pgid becomes pid, resulting
     // in the initial wait be on the main thread. This allows it a chance
     // of creating a new process group.
     pid_t pid, pgid = -this->pid;
+
+#if PTBOX_FREEBSD
+    struct ptrace_lwpinfo lwpi;
+#endif
 
     while (true) {
         clock_gettime(CLOCK_MONOTONIC, &start);
@@ -109,12 +112,14 @@ int pt_process::monitor() {
             //else printf("Thread exit: %d\n", pid);
         }
 
+        ptrace(PT_LWPINFO, pid, (caddr_t) &lwpi, sizeof lwpi);
+
         if (first) {
             dispatch(PTBOX_EVENT_ATTACH, 0);
 
 #if PTBOX_FREEBSD
+            // PTRACE_O_TRACESYSGOOD can be replaced by struct ptrace_lwpinfo.pl_flags.
             // No FreeBSD equivalent that I know of
-            // * TRACESYSGOOD is only for bit 7 of SIGTRAP, we can do without
             // * TRACECLONE makes no sense since FreeBSD has no clone(2)
             // * TRACEEXIT... I'm not sure about
 #else
@@ -127,14 +132,18 @@ int pt_process::monitor() {
 
         if (WIFSTOPPED(status)) {
 #if PTBOX_FREEBSD
-            // FreeBSD has no PTRACE_O_TRACESYSGOOD equivalent
-            if (WSTOPSIG(status) == SIGTRAP) {
+            if (WSTOPSIG(status) == SIGTRAP && lwpi.pl_flags & (PL_FLAG_SCE | PL_FLAG_SCX)) {
+                debugger->update_syscall(&lwpi);
 #else
             if (WSTOPSIG(status) == (0x80 | SIGTRAP)) {
-#endif
                 debugger->settid(pid);
+#endif
                 int syscall = debugger->syscall();
+#if PTBOX_FREEBSD
+                in_syscall = lwpi.pl_flags & PL_FLAG_SCE;
+#else
                 in_syscall = debugger->is_enter();
+#endif
                 //printf("%d: %s syscall %d\n", pid, in_syscall ? "Enter" : "Exit", syscall);
 
                 if (!spawned) {

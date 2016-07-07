@@ -134,13 +134,18 @@ public:
     virtual void new_process();
     virtual char *readstr(unsigned long addr, size_t max_size);
     virtual void freestr(char *);
-    virtual void settid(pid_t tid);
     virtual ~pt_debugger();
 
     pid_t gettid() { return tid; }
     pid_t tid; // TODO maybe call super instead
     pid_t getpid() { return process->getpid(); }
+
+#if PTBOX_FREEBSD
+    void update_syscall(struct ptrace_lwpinfo *info);
+#else
+    void settid(pid_t tid);
     bool is_enter() { return syscall_[tid] != -1; }
+#endif
 
     void on_return(pt_syscall_return_callback callback, void *context) {
         on_return_callback = callback;

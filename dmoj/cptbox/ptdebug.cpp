@@ -22,25 +22,32 @@ void pt_debugger::set_process(pt_process *proc) {
     process = proc;
 }
 
-void pt_debugger::new_process() {}
+void pt_debugger::new_process() {
+#ifdef PTBOX_FREEBSD
+    tid = process->getpid();
+#endif
+}
 
-void pt_debugger::settid(pid_t tid) {
-    this->tid = tid;
-    if (!syscall_.count(tid)) syscall_[tid] = -1;
-#if PTBOX_FREEBSD
+#ifdef PTBOX_FREEBSD
+void pt_debugger::update_syscall(struct ptrace_lwpinfo *info) {
     struct reg bsd_regs;
     ptrace(PT_GETREGS, tid, (caddr_t) &bsd_regs, 0);
     map_regs_to_linux(&bsd_regs, &bsd_converted_regs);
-#endif
-    if (syscall_[tid] == -1)
-        syscall_[tid] = this->syscall();
-    else {
-#if PTBOX_FREEBSD
-        bsd_converted_regs.orig_rax = syscall_[tid];
-#endif
-        syscall_[tid] = -1;
-    }
+
+    if (info->pl_flags & PL_FLAG_SCX)
+        bsd_converted_regs.orig_rax = syscall_[info->pl_lwpid];
+        // Not available on all kernels.
+        // bsd_converted_regs.orig_rax = info->pl_syscall_code;
+    else if (info->pl_flags & PL_FLAG_SCE)
+        syscall_[info->pl_lwpid] = bsd_converted_regs.rax;
 }
+#else
+void pt_debugger::settid(pid_t tid) {
+    this->tid = tid;
+    if (!syscall_.count(tid)) syscall_[tid] = -1;
+    syscall_[tid] = syscall_[tid] == -1 ? this->syscall() : -1;
+}
+#endif
 
 long pt_debugger::peek_reg(int idx) {
 #if PTBOX_FREEBSD

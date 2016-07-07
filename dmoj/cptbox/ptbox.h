@@ -109,6 +109,9 @@ public:
     virtual void arg4(long) = 0;
     virtual void arg5(long) = 0;
 
+    virtual long peek_reg(int reg);
+    virtual void poke_reg(int reg, long data);
+
     virtual bool is_exit(int syscall) = 0;
     virtual int getpid_syscall() = 0;
     int execve_syscall() { return execve_id; }
@@ -121,6 +124,7 @@ public:
     virtual ~pt_debugger();
 
     pid_t gettid() { return tid; }
+    pid_t tid; // TODO maybe call super instead
     pid_t getpid() { return process->getpid(); }
 
     void on_return(pt_syscall_return_callback callback, void *context) {
@@ -132,7 +136,6 @@ protected:
     pt_syscall_return_callback on_return_callback;
     void *on_return_context;
     int execve_id;
-    pid_t tid;
 #if defined(__FreeBSD__)
     linux_pt_reg bsd_converted_regs;
 #endif

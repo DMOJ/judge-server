@@ -29,7 +29,7 @@ void pt_debugger::settid(pid_t tid) {
 #if defined(__FreeBSD__)
     reg bsd_regs;
     ptrace(PT_GETREGS, tid, (caddr_t) &bsd_regs, 0);
-    map_regs_to_linux(&bsd_reg, &bsd_converted_regs);
+    map_regs_to_linux(&bsd_regs, &bsd_converted_regs);
 #endif
 }
 

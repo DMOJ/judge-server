@@ -7,10 +7,11 @@
 #include <string.h>
 #include <signal.h>
 #include <sys/time.h>
-#include <sys/ptrace.h>
 #include <sys/resource.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <sys/ptrace.h>
+
 #include "ptbox.h"
 
 pt_process *pt_alloc_process(pt_debugger *debugger) {
@@ -118,10 +119,9 @@ int pt_process::monitor() {
                 //printf("%d: %s syscall %d\n", pid, in_syscall ? "Enter" : "Exit", syscall);
 
                 if (!spawned) {
-                    // This might seem odd, and you may ask yourself: "does execve not return if the process hits an
-                    // rlimit and gets SIGKILLed?"
+                    // Does execve not return if the process hits an rlimit and gets SIGKILLed?
                     //
-                    // No, it doesn't. See the session below.
+                    // It doesn't. See the strace below.
                     //      $ ulimit -Sv50000
                     //      $ strace ./a.out
                     //      execve("./a.out", ["./a.out"], [/* 17 vars */] <unfinished ...>
@@ -187,7 +187,11 @@ int pt_process::monitor() {
         // Pass NULL as signal in case of our first SIGSTOP because the runtime tends to resend it, making all our
         // work for naught. Like abort(), it catches the signal, prints something (^Z?) and then resends it.
         // Doing this prevents a second SIGSTOP from being dispatched to our event handler above. ***
+#if defined(__FreeBSD__)
+        ptrace(_trace_syscalls ? PT_SYSCALL : PT_CONTINUE, pid, (caddr_t) 1, first ? 0 : signal);
+#else
         ptrace(_trace_syscalls ? PTRACE_SYSCALL : PTRACE_CONT, pid, NULL, first ? NULL : (void*) signal);
+#endif
         first = false;
     }
     dispatch(PTBOX_EVENT_EXITED, exit_reason);

@@ -14,6 +14,9 @@ __all__ = ['Process', 'Debugger', 'MAX_SYSCALL_NUMBER',
 
 
 cdef extern from 'ptbox.h' nogil:
+    # Cross-platform extern
+    long ptrace_traceme()
+
     ctypedef int (*pt_handler_callback)(void *context, int syscall)
     ctypedef void (*pt_syscall_return_callback)(void *context, int syscall)
     ctypedef int (*pt_fork_handler)(void *context)
@@ -97,10 +100,6 @@ cdef extern from 'sys/types.h' nogil:
     DIR *opendir(char *name)
     int closedir(DIR* dirp)
 
-cdef extern from 'sys/ptrace.h' nogil:
-    long ptrace(int, pid_t, void*, void*)
-    cdef int PTRACE_TRACEME
-
 cdef extern from 'sys/resource.h' nogil:
     cdef int RLIMIT_NPROC
 
@@ -175,7 +174,7 @@ cdef int pt_child(void *context) nogil:
         fd = atoi(dir.d_name)
         if fd > config.max_fd:
             close(fd)
-    ptrace(PTRACE_TRACEME, 0, NULL, NULL)
+    ptrace_traceme()
     kill(getpid(), SIGSTOP)
     execve(config.file, config.argv, config.envp)
     return 3306

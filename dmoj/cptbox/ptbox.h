@@ -6,6 +6,14 @@
 #include <sys/types.h>
 #include <sys/time.h>
 
+#include <sys/ptrace.h>
+
+#if __FreeBSD__
+#include "ext_freebsd.h"
+#else
+#include "ext_linux.h"
+#endif
+
 #define MAX_SYSCALL 546
 #define PTBOX_HANDLER_DENY 0
 #define PTBOX_HANDLER_ALLOW 1
@@ -114,9 +122,9 @@ public:
     virtual void new_process();
     virtual char *readstr(unsigned long addr, size_t max_size);
     virtual void freestr(char *);
+    virtual void settid(pid_t tid);
     virtual ~pt_debugger();
 
-    void settid(pid_t tid) { this->tid = tid; }
     pid_t gettid() { return tid; }
     pid_t getpid() { return process->getpid(); }
 
@@ -130,6 +138,9 @@ protected:
     void *on_return_context;
     int execve_id;
     pid_t tid;
+#if defined(__FreeBSD__)
+    linux_pt_reg bsd_converted_regs;
+#endif
     friend class pt_process;
 };
 

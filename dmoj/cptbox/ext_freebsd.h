@@ -58,16 +58,16 @@ inline void map_regs_to_linux(struct reg *bsd_r, struct linux_pt_reg *linux_r)
 
 inline void map_regs_from_linux(struct reg *bsd_r, struct linux_pt_reg *linux_r)
 {
-    bsd_r->r_rbp;    = linux_r->rbp;
-    bsd_r->r_rbx;    = linux_r->rbx;
-    bsd_r->r_r9;      = linux_r->r9;
-    bsd_r->r_r8;      = linux_r->r8;
-    bsd_r->r_rax;    = linux_r->rax;
-    bsd_r->r_rcx;    = linux_r->rcx;
-    bsd_r->r_rdx;    = linux_r->rdx;
-    bsd_r->r_rsi;    = linux_r->rsi;
-    bsd_r->r_rdi;    = linux_r->rdi;
-    bsd_r->r_rsp;    = linux_r->rsp;
+    bsd_r->r_rbp    = linux_r->rbp;
+    bsd_r->r_rbx    = linux_r->rbx;
+    bsd_r->r_r9      = linux_r->r9;
+    bsd_r->r_r8      = linux_r->r8;
+    bsd_r->r_rax    = linux_r->rax;
+    bsd_r->r_rcx    = linux_r->rcx;
+    bsd_r->r_rdx    = linux_r->rdx;
+    bsd_r->r_rsi    = linux_r->rsi;
+    bsd_r->r_rdi    = linux_r->rdi;
+    bsd_r->r_rsp    = linux_r->rsp;
 
     /** the rest aren't copied **/
 }

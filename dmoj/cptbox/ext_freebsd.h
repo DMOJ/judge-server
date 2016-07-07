@@ -5,9 +5,7 @@ inline long ptrace_traceme() {
     return ptrace(PT_TRACE_ME, 0, NULL, 0);
 }
 
-// #include <bits/wordsize.h>
-#define __WORDSIZE 64
-#if __WORDSIZE == 64
+#if INTPTR_MAX == INT64_MAX
 typedef unsigned long reg_type;
 
 struct linux_pt_reg
@@ -43,38 +41,39 @@ struct linux_pt_reg
 
 inline void map_regs_to_linux(struct reg *bsd_r, struct linux_pt_reg *linux_r)
 {
-	linux_r->rbp            = bsd_r->r_rbp;
-	linux_r->rbx            = bsd_r->r_rbx;
-	linux_r->r9             = bsd_r->r_r9;
-	linux_r->r8             = bsd_r->r_r8;
-	linux_r->rax            = bsd_r->r_rax;
-	linux_r->rcx            = bsd_r->r_rcx;
-	linux_r->rdx            = bsd_r->r_rdx;
-	linux_r->rsi            = bsd_r->r_rsi;
-	linux_r->rdi            = bsd_r->r_rdi;
-	linux_r->orig_rax       = bsd_r->r_rax;
-	linux_r->rsp            = bsd_r->r_rsp;
+	linux_r->rbp      = bsd_r->r_rbp;
+	linux_r->rbx      = bsd_r->r_rbx;
+	linux_r->r9       = bsd_r->r_r9;
+	linux_r->r8       = bsd_r->r_r8;
+	linux_r->rax      = bsd_r->r_rax;
+	linux_r->rcx      = bsd_r->r_rcx;
+	linux_r->rdx      = bsd_r->r_rdx;
+	linux_r->rsi      = bsd_r->r_rsi;
+	linux_r->rdi      = bsd_r->r_rdi;
+	linux_r->orig_rax = bsd_r->r_rax;
+	linux_r->rsp      = bsd_r->r_rsp;
 
     /** the rest aren't copied **/
 }
 
 inline void map_regs_from_linux(struct reg *bsd_r, struct linux_pt_reg *linux_r)
 {
-    bsd_r->r_rbp    = linux_r->rbp;
-    bsd_r->r_rbx    = linux_r->rbx;
-    bsd_r->r_r9      = linux_r->r9;
-    bsd_r->r_r8      = linux_r->r8;
-    bsd_r->r_rax    = linux_r->rax;
-    bsd_r->r_rcx    = linux_r->rcx;
-    bsd_r->r_rdx    = linux_r->rdx;
-    bsd_r->r_rsi    = linux_r->rsi;
-    bsd_r->r_rdi    = linux_r->rdi;
-    bsd_r->r_rsp    = linux_r->rsp;
+    bsd_r->r_rbp = linux_r->rbp;
+    bsd_r->r_rbx = linux_r->rbx;
+    bsd_r->r_r9  = linux_r->r9;
+    bsd_r->r_r8  = linux_r->r8;
+    bsd_r->r_rax = linux_r->rax;
+    bsd_r->r_rcx = linux_r->rcx;
+    bsd_r->r_rdx = linux_r->rdx;
+    bsd_r->r_rsi = linux_r->rsi;
+    bsd_r->r_rdi = linux_r->rdi;
+    bsd_r->r_rsp = linux_r->rsp;
 
     /** the rest aren't copied **/
 }
-#else /** WORDSIZE == 32 **/
-typedef long int reg_type;reg_type
+#elif INTPTR_MAX == INT32_MAX
+typedef long int reg_type;
+
 struct linux_pt_reg
 {
   reg_type ebx;
@@ -98,15 +97,15 @@ struct linux_pt_reg
 
 inline void map_regs_to_linux(struct reg *bsd_r, struct linux_pt_reg *linux_r)
 {
-	linux_r->ebx = bsd_r->r_ebx;
-	linux_r->ecx = bsd_r->r_ecx;
-	linux_r->edx = bsd_r->r_edx;
-	linux_r->esi = bsd_r->r_esi;
-	linux_r->edi = bsd_r->r_edi;
-	linux_r->ebp = bsd_r->r_ebp;
-	linux_r->eax = bsd_r->r_eax;
+	linux_r->ebx      = bsd_r->r_ebx;
+	linux_r->ecx      = bsd_r->r_ecx;
+	linux_r->edx      = bsd_r->r_edx;
+	linux_r->esi      = bsd_r->r_esi;
+	linux_r->edi      = bsd_r->r_edi;
+	linux_r->ebp      = bsd_r->r_ebp;
+	linux_r->eax      = bsd_r->r_eax;
 	linux_r->orig_eax = bsd_r->r_eax;
-	linux_r->esp = bsd_r->r_esp;
+	linux_r->esp      = bsd_r->r_esp;
 
     /** the rest aren't copied **/
 }
@@ -124,4 +123,6 @@ inline void map_regs_from_linux(struct reg *bsd_r, struct linux_pt_reg *linux_r)
 
     /** the rest aren't copied **/
 }
-#endif  /* __WORDSIZE */
+#else
+#error Missing size macros?
+#endif

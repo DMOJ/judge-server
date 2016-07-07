@@ -149,8 +149,6 @@ protected:
 };
 
 class pt_debugger_x86 : public pt_debugger {
-    long peek_reg(int);
-    void poke_reg(int, long);
 public:
     pt_debugger_x86();
 
@@ -175,9 +173,6 @@ public:
 };
 
 class pt_debugger_x64 : public pt_debugger {
-protected:
-    long peek_reg(int);
-    void poke_reg(int, long);
 public:
     pt_debugger_x64();
 
@@ -202,8 +197,6 @@ public:
 };
 
 class pt_debugger_x86_on_x64 : public pt_debugger_x86 {
-    long peek_reg(int);
-    void poke_reg(int, long);
 public:
     pt_debugger_x86_on_x64();
 
@@ -223,6 +216,9 @@ public:
     virtual void arg3(long);
     virtual void arg4(long);
     virtual void arg5(long);
+
+    virtual long peek_reg(int) override;
+    virtual void poke_reg(int, long) override;
 };
 
 class pt_debugger_x32 : public pt_debugger_x64 {

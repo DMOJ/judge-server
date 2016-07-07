@@ -197,6 +197,12 @@ int pt_process::monitor() {
                 // No events aside from signal event on FreeBSD
                 // (TODO: maybe check for PL_SIGNAL instead of both PL_SIGNAL and PL_NONE?)
                 signal = WSTOPSIG(status);
+
+                // Swallow SIGSTOP. This is because no one should send it, nor should it
+                // be self-send, hence perfect for implementing shocker.
+                if (signal == SIGSTOP)
+                    signal = 0;
+                //else printf("WSTOPSIG(status): %d\n", signal);
 #else
                 switch (WSTOPSIG(status)) {
                     case SIGTRAP:
@@ -224,6 +230,7 @@ int pt_process::monitor() {
         // work for naught. Like abort(), it catches the signal, prints something (^Z?) and then resends it.
         // Doing this prevents a second SIGSTOP from being dispatched to our event handler above. ***
 #if PTBOX_FREEBSD
+        //if (signal) printf("Forwarding %d...\n", signal);
         ptrace(_trace_syscalls ? PT_SYSCALL : PT_CONTINUE, pid, (caddr_t) 1, first ? 0 : signal);
 #else
         ptrace(_trace_syscalls ? PTRACE_SYSCALL : PTRACE_CONT, pid, NULL, first ? NULL : (void*) signal);

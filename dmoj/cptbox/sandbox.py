@@ -256,6 +256,13 @@ class SecurePopen(Process):
         return code
 
     def _shocker_thread(self):
+        # On Linux, ignored signals still cause a notification under ptrace.
+        # Hence, we use SIGWINCH, harmless and ignored signal to make wait4 return
+        # pt_process::monitor, causing time to be updated.
+        # On FreeBSD, a signal must not be ignored in order for wait4 to return.
+        # Hence, we swallow SIGSTOP, which should never be used anyway, and use it
+        # force an update.
+        wake_signal = signal.SIGSTOP if 'freebsd' in sys.platform else signal.SIGWINCH
         self._started.wait()
 
         while not self._exited:
@@ -266,7 +273,7 @@ class SecurePopen(Process):
                 break
             time.sleep(1)
             try:
-                os.kill(self.pid, signal.SIGWINCH)
+                os.kill(self.pid, wake_signal)
             except OSError:
                 pass
             else:

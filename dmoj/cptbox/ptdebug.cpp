@@ -68,9 +68,9 @@ char *pt_debugger::readstr(unsigned long addr, size_t max_size) {
             buf = (char *) nbuf;
         }
 #if defined(__FreeBSD__)
-        data.val = ptrace(PTRACE_PEEKDATA, tid, addr + read, NULL);
-#else
         data.val = ptrace(PT_READ_D, tid, addr + read, 0);
+#else
+        data.val = ptrace(PTRACE_PEEKDATA, tid, addr + read, NULL);
 #endif
         memcpy(buf + read, data.byte, sizeof(long));
         if (has_null(data.byte, sizeof(long)))

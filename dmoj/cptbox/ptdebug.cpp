@@ -27,7 +27,7 @@ void pt_debugger::new_process() {}
 void pt_debugger::settid(pid_t tid) {
     this->tid = tid;
 #if defined(__FreeBSD__)
-    reg bsd_regs;
+    struct reg bsd_regs;
     ptrace(PT_GETREGS, tid, (caddr_t) &bsd_regs, 0);
     map_regs_to_linux(&bsd_regs, &bsd_converted_regs);
 #endif
@@ -45,7 +45,7 @@ void pt_debugger::poke_reg(int idx, long data) {
 #if defined(__FreeBSD__)
     ((unsigned long*)&bsd_converted_regs)[idx] = data;
 
-    reg bsd_regs;
+    struct reg bsd_regs;
     map_regs_from_linux(&bsd_regs, &bsd_converted_regs);
     ptrace(PT_SETREGS, tid, (caddr_t) &bsd_regs, 0);
 #else
@@ -80,6 +80,7 @@ char *pt_debugger::readstr(unsigned long addr, size_t max_size) {
             buf = (char *) nbuf;
         }
 #if defined(__FreeBSD__)
+        // TODO: we could use PT_IO to speed up this entire function by reading chunks rather than byte
         data.val = ptrace(PT_READ_D, tid, (caddr_t) (addr + read), 0);
 #else
         data.val = ptrace(PTRACE_PEEKDATA, tid, addr + read, NULL);

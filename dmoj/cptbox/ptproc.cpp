@@ -118,10 +118,10 @@ int pt_process::monitor() {
         }
 
         if (WIFSTOPPED(status)) {
-#if defined(__FreeBSD__)
+#if __FreeBSD__
             // FreeBSD has no PTRACE_O_TRACESYSGOOD equivalent
             if (WSTOPSIG(status) == SIGTRAP) {
-else
+#else
             if (WSTOPSIG(status) == (0x80 | SIGTRAP)) {
 #endif
                 debugger->settid(pid);

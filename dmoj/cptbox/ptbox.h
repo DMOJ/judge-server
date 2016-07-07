@@ -15,7 +15,7 @@
 #include "ext_linux.h"
 #endif
 
-#define MAX_SYSCALL 546
+#define MAX_SYSCALL 550
 #define PTBOX_HANDLER_DENY 0
 #define PTBOX_HANDLER_ALLOW 1
 #define PTBOX_HANDLER_CALLBACK 2

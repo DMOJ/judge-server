@@ -8,7 +8,8 @@ from posix.resource cimport setrlimit, rlimit, rusage, \
 from posix.signal cimport kill
 from posix.types cimport pid_t
 
-from dmoj.cptbox.syscalls import translator
+from dmoj.cptbox.syscalls import translator, sys_exit, sys_exit_group
+
 __all__ = ['Process', 'Debugger', 'MAX_SYSCALL_NUMBER',
            'DEBUGGER_X86', 'DEBUGGER_X64', 'DEBUGGER_X86_ON_X64', 'DEBUGGER_X32', 'DEBUGGER_ARM']
 
@@ -417,6 +418,10 @@ cdef class Process:
         return False
 
     cdef int _syscall_handler(self, int syscall) with gil:
+        # TODO: this would be better done natively, since it only makes sense for FreeBSD where EVENT_EXITING
+        # doesn't exist
+        if syscall in [self.debugger.get_syscall_id(sys_exit), self.debugger.get_syscall_id(sys_exit_group)]:
+            self._event_handler(PTBOX_EVENT_EXITING, 0)
         return self._callback(syscall)
 
     cdef int _event_handler(self, int event, unsigned long param) nogil:

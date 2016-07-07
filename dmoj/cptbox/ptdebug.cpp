@@ -62,16 +62,22 @@ void pt_debugger::poke_reg(int idx, long data) {
 #endif
 }
 
+#if PTBOX_FREEBSD
+typedef int ptrace_read_t;
+#else
+typedef long ptrace_read_t;
+#endif
+
 char *pt_debugger::readstr(unsigned long addr, size_t max_size) {
     size_t size = 4096, read = 0;
     char *buf = (char *) malloc(size);
     union {
-        long val;
-        char byte[sizeof(long)];
+        ptrace_read_t val;
+        char byte[sizeof(ptrace_read_t)];
     } data;
 
     while (true) {
-        if (read + sizeof(long) > size) {
+        if (read + sizeof(ptrace_read_t) > size) {
             if (max_size && size >= max_size) {
                 buf[max_size-1] = 0;
                 break;
@@ -94,10 +100,10 @@ char *pt_debugger::readstr(unsigned long addr, size_t max_size) {
 #else
         data.val = ptrace(PTRACE_PEEKDATA, tid, addr + read, NULL);
 #endif
-        memcpy(buf + read, data.byte, sizeof(long));
-        if (has_null(data.byte, sizeof(long)))
+        memcpy(buf + read, data.byte, sizeof(ptrace_read_t));
+        if (has_null(data.byte, sizeof(ptrace_read_t)))
             break;
-        read += sizeof(long);
+        read += sizeof(ptrace_read_t);
     }
     return buf;
 }

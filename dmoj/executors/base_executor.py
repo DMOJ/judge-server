@@ -46,6 +46,8 @@ class BaseExecutor(ResourceProxy):
     test_name = 'self_test'
     test_time = 10
     test_memory = 65536
+    wbox_popen_class = WBoxPopen
+    cptbox_popen_class = SecurePopen
 
     def __init__(self, problem_id, source_code, **kwargs):
         super(BaseExecutor, self).__init__()
@@ -108,22 +110,23 @@ class BaseExecutor(ResourceProxy):
 
     if SecurePopen is None:
         def launch(self, *args, **kwargs):
-            return WBoxPopen(self.get_cmdline() + list(args),
-                             time=kwargs.get('time'), memory=kwargs.get('memory'),
-                             cwd=self._dir, executable=self.get_executable(),
-                             network_block=True, env=self.get_env(),
-                             nproc=self.get_nproc() + 1,
-                             inject32=self.get_inject32(),
-                             inject64=self.get_inject64(),
-                             inject_func=self.get_inject_func())
+            return self.wbox_popen_class(self.get_cmdline() + list(args),
+                                         time=kwargs.get('time'), memory=kwargs.get('memory'),
+                                         cwd=self._dir, executable=self.get_executable(),
+                                         network_block=True, env=self.get_env(),
+                                         nproc=self.get_nproc() + 1,
+                                         inject32=self.get_inject32(),
+                                         inject64=self.get_inject64(),
+                                         inject_func=self.get_inject_func())
     else:
         def launch(self, *args, **kwargs):
-            return SecurePopen(self.get_cmdline() + list(args), executable=self.get_executable(),
-                               security=self.get_security(launch_kwargs=kwargs), address_grace=self.get_address_grace(),
-                               time=kwargs.get('time'), memory=kwargs.get('memory'),
-                               stderr=(PIPE if kwargs.get('pipe_stderr', False) else None),
-                               env=self.get_env(), cwd=self._dir, nproc=self.get_nproc(),
-                               unbuffered=kwargs.get('unbuffered', False))
+            return self.cptbox_popen_class(self.get_cmdline() + list(args), executable=self.get_executable(),
+                                           security=self.get_security(launch_kwargs=kwargs),
+                                           address_grace=self.get_address_grace(),
+                                           time=kwargs.get('time'), memory=kwargs.get('memory'),
+                                           stderr=(PIPE if kwargs.get('pipe_stderr', False) else None),
+                                           env=self.get_env(), cwd=self._dir, nproc=self.get_nproc(),
+                                           unbuffered=kwargs.get('unbuffered', False))
 
     def launch_unsafe(self, *args, **kwargs):
         return Popen(self.get_cmdline() + list(args),

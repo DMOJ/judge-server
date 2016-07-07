@@ -217,8 +217,8 @@ public:
     virtual void arg4(long);
     virtual void arg5(long);
 
-    virtual long peek_reg(int) override;
-    virtual void poke_reg(int, long) override;
+    virtual long peek_reg(int);
+    virtual void poke_reg(int, long);
 };
 
 class pt_debugger_x32 : public pt_debugger_x64 {

@@ -88,11 +88,14 @@ int pt_process::monitor() {
     while (true) {
         clock_gettime(CLOCK_MONOTONIC, &start);
 
+        pid = wait4(-pgid, &status,
 #if defined(__FreeBSD__)
-        pid = wait4(-pgid, &status, P_ALL, &_rusage);
+        WUNTRACED, // This is not really equivalent to __WALL, and might be redundant when ptraced
 #else
-        pid = wait4(-pgid, &status, __WALL, &_rusage);
+        __WALL,
 #endif
+        &_rusage);
+
         clock_gettime(CLOCK_MONOTONIC, &end);
         timespec_sub(&end, &start, &delta);
         timespec_add(&exec_time, &delta, &exec_time);
@@ -123,7 +126,7 @@ int pt_process::monitor() {
         }
 
         if (WIFSTOPPED(status)) {
-#if __FreeBSD__
+#if defined(__FreeBSD__)
             // FreeBSD has no PTRACE_O_TRACESYSGOOD equivalent
             if (WSTOPSIG(status) == SIGTRAP) {
 #else

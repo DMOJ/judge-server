@@ -77,7 +77,31 @@ def _eintr_retry_call(func, *args):
             raise
 
 
-class _SecurePopen(Process):
+# (python arch, executable arch) -> debugger
+_arch_map = {
+    (X86, X86): DEBUGGER_X86,
+    (X64, X64): DEBUGGER_X64,
+    (X64, X86): DEBUGGER_X86_ON_X64,
+    (X64, X32): DEBUGGER_X32,
+    (X32, X32): DEBUGGER_X32,
+    (X32, X86): DEBUGGER_X86_ON_X64,
+    (ARM, ARM): DEBUGGER_ARM,
+}
+
+
+class SecurePopenMeta(type):
+    def __call__(self, argv, executable=None, *args, **kwargs):
+        executable = executable or _find_exe(argv[0])
+        arch = file_arch(executable)
+        debugger = _arch_map.get((PYTHON_ARCH, arch))
+        if debugger is None:
+            raise RuntimeError('Executable type %s could not be debugged on Python type %s' % (arch, PYTHON_ARCH))
+        return super(SecurePopenMeta, self).__call__(debugger, argv, executable, *args, **kwargs)
+
+
+class SecurePopen(Process):
+    __metaclass__ = SecurePopenMeta
+
     def __init__(self, debugger, args, executable=None, security=None, time=0, memory=0, stdin=PIPE, stdout=PIPE,
                  stderr=None, env=None, nproc=0, address_grace=4096, cwd='', fds=None, unbuffered=False):
         self._debugger_type = debugger
@@ -364,27 +388,6 @@ class _SecurePopen(Process):
         return stdout, stderr
 
     safe_communicate = _safe_communicate
-
-
-# (python arch, executable arch) -> debugger
-_arch_map = {
-    (X86, X86): DEBUGGER_X86,
-    (X64, X64): DEBUGGER_X64,
-    (X64, X86): DEBUGGER_X86_ON_X64,
-    (X64, X32): DEBUGGER_X32,
-    (X32, X32): DEBUGGER_X32,
-    (X32, X86): DEBUGGER_X86_ON_X64,
-    (ARM, ARM): DEBUGGER_ARM,
-}
-
-
-def SecurePopen(argv, executable=None, *args, **kwargs):
-    executable = executable or _find_exe(argv[0])
-    arch = file_arch(executable)
-    debugger = _arch_map.get((PYTHON_ARCH, arch))
-    if debugger is None:
-        raise RuntimeError('Executable type %s could not be debugged on Python type %s' % (arch, PYTHON_ARCH))
-    return _SecurePopen(debugger, argv, executable, *args, **kwargs)
 
 
 def can_debug(arch):

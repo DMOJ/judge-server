@@ -28,7 +28,7 @@ void pt_debugger::settid(pid_t tid) {
     this->tid = tid;
 #if defined(__FreeBSD__)
     reg bsd_regs;
-    ptrace(PT_GETREGS, tid, &bsd_regs, 0);
+    ptrace(PT_GETREGS, tid, (caddr_t) &bsd_regs, 0);
     map_regs_to_linux(&bsd_reg, &bsd_converted_regs);
 #endif
 }
@@ -47,7 +47,7 @@ void pt_debugger::poke_reg(int idx, long data) {
 
     reg bsd_regs;
     map_regs_from_linux(&bsd_regs, &bsd_converted_regs);
-    ptrace(PT_SETREGS, tid, &bsd_regs, 0);
+    ptrace(PT_SETREGS, tid, (caddr_t) &bsd_regs, 0);
 #else
     ptrace(PTRACE_POKEUSER, tid, sizeof(long) * idx, data);
 #endif
@@ -80,7 +80,7 @@ char *pt_debugger::readstr(unsigned long addr, size_t max_size) {
             buf = (char *) nbuf;
         }
 #if defined(__FreeBSD__)
-        data.val = ptrace(PT_READ_D, tid, addr + read, 0);
+        data.val = ptrace(PT_READ_D, tid, (caddr_t) (addr + read), 0);
 #else
         data.val = ptrace(PTRACE_PEEKDATA, tid, addr + read, NULL);
 #endif

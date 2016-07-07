@@ -106,7 +106,7 @@ int pt_process::monitor() {
         if (first) {
             dispatch(PTBOX_EVENT_ATTACH, 0);
 
-#if defined(__FreeBSD__)
+#if PTBOX_FREEBSD
             // No FreeBSD equivalent that I know of
             // * TRACESYSGOOD is only for bit 7 of SIGTRAP, we can do without
             // * TRACECLONE makes no sense since FreeBSD has no clone(2)
@@ -120,7 +120,7 @@ int pt_process::monitor() {
         }
 
         if (WIFSTOPPED(status)) {
-#if defined(__FreeBSD__)
+#if PTBOX_FREEBSD
             // FreeBSD has no PTRACE_O_TRACESYSGOOD equivalent
             if (WSTOPSIG(status) == SIGTRAP) {
 #else
@@ -176,7 +176,7 @@ int pt_process::monitor() {
                     debugger->on_return_context = NULL;
                 }
             } else {
-#if defined(__FreeBSD__)
+#if PTBOX_FREEBSD
                 // No events aside from signal event on FreeBSD
                 // (TODO: maybe check for PL_SIGNAL instead of both PL_SIGNAL and PL_NONE?)
                 signal = WSTOPSIG(status);
@@ -206,7 +206,7 @@ int pt_process::monitor() {
         // Pass NULL as signal in case of our first SIGSTOP because the runtime tends to resend it, making all our
         // work for naught. Like abort(), it catches the signal, prints something (^Z?) and then resends it.
         // Doing this prevents a second SIGSTOP from being dispatched to our event handler above. ***
-#if defined(__FreeBSD__)
+#if PTBOX_FREEBSD
         ptrace(_trace_syscalls ? PT_SYSCALL : PT_CONTINUE, pid, (caddr_t) 1, first ? 0 : signal);
 #else
         ptrace(_trace_syscalls ? PTRACE_SYSCALL : PTRACE_CONT, pid, NULL, first ? NULL : (void*) signal);

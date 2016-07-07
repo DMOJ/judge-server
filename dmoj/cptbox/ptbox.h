@@ -9,7 +9,13 @@
 
 #include <sys/ptrace.h>
 
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
+#   define PTBOX_FREEBSD 1
+#else
+#   define PTBOX_FREEBSD 0
+#endif
+
+#if PTBOX_FREEBSD
 #include "ext_freebsd.h"
 #else
 #include "ext_linux.h"
@@ -142,7 +148,7 @@ protected:
     pt_syscall_return_callback on_return_callback;
     void *on_return_context;
     int execve_id;
-#if defined(__FreeBSD__)
+#if PTBOX_FREEBSD
     linux_pt_reg bsd_converted_regs;
 #endif
     friend class pt_process;

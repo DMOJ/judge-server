@@ -35,7 +35,7 @@ void pt_debugger::settid(pid_t tid) {
 
 long pt_debugger::peek_reg(int idx) {
 #if defined(__FreeBSD__)
-    return (int*)((char *)&bsd_converted_regs + idx * sizeof(long));
+    return ((unsigned long*)&bsd_converted_regs)[idx];
 #else
     return ptrace(PTRACE_PEEKUSER, tid, sizeof(long) * idx, 0);
 #endif
@@ -43,7 +43,7 @@ long pt_debugger::peek_reg(int idx) {
 
 void pt_debugger::poke_reg(int idx, long data) {
 #if defined(__FreeBSD__)
-    *(int*)((char *)&bsd_converted_regs + idx * sizeof(long)) = (int) data;
+    ((unsigned long*)&bsd_converted_regs)[idx] = data;
 
     reg bsd_regs;
     map_regs_from_linux(&bsd_regs, &bsd_converted_regs);

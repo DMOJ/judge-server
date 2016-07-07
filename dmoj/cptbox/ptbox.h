@@ -227,8 +227,6 @@ public:
 };
 
 class pt_debugger_arm : public pt_debugger {
-    long peek_reg(int);
-    void poke_reg(int, long);
 public:
     pt_debugger_arm();
 

@@ -5,8 +5,8 @@ inline long ptrace_traceme() {
     return ptrace(PT_TRACE_ME, 0, NULL, 0);
 }
 
-#include <bits/wordsize.h>
-
+// #include <bits/wordsize.h>
+#define __WORDSIZE 64
 #if __WORDSIZE == 64
 struct linux_pt_reg
 {
@@ -37,14 +37,14 @@ struct linux_pt_reg
   unsigned long es;
   unsigned long fs;
   unsigned long gs;
-}
+};
 
 inline void map_regs_to_linux(struct reg *bsd_r, struct linux_pt_reg *linux_r)
 {
 	linux_r->rbp            = bsd_r->r_rbp;
 	linux_r->rbx            = bsd_r->r_rbx;
-	linux_r->r9             = bsd_r->r_9;
-	linux_r->r8             = bsd_r->r_8;
+	linux_r->r9             = bsd_r->r_r9;
+	linux_r->r8             = bsd_r->r_r8;
 	linux_r->rax            = bsd_r->r_rax;
 	linux_r->rcx            = bsd_r->r_rcx;
 	linux_r->rdx            = bsd_r->r_rdx;
@@ -60,8 +60,8 @@ inline void map_regs_from_linux(struct reg *bsd_r, struct linux_pt_reg *linux_r)
 {
     bsd_r->r_rbp;    = linux_r->rbp;
     bsd_r->r_rbx;    = linux_r->rbx;
-    bsd_r->r_9;      = linux_r->r9;
-    bsd_r->r_8;      = linux_r->r8;
+    bsd_r->r_r9;      = linux_r->r9;
+    bsd_r->r_r8;      = linux_r->r8;
     bsd_r->r_rax;    = linux_r->rax;
     bsd_r->r_rcx;    = linux_r->rcx;
     bsd_r->r_rdx;    = linux_r->rdx;
@@ -123,14 +123,14 @@ inline void map_regs_from_linux(struct reg *bsd_r, struct linux_pt_reg *linux_r)
 }
 #endif  /* __WORDSIZE */
 
-inline long get_reg(pt_debugger debugger, int idx) {
-    return (l_int *)((char *)&debugger.bsd_converted_regs + idx * sizeof(long));
+inline long get_reg(pt_debugger *debugger, int idx) {
+    return (int*)((char *)&debugger->bsd_converted_regs + idx * sizeof(long));
 }
 
-inline void set_reg(pt_debugger debugger, int idx, long data) {
-    *(l_int *)((char *)&debugger.bsd_converted_regs + idx * sizeof(long)) = (l_int) data;
+inline void set_reg(pt_debugger *debugger, int idx, long data) {
+    *(int*)((char *)&debugger->bsd_converted_regs + idx * sizeof(long)) = (int) data;
 
     reg bsd_regs;
-    map_regs_from_linux(&bsd_regs, &debugger.bsd_converted_regs);
-    ptrace(PT_SETREGS, debugger.tid, &bsd_regs, 0);
+    map_regs_from_linux(&bsd_regs, &debugger->bsd_converted_regs);
+    ptrace(PT_SETREGS, debugger->tid, &bsd_regs, 0);
 }

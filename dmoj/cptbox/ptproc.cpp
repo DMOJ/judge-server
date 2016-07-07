@@ -87,7 +87,12 @@ int pt_process::monitor() {
 
     while (true) {
         clock_gettime(CLOCK_MONOTONIC, &start);
+
+#if defined(__FreeBSD__)
+        pid = wait4(-pgid, &status, P_ALL, &_rusage);
+#else
         pid = wait4(-pgid, &status, __WALL, &_rusage);
+#endif
         clock_gettime(CLOCK_MONOTONIC, &end);
         timespec_sub(&end, &start, &delta);
         timespec_add(&exec_time, &delta, &exec_time);

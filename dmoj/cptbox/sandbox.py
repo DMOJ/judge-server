@@ -77,8 +77,47 @@ def _eintr_retry_call(func, *args):
             raise
 
 
-class _SecurePopen(Process):
-    def __init__(self, debugger, args, executable=None, security=None, time=0, memory=0, stdin=PIPE, stdout=PIPE,
+# (python arch, executable arch) -> debugger
+_arch_map = {
+    (X86, X86): DEBUGGER_X86,
+    (X64, X64): DEBUGGER_X64,
+    (X64, X86): DEBUGGER_X86_ON_X64,
+    (X64, X32): DEBUGGER_X32,
+    (X32, X32): DEBUGGER_X32,
+    (X32, X86): DEBUGGER_X86_ON_X64,
+    (ARM, ARM): DEBUGGER_ARM,
+}
+
+
+class AdvancedDebugger(Debugger):
+    # Implements additional debugging functionality for convenience.
+
+    def get_syscall_id(self, syscall):
+        return translator[syscall][self._syscall_index]
+
+
+# SecurePopen is a subclass of a cython class, _cptbox.Process. Since it is exceedingly unwise
+# to do everything in cython, determining the debugger class is left to do here. However, since
+# the debugger is constructed in __cinit__, we have to pass the determined debugger class to
+# SecurePopen.__new__. While we can simply override __new__, many complication arises from having
+# differnt parameters to __new__ and __init__, the latter of which is given the *original* arguments
+# as passed to type.__call__. Hence, we use a metaclass to pass the extra debugger argument to both
+# __new__ and __init__.
+class SecurePopenMeta(type):
+    def __call__(self, argv, executable=None, *args, **kwargs):
+        executable = executable or _find_exe(argv[0])
+        arch = file_arch(executable)
+        debugger = _arch_map.get((PYTHON_ARCH, arch))
+        if debugger is None:
+            raise RuntimeError('Executable type %s could not be debugged on Python type %s' % (arch, PYTHON_ARCH))
+        return super(SecurePopenMeta, self).__call__(debugger, self.debugger_type, argv, executable, *args, **kwargs)
+
+
+class SecurePopen(Process):
+    __metaclass__ = SecurePopenMeta
+    debugger_type = AdvancedDebugger
+
+    def __init__(self, debugger, _, args, executable=None, security=None, time=0, memory=0, stdin=PIPE, stdout=PIPE,
                  stderr=None, env=None, nproc=0, address_grace=4096, cwd='', fds=None, unbuffered=False):
         self._debugger_type = debugger
         self._syscall_index = index = _SYSCALL_INDICIES[debugger]
@@ -96,6 +135,8 @@ class _SecurePopen(Process):
         self._fds = fds
         self.__init_streams(stdin, stdout, stderr, unbuffered)
         self.protection_fault = None
+
+        self.debugger._syscall_index = index
 
         self._security = security
         self._callbacks = [None] * MAX_SYSCALL_NUMBER
@@ -187,6 +228,7 @@ class _SecurePopen(Process):
             self.protection_fault = (syscall, callname)
 
     def _cpu_time_exceeded(self):
+        print>> sys.stderr, 'SIGXCPU in child'
         self._tle = True
 
     def _run_process(self):
@@ -364,27 +406,6 @@ class _SecurePopen(Process):
         return stdout, stderr
 
     safe_communicate = _safe_communicate
-
-
-# (python arch, executable arch) -> debugger
-_arch_map = {
-    (X86, X86): DEBUGGER_X86,
-    (X64, X64): DEBUGGER_X64,
-    (X64, X86): DEBUGGER_X86_ON_X64,
-    (X64, X32): DEBUGGER_X32,
-    (X32, X32): DEBUGGER_X32,
-    (X32, X86): DEBUGGER_X86_ON_X64,
-    (ARM, ARM): DEBUGGER_ARM,
-}
-
-
-def SecurePopen(argv, executable=None, *args, **kwargs):
-    executable = executable or _find_exe(argv[0])
-    arch = file_arch(executable)
-    debugger = _arch_map.get((PYTHON_ARCH, arch))
-    if debugger is None:
-        raise RuntimeError('Executable type %s could not be debugged on Python type %s' % (arch, PYTHON_ARCH))
-    return _SecurePopen(debugger, argv, executable, *args, **kwargs)
 
 
 def can_debug(arch):

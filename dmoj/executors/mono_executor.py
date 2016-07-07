@@ -4,7 +4,7 @@ import re
 import sys
 from collections import defaultdict
 
-from dmoj.cptbox import CHROOTSecurity
+from dmoj.cptbox import CHROOTSecurity, SecurePopen
 from dmoj.cptbox.handlers import ALLOW, ACCESS_DENIED
 from dmoj.cptbox.syscalls import *
 from .base_executor import CompiledExecutor
@@ -13,10 +13,16 @@ WRITE_FS = ['/proc/self/task/\d+/comm$', '/dev/shm/mono\.\d+$']
 UNLINK_FS = re.compile('/dev/shm/mono.\d+$')
 
 
+class MonoSecurePopen(SecurePopen):
+    def _cpu_time_exceeded(self):
+        pass
+
+
 class MonoExecutor(CompiledExecutor):
     name = 'MONO'
     nproc = -1  # If you use Mono on Windows you are doing it wrong.
     address_grace = 262144
+    cptbox_popen_class = MonoSecurePopen
     fs = ['/proc/(?:self/|xen)', '/dev/shm/', '/proc/stat', 'mono', '/etc/nsswitch.conf$', '/etc/passwd$',
           '/etc/mono/', '.*/.mono/', '/sys/', '/proc/uptime$']
 

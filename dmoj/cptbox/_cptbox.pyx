@@ -356,10 +356,6 @@ cdef class Debugger:
         def __get__(self):
             return self.thisptr.getpid()
 
-    def get_syscall_id(self, syscall):
-        # x86, x64, x86 on x64, x32, ARM
-        return translator[syscall][[0, 1, 0, 2, 3][self._debugger_type]]
-
     def on_return(self, callback):
         self.on_return_callback = callback
         self.thisptr.on_return(pt_syscall_return_handler, <void*>self)
@@ -382,7 +378,7 @@ cdef class Process:
     cdef public int _nproc
     cdef unsigned long _max_memory
 
-    def __cinit__(self, int debugger, *args, **kwargs):
+    def __cinit__(self, int debugger, debugger_type, *args, **kwargs):
         self._child_memory = self._child_address = 0
         self._child_stdin = self._child_stdout = self._child_stderr = -1
         self._cpu_time = 0
@@ -402,7 +398,7 @@ cdef class Process:
         else:
             raise ValueError('Unsupported debugger configuration')
 
-        self.debugger = Debugger()
+        self.debugger = <Debugger?>debugger_type()
         self.debugger.thisptr = self._debugger
         self.debugger._getpid_syscall = self._debugger.getpid_syscall()
         self.debugger._debugger_type = debugger
@@ -418,10 +414,6 @@ cdef class Process:
         return False
 
     cdef int _syscall_handler(self, int syscall) with gil:
-        # TODO: this would be better done natively, since it only makes sense for FreeBSD where EVENT_EXITING
-        # doesn't exist
-        if syscall in [self.debugger.get_syscall_id(sys_exit), self.debugger.get_syscall_id(sys_exit_group)]:
-            self._event_handler(PTBOX_EVENT_EXITING, 0)
         return self._callback(syscall)
 
     cdef int _event_handler(self, int event, unsigned long param) nogil:
@@ -435,8 +427,6 @@ cdef class Process:
                 self._signal = param
             if param == SIGXCPU:
                 with gil:
-                    import sys
-                    print>>sys.stderr, 'SIGXCPU in child'
                     self._cpu_time_exceeded()
         return 0
 

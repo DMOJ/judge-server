@@ -26,7 +26,7 @@ class build_ext_dmoj(build_ext_old):
             self.compiler.compile_options += ['/Ox', '/W4', '/EHsc', '/GL', '/MT']
             self.compiler.ldflags_shared += ['/OPT:REF,ICF', '/LTCG']
         else:
-            if os.uname()[4].startswith('arm') or 'redist' in sys.argv:
+            if os.uname()[4].startswith('arm') or os.environ.get('DMOJ_REDIST'):
                 extra_compile_args = ['-O3']
             else:
                 extra_compile_args = ['-march=native', '-O3']

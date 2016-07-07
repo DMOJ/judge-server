@@ -89,6 +89,13 @@ _arch_map = {
 }
 
 
+class AdvancedDebugger(Debugger):
+    # Implements additional debugging functionality for convenience.
+
+    def get_syscall_id(self, syscall):
+        return translator[syscall][self._syscall_index]
+
+
 # SecurePopen is a subclass of a cython class, _cptbox.Process. Since it is exceedingly unwise
 # to do everything in cython, determining the debugger class is left to do here. However, since
 # the debugger is constructed in __cinit__, we have to pass the determined debugger class to
@@ -103,13 +110,14 @@ class SecurePopenMeta(type):
         debugger = _arch_map.get((PYTHON_ARCH, arch))
         if debugger is None:
             raise RuntimeError('Executable type %s could not be debugged on Python type %s' % (arch, PYTHON_ARCH))
-        return super(SecurePopenMeta, self).__call__(debugger, argv, executable, *args, **kwargs)
+        return super(SecurePopenMeta, self).__call__(debugger, self.debugger_type, argv, executable, *args, **kwargs)
 
 
 class SecurePopen(Process):
     __metaclass__ = SecurePopenMeta
+    debugger_type = AdvancedDebugger
 
-    def __init__(self, debugger, args, executable=None, security=None, time=0, memory=0, stdin=PIPE, stdout=PIPE,
+    def __init__(self, debugger, _, args, executable=None, security=None, time=0, memory=0, stdin=PIPE, stdout=PIPE,
                  stderr=None, env=None, nproc=0, address_grace=4096, cwd='', fds=None, unbuffered=False):
         self._debugger_type = debugger
         self._syscall_index = index = _SYSCALL_INDICIES[debugger]
@@ -127,6 +135,8 @@ class SecurePopen(Process):
         self._fds = fds
         self.__init_streams(stdin, stdout, stderr, unbuffered)
         self.protection_fault = None
+
+        self.debugger._syscall_index = index
 
         self._security = security
         self._callbacks = [None] * MAX_SYSCALL_NUMBER

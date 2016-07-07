@@ -218,6 +218,7 @@ class SecurePopen(Process):
             self.protection_fault = (syscall, callname)
 
     def _cpu_time_exceeded(self):
+        print>> sys.stderr, 'SIGXCPU in child'
         self._tle = True
 
     def _run_process(self):

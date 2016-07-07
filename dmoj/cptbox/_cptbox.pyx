@@ -431,8 +431,6 @@ cdef class Process:
                 self._signal = param
             if param == SIGXCPU:
                 with gil:
-                    import sys
-                    print>>sys.stderr, 'SIGXCPU in child'
                     self._cpu_time_exceeded()
         return 0
 

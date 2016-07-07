@@ -8,35 +8,37 @@ inline long ptrace_traceme() {
 // #include <bits/wordsize.h>
 #define __WORDSIZE 64
 #if __WORDSIZE == 64
+typedef unsigned long reg_type;
+
 struct linux_pt_reg
 {
-  unsigned long r15;
-  unsigned long r14;
-  unsigned long r13;
-  unsigned long r12;
-  unsigned long rbp;
-  unsigned long rbx;
-  unsigned long r11;
-  unsigned long r10;
-  unsigned long r9;
-  unsigned long r8;
-  unsigned long rax;
-  unsigned long rcx;
-  unsigned long rdx;
-  unsigned long rsi;
-  unsigned long rdi;
-  unsigned long orig_rax;
-  unsigned long rip;
-  unsigned long cs;
-  unsigned long eflags;
-  unsigned long rsp;
-  unsigned long ss;
-  unsigned long fs_base;
-  unsigned long gs_base;
-  unsigned long ds;
-  unsigned long es;
-  unsigned long fs;
-  unsigned long gs;
+  reg_type r15;
+  reg_type r14;
+  reg_type r13;
+  reg_type r12;
+  reg_type rbp;
+  reg_type rbx;
+  reg_type r11;
+  reg_type r10;
+  reg_type r9;
+  reg_type r8;
+  reg_type rax;
+  reg_type rcx;
+  reg_type rdx;
+  reg_type rsi;
+  reg_type rdi;
+  reg_type orig_rax;
+  reg_type rip;
+  reg_type cs;
+  reg_type eflags;
+  reg_type rsp;
+  reg_type ss;
+  reg_type fs_base;
+  reg_type gs_base;
+  reg_type ds;
+  reg_type es;
+  reg_type fs;
+  reg_type gs;
 };
 
 inline void map_regs_to_linux(struct reg *bsd_r, struct linux_pt_reg *linux_r)
@@ -72,25 +74,26 @@ inline void map_regs_from_linux(struct reg *bsd_r, struct linux_pt_reg *linux_r)
     /** the rest aren't copied **/
 }
 #else /** WORDSIZE == 32 **/
+typedef long int reg_type;reg_type
 struct linux_pt_reg
 {
-  long int ebx;
-  long int ecx;
-  long int edx;
-  long int esi;
-  long int edi;
-  long int ebp;
-  long int eax;
-  long int xds;
-  long int xes;
-  long int xfs;
-  long int xgs;
-  long int orig_eax;
-  long int eip;
-  long int xcs;
-  long int eflags;
-  long int esp;
-  long int xss;
+  reg_type ebx;
+  reg_type ecx;
+  reg_type edx;
+  reg_type esi;
+  reg_type edi;
+  reg_type ebp;
+  reg_type eax;
+  reg_type xds;
+  reg_type xes;
+  reg_type xfs;
+  reg_type xgs;
+  reg_type orig_eax;
+  reg_type eip;
+  reg_type xcs;
+  reg_type eflags;
+  reg_type esp;
+  reg_type xss;
 };
 
 inline void map_regs_to_linux(struct reg *bsd_r, struct linux_pt_reg *linux_r)

@@ -13,7 +13,8 @@ void main() {
 '''
     address_grace = 786432
 
-    syscalls = ['epoll_create', 'epoll_ctl', 'epoll_wait',
+    syscalls = ['epoll_create', 'epoll_ctl', 'epoll_wait', 'restart_syscall',
+                'timerfd_settime', 'pipe2',
                 ('write', lambda debugger: debugger.uarg0 <= 4)]
 
-    fs = ['.*\.(so|dart)', '/proc/meminfo$', '/dev/urandom$']
+    fs = ['.*\.(so|dart)', '/proc/meminfo$', '/proc/sys/vm/overcommit_memory$']

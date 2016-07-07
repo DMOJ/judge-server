@@ -5,6 +5,9 @@ inline long ptrace_traceme() {
     return ptrace(PT_TRACE_ME, 0, NULL, 0);
 }
 
+// Constant for wait4
+#define __WALL P_ALL
+
 #if INTPTR_MAX == INT64_MAX
 typedef unsigned long reg_type;
 

@@ -88,13 +88,7 @@ int pt_process::monitor() {
     while (true) {
         clock_gettime(CLOCK_MONOTONIC, &start);
 
-        pid = wait4(-pgid, &status,
-#if defined(__FreeBSD__)
-        WUNTRACED, // This is not really equivalent to __WALL, and might be redundant when ptraced
-#else
-        __WALL,
-#endif
-        &_rusage);
+        pid = wait4(-pgid, &status, __WALL, &_rusage);
 
         clock_gettime(CLOCK_MONOTONIC, &end);
         timespec_sub(&end, &start, &delta);

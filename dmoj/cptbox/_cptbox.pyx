@@ -1,14 +1,9 @@
 from libc.stdio cimport FILE, fopen, fclose, fgets, sprintf
-from libc.stdlib cimport atoi, malloc, free, strtoul
+from libc.stdlib cimport malloc, free, strtoul
 from libc.string cimport strncmp, strlen
-from libc.signal cimport SIGSTOP, SIGTRAP
-from posix.unistd cimport close, dup2, getpid, execve, chdir
-from posix.resource cimport setrlimit, rlimit, rusage, \
-    RLIMIT_AS, RLIMIT_DATA, RLIMIT_CPU, RLIMIT_STACK, RLIMIT_CORE, RLIM_INFINITY
-from posix.signal cimport kill
+from libc.signal cimport SIGTRAP, SIGXCPU
+from posix.resource cimport rusage
 from posix.types cimport pid_t
-
-from dmoj.cptbox.syscalls import translator, sys_exit, sys_exit_group
 
 __all__ = ['Process', 'Debugger', 'MAX_SYSCALL_NUMBER',
            'DEBUGGER_X86', 'DEBUGGER_X64', 'DEBUGGER_X86_ON_X64', 'DEBUGGER_X32', 'DEBUGGER_ARM']
@@ -107,15 +102,14 @@ cdef extern from 'helper.h' nogil:
     void cptbox_closefrom(int lowfd)
     int cptbox_child_run(child_config *)
 
-cdef extern from 'signal.h' nogil:
-    cdef int SIGXCPU
-
 MAX_SYSCALL_NUMBER = MAX_SYSCALL
-DEBUGGER_X86 = 0
-DEBUGGER_X64 = 1
-DEBUGGER_X86_ON_X64 = 2
-DEBUGGER_X32 = 3
-DEBUGGER_ARM = 4
+
+cpdef enum:
+    DEBUGGER_X86 = 0
+    DEBUGGER_X64 = 1
+    DEBUGGER_X86_ON_X64 = 2
+    DEBUGGER_X32 = 3
+    DEBUGGER_ARM = 4
 
 cdef int pt_child(void *context) nogil:
     cdef child_config *config = <child_config*> context

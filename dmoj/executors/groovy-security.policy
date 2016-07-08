@@ -11,6 +11,7 @@ grant {
     permission java.io.FilePermission ".", "read";
     permission java.io.FilePermission "${groovy.starter.conf}", "read";
     permission java.io.FilePermission "${groovy.home}/lib", "read";
+    permission java.io.FilePermission "${groovy.home}/lib/*", "read";
     permission java.io.FilePermission "${groovy.home}/lib/asm3.jar", "read";
     permission java.io.FilePermission "${groovy.home}/lib/ant.jar", "read";
     permission java.io.FilePermission "${groovy.home}/lib/ant-launcher.jar", "read";

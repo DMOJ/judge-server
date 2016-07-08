@@ -27,6 +27,8 @@ BASE_FILESYSTEM = ['.*\.so', '/dev/(?:null|zero|full|random|urandom|stdin|stdout
                    '/proc/self/maps$', '/proc/self$', '/proc/(?:meminfo|stat|cpuinfo$)',
                    '/usr/', '/sys/devices/system/cpu/online$', '/etc/(?:localtime$)', '/$']
 
+if 'freebsd' in sys.platform:
+    BASE_FILESYSTEM += ['/etc/spwd.db$']
 
 class BaseExecutor(ResourceProxy):
     ext = None

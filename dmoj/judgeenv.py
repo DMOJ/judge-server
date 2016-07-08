@@ -12,7 +12,7 @@ env = {}
 _root = os.path.dirname(__file__)
 fs_encoding = os.environ.get('DMOJ_ENCODING', sys.getfilesystemencoding())
 
-log_file = server_host = server_port = no_ansi = no_ansi_emu = None
+log_file = server_host = server_port = no_ansi = no_ansi_emu = no_watchdog = None
 
 startup_warnings = []
 
@@ -28,7 +28,7 @@ def unicodify(string):
 
 def load_env(cli=False):
     global _judge_dirs, only_executors, exclude_executors, log_file, server_host, \
-        server_port, no_ansi, no_ansi_emu, env, startup_warnings
+        server_port, no_ansi, no_ansi_emu, env, startup_warnings, no_watchdog
     _parser = argparse.ArgumentParser(description='''
         Spawns a judge for a submission server.
     ''')
@@ -44,6 +44,7 @@ def load_env(cli=False):
     if not cli:
         _parser.add_argument('-l', '--log-file',
                              help='log file to use')
+    _parser.add_argument('--no-watchdog', action='store_true', help='disable use of watchdog on problem directories')
 
     _group = _parser.add_mutually_exclusive_group()
     _group.add_argument('-e', '--only-executors',
@@ -62,6 +63,7 @@ def load_env(cli=False):
 
     no_ansi_emu = _args.no_ansi_emu if os.name == 'nt' else True
     no_ansi = _args.no_ansi
+    no_watchdog = _args.no_watchdog
 
     log_file = getattr(_args, 'log_file', None)
     only_executors |= _args.only_executors and set(_args.only_executors.split(',')) or set()

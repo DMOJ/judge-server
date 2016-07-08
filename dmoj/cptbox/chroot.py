@@ -136,6 +136,7 @@ class CHROOTSecurity(dict):
                 sys__mmap: ALLOW,
                 sys___mmap: ALLOW,
                 sys_sigsuspend: ALLOW,
+                sys_clock_getcpuclockid2: ALLOW,
             })
 
     def deny_with_file_path(self, syscall, argument):

@@ -116,11 +116,18 @@ class CHROOTSecurity(dict):
             sys_thr_self: ALLOW,
         })
 
-        # kFreeBSD only, do not know if it's GNU/kFreeBSD specific
+        # FreeBSD-specific syscalls
         if 'freebsd' in sys.platform:
             self.update({
-                sys_sysctl: ALLOW, # TODO: More strict?
+                sys_sysctl: ALLOW,  # TODO: More strict?
+                sys_issetugid: ALLOW,
+                sys_rtprio_thread: ALLOW,  # EPERMs when invalid anyway
+                sys_umtx_op: ALLOW,  # http://fxr.watson.org/fxr/source/kern/kern_umtx.c?v=FREEBSD60#L720
+                sys_nosys: ALLOW,  # what?? TODO: this shouldn't really exist, so why is Python calling it?
+                sys_getcontext: ALLOW,
+                sys_setcontext: ALLOW,
             })
+
 
     def deny_with_file_path(self, syscall, argument):
         def check(debugger):

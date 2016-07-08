@@ -1,5 +1,5 @@
 #include <signal.h>
-#include "../thread_dumper.h"
+#include <thread_dumper.h>
 
 void print_err(const char *message, ...) {
     char buffer[256];

@@ -57,12 +57,14 @@ if os.name == 'nt':
                              libraries=['netapi32', 'advapi32', 'ole32'],
                              define_macros=[('UNICODE', None)]),
                    Extension('dmoj.utils.debugger.win._win_debugger',
-                             sources=['dmoj/utils/debugger/win/_win_debugger.c'], libraries=['kernel32'])]
+                             sources=['dmoj/utils/debugger/win/_win_debugger.c'],
+                             include_dirs=['dmoj/utils/debugger'],  libraries=['kernel32'])]
 else:
     extensions += [Extension('dmoj.cptbox._cptbox', sources=cptbox_sources,
                              language='c++', libraries=['rt']),
                    Extension('dmoj.utils.debugger.nix._nix_debugger',
-                             sources=['dmoj/utils/debugger/nix/_nix_debugger.c'], libraries=['rt'])]
+                             sources=['dmoj/utils/debugger/nix/_nix_debugger.c'],
+                             include_dirs=['dmoj/utils/debugger'], libraries=['rt'])]
 
 
 class cythonized(list):

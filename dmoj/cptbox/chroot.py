@@ -109,16 +109,13 @@ class CHROOTSecurity(dict):
             sys_time: ALLOW,
             sys_prlimit64: ALLOW,
             sys_getdents64: ALLOW,
-
-            # FreeBSD specific
-            sys_obreak: ALLOW,
-            sys_sysarch: ALLOW,
-            sys_thr_self: ALLOW,
         })
 
         # FreeBSD-specific syscalls
         if 'freebsd' in sys.platform:
             self.update({
+                sys_obreak: ALLOW,
+                sys_sysarch: ALLOW,
                 sys_sysctl: ALLOW,  # TODO: More strict?
                 sys_issetugid: ALLOW,
                 sys_rtprio_thread: ALLOW,  # EPERMs when invalid anyway
@@ -133,6 +130,7 @@ class CHROOTSecurity(dict):
                 sys_thr_new: ALLOW,
                 sys_thr_exit: ALLOW,
                 sys_thr_kill: ALLOW,
+                sys_thr_self: ALLOW,
                 sys__mmap: ALLOW,
                 sys___mmap: ALLOW,
                 sys_sigsuspend: ALLOW,

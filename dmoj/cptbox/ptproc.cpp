@@ -112,7 +112,9 @@ int pt_process::monitor() {
             //else printf("Thread exit: %d\n", pid);
         }
 
+#if PTBOX_FREEBSD
         ptrace(PT_LWPINFO, pid, (caddr_t) &lwpi, sizeof lwpi);
+#endif
 
         if (first) {
             dispatch(PTBOX_EVENT_ATTACH, 0);

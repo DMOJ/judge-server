@@ -88,21 +88,24 @@ cdef extern from 'ptbox.h' nogil:
     cdef int PTBOX_EXIT_PROTECTION
     cdef int PTBOX_EXIT_SEGFAULT
 
-cdef extern from 'dirent.h' nogil:
-    ctypedef struct DIR:
-        pass
+cdef extern from 'helper.h' nogil:
+    cdef struct child_config:
+        unsigned long memory # affects only sbrk heap
+        unsigned long address_space # affects sbrk and mmap but not all address space is used memory
+        unsigned int cpu_time # ask linus how this counts the CPU time because it SIGKILLs way before the real time limit
+        int nproc
+        char *file
+        char *dir
+        char **argv
+        char **envp
+        int stdin
+        int stdout
+        int stderr
+        int max_fd
+        int *fds
 
-    cdef struct dirent:
-        char* d_name
-
-    dirent* readdir(DIR* dirp)
-
-cdef extern from 'sys/types.h' nogil:
-    DIR *opendir(char *name)
-    int closedir(DIR* dirp)
-
-cdef extern from 'sys/resource.h' nogil:
-    cdef int RLIMIT_NPROC
+    void cptbox_closefrom(int lowfd)
+    int cptbox_child_run(child_config *)
 
 cdef extern from 'signal.h' nogil:
     cdef int SIGXCPU
@@ -114,73 +117,9 @@ DEBUGGER_X86_ON_X64 = 2
 DEBUGGER_X32 = 3
 DEBUGGER_ARM = 4
 
-cdef struct child_config:
-    unsigned long memory # affects only sbrk heap
-    unsigned long address_space # affects sbrk and mmap but not all address space is used memory
-    unsigned int cpu_time # ask linus how this counts the CPU time because it SIGKILLs way before the real time limit
-    int nproc
-    char *file
-    char *dir
-    char **argv
-    char **envp
-    int stdin
-    int stdout
-    int stderr
-    int max_fd
-    int *fds
-
 cdef int pt_child(void *context) nogil:
     cdef child_config *config = <child_config*> context
-
-    # Use /dev/fd since it exists on FreeBSD as well, and it's just a symlink on most Linuxes anyway
-    cdef DIR *d = opendir('/dev/fd')
-    cdef dirent *dir
-    cdef rlimit limit
-    cdef int i
-
-    if config.address_space:
-        limit.rlim_cur = limit.rlim_max = config.address_space
-        setrlimit(RLIMIT_AS, &limit)
-
-    if config.memory:
-        limit.rlim_cur = limit.rlim_max = config.memory
-        setrlimit(RLIMIT_DATA, &limit)
-
-    if config.cpu_time:
-        limit.rlim_cur = config.cpu_time
-        limit.rlim_max = config.cpu_time + 1
-        setrlimit(RLIMIT_CPU, &limit)
-
-    if config.nproc >= 0:
-        limit.rlim_cur = limit.rlim_max = config.nproc
-        setrlimit(RLIMIT_NPROC, &limit)
-
-    if config.dir[0]:
-        chdir(config.dir)
-
-    limit.rlim_cur = limit.rlim_max = RLIM_INFINITY
-    setrlimit(RLIMIT_STACK, &limit)
-    limit.rlim_cur = limit.rlim_max = 0
-    setrlimit(RLIMIT_CORE, &limit)
-
-    if config.stdin >= 0:  dup2(config.stdin, 0)
-    if config.stdout >= 0: dup2(config.stdout, 1)
-    if config.stderr >= 0: dup2(config.stderr, 2)
-
-    for i in xrange(3, config.max_fd + 1):
-        dup2(config.fds[i - 3], i)
-
-    while True:
-        dir = readdir(d)
-        if dir == NULL:
-            break
-        fd = atoi(dir.d_name)
-        if fd > config.max_fd:
-            close(fd)
-    ptrace_traceme()
-    kill(getpid(), SIGSTOP)
-    execve(config.file, config.argv, config.envp)
-    return 3306
+    return cptbox_child_run(config)
 
 cdef int pt_syscall_handler(void *context, int syscall) nogil:
     return (<Process>context)._syscall_handler(syscall)

@@ -44,7 +44,7 @@ class build_ext_dmoj(build_ext_old):
 build_ext.build_ext = build_ext_dmoj
 
 wbox_sources = ['_wbox.pyx', 'handles.cpp', 'process.cpp', 'user.cpp', 'helpers.cpp', 'firewall.cpp']
-cptbox_sources = ['_cptbox.pyx', 'ptdebug.cpp', 'ptdebug_x86.cpp', 'ptdebug_x64.cpp',
+cptbox_sources = ['_cptbox.pyx', 'helper.cpp', 'ptdebug.cpp', 'ptdebug_x86.cpp', 'ptdebug_x64.cpp',
                   'ptdebug_x86_on_x64.cpp', 'ptdebug_x32.cpp', 'ptdebug_arm.cpp', 'ptproc.cpp']
 
 SOURCE_DIR = os.path.dirname(__file__)

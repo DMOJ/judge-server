@@ -62,6 +62,13 @@ void pt_debugger::poke_reg(int idx, long data) {
     ((reg_type*)&bsd_converted_regs)[idx] = data;
 
     struct reg bsd_regs;
+
+    // Update bsd_regs with latest regs, since not all are mapped by map_regs_from_linux and we don't want
+    // garbage to be written to the other registers.
+    // Alternatively we could be mapping them in map_regs, but that'd be more fragile and less easy (there are
+    // some registers, like r_trapno on FreeBSD, that have no real equivalent on Linux, and vice-versa).
+    ptrace(PT_GETREGS, tid, (caddr_t) &bsd_regs, 0);
+
     map_regs_from_linux(&bsd_regs, &bsd_converted_regs);
     ptrace(PT_SETREGS, tid, (caddr_t) &bsd_regs, 0);
 #else

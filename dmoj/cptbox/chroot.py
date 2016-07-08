@@ -132,6 +132,7 @@ class CHROOTSecurity(dict):
                 sys_cpuset_getaffinity: ALLOW,
                 sys_thr_new: ALLOW,
                 sys_thr_exit: ALLOW,
+                sys_thr_kill: ALLOW,
             })
 
     def deny_with_file_path(self, syscall, argument):

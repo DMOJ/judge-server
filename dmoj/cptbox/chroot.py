@@ -126,8 +126,13 @@ class CHROOTSecurity(dict):
                 sys_nosys: ALLOW,  # what?? TODO: this shouldn't really exist, so why is Python calling it?
                 sys_getcontext: ALLOW,
                 sys_setcontext: ALLOW,
+                sys_pread: ALLOW,
+                sys_fsync: ALLOW,
+                sys_shm_open: self.do_open,
+                sys_cpuset_getaffinity: ALLOW,
+                sys_thr_new: ALLOW,
+                sys_thr_exit: ALLOW,
             })
-
 
     def deny_with_file_path(self, syscall, argument):
         def check(debugger):

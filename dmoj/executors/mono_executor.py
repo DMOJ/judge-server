@@ -9,8 +9,8 @@ from dmoj.cptbox.handlers import ALLOW, ACCESS_DENIED
 from dmoj.cptbox.syscalls import *
 from .base_executor import CompiledExecutor
 
-WRITE_FS = ['/proc/self/task/\d+/comm$', '/dev/shm/mono\.\d+$']
-UNLINK_FS = re.compile('/dev/shm/mono.\d+$')
+WRITE_FS = ['/proc/self/task/\d+/comm$', '.*?/mono\.\d+$']
+UNLINK_FS = re.compile('.*?/mono.\d+$')
 
 
 class MonoSecurePopen(SecurePopen):
@@ -24,7 +24,7 @@ class MonoExecutor(CompiledExecutor):
     address_grace = 262144
     cptbox_popen_class = MonoSecurePopen
     fs = ['/proc/(?:self/|xen)', '/dev/shm/', '/proc/stat', 'mono', '/etc/nsswitch.conf$', '/etc/passwd$',
-          '/etc/mono/', '.*/.mono/', '/sys/', '/proc/uptime$']
+          '/etc/mono/', '.*/.mono/', '/sys/', '/proc/uptime$', '.*?/mono.\d+$']
 
     def get_compiled_file(self):
         return self._file('%s.exe' % self.problem)
@@ -91,7 +91,7 @@ class MonoExecutor(CompiledExecutor):
                 return False
             return True
 
-        sec[sys_open] = handle_open
+        sec[sys_open] = sec[sys_shm_open] = handle_open
         sec[sys_close] = handle_close
         sec[sys_dup2] = handle_dup
         sec[sys_dup3] = handle_dup
@@ -99,7 +99,7 @@ class MonoExecutor(CompiledExecutor):
         sec[sys_ftruncate] = handle_ftruncate
         sec[sys_kill] = handle_kill
         sec[sys_tgkill] = handle_kill
-        sec[sys_unlink] = unlink
+        sec[sys_unlink] = sec[sys_shm_unlink] = unlink
         sec[sys_socket] = ACCESS_DENIED
         sec[sys_socketcall] = ACCESS_DENIED
         return sec

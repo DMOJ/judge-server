@@ -4,10 +4,10 @@ import sys
 import threading
 import traceback
 
-from dmoj import packet, graders
+from dmoj import packet, graders, judgeenv
 from dmoj.config import Problem, InvalidInitException, BatchedTestCase
 from dmoj.error import CompileError
-from dmoj.judgeenv import env, get_problem_roots, get_supported_problems, startup_warnings, no_watchdog
+from dmoj.judgeenv import env, get_problem_roots, get_supported_problems, startup_warnings
 from dmoj.result import Result
 from dmoj.utils.ansi import ansi_style, strip_ansi
 from dmoj.utils.debugger import setup_all_debuggers
@@ -59,7 +59,7 @@ class Judge(object):
         self.current_grader = None
         self.current_submission_thread = None
         self._terminate_grading = False
-        if Observer is not None and not no_watchdog:
+        if Observer is not None and not judgeenv.no_watchdog:
             handler = SendProblemsHandler(self)
             self._monitor = monitor = Observer()
             for dir in get_problem_roots():

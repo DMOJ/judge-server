@@ -9,7 +9,7 @@ class Executor(CompiledExecutor):
 
     command = 'racket'
 
-    syscalls = ['epoll_create', 'epoll_wait', 'poll']
+    syscalls = ['epoll_create', 'epoll_wait', 'poll', 'select']
     address_grace = 131072
 
     test_program = '''\

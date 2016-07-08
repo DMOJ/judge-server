@@ -139,6 +139,9 @@ class CHROOTSecurity(dict):
                 sys_clock_getcpuclockid2: ALLOW,
                 sys_fstatfs: ALLOW,
                 sys_getdirentries: ALLOW,  # TODO: maybe check path?
+                sys_getdtablesize: ALLOW,
+                sys_kqueue: ALLOW,
+                sys_kevent: ALLOW,
             })
 
     def deny_with_file_path(self, syscall, argument):

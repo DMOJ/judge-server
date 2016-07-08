@@ -8,6 +8,12 @@
 #include <sys/resource.h>
 #include <sys/types.h>
 
+#if defined(__FreeBSD__) || (defined(__APPLE__) && defined(__MACH__))
+#   define FD_DIR "/dev/fd"
+#else
+#   define FD_DIR "/proc/self/fd"
+#endif
+
 inline void setrlimit2(int resource, rlim_t cur, rlim_t max) {
     rlimit limit;
     limit.rlim_cur = cur;
@@ -77,7 +83,7 @@ static void cptbox_closefrom_brute(int lowfd) {
 }
 
 static void cptbox_closefrom_dirent(int lowfd) {
-    DIR *d = opendir("/dev/fd");
+    DIR *d = opendir(FD_DIR);
     dirent *dir;
 
     if (d) {
@@ -94,11 +100,57 @@ static void cptbox_closefrom_dirent(int lowfd) {
     } else cptbox_closefrom_brute(lowfd);
 }
 
+// Borrowing some SYS_getdents64 magic from python's _posixsubprocess.
+// Look there for explanation. We don't actually need O_CLOEXEC,
+// since this process is single-threaded after fork, and could not
+// possibly be exec'd before we close the fd. If it is, we have
+// bigger problems than leaking the directory fd.
+#ifdef __linux__
+#include <sys/syscall.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+struct linux_dirent64 {
+    unsigned long long d_ino;
+    long long d_off;
+    unsigned short d_reclen;
+    unsigned char d_type;
+    char d_name[256];
+};
+
+static void cptbox_closefrom_getdents(int lowfd) {
+    int fd_dir = open(FD_DIR, O_RDONLY, 0);
+    if (fd_dir == -1) {
+        cptbox_closefrom_brute(lowfd);
+    } else {
+        char buffer[sizeof(struct linux_dirent64)];
+        int bytes;
+        while ((bytes = syscall(SYS_getdents64, fd_dir,
+                                (struct linux_dirent64 *)buffer,
+                                sizeof(buffer))) > 0) {
+            struct linux_dirent64 *entry;
+            int offset;
+            for (offset = 0; offset < bytes; offset += entry->d_reclen) {
+                int fd;
+                entry = (struct linux_dirent64 *)(buffer + offset);
+                if ((fd = pos_int_from_ascii(entry->d_name)) < 0)
+                    continue;  /* Not a number. */
+                if (fd != fd_dir && fd >= lowfd)
+                    cptbox_close_fd(fd);
+            }
+        }
+        close(fd_dir);
+    }
+}
+#endif
+
 void cptbox_closefrom(int lowfd) {
 #if defined(__FreeBSD__) && __FreeBSD__ >= 8
     closefrom(lowfd);
 #elif defined(F_CLOSEM)
     fcntl(fd, F_CLOSEM, 0);
+#elif defined(__linux__)
+    cptbox_closefrom_getdents(lowfd);
 #else
     cptbox_closefrom_dirent(lowfd);
 #endif

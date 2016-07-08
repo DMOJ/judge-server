@@ -133,6 +133,8 @@ class CHROOTSecurity(dict):
                 sys_thr_new: ALLOW,
                 sys_thr_exit: ALLOW,
                 sys_thr_kill: ALLOW,
+                sys__mmap: ALLOW,
+                sys___mmap: ALLOW,
             })
 
     def deny_with_file_path(self, syscall, argument):

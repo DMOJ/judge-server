@@ -44,7 +44,8 @@ def load_env(cli=False):
     if not cli:
         _parser.add_argument('-l', '--log-file',
                              help='log file to use')
-    _parser.add_argument('--no-watchdog', action='store_true', help='disable use of watchdog on problem directories')
+        _parser.add_argument('--no-watchdog', action='store_true',
+                             help='disable use of watchdog on problem directories')
 
     _group = _parser.add_mutually_exclusive_group()
     _group.add_argument('-e', '--only-executors',
@@ -63,7 +64,7 @@ def load_env(cli=False):
 
     no_ansi_emu = _args.no_ansi_emu if os.name == 'nt' else True
     no_ansi = _args.no_ansi
-    no_watchdog = _args.no_watchdog
+    no_watchdog = True if cli else _args.no_watchdog
 
     log_file = getattr(_args, 'log_file', None)
     only_executors |= _args.only_executors and set(_args.only_executors.split(',')) or set()

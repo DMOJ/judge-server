@@ -131,7 +131,9 @@ cdef struct child_config:
 
 cdef int pt_child(void *context) nogil:
     cdef child_config *config = <child_config*> context
-    cdef DIR *d = opendir('/proc/self/fd')
+
+    # Use /dev/fd since it exists on FreeBSD as well, and it's just a symlink on most Linuxes anyway
+    cdef DIR *d = opendir('/dev/fd')
     cdef dirent *dir
     cdef rlimit limit
     cdef int i

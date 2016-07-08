@@ -9,7 +9,7 @@ class Executor(ScriptExecutor):
     command = 'tclsh'
     syscalls = ['connect', 'access', 'getsockname', 'select',
                 # TCL uses some handles internally
-                ('write', lambda debugger: debugger.arg0 <= 4)]
+                ('write', lambda debugger: debugger.arg0 <= 7)]
     fs = ['.*\.tcl', '/etc/nsswitch\.conf$', '/etc/passwd$']
     test_program = '''\
 gets stdin input

@@ -23,12 +23,12 @@ void pt_debugger::set_process(pt_process *proc) {
 }
 
 void pt_debugger::new_process() {
-#ifdef PTBOX_FREEBSD
+#if PTBOX_FREEBSD
     tid = process->getpid();
 #endif
 }
 
-#ifdef PTBOX_FREEBSD
+#if PTBOX_FREEBSD
 void pt_debugger::update_syscall(struct ptrace_lwpinfo *info) {
     struct reg bsd_regs;
     ptrace(PT_GETREGS, tid, (caddr_t) &bsd_regs, 0);

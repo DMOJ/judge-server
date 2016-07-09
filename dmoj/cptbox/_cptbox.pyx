@@ -71,6 +71,7 @@ cdef extern from 'ptbox.h' nogil:
         const rusage *getrusage()
         bint was_initialized()
 
+    cdef bint PTBOX_FREEBSD
     cdef int MAX_SYSCALL
 
     cdef int PTBOX_EVENT_ATTACH
@@ -352,7 +353,7 @@ cdef class Process:
         return self._callback(syscall)
 
     cdef int _event_handler(self, int event, unsigned long param) nogil:
-        if event == PTBOX_EVENT_EXITING or event == PTBOX_EVENT_SIGNAL:
+        if not PTBOX_FREEBSD and (event == PTBOX_EVENT_EXITING or event == PTBOX_EVENT_SIGNAL):
             self._max_memory = get_memory(self.process.getpid())
         if event == PTBOX_EVENT_PROTECTION:
             with gil:
@@ -436,13 +437,15 @@ cdef class Process:
 
     property max_memory:
         def __get__(self):
+            if PTBOX_FREEBSD:
+                return self.process.getrusage().ru_maxrss
             if self._exited:
                 return self._max_memory
             cdef unsigned long memory = get_memory(self.process.getpid())
             if memory > 0:
                 self._max_memory = memory
             return self._max_memory
-    
+
     property signal:
         def __get__(self):
             if not self._exited:

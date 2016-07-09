@@ -1,4 +1,5 @@
 import errno
+import sys
 import os
 import re
 from shutil import copyfile
@@ -127,11 +128,11 @@ class JavaExecutor(CompiledExecutor):
         if cls.jvm_regex is None:
             return {}, False, 'Unimplemented'
 
-        JVM_DIR = '/usr/lib/jvm'
+        JVM_DIR = '/usr/local' if sys.platform.startswith('freebsd') else '/usr/lib/jvm'
         regex = re.compile(cls.jvm_regex)
 
         try:
-            vms = os.listdir('/usr/lib/jvm')
+            vms = os.listdir(JVM_DIR)
         except OSError:
             vms = []
 
@@ -185,6 +186,6 @@ class JavacExecutor(JavaExecutor):
         if os.path.isfile(vm_path) and os.path.isfile(compiler_path):
             executor = type('Executor', (cls,), {'runtime_dict': result})
             success = executor.run_self_test(output=False)
-            return result, success, 'Using %s' % name if success else 'Failed self-test'
+            return result, success, 'Using %s' % vm_path if success else 'Failed self-test'
         else:
             return result, False, 'Invalid JDK'

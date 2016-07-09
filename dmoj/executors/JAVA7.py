@@ -5,7 +5,7 @@ class Executor(JavacExecutor):
     compiler = 'javac'
     vm = 'java'
     name = 'JAVA7'
-    jvm_regex = r'java-7-'
+    jvm_regex = r'java-7-|openjdk7'
 
     test_program = '''\
 public class self_test {

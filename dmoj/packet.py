@@ -36,7 +36,10 @@ class PacketManager(object):
         # Certainly hope it won't stack overflow, since it will take days if not years.
         self.fallback = 4
 
-        self._connect()
+        try:
+            self._connect()
+        except JudgeAuthenticationFailed:
+            self._reconnect()
 
     def _connect(self):
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

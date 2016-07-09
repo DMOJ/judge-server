@@ -140,6 +140,9 @@ class CHROOTSecurity(dict):
                 sys_getdtablesize: ALLOW,
                 sys_kqueue: ALLOW,
                 sys_kevent: ALLOW,
+                sys_ktimer_create: ALLOW,
+                sys_ktimer_settime: ALLOW,
+                sys_ktimer_delete: ALLOW,
             })
 
     def deny_with_file_path(self, syscall, argument):

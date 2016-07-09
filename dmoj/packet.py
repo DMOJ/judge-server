@@ -134,7 +134,10 @@ class PacketManager(object):
                            'id': id,
                            'key': key})
         try:
-            resp = self._read_single()
+            data = self.input.read(PacketManager.SIZE_PACK.size)
+            size = PacketManager.SIZE_PACK.unpack(data)[0]
+            packet = self.input.read(size).decode('zlib')
+            resp = json.loads(packet)
         except Exception:
             traceback.print_exc()
             raise JudgeAuthenticationFailed()

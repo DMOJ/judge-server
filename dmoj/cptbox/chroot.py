@@ -158,7 +158,7 @@ class CHROOTSecurity(dict):
 
     def do_access(self, debugger):
         file = debugger.readstr(debugger.uarg0)
-        return self._file_access_check(file)
+        return self._file_access_check(file, debugger)
 
     def do_open(self, debugger):
         file_ptr = debugger.uarg0
@@ -199,9 +199,12 @@ class CHROOTSecurity(dict):
 
                     return True
 
-        return self._file_access_check(file)
+        return self._file_access_check(file, debugger)
 
-    def _file_access_check(self, file):
+    def _file_access_check(self, file, debugger):
+        if not file.startswith('/'):
+            file = os.path.join(os.readlink('/proc/%d/cwd' % debugger.pid), file)
+        file = os.path.normpath(file)
         if self.fs_jail.match(file) is None:
             print>> sys.stderr, 'Not allowed to access:', file
             return False

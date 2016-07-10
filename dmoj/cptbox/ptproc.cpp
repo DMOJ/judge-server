@@ -109,7 +109,10 @@ int pt_process::monitor() {
         if (WIFEXITED(status) || WIFSIGNALED(status)) {
             if (first || pid == pgid)
                 break;
-            //else printf("Thread exit: %d\n", pid);
+            else {
+                //printf("Thread exit: %d\n", pid);
+                continue;
+            }
         }
 
 #if PTBOX_FREEBSD
@@ -210,6 +213,7 @@ int pt_process::monitor() {
                             case PTRACE_EVENT_EXIT:
                                 if (exit_reason != PTBOX_EXIT_NORMAL)
                                     dispatch(PTBOX_EVENT_EXITING, PTBOX_EXIT_NORMAL);
+                                break;
                             case PTRACE_EVENT_CLONE: {
                                 unsigned long tid;
                                 ptrace(PTRACE_GETEVENTMSG, pid, NULL, &tid);

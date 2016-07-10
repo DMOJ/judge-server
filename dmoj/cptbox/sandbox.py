@@ -99,6 +99,10 @@ class AdvancedDebugger(Debugger):
     def get_syscall_id(self, syscall):
         return translator[syscall][self._syscall_index]
 
+    def readstr(self, address, max_size=4096):
+        if self.address_bits == 32:
+            address &= 0xFFFFFFFF
+        return super(AdvancedDebugger, self).readstr(address, max_size)
 
 # SecurePopen is a subclass of a cython class, _cptbox.Process. Since it is exceedingly unwise
 # to do everything in cython, determining the debugger class is left to do here. However, since
@@ -141,6 +145,7 @@ class SecurePopen(Process):
         self.protection_fault = None
 
         self.debugger._syscall_index = index
+        self.debugger.address_bits = 64 if debugger == DEBUGGER_X64 else 32
 
         self._security = security
         self._callbacks = [None] * MAX_SYSCALL_NUMBER

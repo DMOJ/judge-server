@@ -440,7 +440,7 @@ cdef class Process:
             if PTBOX_FREEBSD:
                 return self.process.getrusage().ru_maxrss
             if self._exited:
-                return self._max_memory
+                return self._max_memory or self.process.getrusage().ru_maxrss
             cdef unsigned long memory = get_memory(self.process.getpid())
             if memory > 0:
                 self._max_memory = memory

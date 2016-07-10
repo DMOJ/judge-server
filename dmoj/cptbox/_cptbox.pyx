@@ -354,7 +354,7 @@ cdef class Process:
 
     cdef int _event_handler(self, int event, unsigned long param) nogil:
         if not PTBOX_FREEBSD and (event == PTBOX_EVENT_EXITING or event == PTBOX_EVENT_SIGNAL):
-            self._max_memory = get_memory(self.process.getpid())
+            self._max_memory = get_memory(self.process.getpid()) or self._max_memory
         if event == PTBOX_EVENT_PROTECTION:
             with gil:
                 self._protection_fault(param)

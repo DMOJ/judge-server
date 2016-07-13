@@ -8,7 +8,7 @@
 #include <sys/resource.h>
 #include <sys/types.h>
 
-#if PTBOX_FREEBSD
+#ifdef __FreeBSD__
 #   include <sys/param.h>
 #   include <sys/queue.h>
 #   include <sys/socket.h>
@@ -165,7 +165,7 @@ void cptbox_closefrom(int lowfd) {
 }
 
 int bsd_get_proc_cwd(pid_t pid, char *buf, int cb) {
-#if PTBOX_FREEBSD
+#ifdef __FreeBSD__
     int ret = 0;
     unsigned kp_cnt;
     struct procstat *procstat;

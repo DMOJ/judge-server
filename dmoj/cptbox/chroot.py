@@ -13,7 +13,7 @@ class CHROOTSecurity(dict):
         self.fs_jail = re.compile('|'.join(filesystem) if filesystem else '^')
         self._writable = list(writable)
         self._io_redirects = io_redirects
-        if 'freebsd' in sys.platform:
+        if sys.platform.startswith('freebsd'):
             self._getcwd_pid = bsd_get_proc_cwd
         else:
             self._getcwd_pid = lambda pid: os.readlink('/proc/%d/cwd' % pid)

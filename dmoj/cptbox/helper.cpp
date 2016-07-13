@@ -8,6 +8,14 @@
 #include <sys/resource.h>
 #include <sys/types.h>
 
+#if PTBOX_FREEBSD
+#   include <sys/param.h>
+#   include <sys/queue.h>
+#   include <sys/socket.h>
+#   include <sys/sysctl.h>
+#   include <libprocstat.h>
+#endif
+
 #if defined(__FreeBSD__) || (defined(__APPLE__) && defined(__MACH__))
 #   define FD_DIR "/dev/fd"
 #else
@@ -155,3 +163,38 @@ void cptbox_closefrom(int lowfd) {
     cptbox_closefrom_dirent(lowfd);
 #endif
 }
+
+int bsd_get_proc_cwd(pid_t pid, char *buf, int cb) {
+#if PTBOX_FREEBSD
+    int ret = 0;
+    unsigned kp_cnt;
+    struct procstat *procstat;
+    struct kinfo_proc *kp;
+    struct filestat_list *head;
+    struct filestat *fst;
+
+    procstat = procstat_open_sysctl();
+    if (procstat) {
+        kp = procstat_getprocs(procstat, KERN_PROC_PID, pid, &kp_cnt);
+        if (kp) {
+            head = procstat_getfiles(procstat, kp, 0);
+            if (head) {
+                ret = EPERM; // Most likely you have no access
+                STAILQ_FOREACH(fst, head, next) {
+                    if (fst->fs_uflags & PS_FST_UFLAG_CDIR) {
+                        strlcpy(buf, fst->fs_path, cb);
+                        ret = 0;
+                        break;
+                    }
+                }
+            } else ret = errno;
+            procstat_freeprocs(procstat, kp);
+        } else ret = errno;
+        procstat_close(procstat);
+    } else ret = errno;
+    return ret;
+#else
+    return EOPNOTSUPP;
+#endif
+}
+

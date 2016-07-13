@@ -1,3 +1,4 @@
+from os import strerror
 from libc.stdio cimport FILE, fopen, fclose, fgets, sprintf
 from libc.stdlib cimport malloc, free, strtoul
 from libc.string cimport strncmp, strlen
@@ -102,6 +103,7 @@ cdef extern from 'helper.h' nogil:
 
     void cptbox_closefrom(int lowfd)
     int cptbox_child_run(child_config *)
+    int _bsd_get_proc_cwd "bsd_get_proc_cwd" (pid_t pid, char *buf, int cb)
 
 MAX_SYSCALL_NUMBER = MAX_SYSCALL
 
@@ -157,6 +159,20 @@ cpdef unsigned long get_memory(pid_t pid) nogil:
             break
     fclose(file)
     return memory
+
+def bsd_get_proc_cwd(pid_t pid, int bufsize=4096):
+    cdef char *buf = <char*>malloc(bufsize)
+    cdef int err
+    if not buf:
+        raise MemoryError()
+    with nogil:
+        err = _bsd_get_proc_cwd(pid, buf, bufsize)
+    if err:
+        raise OSError(err, strerror(err))
+    else:
+        res = <object>buf
+        free(buf)
+        return res
 
 
 cdef class Debugger:

@@ -60,8 +60,11 @@ if os.name == 'nt':
                              sources=['dmoj/utils/debugger/win/_win_debugger.c'],
                              include_dirs=['dmoj/utils/debugger'],  libraries=['kernel32'])]
 else:
+    libs = ['rt']
+    if 'freebsd' in sys.platform:
+        libs += ['procstat']
     extensions += [Extension('dmoj.cptbox._cptbox', sources=cptbox_sources,
-                             language='c++', libraries=['rt']),
+                             language='c++', libraries=libs),
                    Extension('dmoj.utils.debugger.nix._nix_debugger',
                              sources=['dmoj/utils/debugger/nix/_nix_debugger.c'],
                              include_dirs=['dmoj/utils/debugger'], libraries=['rt'])]

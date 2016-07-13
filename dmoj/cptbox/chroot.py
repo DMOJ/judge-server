@@ -3,6 +3,7 @@ import sys
 import os
 
 from dmoj.cptbox.handlers import ALLOW, STDOUTERR, ACCESS_DENIED
+from dmoj.cptbox._cptbox import bsd_get_proc_cwd
 from dmoj.cptbox.syscalls import *
 
 
@@ -12,6 +13,10 @@ class CHROOTSecurity(dict):
         self.fs_jail = re.compile('|'.join(filesystem) if filesystem else '^')
         self._writable = list(writable)
         self._io_redirects = io_redirects
+        if 'freebsd' in sys.platform:
+            self._getcwd_pid = bsd_get_proc_cwd
+        else:
+            self._getcwd_pid = lambda pid: os.readlink('/proc/%d/cwd' % pid)
 
         self.update({
             sys_read: ALLOW,
@@ -203,7 +208,7 @@ class CHROOTSecurity(dict):
 
     def _file_access_check(self, file, debugger):
         if not file.startswith('/'):
-            file = os.path.join(os.readlink('/proc/%d/cwd' % debugger.pid), file)
+            file = os.path.join(self._getcwd_pid(debugger.pid), file)
         file = os.path.normpath(file)
         if self.fs_jail.match(file) is None:
             print>> sys.stderr, 'Not allowed to access:', file

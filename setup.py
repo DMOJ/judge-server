@@ -61,7 +61,7 @@ if os.name == 'nt':
                              include_dirs=['dmoj/utils/debugger'],  libraries=['kernel32'])]
 else:
     libs = ['rt']
-    if 'freebsd' in sys.platform:
+    if sys.platform.startswith('freebsd'):
         libs += ['procstat']
     extensions += [Extension('dmoj.cptbox._cptbox', sources=cptbox_sources,
                              language='c++', libraries=libs),

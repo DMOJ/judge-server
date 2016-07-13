@@ -43,6 +43,7 @@ class PacketManager(object):
 
     def _connect(self):
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.conn.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
         self.conn.connect((self.host, self.port))
         self.input = self.conn.makefile('r')
         self.output = self.conn.makefile('w', 0)

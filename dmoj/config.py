@@ -274,7 +274,10 @@ class Problem(object):
         self._testcase_counter = 0
 
         try:
-            self.config = ConfigNode(yaml.safe_load(self.problem_data['init.yml']), defaults={
+            doc = yaml.safe_load(self.problem_data['init.yml'])
+            if not doc:
+                raise InvalidInitException('I find your lack of content disturbing.')
+            self.config = ConfigNode(doc, defaults={
                 'output_prefix_length': 64,
                 'output_limit_length': 25165824,
             })

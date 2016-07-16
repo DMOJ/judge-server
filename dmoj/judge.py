@@ -116,7 +116,7 @@ class Judge(object):
 
         try:
             problem = Problem(problem_id, time_limit, memory_limit)
-        except InvalidInitException:
+        except Exception:
             return self.internal_error()
 
         if 'signature_grader' in problem.config:

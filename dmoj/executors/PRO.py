@@ -20,7 +20,6 @@ class Executor(ScriptExecutor):
 
     :- main.
 '''
-    fs = ['.*\.(?:pl|pro)', '/lib/swipl', command]
 
     def get_cmdline(self):
         return [self.get_command(), '--goal=main', '-c', self._code]

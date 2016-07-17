@@ -5,7 +5,6 @@ class RubyExecutor(ScriptExecutor):
     ext = '.rb'
     name = 'RUBY'
     address_grace = 65536
-    fs = ['.*\.rb$', '/usr/lib/ruby/gems/']
     test_program = 'puts gets'
 
     @classmethod

@@ -4,7 +4,6 @@ from .base_executor import CompiledExecutor
 class Executor(CompiledExecutor):
     ext = '.rs'
     name = 'RUST'
-    fs = ['.*\.alias']
     command = 'rustc'
     test_program = 'fn main() { println!("echo: Hello, World!"); }'
 

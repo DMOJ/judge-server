@@ -8,7 +8,6 @@ class Executor(ScriptExecutor):
     command_paths = ['sed']
     test_program = '''s/.*/echo: Hello, World!/
 q'''
-    fs = ['.*\.sed$', '/proc/filesystems$', '/+lib/charset.alias$']
     syscalls = ['statfs64', 'statfs']
 
     def get_cmdline(self):

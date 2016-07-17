@@ -1,11 +1,10 @@
 from dmoj.executors.base_executor import CompiledExecutor
-from dmoj.judgeenv import env
 
 
 class Executor(CompiledExecutor):
     ext = '.rkt'
     name = 'RKT'
-    fs = ['.*\.(?:rkt?$|zo$)', '.*racket.*', '/etc/nsswitch.conf$', '/etc/passwd$']
+    fs = ['/etc/nsswitch.conf$', '/etc/passwd$']
 
     command = 'racket'
 

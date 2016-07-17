@@ -7,7 +7,6 @@ class Executor(ScriptExecutor):
     command = 'awk'
     command_paths = ['gawk', 'mawk', 'awk']
     test_program = '{ print $0 }'
-    fs = ['.*\.awk']
 
     def get_cmdline(self):
         return [self.get_command(), '-f', self._code]

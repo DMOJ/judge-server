@@ -11,7 +11,6 @@ class Executor(ScriptExecutor):
 
 HELLO
 '''
-    fs = ['.*?\.(?:fs|fi|gforth-history)']
 
     def get_cmdline(self):
         return [self.get_command(), self._code, '-e', 'bye']

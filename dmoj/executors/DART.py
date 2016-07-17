@@ -17,4 +17,4 @@ void main() {
                 'timerfd_settime', 'pipe2',
                 ('write', lambda debugger: debugger.uarg0 <= 4)]
 
-    fs = ['.*\.(so|dart)', '/proc/meminfo$', '/proc/sys/vm/overcommit_memory$']
+    fs = ['/proc/meminfo$', '/proc/sys/vm/overcommit_memory$']

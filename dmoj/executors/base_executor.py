@@ -46,7 +46,7 @@ class BaseExecutor(ResourceProxy):
     network_block = True
     address_grace = 65536
     nproc = 0
-    fs = ['.*\.so']
+    fs = []
     syscalls = []
     command = None
     command_paths = []

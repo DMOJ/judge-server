@@ -23,12 +23,19 @@ except ImportError:
 else:
     WBoxPopen = default_inject32 = default_inject64 = default_inject_func = None
 
-BASE_FILESYSTEM = ['.*\.so', '/dev/(?:null|zero|full|random|urandom|stdin|stdout|stderr|tty)$',
-                   '/proc/self/maps$', '/proc/self$', '/proc/(?:meminfo|stat|cpuinfo$)',
-                   '/usr/', '/sys/devices/system/cpu/online$', '/etc/(?:localtime$)', '/$']
+BASE_FILESYSTEM = ['/dev/(?:null|zero|u?random)$',
+                   '/usr/(?!home)', '/lib(?:32|64)?/',
+                   '/etc/(?:localtime)$']
 
 if 'freebsd' in sys.platform:
     BASE_FILESYSTEM += ['/etc/s?pwd.db$']
+else:
+    BASE_FILESYSTEM += ['/sys/devices/system/cpu/online$']
+
+# Linux and kFreeBSD mounts linux-style procfs.
+if not sys.platform.startswith('freebsd'):
+    BASE_FILESYSTEM += ['/proc/self/maps$', '/proc/self$', '/proc/(?:meminfo|stat|cpuinfo)$']
+
 
 class BaseExecutor(ResourceProxy):
     ext = None

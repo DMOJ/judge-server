@@ -252,7 +252,7 @@ class ScriptExecutor(BaseExecutor):
 
     def get_fs(self):
         home = self.runtime_dict.get('%s_home' % self.__module__.split('.')[-1].lower())
-        fs = super(ScriptExecutor, self).get_fs()
+        fs = super(ScriptExecutor, self).get_fs() + [self._code]
         if home is not None:
             fs.append(re.escape(home))
         return fs

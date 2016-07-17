@@ -1,7 +1,8 @@
+from dmoj.executors.mixins import ScriptDirectoryMixin
 from .base_executor import ScriptExecutor
 
 
-class Executor(ScriptExecutor):
+class Executor(ScriptDirectoryMixin, ScriptExecutor):
     ext = '.R'
     name = 'R'
     nproc = -1  # needs a bunch

@@ -1,4 +1,5 @@
 import os
+import re
 import threading
 import subprocess
 import sys
@@ -240,6 +241,21 @@ class ScriptExecutor(BaseExecutor):
         super(ScriptExecutor, self).__init__(problem_id, source_code, **kwargs)
         self._code = self._file(problem_id + self.ext)
         self.create_files(problem_id, source_code)
+
+    @classmethod
+    def get_command(cls):
+        if cls.command in cls.runtime_dict:
+            return cls.runtime_dict[cls.command]
+        name = cls.__module__.split('.')[-1].lower()
+        if '%s_home' % name in cls.runtime_dict:
+            return os.path.join(cls.runtime_dict['%s_home' % name], 'bin', cls.command)
+
+    def get_fs(self):
+        home = self.runtime_dict.get('%s_home' % self.__module__.split('.')[-1].lower())
+        fs = super(ScriptExecutor, self).get_fs()
+        if home is not None:
+            fs.append(re.escape(home))
+        return fs
 
     def create_files(self, problem_id, source_code):
         with open(self._code, 'wb') as fo:

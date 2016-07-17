@@ -9,6 +9,7 @@ class Executor(ScriptExecutor):
     test_program = '''s/.*/echo: Hello, World!/
 q'''
     syscalls = ['statfs64', 'statfs']
+    fs = ['/proc/filesystems$']
 
     def get_cmdline(self):
         return [self.get_command(), '-f', self._code]

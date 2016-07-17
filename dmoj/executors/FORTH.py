@@ -12,6 +12,7 @@ class Executor(ScriptDirectoryMixin, ScriptExecutor):
 
 HELLO
 '''
+    fs = [r'/\.gforth-history$']
 
     def get_cmdline(self):
         return [self.get_command(), self._code, '-e', 'bye']

@@ -67,8 +67,12 @@ class BaseExecutor(ResourceProxy):
         self.problem = problem_id
         self.source = source_code
 
+    @classmethod
+    def get_executor_name(cls):
+        return cls.__module__.split('.')[-1]
+
     def get_fs(self):
-        name = self.__class__.__module__.split('.')[-1]
+        name = self.get_executor_name()
         return BASE_FILESYSTEM + self.fs + env.get('extra_fs', {}).get(name, [])
 
     def get_allowed_syscalls(self):
@@ -164,7 +168,7 @@ class BaseExecutor(ResourceProxy):
             return True
 
         if output:
-            print ansi_style("%-39s%s" % ('Self-testing #ansi[%s](|underline):' % cls.__module__.split('.')[-1], '')),
+            print ansi_style("%-39s%s" % ('Self-testing #ansi[%s](|underline):' % cls.get_executor_name(), '')),
         try:
             executor = cls(cls.test_name, cls.test_program)
             proc = executor.launch(time=cls.test_time, memory=cls.test_memory) if sandbox else executor.launch_unsafe()
@@ -246,12 +250,12 @@ class ScriptExecutor(BaseExecutor):
     def get_command(cls):
         if cls.command in cls.runtime_dict:
             return cls.runtime_dict[cls.command]
-        name = cls.__module__.split('.')[-1].lower()
+        name = cls.get_executor_name().lower()
         if '%s_home' % name in cls.runtime_dict:
             return os.path.join(cls.runtime_dict['%s_home' % name], 'bin', cls.command)
 
     def get_fs(self):
-        home = self.runtime_dict.get('%s_home' % self.__module__.split('.')[-1].lower())
+        home = self.runtime_dict.get('%s_home' % self.get_executor_name().lower())
         fs = super(ScriptExecutor, self).get_fs() + [self._code]
         if home is not None:
             fs.append(re.escape(home))

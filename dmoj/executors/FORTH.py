@@ -1,7 +1,8 @@
+from dmoj.executors.mixins import ScriptDirectoryMixin
 from .base_executor import ScriptExecutor
 
 
-class Executor(ScriptExecutor):
+class Executor(ScriptDirectoryMixin, ScriptExecutor):
     name = 'FORTH'
     command = 'gforth'
     command_paths = ['gforth']

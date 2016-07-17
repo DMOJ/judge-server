@@ -1,7 +1,8 @@
 from dmoj.executors.base_executor import CompiledExecutor
+from dmoj.executors.mixins import ScriptDirectoryMixin
 
 
-class Executor(CompiledExecutor):
+class Executor(ScriptDirectoryMixin, CompiledExecutor):
     ext = '.rkt'
     name = 'RKT'
     fs = ['/etc/nsswitch.conf$', '/etc/passwd$']
@@ -15,9 +16,6 @@ class Executor(CompiledExecutor):
 #lang racket
 (displayln (read-line))
 '''
-
-    def get_fs(self):
-        return super(Executor, self).get_fs() + [self._dir]
 
     def get_compile_args(self):
         return [self.runtime_dict['raco'], 'make', self._code]

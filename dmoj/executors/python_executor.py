@@ -1,13 +1,14 @@
 from collections import deque
 import re
 
+from dmoj.executors.mixins import ScriptDirectoryMixin
 from .base_executor import ScriptExecutor
 from dmoj.result import Result
 
 retraceback = re.compile(r'Traceback \(most recent call last\):\n.*?\n([a-zA-Z_]\w*)(?::[^\n]*?)?$', re.S | re.M)
 
 
-class PythonExecutor(ScriptExecutor):
+class PythonExecutor(ScriptDirectoryMixin, ScriptExecutor):
     loader_script = '''\
 import runpy, sys, os
 del sys.argv[0]
@@ -22,9 +23,6 @@ runpy.run_path(sys.argv[0], run_name='__main__')\
 
     def get_cmdline(self):
         return [self.get_command(), '-BS', self._loader, self._code]
-
-    def get_fs(self):
-        return super(PythonExecutor, self).get_fs() + [self._dir]
 
     def get_allowed_syscalls(self):
         syscalls = super(PythonExecutor, self).get_allowed_syscalls()

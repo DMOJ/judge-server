@@ -70,3 +70,11 @@ class EmulateTerminalMixin(object):
             env = super(EmulateTerminalMixin, self).get_compile_env() or os.environ.copy()
             env['TERM'] = 'xterm'
             return env
+
+
+class ScriptDirectoryMixin(object):
+    """Certain script executors need access to the entire directory of the script,
+    usually for some searching purposes."""
+
+    def get_fs(self):
+        return super(ScriptDirectoryMixin, self).get_fs() + [self._dir]

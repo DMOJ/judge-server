@@ -52,7 +52,7 @@ println System.in.newReader().readLine()
 
         cmdline = log[-1].lstrip('+ ').split()
 
-        result['groovy_vm'] = cls.find_command_from_list([cmdline[1]])
+        result['groovy_vm'] = cls.unravel_java(cls.find_command_from_list([cmdline[1]]))
         result['groovy_args'] = [i for i in cmdline[2:-1]]
 
         data = cls.autoconfig_run_test(result)

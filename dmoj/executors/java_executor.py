@@ -1,4 +1,5 @@
 import errno
+import subprocess
 import sys
 import os
 import re
@@ -150,6 +151,19 @@ class JavaExecutor(CompiledExecutor):
                     if success:
                         return config, success, message
         return {}, False, 'Could not find JVM'
+
+    @classmethod
+    def unravel_java(cls, path):
+        with open(path, 'rb') as f:
+            if f.read(2) != '#!':
+                return path
+
+        with open(os.devnull, 'w') as devnull:
+            process = subprocess.Popen(['bash', '-x', path, '-version'], stdout=devnull, stderr=subprocess.PIPE)
+
+        log = [i for i in process.communicate()[1].split('\n') if 'exec' in i]
+        cmdline = log[-1].lstrip('+ ').split()
+        return cmdline[1] if len(cmdline) > 1 else path
 
 
 class JavacExecutor(JavaExecutor):

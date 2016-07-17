@@ -12,6 +12,9 @@ get echo : *
 put echo
 '''
 
+    def get_fs(self):
+        return super(Executor, self).get_fs() + [self._code + 'bc']
+
     def get_compile_args(self):
         return [self.get_command(), self._code, env['runtime']['turing_dir']]
 

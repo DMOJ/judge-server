@@ -16,6 +16,9 @@ class Executor(CompiledExecutor):
 (displayln (read-line))
 '''
 
+    def get_fs(self):
+        return super(Executor, self).get_fs() + [self._dir]
+
     def get_compile_args(self):
         return [self.runtime_dict['raco'], 'make', self._code]
 

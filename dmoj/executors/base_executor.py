@@ -25,7 +25,7 @@ else:
     WBoxPopen = default_inject32 = default_inject64 = default_inject_func = None
 
 BASE_FILESYSTEM = ['/dev/(?:null|zero|u?random)$',
-                   '/usr/(?!home)', '/lib(?:32|64)?/',
+                   '/usr/(?!home)', '/lib(?:32|64)?/', '/opt/',
                    '/etc/(?:localtime)$']
 
 if 'freebsd' in sys.platform:

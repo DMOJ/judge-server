@@ -1,26 +1,9 @@
-import errno
-
-from .python_executor import PythonExecutor
-from dmoj.judgeenv import env
+from dmoj.cptbox.handlers import ACCESS_DENIED
+from dmoj.executors.python_executor import PythonExecutor
 
 
 class Executor(PythonExecutor):
     command = 'pypy'
     test_program = "print __import__('sys').stdin.read()"
     name = 'PYPY'
-    fs = ['.*\.(?:py[co]?$)'] + [command] + ([env['runtime']['pypydir']] if 'pypydir' in env['runtime'] else [])
-
-    def get_security(self, **kwargs):
-        security = super(Executor, self).get_security(**kwargs)
-        from dmoj.cptbox.syscalls import sys_unlink
-
-        def eaccess(debugger):
-            def handle_return():
-                debugger.result = -errno.EACCES
-
-            debugger.syscall = debugger.getpid_syscall
-            debugger.on_return(handle_return)
-            return True
-
-        security[sys_unlink] = eaccess
-        return security
+    syscalls = [('unlink', ACCESS_DENIED)]

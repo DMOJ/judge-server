@@ -1,25 +1,9 @@
-import os
-
-from .python_executor import PythonExecutor
-from dmoj.judgeenv import env
+from dmoj.cptbox.handlers import ACCESS_DENIED
+from dmoj.executors.python_executor import PythonExecutor
 
 
 class Executor(PythonExecutor):
     command = 'pypy3'
     test_program = "print(__import__('sys').stdin.read(), end='')"
     name = 'PYPY3'
-    fs = ['.*\.(?:py[co]?$)'] + [command] + ([env['runtime']['pypy3dir']] if 'pypy3dir' in env['runtime'] else [])
-
-    def get_security(self, **kwargs):
-        from dmoj.cptbox.syscalls import sys_mkdir, sys_unlink
-
-        sec = super(Executor, self).get_security(**kwargs)
-
-        def unsafe_pypy3dir(debugger):
-            # Relies on the fact this user can't access here.
-            return debugger.readstr(debugger.uarg0).startswith(env['runtime']['pypy3dir'])
-
-        if not os.access(env['runtime']['pypy3dir'], os.W_OK):
-            sec[sys_mkdir] = unsafe_pypy3dir
-            sec[sys_unlink] = unsafe_pypy3dir
-        return sec
+    syscalls = [('unlink', ACCESS_DENIED), ('mkdir', ACCESS_DENIED)]

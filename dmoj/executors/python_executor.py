@@ -23,6 +23,9 @@ runpy.run_path(sys.argv[0], run_name='__main__')\
     def get_cmdline(self):
         return [self.get_command(), '-BS', self._loader, self._code]
 
+    def get_fs(self):
+        return super(PythonExecutor, self).get_fs() + [self._dir]
+
     def get_allowed_syscalls(self):
         syscalls = super(PythonExecutor, self).get_allowed_syscalls()
         syscalls += ['statfs', 'statfs64']

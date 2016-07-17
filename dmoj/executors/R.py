@@ -9,7 +9,7 @@ class Executor(ScriptExecutor):
     test_program = 'writeLines(readLines(file("stdin")))'
     syscalls = ['mkdir', 'setup', 'fork', 'waitpid', 'wait4', 'getpgrp', 'execve']
 
-    fs = ['/etc/passwd$', '/etc/nsswitch.conf$', '/etc/group$']
+    fs = ['/dev/tty$', '/etc/passwd$', '/etc/nsswitch.conf$', '/etc/group$']
 
     def get_cmdline(self):
         return [self.get_command(), '--vanilla', self._code]

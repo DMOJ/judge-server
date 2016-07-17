@@ -209,7 +209,7 @@ class CHROOTSecurity(dict):
     def _file_access_check(self, file, debugger):
         if not file.startswith('/'):
             file = os.path.join(self._getcwd_pid(debugger.pid), file)
-        file = os.path.normpath(file)
+        file = '/' + os.path.normpath(file).lstrip('/')
         if self.fs_jail.match(file) is None:
             print>> sys.stderr, 'Not allowed to access:', file
             return False

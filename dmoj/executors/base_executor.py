@@ -32,9 +32,12 @@ if 'freebsd' in sys.platform:
 else:
     BASE_FILESYSTEM += ['/sys/devices/system/cpu/online$']
 
-# Linux and kFreeBSD mounts linux-style procfs.
 if not sys.platform.startswith('freebsd'):
+    # Linux and kFreeBSD mounts linux-style procfs.
     BASE_FILESYSTEM += ['/proc/self/maps$', '/proc/self$', '/proc/(?:meminfo|stat|cpuinfo)$']
+
+    # Linux-style ld.
+    BASE_FILESYSTEM += [r'/etc/ld\.so\.(?:nohwcap|preload|cache)$']
 
 
 class BaseExecutor(ResourceProxy):

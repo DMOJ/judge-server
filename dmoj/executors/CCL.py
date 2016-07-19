@@ -11,7 +11,7 @@ class Executor(ScriptDirectoryMixin, CompiledExecutor):
     fs = ['/dev/tty$', '/etc/(?:nsswitch.conf|passwd)$']
     nproc = -1
     test_program = '(write-line (read-line))'
-    address_grace = 524288
+    address_grace = 131072
 
     compile_script = '''\
 (progn
@@ -28,17 +28,16 @@ class Executor(ScriptDirectoryMixin, CompiledExecutor):
   (load *main-module*)
   (ccl::quit))'''
 
-    execute_script = '''\
-(progn
-  (load (car *unprocessed-command-line-arguments*))
-  (ccl::quit))'''
-
+    def launch(self, *args, **kwargs):
+        self.__memory_limit = kwargs['memory']
+        return super(Executor, self).launch(*args, **kwargs)
 
     def get_compile_args(self):
         return [self.get_command(), '-b', '-n', '-e', self.compile_script, '--', self._code]
 
     def get_cmdline(self):
-        return [self.get_command(), '-b', '-n', '-e', self.execute_script, '--', self.problem]
+        return [self.get_command(), '-R', str((self.__memory_limit + 32768) * 1024),
+                '-b', '-n', '-e', self.execute_script, '--', self.problem]
 
     def get_executable(self):
         return self.get_command()

@@ -25,6 +25,7 @@ class Executor(NullStdoutMixin, ScriptDirectoryMixin, CompiledExecutor):
 
     def get_security(self, *args, **kwargs):
         from dmoj.cptbox.syscalls import sys_open
+        from dmoj.cptbox.handlers import ACCESS_DENIED
 
         sec = super(Executor, self).get_security(*args, **kwargs)
         old_open = sec[sys_open]
@@ -34,7 +35,8 @@ class Executor(NullStdoutMixin, ScriptDirectoryMixin, CompiledExecutor):
         # Otherwise, we'd need to allow execve, personality,, write on fd=3, poll, and kill.
         def new_open(debugger):
             if debugger.readstr(debugger.uarg0) == '/proc/self/exe':
-                return False
+                return ACCESS_DENIED(debugger)
             return old_open(debugger)
 
         sec[sys_open] = new_open
+

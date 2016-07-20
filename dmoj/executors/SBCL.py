@@ -8,8 +8,9 @@ class Executor(NullStdoutMixin, ScriptDirectoryMixin, CompiledExecutor):
     command = 'sbcl'
     command_paths = ['sbcl']
     fs = ['/dev/tty$', '/etc/nsswitch.conf$', '/etc/passwd$']
-    address_grace = 524288 + 131073  # 512mb so that it starts, + 128mb so that the GC doesn't die
+    address_grace = 524288 + 262146  # 512mb so that it starts, + 256mb so that the GC doesn't die
     
+    test_program = '(write-line (read-line))'
 
     compile_script = '''(compile-file "{code}")'''
 

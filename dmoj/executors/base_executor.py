@@ -7,6 +7,7 @@ import traceback
 from distutils.spawn import find_executable
 from shutil import copyfile
 from subprocess import Popen
+import re
 
 import time
 
@@ -40,6 +41,8 @@ if not sys.platform.startswith('freebsd'):
     # Linux-style ld.
     BASE_FILESYSTEM += [r'/etc/ld\.so\.(?:nohwcap|preload|cache)$']
 
+
+reversion = re.compile('(\d+(?:\.\d+)+)')
 
 class BaseExecutor(ResourceProxy):
     ext = None
@@ -190,6 +193,35 @@ class BaseExecutor(ResourceProxy):
             if error_callback:
                 error_callback(traceback.format_exc())
             return False
+
+    @classmethod
+    def get_version(cls):
+        vers = []
+        for runtime in cls.get_find_first_mapping().keys():
+            flags = cls.get_version_flags(runtime)
+            if not flags:
+                continue  # Clearly executor has no idea
+
+            with open(os.devnull, 'w') as null:
+                try:
+                    output = subprocess.check_output([cls.get_command()] + flags, stderr=null)
+                except subprocess.CalledProcessError:
+                    version = None
+                else:
+                    version = cls.parse_version(runtime, output)
+            vers.append((runtime, version or 'unknown'))
+        return tuple(vers)
+
+    @classmethod
+    def parse_version(cls, command, output):
+        match = reversion.match(output)
+        if match:
+            return match.group(1)
+        return None
+
+    @classmethod
+    def get_version_flags(cls, command):
+        return None
 
     @classmethod
     def find_command_from_list(cls, files):

@@ -5,7 +5,8 @@ class Executor(ScriptExecutor):
     ext = '.pike'
     name = 'PIKE'
     command = 'pike'
-    syscalls = ['socketpair', ('fpathconf', ACCESS_DENIED)]
+    syscalls = ['epoll_create', 'epoll_ctl', ('fstatfs', ACCESS_DENIED), #  Linux
+                'socketpair', ('fpathconf', ACCESS_DENIED)]              #  FreeBSD
     test_program = '''\
 int main() {
     write(Stdio.stdin.gets());

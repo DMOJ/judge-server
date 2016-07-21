@@ -55,6 +55,7 @@ The Judge can also grade in the languages listed below. These languages are less
 * Octave
 * OCaml
 * PHP 5/7
+* Pike
 * Prolog
 * R
 * Racket

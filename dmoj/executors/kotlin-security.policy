@@ -13,7 +13,7 @@ grant {
 
     permission java.util.PropertyPermission "*", "read,write";
 
-    // Everything below is used for regular Java submissions, and is not Groovy-specific
+    // Everything below is used for regular Java submissions, and is not Kotlin-specific
 
     // Basic Threads
     permission java.lang.RuntimePermission "stopThread";

@@ -1,0 +1,48 @@
+grant {
+    permission java.lang.RuntimePermission "createClassLoader";
+    permission java.lang.RuntimePermission "accessDeclaredMembers";
+    permission java.lang.RuntimePermission "exitVM.*";
+
+    permission java.io.FilePermission "${kotlin.home}/lib/*.jar", "read";
+    permission java.io.FilePermission "${kotlin.home}/lib/kotlin-runtime.jar", "read";
+    permission java.io.FilePermission "${kotlin.home}/lib/kotlin-reflect.jar", "read";
+
+    permission java.io.FilePermission "${submission.file}.class", "read";
+    permission java.io.FilePermission "${submission.dir}/.", "read";
+    permission java.io.FilePermission "${submission.dir}/./-", "read";
+
+    permission java.util.PropertyPermission "*", "read,write";
+
+    // Everything below is used for regular Java submissions, and is not Groovy-specific
+
+    // Basic Threads
+    permission java.lang.RuntimePermission "stopThread";
+    permission java.lang.RuntimePermission "modifyThread";
+
+    // Locale.setDefault
+    permission java.util.PropertyPermission "user.language", "write";
+
+    // Date timezone
+    permission java.util.PropertyPermission "user.timezone", "write";
+
+    // Standard properties
+    permission java.util.PropertyPermission "java.version", "read";
+    permission java.util.PropertyPermission "java.vendor", "read";
+    permission java.util.PropertyPermission "java.vendor.url", "read";
+    permission java.util.PropertyPermission "java.class.version", "read";
+    permission java.util.PropertyPermission "os.name", "read";
+    permission java.util.PropertyPermission "os.version", "read";
+    permission java.util.PropertyPermission "os.arch", "read";
+    permission java.util.PropertyPermission "line.separator", "read";
+
+    permission java.util.PropertyPermission "java.specification.version", "read";
+    permission java.util.PropertyPermission "java.specification.vendor", "read";
+    permission java.util.PropertyPermission "java.specification.name", "read";
+
+    permission java.util.PropertyPermission "java.vm.specification.version", "read";
+    permission java.util.PropertyPermission "java.vm.specification.vendor", "read";
+    permission java.util.PropertyPermission "java.vm.specification.name", "read";
+    permission java.util.PropertyPermission "java.vm.version", "read";
+    permission java.util.PropertyPermission "java.vm.vendor", "read";
+    permission java.util.PropertyPermission "java.vm.name", "read";
+};

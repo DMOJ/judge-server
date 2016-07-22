@@ -51,6 +51,7 @@ The Judge can also grade in the languages listed below. These languages are less
 * INTERCAL
 * Lua
 * NASM
+* Nim
 * Objective-C
 * Octave
 * OCaml

@@ -7,7 +7,6 @@ import java.lang.instrument.Instrumentation;
 import java.security.ProtectionDomain;
 
 public class SubmissionAgent {
-    private static final String UNCAUGHT_EXCEPTION_UUID = "d4519cd6-6270-4bbb-a040-9bf4bcbd5938";
     private static Throwable lastError;
 
     public static void premain(String argv, Instrumentation inst) throws UnsupportedEncodingException {
@@ -74,9 +73,20 @@ public class SubmissionAgent {
             @Override
             public void run() {
                 System.out.flush();
-                if (lastError != null) {
-                    System.err.println(UNCAUGHT_EXCEPTION_UUID + ":" + lastError.getClass().getName());
-                    System.err.flush();
+                System.err.flush();
+
+                try {
+                    PrintStream state = new PrintStream(new BufferedOutputStream(new FileOutputStream("state")));
+                    if (lastError != null) {
+                        state.println(lastError.getClass().getName());
+                    } else {
+                        // End with ! in the event that some sketchy user-defined exception is ever called OK;
+                        // ! is an invalid character in class names.
+                        state.println("OK!");
+                    }
+                    state.close();
+                } catch (FileNotFoundException ignored) {
+                    // state file won't not exist, "abnormal termination" on the Python side
                 }
             }
         }));

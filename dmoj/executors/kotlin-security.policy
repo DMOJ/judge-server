@@ -1,20 +1,6 @@
+// This is identical to the contents of java-security.policy, but allows you to
+// add or remove permissions you may need strictly for Kotlin.
 grant {
-    permission java.lang.RuntimePermission "createClassLoader";
-    permission java.lang.RuntimePermission "accessDeclaredMembers";
-    permission java.lang.RuntimePermission "exitVM.*";
-
-    permission java.io.FilePermission "${kotlin.home}/lib/*.jar", "read";
-    permission java.io.FilePermission "${kotlin.home}/lib/kotlin-runtime.jar", "read";
-    permission java.io.FilePermission "${kotlin.home}/lib/kotlin-reflect.jar", "read";
-
-    permission java.io.FilePermission "${submission.file}.class", "read";
-    permission java.io.FilePermission "${submission.dir}/.", "read";
-    permission java.io.FilePermission "${submission.dir}/./-", "read";
-
-    permission java.util.PropertyPermission "*", "read,write";
-
-    // Everything below is used for regular Java submissions, and is not Kotlin-specific
-
     // Basic Threads
     permission java.lang.RuntimePermission "stopThread";
     permission java.lang.RuntimePermission "modifyThread";

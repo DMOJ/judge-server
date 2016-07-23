@@ -121,6 +121,15 @@ int pt_process::monitor() {
 
 #if PTBOX_FREEBSD
         ptrace(PT_LWPINFO, pid, (caddr_t) &lwpi, sizeof lwpi);
+
+        //if (lwpi.pl_flags & PL_FLAG_FORKED)
+        //    printf("Created process: %d\n", lwpi.pl_child_pid);
+
+        if (lwpi.pl_flags & PL_FLAG_CHILD) {
+            ptrace(PT_FOLLOW_FORK, pid, 0, 1);
+            children.insert(pid);
+            //printf("Started process: %d\n", pid);
+        }
 #endif
 
         if (first) {
@@ -131,6 +140,7 @@ int pt_process::monitor() {
             // No FreeBSD equivalent that I know of
             // * TRACECLONE makes no sense since FreeBSD has no clone(2)
             // * TRACEEXIT... I'm not sure about
+            ptrace(PT_FOLLOW_FORK, pid, 0, 1);
 #else
             // This is right after SIGSTOP is received:
             ptrace(PTRACE_SETOPTIONS, pid, NULL, PTRACE_O_TRACESYSGOOD | PTRACE_O_TRACEEXIT |
@@ -144,6 +154,7 @@ int pt_process::monitor() {
         if (WIFSTOPPED(status)) {
 #if PTBOX_FREEBSD
             if (WSTOPSIG(status) == SIGTRAP && lwpi.pl_flags & (PL_FLAG_SCE | PL_FLAG_SCX)) {
+                debugger->setpid(pid);
                 debugger->update_syscall(&lwpi);
 #else
             if (WSTOPSIG(status) == (0x80 | SIGTRAP)) {
@@ -211,7 +222,7 @@ int pt_process::monitor() {
                 // be self-send, hence perfect for implementing shocker.
                 if (signal == SIGSTOP)
                     signal = 0;
-                //else printf("WSTOPSIG(status): %d\n", signal);
+                //else printf("%d: WSTOPSIG(status): %d\n", pid, signal);
 #else
                 switch (WSTOPSIG(status)) {
                     case SIGTRAP:
@@ -243,7 +254,7 @@ int pt_process::monitor() {
 
                 //printf("%d: WSTOPSIG(status): %d\n", pid, signal);
                 // Only main process signals are meaningful.
-                if (!first && pid == this->pid) // *** Don't set _signal to SIGSTOP if this is the /first/ SIGSTOP
+                if (!first && pid == pgid) // *** Don't set _signal to SIGSTOP if this is the /first/ SIGSTOP
                     dispatch(PTBOX_EVENT_SIGNAL, WSTOPSIG(status));
             }
         }
@@ -251,7 +262,6 @@ int pt_process::monitor() {
         // work for naught. Like abort(), it catches the signal, prints something (^Z?) and then resends it.
         // Doing this prevents a second SIGSTOP from being dispatched to our event handler above. ***
 #if PTBOX_FREEBSD
-        //if (signal) printf("Forwarding %d...\n", signal);
         ptrace(_trace_syscalls ? PT_SYSCALL : PT_CONTINUE, pid, (caddr_t) 1, first ? 0 : signal);
 #else
         ptrace(_trace_syscalls ? PTRACE_SYSCALL : PTRACE_CONT, pid, NULL, first ? NULL : (void*) signal);

@@ -41,6 +41,10 @@ void pt_debugger::update_syscall(struct ptrace_lwpinfo *info) {
     else if (info->pl_flags & PL_FLAG_SCE)
         syscall_[info->pl_lwpid] = bsd_converted_regs.rax;
 }
+
+void pt_debugger::setpid(pid_t pid) {
+    this->tid = pid;
+}
 #else
 void pt_debugger::settid(pid_t tid) {
     this->tid = tid;

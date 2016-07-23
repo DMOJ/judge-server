@@ -17,10 +17,18 @@ reinline_comment = re.compile(r'//.*?(?=[\r\n])')
 reclass = re.compile(r'\bpublic\s+class\s+([_a-zA-Z\$][_0-9a-zA-z\$]*?)\b')
 repackage = re.compile(r'\bpackage\s+([^.;]+(?:\.[^.;]+)*?);')
 redeunicode = re.compile(r'\\u([0-9a-f]{4})', re.I)
-reexception = re.compile('^d4519cd6-6270-4bbb-a040-9bf4bcbd5938:(.*?)$', re.MULTILINE)
 deunicode = lambda x: redeunicode.sub(lambda a: unichr(int(a.group(1), 16)), x)
 
+
 JAVA_SANDBOX = os.path.abspath(os.path.join(os.path.dirname(__file__), 'java-sandbox.jar'))
+
+POLICY_PREFIX = '''\
+grant codeBase "file://{agent}" {{
+    permission java.io.FilePermission "state", "write";
+}};
+
+'''
+
 with open(os.path.join(os.path.dirname(__file__), 'java-security.policy')) as policy_file:
     policy = policy_file.read()
 
@@ -52,15 +60,16 @@ class JavaExecutor(CompiledExecutor):
 
     def create_files(self, problem_id, source_code, *args, **kwargs):
         super(JavaExecutor, self).create_files(problem_id, source_code, *args, **kwargs)
-        self._policy_file = self._file('security.policy')
-        with open(self._policy_file, 'w') as file:
-            file.write(self.security_policy)
 
         if os.name == 'nt':
             self._agent_file = self._file('java-sandbox.jar')
             copyfile(JAVA_SANDBOX, self._agent_file)
         else:
             self._agent_file = JAVA_SANDBOX
+
+        self._policy_file = self._file('security.policy')
+        with open(self._policy_file, 'w') as file:
+            file.write(POLICY_PREFIX.format(agent=self._agent_file) + self.security_policy)
 
     def get_compile_popen_kwargs(self):
         return {'executable': self.get_compiler()}
@@ -95,13 +104,15 @@ class JavaExecutor(CompiledExecutor):
                     raise InternalError('\n\n' + err.read())
             except IOError:
                 pass
-        if not result.result_flag & Result.IR or not stderr or len(stderr) > 2048:
+        if not result.result_flag & Result.IR:
             return ''
 
-        match = deque(reexception.finditer(stderr), maxlen=1)
-        if not match:
-            return ''
-        exception = match[0].group(1).strip()
+        try:
+            with open(os.path.join(self._dir, 'state'), 'r') as state:
+                exception = state.read().strip()
+        except IOError:
+            exception = "abnormal termination"  # Probably exited without calling shutdown hooks
+
         return exception
 
     @classmethod

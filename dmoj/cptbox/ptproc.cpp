@@ -12,6 +12,8 @@
 #include <unistd.h>
 #include <sys/ptrace.h>
 
+#include <set>
+
 #include "ptbox.h"
 
 pt_process *pt_alloc_process(pt_debugger *debugger) {
@@ -89,6 +91,7 @@ int pt_process::monitor() {
     // in the initial wait be on the main thread. This allows it a chance
     // of creating a new process group.
     pid_t pid, pgid = -this->pid;
+    std::set<pid_t> children;
 
 #if PTBOX_FREEBSD
     struct ptrace_lwpinfo lwpi;
@@ -110,7 +113,8 @@ int pt_process::monitor() {
             if (first || pid == pgid)
                 break;
             else {
-                //printf("Thread exit: %d\n", pid);
+                children.erase(pid);
+                //printf("Thread/Process exit: %d\n", pid);
                 continue;
             }
         }
@@ -129,7 +133,9 @@ int pt_process::monitor() {
             // * TRACEEXIT... I'm not sure about
 #else
             // This is right after SIGSTOP is received:
-            ptrace(PTRACE_SETOPTIONS, pid, NULL, PTRACE_O_TRACESYSGOOD | PTRACE_O_TRACEEXIT | PTRACE_O_TRACECLONE);
+            ptrace(PTRACE_SETOPTIONS, pid, NULL, PTRACE_O_TRACESYSGOOD | PTRACE_O_TRACEEXIT |
+                                                 PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK |
+                                                 PTRACE_O_TRACEVFORK);
 #endif
             // We now set the process group to the actual pgid.
             pgid = pid;
@@ -220,13 +226,24 @@ int pt_process::monitor() {
                                 //printf("Created thread: %d\n", tid);
                                 break;
                             }
+                            case PTRACE_EVENT_FORK:
+                            case PTRACE_EVENT_VFORK: {
+                                unsigned long npid;
+                                ptrace(PTRACE_GETEVENTMSG, pid, NULL, &npid);
+                                children.insert(npid);
+                                //printf("Created process: %d\n", npid);
+                                break;
+                            }
                         }
                         break;
                     default:
                         signal = WSTOPSIG(status);
                 }
 #endif
-                if (!first) // *** Don't set _signal to SIGSTOP if this is the /first/ SIGSTOP
+
+                //printf("%d: WSTOPSIG(status): %d\n", pid, signal);
+                // Only main process signals are meaningful.
+                if (!first && pid == this->pid) // *** Don't set _signal to SIGSTOP if this is the /first/ SIGSTOP
                     dispatch(PTBOX_EVENT_SIGNAL, WSTOPSIG(status));
             }
         }
@@ -241,6 +258,11 @@ int pt_process::monitor() {
 #endif
         first = false;
     }
+
+    // Children are not permitted to outlive parent, by any meaningful measure.
+    for (std::set<pid_t>::const_iterator it = children.begin(); it != children.end(); ++it)
+        kill(*it, SIGKILL);
+
     dispatch(PTBOX_EVENT_EXITED, exit_reason);
     return WIFEXITED(status) ? WEXITSTATUS(status) : -WTERMSIG(status);
 }

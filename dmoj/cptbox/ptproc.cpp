@@ -73,12 +73,16 @@ int pt_process::spawn(pt_fork_handler child, void *context) {
 int pt_process::protection_fault(int syscall) {
     dispatch(PTBOX_EVENT_PROTECTION, syscall);
     dispatch(PTBOX_EVENT_EXITING, PTBOX_EXIT_PROTECTION);
-    kill(pid, SIGKILL);
+    killpg(pid, SIGKILL);
 #if PTBOX_FREEBSD
     // FreeBSD SIGKILL doesn't under ptrace.
     // ptrace(PT_KILL) doesn't work when not under signal-stop.
     // Solution? Use both!
     ptrace(PT_KILL, pid, (caddr_t) 1, 0);
+
+    // We must also kill the current process being debugged.
+    if (debugger->tid != pid)
+        ptrace(PT_KILL, debugger->tid, (caddr_t) 1, 0);
 #endif
     return PTBOX_EXIT_PROTECTION;
 }
@@ -274,8 +278,12 @@ int pt_process::monitor() {
     }
 
     // Children are not permitted to outlive parent, by any meaningful measure.
-    for (std::set<pid_t>::const_iterator it = children.begin(); it != children.end(); ++it)
+    for (std::set<pid_t>::const_iterator it = children.begin(); it != children.end(); ++it) {
         kill(*it, SIGKILL);
+#if PTBOX_FREEBSD
+        ptrace(PT_KILL, *it, (caddr_t) 1, 0);
+#endif
+    }
 
     dispatch(PTBOX_EVENT_EXITED, exit_reason);
     return WIFEXITED(status) ? WEXITSTATUS(status) : -WTERMSIG(status);

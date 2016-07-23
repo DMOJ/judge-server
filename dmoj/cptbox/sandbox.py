@@ -197,7 +197,7 @@ class SecurePopen(Process):
     def kill(self):
         print>> sys.stderr, 'Child is requested to be killed'
         try:
-            os.kill(self.pid, signal.SIGKILL)
+            os.killpg(self.pid, signal.SIGKILL)
         except OSError:
             import traceback
             traceback.print_exc()
@@ -273,12 +273,12 @@ class SecurePopen(Process):
         while not self._exited:
             if self.execution_time > self._time:
                 print>> sys.stderr, 'Shocker activated, ouch!'
-                os.kill(self.pid, signal.SIGKILL)
+                os.killpg(self.pid, signal.SIGKILL)
                 self._tle = True
                 break
             time.sleep(1)
             try:
-                os.kill(self.pid, wake_signal)
+                os.killpg(self.pid, wake_signal)
             except OSError:
                 pass
             else:

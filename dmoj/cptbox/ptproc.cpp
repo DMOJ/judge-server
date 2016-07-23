@@ -160,7 +160,11 @@ int pt_process::monitor() {
             if (WSTOPSIG(status) == (0x80 | SIGTRAP)) {
                 debugger->settid(pid);
 #endif
+#if defined(__FreeBSD_version) && __FreeBSD_version >= 1002501
+                int syscall = lwpi.pl_syscall_code;
+#else
                 int syscall = debugger->syscall();
+#endif
 #if PTBOX_FREEBSD
                 in_syscall = lwpi.pl_flags & PL_FLAG_SCE;
 #else

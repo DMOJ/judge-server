@@ -419,3 +419,35 @@ class CompiledExecutor(BaseExecutor):
 
     def get_executable(self):
         return self._executable + self.get_executable_ext()
+
+
+class ShellExecutor(ScriptExecutor):
+    nproc = -1
+    shell_commands = []
+
+    def get_shell_commands(self):
+        return self.shell_commands
+
+    def get_allowed_exec(self):
+        return map(find_executable, self.get_shell_commands())
+
+    def get_security(self, launch_kwargs=None):
+        from dmoj.cptbox.syscalls import sys_execve
+
+        sec = super(ShellExecutor, self).get_security(launch_kwargs)
+        allowed = set(self.get_allowed_exec())
+
+        def handle_execve(debugger):
+            path = sec.get_full_path(debugger, debugger.readstr(debugger.uarg0))
+            if path in allowed:
+                return True
+            print>> sys.stderr, 'Not allowed to use command:', path
+            return False
+
+        sec[sys_execve] = handle_execve
+        return sec
+
+    def get_env(self):
+        env = super(ShellExecutor, self).get_env()
+        env['PATH'] = os.environ['PATH']
+        return env

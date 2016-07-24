@@ -86,7 +86,7 @@ class ASMExecutor(CompiledExecutor):
     def get_fs(self):
         fs = super(ASMExecutor, self).get_fs()
         if self.use_qemu:
-            fs += ['/proc/sys/vm/mmap_min_addr$', self._executable]
+            fs += ['/proc/sys/vm/mmap_min_addr$', '/etc/qemu-binfmt/', self._executable]
         return fs
 
     def get_address_grace(self):

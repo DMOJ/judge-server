@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <signal.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include <sys/resource.h>
 #include <sys/types.h>
 
@@ -185,7 +186,7 @@ char *bsd_get_proc_fd(pid_t pid, int fdflags, int fdno) {
                 STAILQ_FOREACH(fst, head, next) {
                     if ((fdflags && fst->fs_uflags & fdflags) ||
                        (!fdflags && fst->fs_fd == fdno)) {
-                        buf = malloc(strlen(fst->fs_path) + 1);
+                        buf = (char*) malloc(strlen(fst->fs_path) + 1);
                         if (buf)
                             strcpy(buf, fst->fs_path);
                         err = buf ? 0 : ENOMEM;

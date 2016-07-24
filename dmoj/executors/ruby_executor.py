@@ -8,6 +8,10 @@ class RubyExecutor(ScriptExecutor):
     test_program = 'puts gets'
 
     @classmethod
+    def get_version_flags(cls, command):
+        return ['-v']
+
+    @classmethod
     def get_command(cls):
         return cls.runtime_dict.get(cls.name.lower())
 

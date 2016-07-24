@@ -207,7 +207,12 @@ char *bsd_get_proc_fd(pid_t pid, int fdflags, int fdno) {
 }
 
 char *bsd_get_proc_cwd(pid_t pid) {
+#ifdef __FreeBSD__
     return bsd_get_proc_fd(pid, PS_FST_UFLAG_CDIR, 0);
+#else
+    errno = EOPNOTSUPP;
+    return NULL;
+#endif
 }
 
 char *bsd_get_proc_fdno(pid_t pid, int fdno) {

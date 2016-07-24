@@ -217,6 +217,7 @@ class CHROOTSecurity(dict):
         return True
 
     def get_full_path(self, debugger, file, dirfd=AT_FDCWD):
+        dirfd = (dirfd & 0x7FFFFFFF) - (dirfd & 0x80000000)
         if not file.startswith('/'):
             dir = (self._getcwd_pid(debugger.pid) if dirfd == AT_FDCWD else
                    self._getfd_pid(debugger.pid, dirfd))

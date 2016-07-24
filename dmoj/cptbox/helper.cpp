@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <signal.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include <sys/resource.h>
 #include <sys/types.h>
 
@@ -164,9 +165,11 @@ void cptbox_closefrom(int lowfd) {
 #endif
 }
 
-int bsd_get_proc_cwd(pid_t pid, char *buf, int cb) {
+char *bsd_get_proc_fd(pid_t pid, int fdflags, int fdno) {
 #ifdef __FreeBSD__
-    int ret = 0;
+    int err = 0;
+    char *buf = NULL;
+
     unsigned kp_cnt;
     struct procstat *procstat;
     struct kinfo_proc *kp;
@@ -179,22 +182,39 @@ int bsd_get_proc_cwd(pid_t pid, char *buf, int cb) {
         if (kp) {
             head = procstat_getfiles(procstat, kp, 0);
             if (head) {
-                ret = EPERM; // Most likely you have no access
+                err = EPERM; // Most likely you have no access
                 STAILQ_FOREACH(fst, head, next) {
-                    if (fst->fs_uflags & PS_FST_UFLAG_CDIR) {
-                        strlcpy(buf, fst->fs_path, cb);
-                        ret = 0;
+                    if ((fdflags && fst->fs_uflags & fdflags) ||
+                       (!fdflags && fst->fs_fd == fdno)) {
+                        buf = (char*) malloc(strlen(fst->fs_path) + 1);
+                        if (buf)
+                            strcpy(buf, fst->fs_path);
+                        err = buf ? 0 : ENOMEM;
                         break;
                     }
                 }
-            } else ret = errno;
+            } else err = errno;
             procstat_freeprocs(procstat, kp);
-        } else ret = errno;
+        } else err = errno;
         procstat_close(procstat);
-    } else ret = errno;
-    return ret;
+        errno = err;
+    }
+    return buf;
 #else
-    return EOPNOTSUPP;
+    errno = EOPNOTSUPP;
+    return NULL;
 #endif
 }
 
+char *bsd_get_proc_cwd(pid_t pid) {
+#ifdef __FreeBSD__
+    return bsd_get_proc_fd(pid, PS_FST_UFLAG_CDIR, 0);
+#else
+    errno = EOPNOTSUPP;
+    return NULL;
+#endif
+}
+
+char *bsd_get_proc_fdno(pid_t pid, int fdno) {
+    return bsd_get_proc_fd(pid, 0, fdno);
+}

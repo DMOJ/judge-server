@@ -3,7 +3,7 @@ import sys
 import os
 
 from dmoj.cptbox.handlers import ALLOW, STDOUTERR, ACCESS_DENIED
-from dmoj.cptbox._cptbox import bsd_get_proc_cwd
+from dmoj.cptbox._cptbox import bsd_get_proc_cwd, bsd_get_proc_fdno, AT_FDCWD
 from dmoj.cptbox.syscalls import *
 
 
@@ -13,16 +13,20 @@ class CHROOTSecurity(dict):
         self.fs_jail = re.compile('|'.join(filesystem) if filesystem else '^')
         self._writable = list(writable)
         self._io_redirects = io_redirects
+
         if sys.platform.startswith('freebsd'):
             self._getcwd_pid = bsd_get_proc_cwd
+            self._getfd_pid = bsd_get_proc_fdno
         else:
             self._getcwd_pid = lambda pid: os.readlink('/proc/%d/cwd' % pid)
+            self._getfd_pid = lambda pid, fd: os.readlink('/proc/%d/fd/%d' % (pid, fd))
 
         self.update({
             sys_read: ALLOW,
             sys_write: STDOUTERR if writable == (1, 2) and not io_redirects else self.do_write,
             sys_writev: self.do_write,
             sys_open: self.do_open,
+            sys_openat: self.do_faccessat,
             sys_access: self.do_access,
             sys_faccessat: self.do_faccessat,
             # Deny with report
@@ -79,7 +83,6 @@ class CHROOTSecurity(dict):
             sys_getegid: ALLOW,
             sys_getgid: ALLOW,
             sys_lstat: ALLOW,
-            sys_openat: ALLOW,
             sys_getdents: ALLOW,
             sys_lseek: ALLOW,
             sys_getrusage: ALLOW,
@@ -206,21 +209,25 @@ class CHROOTSecurity(dict):
 
         return self._file_access_check(file, debugger)
 
-    def _file_access_check(self, file, debugger):
-        if not file.startswith('/'):
-            file = os.path.join(self._getcwd_pid(debugger.pid), file)
-        file = '/' + os.path.normpath(file).lstrip('/')
+    def _file_access_check(self, file, debugger, dirfd=AT_FDCWD):
+        file = self.get_full_path(debugger, file, dirfd)
         if self.fs_jail.match(file) is None:
             print>> sys.stderr, 'Not allowed to access:', file
             return False
         return True
 
+    def get_full_path(self, debugger, file, dirfd=AT_FDCWD):
+        dirfd = (dirfd & 0x7FFFFFFF) - (dirfd & 0x80000000)
+        if not file.startswith('/'):
+            dir = (self._getcwd_pid(debugger.pid) if dirfd == AT_FDCWD else
+                   self._getfd_pid(debugger.pid, dirfd))
+            file = os.path.join(dir, file)
+        file = '/' + os.path.normpath(file).lstrip('/')
+        return file
+
     def do_faccessat(self, debugger):
         file = debugger.readstr(debugger.uarg1)
-        if self.fs_jail.match(file) is None:
-            print>> sys.stderr, 'Not allowed to access:', file
-            return False
-        return True
+        return self._file_access_check(file, debugger, dirfd=debugger.arg0)
 
     def do_tgkill(self, debugger):
         tgid = debugger.uarg0

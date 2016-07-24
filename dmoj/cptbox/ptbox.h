@@ -142,6 +142,7 @@ public:
 
 #if PTBOX_FREEBSD
     void update_syscall(struct ptrace_lwpinfo *info);
+    void setpid(pid_t pid);
 #else
     void settid(pid_t tid);
     bool is_enter() { return syscall_[tid] != -1; }

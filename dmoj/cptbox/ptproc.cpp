@@ -12,6 +12,8 @@
 #include <unistd.h>
 #include <sys/ptrace.h>
 
+#include <set>
+
 #include "ptbox.h"
 
 pt_process *pt_alloc_process(pt_debugger *debugger) {
@@ -71,12 +73,16 @@ int pt_process::spawn(pt_fork_handler child, void *context) {
 int pt_process::protection_fault(int syscall) {
     dispatch(PTBOX_EVENT_PROTECTION, syscall);
     dispatch(PTBOX_EVENT_EXITING, PTBOX_EXIT_PROTECTION);
-    kill(pid, SIGKILL);
+    killpg(pid, SIGKILL);
 #if PTBOX_FREEBSD
     // FreeBSD SIGKILL doesn't under ptrace.
     // ptrace(PT_KILL) doesn't work when not under signal-stop.
     // Solution? Use both!
     ptrace(PT_KILL, pid, (caddr_t) 1, 0);
+
+    // We must also kill the current process being debugged.
+    if (debugger->tid != pid)
+        ptrace(PT_KILL, debugger->tid, (caddr_t) 1, 0);
 #endif
     return PTBOX_EXIT_PROTECTION;
 }
@@ -89,6 +95,7 @@ int pt_process::monitor() {
     // in the initial wait be on the main thread. This allows it a chance
     // of creating a new process group.
     pid_t pid, pgid = -this->pid;
+    std::set<pid_t> children;
 
 #if PTBOX_FREEBSD
     struct ptrace_lwpinfo lwpi;
@@ -110,13 +117,23 @@ int pt_process::monitor() {
             if (first || pid == pgid)
                 break;
             else {
-                //printf("Thread exit: %d\n", pid);
+                children.erase(pid);
+                //printf("Thread/Process exit: %d\n", pid);
                 continue;
             }
         }
 
 #if PTBOX_FREEBSD
         ptrace(PT_LWPINFO, pid, (caddr_t) &lwpi, sizeof lwpi);
+
+        //if (lwpi.pl_flags & PL_FLAG_FORKED)
+        //    printf("Created process: %d\n", lwpi.pl_child_pid);
+
+        if (lwpi.pl_flags & PL_FLAG_CHILD) {
+            ptrace(PT_FOLLOW_FORK, pid, 0, 1);
+            children.insert(pid);
+            //printf("Started process: %d\n", pid);
+        }
 #endif
 
         if (first) {
@@ -127,9 +144,15 @@ int pt_process::monitor() {
             // No FreeBSD equivalent that I know of
             // * TRACECLONE makes no sense since FreeBSD has no clone(2)
             // * TRACEEXIT... I'm not sure about
+            ptrace(PT_FOLLOW_FORK, pid, 0, 1);
 #else
             // This is right after SIGSTOP is received:
-            ptrace(PTRACE_SETOPTIONS, pid, NULL, PTRACE_O_TRACESYSGOOD | PTRACE_O_TRACEEXIT | PTRACE_O_TRACECLONE);
+            ptrace(PTRACE_SETOPTIONS, pid, NULL, PTRACE_O_TRACESYSGOOD | PTRACE_O_TRACEEXIT |
+#ifdef PTRACE_O_EXITKILL // Kill all sandboxed process automatically when process exits.
+                                                 PTRACE_O_EXITKILL |
+#endif
+                                                 PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK |
+                                                 PTRACE_O_TRACEVFORK);
 #endif
             // We now set the process group to the actual pgid.
             pgid = pid;
@@ -138,12 +161,17 @@ int pt_process::monitor() {
         if (WIFSTOPPED(status)) {
 #if PTBOX_FREEBSD
             if (WSTOPSIG(status) == SIGTRAP && lwpi.pl_flags & (PL_FLAG_SCE | PL_FLAG_SCX)) {
+                debugger->setpid(pid);
                 debugger->update_syscall(&lwpi);
 #else
             if (WSTOPSIG(status) == (0x80 | SIGTRAP)) {
                 debugger->settid(pid);
 #endif
+#if defined(__FreeBSD_version) && __FreeBSD_version >= 1002501
+                int syscall = lwpi.pl_syscall_code;
+#else
                 int syscall = debugger->syscall();
+#endif
 #if PTBOX_FREEBSD
                 in_syscall = lwpi.pl_flags & PL_FLAG_SCE;
 #else
@@ -205,7 +233,7 @@ int pt_process::monitor() {
                 // be self-send, hence perfect for implementing shocker.
                 if (signal == SIGSTOP)
                     signal = 0;
-                //else printf("WSTOPSIG(status): %d\n", signal);
+                //else printf("%d: WSTOPSIG(status): %d\n", pid, signal);
 #else
                 switch (WSTOPSIG(status)) {
                     case SIGTRAP:
@@ -220,13 +248,24 @@ int pt_process::monitor() {
                                 //printf("Created thread: %d\n", tid);
                                 break;
                             }
+                            case PTRACE_EVENT_FORK:
+                            case PTRACE_EVENT_VFORK: {
+                                unsigned long npid;
+                                ptrace(PTRACE_GETEVENTMSG, pid, NULL, &npid);
+                                children.insert(npid);
+                                //printf("Created process: %d\n", npid);
+                                break;
+                            }
                         }
                         break;
                     default:
                         signal = WSTOPSIG(status);
                 }
 #endif
-                if (!first) // *** Don't set _signal to SIGSTOP if this is the /first/ SIGSTOP
+
+                //printf("%d: WSTOPSIG(status): %d\n", pid, signal);
+                // Only main process signals are meaningful.
+                if (!first && pid == pgid) // *** Don't set _signal to SIGSTOP if this is the /first/ SIGSTOP
                     dispatch(PTBOX_EVENT_SIGNAL, WSTOPSIG(status));
             }
         }
@@ -234,13 +273,21 @@ int pt_process::monitor() {
         // work for naught. Like abort(), it catches the signal, prints something (^Z?) and then resends it.
         // Doing this prevents a second SIGSTOP from being dispatched to our event handler above. ***
 #if PTBOX_FREEBSD
-        //if (signal) printf("Forwarding %d...\n", signal);
         ptrace(_trace_syscalls ? PT_SYSCALL : PT_CONTINUE, pid, (caddr_t) 1, first ? 0 : signal);
 #else
         ptrace(_trace_syscalls ? PTRACE_SYSCALL : PTRACE_CONT, pid, NULL, first ? NULL : (void*) signal);
 #endif
         first = false;
     }
+
+    // Children are not permitted to outlive parent, by any meaningful measure.
+    for (std::set<pid_t>::const_iterator it = children.begin(); it != children.end(); ++it) {
+        kill(*it, SIGKILL);
+#if PTBOX_FREEBSD
+        ptrace(PT_KILL, *it, (caddr_t) 1, 0);
+#endif
+    }
+
     dispatch(PTBOX_EVENT_EXITED, exit_reason);
     return WIFEXITED(status) ? WEXITSTATUS(status) : -WTERMSIG(status);
 }

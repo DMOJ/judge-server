@@ -20,6 +20,8 @@ struct child_config {
 
 void cptbox_closefrom(int lowfd);
 int cptbox_child_run(const struct child_config *config);
-int bsd_get_proc_cwd(pid_t pid, char *buf, int cb);
+
+char *bsd_get_proc_cwd(pid_t pid);
+char *bsd_get_proc_fdno(pid_t pid, int fdno);
 
 #endif

@@ -30,11 +30,13 @@ BASE_FILESYSTEM = ['/dev/(?:null|zero|u?random)$',
                    '/etc/(?:localtime)$']
 
 if 'freebsd' in sys.platform:
-    BASE_FILESYSTEM += ['/etc/s?pwd.db$']
+    BASE_FILESYSTEM += [r'/etc/s?pwd\.db$']
 else:
-    BASE_FILESYSTEM += ['/sys/devices/system/cpu/online$']
+    BASE_FILESYSTEM += ['/sys/devices/system/cpu(?:$|/online)']
 
-if not sys.platform.startswith('freebsd'):
+if sys.platform.startswith('freebsd'):
+    BASE_FILESYSTEM += [r'/etc/libmap\.conf$', r'/var/run/ld-elf\.so\.hints$']
+else:
     # Linux and kFreeBSD mounts linux-style procfs.
     BASE_FILESYSTEM += ['/proc/self/maps$', '/proc/self$', '/proc/(?:meminfo|stat|cpuinfo)$']
 
@@ -419,3 +421,44 @@ class CompiledExecutor(BaseExecutor):
 
     def get_executable(self):
         return self._executable + self.get_executable_ext()
+
+
+class ShellExecutor(ScriptExecutor):
+    nproc = -1
+    shell_commands = ['cat', 'grep', 'awk', 'perl']
+
+    def get_shell_commands(self):
+        return self.shell_commands
+
+    def get_allowed_exec(self):
+        return map(find_executable, self.get_shell_commands())
+
+    def get_fs(self):
+        return super(ShellExecutor, self).get_fs() + self.get_allowed_exec()
+
+    def get_allowed_syscalls(self):
+        return super(ShellExecutor, self).get_allowed_syscalls() + [
+            'fork', 'waitpid', 'wait4'
+        ]
+
+    def get_security(self, launch_kwargs=None):
+        from dmoj.cptbox.syscalls import sys_execve, sys_access, sys_eaccess
+
+        sec = super(ShellExecutor, self).get_security(launch_kwargs)
+        allowed = set(self.get_allowed_exec())
+
+        def handle_execve(debugger):
+            path = sec.get_full_path(debugger, debugger.readstr(debugger.uarg0))
+            if path in allowed:
+                return True
+            print>> sys.stderr, 'Not allowed to use command:', path
+            return False
+
+        sec[sys_execve] = handle_execve
+        sec[sys_eaccess] = sec[sys_access]
+        return sec
+
+    def get_env(self):
+        env = super(ShellExecutor, self).get_env()
+        env['PATH'] = os.environ['PATH']
+        return env

@@ -1,7 +1,8 @@
-from .base_executor import ScriptExecutor
+from dmoj.executors.base_executor import ScriptExecutor
+from dmoj.executors.mixins import ScriptDirectoryMixin
 
 
-class Executor(ScriptExecutor):
+class Executor(ScriptDirectoryMixin, ScriptExecutor):
     ext = '.m'
     name = 'OCTAVE'
     command = 'octave'

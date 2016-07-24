@@ -30,11 +30,13 @@ BASE_FILESYSTEM = ['/dev/(?:null|zero|u?random)$',
                    '/etc/(?:localtime)$']
 
 if 'freebsd' in sys.platform:
-    BASE_FILESYSTEM += ['/etc/s?pwd.db$']
+    BASE_FILESYSTEM += [r'/etc/s?pwd\.db$']
 else:
     BASE_FILESYSTEM += ['/sys/devices/system/cpu/online$']
 
-if not sys.platform.startswith('freebsd'):
+if sys.platform.startswith('freebsd'):
+    BASE_FILESYSTEM += [r'/etc/libmap\.conf$', r'/var/run/ld-elf\.so\.hints$']
+else:
     # Linux and kFreeBSD mounts linux-style procfs.
     BASE_FILESYSTEM += ['/proc/self/maps$', '/proc/self$', '/proc/(?:meminfo|stat|cpuinfo)$']
 

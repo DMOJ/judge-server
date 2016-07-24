@@ -45,3 +45,7 @@ runpy.run_path(sys.argv[0], run_name='__main__')\
             return ''
         exception = match[0].group(1)
         return '' if len(exception) > 20 else exception
+
+    @classmethod
+    def get_version_flags(cls, command):
+        return ['-V']

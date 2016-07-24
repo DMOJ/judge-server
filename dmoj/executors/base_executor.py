@@ -423,7 +423,7 @@ class CompiledExecutor(BaseExecutor):
 
 class ShellExecutor(ScriptExecutor):
     nproc = -1
-    shell_commands = []
+    shell_commands = ['cat', 'grep', 'awk', 'perl']
 
     def get_shell_commands(self):
         return self.shell_commands
@@ -431,8 +431,11 @@ class ShellExecutor(ScriptExecutor):
     def get_allowed_exec(self):
         return map(find_executable, self.get_shell_commands())
 
+    def get_fs(self):
+        return super(ShellExecutor, self).get_fs() + self.get_allowed_exec()
+
     def get_security(self, launch_kwargs=None):
-        from dmoj.cptbox.syscalls import sys_execve
+        from dmoj.cptbox.syscalls import sys_execve, sys_access, sys_eaccess
 
         sec = super(ShellExecutor, self).get_security(launch_kwargs)
         allowed = set(self.get_allowed_exec())
@@ -445,6 +448,7 @@ class ShellExecutor(ScriptExecutor):
             return False
 
         sec[sys_execve] = handle_execve
+        sec[sys_eaccess] = sec[sys_access]
         return sec
 
     def get_env(self):

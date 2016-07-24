@@ -23,7 +23,7 @@ class MonoExecutor(CompiledExecutor):
     nproc = -1  # If you use Mono on Windows you are doing it wrong.
     address_grace = 262144
     cptbox_popen_class = MonoSecurePopen
-    fs = ['/proc/(?:self/|xen)', '/dev/shm/', '/proc/stat', 'mono', '/etc/nsswitch.conf$', '/etc/passwd$',
+    fs = ['/proc/(?:self/|xen)', '/dev/shm', '/proc/stat', 'mono', '/etc/nsswitch.conf$', '/etc/passwd$',
           '/etc/mono/', '.*/.mono/', '/sys/', '/proc/uptime$', '.*?/mono.\d+$']
 
     def get_compiled_file(self):

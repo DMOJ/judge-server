@@ -17,18 +17,22 @@ public class SubmissionAgent {
             for (String opt : argv.split(",")) {
                 if (opt.equals("unicode")) unicode = true;
                 if (opt.equals("nobiginteger")) noBigInt = true;
-                if (opt.startsWith("policy:")) policy = opt.split(":")[1];
+
+                // Split on "policy:" so that paths like R:/tmp/security.policy don't get processed incorrectly
+                if (opt.startsWith("policy:")) policy = opt.split("policy:")[1];
             }
 
         if (policy == null) throw new IllegalStateException("must specify policy file");
-        if (!new File(policy).exists()) throw new IllegalStateException("policy file does not exist");
+        if (!new File(policy).exists()) throw new IllegalStateException("policy file does not exist: " + policy);
 
         final Thread selfThread = Thread.currentThread();
 
         if (noBigInt)
             inst.addTransformer(new ClassFileTransformer() {
                 @Override
-                public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined, ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
+                public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined,
+                                        ProtectionDomain protectionDomain, byte[] classfileBuffer)
+                                        throws IllegalClassFormatException {
                     // If the class ever loaded it's because a submission used it
                     if (className.equals("java/math/BigInteger")) {
                         // Python side detects fatal exception by checking last stacktrace when error code is nonzero
@@ -91,8 +95,8 @@ public class SubmissionAgent {
             }
         }));
 
-        // Set security policy here so that we don't need to grant submissions addShutdownHook, setIO and writeFileDescriptor
-        // to all user submissions.
+        // Set security policy here so that we don't need to grant submissions addShutdownHook, setIO and
+        // writeFileDescriptor to all user submissions.
         System.setProperty("java.security.policy", policy);
         System.setSecurityManager(new SecurityManager());
     }

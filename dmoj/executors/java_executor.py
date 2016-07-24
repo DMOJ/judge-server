@@ -5,7 +5,6 @@ import os
 import re
 from shutil import copyfile
 from subprocess import Popen
-from collections import deque
 
 from dmoj.error import CompileError, InternalError
 from .base_executor import CompiledExecutor
@@ -23,7 +22,7 @@ deunicode = lambda x: redeunicode.sub(lambda a: unichr(int(a.group(1), 16)), x)
 JAVA_SANDBOX = os.path.abspath(os.path.join(os.path.dirname(__file__), 'java-sandbox.jar'))
 
 POLICY_PREFIX = '''\
-grant codeBase "file://{agent}" {{
+grant codeBase "file:///{agent}" {{
     permission java.io.FilePermission "state", "write";
 }};
 
@@ -69,7 +68,10 @@ class JavaExecutor(CompiledExecutor):
 
         self._policy_file = self._file('security.policy')
         with open(self._policy_file, 'w') as file:
-            file.write(POLICY_PREFIX.format(agent=self._agent_file) + self.security_policy)
+            # Normalize path separators because the security policy is processed by a StringTokenizer which treats
+            # escapes sequences as... escape sequences.
+            path = self._agent_file.replace('\\', '/') if os.name == 'nt' else self._agent_file
+            file.write(POLICY_PREFIX.format(agent=path) + self.security_policy)
 
     def get_compile_popen_kwargs(self):
         return {'executable': self.get_compiler()}

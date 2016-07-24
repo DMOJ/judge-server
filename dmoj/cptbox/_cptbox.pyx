@@ -7,8 +7,9 @@ from posix.resource cimport rusage
 from posix.types cimport pid_t
 
 
-__all__ = ['Process', 'Debugger', 'bsd_get_proc_cwd', 'MAX_SYSCALL_NUMBER',
-           'DEBUGGER_X86', 'DEBUGGER_X64', 'DEBUGGER_X86_ON_X64', 'DEBUGGER_X32', 'DEBUGGER_ARM']
+__all__ = ['Process', 'Debugger', 'bsd_get_proc_cwd', 'bsd_get_proc_fdno', 'MAX_SYSCALL_NUMBER',
+           'DEBUGGER_X86', 'DEBUGGER_X64', 'DEBUGGER_X86_ON_X64', 'DEBUGGER_X32', 'DEBUGGER_ARM',
+           'AT_FDCWD']
 
 
 cdef extern from 'ptbox.h' nogil:
@@ -107,7 +108,11 @@ cdef extern from 'helper.h' nogil:
     char *_bsd_get_proc_cwd "bsd_get_proc_cwd"(pid_t pid)
     char *_bsd_get_proc_fdno "bsd_get_proc_fdno"(pid_t pid, int fdno)
 
+cdef extern from 'fcntl.h' nogil:
+    cdef int _AT_FDCWD "AT_FDCWD"
+
 MAX_SYSCALL_NUMBER = MAX_SYSCALL
+AT_FDCWD = _AT_FDCWD
 
 cpdef enum:
     DEBUGGER_X86 = 0

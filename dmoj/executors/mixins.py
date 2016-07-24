@@ -1,4 +1,3 @@
-import pty
 import os
 
 
@@ -29,6 +28,8 @@ class EmulateTerminalMixin(object):
             """
             Creates a compiler process with the stderr stream swapped for a master pty opened for read.
             """
+
+            import pty
 
             self._master, self._slave = pty.openpty()
             proc = super(EmulateTerminalMixin, self).get_compile_process()

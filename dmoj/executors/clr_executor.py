@@ -238,3 +238,7 @@ class CLRExecutor(CompiledExecutor):
         return {cls.compiler: [
             os.path.join(os.environ.get('WINDIR', r'C:\Windows'), 'Microsoft.NET', 'Framework',
                          version, cls.get_compiler_basename()) for version in versions]}
+
+    @classmethod
+    def get_version_flags(cls, command):
+        return ['/?']

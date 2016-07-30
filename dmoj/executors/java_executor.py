@@ -138,6 +138,14 @@ class JavaExecutor(CompiledExecutor):
         raise NotImplementedError()
 
     @classmethod
+    def get_versionable_commands(cls):
+        return [('javac', cls.get_compiler())]
+
+    @classmethod
+    def get_version_flags(cls, command):
+        return ['-version']
+
+    @classmethod
     def autoconfig(cls):
         if cls.jvm_regex is None:
             return {}, False, 'Unimplemented'

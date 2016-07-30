@@ -26,5 +26,9 @@ func main() {
     def get_compile_args(self):
         return [self.get_command(), 'build', self._code]
 
+    @classmethod
+    def get_version_flags(cls, command):
+        return ['version']
+
     def get_nproc(self):
         return [-1, 1][os.name == 'nt']

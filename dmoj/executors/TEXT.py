@@ -12,3 +12,7 @@ class Executor(ScriptExecutor):
     @classmethod
     def get_command(cls):
         return cls.runtime_dict.get('cat', '/bin/cat')
+
+    @classmethod
+    def get_version_flags(cls, command):
+        return ['--version']

@@ -18,3 +18,7 @@ void main() {
                 ('write', lambda debugger: debugger.uarg0 <= 4)]
 
     fs = ['/proc/meminfo$', '/proc/sys/vm/overcommit_memory$']
+
+    @classmethod
+    def get_version_flags(cls, command):
+        return ['--version']

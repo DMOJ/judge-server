@@ -17,3 +17,7 @@ q'''
     @classmethod
     def get_command(cls):
         return cls.runtime_dict.get('sed', '/bin/sed')
+
+    @classmethod
+    def get_version_flags(cls, command):
+        return ['--version']

@@ -44,7 +44,7 @@ else:
     BASE_FILESYSTEM += [r'/etc/ld\.so\.(?:nohwcap|preload|cache)$']
 
 
-reversion = re.compile('(\d+(?:\.\d+)+)')
+reversion = re.compile('.*?(\d+(?:\.\d+)+)', re.DOTALL)
 
 class BaseExecutor(ResourceProxy):
     ext = None
@@ -181,7 +181,7 @@ class BaseExecutor(ResourceProxy):
             stdout, stderr = proc.communicate(test_message + '\n')
             res = stdout.strip() == test_message and not stderr
             if output:
-                print ansi_style(['#ansi[Failed](red|bold)', '#ansi[Success](green|bold)'][res])
+                print ansi_style(['#ansi[Failed](red|bold)', '#ansi[Success](green|bold)'][res]), cls.get_version()
             if stderr:
                 if error_callback:
                     error_callback('Got unexpected stderr output:\n' + stderr)
@@ -197,18 +197,23 @@ class BaseExecutor(ResourceProxy):
             return False
 
     @classmethod
+    def get_versionable_commands(cls):
+        for runtime in cls.get_find_first_mapping().keys():
+            yield runtime, cls.runtime_dict[runtime]
+
+    @classmethod
     def get_version(cls):
         vers = []
-        for runtime in cls.get_find_first_mapping().keys():
+        for runtime, path in cls.get_versionable_commands():
             flags = cls.get_version_flags(runtime)
             if not flags:
                 continue  # Clearly executor has no idea
 
             with open(os.devnull, 'w') as null:
                 try:
-                    output = subprocess.check_output([cls.get_command()] + flags, stderr=null)
+                    output = subprocess.check_output([path] + flags, stderr=subprocess.STDOUT)
                 except subprocess.CalledProcessError:
-                    version = None
+                    version = 'error'
                 else:
                     version = cls.parse_version(runtime, output)
             vers.append((runtime, version or 'unknown'))

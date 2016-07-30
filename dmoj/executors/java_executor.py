@@ -187,7 +187,7 @@ class JavacExecutor(JavaExecutor):
         self._code = self._file('%s.java' % class_name.group(1))
         try:
             with open(self._code, 'wb') as fo:
-                fo.write(source_code)
+                fo.write(source_code.encode('utf8'))
         except IOError as e:
             if e.errno in (errno.ENAMETOOLONG, errno.ENOENT):
                 raise CompileError('Why do you need a class name so long? '
@@ -196,7 +196,7 @@ class JavacExecutor(JavaExecutor):
         self._class_name = class_name.group(1)
 
     def get_compile_args(self):
-        return [self.get_compiler(), self._code]
+        return [self.get_compiler(), '-encoding', 'utf8', self._code]
 
     def handle_compile_error(self, output):
         if 'is public, should be declared in a file named' in output:

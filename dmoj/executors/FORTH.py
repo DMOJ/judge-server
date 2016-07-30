@@ -16,3 +16,7 @@ HELLO
 
     def get_cmdline(self):
         return [self.get_command(), self._code, '-e', 'bye']
+
+    @classmethod
+    def get_version_flags(cls, command):
+        return ['--version']

@@ -1,3 +1,5 @@
+import subprocess
+
 from dmoj.executors.base_executor import ScriptExecutor
 import os
 
@@ -33,6 +35,10 @@ puts $input
         # straight into the interpreter. Since version processes are ran without time limit, this is pretty bad since
         # it can hang the startup process. TCL versions without --version can't be reliably detected either, since
         # they also don't have --help.
-        # Instead, we simply return the actual command name, since this may sometimes contain versioning info (e.g.,
-        # if it's called 'tclsh8.6' that's better than just returning 'tcl'.
-        return (os.path.split(cls.get_command())[-1], ()),
+        # Here, we just use subprocess to print the TCL version, and use that.
+        process = subprocess.Popen([cls.get_command()], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+        process.stdin.write('puts $tcl_version\n')
+        process.stdin.close()
+        retcode = process.poll()
+        return ('tclsh', tuple(map(int, process.stdout.read().split('.'))) if not retcode else ()),
+

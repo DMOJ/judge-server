@@ -1,6 +1,5 @@
 import os
 import re
-import subprocess
 from collections import deque
 
 try:

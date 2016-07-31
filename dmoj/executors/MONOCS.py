@@ -20,3 +20,7 @@ class test {
 
     def get_compile_args(self):
         return [self.get_command(), self._code, '-r:System.Numerics.dll', '-out:%s' % self.get_compiled_file()]
+
+    @classmethod
+    def get_versionable_commands(cls):
+        return ('csc', cls.runtime_dict['mono-csc']), ('mono', cls.runtime_dict['mono'])

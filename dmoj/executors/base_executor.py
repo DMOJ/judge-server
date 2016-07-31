@@ -58,9 +58,9 @@ class BaseExecutor(ResourceProxy):
     _command_versions = ()
     runtime_dict = env['runtime']
     name = '(unknown)'
-    inject32 = env.get('inject32', default_inject32)
-    inject64 = env.get('inject64', default_inject64)
-    inject_func = env.get('inject_func', default_inject_func)
+    inject32 = env.inject32 or default_inject32
+    inject64 = env.inject64 or default_inject64
+    inject_func = env.inject_func or default_inject_func
     test_program = ''
     test_name = 'self_test'
     test_time = 10

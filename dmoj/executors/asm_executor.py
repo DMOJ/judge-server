@@ -154,6 +154,10 @@ class NASMExecutor(ASMExecutor):
         return [self.get_as_path(), '-f', self.nasm_format, self._code, '-o', object]
 
     @classmethod
+    def get_version_flags(cls, command):
+        return ['-version'] if command == cls.as_name else super(NASMExecutor, cls).get_version_flags(command)
+
+    @classmethod
     def get_find_first_mapping(cls):
         if cls.platform_prefixes is None:
             return None

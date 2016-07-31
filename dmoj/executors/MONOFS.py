@@ -23,3 +23,7 @@ let main argv =
     @classmethod
     def get_version_flags(cls, command):
         return ['--help'] if command == cls.command else super(Executor, cls).get_version_flags(command)
+
+    @classmethod
+    def get_versionable_commands(cls):
+        return ('fsharpc', cls.runtime_dict['fsharpc']), ('mono', cls.runtime_dict['mono'])

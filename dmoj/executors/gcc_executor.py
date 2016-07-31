@@ -13,16 +13,16 @@ from .base_executor import CompiledExecutor
 from dmoj.judgeenv import env
 from dmoj.result import Result
 
-GCC_ENV = env['runtime'].get('gcc_env', {})
+GCC_ENV = env.runtime.gcc_env or {}
 GCC_COMPILE = os.environ.copy()
 IS_ARM = hasattr(os, 'uname') and os.uname()[4].startswith('arm')
 
 if os.name == 'nt':
     GCC_COMPILE.update((k.encode('mbcs'), v.encode('mbcs')) for k, v in
-                       env['runtime'].get('gcc_compile', GCC_ENV).iteritems())
+                       (env.runtime.gcc_compile or GCC_ENV).iteritems())
     GCC_ENV = dict((k.encode('mbcs'), v.encode('mbcs')) for k, v in GCC_ENV.iteritems())
 else:
-    GCC_COMPILE.update(env['runtime'].get('gcc_compile', {}))
+    GCC_COMPILE.update(env.runtime.gcc_compile or {})
 
 recppexc = re.compile(r"terminate called after throwing an instance of \'([A-Za-z0-9_:]+)\'$", re.M)
 

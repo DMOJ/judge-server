@@ -32,6 +32,10 @@ process.stdin.on 'readable', () ->
         return super(Executor, self).get_fs() + [self.runtime_dict['coffee'], self._code]
 
     @classmethod
+    def get_versionable_commands(cls):
+        return ('coffee', cls.runtime_dict['coffee']), ('node', cls.runtime_dict['node'])
+
+    @classmethod
     def get_find_first_mapping(cls):
         return {
             'node': ['nodejs', 'node'],

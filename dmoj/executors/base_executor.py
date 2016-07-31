@@ -205,8 +205,6 @@ class BaseExecutor(ResourceProxy):
         vers = {}
         for runtime, path in cls.get_versionable_commands().iteritems():
             flags = cls.get_version_flags(runtime)
-            if not flags:
-                continue  # Clearly executor has no idea
 
             try:
                 output = subprocess.check_output([path] + flags, stderr=subprocess.STDOUT)

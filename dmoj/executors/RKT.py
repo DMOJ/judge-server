@@ -33,6 +33,10 @@ class Executor(ScriptDirectoryMixin, CompiledExecutor):
         return super(Executor, cls).initialize(sandbox)
 
     @classmethod
+    def get_versionable_commands(cls):
+        return {'racket': cls.get_command()}
+
+    @classmethod
     def get_find_first_mapping(cls):
         return {
             'racket': ['racket'],

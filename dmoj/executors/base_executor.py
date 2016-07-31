@@ -198,8 +198,7 @@ class BaseExecutor(ResourceProxy):
 
     @classmethod
     def get_versionable_commands(cls):
-        for runtime in cls.get_find_first_mapping().keys():
-            yield runtime, cls.runtime_dict[runtime]
+        return {runtime: cls.runtime_dict[runtime] for runtime in cls.get_find_first_mapping().keys()}
 
     @classmethod
     def get_version(cls):

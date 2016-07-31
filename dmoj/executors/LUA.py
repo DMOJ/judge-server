@@ -7,3 +7,7 @@ class Executor(ScriptExecutor):
     command = 'lua'
     address_grace = 131072
     test_program = "io.write(io.read('*all'))"
+
+    @classmethod
+    def get_version_flags(cls, command):
+        return ['-v']

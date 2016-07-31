@@ -33,7 +33,7 @@ End Module
 
     @classmethod
     def get_version_flags(cls, command):
-        return ['/help'] if command == cls.command else super(Executor, cls).get_version_flags(command)
+        return ['/help'] if command == 'vbnc' else super(Executor, cls).get_version_flags(command)
 
     @classmethod
     def get_find_first_mapping(cls):

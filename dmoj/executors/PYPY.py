@@ -7,6 +7,7 @@ class Executor(PythonExecutor):
     command = 'pypy'
     test_program = "print __import__('sys').stdin.read()"
     name = 'PYPY'
+
     if os.name != 'nt':
         from dmoj.cptbox.handlers import ACCESS_DENIED
         syscalls = [('unlink', ACCESS_DENIED)]

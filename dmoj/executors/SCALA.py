@@ -28,7 +28,7 @@ object self_test {
 
         # Simply run bash -x $(which scala) and copy all arguments after -Xmx and -Xms
         # and add it as a list in the configuration.
-        res[-2:-1] = self.runtime_dict.get('scala_args')
+        res[-2:-1] = self.runtime_dict.scala_args.raw_config
         return res
 
     def get_compile_args(self):

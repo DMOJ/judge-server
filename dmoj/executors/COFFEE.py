@@ -32,14 +32,6 @@ process.stdin.on 'readable', () ->
         return super(Executor, self).get_fs() + [self.runtime_dict['coffee'], self._code]
 
     @classmethod
-    def get_version_flags(cls, command):
-        # This may someday change, hence the lookup
-        return [{
-            'node': '--version',
-            'coffee': '--version',
-        }[command]]
-
-    @classmethod
     def get_find_first_mapping(cls):
         return {
             'node': ['nodejs', 'node'],

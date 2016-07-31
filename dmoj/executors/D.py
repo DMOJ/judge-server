@@ -17,7 +17,3 @@ void main() {
 
     def get_compile_args(self):
         return [self.get_command(), '-O', '-inline', '-release', '-w', self._code, '-of%s' % self.problem]
-
-    @classmethod
-    def get_version_flags(cls, command):
-        return ['--version']

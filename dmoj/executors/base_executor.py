@@ -227,7 +227,7 @@ class BaseExecutor(ResourceProxy):
 
     @classmethod
     def get_version_flags(cls, command):
-        return None
+        return ['--version']
 
     @classmethod
     def find_command_from_list(cls, files):

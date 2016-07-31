@@ -8,7 +8,7 @@ from dmoj.judgeenv import env
 
 class ResourceProxy(object):
     def __init__(self):
-        self._dir = tempfile.mkdtemp(dir=env.get('tempdir'))
+        self._dir = tempfile.mkdtemp(dir=env.tempdir)
 
     def cleanup(self):
         if not hasattr(self, '_dir'):

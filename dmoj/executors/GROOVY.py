@@ -26,7 +26,7 @@ println System.in.newReader().readLine()
     def get_cmdline(self):
         res = super(Executor, self).get_cmdline()
 
-        res[-2:-1] = ['-Dsubmission.file=%s' % self._class_name] + self.runtime_dict.get('groovy_args')
+        res[-2:-1] = ['-Dsubmission.file=%s' % self._class_name] + self.runtime_dict.groovy_args.raw_config
         return res
 
     def get_compile_args(self):

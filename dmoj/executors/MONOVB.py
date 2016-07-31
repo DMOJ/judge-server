@@ -28,6 +28,10 @@ End Module
         return process.communicate()[0]
 
     @classmethod
+    def get_versionable_commands(cls):
+        return ('vbnc', cls.runtime_dict['mono-vbnc']), ('mono', cls.runtime_dict['mono'])
+
+    @classmethod
     def get_version_flags(cls, command):
         return ['/help'] if command == cls.command else super(Executor, cls).get_version_flags(command)
 

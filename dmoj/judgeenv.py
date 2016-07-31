@@ -83,7 +83,7 @@ def load_env(cli=False):
             env['key'] = _args.judge_key
 
         dirs = env.problem_storage_root
-        if isinstance(dirs, list):
+        if isinstance(dirs, ConfigNode):
             _judge_dirs = tuple(unicodify(os.path.normpath(os.path.join(_root, dir))) for dir in dirs)
         else:
             _judge_dirs = os.path.join(_root, dirs)

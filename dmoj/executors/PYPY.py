@@ -13,7 +13,7 @@ class Executor(PythonExecutor):
 
     @classmethod
     def parse_version(cls, command, output):
-        match = reversion.match(output)
-        if match:
-            return match.group(2)  # Prints implemented Python version first
-        return None
+        try:
+            return reversion.findall(output)[1]  # Prints implemented Python version first
+        except:
+            return None

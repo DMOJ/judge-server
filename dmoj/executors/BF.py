@@ -33,4 +33,4 @@ class Executor(CExecutor):
 
     @classmethod
     def get_version(cls):
-        return ('bf', '1.33.7'),
+        return {'bf': '1.33.7'}

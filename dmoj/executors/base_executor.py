@@ -203,7 +203,7 @@ class BaseExecutor(ResourceProxy):
 
     @classmethod
     def get_version(cls):
-        vers = []
+        vers = {}
         for runtime, path in cls.get_versionable_commands():
             flags = cls.get_version_flags(runtime)
             if not flags:
@@ -216,8 +216,8 @@ class BaseExecutor(ResourceProxy):
                     version = 'error'
                 else:
                     version = cls.parse_version(runtime, output)
-            vers.append((runtime, version or 'unknown'))
-        return tuple(vers)
+            vers[runtime] = version or 'unknown'
+        return vers
 
     @classmethod
     def parse_version(cls, command, output):

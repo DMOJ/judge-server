@@ -3,10 +3,10 @@ import os
 import sys
 
 import yaml
-
+from dmoj.config import ConfigNode
 
 _judge_dirs = ()
-env = {}
+env = ConfigNode()
 _root = os.path.dirname(__file__)
 fs_encoding = os.environ.get('DMOJ_ENCODING', sys.getfilesystemencoding())
 
@@ -79,7 +79,7 @@ def load_env(cli=False):
         if getattr(_args, 'judge_key', None):
             env['key'] = _args.judge_key
 
-        dirs = env.get('problem_storage_root', os.path.join('data', 'problems'))
+        dirs = env.get('problem_storage_root')
         if isinstance(dirs, list):
             _judge_dirs = tuple(unicodify(os.path.normpath(os.path.join(_root, dir))) for dir in dirs)
         else:

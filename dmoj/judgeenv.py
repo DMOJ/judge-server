@@ -6,7 +6,9 @@ import yaml
 from dmoj.config import ConfigNode
 
 _judge_dirs = ()
-env = ConfigNode()
+env = ConfigNode(defaults={
+    'selftest_sandboxing': True,
+})
 _root = os.path.dirname(__file__)
 fs_encoding = os.environ.get('DMOJ_ENCODING', sys.getfilesystemencoding())
 

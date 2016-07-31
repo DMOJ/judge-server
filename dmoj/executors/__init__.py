@@ -51,7 +51,7 @@ def load_executors():
             continue
 
         cls = executor.Executor
-        if hasattr(cls, 'initialize') and not cls.initialize(sandbox=env.get('selftest_sandboxing', True)):
+        if hasattr(cls, 'initialize') and not cls.initialize(sandbox=env.selftest_sandboxing):
             continue
 
         if hasattr(executor, 'aliases'):

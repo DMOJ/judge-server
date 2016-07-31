@@ -1,6 +1,4 @@
-import os
 import os.path
-import subprocess
 
 from dmoj.executors.java_executor import JavaExecutor
 

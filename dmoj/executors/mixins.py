@@ -2,6 +2,10 @@ import os
 
 
 class NullStdoutMixin(object):
+    """
+    Some compilers print a lot of debug info to stdout even with successful compiles. This mixin pipes that generally-
+    useless data into os.devnull so that the user never sees it.
+    """
     def __init__(self, *args, **kwargs):
         self._devnull = open(os.devnull, 'w')
         super(NullStdoutMixin, self).__init__(*args, **kwargs)
@@ -74,8 +78,10 @@ class EmulateTerminalMixin(object):
 
 
 class ScriptDirectoryMixin(object):
-    """Certain script executors need access to the entire directory of the script,
-    usually for some searching purposes."""
+    """
+    Certain script executors need access to the entire directory of the script,
+    usually for some searching purposes.
+    """
 
     def get_fs(self):
         return super(ScriptDirectoryMixin, self).get_fs() + [self._dir]

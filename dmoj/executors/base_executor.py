@@ -182,6 +182,8 @@ class BaseExecutor(ResourceProxy):
             stdout, stderr = proc.communicate(test_message + '\n')
             res = stdout.strip() == test_message and not stderr
             if output:
+                # Cache the versions now, so that the handshake packet doesn't take ages to generate
+                cls.get_runtime_versions()
                 print ansi_style(['#ansi[Failed](red|bold)', '#ansi[Success](green|bold)'][res])
             if stderr:
                 if error_callback:

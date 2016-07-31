@@ -35,6 +35,10 @@ object self_test {
         return [self.get_compiler(), self._code]
 
     @classmethod
+    def get_versionable_commands(cls):
+        return [('scalac', cls.get_compiler()), ('java', cls.get_vm())]
+
+    @classmethod
     def autoconfig(cls):
         result = {}
 

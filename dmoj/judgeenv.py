@@ -125,3 +125,8 @@ def get_supported_problems():
             if os.access(os.path.join(dir, problem, 'init.yml'), os.R_OK):
                 problems.append((problem, os.path.getmtime(os.path.join(dir, problem))))
     return problems
+
+
+def get_runtime_versions():
+    from dmoj.executors import executors
+    return {name: clazz.Executor.get_runtime_versions() for name, clazz in executors.iteritems()}

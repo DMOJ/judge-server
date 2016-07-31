@@ -10,8 +10,7 @@ import zlib
 import os
 
 from dmoj import sysinfo
-from dmoj.executors import executors
-from dmoj.judgeenv import get_supported_problems
+from dmoj.judgeenv import get_supported_problems, get_runtime_versions
 
 logger = logging.getLogger('dmoj.judge')
 timer = time.clock if os.name == 'nt' else time.time
@@ -47,7 +46,7 @@ class PacketManager(object):
         self.conn.connect((self.host, self.port))
         self.input = self.conn.makefile('r')
         self.output = self.conn.makefile('w', 0)
-        self.handshake(get_supported_problems(), self.name, self.key)
+        self.handshake(get_supported_problems(), get_runtime_versions(), self.name, self.key)
 
     def _reconnect(self):
         if self.fallback > 65536:
@@ -131,10 +130,10 @@ class PacketManager(object):
         else:
             print 'ERROR: unknown packet %s, payload %s' % (name, packet)
 
-    def handshake(self, problems, id, key):
+    def handshake(self, problems, runtimes, id, key):
         self._send_packet({'name': 'handshake',
                            'problems': problems,
-                           'executors': executors.keys(),
+                           'executors': runtimes,
                            'id': id,
                            'key': key})
         try:

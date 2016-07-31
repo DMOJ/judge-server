@@ -182,7 +182,7 @@ class BaseExecutor(ResourceProxy):
             stdout, stderr = proc.communicate(test_message + '\n')
             res = stdout.strip() == test_message and not stderr
             if output:
-                print ansi_style(['#ansi[Failed](red|bold)', '#ansi[Success](green|bold)'][res]), cls.get_runtime_versions()
+                print ansi_style(['#ansi[Failed](red|bold)', '#ansi[Success](green|bold)'][res])
             if stderr:
                 if error_callback:
                     error_callback('Got unexpected stderr output:\n' + stderr)

@@ -109,6 +109,11 @@ class ASMExecutor(CompiledExecutor):
         return cls.run_self_test(sandbox)
 
     @classmethod
+    def get_versionable_commands(cls):
+        for runtime in cls.get_find_first_mapping().keys():
+            yield runtime, cls.runtime_dict[runtime]
+
+    @classmethod
     def autoconfig(cls):
         if not can_debug(cls.arch):
             return {}, False, 'Unable to natively debug'

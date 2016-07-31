@@ -28,7 +28,12 @@ End Module
         return process.communicate()[0]
 
     @classmethod
+    def get_version_flags(cls, command):
+        return ['/help']
+
+    @classmethod
     def get_find_first_mapping(cls):
         res = super(Executor, cls).get_find_first_mapping()
         res['mono-vbnc'] = ['mono-vbnc', 'vbnc']
         return res
+

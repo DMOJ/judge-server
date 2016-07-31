@@ -26,7 +26,7 @@ update_address_x64(os.path.join(dirname, u'getaddr64.exe'))
 class WBoxPopen(object):
     def __init__(self, argv, time, memory, nproc=1, executable=None, cwd=None, env=None,
                  network_block=False, inject32=None, inject64=None, inject_func=None):
-        username = u'wboxusr_%s' % judge_config['id']
+        username = u'wboxusr_%s' % judge_config.id
         if not ctypes.windll.netapi32.NetUserDel(None, username):
             print>> sys.stderr, "found uncleaned wbox user '%s'; deleted." % username
         self.user = UserManager(username)
@@ -60,7 +60,7 @@ class WBoxPopen(object):
             # (even though this is valid in most other places in Windows)
             # See https://github.com/DMOJ/judge/issues/166 for more details
             executable.replace('/', '\\')
-            self.network_block = NetworkManager('wbox_%s' % judge_config['id'], executable)
+            self.network_block = NetworkManager('wbox_%s' % judge_config.id, executable)
         else:
             self.network_block = None
         self.process.spawn()

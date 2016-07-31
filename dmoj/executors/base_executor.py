@@ -220,6 +220,7 @@ class BaseExecutor(ResourceProxy):
                 else:
                     version = cls.parse_version(runtime, output)
                     if version:
+                        version = tuple(version)
                         break
             vers.append((runtime, version or 'unknown'))
 
@@ -231,7 +232,7 @@ class BaseExecutor(ResourceProxy):
     def parse_version(cls, command, output):
         match = reversion.match(output)
         if match:
-            return match.group(1)
+            return map(int, match.group(1).split('.'))
         return None
 
     @classmethod

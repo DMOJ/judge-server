@@ -98,5 +98,5 @@ class GCCExecutor(CompiledExecutor):
     def initialize(cls, sandbox=True):
         res = super(CompiledExecutor, cls).initialize(sandbox=sandbox)
         if res:
-            cls.has_color = tuple(map(int, cls.get_version()[0][1].split('.'))[:2]) > (4, 9)
+            cls.has_color = tuple(map(int, cls.get_runtime_versions()[0][1].split('.'))[:2]) > (4, 9)
         return res

@@ -32,5 +32,5 @@ class Executor(CExecutor):
         super(Executor, self).__init__(problem_id, code, **kwargs)
 
     @classmethod
-    def get_version(cls):
+    def get_runtime_versions(cls):
         return ('bf', '1.33.7'),

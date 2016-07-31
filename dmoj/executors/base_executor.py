@@ -182,7 +182,7 @@ class BaseExecutor(ResourceProxy):
             stdout, stderr = proc.communicate(test_message + '\n')
             res = stdout.strip() == test_message and not stderr
             if output:
-                print ansi_style(['#ansi[Failed](red|bold)', '#ansi[Success](green|bold)'][res]), cls.get_version()
+                print ansi_style(['#ansi[Failed](red|bold)', '#ansi[Success](green|bold)'][res]), cls.get_runtime_versions()
             if stderr:
                 if error_callback:
                     error_callback('Got unexpected stderr output:\n' + stderr)
@@ -203,7 +203,7 @@ class BaseExecutor(ResourceProxy):
             yield runtime, cls.runtime_dict[runtime]
 
     @classmethod
-    def get_version(cls):
+    def get_runtime_versions(cls):
         if cls._command_versions:
             return cls._command_versions
 

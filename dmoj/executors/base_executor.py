@@ -55,7 +55,7 @@ class BaseExecutor(ResourceProxy):
     syscalls = []
     command = None
     command_paths = []
-    command_versions = ()
+    _command_versions = ()
     runtime_dict = env['runtime']
     name = '(unknown)'
     inject32 = env.get('inject32', default_inject32)
@@ -204,8 +204,8 @@ class BaseExecutor(ResourceProxy):
 
     @classmethod
     def get_version(cls):
-        if cls.command_versions:
-            return cls.command_versions
+        if cls._command_versions:
+            return cls._command_versions
 
         vers = []
         for runtime, path in cls.get_versionable_commands():
@@ -223,9 +223,9 @@ class BaseExecutor(ResourceProxy):
                         break
             vers.append((runtime, version or 'unknown'))
 
-        cls.command_versions = tuple(vers)
+        cls._command_versions = tuple(vers)
 
-        return cls.command_versions
+        return cls._command_versions
 
     @classmethod
     def parse_version(cls, command, output):

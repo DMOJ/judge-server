@@ -198,12 +198,13 @@ class BaseExecutor(ResourceProxy):
 
     @classmethod
     def get_versionable_commands(cls):
-        return {runtime: cls.runtime_dict[runtime] for runtime in cls.get_find_first_mapping().keys()}
+        for runtime in cls.get_find_first_mapping().keys():
+            return runtime, cls.runtime_dict[runtime]
 
     @classmethod
     def get_version(cls):
-        vers = {}
-        for runtime, path in cls.get_versionable_commands().iteritems():
+        vers = []
+        for runtime, path in cls.get_versionable_commands():
             flags = cls.get_version_flags(runtime)
 
             try:
@@ -212,8 +213,8 @@ class BaseExecutor(ResourceProxy):
                 version = 'error'
             else:
                 version = cls.parse_version(runtime, output)
-            vers[runtime] = version or 'unknown'
-        return vers
+            vers.append((runtime, version or 'unknown'))
+        return tuple(vers)
 
     @classmethod
     def parse_version(cls, command, output):

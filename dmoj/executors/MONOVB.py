@@ -29,7 +29,7 @@ End Module
 
     @classmethod
     def get_version_flags(cls, command):
-        return ['/help']
+        return ['/help'] if command == cls.command else super(Executor, cls).get_version_flags(command)
 
     @classmethod
     def get_find_first_mapping(cls):

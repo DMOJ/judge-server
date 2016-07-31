@@ -1,11 +1,10 @@
 import os
-from functools import partial
 
 from dmoj.error import CompileError
 from dmoj.executors import executors
 from dmoj.graders.base import BaseGrader
 from dmoj.result import Result, CheckerResult
-from dmoj.utils.communicate import safe_communicate, OutputLimitExceeded
+from dmoj.utils.communicate import OutputLimitExceeded
 
 try:
     from dmoj.utils.nixutils import strsignal

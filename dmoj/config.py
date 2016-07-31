@@ -72,7 +72,8 @@ class ConfigNode(object):
             raise InvalidInitException('config node is not a dict')
 
         for key, value in self.raw_config.iteritems():
-            yield key, ConfigNode(value, self) if isinstance(value, list) or isinstance(value, dict) else value
+            yield key, ConfigNode(value, self, dynamic=self.dynamic) \
+                if isinstance(value, list) or isinstance(value, dict) else value
 
     def __getattr__(self, item):
         return self[item]
@@ -104,7 +105,7 @@ class ConfigNode(object):
             cfg = self.raw_config[item]
 
             if isinstance(cfg, list) or isinstance(cfg, dict):
-                cfg = ConfigNode(cfg, self)
+                cfg = ConfigNode(cfg, self, dynamic=self.dynamic)
         except (KeyError, IndexError, TypeError):
             cfg = self.parent[item] if self.parent else None
         return cfg
@@ -112,7 +113,7 @@ class ConfigNode(object):
     def __iter__(self):
         for cfg in self.raw_config:
             if isinstance(cfg, list) or isinstance(cfg, dict):
-                cfg = ConfigNode(cfg, self)
+                cfg = ConfigNode(cfg, self, dynamic=self.dynamic)
             yield cfg
 
     def __str__(self):

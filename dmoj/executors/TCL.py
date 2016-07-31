@@ -26,3 +26,13 @@ class Executor(ScriptExecutor):
 gets stdin input
 puts $input
 '''
+
+    @classmethod
+    def get_runtime_versions(cls):
+        # TCL is dangerous to fetch versions for, since some TCL versions ignore the --version flag and instead go
+        # straight into the interpreter. Since version processes are ran without time limit, this is pretty bad since
+        # it can hang the startup process. TCL versions without --version can't be reliably detected either, since
+        # they also don't have --help.
+        # Instead, we simply return the actual command name, since this may sometimes contain versioning info (e.g.,
+        # if it's called 'tclsh8.6' that's better than just returning 'tcl'.
+        return (os.path.split(cls.get_command())[-1], ()),

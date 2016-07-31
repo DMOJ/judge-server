@@ -10,3 +10,7 @@ class Executor(ScriptExecutor):
 
     def get_cmdline(self):
         return [self.get_command(), '-f', self._code]
+
+    @classmethod
+    def get_version_flags(cls, command):
+        return ['-Wversion', '--version']

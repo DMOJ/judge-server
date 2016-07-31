@@ -22,4 +22,4 @@ let main argv =
 
     @classmethod
     def get_version_flags(cls, command):
-        return ['--help']  # --version is apparently deprecated
+        return ['--version', '--help']  # --version is apparently deprecated

@@ -207,12 +207,15 @@ class BaseExecutor(ResourceProxy):
         for runtime, path in cls.get_versionable_commands():
             flags = cls.get_version_flags(runtime)
 
-            try:
-                output = subprocess.check_output([path] + flags, stderr=subprocess.STDOUT)
-            except subprocess.CalledProcessError:
-                version = 'error'
-            else:
-                version = cls.parse_version(runtime, output)
+            for flag in flags:
+                try:
+                    output = subprocess.check_output([path, flag], stderr=subprocess.STDOUT)
+                except subprocess.CalledProcessError:
+                    version = 'error'
+                else:
+                    version = cls.parse_version(runtime, output)
+                    if version:
+                        break
             vers.append((runtime, version or 'unknown'))
         return tuple(vers)
 

@@ -2,6 +2,7 @@ from dmoj.executors.base_executor import CompiledExecutor
 from dmoj.executors.mixins import ScriptDirectoryMixin
 import os
 
+
 class Executor(ScriptDirectoryMixin, CompiledExecutor):
     ext = '.rkt'
     name = 'RKT'

@@ -1,5 +1,6 @@
 from .base_executor import CompiledExecutor
 
+
 class Executor(CompiledExecutor):
     ext = '.nim'
     name = 'NIM'

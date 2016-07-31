@@ -169,16 +169,15 @@ class PlatformX86Mixin(object):
     ld_name = 'ld_x86'
     platform_prefixes = ['i586-linux-gnu']
 
-    qemu_path = env['runtime'].get('qemu_x86', None)
-    dynamic_linker = env['runtime'].get('ld.so_x86', '/lib/ld-linux.so.2')
+    qemu_path = env.runtime.qemu_x86
+    dynamic_linker = env.runtime['ld.so_x86'] or '/lib/ld-linux.so.2'
 
-    if env['runtime'].get('crt_x86_in_lib32', False):
-        crt_pre = env['runtime'].get('crt_pre_x86', ['/usr/lib32/crt1.o', '/usr/lib32/crti.o'])
-        crt_post = env['runtime'].get('crt_post_x86', ['/usr/lib32/crtn.o'])
+    if env.runtime.crt_x86_in_lib32:
+        crt_pre = env.runtime.get.crt_pre_x86 or ['/usr/lib32/crt1.o', '/usr/lib32/crti.o']
+        crt_post = env.runtime.get.crt_post_x86 or ['/usr/lib32/crtn.o']
     else:
-        crt_pre = env['runtime'].get('crt_pre_x86',
-                                     ['/usr/lib/i386-linux-gnu/crt1.o', '/usr/lib/i386-linux-gnu/crti.o'])
-        crt_post = env['runtime'].get('crt_post_x86', ['/usr/lib/i386-linux-gnu/crtn.o'])
+        crt_pre = env.runtime.crt_pre_x86 or ['/usr/lib/i386-linux-gnu/crt1.o', '/usr/lib/i386-linux-gnu/crti.o']
+        crt_post = env.runtime.crt_post_x86 or ['/usr/lib/i386-linux-gnu/crtn.o']
 
 
 class PlatformX64Mixin(object):
@@ -186,8 +185,7 @@ class PlatformX64Mixin(object):
     ld_name = 'ld_x64'
     platform_prefixes = ['x86_64-linux-gnu']
 
-    qemu_path = env['runtime'].get('qemu_x64', None)
-    dynamic_linker = env['runtime'].get('ld.so_x64', '/lib64/ld-linux-x86-64.so.2')
-    crt_pre = env['runtime'].get('crt_pre_x64',
-                                 ['/usr/lib/x86_64-linux-gnu/crt1.o', '/usr/lib/x86_64-linux-gnu/crti.o'])
-    crt_post = env['runtime'].get('crt_post_x64', ['/usr/lib/x86_64-linux-gnu/crtn.o'])
+    qemu_path = env.runtime.qemu_x64
+    dynamic_linker = env.runtime['ld.so_x64'] or '/lib64/ld-linux-x86-64.so.2'
+    crt_pre = env.runtime.crt_pre_x64 or ['/usr/lib/x86_64-linux-gnu/crt1.o', '/usr/lib/x86_64-linux-gnu/crti.o']
+    crt_post = env.runtime.crt_post_x64 or ['/usr/lib/x86_64-linux-gnu/crtn.o']

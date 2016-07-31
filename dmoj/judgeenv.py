@@ -8,6 +8,7 @@ from dmoj.config import ConfigNode
 _judge_dirs = ()
 env = ConfigNode(defaults={
     'selftest_sandboxing': True,
+    'runtime': {},
 })
 _root = os.path.dirname(__file__)
 fs_encoding = os.environ.get('DMOJ_ENCODING', sys.getfilesystemencoding())

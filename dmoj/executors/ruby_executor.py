@@ -16,5 +16,10 @@ class RubyExecutor(ScriptExecutor):
         return cls.runtime_dict.get(cls.name.lower())
 
     @classmethod
+    def get_versionable_commands(cls):
+        name = cls.name.lower()
+        return (name, cls.runtime_dict[name]),
+
+    @classmethod
     def get_find_first_mapping(cls):
         return {cls.name.lower(): cls.command_paths}

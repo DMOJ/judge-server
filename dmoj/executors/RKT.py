@@ -34,7 +34,7 @@ class Executor(ScriptDirectoryMixin, CompiledExecutor):
 
     @classmethod
     def get_versionable_commands(cls):
-        return {'racket': cls.get_command()}
+        return [('racket', cls.get_command())]
 
     @classmethod
     def get_find_first_mapping(cls):

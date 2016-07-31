@@ -216,13 +216,13 @@ class BaseExecutor(ResourceProxy):
                 try:
                     output = subprocess.check_output([path, flag], stderr=subprocess.STDOUT)
                 except subprocess.CalledProcessError:
-                    version = 'error'
+                    pass
                 else:
                     version = cls.parse_version(runtime, output)
                     if version:
                         version = tuple(version)
                         break
-            vers.append((runtime, version or 'unknown'))
+            vers.append((runtime, version or ()))
 
         cls._command_versions = tuple(vers)
 

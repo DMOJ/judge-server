@@ -53,20 +53,22 @@ class ConfigNode(object):
         self.parent = parent
 
     def update(self, dct):
-        if isinstance(self.raw_config, dict):
+        if hasattr(self.raw_config, 'update'):
             self.raw_config.update(dct)
         else:
-            raise AssertionError('config node is not a dict')
+            raise InvalidInitException('config node is not a dict')
 
     def keys(self):
-        return self.raw_config.keys()
+        if hasattr(self.raw_config, 'keys'):
+            return self.raw_config.keys()
+        raise InvalidInitException('config node is not a dict')
 
     def get(self, key, default=None):
         return self[key] or default
 
     def iteritems(self):
-        if not isinstance(self.raw_config, dict):
-            raise AssertionError('config node is not a dict')
+        if not hasattr(self.raw_config, 'iteritems'):
+            raise InvalidInitException('config node is not a dict')
 
         for key, value in self.raw_config.iteritems():
             yield key, ConfigNode(value, self) if isinstance(value, list) or isinstance(value, dict) else value

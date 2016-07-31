@@ -15,6 +15,6 @@ class Executor(PythonExecutor):
     @classmethod
     def parse_version(cls, command, output):
         try:
-            return map(int, reversion.findall(output)[1])  # Prints implemented Python version first
+            return map(int, reversion.findall(output)[1].split('.'))  # Prints implemented Python version first
         except:
             return None

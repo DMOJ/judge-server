@@ -209,13 +209,12 @@ class BaseExecutor(ResourceProxy):
             if not flags:
                 continue  # Clearly executor has no idea
 
-            with open(os.devnull, 'w') as null:
-                try:
-                    output = subprocess.check_output([path] + flags, stderr=subprocess.STDOUT)
-                except subprocess.CalledProcessError:
-                    version = 'error'
-                else:
-                    version = cls.parse_version(runtime, output)
+            try:
+                output = subprocess.check_output([path] + flags, stderr=subprocess.STDOUT)
+            except subprocess.CalledProcessError:
+                version = 'error'
+            else:
+                version = cls.parse_version(runtime, output)
             vers[runtime] = version or 'unknown'
         return vers
 

@@ -21,3 +21,7 @@ end.
     def get_compile_output(self, process):
         output = process.communicate()[1]
         return output if 'Fatal:' in output or 'Warning:' in output or 'Note:' in output else ''
+
+    @classmethod
+    def get_version_flags(cls, command):
+        return ['-help']

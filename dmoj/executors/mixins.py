@@ -6,6 +6,7 @@ class NullStdoutMixin(object):
     Some compilers print a lot of debug info to stdout even with successful compiles. This mixin pipes that generally-
     useless data into os.devnull so that the user never sees it.
     """
+
     def __init__(self, *args, **kwargs):
         self._devnull = open(os.devnull, 'w')
         super(NullStdoutMixin, self).__init__(*args, **kwargs)
@@ -27,6 +28,7 @@ class EmulateTerminalMixin(object):
     they are connected to a terminal. Some are more persistent than others in enforcing this, so this mixin aims
     to provide a convincing-enough lie to the runtime so that it starts singing in color.
     """
+
     if os.name != 'nt':
         def get_compile_process(self):
             """

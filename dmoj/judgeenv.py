@@ -81,7 +81,7 @@ def load_env(cli=False):
         if getattr(_args, 'judge_key', None):
             env['key'] = _args.judge_key
 
-        dirs = env.get('problem_storage_root')
+        dirs = env.problem_storage_root
         if isinstance(dirs, list):
             _judge_dirs = tuple(unicodify(os.path.normpath(os.path.join(_root, dir))) for dir in dirs)
         else:

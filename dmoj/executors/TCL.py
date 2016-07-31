@@ -1,5 +1,8 @@
 from dmoj.executors.base_executor import ScriptExecutor
-from dmoj.cptbox.handlers import ACCESS_DENIED
+import os
+
+if os.name != 'nt':
+    from dmoj.cptbox.handlers import ACCESS_DENIED
 
 
 def do_write(debugger):

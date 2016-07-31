@@ -9,7 +9,7 @@ _judge_dirs = ()
 env = ConfigNode(defaults={
     'selftest_sandboxing': True,
     'runtime': {},
-})
+}, dynamic=False)
 _root = os.path.dirname(__file__)
 fs_encoding = os.environ.get('DMOJ_ENCODING', sys.getfilesystemencoding())
 

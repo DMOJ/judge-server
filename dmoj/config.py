@@ -44,7 +44,8 @@ class ConfigNode(object):
     node.test_cases[0].batched[1].output_prefix_length == 0
     """
 
-    def __init__(self, raw_config=None, parent=None, defaults=None):
+    def __init__(self, raw_config=None, parent=None, defaults=None, dynamic=True):
+        self.dynamic = dynamic
         if defaults:
             self.raw_config = defaults
             self.raw_config.update(raw_config or {})
@@ -78,27 +79,28 @@ class ConfigNode(object):
 
     def __getitem__(self, item):
         try:
-            def run_dynamic_key(dynamic_key, run_func):
-                # Wrap in a ConfigNode so dynamic keys can benefit from the nice features of ConfigNode
-                local = {'node': ConfigNode(self.raw_config.get(item, {}), self)}
-                try:
-                    cfg = run_func(self.raw_config[dynamic_key], local)
-                except Exception as e:
-                    import traceback
+            if self.dynamic:
+                def run_dynamic_key(dynamic_key, run_func):
+                    # Wrap in a ConfigNode so dynamic keys can benefit from the nice features of ConfigNode
+                    local = {'node': ConfigNode(self.raw_config.get(item, {}), self)}
+                    try:
+                        cfg = run_func(self.raw_config[dynamic_key], local)
+                    except Exception as e:
+                        import traceback
 
-                    traceback.print_exc()
-                    raise InvalidInitException('exception executing dynamic key ' + str(dynamic_key) + ': ' + e.message)
-                del self.raw_config[dynamic_key]
-                self.raw_config[item] = cfg
+                        traceback.print_exc()
+                        raise InvalidInitException('exception executing dynamic key ' + str(dynamic_key) + ': ' + e.message)
+                    del self.raw_config[dynamic_key]
+                    self.raw_config[item] = cfg
 
-            if item + '++' in self.raw_config:
-                def full(code, local):
-                    exec code in local
-                    return local['node']
+                if item + '++' in self.raw_config:
+                    def full(code, local):
+                        exec code in local
+                        return local['node']
 
-                run_dynamic_key(item + '++', full)
-            elif item + '+' in self.raw_config:
-                run_dynamic_key(item + '+', lambda code, local: eval(code, local))
+                    run_dynamic_key(item + '++', full)
+                elif item + '+' in self.raw_config:
+                    run_dynamic_key(item + '+', lambda code, local: eval(code, local))
             cfg = self.raw_config[item]
 
             if isinstance(cfg, list) or isinstance(cfg, dict):

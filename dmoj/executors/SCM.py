@@ -13,5 +13,9 @@ class Executor(CompiledExecutor):
         return [self.get_command(), self._code]
 
     @classmethod
+    def get_versionable_commands(cls):
+        return ('csc', cls.get_command()),
+
+    @classmethod
     def get_version_flags(cls, command):
         return ['-version']

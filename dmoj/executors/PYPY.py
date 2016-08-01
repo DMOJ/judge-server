@@ -22,10 +22,6 @@ class Executor(PythonExecutor):
 
     @classmethod
     def get_runtime_versions(cls):
-        key = cls.get_executor_name()
-        if key in version_cache:
-            return version_cache[key]
         # A little hack to report implemented Python version too
-        version_cache[key] = tuple(list(super(Executor, cls).get_runtime_versions()) +
-                                      [('implementing python', cls._pypy_versions[0])])
-        return version_cache[key]
+        return tuple(list(super(Executor, cls).get_runtime_versions()) +
+                     [('implementing python', cls._pypy_versions[0])])

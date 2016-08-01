@@ -10,3 +10,7 @@ class Executor(CompiledExecutor):
 
     def get_compile_args(self):
         return [self.get_command(), self._code, '-o', self.problem]
+
+    @classmethod
+    def get_version_flags(cls, command):
+        return ['-version']

@@ -31,3 +31,7 @@ fun main(args: Array<String>) {
 
     def get_compile_args(self):
         return [self.get_compiler(), '-include-runtime', '-d', self._jar_name, self._code]
+
+    @classmethod
+    def get_versionable_commands(cls):
+        return [('kotlinc', cls.get_compiler()), ('java', cls.get_vm())]

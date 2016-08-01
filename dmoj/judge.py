@@ -85,7 +85,7 @@ class Judge(object):
         self.packet_manager.supported_problems_packet(get_supported_problems())
 
     def begin_grading(self, id, problem_id, language, source_code, time_limit, memory_limit, short_circuit,
-                      blocking=False):
+                      pretests_only, blocking=False):
         try:
             self.current_submission_thread.join()
         except AttributeError:
@@ -93,7 +93,8 @@ class Judge(object):
         self.current_submission = id
         self.current_submission_thread = threading.Thread(target=self._begin_grading,
                                                           args=(problem_id, language, source_code,
-                                                                time_limit, memory_limit, short_circuit))
+                                                                time_limit, memory_limit, short_circuit,
+                                                                pretests_only))
         self.current_submission_thread.daemon = True
         self.current_submission_thread.start()
         if blocking:
@@ -110,13 +111,13 @@ class Judge(object):
             self.current_submission_thread.join()
             self.current_submission_thread = None
 
-    def _begin_grading(self, problem_id, language, source, time_limit, memory_limit, short_circuit):
+    def _begin_grading(self, problem_id, language, source, time_limit, memory_limit, short_circuit, pretests_only):
         submission_id = self.current_submission
         print ansi_style('Start grading #ansi[%s](yellow)/#ansi[%s](green|bold) in %s...'
                          % (problem_id, submission_id, language))
 
         try:
-            problem = Problem(problem_id, time_limit, memory_limit)
+            problem = Problem(problem_id, time_limit, memory_limit, load_pretests_only=pretests_only)
         except Exception:
             return self.internal_error()
 

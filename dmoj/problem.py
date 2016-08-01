@@ -15,7 +15,7 @@ from dmoj.utils.module import load_module_from_file
 
 
 class Problem(object):
-    def __init__(self, problem_id, time_limit, memory_limit):
+    def __init__(self, problem_id, time_limit, memory_limit, load_pretests_only=False):
         self.id = problem_id
         self.time_limit = time_limit
         self.memory_limit = memory_limit
@@ -40,7 +40,12 @@ class Problem(object):
             raise InvalidInitException(str(e))
 
         self.problem_data.archive = self._resolve_archive_files()
-        self.cases = self._resolve_testcases(self.config['test_cases'])
+
+        if load_pretests_only and 'pretest_test_cases' in self.config:
+            used_cases = 'pretest_test_cases'
+        else:
+            used_cases = 'test_cases'
+        self.cases = self._resolve_testcases(self.config[used_cases])
 
     def load_checker(self, name):
         if name in self._checkers:

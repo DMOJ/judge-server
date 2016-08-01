@@ -120,7 +120,8 @@ class PacketManager(object):
                 packet['source'],
                 float(packet['time-limit']),
                 int(packet['memory-limit']),
-                packet['short-circuit']
+                packet['short-circuit'],
+                packet['pretests-only']
             )
             self._batch = 0
             logger.info('Accept submission: %d: executor: %s, code: %s',

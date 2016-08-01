@@ -1,5 +1,5 @@
 import os
-from dmoj.executors.base_executor import reversion
+from dmoj.executors.base_executor import reversion, version_cache
 from dmoj.executors.python_executor import PythonExecutor
 
 
@@ -22,9 +22,10 @@ class Executor(PythonExecutor):
 
     @classmethod
     def get_runtime_versions(cls):
-        if cls._command_versions:
-            return cls._command_versions
+        key = cls.get_executor_name()
+        if key in version_cache:
+            return version_cache[key]
         # A little hack to report implemented Python version too
-        cls._command_versions = tuple(list(super(Executor, cls).get_runtime_versions()) +
+        version_cache[key] = tuple(list(super(Executor, cls).get_runtime_versions()) +
                                       [('implementing python', cls._pypy_versions[0])])
-        return cls._command_versions
+        return version_cache[key]

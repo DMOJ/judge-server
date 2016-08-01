@@ -45,6 +45,7 @@ else:
 
 
 reversion = re.compile('.*?(\d+(?:\.\d+)+)', re.DOTALL)
+version_cache = {}
 
 class BaseExecutor(ResourceProxy):
     ext = None
@@ -55,7 +56,6 @@ class BaseExecutor(ResourceProxy):
     syscalls = []
     command = None
     command_paths = []
-    _command_versions = ()
     runtime_dict = env['runtime']
     name = '(unknown)'
     inject32 = env.inject32 or default_inject32
@@ -205,8 +205,9 @@ class BaseExecutor(ResourceProxy):
 
     @classmethod
     def get_runtime_versions(cls):
-        if cls._command_versions:
-            return cls._command_versions
+        key = cls.get_executor_name()
+        if key in version_cache:
+            return version_cache[key]
 
         vers = []
         for runtime, path in cls.get_versionable_commands():
@@ -225,9 +226,8 @@ class BaseExecutor(ResourceProxy):
                         break
             vers.append((runtime, version or ()))
 
-        cls._command_versions = tuple(vers)
-
-        return cls._command_versions
+        version_cache[key] = tuple(vers)
+        return version_cache[key]
 
     @classmethod
     def parse_version(cls, command, output):

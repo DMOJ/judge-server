@@ -110,6 +110,9 @@ class ConfigNode(object):
             cfg = self.parent[item] if self.parent else None
         return cfg
 
+    def __setitem__(self, item, value):
+        self.raw_config[item] = value
+
     def __iter__(self):
         for cfg in self.raw_config:
             if isinstance(cfg, list) or isinstance(cfg, dict):

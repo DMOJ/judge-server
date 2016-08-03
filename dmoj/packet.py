@@ -185,10 +185,11 @@ class PacketManager(object):
                            'submission-id': self.judge.current_submission,
                            'message': message})
 
-    def begin_grading_packet(self):
+    def begin_grading_packet(self, is_pretested):
         logger.info('Begin grading: %d', self.judge.current_submission)
         self._send_packet({'name': 'grading-begin',
-                           'submission-id': self.judge.current_submission})
+                           'submission-id': self.judge.current_submission,
+                           'pretested': is_pretested})
 
     def grading_end_packet(self):
         logger.info('End grading: %d', self.judge.current_submission)

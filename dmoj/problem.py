@@ -41,11 +41,8 @@ class Problem(object):
 
         self.problem_data.archive = self._resolve_archive_files()
 
-        if load_pretests_only and 'pretest_test_cases' in self.config:
-            used_cases = 'pretest_test_cases'
-        else:
-            used_cases = 'test_cases'
-        self.cases = self._resolve_testcases(self.config[used_cases])
+        self.is_pretested = load_pretests_only and 'pretest_test_cases' in self.config
+        self.cases = self._resolve_testcases(self.config['pretest_test_cases' if self.is_pretested else 'test_cases'])
 
     def load_checker(self, name):
         if name in self._checkers:

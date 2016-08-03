@@ -36,7 +36,7 @@ class LocalPacketManager(object):
     def internal_error_packet(self, message):
         pass
 
-    def begin_grading_packet(self):
+    def begin_grading_packet(self, is_pretested):
         pass
 
     def grading_end_packet(self):

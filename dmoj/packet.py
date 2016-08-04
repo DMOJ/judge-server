@@ -35,10 +35,7 @@ class PacketManager(object):
         # Certainly hope it won't stack overflow, since it will take days if not years.
         self.fallback = 4
 
-        try:
-            self._connect()
-        except JudgeAuthenticationFailed:
-            self._reconnect()
+        self._do_reconnect()
 
     def _connect(self):
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -57,9 +54,15 @@ class PacketManager(object):
         self.conn.close()
         time.sleep(self.fallback)
         self.fallback *= 1.5
+        self._do_reconnect()
+
+    def _do_reconnect(self):
         try:
             self._connect()
         except JudgeAuthenticationFailed:
+            self._reconnect()
+        except socket.error:
+            traceback.print_exc()
             self._reconnect()
 
     def __del__(self):

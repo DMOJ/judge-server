@@ -9,15 +9,15 @@ from dmoj import judgeenv
 from dmoj.utils.ansi import ansi_style
 
 TEST_ON_TRAVIS = ['PY2', 'TEXT']
+OVERRIDES = {
+    'PY2': {'python': '/usr/bin/python'},
+}
 
 
 def main():
     result = {}
 
     judgeenv.env['runtime'] = {}
-    judgeenv.env['extra_fs'] = {
-        'PY2': [r'/home/travis/virtualenv/python2\.7'],
-    }
 
     failed = False
 
@@ -36,7 +36,11 @@ def main():
             continue
 
         try:
-            data = executor.Executor.autoconfig()
+            if name in OVERRIDES:
+                print ansi_style('#ansi[Manual config:](yellow)'),
+                data = executor.Executor.autoconfig_run_test(OVERRIDES[name])
+            else:
+                data = executor.Executor.autoconfig()
             config = data[0]
             success = data[1]
             feedback = data[2]

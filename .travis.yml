@@ -11,6 +11,7 @@ addons:
     - ghc
     - gnat
     - php5-cli
+    - oracle-java8-installer
 install:
   - pip install coveralls
   - pip install Cython --install-option="--no-cython-compile"

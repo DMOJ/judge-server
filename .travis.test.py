@@ -23,6 +23,14 @@ def main():
 
     failed = False
 
+    jvms = [item for item in os.listdir('/usr/lib/jvm') if os.path.isdir(os.path.join('/usr/lib/jvm/', item))]
+    print 'Available JVMs:'
+    for jvm in jvms:
+        print '  -', jvm
+    print
+
+    print 'Testing executors...'
+
     for name in TEST_ON_TRAVIS:
         executor = import_module('dmoj.executors.' + name)
 

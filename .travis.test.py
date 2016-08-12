@@ -8,7 +8,9 @@ import yaml.representer
 from dmoj import judgeenv
 from dmoj.utils.ansi import ansi_style
 
-TEST_ON_TRAVIS = ['C', 'CPP03', 'CPP11', 'GO', 'JAVA7', 'PERL', 'PY2', 'TEXT']
+TEST_ON_TRAVIS = ['ADA', 'AWK', 'BF', 'C', 'CPP03', 'CPP11', 'CPP14', 'CLANG', 'CLANGX',
+                  'GO', 'HASK', 'JAVA7', 'JAVA8', 'PERL', 'PHP', 'PY2', 'PY3', 'RUBY', 'SCALA',
+                  'TEXT']
 OVERRIDES = {
     'PY2': {'python': '/usr/bin/python'},
 }

@@ -6,6 +6,7 @@ class Executor(ScriptExecutor):
     name = 'AWK'
     command = 'awk'
     command_paths = ['gawk', 'mawk', 'awk']
+    syscalls = ['getgroups']
     test_program = '{ print $0 }'
 
     def get_cmdline(self):

@@ -12,6 +12,11 @@ addons:
     - gnat
     - php5-cli
 install:
+  - pip install coveralls
   - pip install Cython --install-option="--no-cython-compile"
-  - python setup.py develop
-script: python .travis.test.py
+  - python setup.py develop 
+script:
+  - python .travis.test.py
+  - coverage run .travis.test.py
+after_success:
+  coveralls

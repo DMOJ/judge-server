@@ -47,6 +47,7 @@ else:
 reversion = re.compile('.*?(\d+(?:\.\d+)+)', re.DOTALL)
 version_cache = {}
 
+
 class BaseExecutor(ResourceProxy):
     ext = None
     network_block = True
@@ -268,6 +269,7 @@ class BaseExecutor(ResourceProxy):
     @classmethod
     def autoconfig_run_test(cls, result):
         executor = type('Executor', (cls,), {'runtime_dict': result})
+        executor.__module__ = cls.__module__
         errors = []
         success = executor.run_self_test(output=False, error_callback=errors.append)
         if success:

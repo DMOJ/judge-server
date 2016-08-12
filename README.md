@@ -1,4 +1,4 @@
-Judge
+Judge [![Build Status](https://travis-ci.org/DMOJ/judge.svg?branch=master)](https://travis-ci.org/DMOJ/judge) [![Coverage Status](https://coveralls.io/repos/github/DMOJ/judge/badge.svg)](https://coveralls.io/github/DMOJ/judge)
 =====
 Python [AGPLv3](https://github.com/DMOJ/judge/blob/master/LICENSE) contest judge backend for the [DMOJ site](http://github.com/DMOJ/site) interface. The judge implements secure grading on both Linux and Windows machines.
 

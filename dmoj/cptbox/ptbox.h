@@ -2,6 +2,7 @@
 #ifndef idA6398CB6_D711_4634_9D89FF6B1D215169
 #define idA6398CB6_D711_4634_9D89FF6B1D215169
 
+#include <stddef.h>
 #include <sys/resource.h>
 #include <sys/types.h>
 #include <sys/time.h>

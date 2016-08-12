@@ -1,6 +1,13 @@
 language: python
 python:
   - 2.7
+addons:
+  apt:
+    sources:
+    - sourceline: 'ppa:ubuntu-toolchain-r/test'
+    packages:
+    - gcc-5
+    - g++-5
 install:
   - pip install Cython --install-option="--no-cython-compile"
   - python setup.py develop

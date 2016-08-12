@@ -17,7 +17,6 @@ install:
   - pip install Cython --install-option="--no-cython-compile"
   - python setup.py develop 
 script:
-  - python .travis.test.py
-  - coverage run .travis.test.py
-after_success:
+  coverage run .travis.test.py
+after_script:
   coveralls

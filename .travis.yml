@@ -8,6 +8,9 @@ addons:
     packages:
     - gcc-5
     - g++-5
+    - ghc
+    - gnat
+    - php5-cli
 install:
   - pip install Cython --install-option="--no-cython-compile"
   - python setup.py develop

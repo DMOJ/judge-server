@@ -14,16 +14,10 @@ TEST_ON_TRAVIS = ['PY2', 'TEXT']
 def main():
     result = {}
 
-    if os.name == 'nt':
-        judgeenv.load_env(cli=True)
-        if not judgeenv.no_ansi_emu:
-            try:
-                from colorama import init
-                init()
-            except ImportError:
-                pass
-
     judgeenv.env['runtime'] = {}
+    judgeenv.env['extra_fs'] = {
+        'PY2': [r'/home/travis/virtualenv/python2\.7'],
+    }
 
     failed = False
 

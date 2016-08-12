@@ -1,5 +1,6 @@
 import os
 import traceback
+from distutils.spawn import find_executable
 from importlib import import_module
 
 import yaml
@@ -13,6 +14,7 @@ TEST_ON_TRAVIS = ['ADA', 'AWK', 'BF', 'C', 'CPP03', 'CPP11', 'CPP14', 'CLANG', '
                   'TEXT']
 OVERRIDES = {
     'PY2': {'python': '/usr/bin/python'},
+    'RUBY19': {'ruby19': find_executable('ruby')},
 }
 
 

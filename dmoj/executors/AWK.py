@@ -5,8 +5,8 @@ class Executor(ScriptExecutor):
     ext = '.awk'
     name = 'AWK'
     command = 'awk'
-    command_paths = ['gawk', 'mawk', 'awk']
-    syscalls = ['getgroups']
+    command_paths = ['mawk', 'gawk', 'awk']
+    syscalls = ['getgroups']  # gawk is annoying.
     test_program = '{ print $0 }'
 
     def get_cmdline(self):

@@ -122,4 +122,16 @@ class ConfigNode(object):
     def __str__(self):
         return '<ConfigNode(%s)>' % str(self.raw_config)
 
+    def __add__(self, other):
+        if isinstance(other, (list, dict)):
+            return self.raw_config + other
+        elif isinstance(other, ConfigNode):
+            return ConfigNode(self.raw_config + other.raw_config, None, dynamic=self.dynamic)
+        else:
+            return NotImplemented
 
+    def __radd__(self, other):
+        if isinstance(other, (list, dict)):
+            return other + self.raw_config
+        else:
+            return NotImplemented

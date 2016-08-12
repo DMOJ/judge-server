@@ -4,4 +4,4 @@ python:
 install:
   - pip install Cython --install-option="--no-cython-compile"
   - python setup.py develop
-script: python -m dmoj.executors -c .travis.judge.yml
+script: python .travis.test.py

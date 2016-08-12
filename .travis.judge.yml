@@ -1,3 +1,4 @@
 runtime:
   python: /usr/bin/python
   cat: /bin/cat
+problem_storage_root: []

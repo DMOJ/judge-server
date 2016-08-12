@@ -1,0 +1,3 @@
+runtime:
+  python: /usr/bin/python
+  cat: /bin/cat

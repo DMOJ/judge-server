@@ -11,7 +11,6 @@ addons:
     - ghc
     - gnat
     - php5-cli
-    - scala
     - mono-devel
     - mono-vbnc
     - fsharp
@@ -28,6 +27,11 @@ before_install:
   - export PATH=${PWD}/swift-2.2-SNAPSHOT-2015-12-22-a-ubuntu14.04/usr/bin:"${PATH}"
   # Install Rust
   - curl -sSf https://static.rust-lang.org/rustup.sh | sh
+  # Install latest Scala
+  - wget http://downloads.lightbend.com/scala/2.11.8/scala-2.11.8.deb
+  - dpkg -i scala-2.11.8.deb
+  - apt-get update
+  - apt-get install scala
 install:
   - pip install codecov
   - pip install Cython --install-option="--no-cython-compile"

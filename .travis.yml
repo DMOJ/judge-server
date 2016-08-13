@@ -33,6 +33,8 @@ before_install:
   - sudo dpkg -i scala-2.11.8.deb
   # Install D
   - curl -fsS https://dlang.org/install.sh | bash -s dmd
+  # Install Racket
+  - curl -fsS https://mirror.racket-lang.org/installers/6.6/racket-6.6-x86_64-linux.sh | sh
 install:
   - pip install codecov
   - pip install Cython --install-option="--no-cython-compile"

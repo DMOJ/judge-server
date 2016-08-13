@@ -2,4 +2,4 @@ language: PY2
 time: 2
 memory: 65536
 source: helloworld.py
-expect: AC
+expect: WA

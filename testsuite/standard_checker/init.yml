@@ -1,15 +1,2 @@
 generator: gen.py
-test_cases:
-- {points: 1, generator_args: [0]}
-- {points: 1, generator_args: [1]}
-- {points: 1, generator_args: [2]}
-- {points: 1, generator_args: [3]}
-- {points: 1, generator_args: [4]}
-- {points: 1, generator_args: [5]}
-- {points: 1, generator_args: [6]}
-- {points: 1, generator_args: [7]}
-- {points: 1, generator_args: [8]}
-- {points: 1, generator_args: [9]}
-- {points: 1, generator_args: [10]}
-- {points: 1, generator_args: [11]}
-- {points: 1, generator_args: [12]}
+test_cases+: [{'points': 1, 'generator_args': [x]} for x in range(1, 13)]

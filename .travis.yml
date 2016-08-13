@@ -19,6 +19,7 @@ addons:
     - binutils-multiarch
     - libc6-dev-i386
     - nasm
+    - open-cobol
 before_install:
   # Install Swift
   - wget -q -O - https://swift.org/keys/all-keys.asc | gpg --import -

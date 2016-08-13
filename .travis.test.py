@@ -1,6 +1,6 @@
 import os
+import re
 import traceback
-from distutils.spawn import find_executable
 from importlib import import_module
 
 import yaml
@@ -11,15 +11,28 @@ from dmoj.executors import executors
 from dmoj.testsuite import Tester
 from dmoj.utils.ansi import ansi_style
 
-TEST_ON_TRAVIS = ['ADA', 'AWK', 'BF', 'C', 'CPP03', 'CPP11', 'CPP14', 'CLANG', 'CLANGX',
-                  'COFFEE', 'GO', 'HASK', 'JAVA7', 'JAVA8', 'MONOCS',
+
+def find_directory(parent, expr):
+    regex = re.compile(expr)
+    for dir in os.listdir(parent):
+        if regex.match(dir):
+            return os.path.join(parent, dir)
+
+TEST_ON_TRAVIS = ['ADA', 'AWK', 'BF', 'C', 'CPP03', 'CPP11', 'CLANG', 'CLANGX',
+                  'COFFEE', 'GO', 'HASK', 'JAVA7', 'JAVA8', 'JAVA9', 'MONOCS',
                   'GAS32', 'GAS64', 'NASM', 'NASM64',
-                  'PERL', 'PHP', 'PY2', 'PY3', 'PYPY', 'PYPY3', 'RUBY19', 'SCALA', 'TEXT']
+                  'PERL', 'PHP', 'PY2', 'PY3', 'PYPY', 'PYPY3',
+                  'RUBY19', 'RUBY21', 'SCALA', 'TEXT']
+RVM_DIR = os.path.expanduser('~/.rvm/rubies/')
+PYENV_DIR = '/opt/python/'
+JVM_DIR = '/usr/lib/jvm/'
+
 OVERRIDES = {
-    'PY2': {'python': '/usr/bin/python'},
-    'RUBY19': {'ruby19': find_executable('ruby')},
-    'PYPY': {'pypy_home': '/opt/python/pypy-2.5.0'},
-    'PYPY3': {'pypy3_home': '/opt/python/pypy3-2.4.0'},
+    'PY2': {'py2_home': find_directory(PYENV_DIR, r'2\.7')},
+    'RUBY19': {'ruby19_home': find_directory(RVM_DIR, r'ruby-1\.9')},
+    'RUBY21': {'ruby21_home': find_directory(RVM_DIR, r'ruby-2\.1')},
+    'PYPY': {'pypy_home': find_directory(PYENV_DIR, 'pypy-')},
+    'PYPY3': {'pypy3_home': find_directory(PYENV_DIR, 'pypy3-')},
 }
 
 
@@ -36,23 +49,23 @@ def main():
     judgeenv.env['runtime'] = {}
     judgeenv.env['extra_fs'] = {
         'PHP': ['/etc/php5/', '/etc/terminfo/', '/etc/protocols$'],
-        'RUBY19': [os.path.expanduser('~/.rvm/rubies/')],
+        'RUBY19': [RVM_DIR],
     }
 
     failed = False
 
     print 'Available JVMs:'
-    for jvm in get_dirs('/usr/lib/jvm/'):
+    for jvm in get_dirs(JVM_DIR):
         print '  -', jvm
     print
 
     print 'Available Pythons:'
-    for python in get_dirs('/opt/python'):
+    for python in get_dirs(PYENV_DIR):
         print '  -', python
     print
 
     print 'Available Rubies:'
-    for ruby in get_dirs(os.path.expanduser('~/.rvm/rubies')):
+    for ruby in get_dirs(RVM_DIR):
         print '  -', ruby
     print
 

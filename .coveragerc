@@ -24,4 +24,4 @@ omit =
     dmoj/cli.py
     dmoj/testsuite.py
     dmoj/packet.py
-    dmoj/autoconfig.py
+    dmoj/executors/autoconfig.py

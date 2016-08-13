@@ -49,7 +49,6 @@ def main():
     judgeenv.env['runtime'] = {}
     judgeenv.env['extra_fs'] = {
         'PHP': ['/etc/php5/', '/etc/terminfo/', '/etc/protocols$'],
-        'RUBY19': [RVM_DIR],
         'SWIFT': [os.path.join(os.path.dirname(__file__), 'swift-2.2-SNAPSHOT-2015-12-22-a-ubuntu14.04')],
     }
 
@@ -68,6 +67,11 @@ def main():
     print 'Available Rubies:'
     for ruby in get_dirs(RVM_DIR):
         print '  -', ruby
+    print
+
+    print 'Using extra allowed filesystems:'
+    for lang, fs in judgeenv.env['extra_fs']:
+        print '%-6s: %s' % (lang, '|'.join(fs))
     print
 
     print 'Testing executors...'

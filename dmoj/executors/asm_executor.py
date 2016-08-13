@@ -133,7 +133,7 @@ class GASExecutor(ASMExecutor):
 
     def assemble(self):
         object = self._file('%s.o' % self.problem)
-        process = subprocess.Popen([self.get_as_path(), '-o', object, self._code],
+        process = subprocess.Popen(self.get_as_args(object),
                                    cwd=self._dir, stderr=subprocess.PIPE)
         as_output = process.communicate()[1]
         if process.returncode != 0:

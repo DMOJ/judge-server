@@ -18,6 +18,7 @@ addons:
     - mono-devel
     - mono-vbnc
     - fsharp
+    - coffeescript
 install:
   - pip install coveralls
   - pip install Cython --install-option="--no-cython-compile"

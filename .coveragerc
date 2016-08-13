@@ -1,6 +1,7 @@
 [report]
 exclude_lines =
     pragma: no cover
+    os.name == .nt.
     raise AssertionError
     raise NotImplementedError
     if __name__ == .__main__.:

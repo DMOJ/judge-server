@@ -69,7 +69,7 @@ def main():
 
         try:
             if name in OVERRIDES:
-                print ansi_style('#ansi[Manual config:](yellow)'),
+                print ansi_style('#ansi[(manual config)](yellow)'),
                 data = executor.Executor.autoconfig_run_test(OVERRIDES[name])
             else:
                 data = executor.Executor.autoconfig()

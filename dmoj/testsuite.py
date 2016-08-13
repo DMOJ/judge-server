@@ -151,7 +151,7 @@ class Tester(object):
                 with open(os.path.join(case_dir, file)) as f:
                     sources += [f.read()]
         expect = self.parse_expected_codes(config['expect'])
-        cases = config.get('cases', ())
+        cases = config.get('cases', {})
         if isinstance(cases, list):
             cases = enumerate(cases, 1)
         else:

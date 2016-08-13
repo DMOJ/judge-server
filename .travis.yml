@@ -38,7 +38,7 @@ before_install:
   - curl -s get.sdkman.io | bash
   - source "$HOME/.sdkman/bin/sdkman-init.sh"
   # Install Groovy
-  - sdk install groovy
+  - yes | sdk install groovy
 install:
   - pip install codecov
   - pip install Cython --install-option="--no-cython-compile"

@@ -46,7 +46,7 @@ class TestManager(object):
         pass
 
     def internal_error_packet(self, message):
-        self.failed = True
+        self.fail('Unexpected internal error:\n' + message)
 
     def begin_grading_packet(self, is_pretested):
         pass
@@ -119,7 +119,7 @@ class Tester(object):
                 self.output(ansi_style('Running test case #ansi[%s](yellow|bold) for #ansi[%s](cyan|bold)...')
                             % (case, problem))
                 try:
-                    succeeded = self.run_test_case(problem, case, case_dir)
+                    case_fails = self.run_test_case(problem, case, case_dir)
                 except Exception:
                     fails += 1
                     self.output(ansi_style('#ansi[Test case failed with exception:](red|bold)'))
@@ -127,8 +127,8 @@ class Tester(object):
                 else:
                     self.output(ansi_style('Result of case #ansi[%s](yellow|bold) for #ansi[%s](cyan|bold): ')
                                 % (case, problem) +
-                                ansi_style(['#ansi[Failed](red|bold)', '#ansi[Success](green|bold)'][succeeded]))
-                    fails += not succeeded
+                                ansi_style(['#ansi[Failed](red|bold)', '#ansi[Success](green|bold)'][not case_fails]))
+                    fails += case_fails
                 self.output()
         return fails
 
@@ -142,16 +142,25 @@ class Tester(object):
             return True
         time = config['time']
         memory = config['memory']
-        with open(os.path.join(case_dir, config['source'])) as f:
-            source = f.read()
+        if isinstance(config['source'], (str, unicode)):
+            with open(os.path.join(case_dir, config['source'])) as f:
+                sources = [f.read()]
+        else:
+            sources = []
+            for file in config['source']:
+                with open(os.path.join(case_dir, file)) as f:
+                    sources += [f.read()]
         expect = self.parse_expected_codes(config['expect'])
         case_expect = {id: self.parse_expected_codes(codes) for id, codes in config.get('cases', ())}
-        self.manager.set_expected(expect, case_expect)
 
-        self.sub_id += 1
-        self.judge.begin_grading(self.sub_id, problem, language, source, time, memory,
-                                 short_circuit=False, pretests_only=False, blocking=True)
-        return not self.manager.failed
+        fails = 0
+        for source in sources:
+            self.sub_id += 1
+            self.manager.set_expected(expect, case_expect)
+            self.judge.begin_grading(self.sub_id, problem, language, source, time, memory,
+                                     short_circuit=False, pretests_only=False, blocking=True)
+            fails += self.manager.failed
+        return fails
 
     def parse_expected_codes(self, codes):
         if codes == '*':
@@ -185,6 +194,7 @@ def main():
         print ansi_style('#ansi[A total of %d case(s) failed](red|bold).') % fails
     else:
         print ansi_style('#ansi[All cases passed.](green|bold)')
+    raise SystemExit(int(fails != 0))
 
 if __name__ == '__main__':
     main()

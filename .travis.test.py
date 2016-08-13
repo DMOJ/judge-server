@@ -49,7 +49,7 @@ def main():
     judgeenv.env['runtime'] = {}
     judgeenv.env['extra_fs'] = {
         'PHP': ['/etc/php5/', '/etc/terminfo/', '/etc/protocols$'],
-        'SWIFT': [os.path.join(os.path.dirname(__file__), 'swift-2.2-SNAPSHOT-2015-12-22-a-ubuntu14.04')],
+        'SWIFT': [os.path.join(os.path.dirname(__file__), re.escape('swift-2.2-SNAPSHOT-2015-12-22-a-ubuntu14.04'))],
     }
 
     failed = False

@@ -165,7 +165,7 @@ class Tester(object):
 
 
 def main():
-    judgeenv.load_env(cli=True)
+    judgeenv.load_env(cli=True, testsuite=True)
 
     # Emulate ANSI colors with colorama
     if os.name == 'nt' and not judgeenv.no_ansi_emu:

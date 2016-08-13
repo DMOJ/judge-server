@@ -3,9 +3,10 @@ import os
 import sys
 
 import yaml
+
 from dmoj.config import ConfigNode
 
-_judge_dirs = ()
+problem_dirs = ()
 env = ConfigNode(defaults={
     'selftest_sandboxing': True,
     'runtime': {},
@@ -27,8 +28,8 @@ def unicodify(string):
     return string
 
 
-def load_env(cli=False):
-    global _judge_dirs, only_executors, exclude_executors, log_file, server_host, \
+def load_env(cli=False, testsuite=False):
+    global problem_dirs, only_executors, exclude_executors, log_file, server_host, \
         server_port, no_ansi, no_ansi_emu, env, startup_warnings, no_watchdog
     _parser = argparse.ArgumentParser(description='''
         Spawns a judge for a submission server.
@@ -58,6 +59,9 @@ def load_env(cli=False):
     if os.name == 'nt':
         _parser.add_argument('--no-ansi-emu', action='store_true', help='disable ANSI emulation on Windows')
 
+    if testsuite:
+        _parser.add_argument('tests_dir', help='directory where tests are stored')
+
     _args = _parser.parse_args()
 
     server_host = getattr(_args, 'server_host', None)
@@ -83,25 +87,33 @@ def load_env(cli=False):
             env['key'] = _args.judge_key
 
         dirs = env.problem_storage_root
+        if dirs is None:
+            return
+
         if isinstance(dirs, ConfigNode):
-            _judge_dirs = tuple(unicodify(os.path.normpath(os.path.join(_root, dir))) for dir in dirs)
+            problem_dirs = tuple(unicodify(os.path.normpath(os.path.join(_root, dir))) for dir in dirs)
         else:
-            _judge_dirs = os.path.join(_root, dirs)
-            _judge_dirs = [unicodify(os.path.normpath(os.path.join(_judge_dirs, dir)))
-                           for dir in os.listdir(_judge_dirs)]
-            _judge_dirs = tuple(dir for dir in _judge_dirs if os.path.isdir(dir))
+            problem_dirs = os.path.join(_root, dirs)
+            problem_dirs = [unicodify(os.path.normpath(os.path.join(problem_dirs, dir)))
+                            for dir in os.listdir(problem_dirs)]
+            problem_dirs = tuple(dir for dir in problem_dirs if os.path.isdir(dir))
 
         cleaned_dirs = []
-        for dir in _judge_dirs:
+        for dir in problem_dirs:
             if not os.path.exists(dir) or not os.path.isdir(dir):
                 startup_warnings.append('cannot access problem directory %s (does it exist?)' % dir)
                 continue
             cleaned_dirs.append(dir)
-        _judge_dirs = cleaned_dirs
+        problem_dirs = cleaned_dirs
+
+    if testsuite:
+        if not os.path.isdir(_args.tests_dir):
+            raise SystemExit('Invalid tests directory')
+        problem_dirs = [_args.tests_dir]
 
 
 def get_problem_root(pid):
-    for dir in _judge_dirs:
+    for dir in problem_dirs:
         path = os.path.join(dir, pid)
         if os.path.exists(path):
             return path
@@ -109,7 +121,7 @@ def get_problem_root(pid):
 
 
 def get_problem_roots():
-    return _judge_dirs
+    return problem_dirs
 
 
 def get_supported_problems():

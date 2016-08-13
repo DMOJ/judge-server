@@ -3,8 +3,8 @@ import re
 import subprocess
 
 from dmoj.cptbox.sandbox import X86, X64, can_debug
-from dmoj.executors.base_executor import CompiledExecutor
 from dmoj.error import CompileError
+from dmoj.executors.base_executor import CompiledExecutor
 from dmoj.judgeenv import env
 
 refeatures = re.compile('^[#;@|!]\s*features:\s*([\w\s,]+)', re.M)
@@ -13,6 +13,7 @@ feature_split = re.compile('[\s,]+').split
 
 class ASMExecutor(CompiledExecutor):
     arch = None
+    ld_arch = None
     as_name = None
     ld_name = None
     qemu_path = None
@@ -63,7 +64,7 @@ class ASMExecutor(CompiledExecutor):
             to_link = ['-dynamic-linker', self.dynamic_linker] + self.crt_pre + ['-lc'] + to_link + self.crt_post
 
         executable = self._file(self.problem)
-        process = self.TimedPopen([self.get_ld_path(), '-s', '-o', executable] + to_link,
+        process = self.TimedPopen([self.get_ld_path(), '-s', '-o', executable, '-A', self.ld_arch] + to_link,
                                   cwd=self._dir, stderr=subprocess.PIPE, preexec_fn=self.create_executable_fslimit(),
                                   time_limit=self.compiler_time_limit)
         ld_output = process.communicate()[1]
@@ -141,7 +142,7 @@ class GASExecutor(ASMExecutor):
         if cls.platform_prefixes is None:
             return None
         return {cls.as_name: ['%s-as' % i for i in cls.platform_prefixes],
-                cls.ld_name: ['%s-ld' % i for i in cls.platform_prefixes]}
+                cls.ld_name: ['%s-ld' % i for i in cls.platform_prefixes] + ['ld']}
 
 
 class NASMExecutor(ASMExecutor):
@@ -166,12 +167,13 @@ class NASMExecutor(ASMExecutor):
     def get_find_first_mapping(cls):
         if cls.platform_prefixes is None:
             return None
-        return {cls.ld_name: ['%s-ld' % i for i in cls.platform_prefixes], 'nasm': ['nasm']}
+        return {cls.ld_name: ['%s-ld' % i for i in cls.platform_prefixes] + ['ld'], 'nasm': ['nasm']}
 
 
 class PlatformX86Mixin(object):
     arch = X86
     ld_name = 'ld_x86'
+    ld_arch = 'elf32-i386'
     platform_prefixes = ['i586-linux-gnu']
 
     qemu_path = env.runtime.qemu_x86
@@ -188,6 +190,7 @@ class PlatformX86Mixin(object):
 class PlatformX64Mixin(object):
     arch = X64
     ld_name = 'ld_x64'
+    ld_arch = 'elf64-x86-64'
     platform_prefixes = ['x86_64-linux-gnu']
 
     qemu_path = env.runtime.qemu_x64

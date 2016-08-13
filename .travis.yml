@@ -32,7 +32,8 @@ before_install:
   - wget http://downloads.lightbend.com/scala/2.11.8/scala-2.11.8.deb
   - sudo dpkg -i scala-2.11.8.deb
   # Install D
-  - curl -sSf https://dlang.org/install.sh | bash -s dmd
+  - wget http://downloads.dlang.org/releases/2.x/2.071.1/dmd_2.071.1-0_amd64.deb
+  - sudo dpkg -i dmd_2.071.1-0_amd64.deb
   # Install sdkman for Groovy and Kotlin
   - curl -s get.sdkman.io | bash
   - source "$HOME/.sdkman/bin/sdkman-init.sh"

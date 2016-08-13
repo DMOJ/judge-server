@@ -5,6 +5,8 @@ addons:
   apt:
     sources:
     - ubuntu-toolchain-r-test
+    - mono
+    - mono-libtiff-compat
     packages:
     - gcc-5
     - g++-5
@@ -13,6 +15,9 @@ addons:
     - php5-cli
     - oracle-java8-installer
     - scala
+    - mono-devel
+    - mono-vbnc
+    - fsharp
 install:
   - pip install coveralls
   - pip install Cython --install-option="--no-cython-compile"

@@ -1,6 +1,2 @@
-io_redirects:
-  DATA.out:
-    fd: stdout
-    mode: w
 test_cases:
 - {in: helloworld.in, out: helloworld.out, points: 100}

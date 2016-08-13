@@ -7,12 +7,10 @@ addons:
   apt:
     sources:
     - mono
-    - mono-libtiff-compat
     packages:
     - ghc
     - gnat
     - php5-cli
-    - oracle-java8-installer
     - scala
     - mono-devel
     - mono-vbnc

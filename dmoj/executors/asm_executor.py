@@ -123,9 +123,13 @@ class ASMExecutor(CompiledExecutor):
 
 class GASExecutor(ASMExecutor):
     name = 'GAS'
+    as_platform_flag = None
 
     def get_as_args(self, object):
-        return [self.get_as_path(), '-o', object, self._code]
+        as_args = [self.get_as_path(), '-o', object, self._code]
+        if os.path.basename(self.get_as_path()) == 'as' and self.as_platform_flag:
+            as_args += [self.as_platform_flag]
+        return as_args
 
     def assemble(self):
         object = self._file('%s.o' % self.problem)
@@ -141,7 +145,7 @@ class GASExecutor(ASMExecutor):
     def get_find_first_mapping(cls):
         if cls.platform_prefixes is None:
             return None
-        return {cls.as_name: ['%s-as' % i for i in cls.platform_prefixes],
+        return {cls.as_name: ['%s-as' % i for i in cls.platform_prefixes] + ['as'],
                 cls.ld_name: ['%s-ld' % i for i in cls.platform_prefixes] + ['ld']}
 
 
@@ -175,6 +179,7 @@ class PlatformX86Mixin(object):
     ld_name = 'ld_x86'
     ld_m = 'elf_i386'
     platform_prefixes = ['i586-linux-gnu']
+    as_platform_flag = '--32'
 
     qemu_path = env.runtime.qemu_x86
     dynamic_linker = env.runtime['ld.so_x86'] or '/lib/ld-linux.so.2'
@@ -192,6 +197,7 @@ class PlatformX64Mixin(object):
     ld_name = 'ld_x64'
     ld_m = 'elf_x86_64'
     platform_prefixes = ['x86_64-linux-gnu']
+    as_platform_flag = '--64'
 
     qemu_path = env.runtime.qemu_x64
     dynamic_linker = env.runtime['ld.so_x64'] or '/lib64/ld-linux-x86-64.so.2'

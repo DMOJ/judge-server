@@ -50,7 +50,7 @@ def main():
     judgeenv.env['extra_fs'] = {
         'PHP': ['/etc/php5/', '/etc/terminfo/', '/etc/protocols$'],
         'RUBY19': [RVM_DIR],
-        'SWIFT': ['/home/travis/build/DMOJ/judge/swift-2.2-SNAPSHOT-2015-12-22-a-ubuntu14.04'],
+        'SWIFT': [os.path.join(os.path.dirname(__file__), 'swift-2.2-SNAPSHOT-2015-12-22-a-ubuntu14.04')],
     }
 
     failed = False

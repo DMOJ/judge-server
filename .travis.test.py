@@ -70,7 +70,7 @@ def main():
     print
 
     print 'Using extra allowed filesystems:'
-    for lang, fs in judgeenv.env['extra_fs']:
+    for lang, fs in judgeenv.env['extra_fs'].iteritems():
         print '%-6s: %s' % (lang, '|'.join(fs))
     print
 

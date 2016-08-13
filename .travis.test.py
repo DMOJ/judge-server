@@ -23,7 +23,7 @@ def main():
 
     judgeenv.env['runtime'] = {}
     judgeenv.env['extra_fs'] = {
-        'PHP': ['/etc/php5/'],
+        'PHP': ['/etc/php5/', '/etc/terminfo/'],
     }
 
     failed = False

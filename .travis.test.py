@@ -18,8 +18,8 @@ OVERRIDES = {
 }
 
 
-def get_dirs(rubies_dir):
-    return [item for item in os.listdir(rubies_dir) if os.path.isdir(os.path.join(rubies_dir, item))]
+def get_dirs(dir):
+    return [item for item in os.listdir(dir) if os.path.isdir(os.path.join(dir, item))]
 
 
 def main():

@@ -6,7 +6,7 @@ class PHPExecutor(ScriptExecutor):
     address_grace = 131072
     test_program = '<?php while($f = fgets(STDIN)) echo $f;'
 
-    fs = ['.*/php[\w-]*\.ini$', '.*/conf.d/.*\.ini$']
+    fs = ['.*/php[\w-]*\.ini$', '.*/conf.d/.*\.ini$', '/etc/nsswitch.conf$']
 
     def get_cmdline(self):
         return ['php', self._code]

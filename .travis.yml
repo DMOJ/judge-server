@@ -30,8 +30,6 @@ before_install:
   # Install latest Scala
   - wget http://downloads.lightbend.com/scala/2.11.8/scala-2.11.8.deb
   - sudo dpkg -i scala-2.11.8.deb
-  - sudo apt-get update
-  - sudo apt-get install scala
 install:
   - pip install codecov
   - pip install Cython --install-option="--no-cython-compile"

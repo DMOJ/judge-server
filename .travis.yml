@@ -19,6 +19,12 @@ addons:
     - binutils-multiarch
     - libc6-dev-i386
     - nasm
+before_install:
+  # Install Swift
+  - wget -q -O - https://swift.org/keys/all-keys.asc | gpg --import -
+  - wget https://swift.org/builds/ubuntu1404/swift-2.2-SNAPSHOT-2015-12-22-a/swift-2.2-SNAPSHOT-2015-12-22-a-ubuntu14.04.tar.gz
+  - tar xzf swift-2.2-SNAPSHOT-2015-12-22-a-ubuntu14.04.tar.gz
+  - export PATH=${PWD}/swift-2.2-SNAPSHOT-2015-12-22-a-ubuntu14.04/usr/bin:"${PATH}"
 install:
   - pip install codecov
   - pip install Cython --install-option="--no-cython-compile"

@@ -33,6 +33,7 @@ OVERRIDES = {
     'RUBY21': {'ruby21_home': find_directory(RVM_DIR, r'ruby-2\.1')},
     'PYPY': {'pypy_home': find_directory(PYENV_DIR, 'pypy-')},
     'PYPY3': {'pypy3_home': find_directory(PYENV_DIR, 'pypy3-')},
+    'GROOVY': {'groovy_home': os.path.expanduser('~/.sdkman/candidates/groovy/current/')}
 }
 
 

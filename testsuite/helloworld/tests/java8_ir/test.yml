@@ -1,4 +1,4 @@
-language: PY2
+language: JAVA8
 time: 2
 memory: 65536
 source: helloworld.java

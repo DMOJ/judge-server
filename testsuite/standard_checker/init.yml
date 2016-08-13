@@ -1,0 +1,15 @@
+generator: gen.py
+test_cases:
+- {points: 1}
+- {points: 1}
+- {points: 1}
+- {points: 1}
+- {points: 1}
+- {points: 1}
+- {points: 1}
+- {points: 1}
+- {points: 1}
+- {points: 1}
+- {points: 1}
+- {points: 1}
+- {points: 1}

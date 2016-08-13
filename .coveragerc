@@ -1,0 +1,16 @@
+[report]
+exclude_lines =
+    pragma: no cover
+    raise AssertionError
+    raise NotImplementedError
+    if __name__ == .__main__.:
+
+ignore_errors = True
+
+[run]
+omit =
+    dmoj/wbox/*
+    dmoj/utils/debugger/win/*
+    dmoj/utils/pywinjob.py
+    dmoj/utils/winperfmon.py
+    dmoj/utils/winutils.py

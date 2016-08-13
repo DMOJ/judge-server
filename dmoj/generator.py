@@ -29,7 +29,7 @@ class GeneratorManager(object):
             for grader in ('CPP14', 'CPP11', 'CPP0X', 'CPP'):
                 if grader in executors:
                     return grader
-            raise InvalidInitException("can't grade with generator; why did I get this submission?")
+            return None
 
         lookup = {
             '.py': executors.get('PY2', None),

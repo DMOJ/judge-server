@@ -18,6 +18,6 @@ install:
   - pip install Cython --install-option="--no-cython-compile"
   - python setup.py develop 
 script:
-  coverage run .travis.test.py
+  coverage run --source=dmoj .travis.test.py
 after_script:
   coveralls

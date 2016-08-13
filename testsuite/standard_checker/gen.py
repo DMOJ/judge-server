@@ -14,7 +14,7 @@ a, b = [
     ('a   \nb', 'a \n b'),
     ('    a   k z  zz  \nb', 'a k z zz\n        b'),
     ('\n\n  Hello,      World!   ', 'Hello, World!'),
-][int(raw_input()) - 1]
+][int(sys.argv[-1])]
 
-print >>sys.stderr, a
-print >>sys.stdout, b
+print >> sys.stderr, a
+print >> sys.stdout, b

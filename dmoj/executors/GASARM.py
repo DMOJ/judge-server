@@ -7,7 +7,7 @@ class Executor(GASExecutor):
     arch = ARM
     as_name = 'as_arm'
     ld_name = 'ld_arm'
-    ld_arch = 'elf32-littlearm'
+    ld_m = 'armelf_linux_eabi'
     platform_prefixes = ['arm-linux-gnueabihf']
 
     qemu_path = env.runtime.qemu_arm

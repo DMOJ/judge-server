@@ -13,7 +13,7 @@ feature_split = re.compile('[\s,]+').split
 
 class ASMExecutor(CompiledExecutor):
     arch = None
-    ld_arch = None
+    ld_m = None
     as_name = None
     ld_name = None
     qemu_path = None
@@ -64,7 +64,7 @@ class ASMExecutor(CompiledExecutor):
             to_link = ['-dynamic-linker', self.dynamic_linker] + self.crt_pre + ['-lc'] + to_link + self.crt_post
 
         executable = self._file(self.problem)
-        process = self.TimedPopen([self.get_ld_path(), '-s', '-o', executable, '-A', self.ld_arch] + to_link,
+        process = self.TimedPopen([self.get_ld_path(), '-s', '-o', executable, '-m', self.ld_m] + to_link,
                                   cwd=self._dir, stderr=subprocess.PIPE, preexec_fn=self.create_executable_fslimit(),
                                   time_limit=self.compiler_time_limit)
         ld_output = process.communicate()[1]
@@ -173,7 +173,7 @@ class NASMExecutor(ASMExecutor):
 class PlatformX86Mixin(object):
     arch = X86
     ld_name = 'ld_x86'
-    ld_arch = 'elf32-i386'
+    ld_m = 'elf_i386'
     platform_prefixes = ['i586-linux-gnu']
 
     qemu_path = env.runtime.qemu_x86
@@ -190,7 +190,7 @@ class PlatformX86Mixin(object):
 class PlatformX64Mixin(object):
     arch = X64
     ld_name = 'ld_x64'
-    ld_arch = 'elf64-x86-64'
+    ld_m = 'elf_x86_64'
     platform_prefixes = ['x86_64-linux-gnu']
 
     qemu_path = env.runtime.qemu_x64

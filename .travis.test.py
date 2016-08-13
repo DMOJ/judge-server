@@ -10,7 +10,7 @@ from dmoj import judgeenv
 from dmoj.utils.ansi import ansi_style
 
 TEST_ON_TRAVIS = ['ADA', 'AWK', 'BF', 'C', 'CPP03', 'CPP11', 'CPP14', 'CLANG', 'CLANGX',
-                  'GO', 'HASK', 'JAVA7', 'JAVA8', 'MONOCS', 'MONOFS', 'MONOVB',
+                  'GO', 'HASK', 'JAVA7', 'JAVA8', 'MONOCS',
                   'PERL', 'PHP', 'PY2', 'PY3', 'RUBY19', 'SCALA', 'TEXT']
 OVERRIDES = {
     'PY2': {'python': '/usr/bin/python'},

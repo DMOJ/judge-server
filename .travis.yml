@@ -27,9 +27,7 @@ before_install:
   - tar xzf swift-2.2-SNAPSHOT-2015-12-22-a-ubuntu14.04.tar.gz
   - export PATH=${PWD}/swift-2.2-SNAPSHOT-2015-12-22-a-ubuntu14.04/usr/bin:"${PATH}"
   # Install Rust
-  - curl -O http://static.rust-lang.org/dist/rust-nightly-x86_64-unknown-linux-gnu.tar.gz
-  - tar xfz rust-nightly-x86_64-unknown-linux-gnu.tar.gz
-  - (cd rust-nightly-x86_64-unknown-linux-gnu/ && sudo ./install.sh)
+  - curl -sSf https://static.rust-lang.org/rustup.sh | sh
 install:
   - pip install codecov
   - pip install Cython --install-option="--no-cython-compile"

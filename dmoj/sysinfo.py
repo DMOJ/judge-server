@@ -11,7 +11,7 @@ if hasattr(os, 'getloadavg'):
         except OSError:  # as of May 2016, Windows' Linux subsystem throws OSError on getloadavg
             load = -1
         return 'load', load
-else:
+else:  # pragma: no cover
     from dmoj.utils.winperfmon import PerformanceCounter
     from threading import Thread
     from collections import deque

@@ -19,10 +19,12 @@ class TestManager(object):
         self.output(message)
         self.failed = True
 
-    def set_expected(self, all, cases):
+    def set_expected(self, codes_all, codes_cases, feedback_all, feedback_cases):
         self.failed = False
-        self.codes_all = all
-        self.codes_cases = cases
+        self.codes_all = codes_all
+        self.codes_cases = codes_cases
+        self.feedback_all = feedback_all
+        self.feedback_cases = feedback_cases
 
     def _receive_packet(self, packet):
         pass
@@ -39,6 +41,13 @@ class TestManager(object):
         elif code not in self.codes_all:
             self.fail('Unexpected global code: %s, expecting %s' %
                       (code, ', '.join(self.codes_all)))
+
+        feedback = self.feedback_all
+        if position in self.feedback_cases:
+            feedback = self.feedback_cases[position]
+        if feedback is not None and result.feedback not in feedback:
+            self.fail('Unexpected feedback: "%s", expected: "%s"' %
+                      (result.feedback, '", "'.join(feedback)))
 
     def compile_error_packet(self, log):
         if 'CE' not in self.codes_all:
@@ -152,22 +161,30 @@ class Tester(object):
             for file in config['source']:
                 with open(os.path.join(case_dir, file)) as f:
                     sources += [f.read()]
-        expect = self.parse_expected_codes(config.get('expect', 'AC'))
-        cases = config.get('cases', {})
-        if isinstance(cases, list):
-            cases = enumerate(cases, 1)
-        else:
-            cases = cases.iteritems()
-        case_expect = {id: self.parse_expected_codes(codes) for id, codes in cases}
+        codes_all, codes_cases = self.parse_expect(config.get('expect', 'AC'),
+                                                   config.get('cases', {}),
+                                                   self.parse_expected_codes)
+        feedback_all, feedback_cases = self.parse_expect(config.get('feedback'),
+                                                         config.get('feedback_cases', {}),
+                                                         self.parse_feedback)
 
         fails = 0
         for source in sources:
             self.sub_id += 1
-            self.manager.set_expected(expect, case_expect)
+            self.manager.set_expected(codes_all, codes_cases, feedback_all, feedback_cases)
             self.judge.begin_grading(self.sub_id, problem, language, source, time, memory,
                                      short_circuit=False, pretests_only=False, blocking=True)
             fails += self.manager.failed
         return fails
+
+    def parse_expect(self, all, cases, func):
+        expect = func(all)
+        if isinstance(cases, list):
+            cases = enumerate(cases, 1)
+        else:
+            cases = cases.iteritems()
+        case_expect = {id: func(codes) for id, codes in cases}
+        return expect, case_expect
 
     def parse_expected_codes(self, codes):
         if codes == '*':
@@ -179,6 +196,14 @@ class Tester(object):
             result = set(codes)
             assert not (result - self.all_codes)
             return result
+
+    def parse_feedback(self, feedback):
+        if feedback is None or feedback == '*':
+            return None
+        elif isinstance(feedback, (str, unicode)):
+            return {feedback}
+        else:
+            return set(feedback)
 
 
 def main():

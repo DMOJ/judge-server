@@ -19,6 +19,9 @@ addons:
     - mono-vbnc
     - fsharp
     - coffeescript
+    - binutils:i386
+    - libc:i186
+    - nasm
 install:
   - pip install coveralls
   - pip install Cython --install-option="--no-cython-compile"

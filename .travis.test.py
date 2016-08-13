@@ -11,6 +11,7 @@ from dmoj.utils.ansi import ansi_style
 
 TEST_ON_TRAVIS = ['ADA', 'AWK', 'BF', 'C', 'CPP03', 'CPP11', 'CPP14', 'CLANG', 'CLANGX',
                   'COFFEE', 'GO', 'HASK', 'JAVA7', 'JAVA8', 'MONOCS',
+                  'GAS32', 'GAS64', 'NASM', 'NASM64',
                   'PERL', 'PHP', 'PY2', 'PY3', 'PYPY', 'PYPY3', 'RUBY19', 'SCALA', 'TEXT']
 OVERRIDES = {
     'PY2': {'python': '/usr/bin/python'},

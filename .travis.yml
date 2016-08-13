@@ -15,6 +15,7 @@ addons:
     - mono-devel
     - mono-vbnc
     - fsharp
+    - fp-compiler
     - coffeescript
     - binutils-multiarch
     - libc6-dev-i386

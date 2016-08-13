@@ -9,32 +9,7 @@ try:
     #
     # In that case, a native signal handler is the only hope to get some sort of meaningful data out of the dead
     # Python process.
-    from ._nix_debugger import setup_native_traceback
+    from ._nix_debugger import setup_native_traceback as setup_all_debuggers
 except ImportError as e:
-    setup_native_traceback = None
-
-
-def setup_interactive_debugger():
-    import signal
-    import code
-    import traceback
-
-    # In part from http://stackoverflow.com/questions/132058/showing-the-stack-trace-from-a-running-python-application
-    def handle_sigusr2(signum, frame):
-        _locals = {'_frame': frame}
-        _locals.update(frame.f_globals)
-        _locals.update(frame.f_locals)
-
-        message = "Signal received : entering shell.\nTraceback:\n%s" % ''.join(traceback.format_stack(frame))
-
-        console = code.InteractiveConsole(_locals)
-        console.interact(message)
-
-    signal.signal(signal.SIGUSR2, handle_sigusr2)
-
-
-def setup_all_debuggers():
-    if setup_native_traceback:
-        if not setup_native_traceback():
-            pass
-    setup_interactive_debugger()
+    def setup_all_debuggers():
+        pass

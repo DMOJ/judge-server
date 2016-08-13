@@ -3,7 +3,8 @@ from .base_executor import ScriptExecutor
 
 class MetaRubyExecutor(type):
     def __new__(mcs, name, bases, dict):
-        dict['command'] = dict['name'].lower()
+        if 'name' in dict:
+            dict['command'] = dict['name'].lower()
         return super(MetaRubyExecutor, mcs).__new__(mcs, name, bases, dict)
 
 

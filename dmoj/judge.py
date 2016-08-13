@@ -148,9 +148,11 @@ class Judge(object):
 
             batch_counter = 1
             in_batch = False
+
+            # cases are indexed at 1
+            case_number = 1
             try:
-                for case_number, result in enumerate(self.grade_cases(grader, problem.cases,
-                                                                      short_circuit=short_circuit)):
+                for result in self.grade_cases(grader, problem.cases, short_circuit=short_circuit):
                     if isinstance(result, BatchBegin):
                         self.packet_manager.batch_begin_packet()
                         print ansi_style("#ansi[Batch #%d](yellow|bold)" % batch_counter)
@@ -172,11 +174,12 @@ class Judge(object):
                                                              colored_feedback,
                                                              colored_aux_codes) if not is_sc else ''
                         case_padding = '  ' * in_batch
-                        print ansi_style('%sTest case %2d %-3s %s' % (case_padding, case_number + 1,
+                        print ansi_style('%sTest case %2d %-3s %s' % (case_padding, case_number,
                                                                       colored_codes[0], case_info))
 
-                        # cases are indexed at 1
-                        self.packet_manager.test_case_status_packet(case_number + 1, result)
+                        self.packet_manager.test_case_status_packet(case_number, result)
+
+                        case_number += 1
             except TerminateGrading:
                 self.packet_manager.submission_terminated_packet()
                 print ansi_style('#ansi[Forcefully terminating grading. Temporary files may not be deleted.](red|bold)')

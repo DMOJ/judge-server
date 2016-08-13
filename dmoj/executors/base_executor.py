@@ -1,15 +1,13 @@
 import os
 import re
-import threading
 import subprocess
 import sys
+import threading
+import time
 import traceback
 from distutils.spawn import find_executable
 from shutil import copyfile
 from subprocess import Popen
-import re
-
-import time
 
 from dmoj.error import CompileError
 from dmoj.executors.resource_proxy import ResourceProxy
@@ -186,6 +184,8 @@ class BaseExecutor(ResourceProxy):
                 # Cache the versions now, so that the handshake packet doesn't take ages to generate
                 cls.get_runtime_versions()
                 print ansi_style(['#ansi[Failed](red|bold)', '#ansi[Success](green|bold)'][res])
+            if stdout.strip() != test_message and error_callback:
+                error_callback('Got unexpected stdout output:\n' + stdout)
             if stderr:
                 if error_callback:
                     error_callback('Got unexpected stderr output:\n' + stderr)

@@ -38,9 +38,15 @@ def main():
         print '  -', jvm
     print
 
+    print 'Available Pythons:'
+    for ruby in get_dirs('/home/travis/.pyenv/versions'):
+        print '  -', ruby
+    print
+
     print 'Available Rubies:'
     for ruby in get_dirs('/home/travis/.rvm/rubies'):
         print '  -', ruby
+    print
 
     print 'Testing executors...'
 

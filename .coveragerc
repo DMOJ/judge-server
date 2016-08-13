@@ -20,3 +20,7 @@ omit =
     dmoj/executors/VB.py
     dmoj/executors/CS.py
     dmoj/executors/VC.py
+
+    dmoj/cli.py
+    dmoj/testsuite.py
+    dmoj/packet.py

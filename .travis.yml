@@ -39,6 +39,7 @@ before_install:
   - source "$HOME/.sdkman/bin/sdkman-init.sh"
   # Install Groovy
   - yes | sdk install groovy
+  - export PATH=$HOME/.sdkman/candidates/groovy/current/:"${PATH}"
 install:
   - pip install codecov
   - pip install Cython --install-option="--no-cython-compile"

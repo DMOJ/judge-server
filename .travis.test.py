@@ -94,6 +94,8 @@ def main():
                 result.update(config)
                 executor.Executor.runtime_dict = config
                 executors[name] = executor
+                for name, version in executor.get_runtime_versions():
+                    print ansi_style('  #ansi[%s](cyan): %s' % (name, '.'.join(map(str, version))))
             else:
                 if config:
                     print '  Attempted:'

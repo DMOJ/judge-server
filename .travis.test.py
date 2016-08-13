@@ -20,7 +20,7 @@ def find_directory(parent, expr):
 
 TEST_ON_TRAVIS = ['ADA', 'AWK', 'BF', 'C', 'CPP03', 'CPP11', 'CLANG', 'CLANGX',
                   'COFFEE', 'GO', 'HASK', 'JAVA7', 'JAVA8', 'JAVA9', 'MONOCS',
-                  'GAS32', 'GAS64', 'NASM', 'NASM64',
+                  'MONOFS', 'MONOVB', 'GAS32', 'GAS64', 'NASM', 'NASM64',
                   'PERL', 'PHP', 'PY2', 'PY3', 'PYPY', 'PYPY3',
                   'RUBY19', 'RUBY21', 'SCALA', 'SWIFT', 'TEXT']
 RVM_DIR = os.path.expanduser('~/.rvm/rubies/')

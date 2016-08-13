@@ -15,3 +15,8 @@ omit =
     dmoj/utils/pywinjob.py
     dmoj/utils/winperfmon.py
     dmoj/utils/winutils.py
+    dmoj/executors/clr_executor.py
+    dmoj/executors/FS.py
+    dmoj/executors/VB.py
+    dmoj/executors/CS.py
+    dmoj/executors/VC.py

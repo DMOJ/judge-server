@@ -39,8 +39,8 @@ def main():
     print
 
     print 'Available Pythons:'
-    for ruby in get_dirs('/home/travis/.pyenv/versions'):
-        print '  -', ruby
+    for python in get_dirs('/opt/python'):
+        print '  -', python
     print
 
     print 'Available Rubies:'

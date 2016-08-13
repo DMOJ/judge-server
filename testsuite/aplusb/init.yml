@@ -1,0 +1,24 @@
+io_redirects:
+  DATA.out:
+    fd: stdout
+    mode: w
+  DATA.in:
+    fd: stdin
+    mode: r
+
+archive: aplusb.zip
+
+pretest_test_cases:
+- {in: aplusb.1.in, out: aplusb.1.out, points: 5}
+- {in: aplusb.2.in, out: aplusb.2.out, points: 20}
+- {in: aplusb.3.in, out: aplusb.3.out, points: 75}
+- {in: aplusb.1.in, out: aplusb.1.out, points: 5}
+- {in: aplusb.2.in, out: aplusb.2.out, points: 20}
+- {in: aplusb.3.in, out: aplusb.3.out, points: 75}
+- {in: aplusb.1.in, out: aplusb.1.out, points: 5}
+- {in: aplusb.2.in, out: aplusb.2.out, points: 20}
+- {in: aplusb.3.in, out: aplusb.3.out, points: 75}
+test_cases:
+- {in: aplusb.1.in, out: aplusb.1.out, points: 5}
+- {in: aplusb.2.in, out: aplusb.2.out, points: 20}
+- {in: aplusb.3.in, out: aplusb.3.out, points: 75}

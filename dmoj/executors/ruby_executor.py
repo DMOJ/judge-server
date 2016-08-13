@@ -1,7 +1,15 @@
 from .base_executor import ScriptExecutor
 
 
+class MetaRubyExecutor(type):
+    def __new__(mcs, name, bases, dict):
+        dict['command'] = dict['name'].lower()
+        return super(MetaRubyExecutor, mcs).__new__(mcs, name, bases, dict)
+
+
 class RubyExecutor(ScriptExecutor):
+    __metaclass__ = MetaRubyExecutor
+
     ext = '.rb'
     name = 'RUBY'
     address_grace = 65536
@@ -10,10 +18,6 @@ class RubyExecutor(ScriptExecutor):
     @classmethod
     def get_version_flags(cls, command):
         return ['-v']
-
-    @classmethod
-    def get_command(cls):
-        return cls.runtime_dict.get(cls.name.lower())
 
     @classmethod
     def get_versionable_commands(cls):

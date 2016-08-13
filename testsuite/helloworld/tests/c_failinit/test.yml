@@ -3,4 +3,4 @@ time: 1
 memory: 1024
 source: fail.c
 expect: RTE
-feedback: failed initializing
+feedback: ['failed initializing', 'segmentation fault']

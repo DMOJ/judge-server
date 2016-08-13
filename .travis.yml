@@ -25,7 +25,8 @@ addons:
 install:
   - pip install coveralls
   - pip install Cython --install-option="--no-cython-compile"
-  - python setup.py develop 
+  - python setup.py develop
+  - mkdir testsuite && curl https://codeload.github.com/DMOJ/judge-testsuite/legacy.tar.gz/master | tar xz -C testsuite --strip-components=1
 script:
   coverage run --source=dmoj .travis.test.py
 after_script:

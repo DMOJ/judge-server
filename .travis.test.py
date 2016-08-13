@@ -7,6 +7,8 @@ import yaml
 import yaml.representer
 
 from dmoj import judgeenv
+from dmoj.executors import executors
+from dmoj.testsuite import Tester
 from dmoj.utils.ansi import ansi_style
 
 TEST_ON_TRAVIS = ['ADA', 'AWK', 'BF', 'C', 'CPP03', 'CPP11', 'CPP14', 'CLANG', 'CLANGX',
@@ -22,7 +24,10 @@ OVERRIDES = {
 
 
 def get_dirs(dir):
-    return [item for item in os.listdir(dir) if os.path.isdir(os.path.join(dir, item))]
+    try:
+        return [item for item in os.listdir(dir) if os.path.isdir(os.path.join(dir, item))]
+    except OSError:
+        return []
 
 
 def main():
@@ -47,7 +52,7 @@ def main():
     print
 
     print 'Available Rubies:'
-    for ruby in get_dirs('/home/travis/.rvm/rubies'):
+    for ruby in get_dirs(os.path.expanduser('~/.rvm/rubies')):
         print '  -', ruby
     print
 
@@ -87,6 +92,8 @@ def main():
 
             if success:
                 result.update(config)
+                executor.Executor.runtime_dict = config
+                executors[name] = executor
             else:
                 if config:
                     print '  Attempted:'
@@ -100,6 +107,19 @@ def main():
     print
     print ansi_style('#ansi[Configuration result](green|bold|underline):')
     print yaml.dump({'runtime': result}, default_flow_style=False).rstrip()
+    print
+    print
+    print 'Running test cases...'
+    judgeenv.problem_dirs = [os.path.join(os.path.dirname(__file__), 'testsuite')]
+    tester = Tester()
+    fails = tester.test_all()
+    print
+    print 'Test complete'
+    if fails:
+        print ansi_style('#ansi[A total of %d case(s) failed](red|bold).') % fails
+    else:
+        print ansi_style('#ansi[All cases passed.](green|bold)')
+    failed |= fails != 0
     raise SystemExit(int(failed))
 
 

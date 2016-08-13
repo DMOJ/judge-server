@@ -1,0 +1,5 @@
+language: C
+time: 1
+memory: 1024
+source: fail.c
+expect: CE

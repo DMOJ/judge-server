@@ -23,7 +23,7 @@ class RubyExecutor(ScriptExecutor):
 
     @classmethod
     def get_versionable_commands(cls):
-        return ('ruby', cls.runtime_dict[cls.name.lower()]),
+        return ('ruby', cls.get_command()),
 
     @classmethod
     def get_find_first_mapping(cls):

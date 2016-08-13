@@ -1,15 +1,14 @@
+sudo: required
+dist: trusty
 language: python
 python:
   - 2.7
 addons:
   apt:
     sources:
-    - ubuntu-toolchain-r-test
     - mono
     - mono-libtiff-compat
     packages:
-    - gcc-5
-    - g++-5
     - ghc
     - gnat
     - php5-cli

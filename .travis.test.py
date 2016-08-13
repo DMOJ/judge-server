@@ -36,7 +36,7 @@ def main():
     judgeenv.env['runtime'] = {}
     judgeenv.env['extra_fs'] = {
         'PHP': ['/etc/php5/', '/etc/terminfo/', '/etc/protocols$'],
-        'RUBY19': ['/home/travis/.rvm/rubies/'],
+        'RUBY19': [os.path.expanduser('~/.rvm/rubies/')],
     }
 
     failed = False

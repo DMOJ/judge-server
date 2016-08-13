@@ -88,7 +88,7 @@ class TestJudge(Judge):
 
 
 class Tester(object):
-    all_codes = {'AC', 'IE', 'TLE', 'MLE', 'OLE', 'RTE', 'IR', 'WA', 'SC'}
+    all_codes = {'AC', 'IE', 'TLE', 'MLE', 'OLE', 'RTE', 'IR', 'WA', 'CE', 'SC'}
 
     def __init__(self, problem_regex=None, case_regex=None):
         self.manager = TestManager()

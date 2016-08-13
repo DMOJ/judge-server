@@ -125,7 +125,7 @@ class Tester(object):
                     self.output(ansi_style('#ansi[Test case failed with exception:](red|bold)'))
                     self.output(traceback.format_exc())
                 else:
-                    self.output(ansi_style('Result of case #ansi[%s](yellow|bold) for #ansi[%s](|underline): ')
+                    self.output(ansi_style('Result of case #ansi[%s](yellow|bold) for #ansi[%s](cyan|bold): ')
                                 % (case, problem) +
                                 ansi_style(['#ansi[Failed](red|bold)', '#ansi[Success](green|bold)'][succeeded]))
                     fails += not succeeded

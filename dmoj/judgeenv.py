@@ -14,7 +14,7 @@ env = ConfigNode(defaults={
 _root = os.path.dirname(__file__)
 fs_encoding = os.environ.get('DMOJ_ENCODING', sys.getfilesystemencoding())
 
-log_file = server_host = server_port = no_ansi = no_ansi_emu = no_watchdog = None
+log_file = server_host = server_port = no_ansi = no_ansi_emu = no_watchdog = problem_regex = case_regex = None
 
 startup_warnings = []
 
@@ -30,7 +30,8 @@ def unicodify(string):
 
 def load_env(cli=False, testsuite=False):
     global problem_dirs, only_executors, exclude_executors, log_file, server_host, \
-        server_port, no_ansi, no_ansi_emu, env, startup_warnings, no_watchdog
+        server_port, no_ansi, no_ansi_emu, env, startup_warnings, no_watchdog, \
+        problem_regex, case_regex
     _parser = argparse.ArgumentParser(description='''
         Spawns a judge for a submission server.
     ''')
@@ -61,6 +62,8 @@ def load_env(cli=False, testsuite=False):
 
     if testsuite:
         _parser.add_argument('tests_dir', help='directory where tests are stored')
+        _parser.add_argument('problem_regex', help='when specified, only matched problems will be tested', nargs='?')
+        _parser.add_argument('case_regex', help='when specified, only matched cases will be tested', nargs='?')
 
     _args = _parser.parse_args()
 
@@ -110,6 +113,18 @@ def load_env(cli=False, testsuite=False):
         if not os.path.isdir(_args.tests_dir):
             raise SystemExit('Invalid tests directory')
         problem_dirs = [_args.tests_dir]
+
+        import re
+        if _args.problem_regex:
+            try:
+                problem_regex = re.compile(_args.problem_regex)
+            except re.error:
+                raise SystemExit('Invalid problem regex')
+        if _args.case_regex:
+            try:
+                case_regex = re.compile(_args.case_regex)
+            except re.error:
+                raise SystemExit('Invalid case regex')
 
 
 def get_problem_root(pid):

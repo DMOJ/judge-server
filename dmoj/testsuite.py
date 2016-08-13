@@ -90,11 +90,13 @@ class TestJudge(Judge):
 class Tester(object):
     all_codes = {'AC', 'IE', 'TLE', 'MLE', 'OLE', 'RTE', 'IR', 'WA', 'SC'}
 
-    def __init__(self):
+    def __init__(self, problem_regex=None, case_regex=None):
         self.manager = TestManager()
         self.manager.output = self.error_output
         self.judge = TestJudge(self.manager)
         self.sub_id = 0
+        self.problem_regex = problem_regex
+        self.case_regex = case_regex
 
     def output(self, message=''):
         print message
@@ -106,6 +108,8 @@ class Tester(object):
         total_fails = 0
 
         for problem, _ in get_supported_problems():
+            if self.problem_regex is not None and not self.problem_regex.match(problem):
+                continue
             root = get_problem_root(problem)
             test_dir = os.path.join(root, 'tests')
             if os.path.isdir(test_dir):
@@ -125,6 +129,8 @@ class Tester(object):
         fails = 0
 
         for case in os.listdir(test_dir):
+            if self.case_regex is not None and not self.case_regex.match(case):
+                continue
             case_dir = os.path.join(test_dir, case)
             if os.path.isdir(case_dir):
                 self.output(ansi_style('Running test case #ansi[%s](yellow|bold) for #ansi[%s](cyan|bold)...')
@@ -219,7 +225,7 @@ def main():
 
     executors.load_executors()
 
-    tester = Tester()
+    tester = Tester(judgeenv.problem_regex, judgeenv.case_regex)
     fails = tester.test_all()
     print
     print 'Test complete'

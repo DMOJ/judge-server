@@ -34,9 +34,11 @@ class TestManager(object):
         code = result.readable_codes()[0]
         if position in self.codes_cases:
             if code not in self.codes_cases[position]:
-                self.fail('Unexpected code for case %d: %s' % (position, code))
+                self.fail('Unexpected code for case %d: %s, expecting %s' %
+                          (position, code, ', '.join(self.codes_cases[position])))
         elif code not in self.codes_all:
-            self.fail('Unexpected global code: %s' % code)
+            self.fail('Unexpected global code: %s, expecting %s' %
+                      (code, ', '.join(self.codes_all)))
 
     def compile_error_packet(self, log):
         if 'CE' not in self.codes_all:
@@ -100,8 +102,8 @@ class Tester(object):
             if os.path.isdir(test_dir):
                 fails = self.test_problem(problem, test_dir)
                 if fails:
-                    self.output(ansi_style('Problem #ansi[%s](cyan|bold) #ansi[failed %d case(s)](red|bold).')
-                                % (problem, fails))
+                    self.output(ansi_style('Problem #ansi[%s](cyan|bold) #ansi[failed %d case(s)](red|bold).') %
+                                (problem, fails))
                 else:
                     print ansi_style('Problem #ansi[%s](cyan|bold) passed with flying colours.') % problem
                 total_fails += fails
@@ -150,7 +152,7 @@ class Tester(object):
             for file in config['source']:
                 with open(os.path.join(case_dir, file)) as f:
                     sources += [f.read()]
-        expect = self.parse_expected_codes(config['expect'])
+        expect = self.parse_expected_codes(config.get('expect', 'AC'))
         cases = config.get('cases', {})
         if isinstance(cases, list):
             cases = enumerate(cases, 1)
@@ -176,6 +178,7 @@ class Tester(object):
         else:
             result = set(codes)
             assert not (result - self.all_codes)
+            return result
 
 
 def main():

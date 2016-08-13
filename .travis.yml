@@ -29,9 +29,9 @@ before_install:
   - curl -sSf https://static.rust-lang.org/rustup.sh | sh
   # Install latest Scala
   - wget http://downloads.lightbend.com/scala/2.11.8/scala-2.11.8.deb
-  - dpkg -i scala-2.11.8.deb
-  - apt-get update
-  - apt-get install scala
+  - sudo dpkg -i scala-2.11.8.deb
+  - sudo apt-get update
+  - sudo apt-get install scala
 install:
   - pip install codecov
   - pip install Cython --install-option="--no-cython-compile"

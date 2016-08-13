@@ -139,7 +139,7 @@ class Tester(object):
         language = config['language']
         if language not in all_executors:
             self.output(ansi_style('    #ansi[Skipped](magenta|bold) - Language not supported'))
-            return True
+            return 0
         time = config['time']
         memory = config['memory']
         if isinstance(config['source'], (str, unicode)):

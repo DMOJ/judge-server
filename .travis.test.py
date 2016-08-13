@@ -11,10 +11,12 @@ from dmoj.utils.ansi import ansi_style
 
 TEST_ON_TRAVIS = ['ADA', 'AWK', 'BF', 'C', 'CPP03', 'CPP11', 'CPP14', 'CLANG', 'CLANGX',
                   'COFFEE', 'GO', 'HASK', 'JAVA7', 'JAVA8', 'MONOCS',
-                  'PERL', 'PHP', 'PY2', 'PY3', 'RUBY19', 'SCALA', 'TEXT']
+                  'PERL', 'PHP', 'PY2', 'PY3', 'PYPY', 'PYPY3', 'RUBY19', 'SCALA', 'TEXT']
 OVERRIDES = {
     'PY2': {'python': '/usr/bin/python'},
     'RUBY19': {'ruby19': find_executable('ruby')},
+    'PYPY': {'pypy_home': '/opt/python/pypy-2.5.0'},
+    'PYPY3': {'pypy3_home': '/opt/python/pypy3-2.4.0'},
 }
 
 

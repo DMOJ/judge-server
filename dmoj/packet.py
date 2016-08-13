@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 import socket
 import struct
 import sys
@@ -7,7 +8,6 @@ import threading
 import time
 import traceback
 import zlib
-import os
 
 from dmoj import sysinfo
 from dmoj.judgeenv import get_supported_problems, get_runtime_versions
@@ -157,17 +157,17 @@ class PacketManager(object):
         self._send_packet({'name': 'supported-problems',
                            'problems': problems})
 
-    def test_case_status_packet(self, position, points, total_points, status, time, memory, output, feedback=None):
+    def test_case_status_packet(self, position, result):
         self._send_packet({'name': 'test-case-status',
                            'submission-id': self.judge.current_submission,
                            'position': position,
-                           'status': status,
-                           'time': time,
-                           'points': points,
-                           'total-points': total_points,
-                           'memory': memory,
-                           'output': output,
-                           'feedback': feedback})
+                           'status': result.result_flag,
+                           'time': result.execution_time,
+                           'points': result.points,
+                           'total-points': result.total_points,
+                           'memory': result.max_memory,
+                           'output': result.output,
+                           'feedback': result.feedback})
 
     def compile_error_packet(self, log):
         logger.info('Compile error: %d', self.judge.current_submission)

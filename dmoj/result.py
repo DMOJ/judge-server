@@ -44,6 +44,14 @@ class Result(object):
                 execution_verdict.append(flag)
         return execution_verdict or ['AC']
 
+    @property
+    def total_points(self):
+        return self.case.points
+
+    @property
+    def output(self):
+        return self.proc_output[:self.case.output_prefix_length].decode('utf-8', 'replace')
+
 
 class CheckerResult(object):
     def __init__(self, passed, points, feedback=None):

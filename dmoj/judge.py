@@ -5,10 +5,9 @@ import threading
 import traceback
 
 from dmoj import packet, graders, judgeenv
-from dmoj.config import InvalidInitException
-from dmoj.problem import Problem, BatchedTestCase
 from dmoj.error import CompileError
-from dmoj.judgeenv import env, get_problem_roots, get_supported_problems, startup_warnings
+from dmoj.judgeenv import env, get_problem_roots, get_supported_problems
+from dmoj.problem import Problem, BatchedTestCase
 from dmoj.result import Result
 from dmoj.utils.ansi import ansi_style, strip_ansi
 from dmoj.utils.debugger import setup_all_debuggers
@@ -177,12 +176,7 @@ class Judge(object):
                                                                       colored_codes[0], case_info))
 
                         # cases are indexed at 1
-                        self.packet_manager.test_case_status_packet(
-                            case_number + 1, result.points, result.case.points, result.result_flag,
-                            result.execution_time,
-                            result.max_memory,
-                            result.proc_output[:result.case.output_prefix_length].decode('utf-8', 'replace'),
-                            result.feedback)
+                        self.packet_manager.test_case_status_packet(case_number + 1, result)
             except TerminateGrading:
                 self.packet_manager.submission_terminated_packet()
                 print ansi_style('#ansi[Forcefully terminating grading. Temporary files may not be deleted.](red|bold)')

@@ -1,16 +1,14 @@
 import argparse
 import os
-import traceback
+import re
+import sys
 from collections import OrderedDict
 from itertools import izip_longest
 from operator import itemgetter
 
-import re
-
 from dmoj import judgeenv
 from dmoj.executors import executors
 from dmoj.judge import Judge
-import sys
 from dmoj.utils.ansi import ansi_style
 
 
@@ -24,7 +22,7 @@ class LocalPacketManager(object):
     def supported_problems_packet(self, problems):
         pass
 
-    def test_case_status_packet(self, position, points, total_points, status, time, memory, output, feedback=None):
+    def test_case_status_packet(self, position, result):
         pass
 
     def compile_error_packet(self, log):

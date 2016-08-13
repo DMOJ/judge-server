@@ -33,6 +33,11 @@ before_install:
   - sudo dpkg -i scala-2.11.8.deb
   # Install D
   - curl -sSf https://dlang.org/install.sh | bash -s dmd
+  # Install sdkman for Groovy and Kotlin
+  - curl -s get.sdkman.io | bash
+  - source "$HOME/.sdkman/bin/sdkman-init.sh"
+  # Install Groovy
+  - sdk install groovy
 install:
   - pip install codecov
   - pip install Cython --install-option="--no-cython-compile"

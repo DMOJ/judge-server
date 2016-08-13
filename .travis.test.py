@@ -18,21 +18,29 @@ OVERRIDES = {
 }
 
 
+def get_dirs(rubies_dir):
+    return [item for item in os.listdir(rubies_dir) if os.path.isdir(os.path.join(rubies_dir, item))]
+
+
 def main():
     result = {}
 
     judgeenv.env['runtime'] = {}
     judgeenv.env['extra_fs'] = {
         'PHP': ['/etc/php5/', '/etc/terminfo/'],
+        'RUBY19': ['/home/travis/.rvm/rubies/'],
     }
 
     failed = False
 
-    jvms = [item for item in os.listdir('/usr/lib/jvm') if os.path.isdir(os.path.join('/usr/lib/jvm/', item))]
     print 'Available JVMs:'
-    for jvm in jvms:
+    for jvm in get_dirs('/usr/lib/jvm/'):
         print '  -', jvm
     print
+
+    print 'Available Rubies:'
+    for ruby in get_dirs('/home/travis/.rvm/rubies'):
+        print '  -', ruby
 
     print 'Testing executors...'
 

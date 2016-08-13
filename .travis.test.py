@@ -22,7 +22,7 @@ TEST_ON_TRAVIS = ['ADA', 'AWK', 'BF', 'C', 'CPP03', 'CPP11', 'CLANG', 'CLANGX',
                   'COFFEE', 'GO', 'HASK', 'JAVA7', 'JAVA8', 'JAVA9', 'MONOCS',
                   'MONOFS', 'MONOVB', 'PAS', 'GAS32', 'GAS64', 'NASM', 'NASM64',
                   'PERL', 'PHP', 'PY2', 'PY3', 'PYPY', 'PYPY3',
-                  'RUBY19', 'RUBY21', 'SCALA', 'SWIFT', 'TEXT']
+                  'RUBY19', 'RUBY21', 'RUST', 'SCALA', 'SWIFT', 'TEXT']
 RVM_DIR = os.path.expanduser('~/.rvm/rubies/')
 PYENV_DIR = '/opt/python/'
 JVM_DIR = '/usr/lib/jvm/'

@@ -1,0 +1,6 @@
+language: CPP11
+time: 1
+memory: 4096
+source: badalloc.cpp
+expect: RTE
+feedback: std::bad_alloc

@@ -166,7 +166,7 @@ class CHROOTSecurity(dict):
 
     def do_access(self, debugger):
         file = debugger.readstr(debugger.uarg0)
-        return self._file_access_check(file, debugger)
+        return self._file_access_check(file, debugger) or ACCESS_DENIED(debugger)
 
     def do_open(self, debugger):
         file_ptr = debugger.uarg0

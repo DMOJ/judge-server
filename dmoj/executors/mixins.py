@@ -6,107 +6,105 @@ import sys
 from dmoj.judgeenv import env
 
 try:
-    from dmoj.cptbox import SecurePopen, PIPE, CHROOTSecurity, syscalls
-    from dmoj.cptbox.handlers import ALLOW
+    if os.name == 'nt':
+        from dmoj.wbox import WBoxPopen, default_inject32, default_inject64, default_inject_func
 
-    BASE_FILESYSTEM = ['/dev/(?:null|zero|u?random)$',
-                       '/usr/(?!home)', '/lib(?:32|64)?/', '/opt/',
-                       '/etc/(?:localtime)$']
 
-    if 'freebsd' in sys.platform:
-        BASE_FILESYSTEM += [r'/etc/s?pwd\.db$']
+        class PlatformExecutorMixin(object):
+            inject32 = env.inject32 or default_inject32
+            inject64 = env.inject64 or default_inject64
+            inject_func = env.inject_func or default_inject_func
+            network_block = True
+
+            def get_env(self):
+                return None
+
+            def get_network_block(self):
+                return self.network_block
+
+            def get_inject32(self):
+                file = self._file('dmsec32.dll')
+                copyfile(self.inject32, file)
+                return file
+
+            def get_inject64(self):
+                file = self._file('dmsec64.dll')
+                copyfile(self.inject64, file)
+                return file
+
+            def get_inject_func(self):
+                return self.inject_func
+
+            def launch(self, *args, **kwargs):
+                return WBoxPopen(self.get_cmdline() + list(args),
+                                 time=kwargs.get('time'), memory=kwargs.get('memory'),
+                                 cwd=self._dir, executable=self.get_executable(),
+                                 network_block=True, env=self.get_env(),
+                                 nproc=self.get_nproc() + 1,
+                                 inject32=self.get_inject32(),
+                                 inject64=self.get_inject64(),
+                                 inject_func=self.get_inject_func())
     else:
-        BASE_FILESYSTEM += ['/sys/devices/system/cpu(?:$|/online)']
+        from dmoj.cptbox import SecurePopen, PIPE, CHROOTSecurity, syscalls
+        from dmoj.cptbox.handlers import ALLOW
 
-    if sys.platform.startswith('freebsd'):
-        BASE_FILESYSTEM += [r'/etc/libmap\.conf$', r'/var/run/ld-elf\.so\.hints$']
-    else:
-        # Linux and kFreeBSD mounts linux-style procfs.
-        BASE_FILESYSTEM += ['/proc/self/maps$', '/proc/self$', '/proc/(?:meminfo|stat|cpuinfo)$']
+        BASE_FILESYSTEM = ['/dev/(?:null|zero|u?random)$',
+                           '/usr/(?!home)', '/lib(?:32|64)?/', '/opt/',
+                           '/etc/(?:localtime)$']
 
-        # Linux-style ld.
-        BASE_FILESYSTEM += [r'/etc/ld\.so\.(?:nohwcap|preload|cache)$']
+        if 'freebsd' in sys.platform:
+            BASE_FILESYSTEM += [r'/etc/s?pwd\.db$']
+        else:
+            BASE_FILESYSTEM += ['/sys/devices/system/cpu(?:$|/online)']
 
+        if sys.platform.startswith('freebsd'):
+            BASE_FILESYSTEM += [r'/etc/libmap\.conf$', r'/var/run/ld-elf\.so\.hints$']
+        else:
+            # Linux and kFreeBSD mounts linux-style procfs.
+            BASE_FILESYSTEM += ['/proc/self/maps$', '/proc/self$', '/proc/(?:meminfo|stat|cpuinfo)$']
 
-    class LinuxExecutorMixin(object):
-        address_grace = 65536
-        fs = []
-        syscalls = []
-
-        def get_security(self, launch_kwargs=None):
-            if CHROOTSecurity is None:
-                raise NotImplementedError('No security manager on Windows')
-            sec = CHROOTSecurity(self.get_fs(), io_redirects=launch_kwargs.get('io_redirects', None))
-            for name in self.get_allowed_syscalls():
-                if isinstance(name, tuple) and len(name) == 2:
-                    name, handler = name
-                else:
-                    handler = ALLOW
-                sec[getattr(syscalls, 'sys_' + name)] = handler
-            return sec
-
-        def get_fs(self):
-            name = self.get_executor_name()
-            return BASE_FILESYSTEM + self.fs + env.get('extra_fs', {}).get(name, [])
-
-        def get_allowed_syscalls(self):
-            return self.syscalls
-
-        def get_address_grace(self):
-            return self.address_grace
-
-        def get_env(self):
-            return {'LANG': 'C'}
-
-        def launch(self, *args, **kwargs):
-            return SecurePopen(self.get_cmdline() + list(args), executable=self.get_executable(),
-                               security=self.get_security(launch_kwargs=kwargs),
-                               address_grace=self.get_address_grace(),
-                               time=kwargs.get('time'), memory=kwargs.get('memory'),
-                               stderr=(PIPE if kwargs.get('pipe_stderr', False) else None),
-                               env=self.get_env(), cwd=self._dir, nproc=self.get_nproc(),
-                               unbuffered=kwargs.get('unbuffered', False))
-except ImportError:
-    pass
-
-try:
-    from dmoj.wbox import WBoxPopen, default_inject32, default_inject64, default_inject_func
+            # Linux-style ld.
+            BASE_FILESYSTEM += [r'/etc/ld\.so\.(?:nohwcap|preload|cache)$']
 
 
-    class WindowsExecutorMixin(object):
-        inject32 = env.inject32 or default_inject32
-        inject64 = env.inject64 or default_inject64
-        inject_func = env.inject_func or default_inject_func
-        network_block = True
+        class PlatformExecutorMixin(object):
+            address_grace = 65536
+            fs = []
+            syscalls = []
 
-        def get_env(self):
-            return None
+            def get_security(self, launch_kwargs=None):
+                if CHROOTSecurity is None:
+                    raise NotImplementedError('No security manager on Windows')
+                sec = CHROOTSecurity(self.get_fs(), io_redirects=launch_kwargs.get('io_redirects', None))
+                for name in self.get_allowed_syscalls():
+                    if isinstance(name, tuple) and len(name) == 2:
+                        name, handler = name
+                    else:
+                        handler = ALLOW
+                    sec[getattr(syscalls, 'sys_' + name)] = handler
+                return sec
 
-        def get_network_block(self):
-            return self.network_block
+            def get_fs(self):
+                name = self.get_executor_name()
+                return BASE_FILESYSTEM + self.fs + env.get('extra_fs', {}).get(name, [])
 
-        def get_inject32(self):
-            file = self._file('dmsec32.dll')
-            copyfile(self.inject32, file)
-            return file
+            def get_allowed_syscalls(self):
+                return self.syscalls
 
-        def get_inject64(self):
-            file = self._file('dmsec64.dll')
-            copyfile(self.inject64, file)
-            return file
+            def get_address_grace(self):
+                return self.address_grace
 
-        def get_inject_func(self):
-            return self.inject_func
+            def get_env(self):
+                return {'LANG': 'C'}
 
-        def launch(self, *args, **kwargs):
-            return WBoxPopen(self.get_cmdline() + list(args),
-                             time=kwargs.get('time'), memory=kwargs.get('memory'),
-                             cwd=self._dir, executable=self.get_executable(),
-                             network_block=True, env=self.get_env(),
-                             nproc=self.get_nproc() + 1,
-                             inject32=self.get_inject32(),
-                             inject64=self.get_inject64(),
-                             inject_func=self.get_inject_func())
+            def launch(self, *args, **kwargs):
+                return SecurePopen(self.get_cmdline() + list(args), executable=self.get_executable(),
+                                   security=self.get_security(launch_kwargs=kwargs),
+                                   address_grace=self.get_address_grace(),
+                                   time=kwargs.get('time'), memory=kwargs.get('memory'),
+                                   stderr=(PIPE if kwargs.get('pipe_stderr', False) else None),
+                                   env=self.get_env(), cwd=self._dir, nproc=self.get_nproc(),
+                                   unbuffered=kwargs.get('unbuffered', False))
 except ImportError:
     pass
 

@@ -13,10 +13,7 @@ from dmoj.executors.resource_proxy import ResourceProxy
 from dmoj.judgeenv import env
 from dmoj.utils.ansi import ansi_style
 
-try:
-    from dmoj.executors.mixins import LinuxExecutorMixin as PlatformExecutorMixin
-except ImportError:
-    from dmoj.executors.mixins import WindowsExecutorMixin as PlatformExecutorMixin
+from dmoj.executors.mixins import PlatformExecutorMixin
 
 reversion = re.compile('.*?(\d+(?:\.\d+)+)', re.DOTALL)
 version_cache = {}

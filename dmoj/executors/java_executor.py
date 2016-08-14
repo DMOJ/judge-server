@@ -199,7 +199,7 @@ class JavacExecutor(JavaExecutor):
         except IOError as e:
             if e.errno in (errno.ENAMETOOLONG, errno.ENOENT):
                 raise CompileError('Why do you need a class name so long? '
-                                   'As a judge, I sentence your code to death.')
+                                   'As a judge, I sentence your code to death.\n')
             raise
         self._class_name = class_name.group(1)
 
@@ -209,7 +209,7 @@ class JavacExecutor(JavaExecutor):
     def handle_compile_error(self, output):
         if 'is public, should be declared in a file named' in output:
             raise CompileError('You are a troll. Trolls are not welcome. '
-                               'As a judge, I sentence your code to death.')
+                               'As a judge, I sentence your code to death.\n')
         raise CompileError(output)
 
     @classmethod

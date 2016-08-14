@@ -23,6 +23,7 @@ addons:
     - lua5.2
     - gfortran
     - chicken-bin
+    - tcl
 before_install:
   # Install Swift
   - wget -q -O - https://swift.org/keys/all-keys.asc | gpg --import -

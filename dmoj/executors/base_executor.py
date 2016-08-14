@@ -6,7 +6,6 @@ import threading
 import time
 import traceback
 from distutils.spawn import find_executable
-from shutil import copyfile
 from subprocess import Popen
 
 from dmoj.error import CompileError
@@ -15,57 +14,25 @@ from dmoj.judgeenv import env
 from dmoj.utils.ansi import ansi_style
 
 try:
-    from dmoj.cptbox import SecurePopen, PIPE, CHROOTSecurity, syscalls
-    from dmoj.cptbox.handlers import ALLOW
+    from dmoj.executors.mixins import LinuxExecutorMixin as PlatformExecutorMixin
 except ImportError:
-    SecurePopen, PIPE, CHROOTSecurity, ALLOW, syscalls = None, None, None, None, None
-    from dmoj.wbox import WBoxPopen, default_inject32, default_inject64, default_inject_func
-else:
-    WBoxPopen = default_inject32 = default_inject64 = default_inject_func = None
-
-BASE_FILESYSTEM = ['/dev/(?:null|zero|u?random)$',
-                   '/usr/(?!home)', '/lib(?:32|64)?/', '/opt/',
-                   '/etc/(?:localtime)$']
-
-if 'freebsd' in sys.platform:
-    BASE_FILESYSTEM += [r'/etc/s?pwd\.db$']
-else:
-    BASE_FILESYSTEM += ['/sys/devices/system/cpu(?:$|/online)']
-
-if sys.platform.startswith('freebsd'):
-    BASE_FILESYSTEM += [r'/etc/libmap\.conf$', r'/var/run/ld-elf\.so\.hints$']
-else:
-    # Linux and kFreeBSD mounts linux-style procfs.
-    BASE_FILESYSTEM += ['/proc/self/maps$', '/proc/self$', '/proc/(?:meminfo|stat|cpuinfo)$']
-
-    # Linux-style ld.
-    BASE_FILESYSTEM += [r'/etc/ld\.so\.(?:nohwcap|preload|cache)$']
-
+    from dmoj.executors.mixins import WindowsExecutorMixin as PlatformExecutorMixin
 
 reversion = re.compile('.*?(\d+(?:\.\d+)+)', re.DOTALL)
 version_cache = {}
 
 
-class BaseExecutor(ResourceProxy):
+class BaseExecutor(PlatformExecutorMixin, ResourceProxy):
     ext = None
-    network_block = True
-    address_grace = 65536
     nproc = 0
-    fs = []
-    syscalls = []
     command = None
     command_paths = []
     runtime_dict = env['runtime']
     name = '(unknown)'
-    inject32 = env.inject32 or default_inject32
-    inject64 = env.inject64 or default_inject64
-    inject_func = env.inject_func or default_inject_func
     test_program = ''
     test_name = 'self_test'
     test_time = 10
     test_memory = 65536
-    wbox_popen_class = WBoxPopen
-    cptbox_popen_class = SecurePopen
 
     def __init__(self, problem_id, source_code, **kwargs):
         super(BaseExecutor, self).__init__()
@@ -76,79 +43,14 @@ class BaseExecutor(ResourceProxy):
     def get_executor_name(cls):
         return cls.__module__.split('.')[-1]
 
-    def get_fs(self):
-        name = self.get_executor_name()
-        return BASE_FILESYSTEM + self.fs + env.get('extra_fs', {}).get(name, [])
-
-    def get_allowed_syscalls(self):
-        return self.syscalls
-
-    def get_security(self, launch_kwargs=None):
-        if CHROOTSecurity is None:
-            raise NotImplementedError('No security manager on Windows')
-        sec = CHROOTSecurity(self.get_fs(), io_redirects=launch_kwargs.get('io_redirects', None))
-        for name in self.get_allowed_syscalls():
-            if isinstance(name, tuple) and len(name) == 2:
-                name, handler = name
-            else:
-                handler = ALLOW
-            sec[getattr(syscalls, 'sys_' + name)] = handler
-        return sec
-
     def get_executable(self):
         return None
 
     def get_cmdline(self):
         raise NotImplementedError()
 
-    def get_env(self):
-        if WBoxPopen is not None:
-            return None
-        return {'LANG': 'C'}
-
-    def get_network_block(self):
-        assert WBoxPopen is not None
-        return self.network_block
-
-    def get_address_grace(self):
-        assert SecurePopen is not None
-        return self.address_grace
-
     def get_nproc(self):
         return self.nproc
-
-    def get_inject32(self):
-        file = self._file('dmsec32.dll')
-        copyfile(self.inject32, file)
-        return file
-
-    def get_inject64(self):
-        file = self._file('dmsec64.dll')
-        copyfile(self.inject64, file)
-        return file
-
-    def get_inject_func(self):
-        return self.inject_func
-
-    if SecurePopen is None:
-        def launch(self, *args, **kwargs):
-            return self.wbox_popen_class(self.get_cmdline() + list(args),
-                                         time=kwargs.get('time'), memory=kwargs.get('memory'),
-                                         cwd=self._dir, executable=self.get_executable(),
-                                         network_block=True, env=self.get_env(),
-                                         nproc=self.get_nproc() + 1,
-                                         inject32=self.get_inject32(),
-                                         inject64=self.get_inject64(),
-                                         inject_func=self.get_inject_func())
-    else:
-        def launch(self, *args, **kwargs):
-            return self.cptbox_popen_class(self.get_cmdline() + list(args), executable=self.get_executable(),
-                                           security=self.get_security(launch_kwargs=kwargs),
-                                           address_grace=self.get_address_grace(),
-                                           time=kwargs.get('time'), memory=kwargs.get('memory'),
-                                           stderr=(PIPE if kwargs.get('pipe_stderr', False) else None),
-                                           env=self.get_env(), cwd=self._dir, nproc=self.get_nproc(),
-                                           unbuffered=kwargs.get('unbuffered', False))
 
     def launch_unsafe(self, *args, **kwargs):
         return Popen(self.get_cmdline() + list(args),

@@ -2,12 +2,6 @@ import os
 import re
 from collections import deque
 
-try:
-    from dmoj.cptbox import CHROOTSecurity, SecurePopen, PIPE
-except ImportError:
-    CHROOTSecurity, SecurePopen, PIPE = None, None, None
-    from dmoj.wbox import WBoxPopen
-
 from .base_executor import CompiledExecutor
 from dmoj.judgeenv import env
 from dmoj.result import Result
@@ -70,6 +64,7 @@ class GCCExecutor(CompiledExecutor):
         return GCC_COMPILE
 
     def get_security(self, launch_kwargs=None):
+        from dmoj.cptbox import CHROOTSecurity
         return CHROOTSecurity(self.get_fs(), writable=self._writable,
                               io_redirects=launch_kwargs.get('io_redirects', None))
 

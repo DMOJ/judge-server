@@ -9,6 +9,10 @@ addons:
     - mono
     - ubuntu-toolchain-r-test
     - sourceline: 'ppa:swi-prolog/stable'
+    - sourceline: 'deb http://cran.rstudio.com/bin/linux/ubuntu trusty/'
+      key_url: 'http://keyserver.ubuntu.com/pks/lookup?op=get&fingerprint=on&search=0x51716619E084DAB9'
+    - sourceline: 'deb [arch=amd64] https://storage.googleapis.com/download.dartlang.org/linux/debian stable main'
+      key_url: 'https://dl-ssl.google.com/linux/linux_signing_key.pub'
     packages:
     - ghc
     - gnat
@@ -29,6 +33,8 @@ addons:
     - swi-prolog
     - g++-6
     - gcc-6
+    - r-base
+    - dart/stable
 before_install:
   # Install Swift
   - wget -q -O - https://swift.org/keys/all-keys.asc | gpg --import -
@@ -49,18 +55,6 @@ before_install:
   # Install Groovy
   - yes | sdk install groovy
   - export PATH=$HOME/.sdkman/candidates/groovy/current/bin:"${PATH}"
-  # Install Dart
-  - sudo apt-get install apt-transport-https
-  - sudo sh -c 'curl https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -'
-  - sudo sh -c 'curl https://storage.googleapis.com/download.dartlang.org/linux/debian/dart_stable.list > /etc/apt/sources.list.d/dart_stable.list'
-  - sudo apt-get update
-  - sudo apt-get install dart/stable
-  # Install R
-  - sudo sh -c 'echo "deb http://cran.rstudio.com/bin/linux/ubuntu trusty/" >> /etc/apt/sources.list'
-  - gpg --keyserver keyserver.ubuntu.com --recv-key E084DAB9
-  - gpg -a --export E084DAB9 | sudo apt-key add -
-  - sudo apt-get update
-  - sudo apt-get -y install r-base
 install:
   - pip install codecov
   - pip install Cython --install-option="--no-cython-compile"

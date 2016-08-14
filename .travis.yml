@@ -13,6 +13,8 @@ addons:
       key_url: 'http://keyserver.ubuntu.com/pks/lookup?op=get&fingerprint=on&search=0x51716619E084DAB9'
     - sourceline: 'deb [arch=amd64] https://storage.googleapis.com/download.dartlang.org/linux/debian stable main'
       key_url: 'https://dl-ssl.google.com/linux/linux_signing_key.pub'
+    - sourceline: 'deb http://iachievedit-repos.s3.amazonaws.com/ trusty main'
+      key_url: 'http://dev.iachieved.it/iachievedit.gpg.key'
     packages:
     - ghc
     - gnat
@@ -31,18 +33,12 @@ addons:
     - chicken-bin
     - tcl
     - swi-prolog
-    - gcc-4.8/trusty-updates
-    - g++-4.8/trusty-updates
     - g++-6
     - gcc-6
     - r-base
     - dart/stable
+    - swift-2.2
 before_install:
-  # Install Swift
-  - wget -q -O - https://swift.org/keys/all-keys.asc | gpg --import -
-  - wget https://swift.org/builds/swift-2.2.1-release/ubuntu1404/swift-2.2.1-RELEASE/swift-2.2.1-RELEASE-ubuntu14.04.tar.gz
-  - tar xzf swift-2.2.1-RELEASE-ubuntu14.04.tar.gz
-  - export PATH=${PWD}/swift-2.2.1-RELEASE-ubuntu14.04/usr/bin:"${PATH}"
   # Install Rust
   - curl -sSf https://static.rust-lang.org/rustup.sh | sh
   # Install latest Scala

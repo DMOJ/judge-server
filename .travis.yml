@@ -17,7 +17,7 @@ addons:
     - php5-cli
 before_install:
   - >
-    sudo -E apt-get -yq --no-install-suggests --no-install-recommends --no-upgrade --force-yes install
+    sudo -E apt-get -yq --no-install-suggests --no-install-recommends --no-upgrade --force-yes -t trusty-updates install
     g++-6 gcc-6 mono-devel mono-vbnc fsharp fp-compiler coffeescript binutils-multiarch libc6-dev-i386
     nasm open-cobol lua5.2 gfortran chicken-bin tcl swi-prolog g++-6 gcc-6 r-base dart/stable
   # Install Swift

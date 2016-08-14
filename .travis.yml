@@ -22,6 +22,7 @@ addons:
     - open-cobol
     - lua5.2
     - gfortran
+    - chicken-bin
 before_install:
   # Install Swift
   - wget -q -O - https://swift.org/keys/all-keys.asc | gpg --import -

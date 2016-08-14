@@ -27,8 +27,8 @@ addons:
     - chicken-bin
     - tcl
     - swi-prolog
-    - g++-5
-    - gcc-5
+    - g++-6
+    - gcc-6
 before_install:
   # Install Swift
   - wget -q -O - https://swift.org/keys/all-keys.asc | gpg --import -

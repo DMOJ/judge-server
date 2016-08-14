@@ -13,8 +13,6 @@ addons:
       key_url: 'http://keyserver.ubuntu.com/pks/lookup?op=get&fingerprint=on&search=0x51716619E084DAB9'
     - sourceline: 'deb [arch=amd64] https://storage.googleapis.com/download.dartlang.org/linux/debian stable main'
       key_url: 'https://dl-ssl.google.com/linux/linux_signing_key.pub'
-    - sourceline: 'deb http://iachievedit-repos.s3.amazonaws.com/ trusty main'
-      key_url: 'http://dev.iachieved.it/iachievedit.gpg.key'
     packages:
     - ghc
     - gnat
@@ -37,8 +35,14 @@ addons:
     - gcc-6
     - r-base
     - dart/stable
-    - swift-3.0
 before_install:
+  # Install Swift
+  - wget -q -O - https://swift.org/keys/all-keys.asc | gpg --import -
+  - >
+    mkdir swift &&
+    curl https://swift.org/builds/swift-2.2.1-release/ubuntu1510/swift-2.2.1-RELEASE/swift-2.2.1-RELEASE-ubuntu15.10.tar.gz |
+    tar xz -C swift --strip-components=1
+  - export PATH=${PWD}/swift/usr/bin:"${PATH}"
   # Install Rust
   - curl -sSf https://static.rust-lang.org/rustup.sh | sh
   # Install latest Scala
@@ -57,7 +61,10 @@ install:
   - pip install codecov
   - pip install Cython --install-option="--no-cython-compile"
   - python setup.py develop
-  - mkdir testsuite && curl https://codeload.github.com/DMOJ/judge-testsuite/legacy.tar.gz/master | tar xz -C testsuite --strip-components=1
+  - >
+    mkdir testsuite &&
+    curl https://codeload.github.com/DMOJ/judge-testsuite/legacy.tar.gz/master |
+    tar xz -C testsuite --strip-components=1
 script:
   - coverage run --source=dmoj .travis.test.py
 after_script:

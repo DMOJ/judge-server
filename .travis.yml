@@ -7,7 +7,6 @@ addons:
   apt:
     sources:
     - mono
-    - ubuntu-toolchain-r-test
     - sourceline: 'ppa:swi-prolog/stable'
     - sourceline: 'deb http://cran.rstudio.com/bin/linux/ubuntu trusty/'
       key_url: 'http://keyserver.ubuntu.com/pks/lookup?op=get&fingerprint=on&search=0x51716619E084DAB9'
@@ -31,8 +30,6 @@ addons:
     - chicken-bin
     - tcl
     - swi-prolog
-    - g++-6
-    - gcc-6
     - r-base
     - dart/stable
 before_install:
@@ -40,7 +37,7 @@ before_install:
   - wget -q -O - https://swift.org/keys/all-keys.asc | gpg --import -
   - >
     mkdir swift &&
-    curl https://swift.org/builds/swift-2.2.1-release/ubuntu1510/swift-2.2.1-RELEASE/swift-2.2.1-RELEASE-ubuntu15.10.tar.gz |
+    curl https://swift.org/builds/swift-2.2.1-release/ubuntu1404/swift-2.2.1-RELEASE/swift-2.2.1-RELEASE-ubuntu14.04.tar.gz |
     tar xz -C swift --strip-components=1
   - export PATH=${PWD}/swift/usr/bin:"${PATH}"
   # Install Rust

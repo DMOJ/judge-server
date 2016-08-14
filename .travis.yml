@@ -7,6 +7,7 @@ addons:
   apt:
     sources:
     - mono
+    - sourceline: 'ppa:swi-prolog/stable'
     packages:
     - ghc
     - gnat
@@ -24,6 +25,7 @@ addons:
     - gfortran
     - chicken-bin
     - tcl
+    - swi-prolog
 before_install:
   # Install Swift
   - wget -q -O - https://swift.org/keys/all-keys.asc | gpg --import -

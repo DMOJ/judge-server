@@ -315,7 +315,7 @@ def sanity_check():
     return True
 
 
-def main():
+def main():  # pragma: no cover
     sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
     if not sanity_check():
         return 1

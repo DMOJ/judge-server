@@ -37,7 +37,7 @@ addons:
     - gcc-6
     - r-base
     - dart/stable
-    - swift-2.2
+    - swift-3.0
 before_install:
   # Install Rust
   - curl -sSf https://static.rust-lang.org/rustup.sh | sh

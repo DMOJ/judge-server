@@ -36,10 +36,10 @@ def find_class(source):
     source = reinline_comment.sub('', restring.sub('', recomment.sub('', source)))
     class_name = reclass.search(source)
     if class_name is None:
-        raise CompileError('No public class: your main class must be declared as a "public class"')
+        raise CompileError('No public class: your main class must be declared as a "public class"\n')
     package = repackage.search(source)
     if package:
-        raise CompileError('Invalid package %s: do not declare package' % package.group(1))
+        raise CompileError('Invalid package %s: do not declare package\n' % package.group(1))
     return class_name
 
 

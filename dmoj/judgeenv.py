@@ -28,14 +28,14 @@ def unicodify(string):
     return string
 
 
-def load_env(cli=False, testsuite=False):
+def load_env(cli=False, testsuite=False):  # pragma: no cover
     global problem_dirs, only_executors, exclude_executors, log_file, server_host, \
         server_port, no_ansi, no_ansi_emu, env, startup_warnings, no_watchdog, \
         problem_regex, case_regex
     _parser = argparse.ArgumentParser(description='''
         Spawns a judge for a submission server.
     ''')
-    if not cli:  # pragma: no cover
+    if not cli:
         _parser.add_argument('server_host', help='host to listen for the server')
         _parser.add_argument('judge_name', nargs='?', help='judge name (overrides configuration)')
         _parser.add_argument('judge_key', nargs='?', help='judge key (overrides configuration)')
@@ -44,7 +44,7 @@ def load_env(cli=False, testsuite=False):
     _parser.add_argument('-c', '--config', type=str, default=None, required=True,
                          help='file to load judge configurations from')
 
-    if not cli:  # pragma: no cover
+    if not cli:
         _parser.add_argument('-l', '--log-file',
                              help='log file to use')
         _parser.add_argument('--no-watchdog', action='store_true',

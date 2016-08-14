@@ -31,8 +31,6 @@ addons:
     - chicken-bin
     - tcl
     - swi-prolog
-    - g++-6
-    - gcc-6
     - r-base
     - dart/stable
 before_install:

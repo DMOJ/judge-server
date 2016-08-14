@@ -35,7 +35,7 @@ def load_env(cli=False, testsuite=False):
     _parser = argparse.ArgumentParser(description='''
         Spawns a judge for a submission server.
     ''')
-    if not cli:
+    if not cli:  # pragma: no cover
         _parser.add_argument('server_host', help='host to listen for the server')
         _parser.add_argument('judge_name', nargs='?', help='judge name (overrides configuration)')
         _parser.add_argument('judge_key', nargs='?', help='judge key (overrides configuration)')
@@ -44,7 +44,7 @@ def load_env(cli=False, testsuite=False):
     _parser.add_argument('-c', '--config', type=str, default=None, required=True,
                          help='file to load judge configurations from')
 
-    if not cli:
+    if not cli:  # pragma: no cover
         _parser.add_argument('-l', '--log-file',
                              help='log file to use')
         _parser.add_argument('--no-watchdog', action='store_true',

@@ -18,9 +18,9 @@ def find_directory(parent, expr):
         if regex.match(dir):
             return os.path.join(parent, dir)
 
-TEST_ON_TRAVIS = ['ADA', 'AWK', 'BF', 'C', 'CBL', 'D', 'CPP03', 'CPP11', 'CLANG', 'CLANGX',
-                  'COFFEE', 'GO', 'GROOVY', 'HASK', 'JAVA7', 'JAVA8', 'JAVA9', 'MONOCS',
-                  'MONOFS', 'MONOVB', 'PAS', 'GAS32', 'GAS64', 'NASM', 'NASM64',
+TEST_ON_TRAVIS = ['ADA', 'AWK', 'BF', 'C', 'CBL', 'D', 'DART', 'CPP03', 'CPP11', 'CLANG', 'CLANGX',
+                  'COFFEE', 'F95', 'GO', 'GROOVY', 'HASK', 'JAVA7', 'JAVA8', 'JAVA9', 'MONOCS',
+                  'MONOFS', 'MONOVB', 'PAS', 'GAS32', 'GAS64', 'LUA', 'NASM', 'NASM64',
                   'PERL', 'PHP', 'PY2', 'PY3', 'PYPY', 'PYPY3',
                   'RUBY19', 'RUBY21', 'RUST', 'SCALA', 'SWIFT', 'TEXT']
 RVM_DIR = os.path.expanduser('~/.rvm/rubies/')

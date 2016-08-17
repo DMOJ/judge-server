@@ -8,7 +8,7 @@ class Executor(NullStdoutMixin, ScriptDirectoryMixin, CompiledExecutor):
     command = 'sbcl'
     command_paths = ['sbcl']
     syscalls = ['personality', 'modify_ldt']
-    fs = ['/dev/tty$', '/etc/nsswitch.conf$', '/etc/passwd$']
+    fs = ['/etc/nsswitch.conf$', '/etc/passwd$']
     test_program = '(write-line (read-line))'
     address_grace = 524288 + 131073 * 2<<8
 

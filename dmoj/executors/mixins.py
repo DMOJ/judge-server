@@ -48,7 +48,7 @@ try:
         from dmoj.cptbox import SecurePopen, PIPE, CHROOTSecurity, syscalls
         from dmoj.cptbox.handlers import ALLOW
 
-        BASE_FILESYSTEM = ['/dev/(?:null|zero|u?random)$',
+        BASE_FILESYSTEM = ['/dev/(?:null|tty|zero|u?random)$',
                            '/usr/(?!home)', '/lib(?:32|64)?/', '/opt/',
                            '/etc/(?:localtime)$']
 

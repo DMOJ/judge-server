@@ -195,7 +195,9 @@ class JavacExecutor(JavaExecutor):
         self._code = self._file('%s.java' % class_name.group(1))
         try:
             with open(self._code, 'wb') as fo:
-                fo.write(source_code.encode('utf8'))
+                if isinstance(source_code, unicode):
+                    source_code.encode('utf-8')
+                fo.write(source_code)
         except IOError as e:
             if e.errno in (errno.ENAMETOOLONG, errno.ENOENT):
                 raise CompileError('Why do you need a class name so long? '

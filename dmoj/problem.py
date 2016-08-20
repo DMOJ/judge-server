@@ -214,5 +214,8 @@ class TestCase(object):
 
         return partial(checker.check, **params)
 
+    def free_data(self):
+        self._generated = None
+
     def __str__(self):
         return 'TestCase{in=%s,out=%s,points=%s}' % (self.config['in'], self.config['out'], self.config['points'])

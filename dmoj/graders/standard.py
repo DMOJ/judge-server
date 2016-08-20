@@ -44,6 +44,7 @@ class StandardGrader(BaseGrader):
         result.points = check.points
 
         self.update_feedback(check, error, process, result)
+        case.free_data()
 
         return result
 

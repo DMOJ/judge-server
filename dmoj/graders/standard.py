@@ -1,4 +1,6 @@
 import os
+import gc
+import platform
 
 from dmoj.error import CompileError
 from dmoj.executors import executors
@@ -45,6 +47,16 @@ class StandardGrader(BaseGrader):
 
         self.update_feedback(check, error, process, result)
         case.free_data()
+
+        # Where CPython has reference counting and a GC, PyPy only has a GC. This means that while CPython
+        # will have freed any (usually massive) generated data from the line above by reference counting, it might
+        # - and probably still is - in memory by now. We need to be able to fork() immediately, which has a good chance
+        # of failing if there's not a lot of swap space available.
+        #
+        # We don't really have a way to force the generated data to disappear, so calling a gc here is the best
+        # chance we have.
+        if platform.python_implementation() == 'PyPy':
+            gc.collect()
 
         return result
 

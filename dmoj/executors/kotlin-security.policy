@@ -1,6 +1,10 @@
 // This is identical to the contents of java-security.policy, but allows you to
 // add or remove permissions you may need strictly for Kotlin.
 grant {
+    // Read/write to system streams
+    permission java.lang.RuntimePermission "readFileDescriptor";
+    permission java.lang.RuntimePermission "writeFileDescriptor";
+
     // Basic Threads
     permission java.lang.RuntimePermission "stopThread";
     permission java.lang.RuntimePermission "modifyThread";

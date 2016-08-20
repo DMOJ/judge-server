@@ -1,4 +1,8 @@
 grant {
+    // Read/write to system streams
+    permission java.lang.RuntimePermission "readFileDescriptor";
+    permission java.lang.RuntimePermission "writeFileDescriptor";
+
     // Groovy needs a lot of reflection-related permissions
     permission java.lang.RuntimePermission "createClassLoader";
     permission java.lang.RuntimePermission "setContextClassLoader";

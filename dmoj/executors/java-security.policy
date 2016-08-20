@@ -1,4 +1,8 @@
 grant {
+    // Read/write to system streams
+    permission java.lang.RuntimePermission "readFileDescriptor";
+    permission java.lang.RuntimePermission "writeFileDescriptor";
+
     // Basic Threads
     permission java.lang.RuntimePermission "stopThread";
     permission java.lang.RuntimePermission "modifyThread";

@@ -10,7 +10,6 @@ import traceback
 import zlib
 
 from dmoj import sysinfo
-from dmoj.judge import TYPE_INVOCATION
 from dmoj.judgeenv import get_supported_problems, get_runtime_versions
 
 logger = logging.getLogger('dmoj.judge')
@@ -104,8 +103,8 @@ class PacketManager(object):
         threading.Thread(target=self._read_async).start()
 
     def _send_packet(self, packet):
-        if self.judge.process_type == TYPE_INVOCATION and 'submission-id' in packet:
-            packet['invocation-id'] = packet['submission-id']
+        if 'submission-id' in packet and self.judge.get_process_type() != 'submission':
+            packet['%s-id' % self.judge.get_process_type()] = packet['submission-id']
             del packet['submission-id']
 
         raw = json.dumps(packet).encode('zlib')

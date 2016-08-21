@@ -94,19 +94,19 @@ class Judge(object):
         """
         self.packet_manager.supported_problems_packet(get_supported_problems())
 
-    def process_submission(self, target, blocking=False, *args):
+    def process_submission(self, target, id, *args, **kwargs):
         try:
             self.current_submission_thread.join()
         except AttributeError:
             pass
         self.current_submission = id
-        self.current_submission_thread = threading.Thread(target=self._begin_grading, args=args)
+        self.current_submission_thread = threading.Thread(target=target, args=args)
         self.current_submission_thread.daemon = True
         self.current_submission_thread.start()
-        if blocking:
+        if kwargs.pop('blocking', False):
             self.current_submission_thread.join()
 
-    def _custom_invocation(self, id, language, source, memory_limit, time_limit, input_data):
+    def _custom_invocation(self, language, source, memory_limit, time_limit, input_data):
         self.process_type = TYPE_INVOCATION
 
         class InvocationGrader(graders.StandardGrader):
@@ -269,6 +269,13 @@ class Judge(object):
             return self.internal_error()
 
         return grader
+
+    def get_process_type(self):
+        return {0: None,
+                TYPE_SUBMISSION: 'submission',
+                TYPE_INVOCATION: 'invocation',
+                #   TYPE_HACK:       'hack',
+                }[self.process_type]
 
     def internal_error(self, exc=None):
         # If exc is exists, raise it so that sys.exc_info() is populated with its data

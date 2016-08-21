@@ -3,8 +3,10 @@ import os
 import sys
 import threading
 import traceback
+from functools import partial
 
 from dmoj import packet, graders, judgeenv
+from dmoj.config import ConfigNode
 from dmoj.error import CompileError
 from dmoj.judgeenv import env, get_problem_roots, get_supported_problems
 from dmoj.problem import Problem, BatchedTestCase
@@ -52,6 +54,10 @@ class SendProblemsHandler(FileSystemEventHandler):
         self.judge.update_problems()
 
 
+TYPE_SUBMISSION = 1
+TYPE_INVOCATION = 2
+
+
 class Judge(object):
     def __init__(self):
         global startup_warnings
@@ -59,6 +65,11 @@ class Judge(object):
         self.current_grader = None
         self.current_submission_thread = None
         self._terminate_grading = False
+        self.process_type = 0
+
+        self.begin_grading = partial(self.process_submission, self._begin_grading)
+        self.custom_invocation = partial(self.process_submission, self._custom_invocation)
+
         if Observer is not None and not judgeenv.no_watchdog:
             handler = SendProblemsHandler(self)
             self._monitor = monitor = Observer()
@@ -83,34 +94,59 @@ class Judge(object):
         """
         self.packet_manager.supported_problems_packet(get_supported_problems())
 
-    def begin_grading(self, id, problem_id, language, source_code, time_limit, memory_limit, short_circuit,
-                      pretests_only, blocking=False):
+    def process_submission(self, target, blocking=False, *args):
         try:
             self.current_submission_thread.join()
         except AttributeError:
             pass
         self.current_submission = id
-        self.current_submission_thread = threading.Thread(target=self._begin_grading,
-                                                          args=(problem_id, language, source_code,
-                                                                time_limit, memory_limit, short_circuit,
-                                                                pretests_only))
+        self.current_submission_thread = threading.Thread(target=self._begin_grading, args=args)
         self.current_submission_thread.daemon = True
         self.current_submission_thread.start()
         if blocking:
             self.current_submission_thread.join()
 
-    def terminate_grading(self):
-        """
-        Forcefully terminates the current submission. Not necessarily safe.
-        """
-        if self.current_submission_thread:
-            self._terminate_grading = True
-            if self.current_grader:
-                self.current_grader.terminate()
-            self.current_submission_thread.join()
-            self.current_submission_thread = None
+    def _custom_invocation(self, id, language, source, memory_limit, time_limit, input_data):
+        self.process_type = TYPE_INVOCATION
+
+        class InvocationGrader(graders.StandardGrader):
+            def check_result(self, case, result):
+                return not result.result_flag
+
+        class InvocationProblem(object):
+            id = 'CustomInvocation'
+            time_limit = time_limit
+            memory_limit = memory_limit
+
+        class InvocationCase(object):
+            config = ConfigNode({'unbuffered': False})
+            io_redirects = lambda: None
+            input_data = lambda: input_data
+
+        grader = self.get_grader_from_source(InvocationGrader, InvocationProblem(), language, source)
+        binary = grader.binary if grader else None
+
+        if binary:
+            self.packet_manager.invocation_begin_packet()
+            try:
+                result = grader.grade(InvocationCase())
+            except TerminateGrading:
+                self.packet_manager.submission_terminated_packet()
+                print ansi_style('#ansi[Forcefully terminating invocation.](red|bold)')
+                pass
+            except:
+                self.internal_error()
+            else:
+                self.packet_manager.invocation_end_packet(result)
+
+        print ansi_style('Done invoking #ansi[%s](green|bold).\n' % (id))
+        self._terminate_grading = False
+        self.current_submission_thread = None
+        self.current_submission = None
 
     def _begin_grading(self, problem_id, language, source, time_limit, memory_limit, short_circuit, pretests_only):
+        self.process_type = TYPE_SUBMISSION
+
         submission_id = self.current_submission
         print ansi_style('Start grading #ansi[%s](yellow)/#ansi[%s](green|bold) in %s...'
                          % (problem_id, submission_id, language))
@@ -127,18 +163,7 @@ class Judge(object):
         else:
             grader_class = graders.StandardGrader
 
-        if isinstance(source, unicode):
-            source = source.encode('utf-8')
-
-        try:
-            grader = grader_class(self, problem, language, source)
-        except CompileError as ce:
-            print ansi_style('#ansi[Failed compiling submission!](red|bold)')
-            print ce.message,  # don't print extra newline
-            grader = None
-        except:  # if custom grader failed to initialize, report it to the site
-            return self.internal_error()
-
+        grader = self.get_grader_from_source(grader_class, problem, language, source)
         binary = grader.binary if grader else None
 
         # the compiler may have failed, or an error could have happened while initializing a custom judge
@@ -197,7 +222,6 @@ class Judge(object):
         self.current_grader = None
 
     def grade_cases(self, grader, cases, short_circuit=False, is_short_circuiting=False):
-
         for case in cases:
             # Yield notifying objects for batch begin/end, and unwrap all cases inside the batches
             if isinstance(case, BatchedTestCase):
@@ -231,6 +255,21 @@ class Judge(object):
 
             yield result
 
+    def get_grader_from_source(self, grader_class, problem, language, source):
+        if isinstance(source, unicode):
+            source = source.encode('utf-8')
+
+        try:
+            grader = grader_class(self, problem, language, source)
+        except CompileError as ce:
+            print ansi_style('#ansi[Failed compiling submission!](red|bold)')
+            print ce.message,  # don't print extra newline
+            grader = None
+        except:  # if custom grader failed to initialize, report it to the site
+            return self.internal_error()
+
+        return grader
+
     def internal_error(self, exc=None):
         # If exc is exists, raise it so that sys.exc_info() is populated with its data
         if exc:
@@ -241,15 +280,26 @@ class Judge(object):
         exc = sys.exc_info()
 
         message = ''.join(traceback.format_exception(*exc))
-        
+
         # Strip ANSI from the message, since this might be a checker's CompileError
         # ...we don't want to see the raw ANSI codes from GCC/Clang on the site.
         # We could use format_ansi and send HTML to the site, but the site doesn't presently support HTML
         # internal error formatting.
         self.packet_manager.internal_error_packet(strip_ansi(message))
-        
+
         # Logs can contain ANSI, and it'll display fine
-        print >>sys.stderr, message
+        print >> sys.stderr, message
+
+    def terminate_grading(self):
+        """
+        Forcefully terminates the current submission. Not necessarily safe.
+        """
+        if self.current_submission_thread:
+            self._terminate_grading = True
+            if self.current_grader:
+                self.current_grader.terminate()
+            self.current_submission_thread.join()
+            self.current_submission_thread = None
 
     def listen(self):
         """

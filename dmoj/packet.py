@@ -10,6 +10,7 @@ import traceback
 import zlib
 
 from dmoj import sysinfo
+from dmoj.judge import TYPE_INVOCATION
 from dmoj.judgeenv import get_supported_problems, get_runtime_versions
 
 logger = logging.getLogger('dmoj.judge')
@@ -103,6 +104,10 @@ class PacketManager(object):
         threading.Thread(target=self._read_async).start()
 
     def _send_packet(self, packet):
+        if self.judge.process_type == TYPE_INVOCATION and 'submission-id' in packet:
+            packet['invocation-id'] = packet['submission-id']
+            del packet['submission-id']
+
         raw = json.dumps(packet).encode('zlib')
         with self._lock:
             self.output.write(PacketManager.SIZE_PACK.pack(len(raw)))
@@ -129,6 +134,17 @@ class PacketManager(object):
             self._batch = 0
             logger.info('Accept submission: %d: executor: %s, code: %s',
                         packet['submission-id'], packet['language'], packet['problem-id'])
+        elif name == 'invocation-request':
+            self.submission_acknowledged_packet(packet['invocation-id'])
+            self.judge.custom_invocation(
+                packet['invocation-id'],
+                packet['language'],
+                packet['source'],
+                float(packet['time-limit']),
+                int(packet['memory-limit']),
+                packet['input-data']
+            )
+            logger.info('Accept invocation: %d: executor: %s', packet['invocation-id'], packet['language'])
         elif name == 'terminate-submission':
             self.judge.terminate_grading()
         else:
@@ -151,6 +167,22 @@ class PacketManager(object):
         else:
             if resp['name'] != 'handshake-success':
                 raise JudgeAuthenticationFailed()
+
+    def invocation_begin_packet(self):
+        logger.info('Begin invoking: %d', self.judge.current_submission)
+        self._send_packet({'name': 'invocation-begin',
+                           'invocation-id': self.judge.current_submission})
+
+    def invocation_end_packet(self, result):
+        logger.info('End invoking: %d', self.judge.current_submission)
+        self.fallback = 4
+        self._send_packet({'name': 'invocation-end',
+                           'output': result.proc_output,
+                           'status': result.status_flag,
+                           'time': result.execution_time,
+                           'memory': result.max_memory,
+                           'feedback': result.feedback,
+                           'invocation-id': self.judge.current_submission})
 
     def supported_problems_packet(self, problems):
         logger.info('Update problems')
@@ -233,5 +265,3 @@ class PacketManager(object):
     def submission_acknowledged_packet(self, sub_id):
         self._send_packet({'name': 'submission-acknowledged',
                            'submission-id': sub_id})
-
-

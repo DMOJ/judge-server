@@ -3,6 +3,7 @@ import uuid
 from dmoj.error import CompileError
 from dmoj.executors import executors
 from dmoj.graders import StandardGrader
+from dmoj.utils import ansi
 
 
 class SignatureGrader(StandardGrader):
@@ -38,7 +39,7 @@ class SignatureGrader(StandardGrader):
                                                      writable=handler_data['writable'] or (1, 2),
                                                      fds=handler_data['fds'])
             except CompileError as compilation_error:
-                self.judge.packet_manager.compile_error_packet(compilation_error.message)
+                self.judge.packet_manager.compile_error_packet(ansi.format_ansi(compilation_error.message))
 
                 # Compile error is fatal
                 raise

@@ -365,7 +365,7 @@ def main():  # pragma: no cover
     print
 
     judge = ClassicJudge(judgeenv.server_host, judgeenv.server_port)
-    monitor.judge = judge
+    monitor.callback = judge.update_problems
 
     with monitor, judge:
         try:

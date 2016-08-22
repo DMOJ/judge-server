@@ -11,11 +11,11 @@ except ImportError:
 
 class SendProblemsHandler(FileSystemEventHandler):
     def __init__(self):
-        self.judge = None
+        self.callback = None
 
     def on_any_event(self, event):
-        if self.judge is not None:
-            self.judge.update_problems()
+        if self.callback is not None:
+            self.callback()
 
 
 class Monitor(object):
@@ -34,12 +34,12 @@ class Monitor(object):
             self._monitor = None
 
     @property
-    def judge(self):
-        return self._handler.judge
+    def callback(self):
+        return self._handler.callback
 
-    @judge.setter
-    def judge(self, judge):
-        self._handler.judge = judge
+    @callback.setter
+    def callback(self, callback):
+        self._handler.callback = callback
 
     def _stop_monitor(self):
         if self._monitor is not None:

@@ -5,10 +5,11 @@ import threading
 import traceback
 from functools import partial
 
-from dmoj import packet, graders, judgeenv
+from dmoj import packet, graders
 from dmoj.config import ConfigNode
 from dmoj.error import CompileError
-from dmoj.judgeenv import env, get_problem_roots, get_supported_problems
+from dmoj.judgeenv import env, get_supported_problems
+from dmoj.monitor import Monitor
 from dmoj.problem import Problem, BatchedTestCase
 from dmoj.result import Result
 from dmoj.utils.ansi import ansi_style, strip_ansi
@@ -22,17 +23,6 @@ if os.name == 'posix':
     except ImportError:
         pass
 
-try:
-    from watchdog.observers import Observer
-    from watchdog.events import FileSystemEventHandler
-except ImportError:
-    startup_warnings.append('watchdog module not found, install it to automatically update problems')
-    Observer = None
-
-
-    class FileSystemEventHandler(object):
-        pass
-
 
 class BatchBegin(object):
     pass
@@ -44,14 +34,6 @@ class BatchEnd(object):
 
 class TerminateGrading(Exception):
     pass
-
-
-class SendProblemsHandler(FileSystemEventHandler):
-    def __init__(self, judge):
-        self.judge = judge
-
-    def on_any_event(self, event):
-        self.judge.update_problems()
 
 
 TYPE_SUBMISSION = 1
@@ -69,24 +51,6 @@ class Judge(object):
 
         self.begin_grading = partial(self.process_submission, TYPE_SUBMISSION, self._begin_grading)
         self.custom_invocation = partial(self.process_submission, TYPE_INVOCATION, self._custom_invocation)
-
-        if Observer is not None and not judgeenv.no_watchdog:
-            handler = SendProblemsHandler(self)
-            self._monitor = monitor = Observer()
-            for dir in get_problem_roots():
-                monitor.schedule(handler, dir, recursive=True)
-            try:
-                monitor.start()
-            except OSError:
-                startup_warnings.append('failed to start filesystem monitor')
-                self._monitor = None
-        else:
-            self._monitor = None
-
-    def _stop_monitor(self):
-        if self._monitor is not None:
-            self._monitor.stop()
-            self._monitor.join(1)
 
     def update_problems(self):
         """
@@ -325,7 +289,6 @@ class Judge(object):
         End any submission currently executing, and exit the judge.
         """
         self.terminate_grading()
-        self._stop_monitor()
 
 
 class ClassicJudge(Judge):
@@ -394,14 +357,17 @@ def main():  # pragma: no cover
     logging.basicConfig(filename=judgeenv.log_file, level=logging.INFO,
                         format='%(levelname)s %(asctime)s %(module)s %(message)s')
 
-    judge = ClassicJudge(judgeenv.server_host, judgeenv.server_port)
+    monitor = Monitor()
 
     for warning in judgeenv.startup_warnings:
         print ansi_style('#ansi[Warning: %s](yellow)' % warning)
     del judgeenv.startup_warnings
     print
 
-    with judge:
+    judge = ClassicJudge(judgeenv.server_host, judgeenv.server_port)
+    monitor.judge = judge
+
+    with monitor, judge:
         try:
             judge.listen()
         except KeyboardInterrupt:

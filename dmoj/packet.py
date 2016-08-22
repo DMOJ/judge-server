@@ -102,9 +102,8 @@ class PacketManager(object):
     def run_async(self):
         threading.Thread(target=self._read_async).start()
 
-    def _send_packet(self, packet):
-        type = self.judge.get_process_type()
-        if type and 'submission-id' in packet and type != 'submission':
+    def _send_packet(self, packet, rewrite=True):
+        if rewrite and 'submission-id' in packet and self.judge.get_process_type() != 'submission':
             packet['%s-id' % self.judge.get_process_type()] = packet['submission-id']
             del packet['submission-id']
 
@@ -135,7 +134,7 @@ class PacketManager(object):
             logger.info('Accept submission: %d: executor: %s, code: %s',
                         packet['submission-id'], packet['language'], packet['problem-id'])
         elif name == 'invocation-request':
-            self.submission_acknowledged_packet(packet['invocation-id'])
+            self.invocation_acknowledged_packet(packet['invocation-id'])
             self.judge.custom_invocation(
                 packet['invocation-id'],
                 packet['language'],
@@ -264,4 +263,8 @@ class PacketManager(object):
 
     def submission_acknowledged_packet(self, sub_id):
         self._send_packet({'name': 'submission-acknowledged',
-                           'submission-id': sub_id})
+                           'submission-id': sub_id}, rewrite=False)
+
+    def invocation_acknowledged_packet(self, sub_id):
+        self._send_packet({'name': 'submission-acknowledged',
+                           'invocation-id': sub_id}, rewrite=False)

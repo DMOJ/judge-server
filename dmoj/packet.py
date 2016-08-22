@@ -103,7 +103,8 @@ class PacketManager(object):
         threading.Thread(target=self._read_async).start()
 
     def _send_packet(self, packet):
-        if 'submission-id' in packet and self.judge.get_process_type() != 'submission':
+        type = self.judge.get_process_type()
+        if type and 'submission-id' in packet and type != 'submission':
             packet['%s-id' % self.judge.get_process_type()] = packet['submission-id']
             del packet['submission-id']
 

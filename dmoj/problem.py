@@ -27,6 +27,7 @@ class Problem(object):
         # lest globals be deleted with the module.
         self._checkers = {}
         self._testcase_counter = 0
+        self._batch_counter = 0
 
         try:
             doc = yaml.safe_load(self.problem_data['init.yml'])
@@ -62,13 +63,14 @@ class Problem(object):
             return archive
         return None
 
-    def _resolve_testcases(self, cfg):
+    def _resolve_testcases(self, cfg, batch_no=0):
         cases = []
         for case_config in cfg:
             if 'batched' in case_config.raw_config:
-                cases.append(BatchedTestCase(case_config, self))
+                self._batch_counter += 1
+                cases.append(BatchedTestCase(self._batch_counter, case_config, self))
             else:
-                cases.append(TestCase(self._testcase_counter, case_config, self))
+                cases.append(TestCase(self._testcase_counter, batch_no, case_config, self))
         self._testcase_counter += 1
         return cases
 
@@ -94,9 +96,10 @@ class ProblemDataManager(dict):
 
 
 class BatchedTestCase(object):
-    def __init__(self, config, problem):
+    def __init__(self, batch_no, config, problem):
         self.config = config
-        self.batched_cases = problem._resolve_testcases(config['batched'])
+        self.batch_no = batch_no
+        self.batched_cases = problem._resolve_testcases(config['batched'], batch_no=batch_no)
         if any(isinstance(case, BatchedTestCase) for case in self.batched_cases):
             raise InvalidInitException("nested batches")
         self.problem = problem
@@ -106,8 +109,9 @@ class BatchedTestCase(object):
 
 
 class TestCase(object):
-    def __init__(self, count, config, problem):
+    def __init__(self, count, batch_no, config, problem):
         self.position = count
+        self.batch = batch_no
         self.config = config
         self.problem = problem
         self.points = config.points

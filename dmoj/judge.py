@@ -1,5 +1,8 @@
 #!/usr/bin/python
+import errno
+import logging
 import os
+import signal
 import sys
 import threading
 import traceback
@@ -9,7 +12,7 @@ from dmoj import packet, graders
 from dmoj.config import ConfigNode
 from dmoj.error import CompileError
 from dmoj.judgeenv import env, get_supported_problems
-from dmoj.monitor import Monitor
+from dmoj.monitor import Monitor, DummyMonitor
 from dmoj.problem import Problem, BatchedTestCase
 from dmoj.result import Result
 from dmoj.utils.ansi import ansi_style, strip_ansi
@@ -332,12 +335,169 @@ def sanity_check():
     return True
 
 
+def judge_proc(need_monitor):
+    from dmoj import judgeenv
+
+    logfile = judgeenv.log_file
+
+    try:
+        logfile = logfile % env['id']
+    except TypeError:
+        pass
+
+    logging.basicConfig(filename=logfile, level=logging.INFO,
+                        format='%(levelname)s %(asctime)s %(module)s %(message)s')
+
+    judge = ClassicJudge(judgeenv.server_host, judgeenv.server_port)
+    if need_monitor:
+        monitor = Monitor()
+        monitor.callback = judge.update_problems
+    else:
+        monitor = DummyMonitor()
+
+    if hasattr(signal, 'SIGUSR2'):
+        def update_problem_signal(signum, frame):
+            judge.update_problems()
+
+        signal.signal(signal.SIGUSR2, update_problem_signal)
+
+    print
+    with monitor, judge:
+        try:
+            judge.listen()
+        except KeyboardInterrupt:
+            pass
+        except:
+            traceback.print_exc()
+        finally:
+            judge.murder()
+
+PR_SET_PDEATHSIG = 1
+
+
+class JudgeManager(object):
+    signal_map = {k: v for v, k in sorted(signal.__dict__.items(), reverse=True)
+                  if v.startswith('SIG') and not v.startswith('SIG_')}
+
+    def __init__(self, judges):
+        self.libc = self.__get_libc()
+        self.prctl = self.libc.prctl
+
+        self._try_respawn = True
+        self.auth = {entry.id: entry.key for entry in judges}
+        self.pids = {}
+        self.orig_signal = {}
+        self.monitor = Monitor()
+        self.monitor.callback = lambda: self.signal_all(signal.SIGUSR2)
+
+    def __get_libc(self):
+        from ctypes.util import find_library
+        from ctypes import CDLL
+        return CDLL(find_library('c'))
+
+    def _forward_signal(self, sig, respawn=False):
+        def handler(signum, frame):
+            print>>sys.stderr, 'judgepm: Received signal (%s), forwarding...' % self.signal_map.get(signum, signum)
+            if not respawn:
+                print>>sys.stderr, 'judgepm: Will no longer respawn judges.'
+                self._try_respawn = False
+            self.signal_all(signum)
+        self.orig_signal[sig] = signal.signal(sig, handler)
+
+    def _spawn_judge(self, id):
+        sys.stdout.flush()
+        sys.stderr.flush()
+        ppid = os.getpid()
+        try:
+            pid = os.fork()
+        except OSError:
+            print>>sys.stderr, 'judgepm: Failed to spawn judge:', id
+            return
+        if pid == 0:
+            # In child. Scary business.
+            self.prctl(PR_SET_PDEATHSIG, signal.SIGTERM)
+            if ppid != os.getppid():
+                os.kill(os.getpid(), signal.SIGTERM)
+                os._exit(2)
+            sys.stdin.close()
+
+            for sig, handler in self.orig_signal.iteritems():
+                signal.signal(sig, handler)
+
+            env['id'] = id
+            env['key'] = self.auth[id]
+            try:
+                ret = judge_proc(False)
+            except BaseException:
+                ret = 1
+            finally:
+                sys.stdout.flush()
+                sys.stderr.flush()
+                logging.shutdown()
+            # How could we possibly return to top level?
+            os._exit(ret or 0)
+            os._exit(1)  # If that os._exit fails because ret is a truthy non-int, then this will ensure death.
+        self.pids[pid] = id
+
+    def _spawn_all(self):
+        for id in self.auth:
+            print>>sys.stderr, 'judgepm: Spawning judge:', id
+            self._spawn_judge(id)
+
+    def _monitor(self):
+        while self._try_respawn or self.pids:
+            try:
+                pid, status = os.wait()
+            except (OSError, IOError) as e:
+                if e.errno == errno.EINTR:
+                    continue
+                raise
+            if pid in self.pids:
+                # A child just died.
+                judge = self.pids[pid]
+                del self.pids[pid]
+                if self._try_respawn:
+                    print>>sys.stderr, 'judgepm: Judge died, respawning: %s (0x%08X)' % (judge, status)
+                    self._spawn_judge(judge)
+                else:
+                    print>>sys.stderr, 'judgepm: Judge exited: %s (0x%08X)' % (judge, status)
+            else:
+                print>>sys.stderr, 'judgepm: I am not your father, %d (0x%08X)!' % (pid, status)
+
+    def run(self):
+        print>>sys.stderr, 'judgepm: Starting process manager: %d.' % os.getpid()
+
+        self._forward_signal(signal.SIGUSR2, respawn=True)
+        self._forward_signal(signal.SIGINT)
+        self._forward_signal(signal.SIGHUP)
+        self._forward_signal(signal.SIGQUIT)
+        self._forward_signal(signal.SIGTERM)
+
+        self._spawn_all()
+        with self.monitor:
+            try:
+                self._monitor()
+            except KeyboardInterrupt:
+                self._try_respawn = False
+                self.signal_all(signal.SIGINT)
+                self._monitor()
+        print>> sys.stderr, 'judgepm: Exited gracefully: %d.' % os.getpid()
+
+    def signal_all(self, signum):
+        for pid in self.pids:
+            try:
+                os.kill(pid, signum)
+            except OSError as e:
+                if e.errno != errno.ESRCH:
+                    raise
+                # Well the monitor will catch on eventually if the process vanishes.
+
+
 def main():  # pragma: no cover
     sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
     if not sanity_check():
         return 1
 
-    import logging
     from dmoj import judgeenv, executors
 
     judgeenv.load_env()
@@ -354,29 +514,18 @@ def main():  # pragma: no cover
 
     print 'Running live judge...'
 
-    logging.basicConfig(filename=judgeenv.log_file, level=logging.INFO,
-                        format='%(levelname)s %(asctime)s %(module)s %(message)s')
-
-    monitor = Monitor()
-
     for warning in judgeenv.startup_warnings:
         print ansi_style('#ansi[Warning: %s](yellow)' % warning)
     del judgeenv.startup_warnings
-    print
 
-    judge = ClassicJudge(judgeenv.server_host, judgeenv.server_port)
-    monitor.callback = judge.update_problems
-
-    with monitor, judge:
-        try:
-            judge.listen()
-        except KeyboardInterrupt:
-            pass
-        except:
-            traceback.print_exc()
-        finally:
-            judge.murder()
-
+    if os.name == 'posix' and 'judges' in env:
+        if env.pidfile:
+            with open(env.pidfile) as f:
+                f.write(str(os.getpid()))
+        manager = JudgeManager(env.judges)
+        manager.run()
+    else:
+        return judge_proc(need_monitor=True)
 
 if __name__ == '__main__':
     main()

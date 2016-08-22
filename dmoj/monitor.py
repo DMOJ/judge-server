@@ -1,5 +1,6 @@
 from dmoj import judgeenv
 from dmoj.judgeenv import startup_warnings, get_problem_roots
+from dmoj.utils.ansi import ansi_style
 
 try:
     from watchdog.observers import Observer
@@ -25,11 +26,6 @@ class Monitor(object):
             self._monitor = monitor = Observer()
             for dir in get_problem_roots():
                 monitor.schedule(self._handler, dir, recursive=True)
-            try:
-                monitor.start()
-            except OSError:
-                startup_warnings.append('failed to start filesystem monitor')
-                self._monitor = None
         else:
             self._monitor = None
 
@@ -41,13 +37,29 @@ class Monitor(object):
     def callback(self, callback):
         self._handler.callback = callback
 
-    def _stop_monitor(self):
+    def start(self):
+        if self._monitor is not None:
+            try:
+                self._monitor.start()
+            except OSError:
+                print ansi_style('#ansi[Warning: failed to start problem monitor!](yellow)')
+
+    def stop(self):
         if self._monitor is not None:
             self._monitor.stop()
             self._monitor.join(1)
 
     def __enter__(self):
+        self.start()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self._stop_monitor()
+        self.stop()
+
+
+class DummyMonitor(object):
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass

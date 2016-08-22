@@ -94,7 +94,7 @@ class Judge(object):
         """
         self.packet_manager.supported_problems_packet(get_supported_problems())
 
-    def process_submission(self, target, type, id, *args, **kwargs):
+    def process_submission(self, type, target, id, *args, **kwargs):
         try:
             self.current_submission_thread.join()
         except AttributeError:

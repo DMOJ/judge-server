@@ -67,8 +67,8 @@ class Judge(object):
         self._terminate_grading = False
         self.process_type = 0
 
-        self.begin_grading = partial(self.process_submission, self._begin_grading)
-        self.custom_invocation = partial(self.process_submission, self._custom_invocation)
+        self.begin_grading = partial(self.process_submission, TYPE_SUBMISSION, self._begin_grading)
+        self.custom_invocation = partial(self.process_submission, TYPE_INVOCATION, self._custom_invocation)
 
         if Observer is not None and not judgeenv.no_watchdog:
             handler = SendProblemsHandler(self)
@@ -94,11 +94,12 @@ class Judge(object):
         """
         self.packet_manager.supported_problems_packet(get_supported_problems())
 
-    def process_submission(self, target, id, *args, **kwargs):
+    def process_submission(self, target, type, id, *args, **kwargs):
         try:
             self.current_submission_thread.join()
         except AttributeError:
             pass
+        self.process_type = type
         self.current_submission = id
         self.current_submission_thread = threading.Thread(target=target, args=args)
         self.current_submission_thread.daemon = True
@@ -107,8 +108,6 @@ class Judge(object):
             self.current_submission_thread.join()
 
     def _custom_invocation(self, language, source, memory_limit, time_limit, input_data):
-        self.process_type = TYPE_INVOCATION
-
         class InvocationGrader(graders.StandardGrader):
             def check_result(self, case, result):
                 return not result.result_flag
@@ -145,8 +144,6 @@ class Judge(object):
         self.current_submission = None
 
     def _begin_grading(self, problem_id, language, source, time_limit, memory_limit, short_circuit, pretests_only):
-        self.process_type = TYPE_SUBMISSION
-
         submission_id = self.current_submission
         print ansi_style('Start grading #ansi[%s](yellow)/#ansi[%s](green|bold) in %s...'
                          % (problem_id, submission_id, language))

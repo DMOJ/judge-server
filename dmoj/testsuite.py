@@ -178,8 +178,7 @@ class Tester(object):
         for source in sources:
             self.sub_id += 1
             self.manager.set_expected(codes_all, codes_cases, feedback_all, feedback_cases)
-            self.judge.begin_grading(problem, language, source, time, memory, short_circuit=False,
-                                     pretests_only=False, blocking=True)
+            self.judge.begin_grading(self.sub_id, problem, language, source, time, memory, False, False, blocking=True)
             fails += self.manager.failed
         return fails
 

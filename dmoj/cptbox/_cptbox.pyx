@@ -469,7 +469,7 @@ cdef class Process:
             cdef unsigned long memory = get_memory(self.process.getpid())
             if memory > 0:
                 self._max_memory = memory
-            return self._max_memory
+            return self._max_memory or self.process.getrusage().ru_maxrss
 
     property signal:
         def __get__(self):

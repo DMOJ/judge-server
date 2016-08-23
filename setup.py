@@ -68,7 +68,7 @@ else:
     try:
         with open('/proc/version') as f:
             if 'microsoft' in f.read().lower():
-                macros.append(('WLS', None))
+                macros.append(('WSL', None))
     except IOError:
         pass
     extensions += [Extension('dmoj.cptbox._cptbox', sources=cptbox_sources,

@@ -63,8 +63,16 @@ else:
     libs = ['rt']
     if sys.platform.startswith('freebsd'):
         libs += ['procstat']
+
+    macros = []
+    try:
+        with open('/proc/version') as f:
+            if 'microsoft' in f.read().lower():
+                macros.append(('WLS', None))
+    except IOError:
+        pass
     extensions += [Extension('dmoj.cptbox._cptbox', sources=cptbox_sources,
-                             language='c++', libraries=libs),
+                             language='c++', libraries=libs, define_macros=macros),
                    Extension('dmoj.utils.debugger.nix._nix_debugger',
                              sources=['dmoj/utils/debugger/nix/_nix_debugger.c'],
                              include_dirs=['dmoj/utils/debugger'], libraries=['rt'])]

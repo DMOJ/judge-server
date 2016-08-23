@@ -210,7 +210,7 @@ class SubmitCommand(Command):
         submission_id_counter += 1
         graded_submissions.append((problem_id, language_id, src, time_limit, memory_limit))
         self.judge.begin_grading(submission_id_counter, problem_id, language_id, src, time_limit,
-                                 memory_limit, False, blocking=True)
+                                 memory_limit, False, False, blocking=True)
 
 
 class ResubmitCommand(Command):

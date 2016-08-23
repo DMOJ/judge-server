@@ -258,7 +258,7 @@ class ResubmitCommand(Command):
             return
 
         graded_submissions.append((id, lang, src, tl, ml))
-        self.judge.begin_grading(submission_id_counter, id, lang, src, tl, ml, False, blocking=True)
+        self.judge.begin_grading(submission_id_counter, id, lang, src, tl, ml, False, False, blocking=True)
 
 
 class RejudgeCommand(Command):

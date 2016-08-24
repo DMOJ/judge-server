@@ -206,7 +206,7 @@ class JavacExecutor(JavaExecutor):
         self._class_name = class_name.group(1)
 
     def get_compile_args(self):
-        return [self.get_compiler(), '-encoding', 'UTF-8', self._code]
+        return [self.get_compiler(), '-Xlint', '-encoding', 'UTF-8', self._code]
 
     def handle_compile_error(self, output):
         if 'is public, should be declared in a file named' in output:

@@ -37,9 +37,9 @@ public class SubmissionAgent {
 
                     // If the class ever loaded it's because a submission used it
                     if (className.equals("java/math/BigInteger")) {
-                        disallowed = new BigIntegerDisallowedForProblemException();
+                        disallowed = new BigIntegerDisallowedException();
                     } else if (className.equals("java/math/BigDecimal")) {
-                        disallowed = new BigDecimalDisallowedForProblemException();
+                        disallowed = new BigDecimalDisallowedException();
                     }
 
                     if (disallowed != null) {

@@ -51,3 +51,5 @@ nosetests.xml
 dmoj/wbox/_wbox.cpp
 dmoj/wbox/_wbox.html
 dmoj/cptbox/_cptbox.cpp
+
+java_sandbox/objs/

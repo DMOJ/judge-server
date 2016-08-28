@@ -55,7 +55,7 @@ class JavaExecutor(CompiledExecutor):
 
     def __init__(self, problem_id, source_code, **kwargs):
         self._class_name = None
-        super(JavaExecutor, self).__init__(problem_id, source_code)
+        super(JavaExecutor, self).__init__(problem_id, source_code, **kwargs)
 
     def create_files(self, problem_id, source_code, *args, **kwargs):
         super(JavaExecutor, self).create_files(problem_id, source_code, *args, **kwargs)

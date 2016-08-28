@@ -26,10 +26,11 @@ class GCCExecutor(CompiledExecutor):
     name = 'GCC'
     has_color = False
 
-    def create_files(self, problem_id, main_source, aux_sources=None, fds=None, writable=(1, 2)):
-        if not aux_sources:
-            aux_sources = {}
-        aux_sources[problem_id + self.ext] = main_source
+    def create_files(self, problem_id, main_source, **kwargs):
+        aux_sources = kwargs.get('aux_sources', {problem_id + self.ext: main_source})
+        fds = kwargs.get('fds', None)
+        writable = kwargs.get('writable', (1, 2))
+
         sources = []
         for name, source in aux_sources.iteritems():
             if '.' not in name:

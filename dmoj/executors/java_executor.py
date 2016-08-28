@@ -55,7 +55,6 @@ class JavaExecutor(CompiledExecutor):
 
     def __init__(self, problem_id, source_code, **kwargs):
         self._class_name = None
-        self._hints = kwargs.pop('hints', [])
         super(JavaExecutor, self).__init__(problem_id, source_code)
 
     def create_files(self, problem_id, source_code, *args, **kwargs):

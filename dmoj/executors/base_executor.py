@@ -35,6 +35,7 @@ class BaseExecutor(PlatformExecutorMixin, ResourceProxy):
         super(BaseExecutor, self).__init__()
         self.problem = problem_id
         self.source = source_code
+        self._hints = kwargs.pop('hints', [])
 
     @classmethod
     def get_executor_name(cls):

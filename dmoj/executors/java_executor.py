@@ -53,8 +53,9 @@ class JavaExecutor(CompiledExecutor):
     jvm_regex = None
     security_policy = policy
 
-    def __init__(self, problem_id, source_code):
+    def __init__(self, problem_id, source_code, **kwargs):
         self._class_name = None
+        self._hints = kwargs.pop('hints', [])
         super(JavaExecutor, self).__init__(problem_id, source_code)
 
     def create_files(self, problem_id, source_code, *args, **kwargs):
@@ -86,9 +87,12 @@ class JavaExecutor(CompiledExecutor):
         return self.get_vm()
 
     def get_cmdline(self):
-        return ['java', '-client', '-javaagent:%s=policy:%s' % (self._agent_file, self._policy_file),
-                '-Xss128m', '-Xmx%dK' % self.__memory_limit, '-XX:ErrorFile=submission_jvm_crash.log',
-                self._class_name]  # 128m is equivalent to 1<<27 in Thread constructor
+        agent_flags = '-javaagent:%s=policy:%s' % (self._agent_file, self._policy_file)
+        for hint in self._hints:
+            agent_flags += ',%s' % hint
+        # 128m is equivalent to 1<<27 in Thread constructor
+        return ['java', '-client', agent_flags,'-Xss128m', '-Xmx%dK' % self.__memory_limit,
+                '-XX:ErrorFile=submission_jvm_crash.log', self._class_name]
 
     def launch(self, *args, **kwargs):
         self.__memory_limit = kwargs['memory']

@@ -61,8 +61,7 @@ class StandardGrader(BaseGrader):
         return result
 
     def update_feedback(self, check, error, process, result):
-        result.feedback = (check.feedback or
-                           (process.feedback if hasattr(process, 'feedback') else
+        result.feedback = (check.feedback or (process.feedback if hasattr(process, 'feedback') else
                             getattr(self.binary, 'get_feedback', lambda x, y, z: '')(error, result, process)))
         if not result.feedback and result.get_main_code() == Result.RTE:
             if hasattr(process, 'was_initialized') and not process.was_initialized:
@@ -140,7 +139,8 @@ class StandardGrader(BaseGrader):
         # If the executor requires compilation, compile and send any errors/warnings to the site
         try:
             # Fetch an appropriate executor for the language
-            binary = executors[self.language].Executor(self.problem.id, self.source)
+            binary = executors[self.language].Executor(self.problem.id, self.source,
+                                                       hints=self.problem.config.hints or [])
         except CompileError as compilation_error:
             error = compilation_error.args[0]
             error = error.decode('mbcs') if os.name == 'nt' and isinstance(error, str) else error

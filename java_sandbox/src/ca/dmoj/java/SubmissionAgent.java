@@ -11,12 +11,12 @@ public class SubmissionAgent {
 
     public static void premain(String argv, Instrumentation inst) throws UnsupportedEncodingException {
         boolean unicode = false;
-        boolean noBigInt = false;
+        boolean noBigMath = false;
         String policy = null;
         if (argv != null)
             for (String opt : argv.split(",")) {
                 if (opt.equals("unicode")) unicode = true;
-                if (opt.equals("nobiginteger")) noBigInt = true;
+                if (opt.equals("nobigmath")) noBigMath = true;
 
                 // Split on "policy:" so that paths like R:/tmp/security.policy don't get processed incorrectly
                 if (opt.startsWith("policy:")) policy = opt.split("policy:")[1];
@@ -27,21 +27,24 @@ public class SubmissionAgent {
 
         final Thread selfThread = Thread.currentThread();
 
-        if (noBigInt)
+        if (noBigMath)
             inst.addTransformer(new ClassFileTransformer() {
                 @Override
                 public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined,
                                         ProtectionDomain protectionDomain, byte[] classfileBuffer)
                                         throws IllegalClassFormatException {
+                    RuntimeException disallowed = null;
+
                     // If the class ever loaded it's because a submission used it
                     if (className.equals("java/math/BigInteger")) {
-                        // Python side detects fatal exception by checking last stacktrace when error code is nonzero
-                        // This will trick the site into displaying "ca.dmoj.java.BigIntegerDisallowedForProblemException"
-                        // in the judge message field.
-                        selfThread.getUncaughtExceptionHandler()
-                                .uncaughtException(selfThread, new BigIntegerDisallowedForProblemException());
+                        disallowed = new BigIntegerDisallowedForProblemException();
+                    } else if (className.equals("java/math/BigDecimal")) {
+                        disallowed = new BigDecimalDisallowedForProblemException();
                     }
 
+                    if (disallowed != null) {
+                        selfThread.getUncaughtExceptionHandler().uncaughtException(selfThread, disallowed);
+                    }
                     // Don't actually retransform anything
                     return classfileBuffer;
                 }

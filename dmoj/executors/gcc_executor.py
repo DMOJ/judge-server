@@ -27,9 +27,10 @@ class GCCExecutor(CompiledExecutor):
     has_color = False
 
     def create_files(self, problem_id, main_source, **kwargs):
-        aux_sources = kwargs.get('aux_sources', {problem_id + self.ext: main_source})
+        aux_sources = kwargs.get('aux_sources', {})
         fds = kwargs.get('fds', None)
         writable = kwargs.get('writable', (1, 2))
+        aux_sources[problem_id + self.ext] = main_source
 
         sources = []
         for name, source in aux_sources.iteritems():

@@ -139,8 +139,6 @@ class StandardGrader(BaseGrader):
         # If the executor requires compilation, compile and send any errors/warnings to the site
         try:
             # Fetch an appropriate executor for the language
-            print self.problem.config
-            print self.problem.config.hints
             binary = executors[self.language].Executor(self.problem.id, self.source,
                                                        hints=self.problem.config.hints or [])
         except CompileError as compilation_error:

@@ -67,4 +67,5 @@ script:
 after_script:
   - codecov
 notifications:
-  - slack: dmoj:kfSyzQoO51WwR2MFvfRAhUxD
+  slack:
+    secure: FYgVd9Q/KYjEeIVIpz31R/ueZnMAtN38VA6q28UDYunQ7YxMAvibpP61W3Hllyhs4WfzIWp8GzEcIQkw30muh/FjFr9GgWC2kYw6RQjvksZ$

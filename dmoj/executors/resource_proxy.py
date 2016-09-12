@@ -1,7 +1,7 @@
+import errno
 import os
 import shutil
 import tempfile
-import errno
 
 from dmoj.judgeenv import env
 
@@ -21,8 +21,8 @@ class ResourceProxy(object):
             if exc.errno != errno.ENOENT:
                 raise
 
-    def _file(self, file):
-        return os.path.join(self._dir, file)
+    def _file(self, *paths):
+        return os.path.join(self._dir, *paths)
 
     def launch(self, *args, **kwargs):
         raise NotImplementedError()

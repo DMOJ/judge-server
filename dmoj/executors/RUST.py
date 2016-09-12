@@ -17,7 +17,7 @@ class Executor(CompiledExecutor):
 
     def create_files(self, problem_id, source_code, *args, **kwargs):
         os.mkdir(self._file('src'))
-        with open(self._file(os.path.join('src', 'main.rs')), 'wb') as f:
+        with open(self._file('src', 'main.rs'), 'wb') as f:
             f.write(source_code)
 
         with open(self._file('Cargo.toml'), 'wb') as f:
@@ -27,4 +27,4 @@ class Executor(CompiledExecutor):
         return [self.get_command(), 'build', '--release']
 
     def get_compiled_file(self):
-        return self._file(os.path.join('target', 'release', self.problem))
+        return self._file('target', 'release', self.problem)

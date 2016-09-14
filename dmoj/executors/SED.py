@@ -6,8 +6,7 @@ class Executor(ScriptExecutor):
     name = 'SED'
     command = 'sed'
     command_paths = ['sed']
-    test_program = '''s/.*/echo: Hello, World!/
-q'''
+    test_program = 's/^//'
     syscalls = ['statfs64', 'statfs']
     fs = ['/proc/filesystems$']
 

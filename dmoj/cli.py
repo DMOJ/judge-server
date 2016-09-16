@@ -108,7 +108,7 @@ class ListProblemsCommand(Command):
     help = 'Lists the problems available to be graded on this judge.'
 
     def _populate_parser(self):
-        self.arg_parser.add_argument('filter', nargs='?', help='regex filter for problem names')
+        self.arg_parser.add_argument('filter', nargs='?', help='regex filter for problem names (optional)')
         self.arg_parser.add_argument('-l', '--limit', type=int, help='limit number of results', metavar='<limit>')
 
     def execute(self, line):
@@ -169,6 +169,7 @@ class SubmitCommand(Command):
     def _populate_parser(self):
         self.arg_parser.add_argument('problem_id', help='id of problem to grade')
         self.arg_parser.add_argument('language_id', help='id of the language to grade in (e.g., PY2)')
+        self.arg_parser.add_argument('source_file', nargs='?', help='path to submission source (optional)')
         self.arg_parser.add_argument('-tl', '--time-limit', type=float, help='time limit for grading, in seconds',
                                      default=2.0, metavar='<time limit>')
         self.arg_parser.add_argument('-ml', '--memory-limit', type=int, help='memory limit for grading, in kilobytes',
@@ -193,19 +194,28 @@ class SubmitCommand(Command):
             err = '--time-limit must be >= 0'
         elif memory_limit <= 0:
             err = '--memory-limit must be >= 0'
+        if not err:
+            if args.source_file:
+                try:
+                    with open(os.path.realpath(args.source_file), 'r') as f:
+                        src = f.read()
+                except Exception as io:
+                    err = str(io)
+            else:
+                src = []
+                try:
+                    while True:
+                        s = raw_input()
+                        if s.strip() == ':q':
+                            raise EOFError
+                        src.append(s)
+                except EOFError:  # Ctrl+D
+                    src = '\n'.join(src)
+                except Exception as io:
+                    err = str(io)
         if err:
             print ansi_style('#ansi[%s](red|bold)\n' % err)
             return
-
-        src = []
-        try:
-            while True:
-                s = raw_input()
-                if s.strip() == ':q':
-                    raise EOFError
-                src.append(s)
-        except EOFError:  # Ctrl+D
-            src = '\n'.join(src)
 
         submission_id_counter += 1
         graded_submissions.append((problem_id, language_id, src, time_limit, memory_limit))

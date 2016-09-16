@@ -90,7 +90,7 @@ class JavaExecutor(CompiledExecutor):
         for hint in self._hints:
             agent_flags += ',%s' % hint
         # 128m is equivalent to 1<<27 in Thread constructor
-        return ['java', '-client', agent_flags,'-Xss128m', '-Xmx%dK' % self.__memory_limit,
+        return ['java', '-client', agent_flags, '-Xss128m', '-Xmx%dK' % self.__memory_limit,
                 '-XX:ErrorFile=submission_jvm_crash.log', self._class_name]
 
     def launch(self, *args, **kwargs):

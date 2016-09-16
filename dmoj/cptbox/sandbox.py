@@ -104,11 +104,12 @@ class AdvancedDebugger(Debugger):
             address &= 0xFFFFFFFF
         return super(AdvancedDebugger, self).readstr(address, max_size)
 
+
 # SecurePopen is a subclass of a cython class, _cptbox.Process. Since it is exceedingly unwise
 # to do everything in cython, determining the debugger class is left to do here. However, since
 # the debugger is constructed in __cinit__, we have to pass the determined debugger class to
 # SecurePopen.__new__. While we can simply override __new__, many complication arises from having
-# differnt parameters to __new__ and __init__, the latter of which is given the *original* arguments
+# different parameters to __new__ and __init__, the latter of which is given the *original* arguments
 # as passed to type.__call__. Hence, we use a metaclass to pass the extra debugger argument to both
 # __new__ and __init__.
 class SecurePopenMeta(type):
@@ -225,7 +226,7 @@ class SecurePopen(Process):
                 if call[index] == syscall:
                     callname = by_id[id]
                     break
-    
+
             print>> sys.stderr, 'Protection fault on: %d (%s)' % (syscall, callname)
             print>> sys.stderr, 'Arg0: 0x%016x' % self.debugger.uarg0
             print>> sys.stderr, 'Arg1: 0x%016x' % self.debugger.uarg1
@@ -233,7 +234,7 @@ class SecurePopen(Process):
             print>> sys.stderr, 'Arg3: 0x%016x' % self.debugger.uarg3
             print>> sys.stderr, 'Arg4: 0x%016x' % self.debugger.uarg4
             print>> sys.stderr, 'Arg5: 0x%016x' % self.debugger.uarg5
-            
+
             self.protection_fault = (syscall, callname)
 
     def _cpu_time_exceeded(self):

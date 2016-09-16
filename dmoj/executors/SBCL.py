@@ -10,7 +10,7 @@ class Executor(NullStdoutMixin, ScriptDirectoryMixin, CompiledExecutor):
     syscalls = ['personality', 'modify_ldt']
     fs = ['/etc/nsswitch.conf$', '/etc/passwd$']
     test_program = '(write-line (read-line))'
-    address_grace = 524288 + 131073 * 2<<8
+    address_grace = 524288 + 131073 * 2 << 8
 
     compile_script = '''(compile-file "{code}")'''
 

@@ -45,7 +45,6 @@ TYPE_INVOCATION = 2
 
 class Judge(object):
     def __init__(self):
-        global startup_warnings
         self.current_submission = None
         self.current_grader = None
         self.current_submission_thread = None

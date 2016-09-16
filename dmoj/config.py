@@ -90,7 +90,8 @@ class ConfigNode(object):
                         import traceback
 
                         traceback.print_exc()
-                        raise InvalidInitException('exception executing dynamic key ' + str(dynamic_key) + ': ' + e.message)
+                        raise InvalidInitException('exception executing dynamic key ' +
+                                                   str(dynamic_key) + ': ' + e.message)
                     del self.raw_config[dynamic_key]
                     self.raw_config[item] = cfg
 

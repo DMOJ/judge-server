@@ -7,11 +7,17 @@ CARGO_TOML = '''\
 [package]
 name = "{name}"
 version = "1.0.0"
+
+[dependencies]
+dmoj = "0.1.1"
 '''
 
 HELLO_WORLD_PROGRAM = '''\
+#[macro_use] extern crate dmoj;
+
 fn main() {
     println!("echo: Hello, World!");
+    flush!();
 }
 '''
 

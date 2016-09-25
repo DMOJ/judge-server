@@ -6,14 +6,20 @@ from .base_executor import CompiledExecutor
 CARGO_TOML = '''\
 [package]
 name = "{name}"
-version = "0.0.0"
+version = "1.0.0"
+'''
+
+HELLO_WORLD_PROGRAM = '''\
+fn main() {
+    println!("echo: Hello, World!");
+}
 '''
 
 
 class Executor(CompiledExecutor):
     name = 'RUST'
     command = 'cargo'
-    test_program = 'fn main() { println!("echo: Hello, World!"); }'
+    test_program = HELLO_WORLD_PROGRAM
 
     def create_files(self, problem_id, source_code, *args, **kwargs):
         os.mkdir(self._file('src'))

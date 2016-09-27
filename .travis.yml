@@ -20,7 +20,6 @@ addons:
     - mono-complete
     - mono-devel
     - mono-vbnc
-    - fsharp
     - fp-compiler
     - coffeescript
     - binutils-multiarch

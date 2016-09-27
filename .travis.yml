@@ -18,7 +18,6 @@ addons:
     - php5-cli
     - mono-devel
     - mono-vbnc
-    - fsharp
     - fp-compiler
     - coffeescript
     - binutils-multiarch

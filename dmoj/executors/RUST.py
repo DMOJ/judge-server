@@ -9,7 +9,7 @@ name = "{name}"
 version = "1.0.0"
 
 [dependencies]
-dmoj = "0.1.1"
+dmoj = "0.1.2"
 '''
 
 HELLO_WORLD_PROGRAM = '''\
@@ -17,7 +17,6 @@ HELLO_WORLD_PROGRAM = '''\
 
 fn main() {
     println!("echo: Hello, World!");
-    flush!();
 }
 '''
 

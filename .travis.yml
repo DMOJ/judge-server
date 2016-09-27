@@ -31,6 +31,9 @@ addons:
     - swi-prolog
     - r-base
     - dart/stable
+cache:
+  directories:
+    - $HOME/.cargo
 before_install:
   # Install Swift
   - wget -q -O - https://swift.org/keys/all-keys.asc | gpg --import -

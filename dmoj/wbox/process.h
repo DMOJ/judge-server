@@ -4,7 +4,6 @@
 #define id_83DB5799_5792_4F64_BC72_4086C9C0C735
 
 #include <windows.h>
-#include <cinttypes>
 #include "helpers.h"
 #include "getaddr.h"
 

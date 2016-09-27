@@ -7,6 +7,8 @@
 
 #include <atlbase.h>
 
+#include "helpers.h"
+
 class CCoInitialize {
 public:
 	CCoInitialize() : m_hr(CoInitialize(nullptr)) { }

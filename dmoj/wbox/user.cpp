@@ -1,7 +1,6 @@
 #include "user.h"
 #include <stdlib.h>
 #include <strsafe.h>
-#include <cinttypes>
 
 LPCWSTR wbox_password_alphabet = L"1234567890`~!@#$%^&*()-=_+{}[]|;:'<>?,./QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm";
 

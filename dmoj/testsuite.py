@@ -1,4 +1,5 @@
 import os
+import sys
 import traceback
 
 import yaml
@@ -98,6 +99,18 @@ class Tester(object):
         self.problem_regex = problem_regex
         self.case_regex = case_regex
 
+        self.case_files = ['test.yml']
+        if os.name == 'nt':
+            self.case_files += ['test.windows.yml']
+        elif os.name == 'posix':
+            self.case_files += ['test.posix.yml']
+            if 'freebsd' in sys.platform:
+                self.case_files += ['test.freebsd.yml']
+                if not sys.platform.startswith('freebsd'):
+                    self.case_files += ['test.kfreebsd.yml']
+            elif sys.platform.startswith('linux'):
+                self.case_files += ['test.linux.yml']
+
     def output(self, message=''):
         print message
 
@@ -150,8 +163,21 @@ class Tester(object):
         return fails
 
     def run_test_case(self, problem, case, case_dir):
-        with open(os.path.join(case_dir, 'test.yml')) as f:
-            config = yaml.safe_load(f.read())
+        config = {}
+        for file in self.case_files:
+            try:
+                with open(os.path.join(case_dir, file)) as f:
+                    config.update(yaml.safe_load(f.read()))
+            except IOError:
+                pass
+
+        if not config:
+            self.output(ansi_style('    #ansi[Skipped](magenta|bold) - No usable test.yml'))
+            return 0
+
+        if 'skip' in config and config['skip']:
+            self.output(ansi_style('    #ansi[Skipped](magenta|bold) - Unsupported on current platform'))
+            return 0
 
         language = config['language']
         if language not in all_executors:

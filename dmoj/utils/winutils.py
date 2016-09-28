@@ -1,4 +1,5 @@
 import os
+import signal
 from ctypes import windll, c_size_t, Structure, sizeof, byref, c_uint64
 from ctypes.wintypes import DWORD, HANDLE, POINTER, BOOL, WinError
 
@@ -67,3 +68,16 @@ def wait_for_multiple_objects(handles, timeout=INFINITE, all=False):
     elif res == WAIT_TIMEOUT:
         return None
     return res
+
+_signal_map = {
+    signal.SIGABRT: 'Aborted',
+    signal.SIGINT: 'Interrupted',
+    signal.SIGTERM: 'Terminated',
+    signal.SIGFPE: 'Floating point exception',
+    signal.SIGILL: 'Illegal instruction',
+    signal.SIGSEGV: 'Segmentation fault',
+}
+
+
+def strsignal(signum):
+    return _signal_map.get(signum) or 'signal %d' % signum

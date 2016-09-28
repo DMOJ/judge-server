@@ -1,6 +1,7 @@
-import os
 import gc
+import os
 import platform
+import signal
 
 from dmoj.error import CompileError
 from dmoj.executors import executors
@@ -11,7 +12,10 @@ from dmoj.utils.communicate import OutputLimitExceeded
 try:
     from dmoj.utils.nixutils import strsignal
 except ImportError:
-    strsignal = lambda x: ''
+    try:
+        from dmoj.utils.winutils import strsignal
+    except ImportError:
+        strsignal = lambda x: 'signal %s' % x
 
 
 class StandardGrader(BaseGrader):
@@ -102,8 +106,19 @@ class StandardGrader(BaseGrader):
 
     def set_result_flag(self, process, result):
         if process.returncode > 0:
-            # print>> sys.stderr, 'Exited with error: %d' % process.returncode
-            result.result_flag |= Result.IR
+            if os.name == 'nt' and process.returncode == 3:
+                # On Windows, abort() causes return value 3, instead of SIGABRT.
+                result.result_flag |= Result.RTE
+                result.result_code = -signal.SIGABRT
+                process.signal = signal.SIGABRT
+            elif os.name == 'nt' and process.returncode == 0xC0000005:
+                # On Windows, 0xC0000005 is access violation (SIGSEGV).
+                result.result_flag |= Result.RTE
+                result.result_code = -signal.SIGSEGV
+                process.signal = signal.SIGSEGV
+            else:
+                # print>> sys.stderr, 'Exited with error: %d' % process.returncode
+                result.result_flag |= Result.IR
         if process.returncode < 0:
             # None < 0 == True
             # if process.returncode is not None:

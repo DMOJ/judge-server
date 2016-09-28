@@ -90,24 +90,22 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
             env['key'] = _args.judge_key
 
         dirs = env.problem_storage_root
-        if dirs is None:
-            return
+        if dirs is not None:
+            if isinstance(dirs, ConfigNode):
+                problem_dirs = tuple(unicodify(os.path.normpath(os.path.join(_root, dir))) for dir in dirs)
+            else:
+                problem_dirs = os.path.join(_root, dirs)
+                problem_dirs = [unicodify(os.path.normpath(os.path.join(problem_dirs, dir)))
+                                for dir in os.listdir(problem_dirs)]
+                problem_dirs = tuple(dir for dir in problem_dirs if os.path.isdir(dir))
 
-        if isinstance(dirs, ConfigNode):
-            problem_dirs = tuple(unicodify(os.path.normpath(os.path.join(_root, dir))) for dir in dirs)
-        else:
-            problem_dirs = os.path.join(_root, dirs)
-            problem_dirs = [unicodify(os.path.normpath(os.path.join(problem_dirs, dir)))
-                            for dir in os.listdir(problem_dirs)]
-            problem_dirs = tuple(dir for dir in problem_dirs if os.path.isdir(dir))
-
-        cleaned_dirs = []
-        for dir in problem_dirs:
-            if not os.path.exists(dir) or not os.path.isdir(dir):
-                startup_warnings.append('cannot access problem directory %s (does it exist?)' % dir)
-                continue
-            cleaned_dirs.append(dir)
-        problem_dirs = cleaned_dirs
+            cleaned_dirs = []
+            for dir in problem_dirs:
+                if not os.path.exists(dir) or not os.path.isdir(dir):
+                    startup_warnings.append('cannot access problem directory %s (does it exist?)' % dir)
+                    continue
+                cleaned_dirs.append(dir)
+            problem_dirs = cleaned_dirs
 
     if testsuite:
         if not os.path.isdir(_args.tests_dir):

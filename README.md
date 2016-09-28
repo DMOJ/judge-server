@@ -1,7 +1,7 @@
-Judge [![Build Status](https://img.shields.io/travis/DMOJ/judge.svg)](https://travis-ci.org/DMOJ/judge) [![Coverage](https://img.shields.io/codecov/c/github/DMOJ/judge.svg)](https://codecov.io/gh/DMOJ/judge)
+Judge [![Coverage](https://img.shields.io/codecov/c/github/DMOJ/judge.svg)](https://codecov.io/gh/DMOJ/judge)
 =====
 
-Python [AGPLv3](https://github.com/DMOJ/judge/blob/master/LICENSE) contest judge backend for the [DMOJ site](http://github.com/DMOJ/site) interface. The judge implements secure grading on both Linux and Windows machines.
+Python [AGPLv3](https://github.com/DMOJ/judge/blob/master/LICENSE) contest judge backend for the [DMOJ site](http://github.com/DMOJ/site) interface. The judge implements secure grading on both Linux <a href="https://travis-ci.org/DMOJ/judge"><img alt="Build Status" src="https://img.shields.io/travis/DMOJ/judge.svg?maxAge=2592000" style="vertical-align: text-bottom"></a> and Windows <a href="https://ci.appveyor.com/project/quantum5/judge"><img alt="Build Status" src="https://img.shields.io/appveyor/ci/quantum5/judge.svg?maxAge=2592000" style="vertical-align: text-bottom"></a> machines.
 
 <table>
 <tr>

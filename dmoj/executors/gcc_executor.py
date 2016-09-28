@@ -2,9 +2,9 @@ import os
 import re
 from collections import deque
 
-from .base_executor import CompiledExecutor
 from dmoj.judgeenv import env
 from dmoj.result import Result
+from .base_executor import CompiledExecutor
 
 GCC_ENV = env.runtime.gcc_env or {}
 GCC_COMPILE = os.environ.copy()
@@ -17,7 +17,7 @@ if os.name == 'nt':
 else:
     GCC_COMPILE.update(env.runtime.gcc_compile or {})
 
-recppexc = re.compile(r"terminate called after throwing an instance of \'([A-Za-z0-9_:]+)\'$", re.M)
+recppexc = re.compile(r"terminate called after throwing an instance of \'([A-Za-z0-9_:]+)\'\r?$", re.M)
 
 
 class GCCExecutor(CompiledExecutor):

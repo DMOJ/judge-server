@@ -9,9 +9,6 @@ required_executors = ['AWK', 'BF', 'C', 'CPP03', 'CPP11', 'CS', 'GO', 'PERL', 'P
 
 def main():
     judgeenv.load_env(cli=True, testsuite=True)
-
-    # Emulate ANSI colors with colorama
-    __import__('colorama').init()
     executors.load_executors()
 
     executor_fail = not all(name in executors.executors for name in required_executors)

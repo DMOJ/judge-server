@@ -1,7 +1,6 @@
 [report]
 exclude_lines =
     pragma: no cover
-    os.name == .nt.
     raise AssertionError
     raise NotImplementedError
     if __name__ == .__main__.:
@@ -13,18 +12,9 @@ ignore_errors = True
 
 [run]
 omit =
-    dmoj/wbox/*
-    dmoj/utils/debugger/win/*
-    dmoj/utils/pywinjob.py
-    dmoj/utils/winperfmon.py
-    dmoj/utils/winutils.py
-    dmoj/executors/clr_executor.py
     dmoj/executors/FS.py
-    dmoj/executors/VB.py
-    dmoj/executors/CS.py
     dmoj/executors/VC.py
 
     dmoj/cli.py
-    dmoj/testsuite.py
     dmoj/packet.py
     dmoj/executors/autoconfig.py

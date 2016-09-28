@@ -405,8 +405,8 @@ DWORD JobbedProcessManager::ShockerProc() {
 		QueryPerformanceCounter(&qpc);
 		execution_time = (qpc.QuadPart - liStart.QuadPart) * qpc_freq;
 		if (time_limit && execution_time > time_limit) {
-			TerminateProcess(hProcess, 0xDEADBEEF);
 			tle_ = true;
+			TerminateProcess(hProcess, 0xDEADBEEF);
 			WaitForSingleObject(hProcess, INFINITE);
 		}
 		QueryInformationJobObject(hJob, JobObjectExtendedLimitInformation, &extLimit, sizeof extLimit, nullptr);

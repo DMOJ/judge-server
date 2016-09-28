@@ -3,4 +3,6 @@ time: 1
 memory: 4096
 source: badalloc.cpp
 expect: RTE
-feedback: std::bad_alloc
+feedback:
+- std::bad_alloc
+- std::bad_array_new_length

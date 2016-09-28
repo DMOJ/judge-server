@@ -34,5 +34,6 @@ else:
     runtime['gcc_env'] = {'PATH': gcc_bin}
     runtime['gcc'] = os.path.join(gcc_bin, 'gcc.exe')
     runtime['g++'] = runtime['g++11'] = os.path.join(gcc_bin, 'g++.exe')
+    runtime['gfortran'] = os.path.join(gcc_bin, 'gfortran.exe')
 
 print yaml.safe_dump(config)

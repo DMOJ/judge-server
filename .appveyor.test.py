@@ -5,7 +5,7 @@ from dmoj import judgeenv, executors
 from dmoj.testsuite import Tester
 from dmoj.utils.ansi import ansi_style
 
-required_executors = ['AWK', 'BF', 'C', 'CPP03', 'CPP11', 'CS', 'GO', 'PERL', 'PY2', 'PY3',
+required_executors = ['AWK', 'BF', 'C', 'CPP03', 'CPP11', 'CS', 'PERL', 'PY2', 'PY3',
                       'RUBY19', 'RUBY21', 'SED', 'VB']
 
 

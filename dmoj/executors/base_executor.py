@@ -9,11 +9,10 @@ from distutils.spawn import find_executable
 from subprocess import Popen
 
 from dmoj.error import CompileError
+from dmoj.executors.mixins import PlatformExecutorMixin
 from dmoj.executors.resource_proxy import ResourceProxy
 from dmoj.judgeenv import env
 from dmoj.utils.ansi import ansi_style
-
-from dmoj.executors.mixins import PlatformExecutorMixin
 
 reversion = re.compile('.*?(\d+(?:\.\d+)+)', re.DOTALL)
 version_cache = {}
@@ -221,6 +220,14 @@ class ScriptExecutor(BaseExecutor):
 
     def get_executable(self):
         return self.get_command()
+
+    def get_env(self):
+        env = super(BaseExecutor, self).get_env()
+        env_key = self.get_executor_name().lower() + '_env'
+        if env_key in self.runtime_dict:
+            env = env or {}
+            env.update(self.runtime_dict[env_key])
+        return env
 
 
 class CompiledExecutor(BaseExecutor):

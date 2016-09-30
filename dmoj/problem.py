@@ -152,7 +152,9 @@ class TestCase(object):
         return filtered_data
 
     def _normalize(self, data):
-        return data.replace('\r\n', '\n')
+        # Normalize all newline formats (\r\n, \r, \n) to \n, otherwise we have problems with people creating
+        # data on Macs (\r newline) when judged programs assume \n
+        return data.replace('\r\n', '\r').replace('\r', '\n')
 
     def _run_generator(self, gen, args=None):
         flags = []

@@ -109,12 +109,10 @@ class StandardGrader(BaseGrader):
             if os.name == 'nt' and process.returncode == 3:
                 # On Windows, abort() causes return value 3, instead of SIGABRT.
                 result.result_flag |= Result.RTE
-                result.result_code = -signal.SIGABRT
                 process.signal = signal.SIGABRT
             elif os.name == 'nt' and process.returncode == 0xC0000005:
                 # On Windows, 0xC0000005 is access violation (SIGSEGV).
                 result.result_flag |= Result.RTE
-                result.result_code = -signal.SIGSEGV
                 process.signal = signal.SIGSEGV
             else:
                 # print>> sys.stderr, 'Exited with error: %d' % process.returncode

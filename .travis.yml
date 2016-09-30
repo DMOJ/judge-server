@@ -43,7 +43,7 @@ before_install:
     tar xz -C swift --strip-components=1
   - export PATH=${PWD}/swift/usr/bin:"${PATH}"
   # Install Rust
-  - curl -sSf https://static.rust-lang.org/rustup.sh | sh
+  - curl -sSf https://static.rust-lang.org/rustup.sh | sudo sh
   # Install latest Scala
   - wget http://downloads.lightbend.com/scala/2.11.8/scala-2.11.8.deb
   - sudo dpkg -i scala-2.11.8.deb

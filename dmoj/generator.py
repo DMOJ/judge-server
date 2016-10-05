@@ -11,7 +11,6 @@ class GeneratorManager(object):
 
     def get_generator(self, filename, flags):
         from dmoj.executors import executors
-        from dmoj.config import InvalidInitException
 
         filename = os.path.abspath(filename)
         cache_key = filename, tuple(flags)
@@ -26,7 +25,7 @@ class GeneratorManager(object):
             raise IOError('could not read generator source')
 
         def find_cpp():
-            for grader in ('CPP14', 'CPP11', 'CPP0X', 'CPP'):
+            for grader in ('CPP14', 'CPP11', 'CPP0X', 'CPP03'):
                 if grader in executors:
                     return grader
             return None

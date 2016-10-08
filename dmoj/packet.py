@@ -35,12 +35,12 @@ class PacketManager(object):
         # Certainly hope it won't stack overflow, since it will take days if not years.
         self.fallback = 4
 
+        self.conn = None
         self._do_reconnect()
 
     def _connect(self):
-        self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.conn = socket.create_connection((self.host, self.port))
         self.conn.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-        self.conn.connect((self.host, self.port))
         self.input = self.conn.makefile('r')
         self.output = self.conn.makefile('w', 0)
         self.handshake(get_supported_problems(), get_runtime_versions(), self.name, self.key)
@@ -51,7 +51,8 @@ class PacketManager(object):
             raise SystemExit(0)
         print>> sys.stderr
         print>> sys.stderr, 'SOCKET ERROR: Disconnected! Reconnecting in %d seconds.' % self.fallback
-        self.conn.close()
+        if self.conn is not None:
+            self.conn.close()
         time.sleep(self.fallback)
         self.fallback *= 1.5
         self._do_reconnect()

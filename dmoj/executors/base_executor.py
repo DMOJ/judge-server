@@ -2,6 +2,7 @@ import os
 import re
 import subprocess
 import sys
+import signal
 import threading
 import time
 import traceback
@@ -261,11 +262,10 @@ class CompiledExecutor(BaseExecutor):
                 if time.time() - start_time > self._time:
                     self._killed = True
                     try:
-                        # Give the process a bit of time to clean up after itself
-                        self.terminate()
                         if os.name != 'nt':
-                            time.sleep(0.5)
-                            self.kill()  # On Windows this is an alias for terminate()
+                            self.killpg(self.pid, signal.SIGKILL)
+                        else:
+                            self.terminate()
                     except OSError:
                         # This can happen if the process exits quickly
                         pass
@@ -298,20 +298,21 @@ class CompiledExecutor(BaseExecutor):
     def get_compile_popen_kwargs(self):
         return {}
 
-    def create_executable_fslimit(self):
+    def create_executable_limits(self):
         try:
             import resource
 
-            def limit_executable_size():
+            def limit_executable():
+                os.setpgrp()
                 resource.setrlimit(resource.RLIMIT_FSIZE, (self.executable_size, self.executable_size))
 
-            return limit_executable_size
+            return limit_executable
         except ImportError:
             return None
 
     def get_compile_process(self):
         kwargs = {'stderr': subprocess.PIPE, 'cwd': self._dir, 'env': self.get_compile_env(),
-                  'preexec_fn': self.create_executable_fslimit(), 'time_limit': self.compiler_time_limit}
+                  'preexec_fn': self.create_executable_limits(), 'time_limit': self.compiler_time_limit}
         kwargs.update(self.get_compile_popen_kwargs())
 
         return self.TimedPopen(self.get_compile_args(), **kwargs)

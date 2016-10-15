@@ -263,7 +263,7 @@ class CompiledExecutor(BaseExecutor):
                     self._killed = True
                     try:
                         if os.name != 'nt':
-                            self.killpg(self.pid, signal.SIGKILL)
+                            os.killpg(self.pid, signal.SIGKILL)
                         else:
                             self.terminate()
                     except OSError:

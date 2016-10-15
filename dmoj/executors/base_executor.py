@@ -269,7 +269,6 @@ class CompiledExecutor(BaseExecutor):
                     except OSError:
                         # This can happen if the process exits quickly
                         pass
-                    self._killed = True
                     break
                 time.sleep(0.25)
 

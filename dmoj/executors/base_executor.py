@@ -259,6 +259,7 @@ class CompiledExecutor(BaseExecutor):
 
             while self.returncode is None:
                 if time.time() - start_time > self._time:
+                    self._killed = True
                     try:
                         # Give the process a bit of time to clean up after itself
                         self.terminate()

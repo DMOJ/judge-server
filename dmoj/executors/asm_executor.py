@@ -65,7 +65,7 @@ class ASMExecutor(CompiledExecutor):
 
         executable = self._file(self.problem)
         process = self.TimedPopen([self.get_ld_path(), '-s', '-o', executable, '-m', self.ld_m] + to_link,
-                                  cwd=self._dir, stderr=subprocess.PIPE, preexec_fn=self.create_executable_fslimit(),
+                                  cwd=self._dir, stderr=subprocess.PIPE, preexec_fn=self.create_executable_limits(),
                                   time_limit=self.compiler_time_limit)
         ld_output = process.communicate()[1]
         if process.returncode != 0 or (hasattr(process, '_killed') and process._killed):

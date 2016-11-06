@@ -9,6 +9,7 @@ class Executor(JavaExecutor):
     ext = '.scala'
 
     compiler = 'scalac'
+    compiler_time_limit = 20
     vm = 'scala_vm'
 
     test_program = '''\

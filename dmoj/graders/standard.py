@@ -97,7 +97,8 @@ class StandardGrader(BaseGrader):
                                    submission_source=self.source,
                                    judge_input=case.input_data() or '',
                                    point_value=case.points,
-                                   case_position=case.position)
+                                   case_position=case.position,
+                                   submission_language=self.language)
         else:
             # Solution is guaranteed to receive 0 points
             check = False

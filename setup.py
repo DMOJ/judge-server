@@ -8,6 +8,14 @@ from setuptools import setup, Extension
 from setuptools.command import build_ext
 from setuptools.command.build_ext import build_ext as build_ext_old
 
+try:
+    from cython.Build import cythonize
+except ImportError:
+    print>>sys.stderr, 'You need to install cython first before installing DMOJ.'
+    print>>sys.stderr, 'Run: pip install cython'
+    print>>sys.stderr, 'Or if you do not have pip: easy_install cython'
+    sys.exit(1)
+
 
 class build_ext_dmoj(build_ext_old):
     def run(self):
@@ -78,28 +86,6 @@ else:
                              include_dirs=['dmoj/utils/debugger'], libraries=['rt'])]
 
 
-class cythonized(list):
-    def __init__(self, extensions):
-        super(cythonized, self).__init__()
-        self._list = None
-        self.extensions = extensions
-
-    def c_list(self):
-        if self._list is None:
-            from Cython.Build import cythonize
-            self._list = cythonize(self.extensions)
-        return self._list
-
-    def __iter__(self):
-        return iter(self.c_list())
-
-    def __getitem__(self, i):
-        return self.c_list()[i]
-
-    def __len__(self):
-        return len(self.extensions)
-
-
 setup(
     name='dmoj',
     version='0.1',
@@ -110,9 +96,8 @@ setup(
             'dmoj-cli = dmoj.cli:main',
         ]
     },
-    ext_modules=cythonized(extensions),
-    setup_requires=['cython'],
-    install_requires=['cython', 'watchdog', 'pyyaml', 'ansi2html', 'termcolor'],
+    ext_modules=cythonize(extensions),
+    install_requires=['watchdog', 'pyyaml', 'ansi2html', 'termcolor'],
 
     author='quantum5, Xyene',
     author_email='admin@dmoj.ca',

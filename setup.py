@@ -9,7 +9,7 @@ from setuptools.command import build_ext
 from setuptools.command.build_ext import build_ext as build_ext_old
 
 try:
-    from cython.Build import cythonize
+    from Cython.Build import cythonize
 except ImportError:
     print>>sys.stderr, 'You need to install cython first before installing DMOJ.'
     print>>sys.stderr, 'Run: pip install cython'

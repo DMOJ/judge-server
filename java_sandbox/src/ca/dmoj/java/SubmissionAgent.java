@@ -83,6 +83,12 @@ public class SubmissionAgent {
                 System.err.flush();
 
                 try {
+                    // Use a FileOutputStream instead of a File; otherwise, if the user.dir property permission
+                    // is given by a policy file, it could potentially allow malicious submissions to change the
+                    // cwd and have the state file written anywhere.
+                    // FileOutputStream ignores the user.dir property when resolving paths.
+                    // TODO: not a real concern, but this could be made to use the codebase path as a base for
+                    // an absolute path.
                     PrintStream state = new PrintStream(new BufferedOutputStream(new FileOutputStream("state")));
                     if (lastError != null) {
                         state.println(lastError.getClass().getName());

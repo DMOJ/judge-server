@@ -410,7 +410,7 @@ class JudgeManager(object):
         self.api_pid = None
 
         self.monitor = Monitor()
-        self.monitor.callback = lambda: self.signal_all(signal.SIGUSR2)
+        self.monitor.callback = lambda: os.kill(self.master_pid, signal.SIGUSR2)
 
     def __get_libc(self):
         from ctypes.util import find_library

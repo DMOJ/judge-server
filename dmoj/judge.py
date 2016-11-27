@@ -363,8 +363,11 @@ def judge_proc(need_monitor):
 
     if need_monitor and judgeenv.api_listen:
         from BaseHTTPServer import HTTPServer
-        handler = type('JudgeControlRequestHandler', (JudgeControlRequestHandler,), {'judge': judge})
-        api_server = HTTPServer(judgeenv.api_listen, handler)
+
+        class Handler(JudgeControlRequestHandler):
+            judge = judge
+
+        api_server = HTTPServer(judgeenv.api_listen, Handler)
         thread = threading.Thread(target=api_server.serve_forever)
         thread.daemon = True
         thread.start()

@@ -518,6 +518,8 @@ class JudgeManager(object):
                 if e.errno == errno.EINTR:
                     continue
                 raise
+            if not os.WIFSIGNALED(status) and not os.WIFEXITED(status):
+                continue
             if pid in self.pids:
                 # A child just died.
                 judge = self.pids[pid]

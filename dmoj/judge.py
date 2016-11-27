@@ -10,6 +10,7 @@ from functools import partial
 
 from dmoj import packet, graders
 from dmoj.config import ConfigNode
+from dmoj.control import JudgeControlRequestHandler
 from dmoj.error import CompileError
 from dmoj.judgeenv import env, get_supported_problems
 from dmoj.monitor import Monitor, DummyMonitor
@@ -360,6 +361,16 @@ def judge_proc(need_monitor):
 
         signal.signal(signal.SIGUSR2, update_problem_signal)
 
+    if need_monitor and judgeenv.api_listen:
+        from BaseHTTPServer import HTTPServer
+        handler = type('JudgeControlRequestHandler', (JudgeControlRequestHandler,), {'judge': judge})
+        api_server = HTTPServer(judgeenv.api_listen, handler)
+        thread = threading.Thread(target=api_server.serve_forever)
+        thread.daemon = True
+        thread.start()
+    else:
+        api_server = None
+
     print
     with monitor, judge:
         try:
@@ -370,6 +381,8 @@ def judge_proc(need_monitor):
             traceback.print_exc()
         finally:
             judge.murder()
+            if api_server:
+                api_server.shutdown()
 
 PR_SET_PDEATHSIG = 1
 

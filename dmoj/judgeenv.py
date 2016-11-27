@@ -3,7 +3,6 @@ import os
 import sys
 
 import yaml
-
 from dmoj.config import ConfigNode
 
 problem_dirs = ()
@@ -15,6 +14,7 @@ _root = os.path.dirname(__file__)
 fs_encoding = os.environ.get('DMOJ_ENCODING', sys.getfilesystemencoding())
 
 log_file = server_host = server_port = no_ansi = no_ansi_emu = no_watchdog = problem_regex = case_regex = None
+api_listen = None
 
 startup_warnings = []
 
@@ -31,16 +31,16 @@ def unicodify(string):
 def load_env(cli=False, testsuite=False):  # pragma: no cover
     global problem_dirs, only_executors, exclude_executors, log_file, server_host, \
         server_port, no_ansi, no_ansi_emu, env, startup_warnings, no_watchdog, \
-        problem_regex, case_regex
+        problem_regex, case_regex, api_listen
     _parser = argparse.ArgumentParser(description='''
         Spawns a judge for a submission server.
     ''')
     if not cli:
-        _parser.add_argument('server_host', help='host to listen for the server')
+        _parser.add_argument('server_host', help='host to connect for the server')
         _parser.add_argument('judge_name', nargs='?', help='judge name (overrides configuration)')
         _parser.add_argument('judge_key', nargs='?', help='judge key (overrides configuration)')
         _parser.add_argument('-p', '--server-port', type=int, default=9999,
-                             help='port to listen for the server')
+                             help='port to connect for the server')
     _parser.add_argument('-c', '--config', type=str, default=None, required=True,
                          help='file to load judge configurations from')
 
@@ -49,6 +49,11 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
                              help='log file to use')
         _parser.add_argument('--no-watchdog', action='store_true',
                              help='disable use of watchdog on problem directories')
+        _parser.add_argument('-a', '--api-port', type=int, default=None,
+                             help='port to listen for the judge API (do not expose to public, '
+                                  'security is left as an exercise for the reverse proxy)')
+        _parser.add_argument('-A', '--api-host', default='127.0.0.1',
+                             help='IPv4 address to listen for judge API')
 
     _group = _parser.add_mutually_exclusive_group()
     _group.add_argument('-e', '--only-executors',
@@ -73,6 +78,7 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
     no_ansi_emu = _args.no_ansi_emu if os.name == 'nt' else True
     no_ansi = _args.no_ansi
     no_watchdog = True if cli else _args.no_watchdog
+    api_listen = (_args.api_host, _args.api_port) if _args.api_port else None
 
     log_file = getattr(_args, 'log_file', None)
     only_executors |= _args.only_executors and set(_args.only_executors.split(',')) or set()

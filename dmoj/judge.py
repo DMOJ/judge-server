@@ -554,13 +554,12 @@ class JudgeManager(object):
         self._forward_signal(signal.SIGTERM)
 
         self._spawn_all()
-        with self.monitor:
-            try:
-                self._monitor()
-            except KeyboardInterrupt:
-                self._try_respawn = False
-                self.signal_all(signal.SIGINT)
-                self._monitor()
+        try:
+            self._monitor()
+        except KeyboardInterrupt:
+            self._try_respawn = False
+            self.signal_all(signal.SIGINT)
+            self._monitor()
         print>> sys.stderr, 'judgepm: Exited gracefully: %d.' % os.getpid()
 
     def signal_all(self, signum):

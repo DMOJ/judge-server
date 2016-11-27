@@ -39,11 +39,14 @@ class PacketManager(object):
         self._do_reconnect()
 
     def _connect(self):
+        problems = get_supported_problems()
+        versions = get_runtime_versions()
+
         self.conn = socket.create_connection((self.host, self.port))
         self.conn.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
         self.input = self.conn.makefile('r')
         self.output = self.conn.makefile('w', 0)
-        self.handshake(get_supported_problems(), get_runtime_versions(), self.name, self.key)
+        self.handshake(problems, versions, self.name, self.key)
 
     def _reconnect(self):
         if self.fallback > 65536:

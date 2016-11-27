@@ -78,7 +78,8 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
     no_ansi_emu = _args.no_ansi_emu if os.name == 'nt' else True
     no_ansi = _args.no_ansi
     no_watchdog = True if cli else _args.no_watchdog
-    api_listen = (_args.api_host, _args.api_port) if _args.api_port else None
+    if not cli:
+        api_listen = (_args.api_host, _args.api_port) if _args.api_port else None
 
     log_file = getattr(_args, 'log_file', None)
     only_executors |= _args.only_executors and set(_args.only_executors.split(',')) or set()

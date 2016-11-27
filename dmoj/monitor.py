@@ -1,3 +1,4 @@
+import traceback
 from contextlib import closing
 from threading import Thread, Event
 from urllib2 import urlopen
@@ -36,8 +37,11 @@ class RefreshWorker(Thread):
             if self._terminate:
                 break
             for url in self.urls:
-                with closing(urlopen(url, data='')) as f:
-                    f.read()
+                try:
+                    with closing(urlopen(url, data='')) as f:
+                        f.read()
+                except Exception:
+                    traceback.print_exc()
 
 
 class SendProblemsHandler(FileSystemEventHandler):

@@ -7,6 +7,7 @@ import sys
 import threading
 import traceback
 from functools import partial
+from itertools import chain
 
 from dmoj import packet, graders
 from dmoj.config import ConfigNode
@@ -470,6 +471,8 @@ class JudgeManager(object):
 
     def _spawn_monitor(self):
         def monitor_proc():
+            signal.signal(signal.SIGUSR2, signal.SIG_IGN)
+
             self.monitor.start()
             try:
                 self.monitor.join()
@@ -487,7 +490,12 @@ class JudgeManager(object):
             def update_problems(self):
                 os.kill(master_pid, signal.SIGUSR2)
 
-        self.api_pid = self._spawn_child(HTTPServer(judgeenv.api_listen, Handler).serve_forever)
+        server = HTTPServer(judgeenv.api_listen, Handler)
+
+        def api_proc():
+            signal.signal(signal.SIGUSR2, signal.SIG_IGN)
+            server.serve_forever()
+        self.api_pid = self._spawn_child(api_proc)
 
     def _spawn_all(self):
         from dmoj import judgeenv
@@ -554,7 +562,9 @@ class JudgeManager(object):
         print>> sys.stderr, 'judgepm: Exited gracefully: %d.' % os.getpid()
 
     def signal_all(self, signum):
-        for pid in self.pids:
+        for pid in chain(self.pids, [self.monitor_pid, self.api_pid]):
+            if pid is None:
+                continue
             try:
                 os.kill(pid, signum)
             except OSError as e:

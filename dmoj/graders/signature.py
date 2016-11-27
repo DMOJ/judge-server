@@ -24,6 +24,7 @@ class SignatureGrader(StandardGrader):
             header = self.problem.problem_data[handler_data['header']]
 
             submission_template = '''#include "%s"
+#define SIGGRADE
 #define main main_%s
 %s
 '''

@@ -49,7 +49,7 @@ class SendProblemsHandler(FileSystemEventHandler):
         if self.callback is not None:
             self.callback()
         if self.refresher is not None:
-            self.refresher.trigger()
+            self.refresher.refresh()
 
 
 class Monitor(object):

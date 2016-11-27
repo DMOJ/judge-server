@@ -401,8 +401,13 @@ class JudgeManager(object):
 
         self._try_respawn = True
         self.auth = {entry.id: entry.key for entry in judges}
-        self.pids = {}
         self.orig_signal = {}
+
+        self.master_pid = os.getpid()
+        self.pids = {}
+        self.monitor_pid = None
+        self.api_pid = None
+
         self.monitor = Monitor()
         self.monitor.callback = lambda: self.signal_all(signal.SIGUSR2)
 
@@ -420,7 +425,7 @@ class JudgeManager(object):
             self.signal_all(signum)
         self.orig_signal[sig] = signal.signal(sig, handler)
 
-    def _spawn_judge(self, id):
+    def _spawn_child(self, func, *args, **kwargs):
         sys.stdout.flush()
         sys.stderr.flush()
         ppid = os.getpid()
@@ -440,25 +445,62 @@ class JudgeManager(object):
             for sig, handler in self.orig_signal.iteritems():
                 signal.signal(sig, handler)
 
-            env['id'] = id
-            env['key'] = self.auth[id]
-            try:
-                ret = judge_proc(False)
-            except BaseException:
-                ret = 1
-            finally:
-                sys.stdout.flush()
-                sys.stderr.flush()
-                logging.shutdown()
             # How could we possibly return to top level?
-            os._exit(ret or 0)
-            os._exit(1)  # If that os._exit fails because ret is a truthy non-int, then this will ensure death.
+            try:
+                os._exit(func(*args, **kwargs) or 0)
+            finally:
+                os._exit(1)  # If that os._exit fails because ret is a truthy non-int, then this will ensure death.
+        return pid
+
+    def _judge_proc(self, id):
+        env['id'] = id
+        env['key'] = self.auth[id]
+        try:
+            return judge_proc(False)
+        except BaseException:
+            return 1
+        finally:
+            sys.stdout.flush()
+            sys.stderr.flush()
+            logging.shutdown()
+
+    def _spawn_judge(self, id):
+        pid = self._spawn_child(self._judge_proc, id)
         self.pids[pid] = id
 
+    def _spawn_monitor(self):
+        def monitor_proc():
+            self.monitor.start()
+            try:
+                self.monitor.join()
+            except KeyboardInterrupt:
+                self.monitor.stop()
+        self.monitor_pid = self._spawn_child(monitor_proc)
+
+    def _spawn_api(self):
+        from dmoj import judgeenv
+        from BaseHTTPServer import HTTPServer
+
+        master_pid = self.master_pid
+
+        class Handler(JudgeControlRequestHandler):
+            def update_problems(self):
+                os.kill(master_pid, signal.SIGUSR2)
+
+        self.api_pid = self._spawn_child(HTTPServer(judgeenv.api_listen, Handler).serve_forever)
+
     def _spawn_all(self):
+        from dmoj import judgeenv
+
         for id in self.auth:
             print>>sys.stderr, 'judgepm: Spawning judge:', id
             self._spawn_judge(id)
+        if self.monitor.is_real:
+            print>>sys.stderr, 'judgepm: Spawning monitor'
+            self._spawn_monitor()
+        if judgeenv.api_listen is not None:
+            print>>sys.stderr, 'judgepm: Spawning API server'
+            self._spawn_api()
 
     def _monitor(self):
         while self._try_respawn or self.pids:
@@ -477,6 +519,18 @@ class JudgeManager(object):
                     self._spawn_judge(judge)
                 else:
                     print>>sys.stderr, 'judgepm: Judge exited: %s (0x%08X)' % (judge, status)
+            elif pid == self.monitor_pid:
+                if self._try_respawn:
+                    print>>sys.stderr, 'judgepm: Monitor died, respawning (0x%08X)' % status
+                    self._spawn_monitor()
+                else:
+                    print>>sys.stderr, 'judgepm: Monitor exited: (0x%08X)' % status
+            elif pid == self.api_pid:
+                if self._try_respawn:
+                    print>>sys.stderr, 'judgepm: API server died, respawning (0x%08X)' % status
+                    self._spawn_api()
+                else:
+                    print>>sys.stderr, 'judgepm: API server exited: (0x%08X)' % status
             else:
                 print>>sys.stderr, 'judgepm: I am not your father, %d (0x%08X)!' % (pid, status)
 

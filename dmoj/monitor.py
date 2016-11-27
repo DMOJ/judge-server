@@ -30,6 +30,10 @@ class Monitor(object):
             self._monitor = None
 
     @property
+    def is_real(self):
+        return self._monitor is not None
+
+    @property
     def callback(self):
         return self._handler.callback
 
@@ -43,6 +47,10 @@ class Monitor(object):
                 self._monitor.start()
             except OSError:
                 print ansi_style('#ansi[Warning: failed to start problem monitor!](yellow)')
+
+    def join(self):
+        if self._monitor is not None:
+            self._monitor.join()
 
     def stop(self):
         if self._monitor is not None:

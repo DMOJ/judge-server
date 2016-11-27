@@ -1,3 +1,7 @@
+from contextlib import closing
+from threading import Thread, Event
+from urllib2 import urlopen
+
 from dmoj import judgeenv
 from dmoj.judgeenv import startup_warnings, get_problem_roots
 from dmoj.utils.ansi import ansi_style
@@ -10,24 +14,59 @@ except ImportError:
     Observer = None
 
 
+class RefreshWorker(Thread):
+    def __init__(self, urls):
+        super(RefreshWorker, self).__init__()
+        self.urls = urls
+        self.daemon = True
+        self._trigger = Event()
+        self._terminate = False
+
+    def refresh(self):
+        self._trigger.set()
+
+    def stop(self):
+        self._terminate = True
+        self._trigger.set()
+
+    def run(self):
+        while True:
+            self._trigger.wait()
+            self._trigger.clear()
+            if self._terminate:
+                break
+            for url in self.urls:
+                with closing(urlopen(url, data='')) as f:
+                    f.read()
+
+
 class SendProblemsHandler(FileSystemEventHandler):
-    def __init__(self):
+    def __init__(self, refresher=None):
+        self.refresher = refresher
         self.callback = None
 
     def on_any_event(self, event):
         if self.callback is not None:
             self.callback()
+        if self.refresher is not None:
+            self.refresher.trigger()
 
 
 class Monitor(object):
     def __init__(self):
         if Observer is not None and not judgeenv.no_watchdog:
-            self._handler = SendProblemsHandler()
+            if 'update_pings' in judgeenv.env:
+                self._refresher = RefreshWorker(judgeenv.env['update_pings'])
+            else:
+                self._refresher = None
+
+            self._handler = SendProblemsHandler(self._refresher)
             self._monitor = monitor = Observer()
             for dir in get_problem_roots():
                 monitor.schedule(self._handler, dir, recursive=True)
         else:
             self._monitor = None
+            self._refresher = None
 
     @property
     def is_real(self):
@@ -47,12 +86,18 @@ class Monitor(object):
                 self._monitor.start()
             except OSError:
                 print ansi_style('#ansi[Warning: failed to start problem monitor!](yellow)')
+        if self._refresher is not None:
+            self._refresher.start()
 
     def join(self):
         if self._monitor is not None:
             self._monitor.join()
+        if self._refresher is not None:
+            self._refresher.join()
 
     def stop(self):
+        if self._refresher is not None:
+            self._refresher.stop()
         if self._monitor is not None:
             self._monitor.stop()
             self._monitor.join(1)

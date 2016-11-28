@@ -13,7 +13,7 @@ from dmoj import packet, graders
 from dmoj.config import ConfigNode
 from dmoj.control import JudgeControlRequestHandler
 from dmoj.error import CompileError
-from dmoj.judgeenv import env, get_supported_problems
+from dmoj.judgeenv import env, get_supported_problems, startup_warnings
 from dmoj.monitor import Monitor, DummyMonitor
 from dmoj.problem import Problem, BatchedTestCase
 from dmoj.result import Result

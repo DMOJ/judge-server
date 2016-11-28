@@ -5,7 +5,6 @@ from importlib import import_module
 
 import yaml
 import yaml.representer
-
 from dmoj import judgeenv
 from dmoj.executors import executors
 from dmoj.testsuite import Tester
@@ -22,7 +21,7 @@ TEST_ON_TRAVIS = ['ADA', 'AWK', 'BF', 'C', 'CBL', 'D', 'DART', 'CPP0X', 'CPP03',
                   'COFFEE', 'F95', 'GO', 'GROOVY', 'HASK', 'JAVA7', 'JAVA8', 'JAVA9', 'MONOCS',
                   'MONOVB', 'PAS', 'PRO', 'GAS32', 'GAS64', 'LUA', 'NASM', 'NASM64',
                   'PERL', 'PHP', 'PY2', 'PY3', 'PYPY', 'PYPY3',
-                  'RUBY19', 'RUBY21', 'RUST', 'SCALA', 'SCM', 'SED', 'SWIFT', 'TCL', 'TEXT']
+                  'RUBY19', 'RUBY21', 'RUST', 'SCM', 'SED', 'SWIFT', 'TCL', 'TEXT']
 RVM_DIR = os.path.expanduser('~/.rvm/rubies/')
 PYENV_DIR = '/opt/python/'
 JVM_DIR = '/usr/lib/jvm/'

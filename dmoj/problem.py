@@ -71,7 +71,7 @@ class Problem(object):
                 cases.append(BatchedTestCase(self._batch_counter, case_config, self))
             else:
                 cases.append(TestCase(self._testcase_counter, batch_no, case_config, self))
-        self._testcase_counter += 1
+                self._testcase_counter += 1
         return cases
 
 

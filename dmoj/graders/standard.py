@@ -98,6 +98,7 @@ class StandardGrader(BaseGrader):
                                    judge_input=case.input_data() or '',
                                    point_value=case.points,
                                    case_position=case.position,
+                                   batch=case.batch,
                                    submission_language=self.language)
         else:
             # Solution is guaranteed to receive 0 points

@@ -37,7 +37,7 @@ class SignatureGrader(StandardGrader):
             try:
                 return executors[siggrader].Executor(self.problem.id, entry, aux_sources=aux_sources,
                                                      writable=handler_data['writable'] or (1, 2),
-                                                     fds=handler_data['fds'])
+                                                     fds=handler_data['fds'], defines=['-DSIGNATURE_GRADER'])
             except CompileError as compilation_error:
                 self.judge.packet_manager.compile_error_packet(ansi.format_ansi(compilation_error.message))
 

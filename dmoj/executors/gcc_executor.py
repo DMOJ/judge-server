@@ -42,6 +42,7 @@ class GCCExecutor(CompiledExecutor):
         self.sources = sources
         self._fds = fds
         self._writable = writable
+        self.defines = kwargs.get('defines', [])
 
     def get_ldflags(self):
         if os.name == 'nt':

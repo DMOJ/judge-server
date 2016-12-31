@@ -1,5 +1,5 @@
 language: CPP11
 time: 2
 memory: 65536
-source: sigtest.cpp
+source: siggrade.cpp
 expect: AC

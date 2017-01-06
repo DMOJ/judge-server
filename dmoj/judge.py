@@ -193,7 +193,7 @@ class Judge(object):
                 yield BatchBegin()
                 for c in self.grade_cases(grader, case.batched_cases, short_circuit=True,
                                           is_short_circuiting=is_short_circuiting):
-                    if (c.result_flag & Result.WA) > 0 and case.config.points == 0:
+                    if (c.result_flag & Result.WA) > 0 and not case.points:
                         is_short_circuiting = True
                     yield c
                 yield BatchEnd()
@@ -217,7 +217,7 @@ class Judge(object):
             # If the WA bit of result_flag is set and we are set to short-circuit (e.g., in a batch),
             # short circuit the rest of the cases.
             # Do the same if the case is a pretest (i.e. has 0 points)
-            if (result.result_flag & Result.WA) > 0 and (short_circuit or case.points == 0):
+            if (result.result_flag & Result.WA) > 0 and (short_circuit or not case.points):
                 is_short_circuiting = True
 
             yield result

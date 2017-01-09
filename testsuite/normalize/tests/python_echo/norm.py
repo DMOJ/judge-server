@@ -1,2 +1,2 @@
 from sys import stdin
-print stdin.read()
+print stdin.read() ,

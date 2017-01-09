@@ -1,0 +1,5 @@
+language: JAVA8
+time: 2
+memory: 65536
+source: abstract_class.java
+expect: AC

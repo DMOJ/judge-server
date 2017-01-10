@@ -34,6 +34,9 @@ addons:
 cache:
   directories:
     - $HOME/.cargo
+    - $HOME/.cache/pip
+before_cache:
+  - rm -f $HOME/.cache/pip/log/debug.log
 before_install:
   # Install Swift
   - wget -q -O - https://swift.org/keys/all-keys.asc | gpg --import -

@@ -1,11 +1,11 @@
+from __future__ import print_function
+
 import os
 import sys
 
 from dmoj import judgeenv, executors
 from dmoj.testsuite import Tester
 from dmoj.utils.ansi import ansi_style
-
-from __future__ import print_function
 
 required_executors = ['AWK', 'BF', 'C', 'CPP03', 'CPP11', 'CS', 'PERL', 'PY2', 'PY3',
                       'RUBY19', 'RUBY21', 'SED', 'VB']

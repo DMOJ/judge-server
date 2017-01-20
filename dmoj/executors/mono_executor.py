@@ -9,6 +9,8 @@ from dmoj.cptbox.handlers import ALLOW, ACCESS_DENIED
 from dmoj.cptbox.syscalls import *
 from .base_executor import CompiledExecutor
 
+from __future__ import print_function
+
 WRITE_FS = ['/proc/self/task/\d+/comm$', '.*?/mono\.\d+$']
 UNLINK_FS = re.compile('.*?/mono.\d+$')
 
@@ -50,11 +52,11 @@ class MonoExecutor(CompiledExecutor):
         writable[1] = writable[2] = True
 
         def handle_open(debugger):
-            file = debugger.readstr(debugger.uarg0)
-            if fs.match(file) is None:
-                print>>sys.stderr, 'Not allowed to access:', file
+            f = debugger.readstr(debugger.uarg0)
+            if fs.match(f) is None:
+                print('Not allowed to access:', f, file=sys.stderr)
                 return False
-            can = write_fs.match(file) is not None
+            can = write_fs.match(f) is not None
 
             def update():
                 writable[debugger.result] = can
@@ -87,7 +89,7 @@ class MonoExecutor(CompiledExecutor):
         def unlink(debugger):
             path = debugger.readstr(debugger.uarg0)
             if UNLINK_FS.match(path) is None:
-                print 'Not allowed to unlink:', path
+                print('Not allowed to unlink:', path)
                 return False
             return True
 

@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import os
 import traceback
 
@@ -8,7 +10,6 @@ from dmoj import judgeenv
 from dmoj.executors import get_available, load_executor
 from dmoj.utils.ansi import ansi_style
 
-from __future__ import print_function
 
 def main():
     result = {}

@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import os
 import sys
 import traceback
@@ -8,8 +10,6 @@ from dmoj import judgeenv, executors
 from dmoj.judge import Judge
 from dmoj.judgeenv import get_supported_problems, get_problem_root
 from dmoj.utils.ansi import ansi_style
-
-from __future__ import print_function
 
 all_executors = executors.executors
 

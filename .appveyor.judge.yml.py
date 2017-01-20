@@ -1,8 +1,8 @@
+from __future__ import print_function
+
 import os
 
 import yaml
-
-from __future__ import print_function
 
 config = yaml.safe_load(r'''tempdir: C:\judgetemp
 runtime:

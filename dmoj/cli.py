@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import argparse
 import os
 import re
@@ -10,7 +12,6 @@ from dmoj import judgeenv
 from dmoj.executors import executors
 from dmoj.judge import Judge
 from dmoj.utils.ansi import ansi_style
-from __future__ import print_function
 
 if sys.version_info.major == 3:
     raw_input = input

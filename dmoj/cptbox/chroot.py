@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import re
 import sys
 import os
@@ -5,8 +7,6 @@ import os
 from dmoj.cptbox.handlers import ALLOW, STDOUTERR, ACCESS_DENIED
 from dmoj.cptbox._cptbox import bsd_get_proc_cwd, bsd_get_proc_fdno, AT_FDCWD
 from dmoj.cptbox.syscalls import *
-
-from __future__ import print_function
 
 class CHROOTSecurity(dict):
     def __init__(self, filesystem, writable=(1, 2), io_redirects=None):

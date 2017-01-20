@@ -7,6 +7,7 @@ from distutils.msvccompiler import MSVCCompiler
 from setuptools import setup, Extension
 from setuptools.command import build_ext
 from setuptools.command.build_ext import build_ext as build_ext_old
+from __future__ import print_function
 
 try:
     from Cython.Build import cythonize

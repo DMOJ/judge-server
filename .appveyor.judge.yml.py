@@ -2,6 +2,8 @@ import os
 
 import yaml
 
+from __future__ import print_function
+
 config = yaml.safe_load(r'''tempdir: C:\judgetemp
 runtime:
   awk: C:\Program Files\Git\usr\bin\awk.exe
@@ -36,4 +38,4 @@ else:
     runtime['g++'] = runtime['g++11'] = os.path.join(gcc_bin, 'g++.exe')
     runtime['gfortran'] = os.path.join(gcc_bin, 'gfortran.exe')
 
-print yaml.safe_dump(config)
+print(yaml.safe_dump(config))

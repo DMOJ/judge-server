@@ -9,6 +9,7 @@ from dmoj.judgeenv import env as judge_config
 import ctypes
 import sys
 
+from __future__ import print_function
 
 def unicodify(path):
     if path is None:
@@ -28,7 +29,7 @@ class WBoxPopen(object):
                  network_block=False, inject32=None, inject64=None, inject_func=None):
         username = u'wboxusr_%s' % judge_config.id
         if not ctypes.windll.netapi32.NetUserDel(None, username):
-            print>> sys.stderr, "found uncleaned wbox user '%s'; deleted." % username
+            print("found uncleaned wbox user '%s'; deleted." % username, file=sys.stderr)
         self.user = UserManager(username)
 
         self.process = ProcessManager(self.user.username, self.user.password)

@@ -1,6 +1,8 @@
 from ctypes import windll, WinError, byref, Union, Structure, c_double, c_int64
 from ctypes.wintypes import HANDLE, LONG, DWORD, LPCWSTR, LPCSTR
 
+from __future__ import print_function
+
 
 def pdh_error_check(result, func, arguments):
     if result:
@@ -101,7 +103,7 @@ def main():
             pql, pt = counter.query()
             pql_samples.append(pql)
             pt_samples.append(pt)
-            print '\rCPU load: %5.3f, %6.2f%%' % (sum(pql_samples) / len(pql_samples), pt),
+            print('\rCPU load: %5.3f, %6.2f%%' % (sum(pql_samples) / len(pql_samples), pt), end='')
             sleep(1)
     except KeyboardInterrupt:
         pass

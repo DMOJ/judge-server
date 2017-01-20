@@ -6,6 +6,7 @@ from urllib2 import urlopen
 from dmoj import judgeenv
 from dmoj.judgeenv import startup_warnings, get_problem_roots
 from dmoj.utils.ansi import ansi_style
+from __future__ import print_function
 
 try:
     from watchdog.observers import Observer
@@ -89,7 +90,7 @@ class Monitor(object):
             try:
                 self._monitor.start()
             except OSError:
-                print ansi_style('#ansi[Warning: failed to start problem monitor!](yellow)')
+                print(ansi_style('#ansi[Warning: failed to start problem monitor!](yellow)'))
         if self._refresher is not None:
             self._refresher.start()
 

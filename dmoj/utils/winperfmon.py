@@ -1,7 +1,7 @@
+from __future__ import print_function
+
 from ctypes import windll, WinError, byref, Union, Structure, c_double, c_int64
 from ctypes.wintypes import HANDLE, LONG, DWORD, LPCWSTR, LPCSTR
-
-from __future__ import print_function
 
 
 def pdh_error_check(result, func, arguments):

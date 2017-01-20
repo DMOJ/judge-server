@@ -12,6 +12,8 @@ import zlib
 from dmoj import sysinfo
 from dmoj.judgeenv import get_supported_problems, get_runtime_versions
 
+from __future__ import print_function
+
 logger = logging.getLogger('dmoj.judge')
 timer = time.clock if os.name == 'nt' else time.time
 
@@ -52,8 +54,8 @@ class PacketManager(object):
         if self.fallback > 65536:
             # Return 0 to avoid supervisor restart.
             raise SystemExit(0)
-        print>> sys.stderr
-        print>> sys.stderr, 'SOCKET ERROR: Disconnected! Reconnecting in %d seconds.' % self.fallback
+        print(file=sys.stderr)
+        print('SOCKET ERROR: Disconnected! Reconnecting in %d seconds.' % self.fallback, file=sys.stderr)
         if self.conn is not None:
             self.conn.close()
         time.sleep(self.fallback)
@@ -151,7 +153,7 @@ class PacketManager(object):
         elif name == 'terminate-submission':
             self.judge.terminate_grading()
         else:
-            print 'ERROR: unknown packet %s, payload %s' % (name, packet)
+            print('ERROR: unknown packet %s, payload %s' % (name, packet))
 
     def handshake(self, problems, runtimes, id, key):
         self._send_packet({'name': 'handshake',

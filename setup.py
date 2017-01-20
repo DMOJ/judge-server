@@ -44,10 +44,10 @@ class build_ext_dmoj(build_ext_old):
         build_ext_old.build_extensions(self)
 
     def unavailable(self, e):
-        print '*' * 79
-        print 'Please procure the necessary *.pyd or *.so files yourself.'
+        print('*' * 79)
+        print('Please procure the necessary *.pyd or *.so files yourself.')
         traceback.print_exc()
-        print '*' * 79
+        print('*' * 79)
 
 
 build_ext.build_ext = build_ext_dmoj

@@ -5,6 +5,8 @@ from dmoj.cptbox.handlers import DISALLOW, ALLOW
 from dmoj.cptbox.chroot import CHROOTSecurity
 from dmoj.cptbox.syscalls import SYSCALL_COUNT
 
+import sys
+
 if sys.version_info.major == 3:
     xrange = range
 

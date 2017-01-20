@@ -9,6 +9,8 @@ from dmoj.graders.base import BaseGrader
 from dmoj.result import Result, CheckerResult
 from dmoj.utils.communicate import OutputLimitExceeded
 
+from __future__ import print_function
+
 try:
     from dmoj.utils.nixutils import strsignal
 except ImportError:
@@ -122,7 +124,7 @@ class StandardGrader(BaseGrader):
         if process.returncode < 0:
             # None < 0 == True
             # if process.returncode is not None:
-            # print>> sys.stderr, 'Killed by signal %d' % -process.returncode
+            # print('Killed by signal %d' % -process.returncode, file=sys.stderr)
             result.result_flag |= Result.RTE  # Killed by signal
         if process.tle:
             result.result_flag |= Result.TLE
@@ -136,7 +138,7 @@ class StandardGrader(BaseGrader):
                                                                  errlimit=1048576)
         except OutputLimitExceeded as ole:
             stream, result.proc_output, error = ole.args
-            print 'OLE:', stream
+            print('OLE:', stream)
             result.result_flag |= Result.OLE
             try:
                 process.kill()

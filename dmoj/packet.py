@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import json
 import logging
 import os
@@ -11,8 +13,6 @@ import zlib
 
 from dmoj import sysinfo
 from dmoj.judgeenv import get_supported_problems, get_runtime_versions
-
-from __future__ import print_function
 
 logger = logging.getLogger('dmoj.judge')
 timer = time.clock if os.name == 'nt' else time.time

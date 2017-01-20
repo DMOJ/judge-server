@@ -1,10 +1,10 @@
+from __future__ import print_function
+
 import re
 from urllib2 import urlopen
 from contextlib import closing
 
 from syscall_tables import *
-
-from __future__ import print_function
 
 func_to_name = {}
 

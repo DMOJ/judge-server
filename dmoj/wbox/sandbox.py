@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 from subprocess import list2cmdline, Popen
 import os
 
@@ -9,7 +11,6 @@ from dmoj.judgeenv import env as judge_config
 import ctypes
 import sys
 
-from __future__ import print_function
 
 def unicodify(path):
     if path is None:

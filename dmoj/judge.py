@@ -1,4 +1,6 @@
 #!/usr/bin/python
+from __future__ import print_function
+
 import errno
 import logging
 import os
@@ -19,7 +21,6 @@ from dmoj.problem import Problem, BatchedTestCase
 from dmoj.result import Result
 from dmoj.utils.ansi import ansi_style, strip_ansi
 from dmoj.utils.debugger import setup_all_debuggers
-from __future__ import print_function
 
 setup_all_debuggers()
 

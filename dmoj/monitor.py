@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import traceback
 from contextlib import closing
 from threading import Thread, Event
@@ -6,7 +8,6 @@ from urllib2 import urlopen
 from dmoj import judgeenv
 from dmoj.judgeenv import startup_warnings, get_problem_roots
 from dmoj.utils.ansi import ansi_style
-from __future__ import print_function
 
 try:
     from watchdog.observers import Observer

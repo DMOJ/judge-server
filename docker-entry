@@ -4,6 +4,7 @@ import sys
 from dmoj.cli import main as cli_main
 from dmoj.judge import main as judge_main
 
+from __future__ import print_function
 
 def main():
     if len(sys.argv) > 1 and sys.argv[1] == 'cli':
@@ -11,7 +12,7 @@ def main():
         sys.exit(cli_main())
     else:
         if len(sys.argv) < 2 or '-h' in sys.argv or '--help' in sys.argv:
-            print>>sys.stderr, 'DMOJ Docker Image: run with argument `cli` to use `dmoj-cli`'
+            print('DMOJ Docker Image: run with argument `cli` to use `dmoj-cli`', file=sys.stderr)
         sys.argv = ['docker run ...', '-c', '/judge/judge.yml'] + sys.argv[1:]
         sys.exit(judge_main())
 

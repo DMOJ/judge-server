@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import os
 import re
 import traceback
@@ -9,8 +11,6 @@ from dmoj import judgeenv
 from dmoj.executors import executors
 from dmoj.testsuite import Tester
 from dmoj.utils.ansi import ansi_style
-
-from __future__ import print_function
 
 def find_directory(parent, expr):
     regex = re.compile(expr)

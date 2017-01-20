@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import gc
 import os
 import platform
@@ -8,8 +10,6 @@ from dmoj.executors import executors
 from dmoj.graders.base import BaseGrader
 from dmoj.result import Result, CheckerResult
 from dmoj.utils.communicate import OutputLimitExceeded
-
-from __future__ import print_function
 
 try:
     from dmoj.utils.nixutils import strsignal

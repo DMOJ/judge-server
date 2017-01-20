@@ -1,7 +1,11 @@
 import os
 import signal
+import sys
 from ctypes import windll, c_size_t, Structure, sizeof, byref, c_uint64
 from ctypes.wintypes import DWORD, HANDLE, POINTER, BOOL, WinError
+
+if sys.version_info.major == 3:
+    xrange = range
 
 if os.name != 'nt':
     raise ImportError('No module named winutils')

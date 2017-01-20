@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import os
 import re
 import subprocess
@@ -11,8 +13,6 @@ from dmoj.executors.base_executor import CompiledExecutor
 from dmoj.judgeenv import env
 from dmoj.utils.winutils import execution_time, max_memory
 from dmoj.utils.pywinjob import *
-
-from __future__ import print_function
 
 reexc = re.compile(r'E1AE1B1F-C5FE-4335-B642-9446634350A0:\r?\n(.*?):')
 

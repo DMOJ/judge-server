@@ -1,11 +1,11 @@
+from __future__ import print_function
+
 import errno
 import os
 import shutil
 import tempfile
 
 from dmoj.judgeenv import env
-
-from __future__ import print_function
 
 class ResourceProxy(object):
     def __init__(self):

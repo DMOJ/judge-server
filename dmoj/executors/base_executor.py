@@ -15,6 +15,8 @@ from dmoj.executors.resource_proxy import ResourceProxy
 from dmoj.judgeenv import env
 from dmoj.utils.ansi import ansi_style
 
+from __future__ import print_function
+
 reversion = re.compile('.*?(\d+(?:\.\d+)+)', re.DOTALL)
 version_cache = {}
 
@@ -73,7 +75,7 @@ class BaseExecutor(PlatformExecutorMixin, ResourceProxy):
             return True
 
         if output:
-            print ansi_style("%-39s%s" % ('Self-testing #ansi[%s](|underline):' % cls.get_executor_name(), '')),
+            print(ansi_style("%-39s%s" % ('Self-testing #ansi[%s](|underline):' % cls.get_executor_name(), '')), end='')
         try:
             executor = cls(cls.test_name, cls.test_program)
             proc = executor.launch(time=cls.test_time, memory=cls.test_memory) if sandbox else executor.launch_unsafe()
@@ -83,18 +85,18 @@ class BaseExecutor(PlatformExecutorMixin, ResourceProxy):
             if output:
                 # Cache the versions now, so that the handshake packet doesn't take ages to generate
                 cls.get_runtime_versions()
-                print ansi_style(['#ansi[Failed](red|bold)', '#ansi[Success](green|bold)'][res])
+                print(ansi_style(['#ansi[Failed](red|bold)', '#ansi[Success](green|bold)'][res]))
             if stdout.strip() != test_message and error_callback:
                 error_callback('Got unexpected stdout output:\n' + stdout)
             if stderr:
                 if error_callback:
                     error_callback('Got unexpected stderr output:\n' + stderr)
                 else:
-                    print>> sys.stderr, stderr
+                    print(stderr, file=sys.stderr)
             return res
         except Exception:
             if output:
-                print ansi_style('#ansi[Failed](red|bold)')
+                print(ansi_style('#ansi[Failed](red|bold)'))
                 traceback.print_exc()
             if error_callback:
                 error_callback(traceback.format_exc())

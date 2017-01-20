@@ -14,6 +14,7 @@ from __future__ import print_function
 
 if sys.version_info.major == 2:
     input = raw_input
+    range = xrange
 
 class LocalPacketManager(object):
     def __init__(self, judge):
@@ -134,7 +135,7 @@ class ListProblemsCommand(Command):
             problems = iter(map(itemgetter(0), all_problems))
             max_len = max(len(p[0]) for p in all_problems)
             for row in izip_longest(*[problems] * 4, fillvalue=''):
-                print(' '.join(('%*s' % (-max_len, row[i])) for i in xrange(4)))
+                print(' '.join(('%*s' % (-max_len, row[i])) for i in range(4)))
         else:
             print(ansi_style("#ansi[No problems matching filter found.](red|bold)"))
         print

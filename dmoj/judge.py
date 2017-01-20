@@ -115,8 +115,8 @@ class Judge(object):
 
     def _begin_grading(self, problem_id, language, source, time_limit, memory_limit, short_circuit, pretests_only):
         submission_id = self.current_submission
-        print ansi_style('Start grading #ansi[%s](yellow)/#ansi[%s](green|bold) in %s...'
-                         % (problem_id, submission_id, language))
+        print(ansi_style('Start grading #ansi[%s](yellow)/#ansi[%s](green|bold) in %s...'
+                         % (problem_id, submission_id, language)))
 
         try:
             problem = Problem(problem_id, time_limit, memory_limit, load_pretests_only=pretests_only)

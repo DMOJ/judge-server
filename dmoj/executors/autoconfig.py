@@ -32,7 +32,7 @@ def main():
             continue
 
         if hasattr(executor.Executor, 'autoconfig'):
-            print(ansi_style('%-43s%s' % ('Auto-configuring #ansi[%s](|underline):' % name, '')), end='')
+            print(ansi_style('%-43s%s' % ('Auto-configuring #ansi[%s](|underline):' % name, '')), end=' ')
             try:
                 data = executor.Executor.autoconfig()
                 config = data[0]

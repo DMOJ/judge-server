@@ -5,12 +5,8 @@ from dmoj.cptbox.handlers import DISALLOW, ALLOW
 from dmoj.cptbox.chroot import CHROOTSecurity
 from dmoj.cptbox.syscalls import SYSCALL_COUNT
 
-import sys
-
-if sys.version_info.major == 3:
-    xrange = range
 
 class NullSecurity(defaultdict):
     def __init__(self):
-        for i in xrange(SYSCALL_COUNT):
+        for i in range(SYSCALL_COUNT):
             self[i] = ALLOW

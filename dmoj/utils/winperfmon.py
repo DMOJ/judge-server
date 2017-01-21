@@ -103,7 +103,7 @@ def main():
             pql, pt = counter.query()
             pql_samples.append(pql)
             pt_samples.append(pt)
-            print('\rCPU load: %5.3f, %6.2f%%' % (sum(pql_samples) / len(pql_samples), pt), end='')
+            print('\rCPU load: %5.3f, %6.2f%%' % (sum(pql_samples) / len(pql_samples), pt), end=' ')
             sleep(1)
     except KeyboardInterrupt:
         pass

@@ -12,8 +12,6 @@ __all__ = ['Process', 'Debugger', 'bsd_get_proc_cwd', 'bsd_get_proc_fdno', 'MAX_
            'DEBUGGER_X86', 'DEBUGGER_X64', 'DEBUGGER_X86_ON_X64', 'DEBUGGER_X32', 'DEBUGGER_ARM',
            'AT_FDCWD']
 
-if sys.version_info.major == 3:
-    xrange = range
 
 cdef extern from 'ptbox.h' nogil:
     # Cross-platform extern
@@ -422,7 +420,7 @@ cdef class Process:
         else:
             config.max_fd = 2 + len(fds)
             config.fds = <int*>malloc(sizeof(int) * len(fds))
-            for i in xrange(len(fds)):
+            for i in range(len(fds)):
                 config.fds[i] = fds[i]
         with nogil:
             if self.process.spawn(pt_child, &config):

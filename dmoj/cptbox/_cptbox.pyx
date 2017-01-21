@@ -6,8 +6,6 @@ from libc.signal cimport SIGTRAP, SIGXCPU
 from posix.resource cimport rusage
 from posix.types cimport pid_t
 
-import sys
-
 __all__ = ['Process', 'Debugger', 'bsd_get_proc_cwd', 'bsd_get_proc_fdno', 'MAX_SYSCALL_NUMBER',
            'DEBUGGER_X86', 'DEBUGGER_X64', 'DEBUGGER_X86_ON_X64', 'DEBUGGER_X32', 'DEBUGGER_ARM',
            'AT_FDCWD']

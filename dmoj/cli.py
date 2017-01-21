@@ -207,7 +207,7 @@ class SubmitCommand(Command):
                 src = []
                 try:
                     while True:
-                        s = input()
+                        s = sys.stdin.readline()
                         if s.strip() == ':q':
                             raise EOFError
                         src.append(s)

@@ -56,8 +56,8 @@ before_install:
   # Install sdkman for Groovy and Kotlin
   - curl -s get.sdkman.io | bash
   - source "$HOME/.sdkman/bin/sdkman-init.sh"
-  # Install Groovy
-  - yes | sdk install groovy
+  # Install Groovy, 2.4.8 is broken for reasons unknown to us
+  - yes | sdk install groovy 2.4.7
   - export PATH=$HOME/.sdkman/candidates/groovy/current/bin:"${PATH}"
 install:
   - pip install codecov

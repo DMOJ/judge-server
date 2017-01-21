@@ -79,7 +79,7 @@ def main():
     for name in TEST_ON_TRAVIS:
         executor = import_module('dmoj.executors.' + name)
 
-        print(ansi_style('%-34s%s' % ('Testing #ansi[%s](|underline):' % name, '')), end='')
+        print(ansi_style('%-34s%s' % ('Testing #ansi[%s](|underline):' % name, '')), end=' ')
 
         if not hasattr(executor, 'Executor'):
             failed = True
@@ -92,7 +92,7 @@ def main():
 
         try:
             if name in OVERRIDES:
-                print(ansi_style('#ansi[(manual config)](yellow)'), end='')
+                print(ansi_style('#ansi[(manual config)](yellow)'), end=' ')
                 data = executor.Executor.autoconfig_run_test(OVERRIDES[name])
             else:
                 data = executor.Executor.autoconfig()

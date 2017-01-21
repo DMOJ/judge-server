@@ -401,6 +401,7 @@ cdef class Process:
 
     cpdef _spawn(self, file, args, env=(), chdir='', fds=None):
         cdef child_config config
+        cdef size_t i
         config.address_space = self._child_address
         config.memory = self._child_memory
         config.cpu_time = self._cpu_time
@@ -418,7 +419,6 @@ cdef class Process:
         else:
             config.max_fd = 2 + len(fds)
             config.fds = <int*>malloc(sizeof(int) * len(fds))
-            cdef size_t i
             for i in range(len(fds)):
                 config.fds[i] = fds[i]
         with nogil:

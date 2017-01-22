@@ -97,7 +97,7 @@ class ConfigNode(object):
 
                 if item + '++' in self.raw_config:
                     def full(code, local):
-                        exec code in local
+                        exec(code in local)
                         return local['node']
 
                     run_dynamic_key(item + '++', full)

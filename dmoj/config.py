@@ -70,7 +70,7 @@ class ConfigNode(object):
     def iteritems(self):
         if not hasattr(self.raw_config, 'iteritems'):
             if hasattr(self.raw_config, 'items'):
-                for key, value in self.raw_config.iteritems():
+                for key, value in self.raw_config.items():
                     yield key, ConfigNode(value, self, dynamic=self.dynamic) \
                         if isinstance(value, list) or isinstance(value, dict) else value
             else:

@@ -44,12 +44,8 @@ def create():
     max_id += 1
     blank = (None,) * size
     translator = [blank] * max_id
-    try:
-        for id, data in iid_map.iteritems():
-            translator[id] = tuple(data)
-    except AttributeError:
-        for id, data in iid_map.items():
-            translator[id] = tuple(data)
+    for id, data in iid_map.items():
+        translator[id] = tuple(data)
 
     for name, id in list(by_name.items()):
         globals()['sys_' + name] = by_name['sys_' + name] = id

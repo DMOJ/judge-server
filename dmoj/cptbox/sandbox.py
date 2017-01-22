@@ -1,3 +1,5 @@
+from past.builtins import xrange
+
 import errno
 import os
 import pty
@@ -15,9 +17,6 @@ from dmoj.cptbox.handlers import DISALLOW, _CALLBACK
 from dmoj.cptbox.syscalls import translator, SYSCALL_COUNT, by_id
 from dmoj.utils.communicate import safe_communicate as _safe_communicate
 from dmoj.error import InternalError
-
-if sys.version_info.major == 3:
-    xrange = range
 
 PIPE = object()
 
@@ -393,7 +392,7 @@ class SecurePopen(Process):
         while fd2file:
             try:
                 ready = poller.poll()
-            except select.error, e:
+            except select.error as e:
                 if e.args[0] == errno.EINTR:
                     continue
                 raise

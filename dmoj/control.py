@@ -20,7 +20,7 @@ try:
 
         def do_GET(self):
             self.send_error(404)
-execpt ImportError:
+except ImportError:
     from http.server import BaseHTTPRequestHandler
     
     class JudgeControlRequestHandler(BaseHTTPRequestHandler):

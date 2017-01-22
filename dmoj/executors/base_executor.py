@@ -160,18 +160,11 @@ class BaseExecutor(PlatformExecutorMixin, ResourceProxy):
             return {}, False, 'Unimplemented'
         result = {}
 
-        try:
-            for key, files in mapping.iteritems():
-                file = cls.find_command_from_list(files)
-                if file is None:
-                    return result, False, 'Failed to find "%s"' % key
-                result[key] = file
-        except AttributeError:
-            for key, files in mapping.items():
-                file = cls.find_command_from_list(files)
-                if file is None:
-                    return result, False, 'Failed to find "%s"' % key
-                result[key] = file
+        for key, files in mapping.items():
+            file = cls.find_command_from_list(files)
+            if file is None:
+                return result, False, 'Failed to find "%s"' % key
+            result[key] = file
         return cls.autoconfig_run_test(result)
 
     @classmethod

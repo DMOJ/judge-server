@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import os
 import re
 import traceback
@@ -42,7 +44,7 @@ def load_executor(name):
 def load_executors():
     to_load = get_available()
 
-    print 'Self-testing executors...'
+    print('Self-testing executors...')
 
     for name in to_load:
         executor = load_executor(name)

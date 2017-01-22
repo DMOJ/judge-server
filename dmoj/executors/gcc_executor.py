@@ -12,8 +12,8 @@ IS_ARM = hasattr(os, 'uname') and os.uname()[4].startswith('arm')
 
 if os.name == 'nt':
     GCC_COMPILE.update((k.encode('mbcs'), v.encode('mbcs')) for k, v in
-                       (env.runtime.gcc_compile or GCC_ENV).iteritems())
-    GCC_ENV = dict((k.encode('mbcs'), v.encode('mbcs')) for k, v in GCC_ENV.iteritems())
+                       (env.runtime.gcc_compile or GCC_ENV).items())
+    GCC_ENV = dict((k.encode('mbcs'), v.encode('mbcs')) for k, v in GCC_ENV.items())
 else:
     GCC_COMPILE.update(env.runtime.gcc_compile or {})
 
@@ -33,7 +33,7 @@ class GCCExecutor(CompiledExecutor):
         aux_sources[problem_id + self.ext] = main_source
 
         sources = []
-        for name, source in aux_sources.iteritems():
+        for name, source in aux_sources.items():
             if '.' not in name:
                 name += self.ext
             with open(self._file(name), 'wb') as fo:

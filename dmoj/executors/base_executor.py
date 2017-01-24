@@ -214,7 +214,7 @@ class ScriptExecutor(BaseExecutor):
         return fs
 
     def create_files(self, problem_id, source_code):
-        with open(self._code, 'w') as fo:
+        with open(self._code, 'wt') as fo:
             fo.write(source_code.encode('utf-8'))
 
     def get_cmdline(self):

@@ -12,8 +12,8 @@ IS_ARM = hasattr(os, 'uname') and os.uname()[4].startswith('arm')
 
 if os.name == 'nt':
     GCC_COMPILE.update((k.encode('mbcs'), v.encode('mbcs')) for k, v in
-                       (env.runtime.gcc_compile or GCC_ENV).iteritems())
-    GCC_ENV = dict((k.encode('mbcs'), v.encode('mbcs')) for k, v in GCC_ENV.iteritems())
+                       list((env.runtime.gcc_compile or GCC_ENV).items()))
+    GCC_ENV = dict((k.encode('mbcs'), v.encode('mbcs')) for k, v in list(GCC_ENV.items()))
 else:
     GCC_COMPILE.update(env.runtime.gcc_compile or {})
 

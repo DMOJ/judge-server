@@ -30,13 +30,25 @@ class GeneratorManager(object):
                     return grader
             return None
 
+        def find_java():
+            for grader in ('JAVA9', 'JAVA8', 'JAVA7'):
+                if grader in executors:
+                    return grader
+            return None
+            
+        def find_ruby():
+            for grader in ('RUBY21', 'RUBY19', 'RUBY18'):
+                if grader in executors:
+                    return grader
+            return None
+
         lookup = {
             '.py': executors.get('PY2', None),
             '.py3': executors.get('PY3', None),
             '.c': executors.get('C', None),
             '.cpp': executors.get(find_cpp(), None),
-            '.java': executors.get('JAVA', None),
-            '.rb': executors.get('RUBY', None)
+            '.java': executors.get(find_java(), None),
+            '.rb': executors.get(find_ruby, None)
         }
         ext = os.path.splitext(filename)[1]
         pass_platform_flags = ['.c', '.cpp']

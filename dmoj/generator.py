@@ -24,8 +24,8 @@ class GeneratorManager(object):
             traceback.print_exc()
             raise IOError('could not read generator source')
 
-        def find_cpp():
-            for grader in ('CPP14', 'CPP11', 'CPP0X', 'CPP03'):
+        def find_runtime(languages):
+            for grader in languages:
                 if grader in executors:
                     return grader
             return None
@@ -34,9 +34,9 @@ class GeneratorManager(object):
             '.py': executors.get('PY2', None),
             '.py3': executors.get('PY3', None),
             '.c': executors.get('C', None),
-            '.cpp': executors.get(find_cpp(), None),
-            '.java': executors.get('JAVA', None),
-            '.rb': executors.get('RUBY', None)
+            '.cpp': executors.get(find_runtime(('CPP14', 'CPP11', 'CPP0X', 'CPP03')), None),
+            '.java': executors.get(find_runtime(('JAVA9', 'JAVA8', 'JAVA7')), None),
+            '.rb': executors.get(find_runtime(('RUBY21', 'RUBY19', 'RUBY18')), None)
         }
         ext = os.path.splitext(filename)[1]
         pass_platform_flags = ['.c', '.cpp']

@@ -23,7 +23,7 @@ class GeneratorManager(object):
         except:
             traceback.print_exc()
             raise IOError('could not read generator source')
-            
+
         def find_runtime(languages):
             for grader in languages:
                 if grader in executors:

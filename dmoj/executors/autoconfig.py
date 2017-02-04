@@ -8,6 +8,7 @@ import argparse
 
 from dmoj import judgeenv
 from dmoj.executors import get_available, load_executor
+from dmoj.executors.mixins import NullStdoutMixin
 from dmoj.utils.ansi import ansi_style
 
 
@@ -34,6 +35,11 @@ def main():
 
         if executor is None or not hasattr(executor, 'Executor'):
             continue
+
+        if silent:
+            # if you are printing errors into stdout, you may do so in your own blood
+            # *cough* Racket *cough*
+            Executor = type('Executor', (executor.Executor, NullStdoutMixin), {})
 
         if hasattr(executor.Executor, 'autoconfig'):
             if not silent:

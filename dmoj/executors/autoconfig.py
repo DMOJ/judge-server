@@ -11,7 +11,11 @@ from dmoj.executors import get_available, load_executor
 from dmoj.utils.ansi import ansi_style
 
 
-def main(silent=False):
+def main():
+    parser = argparse.ArgumentParser(description='Automatically configures runtimes')
+    parser.add_argument('-s', '--silent', nargs='?', help='silent mode', dest='silent', const=True, default=False)
+    silent = parser.parse_args().silent
+    
     result = {}
 
     if os.name == 'nt':
@@ -68,7 +72,4 @@ def main(silent=False):
     print yaml.dump({'runtime': result}, default_flow_style=False).rstrip()
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Automatically configures runtimes')
-    parser.add_argument('-s', '--silent', nargs='?', help='silent mode', dest='silent', const=True, default=False)
-    args = parser.parse_args()
-    main(bool(args.silent))
+    main()

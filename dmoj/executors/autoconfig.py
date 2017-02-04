@@ -40,12 +40,14 @@ def main():
             # if you are printing errors into stdout, you may do so in your own blood
             # *cough* Racket *cough*
             Executor = type('Executor', (executor.Executor, NullStdoutMixin), {})
+        else:
+            Executor = executor.Executor
 
-        if hasattr(executor.Executor, 'autoconfig'):
+        if hasattr(Executor, 'autoconfig'):
             if not silent:
                 print ansi_style('%-43s%s' % ('Auto-configuring #ansi[%s](|underline):' % name, '')),
             try:
-                data = executor.Executor.autoconfig()
+                data = Executor.autoconfig()
                 config = data[0]
                 success = data[1]
                 feedback = data[2]

@@ -13,7 +13,7 @@ from dmoj.utils.ansi import ansi_style
 
 def main():
     parser = argparse.ArgumentParser(description='Automatically configures runtimes')
-    parser.add_argument('-s', '--silent', nargs='?', help='silent mode', dest='silent', const=True, default=False)
+    parser.add_argument('-s', '--silent', action='store_true', help='silent mode')
     silent = parser.parse_args().silent
     
     result = {}

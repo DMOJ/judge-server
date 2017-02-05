@@ -6,7 +6,8 @@ python:
 addons:
   apt:
     sources:
-    - mono
+    - sourceline: 'deb http://download.mono-project.com/repo/debian beta main'
+      key_url: 'http://keyserver.ubuntu.com/pks/lookup?op=get&search=0x3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF'
     - sourceline: 'ppa:swi-prolog/stable'
     - sourceline: 'deb http://cran.rstudio.com/bin/linux/ubuntu trusty/'
       key_url: 'http://keyserver.ubuntu.com/pks/lookup?op=get&fingerprint=on&search=0x51716619E084DAB9'
@@ -16,6 +17,7 @@ addons:
     - ghc
     - gnat
     - php5-cli
+    - mono-complete
     - mono-devel
     - mono-vbnc
     - fp-compiler

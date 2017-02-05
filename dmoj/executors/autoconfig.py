@@ -16,7 +16,7 @@ def main():
     parser = argparse.ArgumentParser(description='Automatically configures runtimes')
     parser.add_argument('-s', '--silent', action='store_true', help='silent mode')
     silent = parser.parse_args().silent
-    
+
     result = {}
 
     if os.name == 'nt':
@@ -36,12 +36,11 @@ def main():
         if executor is None or not hasattr(executor, 'Executor'):
             continue
 
-        if silent:
+        Executor = executor.Executor
+        if silent and not issubclass(Executor, NullStdoutMixin):
             # if you are printing errors into stdout, you may do so in your own blood
             # *cough* Racket *cough*
-            Executor = type('Executor', (executor.Executor, NullStdoutMixin), {})
-        else:
-            Executor = executor.Executor
+            Executor = type('Executor', (NullStdoutMixin, Executor), {})
 
         if hasattr(Executor, 'autoconfig'):
             if not silent:

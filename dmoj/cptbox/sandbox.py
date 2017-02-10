@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import errno
 import os
 import pty
@@ -15,9 +17,6 @@ from dmoj.cptbox.handlers import DISALLOW, _CALLBACK
 from dmoj.cptbox.syscalls import translator, SYSCALL_COUNT, by_id
 from dmoj.utils.communicate import safe_communicate as _safe_communicate
 from dmoj.error import InternalError
-
-if sys.version_info.major == 3:
-    xrange = range
 
 PIPE = object()
 
@@ -160,7 +159,7 @@ class SecurePopen(Process):
         if security is None:
             self._trace_syscalls = False
         else:
-            for i in xrange(SYSCALL_COUNT):
+            for i in range(SYSCALL_COUNT):
                 handler = security.get(i, DISALLOW)
                 call = translator[i][index]
                 if call is None:
@@ -203,7 +202,7 @@ class SecurePopen(Process):
         return self._start_time and ((self._died_time or time.time()) - self._start_time)
 
     def kill(self):
-        print>> sys.stderr, 'Child is requested to be killed'
+        print(sys.stderr, 'Child is requested to be killed', file=sys.stderr)
         try:
             os.killpg(self.pid, signal.SIGKILL)
         except OSError:
@@ -280,7 +279,7 @@ class SecurePopen(Process):
 
         while not self._exited:
             if self.execution_time > self._time:
-                print>> sys.stderr, 'Shocker activated, ouch!'
+                print('Shocker activated, ouch!', file=sys.stderr)
                 os.killpg(self.pid, signal.SIGKILL)
                 self._tle = True
                 break

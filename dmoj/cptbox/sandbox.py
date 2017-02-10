@@ -202,7 +202,7 @@ class SecurePopen(Process):
         return self._start_time and ((self._died_time or time.time()) - self._start_time)
 
     def kill(self):
-        print(sys.stderr, 'Child is requested to be killed', file=sys.stderr)
+        print('Child is requested to be killed', file=sys.stderr)
         try:
             os.killpg(self.pid, signal.SIGKILL)
         except OSError:

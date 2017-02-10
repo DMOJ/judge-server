@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 from collections import deque
 
 from dmoj.judgeenv import env
@@ -37,7 +38,10 @@ class GCCExecutor(CompiledExecutor):
             if '.' not in name:
                 name += self.ext
             with open(self._file(name), 'wb') as fo:
-                fo.write(bytes(source))
+                if sys.version_info.major == 2:
+                    fo.write(source)
+                else:
+                    fo.write(bytes(source, 'utf-8'))
             sources.append(name)
         self.sources = sources
         self._fds = fds

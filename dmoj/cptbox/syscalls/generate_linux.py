@@ -17,7 +17,7 @@ with open('linux-x86.tbl', 'w') as x86, closing(urlopen(LINUX_SYSCALLS_32)) as d
         if len(syscall) > 3:
             func = syscall[3]
             func_to_name[func] = name
-        print('%d\t%s' % (int(syscall[0]), name, file=x86)
+        print('%d\t%s' % (int(syscall[0]), name), file=x86)
 
 with open('linux-x64.tbl', 'w') as x64, open('linux-x32.tbl', 'w') as x32, closing(urlopen(LINUX_SYSCALLS_64)) as data:
     for line in data:

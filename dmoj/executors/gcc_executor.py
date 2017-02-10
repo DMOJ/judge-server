@@ -37,7 +37,7 @@ class GCCExecutor(CompiledExecutor):
             if '.' not in name:
                 name += self.ext
             with open(self._file(name), 'wb') as fo:
-                fo.write(source)
+                fo.write(bytes(source))
             sources.append(name)
         self.sources = sources
         self._fds = fds

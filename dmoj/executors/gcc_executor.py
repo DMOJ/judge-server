@@ -36,7 +36,7 @@ class GCCExecutor(CompiledExecutor):
         for name, source in aux_sources.items():
             if '.' not in name:
                 name += self.ext
-            with open(self._file(name), 'wr') as fo:
+            with open(self._file(name), 'wb') as fo:
                 fo.write(source)
             sources.append(name)
         self.sources = sources

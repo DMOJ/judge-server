@@ -320,7 +320,7 @@ class CompiledExecutor(BaseExecutor):
     def get_compile_output(self, process):
         # Use safe_communicate because otherwise, malicious submissions can cause a compiler
         # to output hundreds of megabytes of data as output before being killed by the time limit,
-        # which effectively murders the MySQL server waiting on the server.
+        # which effectively murders the MySQL database waiting on the site server.
         return safe_communicate(process, None, outlimit=65536, errlimit=65536)[1]
 
     def get_compiled_file(self):

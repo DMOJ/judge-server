@@ -17,5 +17,6 @@ void main() {
                 'timerfd_settime', 'pipe2',
                 ('write', lambda debugger: debugger.uarg0 <= 4)]
 
-    fs = ['/proc/meminfo$', '/proc/sys/vm/overcommit_memory$', '.*/vm-service$']
+    fs = ['/proc/meminfo$', '/proc/sys/vm/overcommit_memory$', '.*/vm-service$',
+          '/proc/self/auxv$']
 

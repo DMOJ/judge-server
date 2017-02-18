@@ -14,7 +14,7 @@ from dmoj.executors.mixins import PlatformExecutorMixin
 from dmoj.executors.resource_proxy import ResourceProxy
 from dmoj.judgeenv import env
 from dmoj.utils.ansi import ansi_style
-from dmoj.utils.communicate import safe_communicate
+from dmoj.utils.communicate import *
 
 reversion = re.compile('.*?(\d+(?:\.\d+)+)', re.DOTALL)
 version_cache = {}
@@ -335,7 +335,10 @@ class CompiledExecutor(BaseExecutor):
 
     def compile(self):
         process = self.get_compile_process()
-        output = self.get_compile_output(process)
+        try:
+            output = self.get_compile_output(process)
+        except communicate.OutputLimitExceeded:
+            output = 'compiler output too long (> 64kb)'
 
         if self.is_failed_compile(process):
             self.handle_compile_error(output)

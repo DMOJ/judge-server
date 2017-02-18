@@ -17,7 +17,7 @@ process.stdin.on 'readable', () ->
   if chunk != null
     process.stdout.write chunk
 '''
-    address_grace = 262144
+    address_grace = 524288
 
     @classmethod
     def initialize(cls, sandbox=True):

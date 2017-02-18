@@ -14,6 +14,7 @@ from dmoj.executors.mixins import PlatformExecutorMixin
 from dmoj.executors.resource_proxy import ResourceProxy
 from dmoj.judgeenv import env
 from dmoj.utils.ansi import ansi_style
+from dmoj.utils.communicate import safe_communicate
 
 reversion = re.compile('.*?(\d+(?:\.\d+)+)', re.DOTALL)
 version_cache = {}

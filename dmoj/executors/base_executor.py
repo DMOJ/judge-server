@@ -318,7 +318,10 @@ class CompiledExecutor(BaseExecutor):
         return self.TimedPopen(self.get_compile_args(), **kwargs)
 
     def get_compile_output(self, process):
-        return process.communicate()[1]
+        # Use safe_communicate because otherwise, malicious submissions can cause a compiler
+        # to output hundreds of megabytes of data as output before being killed by the time limit,
+        # which effectively murders the MySQL server waiting on the server.
+        return safe_communicate(process, None, outlimit=65536, errlimit=65536)[1]
 
     def get_compiled_file(self):
         return self._file(self.problem)

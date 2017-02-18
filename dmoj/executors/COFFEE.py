@@ -9,7 +9,7 @@ class Executor(ScriptExecutor):
     nproc = -1
     fs = ['/etc/(?:resolv|nsswitch).conf$', '/$']
     command = 'node'
-    syscalls = ['newselect', 'select', 'pipe2', 'write', 'epoll_create1',
+    syscalls = ['newselect', 'select', 'pipe2', 'poll', 'write', 'epoll_create1',
                 'eventfd2', 'epoll_ctl', 'epoll_wait', 'sched_yield', 'restart_syscall']
     test_program = '''\
 process.stdin.on 'readable', () ->

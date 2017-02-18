@@ -337,7 +337,7 @@ class CompiledExecutor(BaseExecutor):
         process = self.get_compile_process()
         try:
             output = self.get_compile_output(process)
-        except communicate.OutputLimitExceeded:
+        except OutputLimitExceeded:
             output = 'compiler output too long (> 64kb)'
 
         if self.is_failed_compile(process):

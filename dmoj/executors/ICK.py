@@ -31,4 +31,8 @@ class Executor(CompiledExecutor):
 '''
 
     def get_compile_args(self):
-        return [self.get_command(), '-O', self._code]
+        flags = [self.get_command(), '-O', self._code]
+        if self.problem == self.test_name:
+            # Do not fail self-test to random compiler bug.
+            flags.insert(1, '-b')
+        return flags

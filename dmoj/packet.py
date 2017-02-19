@@ -111,6 +111,12 @@ class PacketManager(object):
             packet['%s-id' % self.judge.get_process_type()] = packet['submission-id']
             del packet['submission-id']
 
+        for k, v in packet.items():
+            if isinstance(str, v):
+                # Make sure we don't have any garbage utf-8 from e.g. weird compilers
+                # *cough* fpc *cough* that could cause this routine to crash
+                packet[k] = v.decode('utf-8', 'replace')
+
         raw = json.dumps(packet).encode('zlib')
         with self._lock:
             self.output.write(PacketManager.SIZE_PACK.pack(len(raw)))

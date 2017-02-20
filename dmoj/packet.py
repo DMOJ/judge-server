@@ -112,7 +112,7 @@ class PacketManager(object):
             del packet['submission-id']
 
         for k, v in packet.items():
-            if isinstance(str, v):
+            if isinstance(v, str):
                 # Make sure we don't have any garbage utf-8 from e.g. weird compilers
                 # *cough* fpc *cough* that could cause this routine to crash
                 packet[k] = v.decode('utf-8', 'replace')

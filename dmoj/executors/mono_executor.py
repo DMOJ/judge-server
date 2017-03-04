@@ -39,6 +39,7 @@ class MonoExecutor(CompiledExecutor):
         fs = self.get_fs() + [self._dir]
         sec = CHROOTSecurity(fs, io_redirects=launch_kwargs.get('io_redirects', None))
         sec[sys_sched_getaffinity] = ALLOW
+        sec[sys_sched_setscheduler] = ALLOW
         sec[sys_statfs] = ALLOW
         sec[sys_ftruncate64] = ALLOW
         sec[sys_sched_yield] = ALLOW

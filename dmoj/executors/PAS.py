@@ -7,6 +7,7 @@ class Executor(NullStdoutMixin, CompiledExecutor):
     name = 'PAS'
     command = 'fpc'
     fs = ['/etc/timezone$']
+    syscalls = ['select']
     command_paths = ['fpc']
     test_program = '''\
 var line : string;

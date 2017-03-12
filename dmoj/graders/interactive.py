@@ -3,7 +3,7 @@ from dmoj.graders.standard import StandardGrader
 class Interactor(object):
     def __init__(self, process):
         self.process = process
-        self.closed = False
+        self._is_closed = False
 
     def read(self):
         return self.process.stdout.read()
@@ -16,13 +16,13 @@ class Interactor(object):
         self.process.stdin.flush()
 
     def writeln(self, str):
-        write(str + '\n')
+        self.write(str + '\n')
 
     def close(self):
-        if not closed:
+        if not self._is_closed:
             for stream in [self.process.stdin, self.process.stdout, self.process.stderr]:
                 stream.close()
-            closed = True
+            self._is_closed = True
 
 class InteractiveGrader(StandardGrader):
     def _interact_with_process(self, case, result, input):

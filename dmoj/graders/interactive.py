@@ -45,12 +45,12 @@ class Interactor(object):
             raise WrongAnswer
         return ret
 
-    def write(self, str):
-        self.process.stdin.write('%s' % str)
+    def write(self, val):
+        self.process.stdin.write(str(val))
         self.process.stdin.flush()
 
-    def writeln(self, str):
-        self.write('%s\n' % str)
+    def writeln(self, val):
+        self.write(str(val) + '\n')
 
     def close(self):
         for stream in [self.process.stdin, self.process.stdout, self.process.stderr]:
@@ -61,7 +61,7 @@ class InteractiveGrader(StandardGrader):
         interactor = Interactor(self._current_proc)
         self.check = False
         try:
-            self.check = self.interact(interactor)
+            self.check = self.interact(case, interactor)
             interactor.close()
         except (WrongAnswer, IOError):
             pass

@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import os
 import sys
 import traceback
@@ -11,9 +13,9 @@ from setuptools.command.build_ext import build_ext as build_ext_old
 try:
     from Cython.Build import cythonize
 except ImportError:
-    print>>sys.stderr, 'You need to install cython first before installing DMOJ.'
-    print>>sys.stderr, 'Run: pip install cython'
-    print>>sys.stderr, 'Or if you do not have pip: easy_install cython'
+    print('You need to install cython first before installing DMOJ.', file=sys.stderr);
+    print('Run: pip install cython', file=sys.stderr);
+    print('Or if you do not have pip: easy_install cython', file=sys.stderr);
     sys.exit(1)
 
 
@@ -43,10 +45,10 @@ class build_ext_dmoj(build_ext_old):
         build_ext_old.build_extensions(self)
 
     def unavailable(self, e):
-        print '*' * 79
-        print 'Please procure the necessary *.pyd or *.so files yourself.'
+        print('*' * 79)
+        print('Please procure the necessary *.pyd or *.so files yourself.')
         traceback.print_exc()
-        print '*' * 79
+        print('*' * 79)
 
 
 build_ext.build_ext = build_ext_dmoj

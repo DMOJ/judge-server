@@ -140,7 +140,7 @@ else:
         while fd2file:
             try:
                 ready = poller.poll()
-            except select.error, e:
+            except select.error as e:
                 if e.args[0] == errno.EINTR:
                     continue
                 raise

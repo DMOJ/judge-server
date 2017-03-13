@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import json
 import logging
 import os
@@ -52,8 +54,8 @@ class PacketManager(object):
         if self.fallback > 65536:
             # Return 0 to avoid supervisor restart.
             raise SystemExit(0)
-        print>> sys.stderr
-        print>> sys.stderr, 'SOCKET ERROR: Disconnected! Reconnecting in %d seconds.' % self.fallback
+        print(file=sys.stderr)
+        print('SOCKET ERROR: Disconnected! Reconnecting in %d seconds.' % self.fallback, file=sys.stderr)
         if self.conn is not None:
             self.conn.close()
         time.sleep(self.fallback)
@@ -157,7 +159,7 @@ class PacketManager(object):
         elif name == 'terminate-submission':
             self.judge.terminate_grading()
         else:
-            print 'ERROR: unknown packet %s, payload %s' % (name, packet)
+            print('ERROR: unknown packet %s, payload %s' % (name, packet))
 
     def handshake(self, problems, runtimes, id, key):
         self._send_packet({'name': 'handshake',

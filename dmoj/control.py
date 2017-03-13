@@ -1,6 +1,8 @@
-from BaseHTTPServer import BaseHTTPRequestHandler
-
-
+try:
+    from BaseHTTPServer import BaseHTTPRequestHandler
+except ImportError:
+    from http.server import BaseHTTPRequestHandler
+    
 class JudgeControlRequestHandler(BaseHTTPRequestHandler):
     judge = None
 

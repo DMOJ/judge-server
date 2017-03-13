@@ -3,6 +3,7 @@ dist: trusty
 language: python
 python:
   - 2.7
+  - 3.4
 addons:
   apt:
     sources:
@@ -74,3 +75,6 @@ after_script:
 notifications:
   slack:
     secure: "cJMFsXwvAZxSR/p8WFYUAtJmPxnq+MZKhXQgaHZp7D0tveh6v0/O/GDfO+3B3Ep7/SBNiAj/wfH/ivDVjiSWVN/2DYSiHtzMZ9Jkq2CQzMzX5u3l7J04bO617K8+eRGOFQcYj+GPRntF4GebSgfMuhXwba2N/KjAA9QMKOTlJpU="
+matrix:
+  allow_failures:
+  - python: 3.4

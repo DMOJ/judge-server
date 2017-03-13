@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import os
 
 import yaml
@@ -36,4 +38,4 @@ else:
     runtime['g++'] = runtime['g++11'] = os.path.join(gcc_bin, 'g++.exe')
     runtime['gfortran'] = os.path.join(gcc_bin, 'gfortran.exe')
 
-print yaml.safe_dump(config)
+print(yaml.safe_dump(config))

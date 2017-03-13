@@ -34,7 +34,7 @@ def load_executor(name):
     try:
         return import_module('%s.%s' % (__name__, name))
     except ImportError as e:
-        if e.message not in ('No module named _cptbox',
+        if str(e) not in ('No module named _cptbox',
                              'No module named msvcrt',
                              'No module named _wbox',
                              'No module named termios'):

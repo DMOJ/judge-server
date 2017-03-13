@@ -5,7 +5,12 @@ import os
 import re
 import sys
 from collections import OrderedDict
-from itertools import izip_longest
+
+try:
+    from itertools import izip_longest
+except ImportError:
+    from itertools import zip_longest as izip_longest
+
 from operator import itemgetter
 
 from dmoj import judgeenv
@@ -13,6 +18,8 @@ from dmoj.executors import executors
 from dmoj.judge import Judge
 from dmoj.utils.ansi import ansi_style
 
+if sys.version_info[0] < 3:
+    input = raw_input
 
 class LocalPacketManager(object):
     def __init__(self, judge):
@@ -152,8 +159,8 @@ class HelpCommand(Command):
     help = 'Prints listing of commands.'
 
     def execute(self, line):
-        print "Run `command -h/--help` for individual command usage."
-        for name, command in commands.iteritems():
+        print("Run `command -h/--help` for individual command usage.")
+        for name, command in commands.items():
             if command == self:
                 continue
             print('  %s: %s' % (name, command.help))
@@ -207,7 +214,7 @@ class SubmitCommand(Command):
                 src = []
                 try:
                     while True:
-                        s = sys.stdin.readline()
+                        s = input()
                         if s.strip() == ':q':
                             raise EOFError
                         src.append(s)
@@ -353,7 +360,7 @@ def main():
 
             while True:
                 print(ansi_style("#ansi[dmoj](magenta)#ansi[>](green) "), end='')
-                command = sys.stdin.readline().strip()
+                command = input().strip()
 
                 line = command.split(' ')
                 if line[0] in commands:

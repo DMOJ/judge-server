@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 
 import os
 import re
@@ -80,8 +80,8 @@ class BaseExecutor(PlatformExecutorMixin, ResourceProxy):
         try:
             executor = cls(cls.test_name, cls.test_program)
             proc = executor.launch(time=cls.test_time, memory=cls.test_memory) if sandbox else executor.launch_unsafe()
-            test_message = 'echo: Hello, World!'
-            stdout, stderr = proc.communicate(test_message + '\n')
+            test_message = b'echo: Hello, World!'
+            stdout, stderr = proc.communicate(test_message + b'\n')
             res = stdout.strip() == test_message and not stderr
             if output:
                 # Cache the versions now, so that the handshake packet doesn't take ages to generate

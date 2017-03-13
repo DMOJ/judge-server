@@ -54,10 +54,7 @@ class Interactor(object):
 
     def close(self):
         for stream in [self.process.stdin, self.process.stdout, self.process.stderr]:
-            try:
-                stream.close()
-            except IOError:
-                pass
+            stream.close()
 
 class InteractiveGrader(StandardGrader):
     def _interact_with_process(self, case, result, input):
@@ -66,7 +63,7 @@ class InteractiveGrader(StandardGrader):
         try:
             self.check = self.interact(interactor)
             interactor.close()
-        except WrongAnswer:
+        except WrongAnswer, IOError:
             pass
 
         self._current_proc.wait()

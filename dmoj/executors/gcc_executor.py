@@ -33,11 +33,11 @@ class GCCExecutor(CompiledExecutor):
         aux_sources[problem_id + self.ext] = main_source
 
         sources = []
-        for name, source in aux_sources.iteritems():
+        for name, source in aux_sources.items():
             if '.' not in name:
                 name += self.ext
             with open(self._file(name), 'wb') as fo:
-                fo.write(source)
+                fo.write(source.encode('utf-8'))
             sources.append(name)
         self.sources = sources
         self._fds = fds

@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import os
 import re
 import subprocess
@@ -74,7 +76,7 @@ class BaseExecutor(PlatformExecutorMixin, ResourceProxy):
             return True
 
         if output:
-            print ansi_style("%-39s%s" % ('Self-testing #ansi[%s](|underline):' % cls.get_executor_name(), '')),
+            print(ansi_style("%-39s%s" % ('Self-testing #ansi[%s](|underline):' % cls.get_executor_name(), '')), end=' ')
         try:
             executor = cls(cls.test_name, cls.test_program)
             proc = executor.launch(time=cls.test_time, memory=cls.test_memory) if sandbox else executor.launch_unsafe()
@@ -84,18 +86,18 @@ class BaseExecutor(PlatformExecutorMixin, ResourceProxy):
             if output:
                 # Cache the versions now, so that the handshake packet doesn't take ages to generate
                 cls.get_runtime_versions()
-                print ansi_style(['#ansi[Failed](red|bold)', '#ansi[Success](green|bold)'][res])
+                print(ansi_style(['#ansi[Failed](red|bold)', '#ansi[Success](green|bold)'][res]))
             if stdout.strip() != test_message and error_callback:
                 error_callback('Got unexpected stdout output:\n' + stdout)
             if stderr:
                 if error_callback:
                     error_callback('Got unexpected stderr output:\n' + stderr)
                 else:
-                    print>> sys.stderr, stderr
+                    print(stderr, file=sys.stderr)
             return res
         except Exception:
             if output:
-                print ansi_style('#ansi[Failed](red|bold)')
+                print(ansi_style('#ansi[Failed](red|bold)'))
                 traceback.print_exc()
             if error_callback:
                 error_callback(traceback.format_exc())
@@ -159,12 +161,11 @@ class BaseExecutor(PlatformExecutorMixin, ResourceProxy):
             return {}, False, 'Unimplemented'
         result = {}
 
-        for key, files in mapping.iteritems():
+        for key, files in mapping.items():
             file = cls.find_command_from_list(files)
             if file is None:
                 return result, False, 'Failed to find "%s"' % key
             result[key] = file
-
         return cls.autoconfig_run_test(result)
 
     @classmethod
@@ -215,7 +216,7 @@ class ScriptExecutor(BaseExecutor):
 
     def create_files(self, problem_id, source_code):
         with open(self._code, 'wb') as fo:
-            fo.write(source_code)
+            fo.write(source_code.encode('utf-8'))
 
     def get_cmdline(self):
         return [self.get_command(), self._code]
@@ -288,7 +289,7 @@ class CompiledExecutor(BaseExecutor):
     def create_files(self, problem_id, source_code, *args, **kwargs):
         self._code = self._file(problem_id + self.ext)
         with open(self._code, 'wb') as fo:
-            fo.write(source_code)
+            fo.write(source_code.encode('utf-8'))
 
     def get_compile_args(self):
         raise NotImplementedError()

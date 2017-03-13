@@ -23,7 +23,8 @@ exclude_executors = set()
 
 
 def unicodify(string):
-    if isinstance(string, str):
+    if isinstance(string, str) and sys.version_info.major < 3:
+        # Python 3's strings are unicode by default
         return string.decode(fs_encoding)
     return string
 

@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import os
 import sys
 import traceback
@@ -14,7 +16,7 @@ all_executors = executors.executors
 
 class TestManager(object):
     def output(self, message):
-        print message
+        print(message)
 
     def fail(self, message):
         self.output(message)
@@ -112,10 +114,10 @@ class Tester(object):
                 self.case_files += ['test.linux.yml']
 
     def output(self, message=''):
-        print message
+        print(message)
 
     def error_output(self, message):
-        print ansi_style('#ansi[%s](red)') % message
+        print(ansi_style('#ansi[%s](red)') % message)
 
     def test_all(self):
         total_fails = 0
@@ -131,7 +133,7 @@ class Tester(object):
                     self.output(ansi_style('Problem #ansi[%s](cyan|bold) #ansi[failed %d case(s)](red|bold).') %
                                 (problem, fails))
                 else:
-                    print ansi_style('Problem #ansi[%s](cyan|bold) passed with flying colours.') % problem
+                    print(ansi_style('Problem #ansi[%s](cyan|bold) passed with flying colours.') % problem)
                 total_fails += fails
 
         return total_fails
@@ -252,12 +254,12 @@ def main():
 
     tester = Tester(judgeenv.problem_regex, judgeenv.case_regex)
     fails = tester.test_all()
-    print
-    print 'Test complete'
+    print()
+    print('Test complete')
     if fails:
-        print ansi_style('#ansi[A total of %d case(s) failed](red|bold).') % fails
+        print(ansi_style('#ansi[A total of %d case(s) failed](red|bold).') % fails)
     else:
-        print ansi_style('#ansi[All cases passed.](green|bold)')
+        print(ansi_style('#ansi[All cases passed.](green|bold)'))
     raise SystemExit(int(fails != 0))
 
 if __name__ == '__main__':

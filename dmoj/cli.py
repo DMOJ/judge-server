@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import argparse
 import os
 import re
@@ -115,7 +117,7 @@ class ListProblemsCommand(Command):
         _args = self.arg_parser.parse_args(line)
 
         if _args.limit is not None and _args.limit <= 0:
-            print ansi_style("#ansi[--limit must be >= 0](red|bold)\n")
+            print(ansi_style("#ansi[--limit must be >= 0](red|bold)\n"))
             return
 
         all_problems = judgeenv.get_supported_problems()
@@ -131,9 +133,9 @@ class ListProblemsCommand(Command):
             problems = iter(map(itemgetter(0), all_problems))
             max_len = max(len(p[0]) for p in all_problems)
             for row in izip_longest(*[problems] * 4, fillvalue=''):
-                print ' '.join(('%*s' % (-max_len, row[i])) for i in xrange(4))
+                print(' '.join(('%*s' % (-max_len, row[i])) for i in range(4)))
         else:
-            print ansi_style("#ansi[No problems matching filter found.](red|bold)")
+            print(ansi_style("#ansi[No problems matching filter found.](red|bold)"))
         print
 
 
@@ -154,8 +156,8 @@ class HelpCommand(Command):
         for name, command in commands.iteritems():
             if command == self:
                 continue
-            print '  %s: %s' % (name, command.help)
-        print
+            print('  %s: %s' % (name, command.help))
+        print()
 
 
 submission_id_counter = 0
@@ -205,7 +207,7 @@ class SubmitCommand(Command):
                 src = []
                 try:
                     while True:
-                        s = raw_input()
+                        s = sys.stdin.readline()
                         if s.strip() == ':q':
                             raise EOFError
                         src.append(s)
@@ -214,7 +216,7 @@ class SubmitCommand(Command):
                 except Exception as io:
                     err = str(io)
         if err:
-            print ansi_style('#ansi[%s](red|bold)\n' % err)
+            print(ansi_style('#ansi[%s](red|bold)\n' % err))
             return
 
         submission_id_counter += 1
@@ -246,7 +248,7 @@ class ResubmitCommand(Command):
         try:
             id, lang, src, tl, ml = graded_submissions[args.submission_id - 1]
         except IndexError:
-            print ansi_style("#ansi[invalid submission '%d'](red|bold)\n" % (args.submission_id - 1))
+            print(ansi_style("#ansi[invalid submission '%d'](red|bold)\n" % (args.submission_id - 1)))
             return
 
         id = args.problem or id
@@ -264,7 +266,7 @@ class ResubmitCommand(Command):
         elif ml <= 0:
             err = '--memory-limit must be >= 0'
         if err:
-            print ansi_style('#ansi[%s](red|bold)\n' % err)
+            print(ansi_style('#ansi[%s](red|bold)\n' % err))
             return
 
         graded_submissions.append((id, lang, src, tl, ml))
@@ -285,9 +287,9 @@ class RejudgeCommand(Command):
         try:
             problem, lang, src, tl, ml = graded_submissions[args.submission_id - 1]
         except IndexError:
-            print ansi_style("#ansi[invalid submission '%d'](red|bold)\n" % (args.submission_id - 1))
+            print(ansi_style("#ansi[invalid submission '%d'](red|bold)\n" % (args.submission_id - 1)))
             return
-        self.judge.begin_grading(submission_id_counter, problem, lang, src, tl, ml, False, blocking=True)
+        self.judge.begin_grading(submission_id_counter, problem, lang, src, tl, ml, False, False, blocking=True)
 
 
 class ListSubmissionsCommand(Command):
@@ -302,14 +304,14 @@ class ListSubmissionsCommand(Command):
         args = self.arg_parser.parse_args(line)
 
         if args.limit is not None and args.limit <= 0:
-            print ansi_style('#ansi[--limit must be >= 0](red|bold)\n')
+            print(ansi_style('#ansi[--limit must be >= 0](red|bold)\n'))
             return
 
         for i, data in enumerate(
                 graded_submissions if not args.limit else graded_submissions[:args.limit]):
             problem, lang, src, tl, ml = data
-            print ansi_style('#ansi[%s](yellow)/#ansi[%s](green) in %s' % (problem, i + 1, lang))
-        print
+            print(ansi_style('#ansi[%s](yellow)/#ansi[%s](green) in %s' % (problem, i + 1, lang)))
+        print()
 
 
 def main():
@@ -329,7 +331,7 @@ def main():
 
     executors.load_executors()
 
-    print 'Running local judge...'
+    print('Running local judge...')
 
     logging.basicConfig(filename=judgeenv.log_file, level=logging.INFO,
                         format='%(levelname)s %(asctime)s %(module)s %(message)s')
@@ -337,9 +339,9 @@ def main():
     judge = LocalJudge()
 
     for warning in judgeenv.startup_warnings:
-        print ansi_style('#ansi[Warning: %s](yellow)' % warning)
+        print(ansi_style('#ansi[Warning: %s](yellow)' % warning))
     del judgeenv.startup_warnings
-    print
+    print()
 
     for command in [ListProblemsCommand, ListSubmissionsCommand, SubmitCommand, ResubmitCommand, RejudgeCommand,
                     HelpCommand, QuitCommand]:
@@ -350,7 +352,8 @@ def main():
             judge.listen()
 
             while True:
-                command = raw_input(ansi_style("#ansi[dmoj](magenta)#ansi[>](green) ")).strip()
+                print(ansi_style("#ansi[dmoj](magenta)#ansi[>](green) "), end='')
+                command = sys.stdin.readline().strip()
 
                 line = command.split(' ')
                 if line[0] in commands:
@@ -358,10 +361,10 @@ def main():
                     try:
                         cmd.execute(line[1:])
                     except InvalidCommandException:
-                        print
+                        print()
                 else:
-                    print ansi_style('#ansi[Unrecognized command %s](red|bold)' % line[0])
-                    print
+                    print(ansi_style('#ansi[Unrecognized command %s](red|bold)' % line[0]))
+                    print()
         except (EOFError, KeyboardInterrupt):
             print
         finally:

@@ -1,7 +1,12 @@
+from __future__ import print_function
+
 import traceback
 from contextlib import closing
 from threading import Thread, Event
-from urllib2 import urlopen
+try:
+    from urllib2 import urlopen
+except ImportError:
+    from urllib.request import urlopen
 
 from dmoj import judgeenv
 from dmoj.judgeenv import startup_warnings, get_problem_roots
@@ -89,7 +94,7 @@ class Monitor(object):
             try:
                 self._monitor.start()
             except OSError:
-                print ansi_style('#ansi[Warning: failed to start problem monitor!](yellow)')
+                print(ansi_style('#ansi[Warning: failed to start problem monitor!](yellow)'))
         if self._refresher is not None:
             self._refresher.start()
 

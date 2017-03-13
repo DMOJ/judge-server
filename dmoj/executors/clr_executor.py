@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import os
 import re
 import subprocess
@@ -63,7 +65,7 @@ class CLRProcess(object):
     def _shocker(self):
         time.sleep(self.time_limit)
         if WaitForSingleObject(self._process, 0) == WAIT_TIMEOUT:
-            print>> sys.stderr, 'Ouch, shocker activated!'
+            print('Ouch, shocker activated!', file=sys.stderr)
             TerminateProcess(self._process, 0xDEADBEEF)
             WaitForSingleObject(self._process, INFINITE)
 

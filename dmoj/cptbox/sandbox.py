@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import errno
 import os
 import pty
@@ -33,7 +35,11 @@ def _find_exe(path):
 
 def file_info(path, split=re.compile(r'[\s,]').split):
     try:
-        return split(subprocess.check_output(['file', '-b', '-L', path]))
+        try:
+            _ = subprocess.check_output(['file', '-b', '-L', path])
+            return split(_)
+        except TypeError:
+            return split(_.decode('utf-8'))
     except subprocess.CalledProcessError:
         return []
 
@@ -153,7 +159,7 @@ class SecurePopen(Process):
         if security is None:
             self._trace_syscalls = False
         else:
-            for i in xrange(SYSCALL_COUNT):
+            for i in range(SYSCALL_COUNT):
                 handler = security.get(i, DISALLOW)
                 call = translator[i][index]
                 if call is None:
@@ -196,7 +202,7 @@ class SecurePopen(Process):
         return self._start_time and ((self._died_time or time.time()) - self._start_time)
 
     def kill(self):
-        print>> sys.stderr, 'Child is requested to be killed'
+        print('Child is requested to be killed', file=sys.stderr)
         try:
             os.killpg(self.pid, signal.SIGKILL)
         except OSError:
@@ -273,7 +279,7 @@ class SecurePopen(Process):
 
         while not self._exited:
             if self.execution_time > self._time:
-                print>> sys.stderr, 'Shocker activated, ouch!'
+                print('Shocker activated, ouch!', file=sys.stderr)
                 os.killpg(self.pid, signal.SIGKILL)
                 self._tle = True
                 break
@@ -390,7 +396,7 @@ class SecurePopen(Process):
         while fd2file:
             try:
                 ready = poller.poll()
-            except select.error, e:
+            except select.error as e:
                 if e.args[0] == errno.EINTR:
                     continue
                 raise

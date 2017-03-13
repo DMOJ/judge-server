@@ -6,7 +6,6 @@ from libc.signal cimport SIGTRAP, SIGXCPU
 from posix.resource cimport rusage
 from posix.types cimport pid_t
 
-
 __all__ = ['Process', 'Debugger', 'bsd_get_proc_cwd', 'bsd_get_proc_fdno', 'MAX_SYSCALL_NUMBER',
            'DEBUGGER_X86', 'DEBUGGER_X64', 'DEBUGGER_X86_ON_X64', 'DEBUGGER_X32', 'DEBUGGER_ARM',
            'AT_FDCWD']
@@ -419,7 +418,7 @@ cdef class Process:
         else:
             config.max_fd = 2 + len(fds)
             config.fds = <int*>malloc(sizeof(int) * len(fds))
-            for i in xrange(len(fds)):
+            for i in range(len(fds)):
                 config.fds[i] = fds[i]
         with nogil:
             if self.process.spawn(pt_child, &config):

@@ -1,4 +1,5 @@
 import os
+import sys
 import traceback
 
 import yaml
@@ -29,6 +30,9 @@ def main():
                 pass
 
     judgeenv.env['runtime'] = {}
+
+    if silent:
+        sys.stderr = open(os.devnull, 'w')
 
     for name in get_available():
         executor = load_executor(name)

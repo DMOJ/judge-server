@@ -11,8 +11,10 @@ class Interactor(object):
     def read(self):
         return self.process.stdout.read()
 
-    def readln(self):
-        return self.process.stdout.readline().rstrip()
+    def readln(self, strip_newline=True):
+        if strip_newline:
+            return self.process.stdout.readline().rstrip()
+        return self.process.stdout.readline()
 
     def readtoken(self, delim=None):
         if not self._tokens:
@@ -29,7 +31,7 @@ class Interactor(object):
             ret = int(self.readtoken(delim))
         except ValueError:
             raise WrongAnswer
-        if not lo < ret < hi:
+        if not lo <= ret <= hi:
             raise WrongAnswer
         return ret
 
@@ -38,7 +40,7 @@ class Interactor(object):
             ret = float(self.readtoken(delim))
         except ValueError:
             raise WrongAnswer
-        if not lo < ret < hi:
+        if not lo <= ret <= hi:
             raise WrongAnswer
         return ret
 

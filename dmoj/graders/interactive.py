@@ -15,33 +15,34 @@ class Interactor(object):
     def readln(self):
         return self.process.stdout.readline()
 
-    def readtoken(self, str=None):
+    def readtoken(self, delim=None):
         if not self._tokens:
             self._tokens = self.readln()
         try:
-            ret, self._tokens = self._tokens.split(str, 1)
+            ret, self._tokens = self._tokens.split(delim, 1)
         except ValueError:
             ret = self._tokens
             self._tokens = None
         return ret
 
-    def readint(self, lo=float('-inf'), hi=float('inf'), str=None):
+    def readint(self, lo=float('-inf'), hi=float('inf'), delim=None):
         try:
-            ret = int(self.readtoken(str))
+            ret = int(self.readtoken(delim))
         except ValueError:
             raise WrongAnswer
-        if lo > ret or ret > hi:
+        if not lo < ret < hi:
             raise WrongAnswer
         return ret
 
-    def readfloat(self, lo=float('-inf'), hi=float('inf'), str=None):
+    def readfloat(self, lo=float('-inf'), hi=float('inf'), delim=None):
         try:
-            ret = float(self.readtoken(str))
+            ret = float(self.readtoken(delim))
         except ValueError:
             raise WrongAnswer
-        if lo > ret or ret > hi:
+        if not lo < ret < hi:
             raise WrongAnswer
         return ret
+
     def write(self, str):
         self.process.stdin.write(str)
         self.process.stdin.flush()

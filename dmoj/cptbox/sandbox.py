@@ -127,14 +127,14 @@ class SecurePopenMeta(type):
             raise RuntimeError('Executable type %s could not be debugged on Python type %s' % (arch, PYTHON_ARCH))
         return super(SecurePopenMeta, self).__call__(debugger, self.debugger_type, argv, executable, *args, **kwargs)
 
-if sys.version_info[0] >= 3:
-    class SecurePopenBase(Process, metaclass=SecurePopenMeta):
-        pass
-else:
-    class SecurePopenBase(Process):
-        __metaclass__ = SecurePopenMeta
+# pulled from six
+def with_metaclass(meta, *bases):
+    class metaclass(meta):
+        def __new__(cls, name, this_bases, d):
+            return meta(name, bases, d)
+    return type.__new__(metaclass, 'temporary_class', (), {})
 
-class SecurePopen(SecurePopenBase):
+class SecurePopen(with_metaclass(SecurePopenMeta, Process)):
     debugger_type = AdvancedDebugger
 
     def __init__(self, debugger, _, args, executable=None, security=None, time=0, memory=0, stdin=PIPE, stdout=PIPE,

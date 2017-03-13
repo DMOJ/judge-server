@@ -63,7 +63,7 @@ class InteractiveGrader(StandardGrader):
         try:
             self.check = self.interact(interactor)
             interactor.close()
-        except WrongAnswer, IOError:
+        except (WrongAnswer, IOError):
             pass
 
         self._current_proc.wait()

@@ -1,6 +1,6 @@
 from dmoj.graders.interactive import InteractiveGrader
 
-def Grader(InteractiveGrader):
+class Grader(InteractiveGrader):
     def interact(self, case, interactor):
         N = int(case.input_data())
         guess = None

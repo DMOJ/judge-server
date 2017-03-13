@@ -46,11 +46,11 @@ class Interactor(object):
         return ret
 
     def write(self, str):
-        self.process.stdin.write(str)
+        self.process.stdin.write('%s' % str)
         self.process.stdin.flush()
 
     def writeln(self, str):
-        self.write(str + '\n')
+        self.write('%s\n' % str)
 
     def close(self):
         for stream in [self.process.stdin, self.process.stdout, self.process.stderr]:
@@ -71,5 +71,5 @@ class InteractiveGrader(StandardGrader):
     def check_result(self, case, result):
         return self.check
 
-    def interact(self, interactor):
+    def interact(self, case, interactor):
         raise NotImplementedError

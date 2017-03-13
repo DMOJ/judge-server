@@ -12,9 +12,10 @@ class Interactor(object):
         return self.process.stdout.read()
 
     def readln(self, strip_newline=True):
+        ret = self.process.stdout.readline()
         if strip_newline:
-            return self.process.stdout.readline().rstrip()
-        return self.process.stdout.readline()
+            return ret.rstrip()
+        return ret
 
     def readtoken(self, delim=None):
         if not self._tokens:

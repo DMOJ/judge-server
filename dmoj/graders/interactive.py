@@ -1,7 +1,9 @@
 from dmoj.graders.standard import StandardGrader
 
+
 class WrongAnswer(BaseException):
     pass
+
 
 class Interactor(object):
     def __init__(self, process):
@@ -9,12 +11,17 @@ class Interactor(object):
         self._tokens = None
 
     def read(self):
-        return self.process.stdout.read()
+        ret = self.process.stdout.read()
+        if ret == '':
+            raise IOError
+        return ret
 
     def readln(self, strip_newline=True):
         ret = self.process.stdout.readline()
+        if ret == '':
+            raise IOError
         if strip_newline:
-            return ret.rstrip()
+            ret = ret.rstrip()
         return ret
 
     def readtoken(self, delim=None):
@@ -55,6 +62,7 @@ class Interactor(object):
     def close(self):
         for stream in [self.process.stdin, self.process.stdout, self.process.stderr]:
             stream.close()
+
 
 class InteractiveGrader(StandardGrader):
     def _interact_with_process(self, case, result, input):

@@ -50,7 +50,7 @@ class Interactor(object):
         except ValueError:
             raise WrongAnswer('expected int, got "%s"' % (self._abbreviate(token)))
         if not lo <= ret <= hi:
-            raise WrongAnswer('expected int in range [%d, %d], got %d' % (lo, hi, ret))
+            raise WrongAnswer('expected int in range [%.0f, %.0f], got %d' % (lo, hi, ret))
         return ret
 
     def readfloat(self, lo=float('-inf'), hi=float('inf'), delim=None):

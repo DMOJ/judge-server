@@ -30,8 +30,24 @@ pt_process::pt_process(pt_debugger *debugger) :
     _initialized(false)
 {
     memset(&exec_time, 0, sizeof exec_time);
+    memset(&start_time, 0, sizeof exec_time);
+    memset(&end_time, 0, sizeof exec_time);
     memset(handler, 0, sizeof handler);
     debugger->set_process(this);
+}
+
+double pt_process::wall_clock_time() {
+    struct timespec now, delta;
+
+    if (!start_time.tv_sec && !start_time.tv_nsec)
+        return 0;
+
+    if (end_time.tv_sec || end_time.tv_nsec)
+        now = end_time;
+    else
+        clock_gettime(CLOCK_MONOTONIC, &now);
+    timespec_sub(&now, &start_time, &delta);
+    return delta.tv_sec + delta.tv_nsec / 1000000000.0;
 }
 
 void pt_process::set_callback(pt_handler_callback callback, void *context) {
@@ -144,6 +160,7 @@ int pt_process::monitor() {
 #endif
 
         if (first) {
+            start_time = start;
             dispatch(PTBOX_EVENT_ATTACH, 0);
 
 #if PTBOX_FREEBSD
@@ -295,6 +312,7 @@ int pt_process::monitor() {
 #endif
     }
 
+    end_time = end;
     dispatch(PTBOX_EVENT_EXITED, exit_reason);
     return WIFEXITED(status) ? WEXITSTATUS(status) : -WTERMSIG(status);
 }

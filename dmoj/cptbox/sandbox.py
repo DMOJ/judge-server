@@ -127,7 +127,8 @@ class SecurePopen(Process):
     debugger_type = AdvancedDebugger
 
     def __init__(self, debugger, _, args, executable=None, security=None, time=0, memory=0, stdin=PIPE, stdout=PIPE,
-                 stderr=None, env=None, nproc=0, address_grace=4096, cwd='', fds=None, unbuffered=False):
+                 stderr=None, env=None, nproc=0, address_grace=4096, cwd='', fds=None, unbuffered=False,
+                 wall_time=None):
         self._debugger_type = debugger
         self._syscall_index = index = _SYSCALL_INDICIES[debugger]
         self._executable = executable or _find_exe(args[0])
@@ -135,6 +136,7 @@ class SecurePopen(Process):
         self._chdir = cwd
         self._env = ['%s=%s' % i for i in (env if env is not None else os.environ).iteritems()]
         self._time = time
+        self._wall_time = time * 3 if wall_time is None else wall_time
         self._cpu_time = time + 5 if time else 0
         self._memory = memory
         self._child_memory = memory * 1024
@@ -272,7 +274,7 @@ class SecurePopen(Process):
         self._started.wait()
 
         while not self._exited:
-            if self.execution_time > self._time:
+            if self.execution_time > self._time or self.wall_clock_time > self._wall_time:
                 print>> sys.stderr, 'Shocker activated, ouch!'
                 os.killpg(self.pid, signal.SIGKILL)
                 self._tle = True

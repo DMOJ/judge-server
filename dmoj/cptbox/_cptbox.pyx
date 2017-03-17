@@ -71,6 +71,7 @@ cdef extern from 'ptbox.h' nogil:
         int monitor()
         int getpid()
         double execution_time()
+        double wall_clock_time()
         const rusage *getrusage()
         bint was_initialized()
 
@@ -454,6 +455,10 @@ cdef class Process:
     property execution_time:
         def __get__(self):
             return self.process.execution_time()
+
+    property wall_clock_time:
+        def __get__(self):
+            return self.process.wall_clock_time()
 
     property cpu_time:
         def __get__(self):

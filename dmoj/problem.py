@@ -34,6 +34,7 @@ class Problem(object):
             if not doc:
                 raise InvalidInitException('I find your lack of content disturbing.')
             self.config = ConfigNode(doc, defaults={
+                'wall_time_factor': 3,
                 'output_prefix_length': 64,
                 'output_limit_length': 25165824,
             })

@@ -102,6 +102,7 @@ try:
                                    security=self.get_security(launch_kwargs=kwargs),
                                    address_grace=self.get_address_grace(),
                                    time=kwargs.get('time'), memory=kwargs.get('memory'),
+                                   wall_time=kwargs.get('wall_time'),
                                    stderr=(PIPE if kwargs.get('pipe_stderr', False) else None),
                                    env=self.get_env(), cwd=self._dir, nproc=self.get_nproc(),
                                    unbuffered=kwargs.get('unbuffered', False))

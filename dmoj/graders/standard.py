@@ -26,7 +26,8 @@ class StandardGrader(BaseGrader):
 
         self._current_proc = self.binary.launch(time=self.problem.time_limit, memory=self.problem.memory_limit,
                                                 pipe_stderr=True, unbuffered=case.config.unbuffered,
-                                                io_redirects=case.io_redirects())
+                                                io_redirects=case.io_redirects(),
+                                                wall_time=case.config.wall_time_factor * self.problem.time_limit)
 
         error = self._interact_with_process(case, result, input)
 

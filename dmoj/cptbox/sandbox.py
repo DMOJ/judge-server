@@ -167,8 +167,6 @@ class SecurePopen(Process):
                     handler = _CALLBACK
                 self._handler(call, handler)
 
-        self._start_time = 0
-        self._died_time = 0
         self._started = threading.Event()
         self._died = threading.Event()
         if time:
@@ -195,7 +193,7 @@ class SecurePopen(Process):
 
     @property
     def r_execution_time(self):
-        return self._start_time and ((self._died_time or time.time()) - self._start_time)
+        return self.wall_clock_time
 
     def kill(self):
         print>> sys.stderr, 'Child is requested to be killed'
@@ -253,10 +251,8 @@ class SecurePopen(Process):
         if self._child_stderr >= 0:
             os.close(self._child_stderr)
         self._started.set()
-        self._start_time = time.time()
         code = self._monitor()
 
-        self._died_time = time.time()
         if self._time and self.execution_time > self._time:
             self._tle = True
         self._died.set()

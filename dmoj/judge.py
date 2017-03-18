@@ -160,9 +160,11 @@ class Judge(object):
                                                                               Result.COLORS_BYID[x]), codes)
                         colored_aux_codes = '{%s}' % ', '.join(colored_codes[1:]) if len(codes) > 1 else ''
                         colored_feedback = '(#ansi[%s](|underline)) ' % result.feedback if result.feedback else ''
-                        case_info = '[%.3fs | %dkb] %s%s' % (result.execution_time, result.max_memory,
-                                                             colored_feedback,
-                                                             colored_aux_codes) if not is_sc else ''
+                        case_info = '[%.3fs (%.3fs) | %dkb] %s%s' % (result.execution_time,
+                                                                     result.r_execution_time,
+                                                                     result.max_memory,
+                                                                     colored_feedback,
+                                                                     colored_aux_codes) if not is_sc else ''
                         case_padding = '  ' * in_batch
                         print ansi_style('%sTest case %2d %-3s %s' % (case_padding, case_number,
                                                                       colored_codes[0], case_info))

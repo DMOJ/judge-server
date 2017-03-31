@@ -287,7 +287,7 @@ class RejudgeCommand(Command):
         except IndexError:
             print ansi_style("#ansi[invalid submission '%d'](red|bold)\n" % (args.submission_id - 1))
             return
-        self.judge.begin_grading(submission_id_counter, problem, lang, src, tl, ml, False, blocking=True)
+        self.judge.begin_grading(submission_id_counter, problem, lang, src, tl, ml, False, False, blocking=True)
 
 
 class ListSubmissionsCommand(Command):

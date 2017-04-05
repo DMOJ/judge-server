@@ -227,7 +227,7 @@ class SecurePopen(Process):
                     callname = by_id[id]
                     break
 
-            self.protection_fault = (syscall, callname, self.debugger)
+            self.protection_fault = (syscall, callname, [self.debugger.uarg0, self.debugger.uarg1, self.debugger.uarg2, self.debugger.uarg3, self.debugger.uarg4, self.debugger.uarg5])
 
     def _cpu_time_exceeded(self):
         print>> sys.stderr, 'SIGXCPU in child'

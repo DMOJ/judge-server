@@ -81,12 +81,12 @@ class StandardGrader(BaseGrader):
         # On Linux we can provide better help messages
         if hasattr(process, 'protection_fault') and process.protection_fault:
             print>> sys.stderr, 'Protection fault on: %d (%s)' % process.protection_fault[:2]
-            print>> sys.stderr, 'Arg0: 0x%016x' % process.protection_fault[2].uarg0
-            print>> sys.stderr, 'Arg1: 0x%016x' % process.protection_fault[2].uarg1
-            print>> sys.stderr, 'Arg2: 0x%016x' % process.protection_fault[2].uarg2
-            print>> sys.stderr, 'Arg3: 0x%016x' % process.protection_fault[2].uarg3
-            print>> sys.stderr, 'Arg4: 0x%016x' % process.protection_fault[2].uarg4
-            print>> sys.stderr, 'Arg5: 0x%016x' % process.protection_fault[2].uarg5
+            print>> sys.stderr, 'Arg0: 0x%016x' % process.protection_fault[2][0]
+            print>> sys.stderr, 'Arg1: 0x%016x' % process.protection_fault[2][1]
+            print>> sys.stderr, 'Arg2: 0x%016x' % process.protection_fault[2][2]
+            print>> sys.stderr, 'Arg3: 0x%016x' % process.protection_fault[2][3]
+            print>> sys.stderr, 'Arg4: 0x%016x' % process.protection_fault[2][4]
+            print>> sys.stderr, 'Arg5: 0x%016x' % process.protection_fault[2][5]
             sigid, callname = process.protection_fault[:2]
             callname = callname.replace('sys_', '', 1)
             message = {

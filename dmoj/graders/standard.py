@@ -80,14 +80,14 @@ class StandardGrader(BaseGrader):
 
         # On Linux we can provide better help messages
         if hasattr(process, 'protection_fault') and process.protection_fault:
-            sigid, callname = process.protection_fault[:2]
+            sigid, callname, args = process.protection_fault
             print>> sys.stderr, 'Protection fault on: %d (%s)' % (sigid, callname)
-            print>> sys.stderr, 'Arg0: 0x%016x' % process.protection_fault[2][0]
-            print>> sys.stderr, 'Arg1: 0x%016x' % process.protection_fault[2][1]
-            print>> sys.stderr, 'Arg2: 0x%016x' % process.protection_fault[2][2]
-            print>> sys.stderr, 'Arg3: 0x%016x' % process.protection_fault[2][3]
-            print>> sys.stderr, 'Arg4: 0x%016x' % process.protection_fault[2][4]
-            print>> sys.stderr, 'Arg5: 0x%016x' % process.protection_fault[2][5]
+            print>> sys.stderr, 'Arg0: 0x%016x' % args[0]
+            print>> sys.stderr, 'Arg1: 0x%016x' % args[1]
+            print>> sys.stderr, 'Arg2: 0x%016x' % args[2]
+            print>> sys.stderr, 'Arg3: 0x%016x' % args[3]
+            print>> sys.stderr, 'Arg4: 0x%016x' % args[4]
+            print>> sys.stderr, 'Arg5: 0x%016x' % args[5]
             callname = callname.replace('sys_', '', 1)
             message = {
                 'open': 'opening files is not allowed',

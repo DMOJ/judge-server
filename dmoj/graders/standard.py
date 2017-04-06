@@ -80,8 +80,8 @@ class StandardGrader(BaseGrader):
 
         # On Linux we can provide better help messages
         if hasattr(process, 'protection_fault') and process.protection_fault:
-            sigid, callname, args = process.protection_fault
-            print>> sys.stderr, 'Protection fault on: %d (%s)' % (sigid, callname)
+            syscall, callname, args = process.protection_fault
+            print>> sys.stderr, 'Protection fault on: %d (%s)' % (syscall, callname)
             print>> sys.stderr, 'Arg0: 0x%016x' % args[0]
             print>> sys.stderr, 'Arg1: 0x%016x' % args[1]
             print>> sys.stderr, 'Arg2: 0x%016x' % args[2]

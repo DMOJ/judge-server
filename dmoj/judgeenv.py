@@ -98,12 +98,31 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
 
         dirs = env.problem_storage_root
         if dirs is not None:
+            get_path = lambda x, y: unicodify(os.path.normpath(os.path.join(x, y)))
             if isinstance(dirs, ConfigNode):
-                problem_dirs = tuple(unicodify(os.path.normpath(os.path.join(_root, dir))) for dir in dirs)
+                import re
+                rerec = re.compile(r'^(\d+)\s*:\s*(.*)$')
+                # Allow for recursion
+                def rec(dir, dep):
+                    if not dep: return [dir]
+                    ret = []
+                    for d in os.listdir(dir):
+                        nxt = os.path.join(dir, d)
+                        if os.path.isdir(nxt):
+                            ret += rec(nxt, dep - 1)
+                    return ret
+
+                problem_dirs = []
+                for dir in dirs:
+                    r = rerec.match(dir)
+                    if r:
+                        problem_dirs += rec(get_path(_root, r.group(2)), int(r.group(1)))
+                    else:
+                        problem_dirs += get_path(_root, dir)
+                problem_dirs = tuple(problem_dirs)
             else:
                 problem_dirs = os.path.join(_root, dirs)
-                problem_dirs = [unicodify(os.path.normpath(os.path.join(problem_dirs, dir)))
-                                for dir in os.listdir(problem_dirs)]
+                problem_dirs = [get_path(problem_dirs, dir) for dir in os.listdir(problem_dirs)]
                 problem_dirs = tuple(dir for dir in problem_dirs if os.path.isdir(dir))
 
             cleaned_dirs = []

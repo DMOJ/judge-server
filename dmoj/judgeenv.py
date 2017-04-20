@@ -101,13 +101,13 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
             get_path = lambda x, y: unicodify(os.path.normpath(os.path.join(x, y)))
             if isinstance(dirs, ConfigNode):
 
-                def find_directories_by_depth(dir, dep):
-                    if not dep: return [dir] if os.path.isdir(dir) else []
+                def find_directories_by_depth(dir, depth):
+                    if not depth: return [dir] if os.path.isdir(dir) else []
                     ret = []
-                    for d in os.listdir(dir):
-                        nxt = os.path.join(dir, d)
-                        if os.path.isdir(nxt):
-                            ret += find_directories_by_depth(nxt, dep - 1)
+                    for child in os.listdir(dir):
+                        next = os.path.join(dir, child)
+                        if os.path.isdir(next):
+                            ret += find_directories_by_depth(next, depth - 1)
                     return ret
 
                 problem_dirs = []

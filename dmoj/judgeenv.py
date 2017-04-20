@@ -100,21 +100,21 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
         if dirs is not None:
             get_path = lambda x, y: unicodify(os.path.normpath(os.path.join(x, y)))
             if isinstance(dirs, ConfigNode):
-                # Allow for recursion
-                def rec(dir, dep):
-                    if not dep: return [dir]
+
+                def find_directories_by_depth(dir, dep):
+                    if not dep: return [dir] if os.path.isdir(dir) else []
                     ret = []
                     for d in os.listdir(dir):
                         nxt = os.path.join(dir, d)
                         if os.path.isdir(nxt):
-                            ret += rec(nxt, dep - 1)
+                            ret += find_directories_by_depth(nxt, dep - 1)
                     return ret
 
                 problem_dirs = []
                 for dir in dirs:
                     if isinstance(dir, ConfigNode):
-                        for d in dir:
-                            problem_dirs += rec(get_path(_root, dir[d]), int(d))
+                        for depth, recursive_root in dir.iteritems():
+                            problem_dirs += find_directories_by_depth(get_path(_root, recursive_root), int(depth))
                     else:
                         problem_dirs += get_path(_root, dir)
                 problem_dirs = tuple(problem_dirs)

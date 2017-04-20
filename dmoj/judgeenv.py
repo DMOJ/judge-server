@@ -100,8 +100,6 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
         if dirs is not None:
             get_path = lambda x, y: unicodify(os.path.normpath(os.path.join(x, y)))
             if isinstance(dirs, ConfigNode):
-                import re
-                rerec = re.compile(r'^(\d+)\s*:\s*(.*)$')
                 # Allow for recursion
                 def rec(dir, dep):
                     if not dep: return [dir]
@@ -114,9 +112,9 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
 
                 problem_dirs = []
                 for dir in dirs:
-                    r = rerec.match(dir)
-                    if r:
-                        problem_dirs += rec(get_path(_root, r.group(2)), int(r.group(1)))
+                    if isinstance(dir, ConfigNode):
+                        for d in dir:
+                            problem_dirs += rec(get_path(_root, dir[d]), int(d))
                     else:
                         problem_dirs += get_path(_root, dir)
                 problem_dirs = tuple(problem_dirs)

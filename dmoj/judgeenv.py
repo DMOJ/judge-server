@@ -102,7 +102,12 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
             if isinstance(dirs, ConfigNode):
 
                 def find_directories_by_depth(dir, depth):
-                    if not depth: return [dir] if os.path.isdir(dir) else []
+                    if depth < 0: raise ValueError('negative depth reached')
+                    if not depth:
+                        if os.path.isdir(dir):
+                            return [dir]
+                        else:
+                            return []
                     ret = []
                     for child in os.listdir(dir):
                         next = os.path.join(dir, child)
@@ -114,7 +119,10 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
                 for dir in dirs:
                     if isinstance(dir, ConfigNode):
                         for depth, recursive_root in dir.iteritems():
-                            problem_dirs += find_directories_by_depth(get_path(_root, recursive_root), int(depth))
+                            try:
+                                problem_dirs += find_directories_by_depth(get_path(_root, recursive_root), int(depth))
+                            except ValueError:
+                                startup_warnings.append('illegal depth arguement %s' % depth)
                     else:
                         problem_dirs += get_path(_root, dir)
                 problem_dirs = tuple(problem_dirs)
@@ -130,6 +138,7 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
                     continue
                 cleaned_dirs.append(dir)
             problem_dirs = cleaned_dirs
+            print repr(problem_dirs)
 
     if testsuite:
         if not os.path.isdir(_args.tests_dir):

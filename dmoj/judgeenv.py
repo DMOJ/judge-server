@@ -98,12 +98,37 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
 
         dirs = env.problem_storage_root
         if dirs is not None:
+            get_path = lambda x, y: unicodify(os.path.normpath(os.path.join(x, y)))
             if isinstance(dirs, ConfigNode):
-                problem_dirs = tuple(unicodify(os.path.normpath(os.path.join(_root, dir))) for dir in dirs)
+
+                def find_directories_by_depth(dir, depth):
+                    if depth < 0: raise ValueError('negative depth reached')
+                    if not depth:
+                        if os.path.isdir(dir):
+                            return [dir]
+                        else:
+                            return []
+                    ret = []
+                    for child in os.listdir(dir):
+                        next = os.path.join(dir, child)
+                        if os.path.isdir(next):
+                            ret += find_directories_by_depth(next, depth - 1)
+                    return ret
+
+                problem_dirs = []
+                for dir in dirs:
+                    if isinstance(dir, ConfigNode):
+                        for depth, recursive_root in dir.iteritems():
+                            try:
+                                problem_dirs += find_directories_by_depth(get_path(_root, recursive_root), int(depth))
+                            except ValueError:
+                                startup_warnings.append('illegal depth arguement %s' % depth)
+                    else:
+                        problem_dirs += get_path(_root, dir)
+                problem_dirs = tuple(problem_dirs)
             else:
                 problem_dirs = os.path.join(_root, dirs)
-                problem_dirs = [unicodify(os.path.normpath(os.path.join(problem_dirs, dir)))
-                                for dir in os.listdir(problem_dirs)]
+                problem_dirs = [get_path(problem_dirs, dir) for dir in os.listdir(problem_dirs)]
                 problem_dirs = tuple(dir for dir in problem_dirs if os.path.isdir(dir))
 
             cleaned_dirs = []
@@ -113,6 +138,7 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
                     continue
                 cleaned_dirs.append(dir)
             problem_dirs = cleaned_dirs
+            print repr(problem_dirs)
 
     if testsuite:
         if not os.path.isdir(_args.tests_dir):

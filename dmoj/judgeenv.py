@@ -138,7 +138,6 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
                     continue
                 cleaned_dirs.append(dir)
             problem_dirs = cleaned_dirs
-            print repr(problem_dirs)
 
     if testsuite:
         if not os.path.isdir(_args.tests_dir):

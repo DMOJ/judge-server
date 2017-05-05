@@ -124,7 +124,7 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
                             except ValueError:
                                 startup_warnings.append('illegal depth arguement %s' % depth)
                     else:
-                        problem_dirs += get_path(_root, dir)
+                        problem_dirs.append(get_path(_root, dir))
                 problem_dirs = tuple(problem_dirs)
             else:
                 problem_dirs = os.path.join(_root, dirs)
@@ -138,7 +138,6 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
                     continue
                 cleaned_dirs.append(dir)
             problem_dirs = cleaned_dirs
-            print repr(problem_dirs)
 
     if testsuite:
         if not os.path.isdir(_args.tests_dir):

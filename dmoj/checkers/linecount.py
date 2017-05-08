@@ -13,8 +13,6 @@ def check(process_output, judge_output, point_value, feedback=False, **kwargs):
             cases[i] = verdict[1]
             count += 1
 
-    if not count:
+    if not count or len(process_lines) > len(judge_lines):
         return CheckerResult(False, 0)
-    if len(process_lines) > len(judge_lines):
-        return CheckerResult(False, 0, 'Incorrect Output Format')
     return CheckerResult(True, point_value * (1.0 * count / len(judge_lines)), ''.join(cases) if feedback else "")

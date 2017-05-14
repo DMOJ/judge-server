@@ -1,5 +1,6 @@
 from dmoj.result import CheckerResult
-verdict = "XO"
+
+verdict = u"\u2717\u2713"
 
 def check(process_output, judge_output, point_value, feedback=False, **kwargs):
     process_lines = filter(None, process_output.strip().split("\n"))

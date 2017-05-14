@@ -4,6 +4,7 @@ import logging
 import os
 import signal
 import sys
+import codecs
 import threading
 import traceback
 from functools import partial
@@ -579,7 +580,9 @@ class JudgeManager(object):
 
 
 def main():  # pragma: no cover
-    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+    sys.stdout = codecs.getwriter("utf-8")(os.fdopen(sys.stdout.fileno(), 'w', 0))
+    sys.stderr = codecs.getwriter("utf-8")(sys.stderr)
+
     if not sanity_check():
         return 1
 

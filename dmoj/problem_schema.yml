@@ -19,7 +19,22 @@
       "custom_judge":
         type: str
       "io_redirects":
-        type: str
+        type: map
+        mapping:
+          "DATA.in":
+            type: map
+            mapping:
+              "fd":
+                type: str
+              "mode":
+                type: str
+          "DATA.out":
+            type: map
+            mapping:
+              "fd":
+                type: str
+              "mode":
+                type: str
 
 #names with ++
       regex;(archive.+):

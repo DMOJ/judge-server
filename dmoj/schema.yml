@@ -1,0 +1,49 @@
+type: map
+mapping:
+  "archive":
+    type: str
+    pattern: .+\.zip
+  "generator":
+    type: str
+  "checker":
+    type: str
+  "signature_grader":
+    type: str
+
+  # outer points, in, out
+  "points":
+    type: int
+  "in":
+    type: str
+  "out":
+    type: str
+
+  "test_cases":
+    type: seq
+    matching: "any"
+    sequence:
+
+      # normal cases
+      - type: map
+        mapping:
+          "points":
+            type: int
+          "in":
+            type: str
+          "out":
+            type: str
+
+      # batched cases
+      - type: map
+        mapping:
+          "points":
+            type: int
+          "batched":
+            type: seq
+            sequence:
+              - type: map
+                mapping:
+                  "in":
+                    type: str
+                  "out":
+                    type: str

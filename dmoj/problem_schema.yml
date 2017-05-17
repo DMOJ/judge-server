@@ -6,6 +6,10 @@
         type: str
         pattern: .+\.zip
       "generator":
+        type: str
+      "checker":
+        type: str
+      "signature_grader":
         type: seq
         sequence:
           - type: map
@@ -14,15 +18,17 @@
                 type: str
               "header":
                 type: str
-      "checker":
-        type: str
-      "signature_grader":
+      "custom_judge":
         type: str
 #names with ++
       regex;(archive.+):
         type: str
         pattern: .+\.zip
       regex;(generator.+):
+        type: str
+      regex;(checker.+):
+        type: str
+      regex;(signature_grader.+):
         type: seq
         sequence:
           - type: map
@@ -31,10 +37,9 @@
                 type: str
               "header":
                 type: str
-      regex;(checker.+):
+      regex;(custom_judge.+):
         type: str
-      regex;(signature_grader.+):
-        type: str
+
 
 # outer points, in, out
       "points":
@@ -72,8 +77,7 @@
                         type: str
                       "out":
                         type: str
-
-
+                        
 #test_cases ++
       regex;(test_cases.+):
         type: seq

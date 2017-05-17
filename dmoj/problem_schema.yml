@@ -1,51 +1,104 @@
-type: map
-mapping:
-  "archive":
-    type: str
-    pattern: .+\.zip
-  "generator":
-    type: str
-  "checker":
-    type: str
-  "signature_grader":
-    type: str
-  "custom_judge":
-    type: str
 
-  # outer points, in, out
-  "points":
-    type: int
-  "in":
-    type: str
-  "out":
-    type: str
+#normal names
+    type: map
+    mapping:
+      "archive":
+        type: str
+        pattern: .+\.zip
+      "generator":
+        type: seq
+        sequence:
+          - type: map
+            mapping:
+              "entry":
+                type: str
+              "header":
+                type: str
+      "checker":
+        type: str
+      "signature_grader":
+        type: str
+#names with ++
+      regex;(archive.+):
+        type: str
+        pattern: .+\.zip
+      regex;(generator.+):
+        type: seq
+        sequence:
+          - type: map
+            mapping:
+              "entry":
+                type: str
+              "header":
+                type: str
+      regex;(checker.+):
+        type: str
+      regex;(signature_grader.+):
+        type: str
 
-  "test_cases":
-    type: seq
-    matching: "any"
-    sequence:
+# outer points, in, out
+      "points":
+        type: int
+      "in":
+        type: str
+      "out":
+        type: str
 
-      # normal cases
-      - type: map
-        mapping:
-          "points":
-            type: int
-          "in":
-            type: str
-          "out":
-            type: str
+#normal test_cases
+      "test_cases":
+        type: seq
+        matching: "any"
+        sequence:
+# normal cases
+          - type: map
+            mapping:
+              "points":
+                type: int
+              "in":
+                type: str
+              "out":
+                type: str
+# batched cases
+          - type: map
+            mapping:
+              "points":
+                type: int
+              "batched":
+                type: seq
+                sequence:
+                  - type: map
+                    mapping:
+                      "in":
+                        type: str
+                      "out":
+                        type: str
 
-      # batched cases
-      - type: map
-        mapping:
-          "points":
-            type: int
-          "batched":
-            type: seq
-            sequence:
-              - type: map
-                mapping:
-                  "in":
-                    type: str
-                  "out":
-                    type: str
+
+#test_cases ++
+      regex;(test_cases.+):
+        type: seq
+        matching: "any"
+        sequence:
+# normal cases
+          - type: map
+            mapping:
+              "points":
+                type: int
+              "in":
+                type: str
+              "out":
+                type: str
+# batched cases
+          - type: map
+            mapping:
+              "points":
+                type: int
+              "batched":
+                type: seq
+                sequence:
+                  - type: map
+                    mapping:
+                      "in":
+                        type: str
+                      "out":
+                        type: str

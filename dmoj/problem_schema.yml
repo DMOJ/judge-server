@@ -9,6 +9,8 @@ mapping:
     type: str
   "signature_grader":
     type: str
+  "custom_judge":
+    type: str
 
   # outer points, in, out
   "points":

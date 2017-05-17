@@ -34,7 +34,7 @@ class Problem(object):
             doc = yaml.safe_load(self.problem_data['init.yml'])
             if not doc:
                 raise InvalidInitException('I find your lack of content disturbing.')
-            init_check = Core(source_file=doc, schema_files=["problem_schema.yml"])
+            init_check = Core(source_data=doc, schema_files=["problem_schema.yml"])
             init_check.validate(raise_exception=True)
             self.config = ConfigNode(doc, defaults={
                 'wall_time_factor': 3,

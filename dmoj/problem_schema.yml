@@ -60,6 +60,10 @@ mapping:
     type: str
   "io_redirects++":
     type: str
+  "test_cases+":
+    type: str
+  "test_cases++":
+    type: str
 
 # outer points, in, out
   "points":
@@ -110,9 +114,3 @@ mapping:
                     type: str
                   "out":
                     type: str
-
-#test_cases ++
-  "test_cases+":
-    type: str
-  "test_cases++":
-    type: str

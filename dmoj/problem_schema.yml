@@ -1,106 +1,118 @@
-
 #normal names
+type: map
+mapping:
+  "archive":
+     type: str
+     pattern: .+\.zip
+  "generator":
+     type: str
+  "checker":
+    type: str
+  "signature_grader":
     type: map
     mapping:
-      "archive":
+      "entry":
         type: str
-        pattern: .+\.zip
-      "generator":
+      "header":
         type: str
-      "checker":
-        type: str
-      "signature_grader":
+  "custom_judge":
+    type: str
+  "io_redirects":
+    type: map
+    mapping:
+      "DATA.in":
         type: map
         mapping:
-          "entry":
+          "fd":
             type: str
-          "header":
+          "mode":
             type: str
-      "custom_judge":
-        type: str
-      "io_redirects":
+      "DATA.out":
         type: map
         mapping:
-          "DATA.in":
-            type: map
-            mapping:
-              "fd":
-                type: str
-              "mode":
-                type: str
-          "DATA.out":
-            type: map
-            mapping:
-              "fd":
-                type: str
-              "mode":
-                type: str
+          "fd":
+            type: str
+          "mode":
+            type: str
 
 #names with ++
-      regex;(archive.+):
-        type: str
-        pattern: .+\.zip
-      regex;(generator.+):
-        type: str
-      regex;(checker.+):
-        type: str
-      regex;(signature_grader.+):
-        type: str
-      regex;(custom_judge.+):
-        type: str
-      regex;(io_redirects.+):
-        type: str
+  "archive+":
+    type: str
+  "archive++":
+    type: str
+  "generator+":
+    type: str
+  "generator++":
+    type: str
+  "checker+":
+    type: str
+  "checker++":
+    type: str
+  "signature_grader+":
+    type: str
+  "signature_grader++":
+    type: str
+  "custom_judge+":
+    type: str
+  "custom_judge++":
+    type: str
+  "io_redirects+":
+    type: str
+  "io_redirects++":
+    type: str
 
 # outer points, in, out
-      "points":
-        type: int
-      "in":
-        type: str
-      "out":
-        type: str
+  "points":
+    type: int
+  "in":
+    type: str
+  "out":
+    type: str
 
 # pretest_test_cases
-      pretest_test_cases:
-        type: seq
-        sequence:
-          - type: map
-            mapping:
-              "points":
-                type: int
-              "in":
-                type: str
-              "out":
-                type: str
+  "pretest_test_cases":
+    type: seq
+    sequence:
+      - type: map
+        mapping:
+          "points":
+            type: int
+          "in":
+            type: str
+          "out":
+            type: str
 
 #normal test_cases
-      "test_cases":
-        type: seq
-        matching: "any"
-        sequence:
+  "test_cases":
+    type: seq
+    matching: "any"
+    sequence:
 # normal cases
-          - type: map
-            mapping:
-              "points":
-                type: int
-              "in":
-                type: str
-              "out":
-                type: str
+      - type: map
+         mapping:
+          "points":
+            type: int
+          "in":
+            type: str
+          "out":
+            type: str
 # batched cases
-          - type: map
-            mapping:
-              "points":
-                type: int
-              "batched":
-                type: seq
-                sequence:
-                  - type: map
-                    mapping:
-                      "in":
-                        type: str
-                      "out":
-                        type: str
+      - type: map
+        mapping:
+          "points":
+            type: int
+          "batched":
+            type: seq
+            sequence:
+              - type: map
+                mapping:
+                  "in":
+                    type: str
+                  "out":
+                    type: str
 
 #test_cases ++
-      regex;(test_cases.+):
-        type: str
+  "test_cases+":
+    type: str
+  "test_cases++":
+    type: str

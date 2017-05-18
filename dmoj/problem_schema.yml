@@ -2,10 +2,10 @@
 type: map
 mapping:
   "archive":
-     type: str
-     pattern: .+\.zip
+    type: str
+    pattern: .+\.zip
   "generator":
-     type: str
+    type: str
   "checker":
     type: str
   "signature_grader":
@@ -60,10 +60,6 @@ mapping:
     type: str
   "io_redirects++":
     type: str
-  "test_cases+":
-    type: str
-  "test_cases++":
-    type: str
 
 # outer points, in, out
   "points":
@@ -93,7 +89,7 @@ mapping:
     sequence:
 # normal cases
       - type: map
-         mapping:
+        mapping:
           "points":
             type: int
           "in":
@@ -114,3 +110,9 @@ mapping:
                     type: str
                   "out":
                     type: str
+
+#test_cases ++
+  "test_cases+":
+    type: str
+  "test_cases++":
+    type: str

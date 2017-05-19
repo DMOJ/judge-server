@@ -7,7 +7,7 @@ mapping:
   "generator":
     type: str
   "checker":
-    type: str
+    type: any
   "signature_grader":
     type: map
     mapping:
@@ -34,6 +34,18 @@ mapping:
             type: str
           "mode":
             type: str
+  "hints":
+    type: seq
+    sequence:
+      - type: str
+
+#defaults
+  "wall_time_factor":
+    type: int
+  "output_prefix_length":
+    type: int
+  "output_limit_length":
+    type: int
 
 #names with ++
   "archive+":
@@ -59,6 +71,18 @@ mapping:
   "io_redirects+":
     type: str
   "io_redirects++":
+    type: str
+  "wall_time_factor+":
+    type: str
+  "wall_time_factor++":
+    type: str
+  "output_prefix_length+":
+    type: str
+  "output_prefix_length++":
+    type: str
+  "output_limit_length+":
+    type: str
+  "output_limit_length++":
     type: str
 
 # outer points, in, out

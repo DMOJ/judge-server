@@ -4,152 +4,152 @@ mapping:
   archive:
     type: str
     pattern: .+\.zip
-  "generator":
+  generator:
     type: str
-  "checker":
+  checker:
     type: any
-  "signature_grader":
+  signature_grader:
     type: map
     mapping:
-      "entry":
+      entry:
         type: str
-      "header":
+      header:
         type: str
-  "custom_judge":
+  custom_judge:
     type: str
-  "io_redirects":
+  io_redirects:
     type: map
     mapping:
       regex;(.+):
         type: map
         mapping:
-          "fd":
+          fd:
             type: any
-          "mode":
+          mode:
             type: str
-      regex;(mi.+):
+      regex;(.+):
         type: map
         mapping:
-          "fd":
+          fd:
             type: str
-          "mode":
+          mode:
             type: str
-  "hints":
+  hints:
     type: seq
     sequence:
       - type: str
-  "unbuffered":
+  unbuffered:
     type: bool
 
 #defaults
-  "wall_time_factor":
+  wall_time_factor:
     type: int
-  "output_prefix_length":
+  output_prefix_length:
     type: int
-  "output_limit_length":
+  output_limit_length:
     type: int
 
 # outer points, in, out
-  "points":
+  points:
     type: int
-  "in":
+  in:
     type: str
-  "out":
+  out:
     type: str
 
 # pretest_test_cases
-  "pretest_test_cases":
+  pretest_test_cases:
     type: seq
     sequence:
       - type: map
         mapping:
-          "points":
+          points:
             type: int
-          "in":
+          in:
             type: str
-          "out":
+          out:
             type: str
-          "generator_args":
+          generator_args:
             type: seq
             sequence:
               - type: str
 
 #normal test_cases
-  "test_cases":
+  test_cases:
     type: seq
-    matching: "any"
+    matching: any
     sequence:
 # normal cases
       - type: map
         mapping:
-          "points":
+          points:
             type: int
-          "in":
+          in:
             type: str
-          "out":
+          out:
             type: str
-          "generator_args":
+          generator_args:
             type: seq
             sequence:
               - type: str
 # batched cases
       - type: map
         mapping:
-          "points":
+          points:
             type: int
-          "batched":
+          batched:
             type: seq
             sequence:
               - type: map
                 mapping:
-                  "in":
+                  in:
                     type: str
-                  "out":
+                  out:
                     type: str
-                  "generator_args":
+                  generator_args:
                     type: seq
                     sequence:
                       - type: str
 
 #test_cases ++
-  "test_cases+":
+  test_cases+:
     type: str
-  "test_cases++":
+  test_cases++:
     type: str
 #names with ++
-  "archive+":
+  archive+:
     type: str
-  "archive++":
+  archive++:
     type: str
-  "generator+":
+  generator+:
     type: str
-  "generator++":
+  generator++:
     type: str
-  "checker+":
+  checker+:
     type: str
-  "checker++":
+  checker++:
     type: str
-  "signature_grader+":
+  signature_grader+:
     type: str
-  "signature_grader++":
+  signature_grader++:
     type: str
-  "custom_judge+":
+  custom_judge+:
     type: str
-  "custom_judge++":
+  custom_judge++:
     type: str
-  "io_redirects+":
+  io_redirects+:
     type: str
-  "io_redirects++":
+  io_redirects++:
     type: str
-  "wall_time_factor+":
+  wall_time_factor+:
     type: str
-  "wall_time_factor++":
+  wall_time_factor++:
     type: str
-  "output_prefix_length+":
+  output_prefix_length+:
     type: str
-  "output_prefix_length++":
+  output_prefix_length++:
     type: str
-  "output_limit_length+":
+  output_limit_length+:
     type: str
-  "output_limit_length++":
+  output_limit_length++:
     type: str

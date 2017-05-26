@@ -5,6 +5,11 @@ import sys
 from collections import OrderedDict
 from itertools import izip_longest
 from operator import itemgetter
+from difflib import Differ
+
+from pygments import highlight
+from pygments.formatters import terminal256
+from pygments.lexers import guess_lexer
 
 from dmoj import judgeenv
 from dmoj.executors import executors
@@ -310,6 +315,48 @@ class ListSubmissionsCommand(Command):
             problem, lang, src, tl, ml = data
             print ansi_style('#ansi[%s](yellow)/#ansi[%s](green) in %s' % (problem, i + 1, lang))
         print
+        
+class DifferenceCommand(Command):
+    name: 'diff'
+    help: 'Shows difference between two files.'
+
+    def __init__(self, file1, file2):
+        self.file1 = file1
+        self.file2 = file2
+
+    def execute(self):
+        diff = Differ()
+        file_diff = diff.compare(self.file1.readlines(), self.file2.readlines())
+        print highlight(file_diff, guess_lexer(file_diff), terminal256())
+
+class ShowSubmissonIdOrFilename(Command):
+    name: 'show'
+    help: 'Shows file based on submission ID or filename'
+
+    def _populate_parser(self):
+        self.arg_parser.add_argument('submission_id', type=int, help='id of submission to show')
+        self.arg_parser.add_argument('source_file', nargs='?', help='path to submission source (optional)')
+
+
+    def execute(self, line):
+        args = self.arg_parser.parse_args(line)
+
+        problem_id = args.problem_id
+
+        err = None
+        if problem_id not in map(itemgetter(0), judgeenv.get_supported_problems()):
+            err = "unknown problem '%s'" % problem_id
+
+        if not err:
+            try:
+                with open(os.path.realpath(args.source_file), 'r') as f:
+                    src = f.read()
+                    print highlight(src, guess_lexer(src), terminal256())
+            except Exception as io:
+                err = str(io)
+        if err:
+            print ansi_style('#ansi[%s](red|bold)\n' % err)
+            return
 
 
 def main():

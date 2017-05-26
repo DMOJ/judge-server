@@ -316,9 +316,10 @@ class ListSubmissionsCommand(Command):
             print ansi_style('#ansi[%s](yellow)/#ansi[%s](green) in %s' % (problem, i + 1, lang))
         print
         
+
 class DifferenceCommand(Command):
-    name: 'diff'
-    help: 'Shows difference between two files.'
+    name = 'diff'
+    help = 'Shows difference between two files.'
 
     def __init__(self, file1, file2):
         self.file1 = file1
@@ -330,23 +331,19 @@ class DifferenceCommand(Command):
         print highlight(file_diff, guess_lexer(file_diff), terminal256())
 
 class ShowSubmissonIdOrFilename(Command):
-    name: 'show'
-    help: 'Shows file based on submission ID or filename'
+    name = 'show'
+    help = 'Shows file based on submission ID or filename'
 
     def _populate_parser(self):
         self.arg_parser.add_argument('submission_id', type=int, help='id of submission to show')
         self.arg_parser.add_argument('source_file', nargs='?', help='path to submission source (optional)')
 
-
     def execute(self, line):
         args = self.arg_parser.parse_args(line)
-
         problem_id = args.problem_id
-
         err = None
         if problem_id not in map(itemgetter(0), judgeenv.get_supported_problems()):
             err = "unknown problem '%s'" % problem_id
-
         if not err:
             try:
                 with open(os.path.realpath(args.source_file), 'r') as f:
@@ -389,7 +386,7 @@ def main():
     print
 
     for command in [ListProblemsCommand, ListSubmissionsCommand, SubmitCommand, ResubmitCommand, RejudgeCommand,
-                    HelpCommand, QuitCommand]:
+                    HelpCommand, QuitCommand, DifferenceCommand, ShowSubmissonIdOrFilename]:
         register(command(judge))
 
     with judge:

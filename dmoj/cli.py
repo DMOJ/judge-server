@@ -390,7 +390,7 @@ class ShowSubmissonIdOrFilename(Command):
 def main():
     global commands
     import logging
-    from dmoj import judgeenv, executors
+    from dmoj import judgeenv, executors 
 
     judgeenv.load_env(cli=True)
 

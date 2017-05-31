@@ -5,11 +5,13 @@ import sys
 from collections import OrderedDict
 from itertools import izip_longest
 from operator import itemgetter
-from difflib import Differ
+import difflib
+import tempfile
+import subprocess
 
-from pygments import highlight
-from pygments.formatters import terminal256
-from pygments.lexers import guess_lexer
+import pygments
+from pygments import lexers
+from pygments import formatters
 
 from dmoj import judgeenv
 from dmoj.executors import executors
@@ -321,39 +323,68 @@ class DifferenceCommand(Command):
     name = 'diff'
     help = 'Shows difference between two files.'
 
-    def __init__(self, file1, file2):
-        self.file1 = file1
-        self.file2 = file2
-
-    def execute(self):
-        diff = Differ()
-        file_diff = diff.compare(self.file1.readlines(), self.file2.readlines())
-        print highlight(file_diff, guess_lexer(file_diff), terminal256())
-
-class ShowSubmissonIdOrFilename(Command):
-    name = 'show'
-    help = 'Shows file based on submission ID or filename'
-
     def _populate_parser(self):
-        self.arg_parser.add_argument('submission_id', type=int, help='id of submission to show')
-        self.arg_parser.add_argument('source_file', nargs='?', help='path to submission source (optional)')
+        self.arg_parser.add_argument('id_or_source_1', help='id or path of first source', metavar='<source 1>')
+        self.arg_parser.add_argument('id_or_source_2', help='id or path of second source', metavar='<source 2>')
+
+    def get_data(self, id_or_source):
+        err = None
+        src = None
+        try:
+            id = int(id_or_source)
+            try:
+                global graded_submissions
+                problem, lang, src, tl, ml = graded_submissions[id - 1]
+            except IndexError:
+                err = "invalid submission '%d'" % (id - 1)
+        except ValueError:
+            try:
+                with open(os.path.realpath(id_or_source), 'r') as f:
+                    src = f.read()
+            except Exception as io:
+                 err = str(io)
+
+        return src, err
 
     def execute(self, line):
         args = self.arg_parser.parse_args(line)
-        problem_id = args.problem_id
+
+        data1, err1 = self.get_data(args.id_or_source_1)
+        data2, err2 = self.get_data(args.id_or_source_2)
+
+        file_diff = '\n'.join(list(difflib.unified_diff(data1.splitlines(), data2.splitlines(), fromfile=args.id_or_source_1, tofile=args.id_or_source_2, lineterm='')))
+        print pygments.highlight(file_diff, pygments.lexers.DiffLexer(), pygments.formatters.Terminal256Formatter())
+
+class ShowSubmissonIdOrFilename(Command):
+    name = 'show'
+    help = 'Shows file based on submission ID or filename.'
+
+    def _populate_parser(self):
+        self.arg_parser.add_argument('id_or_source', type=int, help='id or path of submission to show')
+
+    def get_data(selfself, id_or_source):
         err = None
-        if problem_id not in map(itemgetter(0), judgeenv.get_supported_problems()):
-            err = "unknown problem '%s'" % problem_id
-        if not err:
+        src = None
+        try:
+            id = int(id_or_source)
             try:
-                with open(os.path.realpath(args.source_file), 'r') as f:
+                global graded_submissions
+                problem, lang, src, tl, ml = graded_submissions[id - 1]
+            except IndexError:
+                err = "invalid submission '%d'" % (id - 1)
+        except ValueError:
+            try:
+                with open(os.path.realpath(id_or_source), 'r') as f:
                     src = f.read()
-                    print highlight(src, guess_lexer(src), terminal256())
             except Exception as io:
                 err = str(io)
-        if err:
-            print ansi_style('#ansi[%s](red|bold)\n' % err)
-            return
+
+        return src, err
+
+    def execute(self, line):
+        args = self.arg_parser.parse_args(line)
+        data, err = self.get_data(args.id_or_source)
+        print pygments.highlight(data, pygments.lexers.DiffLexer(), pygments.formatters.Terminal256Formatter())
 
 
 def main():

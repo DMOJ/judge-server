@@ -360,37 +360,44 @@ class ShowSubmissonIdOrFilename(Command):
     help = 'Shows file based on submission ID or filename.'
 
     def _populate_parser(self):
-        self.arg_parser.add_argument('id_or_source', type=int, help='id or path of submission to show')
+        self.arg_parser.add_argument('id_or_source', help='id or path of submission to show', metavar='<source>')
 
-    def get_data(selfself, id_or_source):
+    def get_data(self, id_or_source):
         err = None
         src = None
+        lexer = None
         try:
             id = int(id_or_source)
             try:
                 global graded_submissions
                 problem, lang, src, tl, ml = graded_submissions[id - 1]
+                if lang in ['PY2', 'PYPY2', 'PY3', 'PYPY3']:
+                    lexer = pygments.lexers.PythonLexer()
+                else:
+                    lexer = pygments.lexers.guess_lexer(src)
             except IndexError:
                 err = "invalid submission '%d'" % (id - 1)
         except ValueError:
             try:
                 with open(os.path.realpath(id_or_source), 'r') as f:
                     src = f.read()
+                    lexer = pygments.lexers.guess_lexer_for_file(id_or_source, src)
             except Exception as io:
                 err = str(io)
 
-        return src, err
+        return src, err, lexer
 
     def execute(self, line):
         args = self.arg_parser.parse_args(line)
-        data, err = self.get_data(args.id_or_source)
-        print pygments.highlight(data, pygments.lexers.DiffLexer(), pygments.formatters.Terminal256Formatter())
+        data, err, lexer = self.get_data(args.id_or_source)
+
+        print pygments.highlight(data, lexer, pygments.formatters.Terminal256Formatter())
 
 
 def main():
     global commands
     import logging
-    from dmoj import judgeenv, executors 
+    from dmoj import judgeenv, executors
 
     judgeenv.load_env(cli=True)
 

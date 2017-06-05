@@ -4,3 +4,5 @@ ansi2html
 termcolor
 colorama
 cython
+pykwalify
+pygments

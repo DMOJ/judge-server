@@ -1,7 +1,9 @@
 import os
 import subprocess
 import zipfile
+import logging
 from functools import partial
+from pykwalify.core import Core
 
 import yaml
 from yaml.parser import ParserError
@@ -33,6 +35,10 @@ class Problem(object):
             doc = yaml.safe_load(self.problem_data['init.yml'])
             if not doc:
                 raise InvalidInitException('I find your lack of content disturbing.')
+            logging.disable(logging.CRITICAL)  # disable logging for pykwalify
+            init_check = Core(source_data=doc, schema_files=[os.path.join(os.path.dirname(__file__), 'problem_schema.yml')])
+            init_check.validate(raise_exception=True)
+            logging.disable(logging.NOTSET)  #doing this for now
             self.config = ConfigNode(doc, defaults={
                 'wall_time_factor': 3,
                 'output_prefix_length': 64,

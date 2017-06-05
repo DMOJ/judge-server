@@ -5,6 +5,13 @@ import sys
 from collections import OrderedDict
 from itertools import izip_longest
 from operator import itemgetter
+import difflib
+import tempfile
+import subprocess
+
+import pygments
+from pygments import lexers
+from pygments import formatters
 
 from dmoj import judgeenv
 from dmoj.executors import executors
@@ -310,6 +317,83 @@ class ListSubmissionsCommand(Command):
             problem, lang, src, tl, ml = data
             print ansi_style('#ansi[%s](yellow)/#ansi[%s](green) in %s' % (problem, i + 1, lang))
         print
+        
+
+class DifferenceCommand(Command):
+    name = 'diff'
+    help = 'Shows difference between two files.'
+
+    def _populate_parser(self):
+        self.arg_parser.add_argument('id_or_source_1', help='id or path of first source', metavar='<source 1>')
+        self.arg_parser.add_argument('id_or_source_2', help='id or path of second source', metavar='<source 2>')
+
+    def get_data(self, id_or_source):
+        err = None
+        src = None
+        try:
+            id = int(id_or_source)
+            try:
+                global graded_submissions
+                problem, lang, src, tl, ml = graded_submissions[id - 1]
+            except IndexError:
+                err = "invalid submission '%d'" % (id - 1)
+        except ValueError:
+            try:
+                with open(os.path.realpath(id_or_source), 'r') as f:
+                    src = f.read()
+            except Exception as io:
+                 err = str(io)
+
+        return src, err
+
+    def execute(self, line):
+        args = self.arg_parser.parse_args(line)
+
+        data1, err1 = self.get_data(args.id_or_source_1)
+        data2, err2 = self.get_data(args.id_or_source_2)
+
+        file_diff = '\n'.join(list(difflib.unified_diff(data1.splitlines(), data2.splitlines(), fromfile=args.id_or_source_1, tofile=args.id_or_source_2, lineterm='')))
+        print pygments.highlight(file_diff, pygments.lexers.DiffLexer(), pygments.formatters.Terminal256Formatter())
+
+class ShowSubmissonIdOrFilename(Command):
+    name = 'show'
+    help = 'Shows file based on submission ID or filename.'
+
+    def _populate_parser(self):
+        self.arg_parser.add_argument('id_or_source', help='id or path of submission to show', metavar='<source>')
+
+    def get_data(self, id_or_source):
+        err = None
+        src = None
+        lexer = None
+        try:
+            id = int(id_or_source)
+            try:
+                global graded_submissions
+                problem, lang, src, tl, ml = graded_submissions[id - 1]
+                if lang in ['PY2', 'PYPY2']:
+                    lexer = pygments.lexers.PythonLexer()
+                elif lang in ['PY3', 'PYPY3']:
+                    lexer = pygments.lexers.Python3Lexer()
+                else:
+                    lexer = pygments.lexers.guess_lexer(src)
+            except IndexError:
+                err = "invalid submission '%d'" % (id - 1)
+        except ValueError:
+            try:
+                with open(os.path.realpath(id_or_source), 'r') as f:
+                    src = f.read()
+                    lexer = pygments.lexers.guess_lexer_for_file(id_or_source, src)
+            except Exception as io:
+                err = str(io)
+
+        return src, err, lexer
+
+    def execute(self, line):
+        args = self.arg_parser.parse_args(line)
+        data, err, lexer = self.get_data(args.id_or_source)
+
+        print pygments.highlight(data, lexer, pygments.formatters.Terminal256Formatter())
 
 
 def main():
@@ -342,7 +426,7 @@ def main():
     print
 
     for command in [ListProblemsCommand, ListSubmissionsCommand, SubmitCommand, ResubmitCommand, RejudgeCommand,
-                    HelpCommand, QuitCommand]:
+                    HelpCommand, QuitCommand, DifferenceCommand, ShowSubmissonIdOrFilename]:
         register(command(judge))
 
     with judge:

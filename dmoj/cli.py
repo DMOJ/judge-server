@@ -371,8 +371,10 @@ class ShowSubmissonIdOrFilename(Command):
             try:
                 global graded_submissions
                 problem, lang, src, tl, ml = graded_submissions[id - 1]
-                if lang in ['PY2', 'PYPY2', 'PY3', 'PYPY3']:
+                if lang in ['PY2', 'PYPY2']:
                     lexer = pygments.lexers.PythonLexer()
+                elif lang in ['PY3', 'PYPY3']:
+                    lexer = pygments.lexers.Python3Lexer()
                 else:
                     lexer = pygments.lexers.guess_lexer(src)
             except IndexError:

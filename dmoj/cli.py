@@ -175,8 +175,8 @@ class SubmitCommand(Command):
 
     def _populate_parser(self):
         self.arg_parser.add_argument('problem_id', help='id of problem to grade')
-        self.arg_parser.add_argument('language_id', help='id of the language to grade in (e.g., PY2)')
         self.arg_parser.add_argument('source_file', nargs='?', help='path to submission source (optional)')
+        self.arg_parser.add_argument('-lan', '--language-id', nargs='?', default=' ', help='id of the language to grade in (e.g., PY2)')
         self.arg_parser.add_argument('-tl', '--time-limit', type=float, help='time limit for grading, in seconds',
                                      default=2.0, metavar='<time limit>')
         self.arg_parser.add_argument('-ml', '--memory-limit', type=int, help='memory limit for grading, in kilobytes',
@@ -188,13 +188,35 @@ class SubmitCommand(Command):
         args = self.arg_parser.parse_args(line)
 
         problem_id = args.problem_id
-        language_id = args.language_id
         time_limit = args.time_limit
         memory_limit = args.memory_limit
+        language_id = args.language_id
 
         err = None
+
         if problem_id not in map(itemgetter(0), judgeenv.get_supported_problems()):
             err = "unknown problem '%s'" % problem_id
+        elif language_id == ' ':
+            if args.source_file:
+                ext = None
+                try:
+                    filename, ext = args.source_file.split('.')
+                except:
+                    err = 'invalid file'
+                ext = ext.upper()
+                print ext
+                if ext == 'PY':
+                    language_id = 'PY2'
+                elif ext == 'CPP':
+                    language_id = 'CPP14'
+                elif ext == 'JAVA':
+                    language_id = 'JAVA9'
+                elif ext:
+                    language_id = ext
+                else:
+                    err = "unknown language '%s'" % language_id
+            else:
+                err = "no language is selected"
         elif language_id not in executors:
             err = "unknown language '%s'" % language_id
         elif time_limit <= 0:
@@ -228,7 +250,7 @@ class SubmitCommand(Command):
         graded_submissions.append((problem_id, language_id, src, time_limit, memory_limit))
         self.judge.begin_grading(submission_id_counter, problem_id, language_id, src, time_limit,
                                  memory_limit, False, False, blocking=True)
-
+        
 
 class ResubmitCommand(Command):
     name = 'resubmit'
@@ -352,7 +374,11 @@ class DifferenceCommand(Command):
         data1, err1 = self.get_data(args.id_or_source_1)
         data2, err2 = self.get_data(args.id_or_source_2)
 
-        file_diff = '\n'.join(list(difflib.unified_diff(data1.splitlines(), data2.splitlines(), fromfile=args.id_or_source_1, tofile=args.id_or_source_2, lineterm='')))
+        file1 = args.id_or_source_1
+        file2 = args.id_or_source_2
+
+        difference = difflib.unified_diff(data1.splitlines(), data2.splitlines(), fromfile=file1, tofile=file2, lineterm='')
+        file_diff = '\n'.join(list(difference))
         print pygments.highlight(file_diff, pygments.lexers.DiffLexer(), pygments.formatters.Terminal256Formatter())
 
 class ShowSubmissonIdOrFilename(Command):

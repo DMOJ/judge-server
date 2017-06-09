@@ -176,7 +176,7 @@ class SubmitCommand(Command):
     def _populate_parser(self):
         self.arg_parser.add_argument('problem_id', help='id of problem to grade')
         self.arg_parser.add_argument('source_file', nargs='?', help='path to submission source (optional)')
-        self.arg_parser.add_argument('-lan', '--language-id', nargs='?', default=' ', help='id of the language to grade in (e.g., PY2)')
+        self.arg_parser.add_argument('-lan', '--language-id', type=str, default=' ', help='id of the language to grade in (e.g., PY2)')
         self.arg_parser.add_argument('-tl', '--time-limit', type=float, help='time limit for grading, in seconds',
                                      default=2.0, metavar='<time limit>')
         self.arg_parser.add_argument('-ml', '--memory-limit', type=int, help='memory limit for grading, in kilobytes',
@@ -231,17 +231,17 @@ class SubmitCommand(Command):
                 except Exception as io:
                     err = str(io)
             else:
-                src = []
+                file_suffix = '.' + language_id
                 try:
-                    while True:
-                        s = raw_input()
-                        if s.strip() == ':q':
-                            raise EOFError
-                        src.append(s)
-                except EOFError:  # Ctrl+D
-                    src = '\n'.join(src)
-                except Exception as io:
-                    err = str(io)
+                    with tempfile.NamedTemporaryFile(suffix=file_suffix) as temp:
+                        subprocess.call(['nano', temp.name])
+                        temp.seek(0)
+                        src = temp.read()
+                        temp.close()
+                except Exception:
+                    for warning in judgeenv.startup_warnings:
+                        print ansi_style('#ansi[Warning: %s](yellow)' % warning)
+
         if err:
             print ansi_style('#ansi[%s](red|bold)\n' % err)
             return
@@ -250,7 +250,7 @@ class SubmitCommand(Command):
         graded_submissions.append((problem_id, language_id, src, time_limit, memory_limit))
         self.judge.begin_grading(submission_id_counter, problem_id, language_id, src, time_limit,
                                  memory_limit, False, False, blocking=True)
-        
+
 
 class ResubmitCommand(Command):
     name = 'resubmit'
@@ -295,6 +295,18 @@ class ResubmitCommand(Command):
         if err:
             print ansi_style('#ansi[%s](red|bold)\n' % err)
             return
+
+        try:
+            with tempfile.NamedTemporaryFile() as temp:
+                temp.write('%s' % src)
+                temp.flush()
+                subprocess.call(['nano', temp.name])
+                temp.seek(0)
+                src = temp.read()
+                temp.close()
+        except Exception:
+            for warning in judgeenv.startup_warnings:
+                print ansi_style('#ansi[Warning: %s](yellow)' % warning)
 
         graded_submissions.append((id, lang, src, tl, ml))
         self.judge.begin_grading(submission_id_counter, id, lang, src, tl, ml, False, False, blocking=True)

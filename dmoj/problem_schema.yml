@@ -1,4 +1,4 @@
-#normal names
+# normal names
 type: map
 mapping:
   archive:
@@ -41,7 +41,7 @@ mapping:
   unbuffered:
     type: bool
 
-#defaults
+# defaults
   wall_time_factor:
     type: int
   output_prefix_length:
@@ -74,7 +74,7 @@ mapping:
             sequence:
               - type: str
 
-#normal test_cases
+# normal test_cases
   test_cases:
     type: seq
     matching: any
@@ -111,12 +111,12 @@ mapping:
                     sequence:
                       - type: str
 
-#test_cases ++
+# test_cases ++
   test_cases+:
     type: str
   test_cases++:
     type: str
-#names with ++
+# names with ++
   archive+:
     type: str
   archive++:

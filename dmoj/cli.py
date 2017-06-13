@@ -233,14 +233,16 @@ class SubmitCommand(Command):
             else:
                 file_suffix = '.' + language_id
                 try:
-                    with tempfile.NamedTemporaryFile(suffix=file_suffix) as temp:
-                        subprocess.call(['nano', temp.name])
-                        temp.seek(0)
-                        src = temp.read()
-                        temp.close()
-                except Exception:
-                    for warning in judgeenv.startup_warnings:
-                        print ansi_style('#ansi[Warning: %s](yellow)' % warning)
+                    EDITOR = os.environ.get('EDITOR')
+                    if EDITOR:
+                        with tempfile.NamedTemporaryFile(suffix=file_suffix) as temp:
+                            subprocess.call([EDITOR, temp.name])
+                            temp.seek(0)
+                            src = temp.read()
+                    else:
+                       err = 'no editor found'
+                except Exception as io:
+                    err = str(io)
 
         if err:
             print ansi_style('#ansi[%s](red|bold)\n' % err)
@@ -297,16 +299,15 @@ class ResubmitCommand(Command):
             return
 
         try:
-            with tempfile.NamedTemporaryFile() as temp:
+            file_suffix = '.' + lang
+            with tempfile.NamedTemporaryFile(suffix=file_suffix) as temp:
                 temp.write('%s' % src)
                 temp.flush()
                 subprocess.call(['nano', temp.name])
                 temp.seek(0)
                 src = temp.read()
-                temp.close()
-        except Exception:
-            for warning in judgeenv.startup_warnings:
-                print ansi_style('#ansi[Warning: %s](yellow)' % warning)
+        except Exception as io:
+            err = str(io)
 
         graded_submissions.append((id, lang, src, tl, ml))
         self.judge.begin_grading(submission_id_counter, id, lang, src, tl, ml, False, False, blocking=True)
@@ -366,11 +367,10 @@ class DifferenceCommand(Command):
         src = None
         try:
             id = int(id_or_source)
-            try:
-                global graded_submissions
-                problem, lang, src, tl, ml = graded_submissions[id - 1]
-            except IndexError:
-                err = "invalid submission '%d'" % (id - 1)
+            global graded_submissions
+            problem, lang, src, tl, ml = graded_submissions[id - 1]
+        except IndexError:
+            err = "invalid submission '%d'" % (id - 1)
         except ValueError:
             try:
                 with open(os.path.realpath(id_or_source), 'r') as f:
@@ -405,18 +405,17 @@ class ShowSubmissonIdOrFilename(Command):
         src = None
         lexer = None
         try:
+            global graded_submissions
             id = int(id_or_source)
-            try:
-                global graded_submissions
-                problem, lang, src, tl, ml = graded_submissions[id - 1]
-                if lang in ['PY2', 'PYPY2']:
-                    lexer = pygments.lexers.PythonLexer()
-                elif lang in ['PY3', 'PYPY3']:
-                    lexer = pygments.lexers.Python3Lexer()
-                else:
-                    lexer = pygments.lexers.guess_lexer(src)
-            except IndexError:
-                err = "invalid submission '%d'" % (id - 1)
+            problem, lang, src, tl, ml = graded_submissions[id - 1]
+            if lang in ['PY2', 'PYPY2']:
+                lexer = pygments.lexers.PythonLexer()
+            elif lang in ['PY3', 'PYPY3']:
+                lexer = pygments.lexers.Python3Lexer()
+            else:
+                lexer = pygments.lexers.guess_lexer(src)
+        except IndexError:
+            err = "invalid submission '%d'" % (id - 1)
         except ValueError:
             try:
                 with open(os.path.realpath(id_or_source), 'r') as f:

@@ -176,7 +176,7 @@ class SubmitCommand(Command):
     def _populate_parser(self):
         self.arg_parser.add_argument('problem_id', help='id of problem to grade')
         self.arg_parser.add_argument('source_file', nargs='?', help='path to submission source (optional)')
-        self.arg_parser.add_argument('-lan', '--language-id', type=str, default=' ', help='id of the language to grade in (e.g., PY2)')
+        self.arg_parser.add_argument('-lan', '--language-id', type=str, default='unknown', help='id of the language to grade in (e.g., PY2)')
         self.arg_parser.add_argument('-tl', '--time-limit', type=float, help='time limit for grading, in seconds',
                                      default=2.0, metavar='<time limit>')
         self.arg_parser.add_argument('-ml', '--memory-limit', type=int, help='memory limit for grading, in kilobytes',
@@ -196,13 +196,13 @@ class SubmitCommand(Command):
 
         if problem_id not in map(itemgetter(0), judgeenv.get_supported_problems()):
             err = "unknown problem '%s'" % problem_id
-        elif language_id == ' ':
+        elif language_id == 'unknown':
             if args.source_file:
                 ext = None
                 try:
                     filename, ext = args.source_file.split('.')
-                except:
-                    err = 'invalid file'
+                except Exception:
+                    err = 'invalid file name'
                 ext = ext.upper()
                 print ext
                 if ext == 'PY':
@@ -231,18 +231,33 @@ class SubmitCommand(Command):
                 except Exception as io:
                     err = str(io)
             else:
-                file_suffix = '.' + language_id
-                try:
-                    EDITOR = os.environ.get('EDITOR')
-                    if EDITOR:
-                        with tempfile.NamedTemporaryFile(suffix=file_suffix) as temp:
-                            subprocess.call([EDITOR, temp.name])
-                            temp.seek(0)
-                            src = temp.read()
-                    else:
-                       err = 'no editor found'
-                except Exception as io:
-                    err = str(io)
+                if language_id in ['PY2', 'PYPY2']:
+                    file_suffix = '.py'
+                elif language_id in ['CPP0X', 'CPP03', 'CPP11', 'CPP14']:
+                    file_suffix = '.cpp'
+                elif language_id in ['JAVA7', 'JAVA8', 'JAVA9']:
+                    file_suffix = '.java'
+                else:
+                    file_suffix = '.' + language_id.lower()
+
+                editor = os.environ.get('EDITOR')
+                if editor:
+                    with tempfile.NamedTemporaryFile(suffix= file_suffix) as temp:
+                        subprocess.call([editor, temp.name])
+                        temp.seek(0)
+                        src = temp.read()
+                else:
+                    src = []
+                    try:
+                        while True:
+                            s = raw_input()
+                            if s.strip() == ':q':
+                                raise EOFError
+                            src.append(s)
+                    except EOFError:  # Ctrl+D
+                        src = '\n'.join(src)
+                    except Exception as io:
+                        err = str(io)
 
         if err:
             print ansi_style('#ansi[%s](red|bold)\n' % err)
@@ -298,16 +313,35 @@ class ResubmitCommand(Command):
             print ansi_style('#ansi[%s](red|bold)\n' % err)
             return
 
-        try:
-            file_suffix = '.' + lang
+        if lang in ['PY2', 'PYPY2']:
+            file_suffix = '.py'
+        elif lang in ['CPP0X', 'CPP03', 'CPP11', 'CPP14']:
+            file_suffix = '.cpp'
+        elif lang in ['JAVA7', 'JAVA8', 'JAVA9']:
+            file_suffix = '.java'
+        else:
+            file_suffix = '.' + lang.lower()
+
+        editor = os.environ.get('EDITOR')
+        if editor:
             with tempfile.NamedTemporaryFile(suffix=file_suffix) as temp:
-                temp.write('%s' % src)
+                temp.write(src)
                 temp.flush()
-                subprocess.call(['nano', temp.name])
+                subprocess.call([editor, temp.name])
                 temp.seek(0)
                 src = temp.read()
-        except Exception as io:
-            err = str(io)
+        else:
+            src = []
+            try:
+                while True:
+                    s = raw_input()
+                    if s.strip() == ':q':
+                        raise EOFError
+                    src.append(s)
+            except EOFError:  # Ctrl+D
+                src = '\n'.join(src)
+            except Exception as io:
+                err = str(io)
 
         graded_submissions.append((id, lang, src, tl, ml))
         self.judge.begin_grading(submission_id_counter, id, lang, src, tl, ml, False, False, blocking=True)
@@ -367,10 +401,10 @@ class DifferenceCommand(Command):
         src = None
         try:
             id = int(id_or_source)
-            global graded_submissions
-            problem, lang, src, tl, ml = graded_submissions[id - 1]
-        except IndexError:
-            err = "invalid submission '%d'" % (id - 1)
+            try:
+                problem, lang, src, tl, ml = graded_submissions[id - 1]
+            except IndexError:
+                err = "invalid submission '%d'" % (id - 1)
         except ValueError:
             try:
                 with open(os.path.realpath(id_or_source), 'r') as f:
@@ -393,7 +427,8 @@ class DifferenceCommand(Command):
         file_diff = '\n'.join(list(difference))
         print pygments.highlight(file_diff, pygments.lexers.DiffLexer(), pygments.formatters.Terminal256Formatter())
 
-class ShowSubmissonIdOrFilename(Command):
+
+class ShowCommand(Command):
     name = 'show'
     help = 'Shows file based on submission ID or filename.'
 
@@ -405,17 +440,17 @@ class ShowSubmissonIdOrFilename(Command):
         src = None
         lexer = None
         try:
-            global graded_submissions
             id = int(id_or_source)
-            problem, lang, src, tl, ml = graded_submissions[id - 1]
-            if lang in ['PY2', 'PYPY2']:
-                lexer = pygments.lexers.PythonLexer()
-            elif lang in ['PY3', 'PYPY3']:
-                lexer = pygments.lexers.Python3Lexer()
-            else:
-                lexer = pygments.lexers.guess_lexer(src)
-        except IndexError:
-            err = "invalid submission '%d'" % (id - 1)
+            try:
+                problem, lang, src, tl, ml = graded_submissions[id - 1]
+                if lang in ['PY2', 'PYPY2']:
+                    lexer = pygments.lexers.PythonLexer()
+                elif lang in ['PY3', 'PYPY3']:
+                    lexer = pygments.lexers.Python3Lexer()
+                else:
+                    lexer = pygments.lexers.guess_lexer(src)
+            except IndexError:
+                err = "invalid submission '%d'" % (id - 1)
         except ValueError:
             try:
                 with open(os.path.realpath(id_or_source), 'r') as f:
@@ -463,7 +498,7 @@ def main():
     print
 
     for command in [ListProblemsCommand, ListSubmissionsCommand, SubmitCommand, ResubmitCommand, RejudgeCommand,
-                    HelpCommand, QuitCommand, DifferenceCommand, ShowSubmissonIdOrFilename]:
+                    HelpCommand, QuitCommand, DifferenceCommand, ShowCommand]:
         register(command(judge))
 
     with judge:

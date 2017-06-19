@@ -3,7 +3,7 @@ from dmoj.result import CheckerResult
 verdict = u"\u2717\u2713"
 
 def check(process_output, judge_output, point_value,
-        feedback=False, match=lambda x,y: x.strip()==y.strip(), **kwargs):
+        feedback=False, match=lambda p, j: p.strip()==j.strip(), **kwargs):
 
     process_lines = filter(None, process_output.strip().split("\n"))
     judge_lines = filter(None, judge_output.strip().split("\n"))

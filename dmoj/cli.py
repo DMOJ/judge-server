@@ -175,8 +175,8 @@ class SubmitCommand(Command):
 
     def _populate_parser(self):
         self.arg_parser.add_argument('problem_id', help='id of problem to grade')
-        self.arg_parser.add_argument('source_file', nargs='?', help='path to submission source (optional)')
-        self.arg_parser.add_argument('-lan', '--language-id', type=str, default='unknown', help='id of the language to grade in (e.g., PY2)')
+        self.arg_parser.add_argument('language_id', nargs='?', default=None, help='id of the language to grade in (e.g., PY2)')
+        self.arg_parser.add_argument('source_file', nargs='?', default=None, help='path to submission source (optional)')
         self.arg_parser.add_argument('-tl', '--time-limit', type=float, help='time limit for grading, in seconds',
                                      default=2.0, metavar='<time limit>')
         self.arg_parser.add_argument('-ml', '--memory-limit', type=int, help='memory limit for grading, in kilobytes',
@@ -188,33 +188,36 @@ class SubmitCommand(Command):
         args = self.arg_parser.parse_args(line)
 
         problem_id = args.problem_id
+        language_id = args.language_id
         time_limit = args.time_limit
         memory_limit = args.memory_limit
-        language_id = args.language_id
+        source_file = args.source_file
+
+        if language_id not in executors:
+            source_file = language_id
+            language_id = None    # source file / language id optional
 
         err = None
 
         if problem_id not in map(itemgetter(0), judgeenv.get_supported_problems()):
             err = "unknown problem '%s'" % problem_id
-        elif language_id == 'unknown':
-            if args.source_file:
-                ext = None
-                try:
-                    filename, ext = args.source_file.split('.')
-                except Exception:
+        elif not language_id:
+            if source_file:
+                filename, dot, ext = source_file.partition('.')
+                if not ext:
                     err = 'invalid file name'
-                ext = ext.upper()
-                print ext
-                if ext == 'PY':
-                    language_id = 'PY2'
-                elif ext == 'CPP':
-                    language_id = 'CPP14'
-                elif ext == 'JAVA':
-                    language_id = 'JAVA9'
-                elif ext:
-                    language_id = ext
                 else:
-                    err = "unknown language '%s'" % language_id
+                    ext = ext.upper()
+                    if ext == 'PY':
+                        language_id = 'PY2'
+                    elif ext == 'CPP':
+                        language_id = 'CPP14'
+                    elif ext == 'JAVA':
+                        language_id = 'JAVA9'
+                    elif ext:
+                        language_id = ext
+                    else:
+                        err = "unknown language '%s'" % language_id
             else:
                 err = "no language is selected"
         elif language_id not in executors:
@@ -224,29 +227,22 @@ class SubmitCommand(Command):
         elif memory_limit <= 0:
             err = '--memory-limit must be >= 0'
         if not err:
-            if args.source_file:
+            if source_file:
                 try:
-                    with open(os.path.realpath(args.source_file), 'r') as f:
+                    with open(os.path.realpath(source_file)) as f:
                         src = f.read()
                 except Exception as io:
                     err = str(io)
             else:
-                if language_id in ['PY2', 'PYPY2']:
-                    file_suffix = '.py'
-                elif language_id in ['CPP0X', 'CPP03', 'CPP11', 'CPP14']:
-                    file_suffix = '.cpp'
-                elif language_id in ['JAVA7', 'JAVA8', 'JAVA9']:
-                    file_suffix = '.java'
-                else:
-                    file_suffix = '.' + language_id.lower()
-
+                file_suffix = executors[language_id].Executor.ext
                 editor = os.environ.get('EDITOR')
                 if editor:
-                    with tempfile.NamedTemporaryFile(suffix= file_suffix) as temp:
+                    with tempfile.NamedTemporaryFile(suffix=file_suffix) as temp:
                         subprocess.call([editor, temp.name])
                         temp.seek(0)
                         src = temp.read()
                 else:
+                    print ansi_style('#ansi[no editor, falling back](yellow)\n')
                     src = []
                     try:
                         while True:
@@ -309,39 +305,33 @@ class ResubmitCommand(Command):
             err = '--time-limit must be >= 0'
         elif ml <= 0:
             err = '--memory-limit must be >= 0'
+        if not err:
+            file_suffix = executors[lang].Executor.ext
+            editor = os.environ.get('EDITOR')
+            if editor:
+                with tempfile.NamedTemporaryFile(suffix=file_suffix) as temp:
+                    temp.write(src)
+                    temp.flush()
+                    subprocess.call([editor, temp.name])
+                    temp.seek(0)
+                    src = temp.read()
+            else:
+                print ansi_style('#ansi[no editor, falling back](yellow)\n')
+                src = []
+                try:
+                    while True:
+                        s = raw_input()
+                        if s.strip() == ':q':
+                            raise EOFError
+                        src.append(s)
+                except EOFError:  # Ctrl+D
+                    src = '\n'.join(src)
+                except Exception as io:
+                    err = str(io)
+
         if err:
             print ansi_style('#ansi[%s](red|bold)\n' % err)
             return
-
-        if lang in ['PY2', 'PYPY2']:
-            file_suffix = '.py'
-        elif lang in ['CPP0X', 'CPP03', 'CPP11', 'CPP14']:
-            file_suffix = '.cpp'
-        elif lang in ['JAVA7', 'JAVA8', 'JAVA9']:
-            file_suffix = '.java'
-        else:
-            file_suffix = '.' + lang.lower()
-
-        editor = os.environ.get('EDITOR')
-        if editor:
-            with tempfile.NamedTemporaryFile(suffix=file_suffix) as temp:
-                temp.write(src)
-                temp.flush()
-                subprocess.call([editor, temp.name])
-                temp.seek(0)
-                src = temp.read()
-        else:
-            src = []
-            try:
-                while True:
-                    s = raw_input()
-                    if s.strip() == ':q':
-                        raise EOFError
-                    src.append(s)
-            except EOFError:  # Ctrl+D
-                src = '\n'.join(src)
-            except Exception as io:
-                err = str(io)
 
         graded_submissions.append((id, lang, src, tl, ml))
         self.judge.begin_grading(submission_id_counter, id, lang, src, tl, ml, False, False, blocking=True)
@@ -407,7 +397,7 @@ class DifferenceCommand(Command):
                 err = "invalid submission '%d'" % (id - 1)
         except ValueError:
             try:
-                with open(os.path.realpath(id_or_source), 'r') as f:
+                with open(os.path.realpath(id_or_source)) as f:
                     src = f.read()
             except Exception as io:
                  err = str(io)
@@ -453,7 +443,7 @@ class ShowCommand(Command):
                 err = "invalid submission '%d'" % (id - 1)
         except ValueError:
             try:
-                with open(os.path.realpath(id_or_source), 'r') as f:
+                with open(os.path.realpath(id_or_source)) as f:
                     src = f.read()
                     lexer = pygments.lexers.guess_lexer_for_file(id_or_source, src)
             except Exception as io:

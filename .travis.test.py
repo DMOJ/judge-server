@@ -41,7 +41,7 @@ OVERRIDES = {
     'PY2': make_override('py2_home', PYENV_DIR, r'2\.'),
     'RUBY19': make_override('ruby19_home', RVM_DIR, r'ruby-1\.9'),
     'RUBY21': make_override('ruby21_home', RVM_DIR, r'ruby-2\.1'),
-    'PYPY': make_override('pypy_home', PYENV_DIR, 'pypy-'),
+    'PYPY': make_override('pypy_home', PYENV_DIR, 'pypy2?-'),
     'PYPY3': make_override('pypy3_home', PYENV_DIR, 'pypy3-'),
 }
 

@@ -2,6 +2,7 @@ import os
 import re
 import traceback
 from importlib import import_module
+from distutils.version import LooseVersion
 
 import yaml
 import yaml.representer
@@ -13,9 +14,19 @@ from dmoj.utils.ansi import ansi_style
 
 def find_directory(parent, expr):
     regex = re.compile(expr)
-    for dir in os.listdir(parent):
-        if regex.match(dir):
-            return os.path.join(parent, dir)
+    dirs = [dir for dir in os.listdir(parent) if regex.match(dir)]
+    if not dirs:
+        return
+    dirs.sort(key=LooseVersion, reverse=True)
+    return os.path.join(parent, dirs[0])
+
+
+def make_override(home, parent, expr):
+    directory = find_directory(parent, expr)
+    if not directory:
+        return
+    return {home: directory}
+
 
 TEST_ON_TRAVIS = ['ADA', 'AWK', 'BF', 'C', 'CBL', 'D', 'DART', 'CPP0X', 'CPP03', 'CPP11', 'CLANG', 'CLANGX',
                   'F95', 'GO', 'GROOVY', 'HASK', 'JAVA7', 'JAVA8', 'JAVA9',
@@ -27,11 +38,11 @@ PYENV_DIR = '/opt/python/'
 JVM_DIR = '/usr/lib/jvm/'
 
 OVERRIDES = {
-    'PY2': {'py2_home': find_directory(PYENV_DIR, r'2\.7')},
-    'RUBY19': {'ruby19_home': find_directory(RVM_DIR, r'ruby-1\.9')},
-    'RUBY21': {'ruby21_home': find_directory(RVM_DIR, r'ruby-2\.1')},
-    'PYPY': {'pypy_home': find_directory(PYENV_DIR, 'pypy-')},
-    'PYPY3': {'pypy3_home': find_directory(PYENV_DIR, 'pypy3-')},
+    'PY2': make_override('py2_home', PYENV_DIR, r'2\.'),
+    'RUBY19': make_override('ruby19_home', RVM_DIR, r'ruby-1\.9'),
+    'RUBY21': make_override('ruby21_home', RVM_DIR, r'ruby-2\.1'),
+    'PYPY': make_override('pypy_home', PYENV_DIR, 'pypy-'),
+    'PYPY3': make_override('pypy3_home', PYENV_DIR, 'pypy3-'),
 }
 
 
@@ -91,6 +102,9 @@ def main():
 
         try:
             if name in OVERRIDES:
+                if not OVERRIDES[name]:
+                    print ansi_style('#ansi[Environment not found on Travis](red)')
+                    continue
                 print ansi_style('#ansi[(manual config)](yellow)'),
                 data = executor.Executor.autoconfig_run_test(OVERRIDES[name])
             else:

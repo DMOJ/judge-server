@@ -3,13 +3,10 @@ import sys
 
 from dmoj.result import CheckerResult
 
+equal = lambda p, j: p.strip() == j.strip()
 verdict = u"\u2717\u2713"
 
-def error(*args, **kwargs):
-    print(*args, file=sys.stderr, **kwargs)
-
-def check(process_output, judge_output, point_value,
-          feedback=False, match=lambda p, j: p.strip() == j.strip(), **kwargs):
+def check(process_output, judge_output, point_value, feedback=False, **kwargs):
 
     process_lines = filter(None, process_output.strip().split("\n"))
     judge_lines = filter(None, judge_output.strip().split("\n"))
@@ -18,16 +15,18 @@ def check(process_output, judge_output, point_value,
     if len(process_lines) > len(judge_lines):
         return False
 
+    match = equal
+
+    # Overload lambda - passed as a string literal
+    if 'match' in kwargs and isinstance(kwargs['match'], basestring):
+        try:
+            # Skips assignment if eval fails
+            match = eval(kwargs['match'])
+        except Exception as e:
+            print(e.__doc__, e.message, file=sys.stderr, sep='\n')
+
     cases = [verdict[0]] * len(judge_lines)
     count = 0
-
-    # Overload lambda
-    if isinstance(match, basestring):
-        try:
-            match = eval(match)
-        except Exception as e:
-            error(e.__doc__)
-            error(e.message)
 
     for i, (process_line, judge_line) in enumerate(zip(process_lines, judge_lines)):
         if match(process_line, judge_line):

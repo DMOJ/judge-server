@@ -14,8 +14,7 @@ def check(process_output, judge_output, point_value, feedback=False,
     if not judge_lines:
         return True
 
-    # Overload lambda - passed as a string literal
-    if isinstance(match, str):
+    if isinstance(match, basestring):
         match = eval(match)
 
     cases = [verdict[0]] * len(judge_lines)

@@ -1,9 +1,9 @@
 from dmoj.result import CheckerResult
 
-equal = lambda p, j: p.strip() == j.strip()
 verdict = u"\u2717\u2713"
 
-def check(process_output, judge_output, point_value, feedback=False, **kwargs):
+def check(process_output, judge_output, point_value, feedback=False,
+          match=lambda p, j: p.strip() == j.strip(), **kwargs):
 
     process_lines = filter(None, process_output.strip().split("\n"))
     judge_lines = filter(None, judge_output.strip().split("\n"))
@@ -14,11 +14,9 @@ def check(process_output, judge_output, point_value, feedback=False, **kwargs):
     if not judge_lines:
         return True
 
-    match = equal
-
     # Overload lambda - passed as a string literal
-    if 'match' in kwargs:
-        match = eval(kwargs['match'])
+    if isinstance(match, str):
+        match = eval(match)
 
     cases = [verdict[0]] * len(judge_lines)
     count = 0

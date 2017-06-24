@@ -1,6 +1,3 @@
-from __future__ import print_function
-import sys
-
 from dmoj.result import CheckerResult
 
 equal = lambda p, j: p.strip() == j.strip()
@@ -11,11 +8,9 @@ def check(process_output, judge_output, point_value, feedback=False, **kwargs):
     process_lines = filter(None, process_output.strip().split("\n"))
     judge_lines = filter(None, judge_output.strip().split("\n"))
 
-    # Extraneous output
     if len(process_lines) > len(judge_lines):
         return False
 
-    # Empty answer
     if not judge_lines:
         return True
 
@@ -23,11 +18,7 @@ def check(process_output, judge_output, point_value, feedback=False, **kwargs):
 
     # Overload lambda - passed as a string literal
     if 'match' in kwargs:
-        try:
-            # Skips assignment if eval fails
-            match = eval(kwargs['match'])
-        except Exception as e:
-            print(e.__doc__, e.message, file=sys.stderr, sep='\n')
+        match = eval(kwargs['match'])
 
     cases = [verdict[0]] * len(judge_lines)
     count = 0

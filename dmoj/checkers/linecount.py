@@ -18,7 +18,7 @@ def check(process_output, judge_output, point_value, feedback=False, **kwargs):
     match = equal
 
     # Overload lambda - passed as a string literal
-    if 'match' in kwargs and isinstance(kwargs['match'], basestring):
+    if 'match' in kwargs:
         try:
             # Skips assignment if eval fails
             match = eval(kwargs['match'])

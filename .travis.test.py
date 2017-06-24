@@ -128,6 +128,9 @@ def main():
                 for runtime, ver in executor.Executor.get_runtime_versions():
                     print ansi_style('  #ansi[%s](cyan): %s' % (runtime, '.'.join(map(str, ver)) if ver else 'unknown'))
             else:
+                if feedback == 'Could not find JVM':
+                    continue
+
                 if config:
                     print '  Attempted:'
                     print '   ', yaml.dump(config, default_flow_style=False).rstrip().replace('\n', '\n' + ' ' * 4)
@@ -140,6 +143,11 @@ def main():
     print
     print ansi_style('#ansi[Configuration result](green|bold|underline):')
     print yaml.dump({'runtime': result}, default_flow_style=False).rstrip()
+    print
+    if failed:
+        print ansi_style('#ansi[Executor configuration failed.](red|bold).')
+    else:
+        print ansi_style('#ansi[Executor configuration succeeded.](green|bold).')
     print
     print
     print 'Running test cases...'

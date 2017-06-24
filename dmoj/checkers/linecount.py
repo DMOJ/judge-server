@@ -15,6 +15,10 @@ def check(process_output, judge_output, point_value, feedback=False, **kwargs):
     if len(process_lines) > len(judge_lines):
         return False
 
+    # Empty answer
+    if not judge_lines:
+        return True
+
     match = equal
 
     # Overload lambda - passed as a string literal
@@ -32,9 +36,5 @@ def check(process_output, judge_output, point_value, feedback=False, **kwargs):
         if match(process_line, judge_line):
             cases[i] = verdict[1]
             count += 1
-
-    # Empty answer
-    if not judge_lines:
-        return True
 
     return CheckerResult(count == len(judge_lines), point_value * (1.0 * count / len(judge_lines)), ''.join(cases) if feedback else "")

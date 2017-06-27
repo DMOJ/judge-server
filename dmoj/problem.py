@@ -35,7 +35,6 @@ class Problem(object):
             doc = yaml.safe_load(self.problem_data['init.yml'])
             if not doc:
                 raise InvalidInitException('I find your lack of content disturbing.')
-            logging.getLogger("logging").setLevel(logging.CRITICAL)
             init_check = Core(source_data=doc, schema_files=[os.path.join(os.path.dirname(__file__), 'problem_schema.yml')])
             init_check.validate(raise_exception=True)
             self.config = ConfigNode(doc, defaults={

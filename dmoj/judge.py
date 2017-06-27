@@ -582,6 +582,7 @@ class JudgeManager(object):
 def main():  # pragma: no cover
     sys.stdout = codecs.getwriter("utf-8")(os.fdopen(sys.stdout.fileno(), 'w', 0))
     sys.stderr = codecs.getwriter("utf-8")(sys.stderr)
+    logging.getLogger("pykwalify.core").setLevel(logging.CRITICAL)
 
     if not sanity_check():
         return 1

@@ -195,7 +195,7 @@ class SubmitCommand(Command):
 
         if language_id not in executors:
             source_file = language_id
-            language_id = None    # source file / language id optional
+            language_id = None  # source file / language id optional
 
         err = None
 
@@ -211,9 +211,9 @@ class SubmitCommand(Command):
                     if ext == 'PY':
                         language_id = 'PY2'
                     elif ext == 'CPP':
-                        language_id = 'CPP14'
+                        language_id = 'CPP11'
                     elif ext == 'JAVA':
-                        language_id = 'JAVA9'
+                        language_id = 'JAVA8'
                     elif ext:
                         language_id = ext
                     else:
@@ -376,7 +376,7 @@ class ListSubmissionsCommand(Command):
             problem, lang, src, tl, ml = data
             print ansi_style('#ansi[%s](yellow)/#ansi[%s](green) in %s' % (problem, i + 1, lang))
         print
-        
+
 
 class DifferenceCommand(Command):
     name = 'diff'
@@ -400,7 +400,7 @@ class DifferenceCommand(Command):
                 with open(os.path.realpath(id_or_source)) as f:
                     src = f.read()
             except Exception as io:
-                 err = str(io)
+                err = str(io)
 
         return src, err
 

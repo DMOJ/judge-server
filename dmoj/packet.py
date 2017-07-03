@@ -12,7 +12,7 @@ import zlib
 from dmoj import sysinfo
 from dmoj.judgeenv import get_supported_problems, get_runtime_versions
 
-logger = logging.getLogger('dmoj.judge')
+logger = logging.getLogger(__name__)
 timer = time.clock if os.name == 'nt' else time.time
 
 

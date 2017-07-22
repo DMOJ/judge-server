@@ -91,7 +91,7 @@ class InteractiveGrader(StandardGrader):
         self._current_proc.wait()
 
     def check_result(self, case, result):
-        if not isinstance(self.check, CheckerResult)
+        if not isinstance(self.check, CheckerResult):
             return CheckerResult(self.check, case.points if self.check else 0.0, feedback=self.feedback)
         return self.check
 

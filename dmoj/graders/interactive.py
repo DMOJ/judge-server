@@ -91,7 +91,9 @@ class InteractiveGrader(StandardGrader):
         self._current_proc.wait()
 
     def check_result(self, case, result):
-        return CheckerResult(self.check, case.points if self.check else 0.0, feedback=self.feedback)
+        if not isinstance(self.check, CheckerResult)
+            return CheckerResult(self.check, case.points if self.check else 0.0, feedback=self.feedback)
+        return self.check
 
     def interact(self, case, interactor):
         raise NotImplementedError

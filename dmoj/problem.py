@@ -85,7 +85,7 @@ class ProblemDataManager(dict):
 
     def __missing__(self, key):
         try:
-            return open(os.path.join(get_problem_root(self.problem_id), key), 'r').read()
+            return open(os.path.join(get_problem_root(self.problem_id), key), 'rb').read()
         except IOError:
             if self.archive:
                 zipinfo = self.archive.getinfo(key)

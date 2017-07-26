@@ -37,6 +37,7 @@ class Problem(object):
                 'wall_time_factor': 3,
                 'output_prefix_length': 64,
                 'output_limit_length': 25165824,
+                'binary_data': False,
             })
         except (IOError, ParserError, ScannerError) as e:
             raise InvalidInitException(str(e))
@@ -156,6 +157,8 @@ class TestCase(object):
     def _normalize(self, data):
         # Normalize all newline formats (\r\n, \r, \n) to \n, otherwise we have problems with people creating
         # data on Macs (\r newline) when judged programs assume \n
+        if self.config.binary_data:
+            return data
         return data.replace('\r\n', '\r').replace('\r', '\n')
 
     def _run_generator(self, gen, args=None):

@@ -134,6 +134,7 @@ bool JobbedProcessManager::inject(HANDLE hProcess, BOOL x64, LPCWSTR szDllPath, 
 		return false;
 
 	WaitForSingleObject(hInject, INFINITE);
+	CloseHandle(hInject);
 
 	VirtualFreeEx(hProcess, lpDllPath, cbDllPath, MEM_RELEASE);
 	VirtualFreeEx(hProcess, lpFunctionName, cbFunctionName, MEM_RELEASE);

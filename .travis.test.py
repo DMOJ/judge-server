@@ -18,8 +18,7 @@ def find_directory(parent, expr):
     dirs = [dir for dir in os.listdir(parent) if regex.match(dir)]
     if not dirs:
         return
-    dirs.sort(key=LooseVersion, reverse=True)
-    return os.path.join(parent, dirs[0])
+    return os.path.join(parent, max(dirs, key=LooseVersion))
 
 
 def make_override(home, parent, expr):
@@ -33,15 +32,14 @@ TEST_ON_TRAVIS = ['ADA', 'AWK', 'BF', 'C', 'CBL', 'D', 'DART', 'CPP0X', 'CPP03',
                   'F95', 'GO', 'GROOVY', 'HASK', 'JAVA7', 'JAVA8', 'JAVA9',
                   'PAS', 'PRO', 'GAS32', 'GAS64', 'LUA', 'NASM', 'NASM64',
                   'PERL', 'PHP', 'PY2', 'PY3', 'PYPY', 'PYPY3',
-                  'RUBY19', 'RUBY21', 'RUST', 'SCM', 'SED', 'SWIFT', 'TCL', 'TEXT']
+                  'RUBY2', 'RUST', 'SCM', 'SED', 'SWIFT', 'TCL', 'TEXT']
 RVM_DIR = os.path.expanduser('~/.rvm/rubies/')
 PYENV_DIR = '/opt/python/'
 JVM_DIR = '/usr/lib/jvm/'
 
 OVERRIDES = {
     'PY2':    make_override('py2_home',    PYENV_DIR, r'2\.'),
-    'RUBY19': make_override('ruby19_home', RVM_DIR,   r'ruby-1\.9'),
-    'RUBY21': make_override('ruby21_home', RVM_DIR,   r'ruby-2\.1'),
+    'RUBY2':  make_override('ruby2_home',  RVM_DIR,   r'ruby-2\.'),
     'PYPY':  {'pypy_home':  os.path.abspath('pypy2')},
     'PYPY3': {'pypy3_home': os.path.abspath('pypy3')},
 }

@@ -4,8 +4,8 @@ from .ruby_executor import RubyExecutor
 
 
 class Executor(RubyExecutor):
-    name = 'RUBY21'
-    command_paths = ['ruby2.1']
+    name = 'RUBY2'
+    command_paths = ['ruby2.%d' for i in reversed(xrange(0, 5))]
     syscalls = ['pipe2', 'poll', ('write', lambda debugger: debugger.arg0 in (1, 2, 4))]
 
     def get_nproc(self):

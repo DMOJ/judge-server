@@ -36,7 +36,7 @@ class GeneratorManager(object):
             '.c': executors.get('C', None),
             '.cpp': executors.get(find_runtime(('CPP14', 'CPP11', 'CPP0X', 'CPP03')), None),
             '.java': executors.get(find_runtime(('JAVA9', 'JAVA8', 'JAVA7')), None),
-            '.rb': executors.get(find_runtime(('RUBY21', 'RUBY19', 'RUBY18')), None)
+            '.rb': executors.get(find_runtime(('RUBY2', 'RUBY19', 'RUBY18')), None)
         }
         ext = os.path.splitext(filename)[1]
         pass_platform_flags = ['.c', '.cpp']

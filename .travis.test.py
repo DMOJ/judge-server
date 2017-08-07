@@ -1,11 +1,12 @@
 import os
 import re
 import traceback
-from importlib import import_module
 from distutils.version import LooseVersion
+from importlib import import_module
 
 import yaml
 import yaml.representer
+
 from dmoj import judgeenv
 from dmoj.executors import executors
 from dmoj.testsuite import Tester
@@ -38,11 +39,11 @@ PYENV_DIR = '/opt/python/'
 JVM_DIR = '/usr/lib/jvm/'
 
 OVERRIDES = {
-    'PY2': make_override('py2_home', PYENV_DIR, r'2\.'),
-    'RUBY19': make_override('ruby19_home', RVM_DIR, r'ruby-1\.9'),
-    'RUBY21': make_override('ruby21_home', RVM_DIR, r'ruby-2\.1'),
-    'PYPY': make_override('pypy_home', PYENV_DIR, 'pypy2?-'),
-    'PYPY3': make_override('pypy3_home', PYENV_DIR, 'pypy3-'),
+    'PY2':    make_override('py2_home',    PYENV_DIR, r'2\.'),
+    'RUBY19': make_override('ruby19_home', RVM_DIR,   r'ruby-1\.9'),
+    'RUBY21': make_override('ruby21_home', RVM_DIR,   r'ruby-2\.1'),
+    'PYPY':  {'pypy_home':  os.path.abspath('pypy2')},
+    'PYPY3': {'pypy3_home': os.path.abspath('pypy3')},
 }
 
 

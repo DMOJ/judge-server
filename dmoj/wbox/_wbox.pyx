@@ -1,6 +1,6 @@
 from ctypes import WinError
-from os import fdopen, O_RDONLY, O_WRONLY
 from msvcrt import open_osfhandle
+from os import fdopen, O_RDONLY, O_WRONLY
 
 ctypedef const Py_UNICODE *LPCWSTR
 ctypedef Py_UNICODE *LPWSTR
@@ -39,24 +39,24 @@ cdef extern from 'user.h' nogil:
         LPCWSTR username()
         LPCWSTR password()
 
-cdef extern from 'process.h' nogil:
+cdef extern from 'wbox.h' nogil:
     cdef cppclass JobbedProcessManager:
         JobbedProcessManager() except +
 
         bint spawn() except +
         bint terminate(unsigned code) except +
 
-        JobbedProcessManager & time(double seconds)
-        JobbedProcessManager & memory(size_t bytes)
-        JobbedProcessManager & processes(int count)
-        JobbedProcessManager & withLogin(LPCWSTR username, LPCWSTR password);
-        JobbedProcessManager & command(LPCWSTR cmdline);
-        JobbedProcessManager & executable(LPCWSTR executable)
-        JobbedProcessManager & directory(LPCWSTR directory)
-        JobbedProcessManager & injectX86(LPCWSTR szExecutable)
-        JobbedProcessManager & injectX64(LPCWSTR szExecutable)
-        JobbedProcessManager & injectFunction(LPCSTR szFunction)
-        JobbedProcessManager & environment(LPCWSTR env, size_t cb)
+        JobbedProcessManager &time(double seconds)
+        JobbedProcessManager &memory(size_t bytes)
+        JobbedProcessManager &processes(int count)
+        JobbedProcessManager &withLogin(LPCWSTR username, LPCWSTR password);
+        JobbedProcessManager &command(LPCWSTR cmdline);
+        JobbedProcessManager &executable(LPCWSTR executable)
+        JobbedProcessManager &directory(LPCWSTR directory)
+        JobbedProcessManager &injectX86(LPCWSTR szExecutable)
+        JobbedProcessManager &injectX64(LPCWSTR szExecutable)
+        JobbedProcessManager &injectFunction(LPCSTR szFunction)
+        JobbedProcessManager &environment(LPCWSTR env, size_t cb)
 
         unsigned long long memory()
         double executionTime()
@@ -66,16 +66,16 @@ cdef extern from 'process.h' nogil:
         bint wait()
         bint wait(DWORD time)
 
-        AutoHandle & process()
-        AutoHandle & job()
-        AutoHandle & stdIn()
-        AutoHandle & stdOut()
-        AutoHandle & stdErr()
+        AutoHandle &process()
+        AutoHandle &job()
+        AutoHandle &stdIn()
+        AutoHandle &stdOut()
+        AutoHandle &stdErr()
 
-        @ staticmethod
+        @staticmethod
         void updateAsmX86(LPCWSTR szExecutable)
 
-        @ staticmethod
+        @staticmethod
         void updateAsmX64(LPCWSTR szExecutable)
 
 

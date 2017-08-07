@@ -1,4 +1,4 @@
-#include "process.h"
+#include "wbox.h"
 #include "handles.h"
 #include <objbase.h>
 #include <strsafe.h>

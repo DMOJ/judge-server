@@ -12,6 +12,11 @@ import zlib
 from dmoj import sysinfo
 from dmoj.judgeenv import get_supported_problems, get_runtime_versions
 
+try:
+    import ssl
+except ImportError:
+    ssl = None
+
 logger = logging.getLogger(__name__)
 timer = time.clock if os.name == 'nt' else time.time
 
@@ -23,12 +28,33 @@ class JudgeAuthenticationFailed(Exception):
 class PacketManager(object):
     SIZE_PACK = struct.Struct('!I')
 
-    def __init__(self, host, port, judge, name, key):
+    def __init__(self, host, port, judge, name, key, secure=False, no_cert_check=False, cert_store=None):
         self.host = host
         self.port = port
         self.judge = judge
         self.name = name
         self.key = key
+
+        if secure and ssl:
+            self.ssl_context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+            self.ssl_context.options |= ssl.OP_NO_SSLv2
+            self.ssl_context.options |= ssl.OP_NO_SSLv3
+
+            if not no_cert_check:
+                self.ssl_context.verify_mode = ssl.CERT_REQUIRED
+                self.ssl_context.check_hostname = True
+
+            if cert_store is None:
+                self.ssl_context.load_default_certs()
+            else:
+                self.ssl_context.load_verify_locations(cafile=cert_store)
+        else:
+            self.ssl_context = None
+
+        self.secure = secure
+        self.no_cert_check = no_cert_check
+        self.cert_store = cert_store
+
         self._lock = threading.RLock()
         self._batch = 0
         # Exponential backoff: starting at 4 seconds.
@@ -44,6 +70,10 @@ class PacketManager(object):
 
         self.conn = socket.create_connection((self.host, self.port))
         self.conn.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+
+        if self.ssl_context:
+            self.conn = self.ssl_context.wrap_socket(self.conn, server_hostname=self.host)
+
         self.input = self.conn.makefile('r')
         self.output = self.conn.makefile('w', 0)
         self.handshake(problems, versions, self.name, self.key)

@@ -1,10 +1,10 @@
 #!/usr/bin/python
+import codecs
 import errno
 import logging
 import os
 import signal
 import sys
-import codecs
 import threading
 import traceback
 from functools import partial
@@ -301,8 +301,8 @@ class Judge(object):
 
 
 class ClassicJudge(Judge):
-    def __init__(self, host, port):
-        self.packet_manager = packet.PacketManager(host, port, self, env['id'], env['key'])
+    def __init__(self, host, port, **kwargs):
+        self.packet_manager = packet.PacketManager(host, port, self, env['id'], env['key'], **kwargs)
         super(ClassicJudge, self).__init__()
 
 
@@ -354,7 +354,9 @@ def judge_proc(need_monitor):
     logging.basicConfig(filename=logfile, level=logging.INFO,
                         format='%(levelname)s %(asctime)s %(module)s %(message)s')
 
-    judge = ClassicJudge(judgeenv.server_host, judgeenv.server_port)
+    judge = ClassicJudge(judgeenv.server_host, judgeenv.server_port,
+                         secure=judgeenv.secure, no_cert_check=judgeenv.no_cert_check,
+                         cert_store=judgeenv.cert_store)
     if need_monitor:
         monitor = Monitor()
         monitor.callback = judge.update_problems

@@ -38,7 +38,7 @@ before_install:
   # Install Swift
   - >
     mkdir swift &&
-    curl https://swift.org/builds/swift-3.1.1-release/ubuntu1604/swift-3.1.1-RELEASE/swift-3.1.1-RELEASE-ubuntu16.04.tar.gz |
+    curl https://swift.org/builds/swift-2.2.1-release/ubuntu1404/swift-2.2.1-RELEASE/swift-2.2.1-RELEASE-ubuntu14.04.tar.gz |
     tar xz -C swift --strip-components=1
   - export PATH=${PWD}/swift/usr/bin:"${PATH}"
   # Install PyPy

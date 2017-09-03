@@ -100,9 +100,6 @@ class ProblemDataManager(dict):
 
 class BatchedTestCase(object):
     def __init__(self, batch_no, config, problem):
-#        self.config = ConfigNode(config.raw_config, defaults={
-#            'short_circuit': True
-#        })
         self.config = config
         self.batch_no = batch_no
         self.points = config.points

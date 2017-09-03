@@ -38,6 +38,7 @@ class Problem(object):
                 'output_prefix_length': 64,
                 'output_limit_length': 25165824,
                 'binary_data': False,
+                'short_circuit': True,
             })
         except (IOError, ParserError, ScannerError) as e:
             raise InvalidInitException(str(e))

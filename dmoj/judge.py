@@ -194,7 +194,8 @@ class Judge(object):
             # Yield notifying objects for batch begin/end, and unwrap all cases inside the batches
             if isinstance(case, BatchedTestCase):
                 yield BatchBegin()
-                for batched_case in self.grade_cases(grader, case.batched_cases, short_circuit=True,
+                for batched_case in self.grade_cases(grader, case.batched_cases,
+                                          short_circuit=case.config['short_circuit'],
                                           is_short_circuiting=is_short_circuiting):
                     if (batched_case.result_flag & Result.WA) > 0 and not case.points:
                         is_short_circuiting = True

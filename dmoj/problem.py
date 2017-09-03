@@ -38,6 +38,7 @@ class Problem(object):
                 'output_prefix_length': 64,
                 'output_limit_length': 25165824,
                 'binary_data': False,
+                'short_circuit': True,
             })
         except (IOError, ParserError, ScannerError) as e:
             raise InvalidInitException(str(e))
@@ -99,9 +100,10 @@ class ProblemDataManager(dict):
 
 class BatchedTestCase(object):
     def __init__(self, batch_no, config, problem):
-        self.config = ConfigNode(config.raw_config, defaults={
-            'short_circuit': True
-        })
+#        self.config = ConfigNode(config.raw_config, defaults={
+#            'short_circuit': True
+#        })
+        self.config = config
         self.batch_no = batch_no
         self.points = config.points
         self.batched_cases = problem._resolve_testcases(config['batched'], batch_no=batch_no)

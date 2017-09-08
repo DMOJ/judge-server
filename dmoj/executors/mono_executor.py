@@ -44,6 +44,7 @@ class MonoExecutor(CompiledExecutor):
         sec[sys_ftruncate64] = ALLOW
         sec[sys_sched_yield] = ALLOW
         sec[sys_rt_sigsuspend] = ALLOW
+        sec[sys_wait4] = ALLOW
 
         fs = sec.fs_jail
         write_fs = re.compile('|'.join(WRITE_FS))

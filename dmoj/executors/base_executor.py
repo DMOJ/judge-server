@@ -1,9 +1,7 @@
-import os
 import re
+import signal
 import subprocess
 import sys
-import signal
-import threading
 import time
 import traceback
 from distutils.spawn import find_executable
@@ -15,6 +13,7 @@ from dmoj.executors.resource_proxy import ResourceProxy
 from dmoj.judgeenv import env
 from dmoj.utils.ansi import ansi_style
 from dmoj.utils.communicate import *
+from dmoj.utils.error import print_protection_fault
 
 reversion = re.compile('.*?(\d+(?:\.\d+)+)', re.DOTALL)
 version_cache = {}
@@ -92,6 +91,8 @@ class BaseExecutor(PlatformExecutorMixin, ResourceProxy):
                     error_callback('Got unexpected stderr output:\n' + stderr)
                 else:
                     print>> sys.stderr, stderr
+            if hasattr(proc, 'protection_fault') and proc.protection_fault:
+                print_protection_fault(proc.protection_fault)
             return res
         except Exception:
             if output:

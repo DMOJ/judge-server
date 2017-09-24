@@ -14,8 +14,7 @@ void main() {
     address_grace = 786432
 
     syscalls = ['epoll_create', 'epoll_ctl', 'epoll_wait', 'restart_syscall',
-                'timerfd_settime', 'pipe2',
-                ('write', lambda debugger: debugger.uarg0 <= 4)]
+                'timerfd_settime', 'pipe2']
 
     fs = ['/proc/meminfo$', '/proc/sys/vm/overcommit_memory$', '.*/vm-service$',
           '/proc/self/auxv$']

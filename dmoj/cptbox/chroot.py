@@ -1,10 +1,9 @@
+import os
 import re
 import sys
-import os
 
-from dmoj.cptbox.handlers import ALLOW, STDOUTERR, ACCESS_DENIED
 from dmoj.cptbox._cptbox import bsd_get_proc_cwd, bsd_get_proc_fdno, AT_FDCWD
-from dmoj.cptbox.syscalls import *
+from dmoj.cptbox.handlers import ALLOW, ACCESS_DENIED
 
 
 class CHROOTSecurity(dict):
@@ -23,7 +22,7 @@ class CHROOTSecurity(dict):
 
         self.update({
             sys_read: ALLOW,
-            sys_write: STDOUTERR if writable == (1, 2) and not io_redirects else self.do_write,
+            sys_write: ALLOW,
             sys_writev: self.do_write,
             sys_open: self.do_open,
             sys_openat: self.do_faccessat,

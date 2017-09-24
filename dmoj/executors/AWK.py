@@ -6,7 +6,7 @@ class Executor(ScriptExecutor):
     name = 'AWK'
     command = 'awk'
     command_paths = ['mawk', 'gawk', 'awk']
-    syscalls = ['getgroups']  # gawk is annoying.
+    syscalls = ['getgroups', 'getpgrp']  # gawk is annoying.
     test_program = '{ print $0 }'
 
     def get_cmdline(self):

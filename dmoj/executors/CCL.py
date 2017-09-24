@@ -7,7 +7,7 @@ class Executor(ScriptDirectoryMixin, CompiledExecutor):
     name = 'CCL'
     command = 'ccl'
     command_paths = ['ccl']
-    syscalls = ['setrlimit', 'modify_ldt']
+    syscalls = ['setrlimit', 'write', 'modify_ldt']
     fs = ['/etc/(?:nsswitch.conf|passwd)$']
     nproc = -1
     test_program = '(write-line (read-line))'

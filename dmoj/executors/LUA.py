@@ -5,6 +5,7 @@ class Executor(ScriptExecutor):
     ext = '.lua'
     name = 'LUA'
     command = 'lua'
+    command_paths = ['lua', 'lua5.3', 'lua5.2', 'lua5.1']
     address_grace = 131072
     test_program = "io.write(io.read('*all'))"
 

@@ -149,8 +149,7 @@ class PacketManager(object):
 
         raw = json.dumps(packet).encode('zlib')
         with self._lock:
-            self.output.write(PacketManager.SIZE_PACK.pack(len(raw)))
-            self.output.write(raw)
+            self.output.writelines((PacketManager.SIZE_PACK.pack(len(raw)), raw))
 
     def _receive_packet(self, packet):
         name = packet['name']

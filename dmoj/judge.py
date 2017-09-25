@@ -6,6 +6,7 @@ import os
 import signal
 import sys
 import threading
+import time
 import traceback
 from functools import partial
 from itertools import chain
@@ -366,6 +367,7 @@ def judge_proc(need_monitor):
 
     if hasattr(signal, 'SIGUSR2'):
         def update_problem_signal(signum, frame):
+            logging.getLogger('signal').info('Received SIGUSR2, updating problems.')
             judge.update_problems()
 
         signal.signal(signal.SIGUSR2, update_problem_signal)
@@ -425,11 +427,14 @@ class JudgeManager(object):
         from ctypes import CDLL
         return CDLL(find_library('c'))
 
+    def _log(self, message, *args, **kwargs):
+        print>>sys.stderr, '[%s] %s: %s' % (time.asctime(), kwargs.pop('source', 'judgepm'), message % args)
+
     def _forward_signal(self, sig, respawn=False):
         def handler(signum, frame):
-            print>>sys.stderr, 'judgepm: Received signal (%s), forwarding...' % self.signal_map.get(signum, signum)
+            self._log('Received signal (%s), forwarding...', self.signal_map.get(signum, signum))
             if not respawn:
-                print>>sys.stderr, 'judgepm: Will no longer respawn judges.'
+                self._log('Will no longer respawn judges.')
                 self._try_respawn = False
             self.signal_all(signum)
         self.orig_signal[sig] = signal.signal(sig, handler)
@@ -441,7 +446,7 @@ class JudgeManager(object):
         try:
             pid = os.fork()
         except OSError:
-            print>>sys.stderr, 'judgepm: Failed to spawn judge:', id
+            self._log('Failed to spawn judge.')
             return
         if pid == 0:
             # In child. Scary business.
@@ -476,6 +481,7 @@ class JudgeManager(object):
     def _spawn_judge(self, id):
         pid = self._spawn_child(self._judge_proc, id)
         self.pids[pid] = id
+        return pid
 
     def _spawn_monitor(self):
         def monitor_proc():
@@ -487,6 +493,7 @@ class JudgeManager(object):
             except KeyboardInterrupt:
                 self.monitor.stop()
         self.monitor_pid = self._spawn_child(monitor_proc)
+        return self.monitor_pid
 
     def _spawn_api(self):
         from dmoj import judgeenv
@@ -504,19 +511,23 @@ class JudgeManager(object):
             signal.signal(signal.SIGUSR2, signal.SIG_IGN)
             server.serve_forever()
         self.api_pid = self._spawn_child(api_proc)
+        return self.api_pid
 
     def _spawn_all(self):
         from dmoj import judgeenv
 
         for id in self.auth:
-            print>>sys.stderr, 'judgepm: Spawning judge:', id
-            self._spawn_judge(id)
+            self._log('Spawning judge: %d', id)
+            pid = self._spawn_judge(id)
+            self._log('Judge %d is pid %d', id, pid)
         if self.monitor.is_real:
-            print>>sys.stderr, 'judgepm: Spawning monitor'
-            self._spawn_monitor()
+            self._log('Spawning monitor')
+            pid = self._spawn_monitor()
+            self._log('Monitor is pid %d', pid)
         if judgeenv.api_listen is not None:
-            print>>sys.stderr, 'judgepm: Spawning API server'
-            self._spawn_api()
+            self._log('Spawning API server')
+            pid = self._spawn_api()
+            self._log('API server is pid %d', pid)
 
     def _monitor(self):
         while self._try_respawn or self.pids:
@@ -533,27 +544,27 @@ class JudgeManager(object):
                 judge = self.pids[pid]
                 del self.pids[pid]
                 if self._try_respawn:
-                    print>>sys.stderr, 'judgepm: Judge died, respawning: %s (0x%08X)' % (judge, status)
+                    self._log('Judge died, respawning: %s (pid %d, 0x%08X)', judge, pid, status)
                     self._spawn_judge(judge)
                 else:
-                    print>>sys.stderr, 'judgepm: Judge exited: %s (0x%08X)' % (judge, status)
+                    self._log('Judge exited: %s (pid %d, 0x%08X)', judge, pid, status)
             elif pid == self.monitor_pid:
                 if self._try_respawn:
-                    print>>sys.stderr, 'judgepm: Monitor died, respawning (0x%08X)' % status
+                    self._log('Monitor died, respawning (0x%08X)', status)
                     self._spawn_monitor()
                 else:
-                    print>>sys.stderr, 'judgepm: Monitor exited: (0x%08X)' % status
+                    self._log('Monitor exited: (0x%08X)', status)
             elif pid == self.api_pid:
                 if self._try_respawn:
-                    print>>sys.stderr, 'judgepm: API server died, respawning (0x%08X)' % status
+                    self._log('API server died, respawning (0x%08X)', status)
                     self._spawn_api()
                 else:
-                    print>>sys.stderr, 'judgepm: API server exited: (0x%08X)' % status
+                    self._log('API server exited: (0x%08X)', status)
             else:
-                print>>sys.stderr, 'judgepm: I am not your father, %d (0x%08X)!' % (pid, status)
+                self._log('I am not your father, %d (0x%08X)!', pid, status)
 
     def run(self):
-        print>>sys.stderr, 'judgepm: Starting process manager: %d.' % os.getpid()
+        self._log('Starting process manager: %d.', os.getpid())
 
         self._forward_signal(signal.SIGUSR2, respawn=True)
         self._forward_signal(signal.SIGINT)
@@ -568,7 +579,7 @@ class JudgeManager(object):
             self._try_respawn = False
             self.signal_all(signal.SIGINT)
             self._monitor()
-        print>> sys.stderr, 'judgepm: Exited gracefully: %d.' % os.getpid()
+        self._log('Exited gracefully: %d.', os.getpid())
 
     def signal_all(self, signum):
         for pid in chain(self.pids, [self.monitor_pid, self.api_pid]):

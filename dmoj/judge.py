@@ -517,9 +517,9 @@ class JudgeManager(object):
         from dmoj import judgeenv
 
         for id in self.auth:
-            self._log('Spawning judge: %d', id)
+            self._log('Spawning judge: %s', id)
             pid = self._spawn_judge(id)
-            self._log('Judge %d is pid %d', id, pid)
+            self._log('Judge %s is pid %d', id, pid)
         if self.monitor.is_real:
             self._log('Spawning monitor')
             pid = self._spawn_monitor()

@@ -137,4 +137,4 @@ optional arguments:
 
 ## More Help
 For info on the problem file format and more, 
-[read the documentation.](https://github.com/DMOJ/docs)
+[read the documentation.](https://docs.dmoj.ca)

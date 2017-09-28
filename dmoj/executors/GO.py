@@ -40,5 +40,5 @@ func main() {
     def create_files(self, problem_id, source_code, *args, **kwargs):
         super(Executor, self).create_files(problem_id, source_code, *args, **kwargs)
         source_code = decomment(source_code).strip()
-        if source_code.split('\n')[0].strip() != 'package main':
+        if source_code.split('\n')[0].strip().split() != ['package', 'main']:
             raise CompileError('Your code must be defined in package main.\n')

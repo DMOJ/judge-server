@@ -88,7 +88,8 @@ class Monitor(object):
 
     @callback.setter
     def callback(self, callback):
-        self._handler.callback = callback
+        if self._monitor is not None:
+            self._handler.callback = callback
 
     def start(self):
         if self._monitor is not None:

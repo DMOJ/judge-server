@@ -119,7 +119,12 @@ class BaseExecutor(PlatformExecutorMixin, ResourceProxy):
             version = None
             for flag in flags:
                 try:
-                    output = subprocess.check_output([path, flag], stderr=subprocess.STDOUT)
+                    command = [path]
+                    if isinstance(flag, (tuple, list)):
+                        command.extend(flag)
+                    else:
+                        command.append(flag)
+                    output = subprocess.check_output(command, stderr=subprocess.STDOUT)
                 except subprocess.CalledProcessError:
                     pass
                 else:

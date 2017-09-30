@@ -82,6 +82,7 @@ class PacketManager(object):
         self.input = self.conn.makefile('r')
         self.output = self.conn.makefile('w', 0)
         self.handshake(problems, versions, self.name, self.key)
+        log.info('Judge "%s" online: [%s]:%s', self.name, self.host, self.port)
 
     def _reconnect(self):
         if self.fallback > 86400:
@@ -248,18 +249,18 @@ class PacketManager(object):
                            'output': result.output,
                            'feedback': result.feedback})
 
-    def compile_error_packet(self, log):
+    def compile_error_packet(self, message):
         log.info('Compile error: %d', self.judge.current_submission)
         self.fallback = 4
         self._send_packet({'name': 'compile-error',
                            'submission-id': self.judge.current_submission,
-                           'log': log})
+                           'log': message})
 
-    def compile_message_packet(self, log):
+    def compile_message_packet(self, message):
         log.info('Compile message: %d', self.judge.current_submission)
         self._send_packet({'name': 'compile-message',
                            'submission-id': self.judge.current_submission,
-                           'log': log})
+                           'log': message})
 
     def internal_error_packet(self, message):
         log.info('Internal error: %d', self.judge.current_submission)

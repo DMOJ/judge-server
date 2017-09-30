@@ -3,7 +3,6 @@ import logging
 import os
 import socket
 import struct
-import sys
 import threading
 import time
 import traceback
@@ -17,7 +16,7 @@ try:
 except ImportError:
     ssl = None
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 timer = time.clock if os.name == 'nt' else time.time
 
 
@@ -35,6 +34,7 @@ class PacketManager(object):
         self.name = name
         self.key = key
 
+        log.info('Preparing to connect to [%s]:%s as: %s', host, port, name)
         if secure and ssl:
             self.ssl_context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
             self.ssl_context.options |= ssl.OP_NO_SSLv2
@@ -48,8 +48,10 @@ class PacketManager(object):
                 self.ssl_context.load_default_certs()
             else:
                 self.ssl_context.load_verify_locations(cafile=cert_store)
+            log.info('Configured to use TLS.')
         else:
             self.ssl_context = None
+            log.info('TLS not enabled.')
 
         self.secure = secure
         self.no_cert_check = no_cert_check
@@ -68,23 +70,27 @@ class PacketManager(object):
         problems = get_supported_problems()
         versions = get_runtime_versions()
 
+        log.info('Opening connection to: [%s]:%s', self.host, self.port)
         self.conn = socket.create_connection((self.host, self.port))
         self.conn.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
 
         if self.ssl_context:
+            log.info('Starting TLS on: [%s]:%s', self.host, self.port)
             self.conn = self.ssl_context.wrap_socket(self.conn, server_hostname=self.host)
 
+        log.info('Starting handshake with: [%s]:%s', self.host, self.port)
         self.input = self.conn.makefile('r')
         self.output = self.conn.makefile('w', 0)
         self.handshake(problems, versions, self.name, self.key)
 
     def _reconnect(self):
-        if self.fallback > 65536:
+        if self.fallback > 86400:
             # Return 0 to avoid supervisor restart.
             raise SystemExit(0)
-        print>> sys.stderr
-        print>> sys.stderr, 'SOCKET ERROR: Disconnected! Reconnecting in %d seconds.' % self.fallback
+
+        log.warning('Attempting reconnection in %.0fs: [%s]:%s', self.fallback, self.host, self.port)
         if self.conn is not None:
+            log.info('Dropping old connection.')
             self.conn.close()
         time.sleep(self.fallback)
         self.fallback *= 1.5
@@ -94,9 +100,10 @@ class PacketManager(object):
         try:
             self._connect()
         except JudgeAuthenticationFailed:
+            log.error('Authentication as "%s" failed on: [%s]:%s', self.name, self.host, self.port)
             self._reconnect()
         except socket.error:
-            traceback.print_exc()
+            log.exception('Connection failed due to socket error: [%s]:%s', self.host, self.port)
             self._reconnect()
 
     def __del__(self):
@@ -170,8 +177,8 @@ class PacketManager(object):
                 packet['pretests-only']
             )
             self._batch = 0
-            logger.info('Accept submission: %d: executor: %s, code: %s',
-                        packet['submission-id'], packet['language'], packet['problem-id'])
+            log.info('Accept submission: %d: executor: %s, code: %s',
+                     packet['submission-id'], packet['language'], packet['problem-id'])
         elif name == 'invocation-request':
             self.invocation_acknowledged_packet(packet['invocation-id'])
             self.judge.custom_invocation(
@@ -182,7 +189,7 @@ class PacketManager(object):
                 int(packet['memory-limit']),
                 packet['input-data']
             )
-            logger.info('Accept invocation: %d: executor: %s', packet['invocation-id'], packet['language'])
+            log.info('Accept invocation: %d: executor: %s', packet['invocation-id'], packet['language'])
         elif name == 'terminate-submission':
             self.judge.terminate_grading()
         else:
@@ -194,25 +201,27 @@ class PacketManager(object):
                            'executors': runtimes,
                            'id': id,
                            'key': key})
+        log.info('Awaiting handshake response: [%s]:%s', self.host, self.port)
         try:
             data = self.input.read(PacketManager.SIZE_PACK.size)
             size = PacketManager.SIZE_PACK.unpack(data)[0]
             packet = self.input.read(size).decode('zlib')
             resp = json.loads(packet)
         except Exception:
-            traceback.print_exc()
+            log.exception('Cannot understand handshake response: [%s]:%s', self.host, self.port)
             raise JudgeAuthenticationFailed()
         else:
             if resp['name'] != 'handshake-success':
+                log.error('Handshake failed.')
                 raise JudgeAuthenticationFailed()
 
     def invocation_begin_packet(self):
-        logger.info('Begin invoking: %d', self.judge.current_submission)
+        log.info('Begin invoking: %d', self.judge.current_submission)
         self._send_packet({'name': 'invocation-begin',
                            'invocation-id': self.judge.current_submission})
 
     def invocation_end_packet(self, result):
-        logger.info('End invoking: %d', self.judge.current_submission)
+        log.info('End invoking: %d', self.judge.current_submission)
         self.fallback = 4
         self._send_packet({'name': 'invocation-end',
                            'output': result.proc_output,
@@ -223,7 +232,7 @@ class PacketManager(object):
                            'invocation-id': self.judge.current_submission})
 
     def supported_problems_packet(self, problems):
-        logger.info('Update problems')
+        log.info('Update problems')
         self._send_packet({'name': 'supported-problems',
                            'problems': problems})
 
@@ -240,54 +249,54 @@ class PacketManager(object):
                            'feedback': result.feedback})
 
     def compile_error_packet(self, log):
-        logger.info('Compile error: %d', self.judge.current_submission)
+        log.info('Compile error: %d', self.judge.current_submission)
         self.fallback = 4
         self._send_packet({'name': 'compile-error',
                            'submission-id': self.judge.current_submission,
                            'log': log})
 
     def compile_message_packet(self, log):
-        logger.info('Compile message: %d', self.judge.current_submission)
+        log.info('Compile message: %d', self.judge.current_submission)
         self._send_packet({'name': 'compile-message',
                            'submission-id': self.judge.current_submission,
                            'log': log})
 
     def internal_error_packet(self, message):
-        logger.info('Internal error: %d', self.judge.current_submission)
+        log.info('Internal error: %d', self.judge.current_submission)
         self._send_packet({'name': 'internal-error',
                            'submission-id': self.judge.current_submission,
                            'message': message})
 
     def begin_grading_packet(self, is_pretested):
-        logger.info('Begin grading: %d', self.judge.current_submission)
+        log.info('Begin grading: %d', self.judge.current_submission)
         self._send_packet({'name': 'grading-begin',
                            'submission-id': self.judge.current_submission,
                            'pretested': is_pretested})
 
     def grading_end_packet(self):
-        logger.info('End grading: %d', self.judge.current_submission)
+        log.info('End grading: %d', self.judge.current_submission)
         self.fallback = 4
         self._send_packet({'name': 'grading-end',
                            'submission-id': self.judge.current_submission})
 
     def batch_begin_packet(self):
         self._batch += 1
-        logger.info('Enter batch number %d: %d', self._batch, self.judge.current_submission)
+        log.info('Enter batch number %d: %d', self._batch, self.judge.current_submission)
         self._send_packet({'name': 'batch-begin',
                            'submission-id': self.judge.current_submission})
 
     def batch_end_packet(self):
-        logger.info('Exit batch number %d: %d', self._batch, self.judge.current_submission)
+        log.info('Exit batch number %d: %d', self._batch, self.judge.current_submission)
         self._send_packet({'name': 'batch-end',
                            'submission-id': self.judge.current_submission})
 
     def current_submission_packet(self):
-        logger.info('Current submission query: %d', self.judge.current_submission)
+        log.info('Current submission query: %d', self.judge.current_submission)
         self._send_packet({'name': 'current-submission-id',
                            'submission-id': self.judge.current_submission})
 
     def submission_terminated_packet(self):
-        logger.info('Submission aborted: %d', self.judge.current_submission)
+        log.info('Submission aborted: %d', self.judge.current_submission)
         self._send_packet({'name': 'submission-terminated',
                            'submission-id': self.judge.current_submission})
 

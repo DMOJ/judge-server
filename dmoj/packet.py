@@ -71,7 +71,8 @@ class PacketManager(object):
         versions = get_runtime_versions()
 
         log.info('Opening connection to: [%s]:%s', self.host, self.port)
-        self.conn = socket.create_connection((self.host, self.port))
+        self.conn = socket.create_connection((self.host, self.port), timeout=5)
+        self.conn.settimeout(None)
         self.conn.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
 
         if self.ssl_context:

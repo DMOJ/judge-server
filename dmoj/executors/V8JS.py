@@ -8,3 +8,7 @@ class Executor(ScriptExecutor):
     test_program = 'print(gets());'
     address_grace = 786432
     nproc = -1
+
+    @classmethod
+    def get_version_flags(cls, command):
+        return [('-e', 'print(version())')]

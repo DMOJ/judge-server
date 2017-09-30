@@ -481,7 +481,7 @@ class JudgeManager(object):
     def _spawn_judge(self, id):
         pid = self._spawn_child(self._judge_proc, id)
         self.pids[pid] = id
-        return pid
+        self._log('Judge %s is pid %d', id, pid)
 
     def _spawn_monitor(self):
         def monitor_proc():
@@ -493,7 +493,7 @@ class JudgeManager(object):
             except KeyboardInterrupt:
                 self.monitor.stop()
         self.monitor_pid = self._spawn_child(monitor_proc)
-        return self.monitor_pid
+        self._log('Monitor is pid %d', self.monitor_pid)
 
     def _spawn_api(self):
         from dmoj import judgeenv
@@ -511,23 +511,20 @@ class JudgeManager(object):
             signal.signal(signal.SIGUSR2, signal.SIG_IGN)
             server.serve_forever()
         self.api_pid = self._spawn_child(api_proc)
-        return self.api_pid
+        self._log('API server is pid %d', self.api_pid)
 
     def _spawn_all(self):
         from dmoj import judgeenv
 
         for id in self.auth:
             self._log('Spawning judge: %s', id)
-            pid = self._spawn_judge(id)
-            self._log('Judge %s is pid %d', id, pid)
+            self._spawn_judge(id)
         if self.monitor.is_real:
             self._log('Spawning monitor')
-            pid = self._spawn_monitor()
-            self._log('Monitor is pid %d', pid)
+            self._spawn_monitor()
         if judgeenv.api_listen is not None:
             self._log('Spawning API server')
-            pid = self._spawn_api()
-            self._log('API server is pid %d', pid)
+            self._spawn_api()
 
     def _monitor(self):
         while self._try_respawn or self.pids:

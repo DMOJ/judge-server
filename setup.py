@@ -93,7 +93,8 @@ setup(
     entry_points={
         'console_scripts': [
             'dmoj = dmoj.judge:main',
-            'dmoj-cli = dmoj.cli:main',
+            'dmoj-cli = dmoj.cli:main',            
+            'dmoj-autoconf = dmoj.executors.autoconfig:main',
         ]
     },
     ext_modules=cythonize(extensions),

@@ -49,7 +49,7 @@ class JavaExecutor(CompiledExecutor):
     vm = None
     compiler = None
     nproc = -1
-    address_grace = 262144
+    address_grace = 786432
 
     jvm_regex = None
     security_policy = policy

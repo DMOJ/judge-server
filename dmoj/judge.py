@@ -54,6 +54,9 @@ class Judge(object):
         self._terminate_grading = False
         self.process_type = 0
 
+        self._updating_problem = False
+        self._problem_is_stale = False
+
         self.begin_grading = partial(self.process_submission, TYPE_SUBMISSION, self._begin_grading)
         self.custom_invocation = partial(self.process_submission, TYPE_INVOCATION, self._custom_invocation)
 
@@ -61,7 +64,15 @@ class Judge(object):
         """
         Pushes current problem set to server.
         """
-        self.packet_manager.supported_problems_packet(get_supported_problems())
+        self._problem_is_stale = True
+        if not self._updating_problem:
+            # If a signal is received here, there is still a race.
+            # But how probable is that?
+            self._updating_problem = True
+            while self._problem_is_stale:
+                self._problem_is_stale = False
+                self.packet_manager.supported_problems_packet(get_supported_problems())
+            self._updating_problem = False
 
     def process_submission(self, type, target, id, *args, **kwargs):
         try:

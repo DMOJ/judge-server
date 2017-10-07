@@ -239,6 +239,11 @@ class PacketManager(object):
                            'problems': problems})
 
     def test_case_status_packet(self, position, result):
+        log.info('Test case on %d: #%d, %s [%.3fs | %.2f MB], %.1f/%.0f',
+                 self.judge.current_submission, position,
+                 ', '.join(result.readable_codes()),
+                 result.execution_time, result.max_memory,
+                 result.points, result.total_points)
         self._send_packet({'name': 'test-case-status',
                            'submission-id': self.judge.current_submission,
                            'position': position,

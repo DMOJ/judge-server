@@ -441,6 +441,9 @@ class JudgeManager(object):
         sys.stdout.flush()
         sys.stderr.flush()
         ppid = os.getpid()
+
+        # Pipe to signal signal handler initialization.
+        pr, pw = os.pipe()
         try:
             pid = os.fork()
         except OSError:
@@ -453,15 +456,31 @@ class JudgeManager(object):
                 os.kill(os.getpid(), signal.SIGTERM)
                 os._exit(2)
             sys.stdin.close()
+            os.close(pr)
 
             for sig, handler in self.orig_signal.iteritems():
                 signal.signal(sig, handler)
+            os.close(pw)
 
             # How could we possibly return to top level?
             try:
                 os._exit(func(*args, **kwargs) or 0)
             finally:
                 os._exit(1)  # If that os._exit fails because ret is a truthy non-int, then this will ensure death.
+
+        # In parent.
+        os.close(pw)
+
+        # Block until child initializes signals before we register this child to receive signals.
+        while True:
+            try:
+                os.read(pr, 1)
+            except OSError as e:
+                if e.errno != errno.EINTR:
+                    raise
+            else:
+                break
+        os.close(pr)
         return pid
 
     def _judge_proc(self, id):

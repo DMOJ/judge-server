@@ -1,10 +1,12 @@
-import logging
-import os
 import re
 import sys
+import os
+import logging
 
-from dmoj.cptbox._cptbox import bsd_get_proc_cwd, bsd_get_proc_fdno, AT_FDCWD
 from dmoj.cptbox.handlers import ALLOW, STDOUTERR, ACCESS_DENIED
+from dmoj.cptbox._cptbox import bsd_get_proc_cwd, bsd_get_proc_fdno, AT_FDCWD
+from dmoj.cptbox.syscalls import *
+
 
 log = logging.getLogger('dmoj.security')
 

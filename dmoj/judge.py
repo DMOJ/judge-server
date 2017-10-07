@@ -609,6 +609,9 @@ def main():  # pragma: no cover
 
     executors.load_executors()
 
+    if hasattr(signal, 'SIGUSR2'):
+        signal.signal(signal.SIGUSR2, signal.SIG_IGN)
+
     print 'Running live judge...'
 
     for warning in judgeenv.startup_warnings:

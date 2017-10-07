@@ -1,4 +1,5 @@
 import gc
+import logging
 import os
 import platform
 import signal
@@ -17,6 +18,8 @@ except ImportError:
         from dmoj.utils.winutils import strsignal
     except ImportError:
         strsignal = lambda x: 'signal %s' % x
+
+log = logging.getLogger('dmoj.graders')
 
 
 class StandardGrader(BaseGrader):
@@ -139,7 +142,7 @@ class StandardGrader(BaseGrader):
                                                                  errlimit=1048576)
         except OutputLimitExceeded as ole:
             stream, result.proc_output, error = ole.args
-            print 'OLE:', stream
+            log.warning('OLE on stream: %s', stream)
             result.result_flag |= Result.OLE
             try:
                 process.kill()

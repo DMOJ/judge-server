@@ -1,4 +1,5 @@
 import errno
+import logging
 import os
 import pty
 import re
@@ -10,13 +11,13 @@ import threading
 import time
 
 from dmoj.cptbox._cptbox import *
-
 from dmoj.cptbox.handlers import DISALLOW, _CALLBACK
 from dmoj.cptbox.syscalls import translator, SYSCALL_COUNT, by_id
-from dmoj.utils.communicate import safe_communicate as _safe_communicate
 from dmoj.error import InternalError
+from dmoj.utils.communicate import safe_communicate as _safe_communicate
 
 PIPE = object()
+log = logging.getLogger('dmoj.cptbox')
 
 
 def _find_exe(path):
@@ -196,6 +197,7 @@ class SecurePopen(Process):
         return self.wall_clock_time
 
     def kill(self):
+        log.warning('Request the killing of process: %s', self.pid)
         print>> sys.stderr, 'Child is requested to be killed'
         try:
             os.killpg(self.pid, signal.SIGKILL)
@@ -232,6 +234,7 @@ class SecurePopen(Process):
                                                          self.debugger.uarg4, self.debugger.uarg5])
 
     def _cpu_time_exceeded(self):
+        log.warning('SIGXCPU in process %d', self.pid)
         print>> sys.stderr, 'SIGXCPU in child'
         self._tle = True
 
@@ -266,6 +269,7 @@ class SecurePopen(Process):
         while not self._exited:
             if self.execution_time > self._time or self.wall_clock_time > self._wall_time:
                 print>> sys.stderr, 'Shocker activated, ouch!'
+                log.warning('Shocker activated and killed %d', self.pid)
                 os.killpg(self.pid, signal.SIGKILL)
                 self._tle = True
                 break

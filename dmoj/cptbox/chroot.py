@@ -1,10 +1,12 @@
+import logging
+import os
 import re
 import sys
-import os
 
-from dmoj.cptbox.handlers import ALLOW, STDOUTERR, ACCESS_DENIED
 from dmoj.cptbox._cptbox import bsd_get_proc_cwd, bsd_get_proc_fdno, AT_FDCWD
-from dmoj.cptbox.syscalls import *
+from dmoj.cptbox.handlers import ALLOW, STDOUTERR, ACCESS_DENIED
+
+log = logging.getLogger('dmoj.security')
 
 
 class CHROOTSecurity(dict):
@@ -157,6 +159,7 @@ class CHROOTSecurity(dict):
         def check(debugger):
             file = debugger.readstr(getattr(debugger, 'uarg%d' % argument))
             print>> sys.stderr, '%s: not allowed to access: %s' % (syscall, file)
+            log.warning('Denied access via syscall %s: %s', syscall, file)
             return False
 
         return check
@@ -212,6 +215,7 @@ class CHROOTSecurity(dict):
     def _file_access_check(self, file, debugger, dirfd=AT_FDCWD):
         file = self.get_full_path(debugger, file, dirfd)
         if self.fs_jail.match(file) is None:
+            log.warning('Denied file open: %s', file)
             print>> sys.stderr, 'Not allowed to access:', file
             return False
         return True

@@ -193,9 +193,10 @@ class PacketManager(object):
             )
             log.info('Accept invocation: %d: executor: %s', packet['invocation-id'], packet['language'])
         elif name == 'terminate-submission':
+            log.info('Received abortion request for %s', self.judge.current_submission)
             self.judge.terminate_grading()
         else:
-            print 'ERROR: unknown packet %s, payload %s' % (name, packet)
+            log.error('Unknown packet %s, payload %s', name, packet)
 
     def handshake(self, problems, runtimes, id, key):
         self._send_packet({'name': 'handshake',

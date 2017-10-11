@@ -588,14 +588,18 @@ class JudgeManager(object):
             else:
                 logpm.error('I am not your father, %d (0x%08X)!', pid, status)
 
+    def _respawn_judges(self, signum, frame):
+        logpm.info('Received signal (%s), murderizing all children.', self.signal_map.get(signum, signum))
+        self.signal_all(signal.SIGTERM)
+
     def run(self):
         logpm.info('Starting process manager: %d.', os.getpid())
 
         self._forward_signal(signal.SIGUSR2, respawn=True)
         self._forward_signal(signal.SIGINT)
-        self._forward_signal(signal.SIGHUP)
         self._forward_signal(signal.SIGQUIT)
         self._forward_signal(signal.SIGTERM)
+        signal.signal(signal.SIGHUP, self._respawn_judges)
 
         self._spawn_all()
         try:

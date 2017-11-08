@@ -7,6 +7,7 @@ from collections import defaultdict
 
 from dmoj.cptbox import CHROOTSecurity, SecurePopen
 from dmoj.cptbox.handlers import ALLOW, ACCESS_DENIED
+from dmoj.cptbox.syscalls import *
 from .base_executor import CompiledExecutor
 
 WRITE_FS = ['/proc/self/task/\d+/comm$', '.*?/mono\.\d+$']

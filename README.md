@@ -16,7 +16,7 @@ A modern online judge and contest platform system, supporting <b>IO-based</b>, <
 </tr>
 </table>
 
-## Support
+## Supported Platforms and Runtimes
 
 The judge implements secure grading on Linux, Windows, and FreeBSD machines.
 
@@ -85,13 +85,19 @@ The Judge can also grade in the languages listed below. These languages are less
 * Brain****
 
 ## Installation
+
+On a typical Linux install,
+
 ```
 $ git clone https://github.com/DMOJ/judge.git
 $ cd judge
+$ pip install -r requirements.txt
 $ python setup.py develop
 ```
 
 This will create two executables in your Python's script directory: `dmoj` and `dmoj-cli`. `dmoj` is used to connect a judge to a DMOJ site instance, while `dmoj-cli` provides a command-line interface to a local judge, useful for testing problems.
+
+For more detailed steps, read the [Linux Installation](https://docs.dmoj.ca/en/latest/judge/linux_installation/) or [Windows Installation](https://docs.dmoj.ca/en/latest/judge/windows_installation/) instructions.
 
 ## Usage
 ### Running a Judge Server
@@ -146,6 +152,6 @@ optional arguments:
   --no-ansi-emu         disable ANSI emulation on Windows
 ```
 
-## More Help
+## Documentation
 For info on the problem file format and more, 
 [read the documentation.](https://docs.dmoj.ca)

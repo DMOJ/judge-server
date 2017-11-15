@@ -11,7 +11,7 @@ def main():
     judgeenv.env['extra_fs'] = {
         'PERL': ['/dev/dtrace/helper$', '/dev/hv_tsc$'],
         'PY3': ['/dev/hv_tsc$'],
-        'RUBY2': ['/dev/dtrace/helper$'],
+        'RUBY2': ['/dev/dtrace/helper$', '/dev/hv_tsc$'],
     }
 
     print 'Using extra allowed filesystems:'

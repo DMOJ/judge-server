@@ -24,8 +24,8 @@ The judge implements secure grading on Linux, Windows, and FreeBSD machines.
 |------	|-------	|---------	|---------	|
 | x86  	| ✔     	| ✔      |       ¯\\\_(ツ)\_/¯   |
 | x64  	| [✔](https://travis-ci.org/DMOJ/judge)     	| [✔](https://ci.appveyor.com/project/quantum5/judge)        | [✔](https://ci.dmoj.ca/job/dmoj-judge-freebsd/)       	|
-| x32 	| ✔     	|    ❌	|      ❌   	|
-| ARM  	| ✔     	|      ❌   	|      ❌   	|
+| x32 	| ✔     	|    &mdash;	|      &mdash;   	|
+| ARM  	| ✔     	|      &mdash;   	|      ❌   	|
 
 The DMOJ Judge does **not** need a root user to run on Linux machines: it will run just fine under a normal user.
 

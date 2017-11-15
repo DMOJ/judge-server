@@ -103,7 +103,7 @@ def ci_test(executors_to_test, overrides):
     print
     print
     print 'Running test cases...'
-    judgeenv.problem_dirs = [os.path.join(os.path.dirname(__file__), 'testsuite')]
+    judgeenv.problem_dirs = [os.path.normpath(os.path.join(os.path.dirname(__file__), '..', 'testsuite'))]
     tester = Tester()
     fails = tester.test_all()
     print

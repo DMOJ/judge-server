@@ -8,7 +8,10 @@ OVERRIDES = {}
 
 def main():
     judgeenv.env['runtime'] = {}
-    judgeenv.env['extra_fs'] = {}
+    judgeenv.env['extra_fs'] = {
+        'PERL': ['/dev/dtrace/helper$'],
+        'PY3': ['/dev/hv_tsc'],
+    }
 
     print 'Using extra allowed filesystems:'
     for lang, fs in judgeenv.env['extra_fs'].iteritems():

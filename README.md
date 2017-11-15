@@ -1,7 +1,7 @@
 DMOJ Judge [![Linux Build Status](https://img.shields.io/travis/DMOJ/judge.svg?maxAge=2592000)](https://travis-ci.org/DMOJ/judge) [![Windows Build Status](https://ci.appveyor.com/api/projects/status/wv4e1eujb6wtcbps?svg=true)](https://ci.appveyor.com/project/quantum5/judge) [![FreeBSD Build Status](https://ci.dmoj.ca/buildStatus/icon?job=dmoj-judge-freebsd)](https://ci.dmoj.ca/job/dmoj-judge-freebsd/) [![Coverage](https://img.shields.io/codecov/c/github/DMOJ/judge.svg)](https://codecov.io/gh/DMOJ/judge) [![Slack](https://slack.dmoj.ca/badge.svg)](https://slack.dmoj.ca)
 =====
 
-Python [AGPLv3](https://github.com/DMOJ/judge/blob/master/LICENSE) contest judge backend for the [DMOJ site](http://github.com/DMOJ/site) interface. The judge implements secure grading on Linux, Windows, and FreeBSD machines.
+Python [AGPLv3](https://github.com/DMOJ/judge/blob/master/LICENSE) contest judge backend for the [DMOJ site](http://github.com/DMOJ/site) interface.
 
 <table>
 <tr>
@@ -15,6 +15,17 @@ A modern online judge and contest platform system, supporting <b>IO-based</b>, <
 </td>
 </tr>
 </table>
+
+## Support
+
+The judge implements secure grading on Linux, Windows, and FreeBSD machines.
+
+|           | Linux 	| Windows 	| FreeBSD 	|
+|------	|-------	|---------	|---------	|
+| x86  	| ✔     	| ✔      |       ¯\\\_(ツ)\_/¯   |
+| x64  	| [✔](https://travis-ci.org/DMOJ/judge)     	| [✔](https://ci.appveyor.com/project/quantum5/judge)        | [✔](https://ci.quantum2.xyz/job/dmoj-judge-freebsd/)       	|
+| x32 	| ✔     	|    ❌	|      ❌   	|
+| ARM  	| ✔     	|      ❌   	|      ❌   	|
 
 The DMOJ Judge does **not** need a root user to run on Linux machines: it will run just fine under a normal user.
 

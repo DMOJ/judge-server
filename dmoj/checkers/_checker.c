@@ -10,6 +10,16 @@
 #	define inline
 #endif
 
+#if PY_MAJOR_VERSION >= 3
+#define PyStr_Check PyUnicode_Check
+#define PyStr_Size PyBytes_Size
+#define PyStr_AsString PyBytes_AsString
+#else
+#define PyStr_Check PyString_Check
+#define PyStr_Size PyString_GET_SIZE
+#define PyStr_AsString PyString_AS_STRING
+#endif
+
 static inline int isline(char ch) {
 	switch (ch) {
 	case '\n':
@@ -59,7 +69,7 @@ static PyObject *checker_standard(PyObject *self, PyObject *args) {
 	if (!PyArg_ParseTuple(args, "OO:standard", &expected, &actual))
 		return NULL;
 
-	if (!PyString_Check(expected) || !PyString_Check(actual)) {
+	if (!PyStr_Check(expected) || !PyStr_Check(actual)) {
 		PyErr_SetString(PyExc_ValueError, "expected strings");
 		return NULL;
 	}
@@ -67,8 +77,8 @@ static PyObject *checker_standard(PyObject *self, PyObject *args) {
 	Py_INCREF(expected);
 	Py_INCREF(actual);
 	Py_BEGIN_ALLOW_THREADS
-	result = check_standard(PyString_AS_STRING(expected), PyString_GET_SIZE(expected),
-							PyString_AS_STRING(actual), PyString_GET_SIZE(actual)) ?
+	result = check_standard(PyStr_AsString(expected), PyStr_Size(expected),
+							PyStr_AsString(actual), PyStr_Size(actual)) ?
 			Py_True : Py_False;
 	Py_END_ALLOW_THREADS
 	Py_DECREF(expected);
@@ -83,6 +93,20 @@ static PyMethodDef checker_methods[] = {
 	{NULL, NULL, 0, NULL}
 };
 
-PyMODINIT_FUNC init_checker(void) {
-	(void) Py_InitModule("_checker", checker_methods);
-}
+#if PY_MAJOR_VERSION >= 3
+static struct PyModuleDef moduledef = {
+        PyModuleDef_HEAD_INIT,
+        "_checker",
+        NULL,
+        -1,
+        checker_methods,
+        NULL,
+        NULL,
+        NULL,
+        NULL
+};
+
+PyMODINIT_FUNC PyInit__checker(void) { (void) PyModule_Create(&moduledef); }
+#else
+PyMODINIT_FUNC init_checker(void) { (void) Py_InitModule("_checker", checker_methods); }
+#endif

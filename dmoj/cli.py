@@ -131,7 +131,7 @@ def main():
                     print(ansi_style('#ansi[Unrecognized command %s](red|bold)' % line[0]))
                     print()
         except (EOFError, KeyboardInterrupt):
-            print
+            print()
         finally:
             judge.murder()
 

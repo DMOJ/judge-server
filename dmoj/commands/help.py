@@ -7,9 +7,9 @@ class HelpCommand(Command):
     help = 'Prints listing of commands.'
 
     def execute(self, line):
-        print "Run `command -h/--help` for individual command usage."
-        for name, command in commands.iteritems():
+        print('Run `command -h/--help` for individual command usage.')
+        for name, command in commands.items():
             if command == self:
                 continue
-            print '  %s: %s' % (name, command.help)
-        print
+            print('  %s: %s' % (name, command.help))
+        print()

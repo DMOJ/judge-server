@@ -9,6 +9,9 @@ from dmoj.cli import InvalidCommandException
 from dmoj.executors import executors
 from dmoj.utils.ansi import ansi_style
 
+if sys.version_info[0] < 3:
+    input = raw_input
+
 
 class CommandArgumentParser(argparse.ArgumentParser):
     def error(self, message):
@@ -47,7 +50,7 @@ class Command(object):
 
         raise InvalidCommandException("invalid submission '%d'" % submission_id)
 
-    def open_editor(self, lang, src=''):
+    def open_editor(self, lang, src=b''):
         file_suffix = executors[lang].Executor.ext
         editor = os.environ.get('EDITOR')
         if editor:
@@ -58,7 +61,7 @@ class Command(object):
                 temp.seek(0)
                 src = temp.read()
         else:
-            print ansi_style('#ansi[$EDITOR not set, falling back to stdin](yellow)\n')
+            print(ansi_style('#ansi[$EDITOR not set, falling back to stdin](yellow)\n'))
             src = []
             try:
                 while True:

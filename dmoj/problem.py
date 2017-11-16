@@ -220,7 +220,7 @@ class TestCase(object):
             else:
                 checker = getattr(checkers, name)
         except AttributeError as e:
-            raise InvalidInitException('error loading checker: ' + e.message)
+            raise InvalidInitException('error loading checker: ' + str(e))
         if not hasattr(checker, 'check') or not callable(checker.check):
             raise InvalidInitException('malformed checker: no check method found')
 

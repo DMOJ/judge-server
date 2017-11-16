@@ -39,7 +39,7 @@ class SignatureGrader(StandardGrader):
                                                      writable=handler_data['writable'] or (1, 2),
                                                      fds=handler_data['fds'], defines=['-DSIGNATURE_GRADER'])
             except CompileError as compilation_error:
-                self.judge.packet_manager.compile_error_packet(ansi.format_ansi(compilation_error.message))
+                self.judge.packet_manager.compile_error_packet(ansi.format_ansi(str(compilation_error)))
 
                 # Compile error is fatal
                 raise

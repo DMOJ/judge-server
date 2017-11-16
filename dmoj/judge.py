@@ -582,7 +582,6 @@ class JudgeManager(object):
 def main():  # pragma: no cover
     sys.stdout = codecs.getwriter("utf-8")(os.fdopen(sys.stdout.fileno(), 'w', 0))
     sys.stderr = codecs.getwriter("utf-8")(sys.stderr)
-    logging.getLogger("pykwalify.core").setLevel(logging.CRITICAL)
 
     if not sanity_check():
         return 1
@@ -602,6 +601,8 @@ def main():  # pragma: no cover
     executors.load_executors()
 
     print 'Running live judge...'
+    
+    logging.getLogger("pykwalify.core").setLevel(logging.CRITICAL)
 
     for warning in judgeenv.startup_warnings:
         print ansi_style('#ansi[Warning: %s](yellow)' % warning)

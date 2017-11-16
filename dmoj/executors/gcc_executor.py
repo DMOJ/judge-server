@@ -2,6 +2,8 @@ import os
 import re
 from collections import deque
 
+import six
+
 from dmoj.judgeenv import env
 from dmoj.result import Result
 from .base_executor import CompiledExecutor
@@ -37,6 +39,8 @@ class GCCExecutor(CompiledExecutor):
             if '.' not in name:
                 name += self.ext
             with open(self._file(name), 'wb') as fo:
+                if isinstance(source, six.text_type):
+                    source = source.encode('utf-8')
                 fo.write(source)
             sources.append(name)
         self.sources = sources

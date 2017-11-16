@@ -4,6 +4,7 @@ from dmoj.error import CompileError
 from dmoj.executors import executors
 from dmoj.graders import StandardGrader
 from dmoj.utils import ansi
+from dmoj.utils.unicode import utf8bytes
 
 
 class SignatureGrader(StandardGrader):
@@ -28,8 +29,11 @@ class SignatureGrader(StandardGrader):
 %s
 '''
 
-            aux_sources[self.problem.id + '_submission'] = \
-                (submission_template % (handler_data['header'], str(uuid.uuid4()).replace('-', ''), self.source))
+            aux_sources[self.problem.id + '_submission'] = submission_template % (
+                utf8bytes(handler_data['header']),
+                utf8bytes(str(uuid.uuid4()).replace('-', '')),
+                self.source
+            )
 
             aux_sources[handler_data['header']] = header
             entry = entry_point

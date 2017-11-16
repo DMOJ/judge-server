@@ -29,7 +29,7 @@ def _find_exe(path):
     for dir in os.environ.get('PATH', os.defpath).split(os.pathsep):
         p = os.path.join(dir, path)
         if os.access(p, os.X_OK):
-            return p
+            return p.encode('utf-8')
     raise OSError()
 
 
@@ -108,7 +108,7 @@ class AdvancedDebugger(Debugger):
     def readstr(self, address, max_size=4096):
         if self.address_bits == 32:
             address &= 0xFFFFFFFF
-        return super(AdvancedDebugger, self).readstr(address, max_size)
+        return super(AdvancedDebugger, self).readstr(address, max_size).decode('utf-8')
 
 
 # SecurePopen is a subclass of a cython class, _cptbox.Process. Since it is exceedingly unwise
@@ -127,12 +127,15 @@ class SecurePopenMeta(type):
             raise RuntimeError('Executable type %s could not be debugged on Python type %s' % (arch, PYTHON_ARCH))
         return super(SecurePopenMeta, self).__call__(debugger, self.debugger_type, argv, executable, *args, **kwargs)
 
+
 # pulled from six
 def with_metaclass(meta, *bases):
     class metaclass(meta):
         def __new__(cls, name, this_bases, d):
             return meta(name, bases, d)
+
     return type.__new__(metaclass, 'temporary_class', (), {})
+
 
 class SecurePopen(with_metaclass(SecurePopenMeta, Process)):
     debugger_type = AdvancedDebugger
@@ -144,7 +147,7 @@ class SecurePopen(with_metaclass(SecurePopenMeta, Process)):
         self._executable = executable or _find_exe(args[0])
         self._args = args
         self._chdir = cwd
-        self._env = ['%s=%s' % i for i in (env if env is not None else os.environ).items()]
+        self._env = [bytes('%s=%s' % i, 'utf-8') for i in (env if env is not None else os.environ).items()]
         self._time = time
         self._cpu_time = time + 5 if time else 0
         self._memory = memory
@@ -249,11 +252,15 @@ class SecurePopen(with_metaclass(SecurePopenMeta, Process)):
             self.protection_fault = (syscall, callname)
 
     def _cpu_time_exceeded(self):
-        print>> sys.stderr, 'SIGXCPU in child'
+        print >> sys.stderr, 'SIGXCPU in child'
         self._tle = True
 
     def _run_process(self):
-        self._spawn(self._executable, self._args, self._env, self._chdir, self._fds)
+        self._spawn(self._executable,
+                    self._args,
+                    self._env,
+                    self._chdir,
+                    self._fds)
 
         if self._child_stdin >= 0:
             os.close(self._child_stdin)
@@ -423,7 +430,7 @@ class SecurePopen(with_metaclass(SecurePopenMeta, Process)):
                     data = os.read(fd, 4096)
                     if not data:
                         close_unregister_and_remove(fd)
-                    fd2output[fd].append(data)
+                    fd2output[fd].append(data.decode('utf-8'))
                 else:
                     # Ignore hang up or errors.
                     close_unregister_and_remove(fd)

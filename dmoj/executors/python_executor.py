@@ -31,10 +31,10 @@ runpy.run_path(sys.argv[0], run_name='__main__')\
 
     def create_files(self, problem_id, source_code):
         self._loader = self._file('-loader.py')
-        with open(self._code, 'wb') as fo, open(self._loader, 'wb') as loader:
+        with open(self._code, 'wb') as fo, open(self._loader, 'w') as loader:
             # UTF-8 BOM instead of comment to not modify line numbers.
-            fo.write('\xef\xbb\xbf')
-            fo.write(source_code)
+            fo.write(b'\xef\xbb\xbf')
+            fo.write(bytes(source_code, 'utf8'))
             loader.write(self.loader_script)
 
     def get_feedback(self, stderr, result, process):

@@ -80,8 +80,8 @@ class BaseExecutor(PlatformExecutorMixin, ResourceProxy):
         try:
             executor = cls(cls.test_name, cls.test_program)
             proc = executor.launch(time=cls.test_time, memory=cls.test_memory) if sandbox else executor.launch_unsafe()
-            test_message = b'echo: Hello, World!'
-            stdout, stderr = proc.communicate(test_message + b'\n')
+            test_message = 'echo: Hello, World!'
+            stdout, stderr = proc.communicate(bytes(test_message, 'utf-8') + b'\n')
             res = stdout.strip() == test_message and not stderr
             if output:
                 # Cache the versions now, so that the handshake packet doesn't take ages to generate
@@ -120,7 +120,7 @@ class BaseExecutor(PlatformExecutorMixin, ResourceProxy):
             version = None
             for flag in flags:
                 try:
-                    output = subprocess.check_output([path, flag], stderr=subprocess.STDOUT)
+                    output = subprocess.check_output([path, flag], stderr=subprocess.STDOUT).decode('utf-8')
                 except subprocess.CalledProcessError:
                     pass
                 else:

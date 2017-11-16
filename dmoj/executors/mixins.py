@@ -98,12 +98,13 @@ try:
                 return {'LANG': 'C'}
 
             def launch(self, *args, **kwargs):
-                return SecurePopen(self.get_cmdline() + list(args), executable=self.get_executable(),
+                return SecurePopen([bytes(x, 'utf-8') for x in self.get_cmdline() + list(args)],
+                                   executable=self.get_executable().encode('utf-8'),
                                    security=self.get_security(launch_kwargs=kwargs),
                                    address_grace=self.get_address_grace(),
                                    time=kwargs.get('time'), memory=kwargs.get('memory'),
                                    stderr=(PIPE if kwargs.get('pipe_stderr', False) else None),
-                                   env=self.get_env(), cwd=self._dir, nproc=self.get_nproc(),
+                                   env=self.get_env(), cwd=self._dir.encode('utf-8'), nproc=self.get_nproc(),
                                    unbuffered=kwargs.get('unbuffered', False))
 except ImportError:
     pass

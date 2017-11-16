@@ -69,6 +69,8 @@ class LocalPacketManager(object):
 class LocalJudge(Judge):
     def __init__(self):
         self.packet_manager = LocalPacketManager(self)
+        self.submission_id_counter = 0
+        self.graded_submissions = []
         super(LocalJudge, self).__init__()
 
 
@@ -80,7 +82,8 @@ def register(command):
 
 
 class InvalidCommandException(Exception):
-    pass
+    def __init__(self, message=None):
+        self.message = message
 
 
 class CommandArgumentParser(argparse.ArgumentParser):
@@ -103,6 +106,48 @@ class Command(object):
         self.arg_parser = CommandArgumentParser(prog=self.name, description=self.help)
         self._populate_parser()
 
+    def get_source(self, source_file):
+        try:
+            with open(os.path.realpath(source_file)) as f:
+                return f.read()
+        except Exception as io:
+            raise InvalidCommandException(str(io))
+
+    def get_submission_data(self, submission_id):
+        # don't wrap around
+        if submission_id > 0:
+            try:
+                return self.judge.graded_submissions[submission_id - 1]
+            except IndexError:
+                pass
+
+        raise InvalidCommandException("invalid submission '%d'" % submission_id)
+
+    def open_editor(self, lang, src=''):
+        file_suffix = executors[lang].Executor.ext
+        editor = os.environ.get('EDITOR')
+        if editor:
+            with tempfile.NamedTemporaryFile(suffix=file_suffix) as temp:
+                temp.write(src)
+                temp.flush()
+                subprocess.call([editor, temp.name])
+                temp.seek(0)
+                src = temp.read()
+        else:
+            print ansi_style('#ansi[$EDITOR not set, falling back to stdin](yellow)\n')
+            src = []
+            try:
+                while True:
+                    s = raw_input()
+                    if s.strip() == ':q':
+                        raise EOFError
+                    src.append(s)
+            except EOFError:  # Ctrl+D
+                src = '\n'.join(src)
+            except Exception as io:
+                raise InvalidCommandException(str(io))
+        return src
+
     def _populate_parser(self):
         pass
 
@@ -122,8 +167,7 @@ class ListProblemsCommand(Command):
         _args = self.arg_parser.parse_args(line)
 
         if _args.limit is not None and _args.limit <= 0:
-            print ansi_style("#ansi[--limit must be >= 0](red|bold)\n")
-            return
+            raise InvalidCommandException('--limit must be >= 0')
 
         all_problems = judgeenv.get_supported_problems()
 
@@ -139,9 +183,9 @@ class ListProblemsCommand(Command):
             max_len = max(len(p[0]) for p in all_problems)
             for row in izip_longest(*[problems] * 4, fillvalue=''):
                 print ' '.join(('%*s' % (-max_len, row[i])) for i in xrange(4))
+            print
         else:
-            print ansi_style("#ansi[No problems matching filter found.](red|bold)")
-        print
+            raise InvalidCommandException('No problems matching filter found.')
 
 
 class QuitCommand(Command):
@@ -165,26 +209,22 @@ class HelpCommand(Command):
         print
 
 
-submission_id_counter = 0
-graded_submissions = []
-
-
 class SubmitCommand(Command):
     name = 'submit'
     help = 'Grades a submission.'
 
     def _populate_parser(self):
         self.arg_parser.add_argument('problem_id', help='id of problem to grade')
-        self.arg_parser.add_argument('language_id', nargs='?', default=None, help='id of the language to grade in (e.g., PY2)')
-        self.arg_parser.add_argument('source_file', nargs='?', default=None, help='path to submission source (optional)')
+        self.arg_parser.add_argument('language_id', nargs='?', default=None,
+                                     help='id of the language to grade in (e.g., PY2)')
+        self.arg_parser.add_argument('source_file', nargs='?', default=None,
+                                     help='path to submission source (optional)')
         self.arg_parser.add_argument('-tl', '--time-limit', type=float, help='time limit for grading, in seconds',
                                      default=2.0, metavar='<time limit>')
         self.arg_parser.add_argument('-ml', '--memory-limit', type=int, help='memory limit for grading, in kilobytes',
                                      default=65536, metavar='<memory limit>')
 
     def execute(self, line):
-        global submission_id_counter, graded_submissions
-
         args = self.arg_parser.parse_args(line)
 
         problem_id = args.problem_id
@@ -197,71 +237,35 @@ class SubmitCommand(Command):
             source_file = language_id
             language_id = None  # source file / language id optional
 
-        err = None
-
         if problem_id not in map(itemgetter(0), judgeenv.get_supported_problems()):
-            err = "unknown problem '%s'" % problem_id
+            raise InvalidCommandException("unknown problem '%s'" % problem_id)
         elif not language_id:
             if source_file:
                 filename, dot, ext = source_file.partition('.')
                 if not ext:
-                    err = 'invalid file name'
+                    raise InvalidCommandException('invalid file name')
                 else:
+                    # TODO: this should be a proper lookup elsewhere
                     ext = ext.upper()
-                    if ext == 'PY':
-                        language_id = 'PY2'
-                    elif ext == 'CPP':
-                        language_id = 'CPP11'
-                    elif ext == 'JAVA':
-                        language_id = 'JAVA8'
-                    elif ext:
-                        language_id = ext
-                    else:
-                        err = "unknown language '%s'" % language_id
+                    language_id = {
+                        'PY': 'PY2',
+                        'CPP': 'CPP11',
+                        'JAVA': 'JAVA8'
+                    }.get(ext, ext)
             else:
-                err = "no language is selected"
+                raise InvalidCommandException("no language is selected")
         elif language_id not in executors:
-            err = "unknown language '%s'" % language_id
+            raise InvalidCommandException("unknown language '%s'" % language_id)
         elif time_limit <= 0:
-            err = '--time-limit must be >= 0'
+            raise InvalidCommandException('--time-limit must be >= 0')
         elif memory_limit <= 0:
-            err = '--memory-limit must be >= 0'
-        if not err:
-            if source_file:
-                try:
-                    with open(os.path.realpath(source_file)) as f:
-                        src = f.read()
-                except Exception as io:
-                    err = str(io)
-            else:
-                file_suffix = executors[language_id].Executor.ext
-                editor = os.environ.get('EDITOR')
-                if editor:
-                    with tempfile.NamedTemporaryFile(suffix=file_suffix) as temp:
-                        subprocess.call([editor, temp.name])
-                        temp.seek(0)
-                        src = temp.read()
-                else:
-                    print ansi_style('#ansi[no $EDITOR, falling back to stdin](yellow)\n')
-                    src = []
-                    try:
-                        while True:
-                            s = raw_input()
-                            if s.strip() == ':q':
-                                raise EOFError
-                            src.append(s)
-                    except EOFError:  # Ctrl+D
-                        src = '\n'.join(src)
-                    except Exception as io:
-                        err = str(io)
+            raise InvalidCommandException('--memory-limit must be >= 0')
 
-        if err:
-            print ansi_style('#ansi[%s](red|bold)\n' % err)
-            return
+        src = self.get_source(source_file) if source_file else self.open_editor(language_id)
 
-        submission_id_counter += 1
-        graded_submissions.append((problem_id, language_id, src, time_limit, memory_limit))
-        self.judge.begin_grading(submission_id_counter, problem_id, language_id, src, time_limit,
+        self.judge.submission_id_counter += 1
+        self.judge.graded_submissions.append((problem_id, language_id, src, time_limit, memory_limit))
+        self.judge.begin_grading(self.judge.submission_id_counter, problem_id, language_id, src, time_limit,
                                  memory_limit, False, False, blocking=True)
 
 
@@ -280,61 +284,29 @@ class ResubmitCommand(Command):
                                      metavar='<memory limit>')
 
     def execute(self, line):
-        global submission_id_counter, graded_submissions
-
         args = self.arg_parser.parse_args(line)
 
-        submission_id_counter += 1
-        try:
-            id, lang, src, tl, ml = graded_submissions[args.submission_id - 1]
-        except IndexError:
-            print ansi_style("#ansi[invalid submission '%d'](red|bold)\n" % (args.submission_id - 1))
-            return
+        id, lang, src, tl, ml = self.get_submission_data(args.submission_id)
 
         id = args.problem or id
         lang = args.language or lang
         tl = args.time_limit or tl
         ml = args.memory_limit or ml
 
-        err = None
         if id not in map(itemgetter(0), judgeenv.get_supported_problems()):
-            err = "unknown problem '%s'" % id
+            raise InvalidCommandException("unknown problem '%s'" % id)
         elif lang not in executors:
-            err = "unknown language '%s'" % lang
+            raise InvalidCommandException("unknown language '%s'" % lang)
         elif tl <= 0:
-            err = '--time-limit must be >= 0'
+            raise InvalidCommandException('--time-limit must be >= 0')
         elif ml <= 0:
-            err = '--memory-limit must be >= 0'
-        if not err:
-            file_suffix = executors[lang].Executor.ext
-            editor = os.environ.get('EDITOR')
-            if editor:
-                with tempfile.NamedTemporaryFile(suffix=file_suffix) as temp:
-                    temp.write(src)
-                    temp.flush()
-                    subprocess.call([editor, temp.name])
-                    temp.seek(0)
-                    src = temp.read()
-            else:
-                print ansi_style('#ansi[no editor, falling back](yellow)\n')
-                src = []
-                try:
-                    while True:
-                        s = raw_input()
-                        if s.strip() == ':q':
-                            raise EOFError
-                        src.append(s)
-                except EOFError:  # Ctrl+D
-                    src = '\n'.join(src)
-                except Exception as io:
-                    err = str(io)
+            raise InvalidCommandException('--memory-limit must be >= 0')
 
-        if err:
-            print ansi_style('#ansi[%s](red|bold)\n' % err)
-            return
+        src = self.open_editor(lang, src)
 
-        graded_submissions.append((id, lang, src, tl, ml))
-        self.judge.begin_grading(submission_id_counter, id, lang, src, tl, ml, False, False, blocking=True)
+        self.judge.submission_id_counter += 1
+        self.judge.graded_submissions.append((id, lang, src, tl, ml))
+        self.judge.begin_grading(self.judge.submission_id_counter, id, lang, src, tl, ml, False, False, blocking=True)
 
 
 class RejudgeCommand(Command):
@@ -345,15 +317,11 @@ class RejudgeCommand(Command):
         self.arg_parser.add_argument('submission_id', type=int, help='id of submission to rejudge')
 
     def execute(self, line):
-        global graded_submissions
-
         args = self.arg_parser.parse_args(line)
-        try:
-            problem, lang, src, tl, ml = graded_submissions[args.submission_id - 1]
-        except IndexError:
-            print ansi_style("#ansi[invalid submission '%d'](red|bold)\n" % (args.submission_id - 1))
-            return
-        self.judge.begin_grading(submission_id_counter, problem, lang, src, tl, ml, False, False, blocking=True)
+        problem, lang, src, tl, ml = self.get_submission_data(args.submission_id)
+
+        self.judge.begin_grading(self.judge.submission_id_counter, problem, lang, src, tl, ml, False, False,
+                                 blocking=True)
 
 
 class ListSubmissionsCommand(Command):
@@ -368,12 +336,11 @@ class ListSubmissionsCommand(Command):
         args = self.arg_parser.parse_args(line)
 
         if args.limit is not None and args.limit <= 0:
-            print ansi_style('#ansi[--limit must be >= 0](red|bold)\n')
-            return
+            raise InvalidCommandException("--limit must be >= 0")
 
-        for i, data in enumerate(
-                graded_submissions if not args.limit else graded_submissions[:args.limit]):
-            problem, lang, src, tl, ml = data
+        submissions = self.judge.graded_submissions if not args.limit else self.judge.graded_submissions[:args.limit]
+
+        for i, (problem, lang, src, tl, ml) in enumerate(submissions):
             print ansi_style('#ansi[%s](yellow)/#ansi[%s](green) in %s' % (problem, i + 1, lang))
         print
 
@@ -387,23 +354,12 @@ class DifferenceCommand(Command):
         self.arg_parser.add_argument('id_or_source_2', help='id or path of second source', metavar='<source 2>')
 
     def get_data(self, id_or_source):
-        err = None
-        src = ''
         try:
-            id = int(id_or_source)
+            _, _, src, _, _ = self.get_submission_data(int(id_or_source))
         except ValueError:
-            try:
-                with open(os.path.realpath(id_or_source)) as f:
-                    src = f.read()
-            except Exception as io:
-                err = str(io)
-        else:
-            try:
-                _, _, src, _, _ = graded_submissions[id - 1]
-            except IndexError:
-                err = "invalid submission '%d'" % id
-        
-        return src.splitlines(), err
+            src = self.get_source(id_or_source)
+
+        return src.splitlines()
 
     def execute(self, line):
         args = self.arg_parser.parse_args(line)
@@ -411,14 +367,8 @@ class DifferenceCommand(Command):
         file1 = args.id_or_source_1
         file2 = args.id_or_source_2
 
-        data1, err1 = self.get_data(file1)
-        data2, err2 = self.get_data(file2)
-
-        err = err1 or err2
-
-        if err:
-            print ansi_style('#ansi[%s](red|bold)\n' % err)
-            return
+        data1 = self.get_data(file1)
+        data2 = self.get_data(file2)
 
         difference = list(difflib.unified_diff(data1, data2, fromfile=file1, tofile=file2, lineterm=''))
         if not difference:
@@ -436,42 +386,29 @@ class ShowCommand(Command):
         self.arg_parser.add_argument('id_or_source', help='id or path of submission to show', metavar='<source>')
 
     def get_data(self, id_or_source):
-        err = None
-        src = None
-        lexer = None
         try:
             id = int(id_or_source)
         except ValueError:
-            try:
-                with open(os.path.realpath(id_or_source)) as f:
-                    src = f.read()
-                    lexer = pygments.lexers.get_lexer_for_filename(id_or_source)
-            except Exception as io:
-                err = str(io)
+            src = self.get_source(id_or_source)
+            lexer = pygments.lexers.get_lexer_for_filename(id_or_source)
         else:
-            try:
-                _, lang, src, _, _ = graded_submissions[id - 1]
+            _, lang, src, _, _ = self.get_submission_data(id)
 
-                # TODO: after executor->extension mapping is built-in to the judge, redo this
-                if lang in ['PY2', 'PYPY2']:
-                    lexer = pygments.lexers.PythonLexer()
-                elif lang in ['PY3', 'PYPY3']:
-                    lexer = pygments.lexers.Python3Lexer()
-                else:
-                    lexer = pygments.lexers.guess_lexer(src)
-            except IndexError:
-                err = "invalid submission '%d'" % id
+            # TODO: after executor->extension mapping is built-in to the judge, redo this
+            if lang in ['PY2', 'PYPY2']:
+                lexer = pygments.lexers.PythonLexer()
+            elif lang in ['PY3', 'PYPY3']:
+                lexer = pygments.lexers.Python3Lexer()
+            else:
+                lexer = pygments.lexers.guess_lexer(src)
 
-        return src, err, lexer
+        return src, lexer
 
     def execute(self, line):
         args = self.arg_parser.parse_args(line)
-        data, err, lexer = self.get_data(args.id_or_source)
+        data, lexer = self.get_data(args.id_or_source)
 
-        if err:
-            print ansi_style('#ansi[%s](red|bold)\n' % err)
-        else:
-            print pygments.highlight(data, lexer, pygments.formatters.Terminal256Formatter())
+        print pygments.highlight(data, lexer, pygments.formatters.Terminal256Formatter())
 
 
 def main():
@@ -504,7 +441,7 @@ def main():
     print
 
     for command in [ListProblemsCommand, ListSubmissionsCommand, SubmitCommand, ResubmitCommand, RejudgeCommand,
-                    HelpCommand, QuitCommand, DifferenceCommand, ShowCommand]:
+                    DifferenceCommand, ShowCommand, HelpCommand, QuitCommand]:
         register(command(judge))
 
     with judge:
@@ -519,7 +456,9 @@ def main():
                     cmd = commands[line[0]]
                     try:
                         cmd.execute(line[1:])
-                    except InvalidCommandException:
+                    except InvalidCommandException as e:
+                        if e.message:
+                            print ansi_style("#ansi[%s](red|bold)\n" % e.message)
                         print
                 else:
                     print ansi_style('#ansi[Unrecognized command %s](red|bold)' % line[0])

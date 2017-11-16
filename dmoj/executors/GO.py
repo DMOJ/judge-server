@@ -1,7 +1,11 @@
 import os
+import re
 
+from dmoj.error import CompileError
 from .base_executor import CompiledExecutor
 
+recomment = re.compile(r'//.*?(?=[\r\n])')
+decomment = lambda x: recomment.sub('', x)
 
 class Executor(CompiledExecutor):
     ext = '.go'
@@ -32,3 +36,9 @@ func main() {
 
     def get_nproc(self):
         return [-1, 1][os.name == 'nt']
+
+    def create_files(self, problem_id, source_code, *args, **kwargs):
+        source_code = decomment(source_code).strip()
+        if source_code.split('\n')[0].strip().split() != ['package', 'main']:
+            raise CompileError('Your code must be defined in package main.\n')
+        super(Executor, self).create_files(problem_id, source_code, *args, **kwargs)

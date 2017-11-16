@@ -1,14 +1,15 @@
 import gc
+import logging
 import os
 import platform
 import signal
-import sys
 
 from dmoj.error import CompileError
 from dmoj.executors import executors
 from dmoj.graders.base import BaseGrader
 from dmoj.result import Result, CheckerResult
 from dmoj.utils.communicate import OutputLimitExceeded
+from dmoj.utils.error import print_protection_fault
 
 try:
     from dmoj.utils.nixutils import strsignal
@@ -17,6 +18,8 @@ except ImportError:
         from dmoj.utils.winutils import strsignal
     except ImportError:
         strsignal = lambda x: 'signal %s' % x
+
+log = logging.getLogger('dmoj.graders')
 
 
 class StandardGrader(BaseGrader):
@@ -81,13 +84,7 @@ class StandardGrader(BaseGrader):
         # On Linux we can provide better help messages
         if hasattr(process, 'protection_fault') and process.protection_fault:
             syscall, callname, args = process.protection_fault
-            print>> sys.stderr, 'Protection fault on: %d (%s)' % (syscall, callname)
-            print>> sys.stderr, 'Arg0: 0x%016x' % args[0]
-            print>> sys.stderr, 'Arg1: 0x%016x' % args[1]
-            print>> sys.stderr, 'Arg2: 0x%016x' % args[2]
-            print>> sys.stderr, 'Arg3: 0x%016x' % args[3]
-            print>> sys.stderr, 'Arg4: 0x%016x' % args[4]
-            print>> sys.stderr, 'Arg5: 0x%016x' % args[5]
+            print_protection_fault(process.protection_fault)
             callname = callname.replace('sys_', '', 1)
             message = {
                 'open': 'opening files is not allowed',
@@ -145,7 +142,7 @@ class StandardGrader(BaseGrader):
                                                                  errlimit=1048576)
         except OutputLimitExceeded as ole:
             stream, result.proc_output, error = ole.args
-            print 'OLE:', stream
+            log.warning('OLE on stream: %s', stream)
             result.result_flag |= Result.OLE
             try:
                 process.kill()

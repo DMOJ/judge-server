@@ -1,7 +1,7 @@
-Judge [![Linux Build Status](https://img.shields.io/travis/DMOJ/judge.svg?maxAge=2592000)](https://travis-ci.org/DMOJ/judge) [![Windows Build Status](https://ci.appveyor.com/api/projects/status/wv4e1eujb6wtcbps?svg=true)](https://ci.appveyor.com/project/quantum5/judge) [![Coverage](https://img.shields.io/codecov/c/github/DMOJ/judge.svg)](https://codecov.io/gh/DMOJ/judge) [![Slack](https://slack.dmoj.ca/badge.svg)](https://slack.dmoj.ca)
+DMOJ Judge [![Linux Build Status](https://img.shields.io/travis/DMOJ/judge.svg?maxAge=2592000)](https://travis-ci.org/DMOJ/judge) [![Windows Build Status](https://ci.appveyor.com/api/projects/status/wv4e1eujb6wtcbps?svg=true)](https://ci.appveyor.com/project/quantum5/judge) [![FreeBSD Build Status](https://ci.dmoj.ca/buildStatus/icon?job=dmoj-judge-freebsd)](https://ci.dmoj.ca/job/dmoj-judge-freebsd/lastBuild/consoleFull) [![Coverage](https://img.shields.io/codecov/c/github/DMOJ/judge.svg)](https://codecov.io/gh/DMOJ/judge) [![Documentation Status](https://readthedocs.org/projects/dmoj/badge/?version=latest)](http://dmoj.readthedocs.org/en/latest/?badge=latest) [![Slack](https://slack.dmoj.ca/badge.svg)](https://slack.dmoj.ca)
 =====
 
-Python [AGPLv3](https://github.com/DMOJ/judge/blob/master/LICENSE) contest judge backend for the [DMOJ site](http://github.com/DMOJ/site) interface. The judge implements secure grading on both Linux and Windows machines.
+Python [AGPLv3](https://github.com/DMOJ/judge/blob/master/LICENSE) contest judge backend for the [DMOJ site](http://github.com/DMOJ/site) interface. See it in action at [dmoj.ca](https://dmoj.ca/)!
 
 <table>
 <tr>
@@ -16,11 +16,22 @@ A modern online judge and contest platform system, supporting <b>IO-based</b>, <
 </tr>
 </table>
 
+## Supported Platforms and Runtimes
+
+The judge implements secure grading on Linux, Windows, and FreeBSD machines.
+
+|           | Linux 	| Windows 	| FreeBSD 	|
+|------	|-------	|---------	|---------	|
+| x64  	| [✔](https://travis-ci.org/DMOJ/judge)     	| [✔](https://ci.appveyor.com/project/quantum5/judge)        | [✔](https://ci.dmoj.ca/job/dmoj-judge-freebsd/)       	|
+| x86  	| ✔     	| ✔      |       ¯\\\_(ツ)\_/¯   |
+| x32 	| ✔     	|    &mdash;	|      &mdash;   	|
+| ARM  	| ✔     	|      &mdash;   	|      ❌   	|
+
 The DMOJ Judge does **not** need a root user to run on Linux machines: it will run just fine under a normal user.
 
 Supported languages include:
-* C/++/0x/11/14/
-* Java 7/8
+* C/++/0x/11/14
+* Java 7/8/9
 * Python 2/3
 * PyPy 2/3
 * Pascal
@@ -74,13 +85,19 @@ The Judge can also grade in the languages listed below. These languages are less
 * Brain****
 
 ## Installation
+
+On a typical Linux install,
+
 ```
 $ git clone https://github.com/DMOJ/judge.git
 $ cd judge
+$ pip install -r requirements.txt
 $ python setup.py develop
 ```
 
 This will create two executables in your Python's script directory: `dmoj` and `dmoj-cli`. `dmoj` is used to connect a judge to a DMOJ site instance, while `dmoj-cli` provides a command-line interface to a local judge, useful for testing problems.
+
+For more detailed steps, read the [Linux Installation](https://docs.dmoj.ca/en/latest/judge/linux_installation/) or [Windows Installation](https://docs.dmoj.ca/en/latest/judge/windows_installation/) instructions.
 
 ## Usage
 ### Running a Judge Server
@@ -135,6 +152,6 @@ optional arguments:
   --no-ansi-emu         disable ANSI emulation on Windows
 ```
 
-## More Help
+## Documentation
 For info on the problem file format and more, 
-[read the documentation.](https://github.com/DMOJ/docs)
+[read the documentation.](https://docs.dmoj.ca)

@@ -1,4 +1,5 @@
 import errno
+import logging
 import os
 import re
 import sys
@@ -11,6 +12,8 @@ from .base_executor import CompiledExecutor
 
 WRITE_FS = ['/proc/self/task/\d+/comm$', '.*?/mono\.\d+$']
 UNLINK_FS = re.compile('.*?/mono.\d+$')
+
+log = logging.getLogger('dmoj.security')
 
 
 class MonoSecurePopen(SecurePopen):
@@ -44,6 +47,7 @@ class MonoExecutor(CompiledExecutor):
         sec[sys_ftruncate64] = ALLOW
         sec[sys_sched_yield] = ALLOW
         sec[sys_rt_sigsuspend] = ALLOW
+        sec[sys_wait4] = ALLOW
 
         fs = sec.fs_jail
         write_fs = re.compile('|'.join(WRITE_FS))
@@ -54,6 +58,7 @@ class MonoExecutor(CompiledExecutor):
             file = debugger.readstr(debugger.uarg0)
             if fs.match(file) is None:
                 print>>sys.stderr, 'Not allowed to access:', file
+                log.warning('Denied file open: %s', file)
                 return False
             can = write_fs.match(file) is not None
 
@@ -89,6 +94,7 @@ class MonoExecutor(CompiledExecutor):
             path = debugger.readstr(debugger.uarg0)
             if UNLINK_FS.match(path) is None:
                 print 'Not allowed to unlink:', path
+                log.warning('Denied file unlink: %s', path)
                 return False
             return True
 

@@ -10,14 +10,15 @@ class Executor(ScriptExecutor):
     fs = ['/etc/(?:resolv|nsswitch).conf$', '/$']
     command = 'node'
     syscalls = ['newselect', 'select', 'pipe2', 'poll', 'write', 'epoll_create1',
-                'eventfd2', 'epoll_ctl', 'epoll_wait', 'sched_yield', 'restart_syscall']
+                'eventfd2', 'epoll_ctl', 'epoll_wait', 'sched_yield', 'restart_syscall',
+                'setrlimit']
     test_program = '''\
 process.stdin.on 'readable', () ->
   chunk = process.stdin.read()
   if chunk != null
     process.stdout.write chunk
 '''
-    address_grace = 524288
+    address_grace = 1048576
 
     @classmethod
     def initialize(cls, sandbox=True):

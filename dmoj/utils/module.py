@@ -6,7 +6,7 @@ def load_module(name, code, filename=None):
     mod = imp.new_module(name)
     if filename is not None:
         mod.__file__ = filename
-    exec(compile(code, filename or '<string>', 'exec')) in mod.__dict__
+    exec(compile(code, filename or '<string>', 'exec'), mod.__dict__)
     return mod
 
 

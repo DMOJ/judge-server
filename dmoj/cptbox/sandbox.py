@@ -39,11 +39,10 @@ def _find_exe(path):
 
 def file_info(path, split=re.compile(r'[\s,]').split):
     try:
-        try:
-            _ = subprocess.check_output(['file', '-b', '-L', path])
-            return split(_)
-        except TypeError:
-            return split(_.decode('utf-8'))
+        info = subprocess.check_output(['file', '-b', '-L', path])
+        if isinstance(info, six.binary_type):
+            info = info.decode('utf-8')
+        return split(info)
     except subprocess.CalledProcessError:
         return []
 

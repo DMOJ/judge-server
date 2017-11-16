@@ -1,6 +1,8 @@
 import os
 import subprocess
 
+from six import iteritems
+
 from dmoj.executors.java_executor import JavaExecutor
 
 with open(os.path.join(os.path.dirname(__file__), 'groovy-security.policy')) as policy_file:
@@ -40,7 +42,7 @@ println System.in.newReader().readLine()
     def autoconfig(cls):
         result = {}
 
-        for key, files in {'groovyc': ['groovyc'], 'groovy': ['groovy']}.iteritems():
+        for key, files in iteritems({'groovyc': ['groovyc'], 'groovy': ['groovy']}):
             file = cls.find_command_from_list(files)
             if file is None:
                 return result, False, 'Failed to find "%s"' % key

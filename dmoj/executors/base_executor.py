@@ -89,10 +89,10 @@ class BaseExecutor(PlatformExecutorMixin, ResourceProxy):
                 cls.get_runtime_versions()
                 print(ansi_style(['#ansi[Failed](red|bold)', '#ansi[Success](green|bold)'][res]))
             if stdout.strip() != test_message and error_callback:
-                error_callback('Got unexpected stdout output:\n' + stdout)
+                error_callback('Got unexpected stdout output:\n' + stdout.decode('utf-8'))
             if stderr:
                 if error_callback:
-                    error_callback('Got unexpected stderr output:\n' + stderr)
+                    error_callback('Got unexpected stderr output:\n' + stderr.decode('utf-8'))
                 else:
                     print(stderr, file=sys.stderr)
             if hasattr(proc, 'protection_fault') and proc.protection_fault:
@@ -185,7 +185,7 @@ class BaseExecutor(PlatformExecutorMixin, ResourceProxy):
         if success:
             message = ''
             if len(result) == 1:
-                message = 'Using %s' % result.values()[0]
+                message = 'Using %s' % list(result.values())[0]
         else:
             message = 'Failed self-test'
         return result, success, message, '\n'.join(errors)
@@ -372,7 +372,7 @@ class ShellExecutor(ScriptExecutor):
         return self.shell_commands
 
     def get_allowed_exec(self):
-        return map(find_executable, self.get_shell_commands())
+        return list(map(find_executable, self.get_shell_commands()))
 
     def get_fs(self):
         return super(ShellExecutor, self).get_fs() + self.get_allowed_exec()

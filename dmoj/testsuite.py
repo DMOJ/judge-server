@@ -5,6 +5,8 @@ import sys
 import traceback
 
 import six
+from six import iteritems
+
 import yaml
 
 from dmoj import judgeenv, executors
@@ -216,7 +218,7 @@ class Tester(object):
         if isinstance(cases, list):
             cases = enumerate(cases, 1)
         else:
-            cases = cases.iteritems()
+            cases = iteritems(cases)
         case_expect = {id: func(codes) for id, codes in cases}
         return expect, case_expect
 

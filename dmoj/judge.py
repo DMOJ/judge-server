@@ -205,6 +205,7 @@ class Judge(object):
             # Yield notifying objects for batch begin/end, and unwrap all cases inside the batches
             if isinstance(case, BatchedTestCase):
                 yield BatchBegin()
+
                 for batched_case in self.grade_cases(grader, case.batched_cases,
                                           short_circuit=case.config['short_circuit'],
                                           is_short_circuiting=is_short_circuiting):
@@ -409,6 +410,7 @@ def judge_proc(need_monitor):
             if api_server:
                 api_server.shutdown()
 
+
 PR_SET_PDEATHSIG = 1
 
 logpm = logging.getLogger('dmoj.judgepm')
@@ -446,6 +448,7 @@ class JudgeManager(object):
                 logpm.info('Will no longer respawn judges.')
                 self._try_respawn = False
             self.signal_all(signum)
+
         self.orig_signal[sig] = signal.signal(sig, handler)
 
     def _spawn_child(self, func, *args, **kwargs):
@@ -520,6 +523,7 @@ class JudgeManager(object):
                 self.monitor.join()
             except KeyboardInterrupt:
                 self.monitor.stop()
+
         self.monitor_pid = self._spawn_child(monitor_proc)
         logpm.info('Monitor is pid %d', self.monitor_pid)
 
@@ -538,6 +542,7 @@ class JudgeManager(object):
         def api_proc():
             signal.signal(signal.SIGUSR2, signal.SIG_IGN)
             server.serve_forever()
+
         self.api_pid = self._spawn_child(api_proc)
         logpm.info('API server is pid %d', self.api_pid)
 
@@ -619,7 +624,7 @@ class JudgeManager(object):
             except OSError as e:
                 if e.errno != errno.ESRCH:
                     raise
-                # Well the monitor will catch on eventually if the process vanishes.
+                    # Well the monitor will catch on eventually if the process vanishes.
 
 
 def main():  # pragma: no cover
@@ -667,6 +672,7 @@ def main():  # pragma: no cover
         manager.run()
     else:
         return judge_proc(need_monitor=True)
+
 
 if __name__ == '__main__':
     main()

@@ -57,7 +57,7 @@ println System.in.newReader().readLine()
         if not log:
             return result, False, 'Failed to parse: %s' % groovy
 
-        cmdline = log[-1].lstrip(b'+ ').split()
+        cmdline = log[-1].lstrip('+ ').split()
 
         result['groovy_vm'] = cls.unravel_java(cls.find_command_from_list([cmdline[1]]))
         result['groovy_args'] = [i for i in cmdline[2:-1]]

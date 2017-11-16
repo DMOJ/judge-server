@@ -12,11 +12,11 @@ from dmoj.error import CompileError, InternalError
 from .base_executor import CompiledExecutor
 from dmoj.result import Result
 
-recomment = re.compile(r'/\*.*?\*/', re.DOTALL)
-restring = re.compile(r''''(?:\\.|[^'\\])'|"(?:\\.|[^"\\])*"''', re.DOTALL)
-reinline_comment = re.compile(r'//.*?(?=[\r\n])')
-reclass = re.compile(r'\bpublic\s+(?:strictfp\s+)?(?:(?:abstract|final)\s+)?(?:strictfp\s+)?class\s+([_a-zA-Z\$][_0-9a-zA-z\$]*?)\b')
-repackage = re.compile(r'\bpackage\s+([^.;]+(?:\.[^.;]+)*?);')
+recomment = re.compile(br'/\*.*?\*/', re.DOTALL)
+restring = re.compile(br''''(?:\\.|[^'\\])'|"(?:\\.|[^"\\])*"''', re.DOTALL)
+reinline_comment = re.compile(br'//.*?(?=[\r\n])')
+reclass = re.compile(br'\bpublic\s+(?:strictfp\s+)?(?:(?:abstract|final)\s+)?(?:strictfp\s+)?class\s+([_a-zA-Z\$][_0-9a-zA-z\$]*?)\b')
+repackage = re.compile(br'\bpackage\s+([^.;]+(?:\.[^.;]+)*?);')
 redeunicode = re.compile(br'\\u([0-9a-f]{4})', re.I)
 deunicode = lambda x: redeunicode.sub(lambda a: unichr(int(a.group(1), 16)), x)
 
@@ -35,8 +35,7 @@ with open(os.path.join(os.path.dirname(__file__), 'java-security.policy')) as po
 
 
 def find_class(source):
-    source = source.decode('utf-8')
-    source = reinline_comment.sub('', restring.sub('', recomment.sub('', source)))
+    source = reinline_comment.sub(b'', restring.sub(b'', recomment.sub(b'', source)))
     class_name = reclass.search(source)
     if class_name is None:
         raise CompileError(b'No public class: your main class must be declared as a "public class"\n')

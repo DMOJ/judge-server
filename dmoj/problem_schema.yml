@@ -1,0 +1,155 @@
+# normal names
+type: map
+mapping:
+  archive:
+    type: str
+    pattern: .+\.zip
+  generator:
+    type: str
+  checker:
+    type: any
+  signature_grader:
+    type: map
+    mapping:
+      entry:
+        type: str
+      header:
+        type: str
+  custom_judge:
+    type: str
+  io_redirects:
+    type: map
+    mapping:
+      regex;(.+):
+        type: map
+        mapping:
+          fd:
+            type: any
+          mode:
+            type: str
+      regex;(.+):
+        type: map
+        mapping:
+          fd:
+            type: str
+          mode:
+            type: str
+  hints:
+    type: seq
+    sequence:
+      - type: str
+  unbuffered:
+    type: bool
+
+# defaults
+  wall_time_factor:
+    type: int
+  output_prefix_length:
+    type: int
+  output_limit_length:
+    type: int
+
+# outer points, in, out
+  points:
+    type: int
+  in:
+    type: str
+  out:
+    type: str
+
+# pretest_test_cases
+  pretest_test_cases:
+    type: seq
+    sequence:
+      - type: map
+        mapping:
+          points:
+            type: int
+          in:
+            type: str
+          out:
+            type: str
+          generator_args:
+            type: seq
+            sequence:
+              - type: str
+
+# normal test_cases
+  test_cases:
+    type: seq
+    matching: any
+    sequence:
+# normal cases
+      - type: map
+        mapping:
+          points:
+            type: int
+          in:
+            type: str
+          out:
+            type: str
+          generator_args:
+            type: seq
+            sequence:
+              - type: str
+# batched cases
+      - type: map
+        mapping:
+          points:
+            type: int
+          batched:
+            type: seq
+            sequence:
+              - type: map
+                mapping:
+                  in:
+                    type: str
+                  out:
+                    type: str
+                  generator_args:
+                    type: seq
+                    sequence:
+                      - type: str
+
+# test_cases ++
+  test_cases+:
+    type: str
+  test_cases++:
+    type: str
+# names with ++
+  archive+:
+    type: str
+  archive++:
+    type: str
+  generator+:
+    type: str
+  generator++:
+    type: str
+  checker+:
+    type: str
+  checker++:
+    type: str
+  signature_grader+:
+    type: str
+  signature_grader++:
+    type: str
+  custom_judge+:
+    type: str
+  custom_judge++:
+    type: str
+  io_redirects+:
+    type: str
+  io_redirects++:
+    type: str
+  wall_time_factor+:
+    type: str
+  wall_time_factor++:
+    type: str
+  output_prefix_length+:
+    type: str
+  output_prefix_length++:
+    type: str
+  output_limit_length+:
+    type: str
+  output_limit_length++:
+    type: str

@@ -331,6 +331,7 @@ def main():
 
     print 'Running local judge...'
 
+    logging.getLogger("pykwalify.core").setLevel(logging.CRITICAL)
     logging.basicConfig(filename=judgeenv.log_file, level=logging.INFO,
                         format='%(levelname)s %(asctime)s %(module)s %(message)s')
 

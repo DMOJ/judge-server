@@ -647,6 +647,8 @@ def main():  # pragma: no cover
         signal.signal(signal.SIGUSR2, signal.SIG_IGN)
 
     print 'Running live judge...'
+    
+    logging.getLogger("pykwalify.core").setLevel(logging.CRITICAL)
 
     for warning in judgeenv.startup_warnings:
         print ansi_style('#ansi[Warning: %s](yellow)' % warning)

@@ -195,7 +195,7 @@ class Judge(object):
             if isinstance(case, BatchedTestCase):
                 yield BatchBegin()
                 for batched_case in self.grade_cases(grader, case.batched_cases, short_circuit=True,
-                                          is_short_circuiting=is_short_circuiting):
+                                                     is_short_circuiting=is_short_circuiting):
                     if (batched_case.result_flag & Result.WA) > 0 and not case.points:
                         is_short_circuiting = True
                     yield batched_case
@@ -394,6 +394,7 @@ def judge_proc(need_monitor):
             if api_server:
                 api_server.shutdown()
 
+
 PR_SET_PDEATHSIG = 1
 
 
@@ -424,11 +425,12 @@ class JudgeManager(object):
 
     def _forward_signal(self, sig, respawn=False):
         def handler(signum, frame):
-            print>>sys.stderr, 'judgepm: Received signal (%s), forwarding...' % self.signal_map.get(signum, signum)
+            print>> sys.stderr, 'judgepm: Received signal (%s), forwarding...' % self.signal_map.get(signum, signum)
             if not respawn:
-                print>>sys.stderr, 'judgepm: Will no longer respawn judges.'
+                print>> sys.stderr, 'judgepm: Will no longer respawn judges.'
                 self._try_respawn = False
             self.signal_all(signum)
+
         self.orig_signal[sig] = signal.signal(sig, handler)
 
     def _spawn_child(self, func, *args, **kwargs):
@@ -438,7 +440,7 @@ class JudgeManager(object):
         try:
             pid = os.fork()
         except OSError:
-            print>>sys.stderr, 'judgepm: Failed to spawn judge:', id
+            print>> sys.stderr, 'judgepm: Failed to spawn judge:', id
             return
         if pid == 0:
             # In child. Scary business.
@@ -483,6 +485,7 @@ class JudgeManager(object):
                 self.monitor.join()
             except KeyboardInterrupt:
                 self.monitor.stop()
+
         self.monitor_pid = self._spawn_child(monitor_proc)
 
     def _spawn_api(self):
@@ -500,19 +503,20 @@ class JudgeManager(object):
         def api_proc():
             signal.signal(signal.SIGUSR2, signal.SIG_IGN)
             server.serve_forever()
+
         self.api_pid = self._spawn_child(api_proc)
 
     def _spawn_all(self):
         from dmoj import judgeenv
 
         for id in self.auth:
-            print>>sys.stderr, 'judgepm: Spawning judge:', id
+            print>> sys.stderr, 'judgepm: Spawning judge:', id
             self._spawn_judge(id)
         if self.monitor.is_real:
-            print>>sys.stderr, 'judgepm: Spawning monitor'
+            print>> sys.stderr, 'judgepm: Spawning monitor'
             self._spawn_monitor()
         if judgeenv.api_listen is not None:
-            print>>sys.stderr, 'judgepm: Spawning API server'
+            print>> sys.stderr, 'judgepm: Spawning API server'
             self._spawn_api()
 
     def _monitor(self):
@@ -530,27 +534,27 @@ class JudgeManager(object):
                 judge = self.pids[pid]
                 del self.pids[pid]
                 if self._try_respawn:
-                    print>>sys.stderr, 'judgepm: Judge died, respawning: %s (0x%08X)' % (judge, status)
+                    print>> sys.stderr, 'judgepm: Judge died, respawning: %s (0x%08X)' % (judge, status)
                     self._spawn_judge(judge)
                 else:
-                    print>>sys.stderr, 'judgepm: Judge exited: %s (0x%08X)' % (judge, status)
+                    print>> sys.stderr, 'judgepm: Judge exited: %s (0x%08X)' % (judge, status)
             elif pid == self.monitor_pid:
                 if self._try_respawn:
-                    print>>sys.stderr, 'judgepm: Monitor died, respawning (0x%08X)' % status
+                    print>> sys.stderr, 'judgepm: Monitor died, respawning (0x%08X)' % status
                     self._spawn_monitor()
                 else:
-                    print>>sys.stderr, 'judgepm: Monitor exited: (0x%08X)' % status
+                    print>> sys.stderr, 'judgepm: Monitor exited: (0x%08X)' % status
             elif pid == self.api_pid:
                 if self._try_respawn:
-                    print>>sys.stderr, 'judgepm: API server died, respawning (0x%08X)' % status
+                    print>> sys.stderr, 'judgepm: API server died, respawning (0x%08X)' % status
                     self._spawn_api()
                 else:
-                    print>>sys.stderr, 'judgepm: API server exited: (0x%08X)' % status
+                    print>> sys.stderr, 'judgepm: API server exited: (0x%08X)' % status
             else:
-                print>>sys.stderr, 'judgepm: I am not your father, %d (0x%08X)!' % (pid, status)
+                print>> sys.stderr, 'judgepm: I am not your father, %d (0x%08X)!' % (pid, status)
 
     def run(self):
-        print>>sys.stderr, 'judgepm: Starting process manager: %d.' % os.getpid()
+        print>> sys.stderr, 'judgepm: Starting process manager: %d.' % os.getpid()
 
         self._forward_signal(signal.SIGUSR2, respawn=True)
         self._forward_signal(signal.SIGINT)
@@ -576,13 +580,13 @@ class JudgeManager(object):
             except OSError as e:
                 if e.errno != errno.ESRCH:
                     raise
-                # Well the monitor will catch on eventually if the process vanishes.
+                    # Well the monitor will catch on eventually if the process vanishes.
 
 
 def main():  # pragma: no cover
     sys.stdout = codecs.getwriter("utf-8")(os.fdopen(sys.stdout.fileno(), 'w', 0))
     sys.stderr = codecs.getwriter("utf-8")(sys.stderr)
- 
+
     if not sanity_check():
         return 1
 
@@ -614,6 +618,7 @@ def main():  # pragma: no cover
         manager.run()
     else:
         return judge_proc(need_monitor=True)
+
 
 if __name__ == '__main__':
     main()

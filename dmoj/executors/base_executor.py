@@ -392,7 +392,7 @@ class ShellExecutor(ScriptExecutor):
             path = sec.get_full_path(debugger, debugger.readstr(debugger.uarg0))
             if path in allowed:
                 return True
-            print>> sys.stderr, 'Not allowed to use command:', path
+            print('Not allowed to use command:', path, file=sys.stderr)
             return False
 
         sec[sys_execve] = handle_execve

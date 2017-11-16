@@ -6,7 +6,7 @@ import six
 
 from dmoj.judgeenv import env
 from dmoj.result import Result
-from dmoj.utils.unicode import utf8bytes
+from dmoj.utils.unicode import utf8bytes, utf8text
 from .base_executor import CompiledExecutor
 
 GCC_ENV = env.runtime.gcc_env or {}
@@ -86,7 +86,7 @@ class GCCExecutor(CompiledExecutor):
         if not match:
             return ''
         exception = match[0].group(1)
-        return '' if len(exception) > 40 else exception
+        return '' if len(exception) > 40 else utf8text(exception, 'replace')
 
     @classmethod
     def get_version_flags(cls, command):

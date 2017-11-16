@@ -2,6 +2,7 @@ import argparse
 import os
 import sys
 
+import six
 import yaml
 
 from dmoj.config import ConfigNode
@@ -201,7 +202,7 @@ def get_supported_problems():
     problems = []
     for dir in get_problem_roots():
         for problem in os.listdir(dir):
-            if isinstance(problem, str):
+            if isinstance(problem, six.binary_type):
                 problem = problem.decode(fs_encoding)
             if os.access(os.path.join(dir, problem, 'init.yml'), os.R_OK):
                 problems.append((problem, os.path.getmtime(os.path.join(dir, problem))))

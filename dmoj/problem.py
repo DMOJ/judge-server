@@ -160,7 +160,7 @@ class TestCase(object):
         # data on Macs (\r newline) when judged programs assume \n
         if self.config.binary_data:
             return data
-        return data.replace('\r\n', '\r').replace('\r', '\n')
+        return data.replace(b'\r\n', b'\r').replace(b'\r', b'\n')
 
     def _run_generator(self, gen, args=None):
         flags = []

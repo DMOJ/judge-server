@@ -172,8 +172,8 @@ class Judge(object):
 
                         # here be cancer
                         is_sc = (result.result_flag & Result.SC)
-                        colored_codes = map(lambda x: '#ansi[%s](%s|bold)' % ('--' if x == 'SC' else x,
-                                                                              Result.COLORS_BYID[x]), codes)
+                        colored_codes = list(map(lambda x: '#ansi[%s](%s|bold)' % ('--' if x == 'SC' else x,
+                                                                                   Result.COLORS_BYID[x]), codes))
                         colored_aux_codes = '{%s}' % ', '.join(colored_codes[1:]) if len(codes) > 1 else ''
                         colored_feedback = '(#ansi[%s](|underline)) ' % result.feedback if result.feedback else ''
                         case_info = '[%.3fs (%.3fs) | %dkb] %s%s' % (result.execution_time,
@@ -190,7 +190,8 @@ class Judge(object):
                         case_number += 1
             except TerminateGrading:
                 self.packet_manager.submission_terminated_packet()
-                print(ansi_style('#ansi[Forcefully terminating grading. Temporary files may not be deleted.](red|bold)'))
+                print(
+                    ansi_style('#ansi[Forcefully terminating grading. Temporary files may not be deleted.](red|bold)'))
                 pass
             except:
                 self.internal_error()
@@ -211,8 +212,8 @@ class Judge(object):
                 yield BatchBegin()
 
                 for batched_case in self.grade_cases(grader, case.batched_cases,
-                                          short_circuit=case.config['short_circuit'],
-                                          is_short_circuiting=is_short_circuiting):
+                                                     short_circuit=case.config['short_circuit'],
+                                                     is_short_circuiting=is_short_circuiting):
                     if (batched_case.result_flag & Result.WA) > 0 and not case.points:
                         is_short_circuiting = True
                     yield batched_case

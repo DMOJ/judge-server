@@ -1,6 +1,9 @@
+import six
+
+
 class BaseGrader(object):
     def __init__(self, judge, problem, language, source):
-        if isinstance(source, unicode):
+        if isinstance(source, six.text_type):
             source = source.encode('utf-8')
         self.source = source
         self.language = language

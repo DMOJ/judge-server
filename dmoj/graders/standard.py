@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import gc
+import logging
 import os
 import platform
 import signal
@@ -10,6 +11,7 @@ from dmoj.executors import executors
 from dmoj.graders.base import BaseGrader
 from dmoj.result import Result, CheckerResult
 from dmoj.utils.communicate import OutputLimitExceeded
+from dmoj.utils.error import print_protection_fault
 
 try:
     from dmoj.utils.nixutils import strsignal
@@ -18,6 +20,8 @@ except ImportError:
         from dmoj.utils.winutils import strsignal
     except ImportError:
         strsignal = lambda x: 'signal %s' % x
+
+log = logging.getLogger('dmoj.graders')
 
 
 class StandardGrader(BaseGrader):
@@ -28,7 +32,8 @@ class StandardGrader(BaseGrader):
 
         self._current_proc = self.binary.launch(time=self.problem.time_limit, memory=self.problem.memory_limit,
                                                 pipe_stderr=True, unbuffered=case.config.unbuffered,
-                                                io_redirects=case.io_redirects())
+                                                io_redirects=case.io_redirects(),
+                                                wall_time=case.config.wall_time_factor * self.problem.time_limit)
 
         error = self._interact_with_process(case, result, input)
 
@@ -80,7 +85,8 @@ class StandardGrader(BaseGrader):
 
         # On Linux we can provide better help messages
         if hasattr(process, 'protection_fault') and process.protection_fault:
-            sigid, callname = process.protection_fault
+            syscall, callname, args = process.protection_fault
+            print_protection_fault(process.protection_fault)
             callname = callname.replace('sys_', '', 1)
             message = {
                 'open': 'opening files is not allowed',
@@ -138,7 +144,7 @@ class StandardGrader(BaseGrader):
                                                                  errlimit=1048576)
         except OutputLimitExceeded as ole:
             stream, result.proc_output, error = ole.args
-            print('OLE:', stream)
+            log.warning('OLE on stream: %s', stream)
             result.result_flag |= Result.OLE
             try:
                 process.kill()

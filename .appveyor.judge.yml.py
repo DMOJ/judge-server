@@ -18,7 +18,7 @@ runtime:
   python: C:\Python27\Python.exe
   python3: C:\Python35\Python.exe
   ruby19: C:\Ruby193\bin\ruby.exe
-  ruby21: C:\Ruby21\bin\ruby.exe
+  ruby2: C:\Ruby21\bin\ruby.exe
   sed: C:\Program Files\Git\usr\bin\sed.exe
   vbc: C:\Windows\Microsoft.NET\Framework\v4.0.30319\vbc.exe
 

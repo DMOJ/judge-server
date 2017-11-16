@@ -1,7 +1,6 @@
 import os
-from shutil import copyfile
-
 import sys
+from shutil import copyfile
 
 from dmoj.judgeenv import env
 
@@ -72,10 +71,7 @@ try:
             fs = []
             syscalls = []
 
-            def get_security(self, launch_kwargs=None):
-                if CHROOTSecurity is None:
-                    raise NotImplementedError('No security manager on Windows')
-                sec = CHROOTSecurity(self.get_fs(), io_redirects=launch_kwargs.get('io_redirects', None))
+            def _add_syscalls(self, sec):
                 for name in self.get_allowed_syscalls():
                     if isinstance(name, tuple) and len(name) == 2:
                         name, handler = name
@@ -83,6 +79,12 @@ try:
                         handler = ALLOW
                     sec[getattr(syscalls, 'sys_' + name)] = handler
                 return sec
+
+            def get_security(self, launch_kwargs=None):
+                if CHROOTSecurity is None:
+                    raise NotImplementedError('No security manager on Windows')
+                sec = CHROOTSecurity(self.get_fs(), io_redirects=launch_kwargs.get('io_redirects', None))
+                return self._add_syscalls(sec)
 
             def get_fs(self):
                 name = self.get_executor_name()
@@ -103,6 +105,7 @@ try:
                                    security=self.get_security(launch_kwargs=kwargs),
                                    address_grace=self.get_address_grace(),
                                    time=kwargs.get('time'), memory=kwargs.get('memory'),
+                                   wall_time=kwargs.get('wall_time'),
                                    stderr=(PIPE if kwargs.get('pipe_stderr', False) else None),
                                    env=self.get_env(), cwd=self._dir.encode('utf-8'), nproc=self.get_nproc(),
                                    unbuffered=kwargs.get('unbuffered', False))

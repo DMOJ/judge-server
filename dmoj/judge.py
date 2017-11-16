@@ -1,6 +1,7 @@
 #!/usr/bin/python
 from __future__ import print_function
 
+import codecs
 import errno
 import logging
 import os
@@ -57,6 +58,9 @@ class Judge(object):
         self._terminate_grading = False
         self.process_type = 0
 
+        self._updating_problem = False
+        self._problem_is_stale = False
+
         self.begin_grading = partial(self.process_submission, TYPE_SUBMISSION, self._begin_grading)
         self.custom_invocation = partial(self.process_submission, TYPE_INVOCATION, self._custom_invocation)
 
@@ -64,7 +68,15 @@ class Judge(object):
         """
         Pushes current problem set to server.
         """
-        self.packet_manager.supported_problems_packet(get_supported_problems())
+        self._problem_is_stale = True
+        if not self._updating_problem:
+            # If a signal is received here, there is still a race.
+            # But how probable is that?
+            self._updating_problem = True
+            while self._problem_is_stale:
+                self._problem_is_stale = False
+                self.packet_manager.supported_problems_packet(get_supported_problems())
+            self._updating_problem = False
 
     def process_submission(self, type, target, id, *args, **kwargs):
         try:
@@ -164,9 +176,11 @@ class Judge(object):
                                                                               Result.COLORS_BYID[x]), codes)
                         colored_aux_codes = '{%s}' % ', '.join(colored_codes[1:]) if len(codes) > 1 else ''
                         colored_feedback = '(#ansi[%s](|underline)) ' % result.feedback if result.feedback else ''
-                        case_info = '[%.3fs | %dkb] %s%s' % (result.execution_time, result.max_memory,
-                                                             colored_feedback,
-                                                             colored_aux_codes) if not is_sc else ''
+                        case_info = '[%.3fs (%.3fs) | %dkb] %s%s' % (result.execution_time,
+                                                                     result.r_execution_time,
+                                                                     result.max_memory,
+                                                                     colored_feedback,
+                                                                     colored_aux_codes) if not is_sc else ''
                         case_padding = '  ' * in_batch
                         print(ansi_style('%sTest case %2d %-3s %s' % (case_padding, case_number,
                                                                       colored_codes[0], case_info)))
@@ -195,7 +209,9 @@ class Judge(object):
             # Yield notifying objects for batch begin/end, and unwrap all cases inside the batches
             if isinstance(case, BatchedTestCase):
                 yield BatchBegin()
-                for batched_case in self.grade_cases(grader, case.batched_cases, short_circuit=True,
+
+                for batched_case in self.grade_cases(grader, case.batched_cases,
+                                          short_circuit=case.config['short_circuit'],
                                           is_short_circuiting=is_short_circuiting):
                     if (batched_case.result_flag & Result.WA) > 0 and not case.points:
                         is_short_circuiting = True
@@ -302,8 +318,8 @@ class Judge(object):
 
 
 class ClassicJudge(Judge):
-    def __init__(self, host, port):
-        self.packet_manager = packet.PacketManager(host, port, self, env['id'], env['key'])
+    def __init__(self, host, port, **kwargs):
+        self.packet_manager = packet.PacketManager(host, port, self, env['id'], env['key'], **kwargs)
         super(ClassicJudge, self).__init__()
 
 
@@ -353,9 +369,11 @@ def judge_proc(need_monitor):
         pass
 
     logging.basicConfig(filename=logfile, level=logging.INFO,
-                        format='%(levelname)s %(asctime)s %(module)s %(message)s')
+                        format='%(levelname)s %(asctime)s %(process)d %(module)s %(message)s')
 
-    judge = ClassicJudge(judgeenv.server_host, judgeenv.server_port)
+    judge = ClassicJudge(judgeenv.server_host, judgeenv.server_port,
+                         secure=judgeenv.secure, no_cert_check=judgeenv.no_cert_check,
+                         cert_store=judgeenv.cert_store)
     if need_monitor:
         monitor = Monitor()
         monitor.callback = judge.update_problems
@@ -364,6 +382,7 @@ def judge_proc(need_monitor):
 
     if hasattr(signal, 'SIGUSR2'):
         def update_problem_signal(signum, frame):
+            logging.getLogger('signal').info('Received SIGUSR2, updating problems.')
             judge.update_problems()
 
         signal.signal(signal.SIGUSR2, update_problem_signal)
@@ -395,7 +414,10 @@ def judge_proc(need_monitor):
             if api_server:
                 api_server.shutdown()
 
+
 PR_SET_PDEATHSIG = 1
+
+logpm = logging.getLogger('dmoj.judgepm')
 
 
 class JudgeManager(object):
@@ -425,21 +447,25 @@ class JudgeManager(object):
 
     def _forward_signal(self, sig, respawn=False):
         def handler(signum, frame):
-            print('judgepm: Received signal (%s), forwarding...' % self.signal_map.get(signum, signum), file=sys.stderr)
+            logpm.info('Received signal (%s), forwarding...', self.signal_map.get(signum, signum))
             if not respawn:
-                print('judgepm: Will no longer respawn judges.', file=sys.stderr)
+                logpm.info('Will no longer respawn judges.')
                 self._try_respawn = False
             self.signal_all(signum)
+
         self.orig_signal[sig] = signal.signal(sig, handler)
 
     def _spawn_child(self, func, *args, **kwargs):
         sys.stdout.flush()
         sys.stderr.flush()
         ppid = os.getpid()
+
+        # Pipe to signal signal handler initialization.
+        pr, pw = os.pipe()
         try:
             pid = os.fork()
         except OSError:
-            print('judgepm: Failed to spawn judge:', id, file=sys.stderr)
+            logpm.exception('Failed to spawn child process.')
             return
         if pid == 0:
             # In child. Scary business.
@@ -448,15 +474,31 @@ class JudgeManager(object):
                 os.kill(os.getpid(), signal.SIGTERM)
                 os._exit(2)
             sys.stdin.close()
+            os.close(pr)
 
             for sig, handler in self.orig_signal.iteritems():
                 signal.signal(sig, handler)
+            os.close(pw)
 
             # How could we possibly return to top level?
             try:
                 os._exit(func(*args, **kwargs) or 0)
             finally:
                 os._exit(1)  # If that os._exit fails because ret is a truthy non-int, then this will ensure death.
+
+        # In parent.
+        os.close(pw)
+
+        # Block until child initializes signals before we register this child to receive signals.
+        while True:
+            try:
+                os.read(pr, 1)
+            except OSError as e:
+                if e.errno != errno.EINTR:
+                    raise
+            else:
+                break
+        os.close(pr)
         return pid
 
     def _judge_proc(self, id):
@@ -474,6 +516,7 @@ class JudgeManager(object):
     def _spawn_judge(self, id):
         pid = self._spawn_child(self._judge_proc, id)
         self.pids[pid] = id
+        logpm.info('Judge %s is pid %d', id, pid)
 
     def _spawn_monitor(self):
         def monitor_proc():
@@ -484,7 +527,9 @@ class JudgeManager(object):
                 self.monitor.join()
             except KeyboardInterrupt:
                 self.monitor.stop()
+
         self.monitor_pid = self._spawn_child(monitor_proc)
+        logpm.info('Monitor is pid %d', self.monitor_pid)
 
     def _spawn_api(self):
         from dmoj import judgeenv
@@ -501,19 +546,21 @@ class JudgeManager(object):
         def api_proc():
             signal.signal(signal.SIGUSR2, signal.SIG_IGN)
             server.serve_forever()
+
         self.api_pid = self._spawn_child(api_proc)
+        logpm.info('API server is pid %d', self.api_pid)
 
     def _spawn_all(self):
         from dmoj import judgeenv
 
         for id in self.auth:
-            print('judgepm: Spawning judge:', id, file=sys.stderr)
+            logpm.info('Spawning judge: %s', id)
             self._spawn_judge(id)
         if self.monitor.is_real:
-            print('judgepm: Spawning monitor', file=sys.stderr)
+            logpm.info('Spawning monitor')
             self._spawn_monitor()
         if judgeenv.api_listen is not None:
-            print('judgepm: Spawning API server', file=sys.stderr)
+            logpm.info('Spawning API server')
             self._spawn_api()
 
     def _monitor(self):
@@ -531,33 +578,37 @@ class JudgeManager(object):
                 judge = self.pids[pid]
                 del self.pids[pid]
                 if self._try_respawn:
-                    print('judgepm: Judge died, respawning: %s (0x%08X)' % (judge, status), file=sys.stderr)
+                    logpm.warning('Judge died, respawning: %s (pid %d, 0x%08X)', judge, pid, status)
                     self._spawn_judge(judge)
                 else:
-                    print('judgepm: Judge exited: %s (0x%08X)' % (judge, status), file=sys.stderr)
+                    logpm.info('Judge exited: %s (pid %d, 0x%08X)', judge, pid, status)
             elif pid == self.monitor_pid:
                 if self._try_respawn:
-                    print('judgepm: Monitor died, respawning (0x%08X)' % status, file=sys.stderr)
+                    logpm.warning('Monitor died, respawning (0x%08X)', status)
                     self._spawn_monitor()
                 else:
-                    print('judgepm: Monitor exited: (0x%08X)' % status, file=sys.stderr)
+                    logpm.info('Monitor exited: (0x%08X)', status)
             elif pid == self.api_pid:
                 if self._try_respawn:
-                    print(sys.stderr, 'judgepm: API server died, respawning (0x%08X)' % status, file=sys.stderr)
+                    logpm.warning('API server died, respawning (0x%08X)', status)
                     self._spawn_api()
                 else:
-                    print('judgepm: API server exited: (0x%08X)' % status, file=sys.stderr)
+                    logpm.info('API server exited: (0x%08X)', status)
             else:
-                print('judgepm: I am not your father, %d (0x%08X)!' % (pid, status), file=sys.stderr)
+                logpm.error('I am not your father, %d (0x%08X)!', pid, status)
+
+    def _respawn_judges(self, signum, frame):
+        logpm.info('Received signal (%s), murderizing all children.', self.signal_map.get(signum, signum))
+        self.signal_all(signal.SIGTERM)
 
     def run(self):
-        print('judgepm: Starting process manager: %d.' % os.getpid(), file=sys.stderr)
+        logpm.info('Starting process manager: %d.', os.getpid())
 
         self._forward_signal(signal.SIGUSR2, respawn=True)
         self._forward_signal(signal.SIGINT)
-        self._forward_signal(signal.SIGHUP)
         self._forward_signal(signal.SIGQUIT)
         self._forward_signal(signal.SIGTERM)
+        signal.signal(signal.SIGHUP, self._respawn_judges)
 
         self._spawn_all()
         try:
@@ -566,7 +617,8 @@ class JudgeManager(object):
             self._try_respawn = False
             self.signal_all(signal.SIGINT)
             self._monitor()
-        print('judgepm: Exited gracefully: %d.' % os.getpid(), file=sys.stderr)
+
+        logpm.info('Exited gracefully: %d.', os.getpid())
 
     def signal_all(self, signum):
         for pid in chain(self.pids, [self.monitor_pid, self.api_pid]):
@@ -577,11 +629,13 @@ class JudgeManager(object):
             except OSError as e:
                 if e.errno != errno.ESRCH:
                     raise
-                # Well the monitor will catch on eventually if the process vanishes.
+                    # Well the monitor will catch on eventually if the process vanishes.
 
 
 def main():  # pragma: no cover
-    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+    sys.stdout = codecs.getwriter("utf-8")(os.fdopen(sys.stdout.fileno(), 'w', 0))
+    sys.stderr = codecs.getwriter("utf-8")(sys.stderr)
+
     if not sanity_check():
         return 1
 
@@ -599,6 +653,9 @@ def main():  # pragma: no cover
 
     executors.load_executors()
 
+    if hasattr(signal, 'SIGUSR2'):
+        signal.signal(signal.SIGUSR2, signal.SIG_IGN)
+
     print('Running live judge...')
 
     for warning in judgeenv.startup_warnings:
@@ -606,6 +663,13 @@ def main():  # pragma: no cover
     del judgeenv.startup_warnings
 
     if os.name == 'posix' and 'judges' in env:
+        logfile = judgeenv.log_file
+        try:
+            logfile = logfile % 'master'
+        except TypeError:
+            pass
+        logging.basicConfig(filename=logfile, level=logging.INFO,
+                            format='%(levelname)s %(asctime)s %(process)d %(name)s %(message)s')
         if env.pidfile:
             with open(env.pidfile) as f:
                 f.write(str(os.getpid()))
@@ -613,6 +677,7 @@ def main():  # pragma: no cover
         manager.run()
     else:
         return judge_proc(need_monitor=True)
+
 
 if __name__ == '__main__':
     main()

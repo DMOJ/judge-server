@@ -8,7 +8,7 @@ from dmoj.testsuite import Tester
 from dmoj.utils.ansi import ansi_style
 
 required_executors = ['AWK', 'BF', 'C', 'CPP03', 'CPP11', 'CS', 'PERL', 'PY2', 'PY3',
-                      'RUBY19', 'RUBY21', 'SED', 'VB']
+                      'RUBY19', 'RUBY2', 'SED', 'VB']
 
 
 def main():

@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import errno
+import logging
 import os
 import pty
 import re
@@ -14,13 +15,13 @@ import time
 import six
 
 from dmoj.cptbox._cptbox import *
-
 from dmoj.cptbox.handlers import DISALLOW, _CALLBACK
 from dmoj.cptbox.syscalls import translator, SYSCALL_COUNT, by_id
-from dmoj.utils.communicate import safe_communicate as _safe_communicate
 from dmoj.error import InternalError
+from dmoj.utils.communicate import safe_communicate as _safe_communicate
 
 PIPE = object()
+log = logging.getLogger('dmoj.cptbox')
 
 
 def _find_exe(path):
@@ -134,7 +135,8 @@ class SecurePopen(six.with_metaclass(SecurePopenMeta, Process)):
     debugger_type = AdvancedDebugger
 
     def __init__(self, debugger, _, args, executable=None, security=None, time=0, memory=0, stdin=PIPE, stdout=PIPE,
-                 stderr=None, env=None, nproc=0, address_grace=4096, cwd='', fds=None, unbuffered=False):
+                 stderr=None, env=None, nproc=0, address_grace=4096, cwd='', fds=None, unbuffered=False,
+                 wall_time=None):
         self._debugger_type = debugger
         self._syscall_index = index = _SYSCALL_INDICIES[debugger]
         self._executable = executable or _find_exe(args[0])
@@ -142,6 +144,7 @@ class SecurePopen(six.with_metaclass(SecurePopenMeta, Process)):
         self._chdir = cwd
         self._env = [('%s=%s' % i).encode('utf-8') for i in (env if env is not None else os.environ).items()]
         self._time = time
+        self._wall_time = time * 3 if wall_time is None else wall_time
         self._cpu_time = time + 5 if time else 0
         self._memory = memory
         self._child_memory = memory * 1024
@@ -172,8 +175,6 @@ class SecurePopen(six.with_metaclass(SecurePopenMeta, Process)):
                     handler = _CALLBACK
                 self._handler(call, handler)
 
-        self._start_time = 0
-        self._died_time = 0
         self._started = threading.Event()
         self._died = threading.Event()
         if time:
@@ -200,9 +201,10 @@ class SecurePopen(six.with_metaclass(SecurePopenMeta, Process)):
 
     @property
     def r_execution_time(self):
-        return self._start_time and ((self._died_time or time.time()) - self._start_time)
+        return self.wall_clock_time
 
     def kill(self):
+        log.warning('Request the killing of process: %s', self.pid)
         print('Child is requested to be killed', file=sys.stderr)
         try:
             os.killpg(self.pid, signal.SIGKILL)
@@ -234,18 +236,13 @@ class SecurePopen(six.with_metaclass(SecurePopenMeta, Process)):
                     callname = by_id[id]
                     break
 
-            print('Protection fault on: %d (%s)' % (syscall, callname), file=sys.stderr)
-            print('Arg0: 0x%016x' % self.debugger.uarg0, file=sys.stderr)
-            print('Arg1: 0x%016x' % self.debugger.uarg1, file=sys.stderr)
-            print('Arg2: 0x%016x' % self.debugger.uarg2, file=sys.stderr)
-            print('Arg3: 0x%016x' % self.debugger.uarg3, file=sys.stderr)
-            print('Arg4: 0x%016x' % self.debugger.uarg4, file=sys.stderr)
-            print('Arg5: 0x%016x' % self.debugger.uarg5, file=sys.stderr)
-
-            self.protection_fault = (syscall, callname)
+            self.protection_fault = (syscall, callname, [self.debugger.uarg0, self.debugger.uarg1,
+                                                         self.debugger.uarg2, self.debugger.uarg3,
+                                                         self.debugger.uarg4, self.debugger.uarg5])
 
     def _cpu_time_exceeded(self):
-        print >> sys.stderr, 'SIGXCPU in child'
+        log.warning('SIGXCPU in process %d', self.pid)
+        print('SIGXCPU in child', file=sys.stderr)
         self._tle = True
 
     def _run_process(self):
@@ -262,10 +259,8 @@ class SecurePopen(six.with_metaclass(SecurePopenMeta, Process)):
         if self._child_stderr >= 0:
             os.close(self._child_stderr)
         self._started.set()
-        self._start_time = time.time()
         code = self._monitor()
 
-        self._died_time = time.time()
         if self._time and self.execution_time > self._time:
             self._tle = True
         self._died.set()
@@ -283,8 +278,9 @@ class SecurePopen(six.with_metaclass(SecurePopenMeta, Process)):
         self._started.wait()
 
         while not self._exited:
-            if self.execution_time > self._time:
+            if self.execution_time > self._time or self.wall_clock_time > self._wall_time:
                 print('Shocker activated, ouch!', file=sys.stderr)
+                log.warning('Shocker activated and killed %d', self.pid)
                 os.killpg(self.pid, signal.SIGKILL)
                 self._tle = True
                 break

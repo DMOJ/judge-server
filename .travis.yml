@@ -7,7 +7,6 @@ python:
 addons:
   apt:
     sources:
-    - mono
     - sourceline: 'ppa:swi-prolog/stable'
     - sourceline: 'deb http://cran.rstudio.com/bin/linux/ubuntu trusty/'
       key_url: 'http://keyserver.ubuntu.com/pks/lookup?op=get&fingerprint=on&search=0x51716619E084DAB9'
@@ -17,8 +16,6 @@ addons:
     - ghc
     - gnat
     - php5-cli
-    - mono-devel
-    - mono-vbnc
     - fp-compiler
     - coffeescript
     - binutils-multiarch
@@ -40,12 +37,22 @@ before_cache:
   - rm -f $HOME/.cache/pip/log/debug.log
 before_install:
   # Install Swift
-  - wget -q -O - https://swift.org/keys/all-keys.asc | gpg --import -
   - >
     mkdir swift &&
     curl https://swift.org/builds/swift-2.2.1-release/ubuntu1404/swift-2.2.1-RELEASE/swift-2.2.1-RELEASE-ubuntu14.04.tar.gz |
     tar xz -C swift --strip-components=1
   - export PATH=${PWD}/swift/usr/bin:"${PATH}"
+  # Install PyPy
+  - >
+    mkdir pypy2 &&
+    curl -L https://bitbucket.org/squeaky/portable-pypy/downloads/pypy-5.8-1-linux_x86_64-portable.tar.bz2 |
+    tar xj -C pypy2 --strip-components=1 &&
+    ./pypy2/bin/pypy -mcompileall
+  - >
+    mkdir pypy3 &&
+    curl -L https://bitbucket.org/squeaky/portable-pypy/downloads/pypy3.5-5.8-1-beta-linux_x86_64-portable.tar.bz2 |
+    tar xj -C pypy3 --strip-components=1 &&
+    ./pypy3/bin/pypy -mcompileall
   # Install Rust
   - curl -sSf https://static.rust-lang.org/rustup.sh | sudo sh
   # Install latest Scala

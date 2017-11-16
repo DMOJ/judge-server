@@ -3,10 +3,15 @@ from __future__ import print_function
 import re
 import sys
 import os
+import logging
 
 from dmoj.cptbox.handlers import ALLOW, STDOUTERR, ACCESS_DENIED
 from dmoj.cptbox._cptbox import bsd_get_proc_cwd, bsd_get_proc_fdno, AT_FDCWD
 from dmoj.cptbox.syscalls import *
+
+
+log = logging.getLogger('dmoj.security')
+
 
 class CHROOTSecurity(dict):
     def __init__(self, filesystem, writable=(1, 2), io_redirects=None):
@@ -158,6 +163,7 @@ class CHROOTSecurity(dict):
         def check(debugger):
             file = debugger.readstr(getattr(debugger, 'uarg%d' % argument))
             print('%s: not allowed to access: %s' % (syscall, file), file=sys.stderr)
+            log.warning('Denied access via syscall %s: %s', syscall, file)
             return False
 
         return check
@@ -213,7 +219,7 @@ class CHROOTSecurity(dict):
     def _file_access_check(self, file, debugger, dirfd=AT_FDCWD):
         file = self.get_full_path(debugger, file, dirfd)
         if self.fs_jail.match(file) is None:
-            print('Not allowed to access:', file, file=sys.stderr)
+            log.warning('Denied file open: %s', file)
             return False
         return True
 

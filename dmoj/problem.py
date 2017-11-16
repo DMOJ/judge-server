@@ -34,8 +34,11 @@ class Problem(object):
             if not doc:
                 raise InvalidInitException('I find your lack of content disturbing.')
             self.config = ConfigNode(doc, defaults={
+                'wall_time_factor': 3,
                 'output_prefix_length': 64,
                 'output_limit_length': 25165824,
+                'binary_data': False,
+                'short_circuit': True,
             })
         except (IOError, ParserError, ScannerError) as e:
             raise InvalidInitException(str(e))
@@ -83,7 +86,7 @@ class ProblemDataManager(dict):
 
     def __missing__(self, key):
         try:
-            return open(os.path.join(get_problem_root(self.problem_id), key), 'r').read()
+            return open(os.path.join(get_problem_root(self.problem_id), key), 'rb').read()
         except IOError:
             if self.archive:
                 zipinfo = self.archive.getinfo(key)
@@ -155,6 +158,8 @@ class TestCase(object):
     def _normalize(self, data):
         # Normalize all newline formats (\r\n, \r, \n) to \n, otherwise we have problems with people creating
         # data on Macs (\r newline) when judged programs assume \n
+        if self.config.binary_data:
+            return data
         return data.replace('\r\n', '\r').replace('\r', '\n')
 
     def _run_generator(self, gen, args=None):

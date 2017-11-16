@@ -84,6 +84,7 @@ public:
     int monitor();
     int getpid() { return pid; }
     double execution_time() { return exec_time.tv_sec + exec_time.tv_nsec / 1000000000.0; }
+    double wall_clock_time();
     const rusage *getrusage() { return &_rusage; }
     bool was_initialized() { return _initialized; }
 protected:
@@ -94,7 +95,7 @@ private:
     int handler[MAX_SYSCALL];
     pt_handler_callback callback;
     void *context;
-    struct timespec exec_time;
+    struct timespec exec_time, start_time, end_time;
     struct rusage _rusage;
     pt_debugger *debugger;
     pt_event_callback event_proc;

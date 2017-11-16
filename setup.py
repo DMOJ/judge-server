@@ -96,10 +96,11 @@ setup(
         'console_scripts': [
             'dmoj = dmoj.judge:main',
             'dmoj-cli = dmoj.cli:main',
+            'dmoj-autoconf = dmoj.executors.autoconfig:main',
         ]
     },
     ext_modules=cythonize(extensions),
-    install_requires=['watchdog', 'pyyaml', 'ansi2html', 'termcolor', 'six'],
+    install_requires=['watchdog', 'pyyaml', 'ansi2html', 'termcolor', 'pygments', 'six'],
 
     author='quantum5, Xyene',
     author_email='admin@dmoj.ca',

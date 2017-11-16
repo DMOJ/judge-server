@@ -40,7 +40,7 @@ runpy.run_path(sys.argv[0], run_name='__main__')\
     def get_feedback(self, stderr, result, process):
         if not result.result_flag & Result.IR or not stderr or len(stderr) > 2048:
             return ''
-        match = deque(retraceback.finditer(stderr), maxlen=1)
+        match = deque(retraceback.finditer(stderr.decode('utf-8')), maxlen=1)
         if not match:
             return ''
         exception = match[0].group(1)

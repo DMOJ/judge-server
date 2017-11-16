@@ -34,10 +34,11 @@ def load_executor(name):
     try:
         return import_module('%s.%s' % (__name__, name))
     except ImportError as e:
-        if str(e) not in ('No module named _cptbox',
-                             'No module named msvcrt',
-                             'No module named _wbox',
-                             'No module named termios'):
+        # Python 2 has no quotes, Python 3 has quotes :|
+        if str(e).replace("'", '') not in ('No module named _cptbox',
+                                           'No module named msvcrt',
+                                           'No module named _wbox',
+                                           'No module named termios'):
             traceback.print_exc()
 
 

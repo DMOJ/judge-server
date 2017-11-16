@@ -6,6 +6,7 @@ import six
 
 from dmoj.judgeenv import env
 from dmoj.result import Result
+from dmoj.utils.unicode import utf8bytes
 from .base_executor import CompiledExecutor
 
 GCC_ENV = env.runtime.gcc_env or {}
@@ -39,9 +40,7 @@ class GCCExecutor(CompiledExecutor):
             if '.' not in name:
                 name += self.ext
             with open(self._file(name), 'wb') as fo:
-                if isinstance(source, six.text_type):
-                    source = source.encode('utf-8')
-                fo.write(source)
+                fo.write(utf8bytes(source))
             sources.append(name)
         self.sources = sources
         self._fds = fds

@@ -9,6 +9,7 @@ from subprocess import Popen
 import six
 
 from dmoj.error import CompileError, InternalError
+from dmoj.utils.unicode import utf8bytes
 from .base_executor import CompiledExecutor
 from dmoj.result import Result
 
@@ -201,9 +202,7 @@ class JavacExecutor(JavaExecutor):
         self._code = self._file('%s.java' % class_name.group(1))
         try:
             with open(self._code, 'wb') as fo:
-                if isinstance(source_code, six.text_type):
-                    source_code = source_code.encode('utf-8')
-                fo.write(source_code)
+                fo.write(utf8bytes(source_code))
         except IOError as e:
             if e.errno in (errno.ENAMETOOLONG, errno.ENOENT):
                 raise CompileError(b'Why do you need a class name so long? '

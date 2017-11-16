@@ -10,6 +10,8 @@ import time
 import traceback
 import zlib
 
+import six
+
 from dmoj import sysinfo
 from dmoj.judgeenv import get_supported_problems, get_runtime_versions
 
@@ -154,9 +156,10 @@ class PacketManager(object):
             del packet['submission-id']
 
         for k, v in packet.items():
-            if isinstance(v, str):
+            if isinstance(v, six.binary_type):
                 # Make sure we don't have any garbage utf-8 from e.g. weird compilers
                 # *cough* fpc *cough* that could cause this routine to crash
+                # We cannot use utf8text because it may not be text.
                 packet[k] = v.decode('utf-8', 'replace')
 
         raw = json.dumps(packet).encode('zlib')

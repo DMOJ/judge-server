@@ -3,6 +3,8 @@ from __future__ import print_function
 from ctypes import windll, WinError, byref, Union, Structure, c_double, c_int64
 from ctypes.wintypes import HANDLE, LONG, DWORD, LPCWSTR, LPCSTR
 
+import six
+
 
 def pdh_error_check(result, func, arguments):
     if result:
@@ -57,7 +59,7 @@ class PerformanceCounter(object):
                 path, flags = counter
             else:
                 path, flags = counter, PDH_FMT_DOUBLE
-            if not isinstance(path, unicode):
+            if not isinstance(path, six.text_type):
                 path = path.decode('mbcs')
             if not flags & (PDH_FMT_LARGE | PDH_FMT_DOUBLE | PDH_FMT_LONG):
                 flags |= PDH_FMT_LONG if flags & PDH_FMT_1000 else PDH_FMT_DOUBLE

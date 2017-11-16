@@ -1,3 +1,6 @@
+import six
+
+
 class Result(object):
     AC = 0
     WA = 1 << 0
@@ -58,7 +61,7 @@ class CheckerResult(object):
         # Make sure we don't kill the site bridge
         assert isinstance(passed, bool)
         assert isinstance(points, int) or isinstance(points, float)
-        assert feedback is None or isinstance(feedback, str) or isinstance(feedback, unicode)
+        assert feedback is None or isinstance(feedback, six.string_types)
 
         self.passed = passed
         self.points = points

@@ -3,6 +3,7 @@ import subprocess
 import zipfile
 from functools import partial
 
+import six
 import yaml
 from yaml.parser import ParserError
 from yaml.scanner import ScannerError
@@ -145,7 +146,7 @@ class TestCase(object):
                 raise InvalidInitException("no mode specified for redirect '%s'" % redirect)
             if mapping.mode not in 'rw':
                 raise InvalidInitException("invalid mode for redirect '%s': valid options are 'r', 'w'" % redirect)
-            if isinstance(mapping.fd, str):
+            if isinstance(mapping.fd, six.string_types):
                 mapped = {'stdin': 0, 'stdout': 1, 'stderr': 2}.get(mapping.fd, None)
                 if mapped is None:
                     raise InvalidInitException("unknown named fd for redirect '%s'" % redirect)
@@ -165,7 +166,7 @@ class TestCase(object):
     def _run_generator(self, gen, args=None):
         flags = []
         args = args or []
-        if isinstance(gen, str):
+        if isinstance(gen, six.string_types):
             filename = os.path.join(get_problem_root(self.problem.id), gen)
         else:
             filename = gen.source

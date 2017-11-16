@@ -24,6 +24,7 @@ from dmoj.problem import Problem, BatchedTestCase
 from dmoj.result import Result
 from dmoj.utils.ansi import ansi_style, strip_ansi
 from dmoj.utils.debugger import setup_all_debuggers
+from dmoj.utils.unicode import utf8bytes
 
 setup_all_debuggers()
 
@@ -244,11 +245,8 @@ class Judge(object):
             yield result
 
     def get_grader_from_source(self, grader_class, problem, language, source):
-        if isinstance(source, six.text_type):
-            source = source.encode('utf-8')
-
         try:
-            grader = grader_class(self, problem, language, source)
+            grader = grader_class(self, problem, language, utf8bytes(source))
         except CompileError as ce:
             print(ansi_style('#ansi[Failed compiling submission!](red|bold)'))
             print(ce.args[0], end=' ')  # don't print extra newline

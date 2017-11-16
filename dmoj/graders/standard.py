@@ -6,6 +6,8 @@ import os
 import platform
 import signal
 
+import six
+
 from dmoj.error import CompileError
 from dmoj.executors import executors
 from dmoj.graders.base import BaseGrader
@@ -166,7 +168,7 @@ class StandardGrader(BaseGrader):
                                                        hints=self.problem.config.hints or [])
         except CompileError as compilation_error:
             error = compilation_error.args[0]
-            error = error.decode('mbcs') if os.name == 'nt' and isinstance(error, str) else error
+            error = error.decode('mbcs') if os.name == 'nt' and isinstance(error, six.binary_type) else error
             self.judge.packet_manager.compile_error_packet(ansi.format_ansi(error or ''))
 
             # Compile error is fatal

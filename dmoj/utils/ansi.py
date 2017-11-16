@@ -4,6 +4,8 @@ import six
 from termcolor import colored
 import ansi2html
 
+from dmoj.utils.unicode import utf8text
+
 
 def strip_ansi(s):
     # http://stackoverflow.com/questions/13506033/filtering-out-ansi-escape-sequences
@@ -11,10 +13,7 @@ def strip_ansi(s):
 
 
 def format_ansi(s):
-    # TODO: supposedly, the decode isn't necessary https://github.com/ralphbean/ansi2html/issues/60
-    if isinstance(s, six.binary_type):
-        s = s.decode('utf-8')
-    return ansi2html.Ansi2HTMLConverter(inline=True).convert(s, full=False)
+    return ansi2html.Ansi2HTMLConverter(inline=True).convert(utf8text(s), full=False)
 
 
 def ansi_style(text):

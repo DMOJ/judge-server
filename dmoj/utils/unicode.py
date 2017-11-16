@@ -7,7 +7,7 @@ def utf8bytes(maybe_text):
     return maybe_text.encode('utf-8')
 
 
-def utf8text(maybe_bytes):
+def utf8text(maybe_bytes, errors='strict'):
     if isinstance(maybe_bytes, six.text_type):
         return maybe_bytes
-    return maybe_bytes.decode('utf-8')
+    return maybe_bytes.decode('utf-8', errors)

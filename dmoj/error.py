@@ -1,11 +1,9 @@
-import six
+from dmoj.utils.unicode import utf8text
 
 
 class CompileError(Exception):
     def __init__(self, message):
-        if isinstance(message, six.binary_type):
-            message = message.decode('utf-8')
-        super(CompileError, self).__init__(message)
+        super(CompileError, self).__init__(utf8text(message))
 
 
 class InternalError(Exception):

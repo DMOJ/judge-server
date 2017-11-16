@@ -20,6 +20,7 @@ from dmoj.cptbox.handlers import DISALLOW, _CALLBACK
 from dmoj.cptbox.syscalls import translator, SYSCALL_COUNT, by_id
 from dmoj.error import InternalError
 from dmoj.utils.communicate import safe_communicate as _safe_communicate
+from dmoj.utils.unicode import utf8text
 
 PIPE = object()
 log = logging.getLogger('dmoj.cptbox')
@@ -39,10 +40,7 @@ def _find_exe(path):
 
 def file_info(path, split=re.compile(r'[\s,]').split):
     try:
-        info = subprocess.check_output(['file', '-b', '-L', path])
-        if isinstance(info, six.binary_type):
-            info = info.decode('utf-8')
-        return split(info)
+        return split(utf8text(subprocess.check_output(['file', '-b', '-L', path])))
     except subprocess.CalledProcessError:
         return []
 

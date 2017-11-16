@@ -166,10 +166,9 @@ else:
                     fd2length[fd] += len(data)
                     if fd2length[fd] > fd2limit[fd]:
                         if stdout is not None:
-                            stdout = b''.join(map(str, stdout))
-
+                            stdout = b''.join(stdout)
                         if stderr is not None:
-                            stderr = b''.join(map(str, stderr))
+                            stderr = b''.join(stderr)
 
                         raise OutputLimitExceeded(['stderr', 'stdout'][proc.stdout is not None and proc.stdout.fileno() == fd],
                                                   stdout, stderr)

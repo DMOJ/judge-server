@@ -54,7 +54,7 @@ object self_test {
         scala = result.pop('scala')
         with open(os.devnull, 'w') as devnull:
             process = subprocess.Popen(['bash', '-x', scala, '-version'], stdout=devnull, stderr=subprocess.PIPE)
-        log = [i for i in process.communicate()[1].split('\n') if 'scala.tools.nsc.MainGenericRunner' in i]
+        log = [i for i in process.communicate()[1].split(b'\n') if b'scala.tools.nsc.MainGenericRunner' in i]
 
         if not log:
             return result, False, 'Failed to parse: %s' % scala

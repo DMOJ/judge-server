@@ -51,7 +51,7 @@ println System.in.newReader().readLine()
         groovy = result.pop('groovy')
         with open(os.devnull, 'w') as devnull:
             process = subprocess.Popen(['bash', '-x', groovy, '-version'], stdout=devnull, stderr=subprocess.PIPE)
-        log = [i for i in process.communicate()[1].split('\n') if 'org.codehaus.groovy.tools.GroovyStarter' in i]
+        log = [i for i in process.communicate()[1].split(b'\n') if b'org.codehaus.groovy.tools.GroovyStarter' in i]
 
         if not log:
             return result, False, 'Failed to parse: %s' % groovy

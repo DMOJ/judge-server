@@ -17,7 +17,7 @@ if os.name == 'nt':
 else:
     GCC_COMPILE.update(env.runtime.gcc_compile or {})
 
-recppexc = re.compile(r"terminate called after throwing an instance of \'([A-Za-z0-9_:]+)\'\r?$", re.M)
+recppexc = re.compile(br"terminate called after throwing an instance of \'([A-Za-z0-9_:]+)\'\r?$", re.M)
 
 
 class GCCExecutor(CompiledExecutor):

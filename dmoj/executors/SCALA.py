@@ -54,12 +54,13 @@ object self_test {
         scala = result.pop('scala')
         with open(os.devnull, 'w') as devnull:
             process = subprocess.Popen(['bash', '-x', scala, '-version'], stdout=devnull, stderr=subprocess.PIPE)
-        log = [i for i in process.communicate()[1].split(b'\n') if b'scala.tools.nsc.MainGenericRunner' in i]
+        output = process.communicate()[1].decode('utf-8')
+        log = [i for i in output.split('\n') if 'scala.tools.nsc.MainGenericRunner' in i]
 
         if not log:
             return result, False, 'Failed to parse: %s' % scala
 
-        cmdline = log[-1].lstrip('+ ').split()
+        cmdline = log[-1].lstrip(b'+ ').split()
         result['scala_vm'] = cls.unravel_java(cls.find_command_from_list([cmdline[0]]))
         result['scala_args'] = [i for i in cmdline[1:-1] if not i.startswith(('-Xmx', '-Xms'))]
 

@@ -51,12 +51,13 @@ println System.in.newReader().readLine()
         groovy = result.pop('groovy')
         with open(os.devnull, 'w') as devnull:
             process = subprocess.Popen(['bash', '-x', groovy, '-version'], stdout=devnull, stderr=subprocess.PIPE)
-        log = [i for i in process.communicate()[1].split(b'\n') if b'org.codehaus.groovy.tools.GroovyStarter' in i]
+        output = process.communicate()[1].decode('utf-8')
+        log = [i for i in output.split('\n') if 'org.codehaus.groovy.tools.GroovyStarter' in i]
 
         if not log:
             return result, False, 'Failed to parse: %s' % groovy
 
-        cmdline = log[-1].lstrip('+ ').split()
+        cmdline = log[-1].lstrip(b'+ ').split()
 
         result['groovy_vm'] = cls.unravel_java(cls.find_command_from_list([cmdline[1]]))
         result['groovy_args'] = [i for i in cmdline[2:-1]]

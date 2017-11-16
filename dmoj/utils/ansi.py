@@ -1,5 +1,6 @@
 import re
 
+import six
 from termcolor import colored
 import ansi2html
 
@@ -11,7 +12,9 @@ def strip_ansi(s):
 
 def format_ansi(s):
     # TODO: supposedly, the decode isn't necessary https://github.com/ralphbean/ansi2html/issues/60
-    return ansi2html.Ansi2HTMLConverter(inline=True).convert(s.decode('utf-8'), full=False)
+    if isinstance(s, six.binary_type):
+        s = s.decode('utf-8')
+    return ansi2html.Ansi2HTMLConverter(inline=True).convert(s, full=False)
 
 
 def ansi_style(text):

@@ -98,7 +98,7 @@ try:
                 return {'LANG': 'C'}
 
             def launch(self, *args, **kwargs):
-                return SecurePopen([bytes(x, 'utf-8') for x in self.get_cmdline() + list(args)],
+                return SecurePopen([a.encode('utf-8') for a in self.get_cmdline() + list(args)],
                                    executable=self.get_executable().encode('utf-8'),
                                    security=self.get_security(launch_kwargs=kwargs),
                                    address_grace=self.get_address_grace(),

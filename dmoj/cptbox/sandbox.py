@@ -140,7 +140,7 @@ class SecurePopen(six.with_metaclass(SecurePopenMeta, Process)):
         self._executable = executable or _find_exe(args[0])
         self._args = args
         self._chdir = cwd
-        self._env = [bytes('%s=%s' % i, 'utf-8') for i in (env if env is not None else os.environ).items()]
+        self._env = [('%s=%s' % i).encode('utf-8') for i in (env if env is not None else os.environ).items()]
         self._time = time
         self._cpu_time = time + 5 if time else 0
         self._memory = memory

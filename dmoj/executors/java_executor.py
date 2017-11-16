@@ -6,6 +6,8 @@ import re
 from shutil import copyfile
 from subprocess import Popen
 
+import six
+
 from dmoj.error import CompileError, InternalError
 from .base_executor import CompiledExecutor
 from dmoj.result import Result
@@ -15,7 +17,7 @@ restring = re.compile(r''''(?:\\.|[^'\\])'|"(?:\\.|[^"\\])*"''', re.DOTALL)
 reinline_comment = re.compile(r'//.*?(?=[\r\n])')
 reclass = re.compile(r'\bpublic\s+(?:strictfp\s+)?(?:(?:abstract|final)\s+)?(?:strictfp\s+)?class\s+([_a-zA-Z\$][_0-9a-zA-z\$]*?)\b')
 repackage = re.compile(r'\bpackage\s+([^.;]+(?:\.[^.;]+)*?);')
-redeunicode = re.compile(r'\\u([0-9a-f]{4})', re.I)
+redeunicode = re.compile(rb'\\u([0-9a-f]{4})', re.I)
 deunicode = lambda x: redeunicode.sub(lambda a: unichr(int(a.group(1), 16)), x)
 
 
@@ -33,6 +35,7 @@ with open(os.path.join(os.path.dirname(__file__), 'java-security.policy')) as po
 
 
 def find_class(source):
+    source = source.decode('utf-8')
     source = reinline_comment.sub('', restring.sub('', recomment.sub('', source)))
     class_name = reclass.search(source)
     if class_name is None:
@@ -198,8 +201,8 @@ class JavacExecutor(JavaExecutor):
         self._code = self._file('%s.java' % class_name.group(1))
         try:
             with open(self._code, 'wb') as fo:
-                if isinstance(source_code, unicode):
-                    source_code.encode('utf-8')
+                if isinstance(source_code, six.text_type):
+                    source_code = source_code.encode('utf-8')
                 fo.write(source_code)
         except IOError as e:
             if e.errno in (errno.ENAMETOOLONG, errno.ENOENT):
@@ -212,7 +215,7 @@ class JavacExecutor(JavaExecutor):
         return [self.get_compiler(), '-Xlint', '-encoding', 'UTF-8', self._code]
 
     def handle_compile_error(self, output):
-        if 'is public, should be declared in a file named' in output:
+        if b'is public, should be declared in a file named' in output:
             raise CompileError('You are a troll. Trolls are not welcome. '
                                'As a judge, I sentence your code to death.\n')
         raise CompileError(output)

@@ -156,7 +156,7 @@ class NASMExecutor(ASMExecutor):
 
     def find_features(self, source_code):
         features = super(NASMExecutor, self).find_features(source_code)
-        if source_code.startswith('; libc'):
+        if source_code.startswith(b'; libc'):
             features.add('libc')
         return features
 

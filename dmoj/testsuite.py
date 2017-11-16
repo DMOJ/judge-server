@@ -4,6 +4,7 @@ import os
 import sys
 import traceback
 
+import six
 import yaml
 
 from dmoj import judgeenv, executors
@@ -187,7 +188,7 @@ class Tester(object):
             return 0
         time = config['time']
         memory = config['memory']
-        if isinstance(config['source'], (str, unicode)):
+        if isinstance(config['source'], six.string_types):
             with open(os.path.join(case_dir, config['source'])) as f:
                 sources = [f.read()]
         else:
@@ -222,7 +223,7 @@ class Tester(object):
     def parse_expected_codes(self, codes):
         if codes == '*':
             return self.all_codes
-        elif isinstance(codes, (str, unicode)):
+        elif isinstance(codes, six.string_types):
             assert codes in self.all_codes
             return {codes}
         else:
@@ -233,7 +234,7 @@ class Tester(object):
     def parse_feedback(self, feedback):
         if feedback is None or feedback == '*':
             return None
-        elif isinstance(feedback, (str, unicode)):
+        elif isinstance(feedback, six.string_types):
             return {feedback}
         else:
             return set(feedback)

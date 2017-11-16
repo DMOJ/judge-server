@@ -11,6 +11,8 @@ import sys
 import threading
 import time
 
+import six
+
 from dmoj.cptbox._cptbox import *
 
 from dmoj.cptbox.handlers import DISALLOW, _CALLBACK
@@ -128,16 +130,7 @@ class SecurePopenMeta(type):
         return super(SecurePopenMeta, self).__call__(debugger, self.debugger_type, argv, executable, *args, **kwargs)
 
 
-# pulled from six
-def with_metaclass(meta, *bases):
-    class metaclass(meta):
-        def __new__(cls, name, this_bases, d):
-            return meta(name, bases, d)
-
-    return type.__new__(metaclass, 'temporary_class', (), {})
-
-
-class SecurePopen(with_metaclass(SecurePopenMeta, Process)):
+class SecurePopen(six.with_metaclass(SecurePopenMeta, Process)):
     debugger_type = AdvancedDebugger
 
     def __init__(self, debugger, _, args, executable=None, security=None, time=0, memory=0, stdin=PIPE, stdout=PIPE,
@@ -430,16 +423,16 @@ class SecurePopen(with_metaclass(SecurePopenMeta, Process)):
                     data = os.read(fd, 4096)
                     if not data:
                         close_unregister_and_remove(fd)
-                    fd2output[fd].append(data.decode('utf-8'))
+                    fd2output[fd].append(data)
                 else:
                     # Ignore hang up or errors.
                     close_unregister_and_remove(fd)
 
         # All data exchanged.  Translate lists into strings.
         if stdout is not None:
-            stdout = ''.join(stdout)
+            stdout = b''.join(stdout)
         if stderr is not None:
-            stderr = ''.join(stderr)
+            stderr = b''.join(stderr)
 
         self.wait()
         return stdout, stderr

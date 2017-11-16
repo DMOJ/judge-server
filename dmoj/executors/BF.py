@@ -26,9 +26,10 @@ class Executor(CExecutor):
     test_program = ',+[-.,+]'
 
     def __init__(self, problem_id, source_code, **kwargs):
+        source_code = source_code.decode('utf-8')
         if source_code.count('[') != source_code.count(']'):
             raise CompileError('Unmatched brackets\n')
-        code = template % (''.join(map(trans.get, source_code, itertools.repeat(''))))
+        code = (template % (''.join(map(trans.get, source_code, itertools.repeat(''))))).encode('utf-8')
         super(Executor, self).__init__(problem_id, code, **kwargs)
 
     @classmethod

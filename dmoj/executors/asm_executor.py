@@ -29,10 +29,10 @@ class ASMExecutor(CompiledExecutor):
         self.use_qemu = self.qemu_path is not None and os.path.isfile(self.qemu_path)
         self.features = self.find_features(source_code)
 
-        super(ASMExecutor, self).__init__(problem_id, source_code + '\n', *args, **kwargs)
+        super(ASMExecutor, self).__init__(problem_id, source_code + b'\n', *args, **kwargs)
 
     def find_features(self, source_code):
-        features = refeatures.search(source_code)
+        features = refeatures.search(source_code.decode('utf-8'))
         if features is not None:
             return set(filter(None, feature_split(features.group(1))))
         return set()

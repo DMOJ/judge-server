@@ -80,10 +80,10 @@ if os.name == 'nt':
 
         # All data exchanged.  Translate lists into strings.
         if stdout is not None:
-            stdout = ''.join(stdout)
+            stdout = b''.join(stdout)
 
         if stderr is not None:
-            stderr = ''.join(stderr)
+            stderr = b''.join(stderr)
 
         if out_ole[0] or err_ole[0]:
             raise OutputLimitExceeded('stdout' if out_ole[0] else 'stderr', stdout, stderr)
@@ -166,10 +166,10 @@ else:
                     fd2length[fd] += len(data)
                     if fd2length[fd] > fd2limit[fd]:
                         if stdout is not None:
-                            stdout = ''.join(map(str, stdout))
+                            stdout = b''.join(map(str, stdout))
 
                         if stderr is not None:
-                            stderr = ''.join(map(str, stderr))
+                            stderr = b''.join(map(str, stderr))
 
                         raise OutputLimitExceeded(['stderr', 'stdout'][proc.stdout is not None and proc.stdout.fileno() == fd],
                                                   stdout, stderr)
@@ -179,9 +179,9 @@ else:
 
         # All data exchanged.  Translate lists into strings.
         if stdout is not None:
-            stdout = ''.join(stdout)
+            stdout = b''.join(stdout)
         if stderr is not None:
-            stderr = ''.join(stderr)
+            stderr = b''.join(stderr)
 
         proc.wait()
         return stdout, stderr

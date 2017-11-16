@@ -34,7 +34,7 @@ runpy.run_path(sys.argv[0], run_name='__main__')\
         with open(self._code, 'wb') as fo, open(self._loader, 'w') as loader:
             # UTF-8 BOM instead of comment to not modify line numbers.
             fo.write(b'\xef\xbb\xbf')
-            fo.write(bytes(source_code, 'utf8'))
+            fo.write(source_code)
             loader.write(self.loader_script)
 
     def get_feedback(self, stderr, result, process):

@@ -11,6 +11,8 @@ import traceback
 from functools import partial
 from itertools import chain
 
+import six
+
 from dmoj import packet, graders
 from dmoj.config import ConfigNode
 from dmoj.control import JudgeControlRequestHandler
@@ -225,7 +227,7 @@ class Judge(object):
             yield result
 
     def get_grader_from_source(self, grader_class, problem, language, source):
-        if isinstance(source, unicode):
+        if isinstance(source, six.text_type):
             source = source.encode('utf-8')
 
         try:

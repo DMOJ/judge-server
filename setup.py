@@ -99,7 +99,7 @@ setup(
         ]
     },
     ext_modules=cythonize(extensions),
-    install_requires=['watchdog', 'pyyaml', 'ansi2html', 'termcolor'],
+    install_requires=['watchdog', 'pyyaml', 'ansi2html', 'termcolor', 'six'],
 
     author='quantum5, Xyene',
     author_email='admin@dmoj.ca',

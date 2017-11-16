@@ -78,10 +78,11 @@ class BaseExecutor(PlatformExecutorMixin, ResourceProxy):
         if output:
             print(ansi_style("%-39s%s" % ('Self-testing #ansi[%s](|underline):' % cls.get_executor_name(), '')), end=' ')
         try:
-            executor = cls(cls.test_name, cls.test_program)
+            executor = cls(cls.test_name, cls.test_program.encode('utf-8'))
             proc = executor.launch(time=cls.test_time, memory=cls.test_memory) if sandbox else executor.launch_unsafe()
-            test_message = 'echo: Hello, World!'
-            stdout, stderr = proc.communicate(bytes(test_message, 'utf-8') + b'\n')
+            test_message = b'echo: Hello, World!'
+            stdout, stderr = proc.communicate(test_message + b'\n')
+
             res = stdout.strip() == test_message and not stderr
             if output:
                 # Cache the versions now, so that the handshake packet doesn't take ages to generate
@@ -216,7 +217,7 @@ class ScriptExecutor(BaseExecutor):
 
     def create_files(self, problem_id, source_code):
         with open(self._code, 'wb') as fo:
-            fo.write(source_code.encode('utf-8'))
+            fo.write(source_code)
 
     def get_cmdline(self):
         return [self.get_command(), self._code]
@@ -289,7 +290,7 @@ class CompiledExecutor(BaseExecutor):
     def create_files(self, problem_id, source_code, *args, **kwargs):
         self._code = self._file(problem_id + self.ext)
         with open(self._code, 'wb') as fo:
-            fo.write(source_code.encode('utf-8'))
+            fo.write(source_code)
 
     def get_compile_args(self):
         raise NotImplementedError()

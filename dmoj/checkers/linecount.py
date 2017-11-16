@@ -16,7 +16,7 @@ def check(process_output, judge_output, point_value, feedback=False,
     if not judge_lines:
         return True
 
-    if isinstance(match, six.text_type):
+    if isinstance(match, six.string_types):
         match = eval(match)
 
     cases = [verdict[0]] * len(judge_lines)

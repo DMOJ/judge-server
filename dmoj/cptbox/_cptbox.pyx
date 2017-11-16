@@ -419,7 +419,7 @@ cdef class Process:
         else:
             config.max_fd = 2 + len(fds)
             config.fds = <int*>malloc(sizeof(int) * len(fds))
-            for i in range(len(fds)):
+            for i in xrange(len(fds)):
                 config.fds[i] = fds[i]
         with nogil:
             if self.process.spawn(pt_child, &config):

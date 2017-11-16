@@ -4,11 +4,11 @@ import os
 import sys
 from collections import OrderedDict
 
+from six.moves import input
+
 from dmoj.judge import Judge
 from dmoj.utils.ansi import ansi_style
 
-if sys.version_info[0] < 3:
-    input = raw_input
 
 class LocalPacketManager(object):
     def __init__(self, judge):
@@ -115,8 +115,7 @@ def main():
             judge.listen()
 
             while True:
-                print(ansi_style("#ansi[dmoj](magenta)#ansi[>](green) "), end='')
-                command = input().strip()
+                command = input(ansi_style("#ansi[dmoj](magenta)#ansi[>](green) ")).strip()
 
                 line = command.split(' ')
                 if line[0] in commands:

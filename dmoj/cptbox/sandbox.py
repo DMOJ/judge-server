@@ -13,6 +13,7 @@ import threading
 import time
 
 import six
+from six.moves import range
 
 from dmoj.cptbox._cptbox import *
 from dmoj.cptbox.handlers import DISALLOW, _CALLBACK

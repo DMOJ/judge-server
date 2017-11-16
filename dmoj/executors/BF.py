@@ -1,8 +1,9 @@
 import itertools
 
+from six.moves import map
+
 from dmoj.executors.C import Executor as CExecutor
 from dmoj.error import CompileError
-
 
 template = '''\
 #include <stdio.h>

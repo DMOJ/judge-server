@@ -2,15 +2,13 @@ import argparse
 import os
 import subprocess
 import tempfile
-
 import sys
+
+from six.moves import input
 
 from dmoj.cli import InvalidCommandException
 from dmoj.executors import executors
 from dmoj.utils.ansi import ansi_style
-
-if sys.version_info[0] < 3:
-    input = raw_input
 
 
 class CommandArgumentParser(argparse.ArgumentParser):
@@ -65,7 +63,7 @@ class Command(object):
             src = []
             try:
                 while True:
-                    s = raw_input()
+                    s = input()
                     if s.strip() == ':q':
                         raise EOFError
                     src.append(s)

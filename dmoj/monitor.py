@@ -1,13 +1,10 @@
 from __future__ import print_function
 
-import traceback
 import logging
 from contextlib import closing
 from threading import Thread, Event
-try:
-    from urllib2 import urlopen
-except ImportError:
-    from urllib.request import urlopen
+
+from six.moves.urllib.request import urlopen
 
 from dmoj import judgeenv
 from dmoj.judgeenv import startup_warnings, get_problem_roots

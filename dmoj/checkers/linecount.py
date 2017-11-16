@@ -1,3 +1,5 @@
+import six
+
 from dmoj.result import CheckerResult
 
 verdict = u"\u2717\u2713"
@@ -5,8 +7,8 @@ verdict = u"\u2717\u2713"
 def check(process_output, judge_output, point_value, feedback=False,
           match=lambda p, j: p.strip() == j.strip(), **kwargs):
 
-    process_lines = filter(None, process_output.strip().split("\n"))
-    judge_lines = filter(None, judge_output.strip().split("\n"))
+    process_lines = list(filter(None, process_output.strip().split(b"\n")))
+    judge_lines = list(filter(None, judge_output.strip().split(b"\n")))
 
     if len(process_lines) > len(judge_lines):
         return False
@@ -14,7 +16,7 @@ def check(process_output, judge_output, point_value, feedback=False,
     if not judge_lines:
         return True
 
-    if isinstance(match, basestring):
+    if isinstance(match, six.text_type):
         match = eval(match)
 
     cases = [verdict[0]] * len(judge_lines)

@@ -1,10 +1,10 @@
 def check(process_output, judge_output, **kwargs):
-    from itertools import izip
-    process_lines = filter(None, process_output.split('\n'))
-    judge_lines = filter(None, judge_output.split('\n'))
+    from six.moves import zip
+    process_lines = list(filter(None, process_output.split(b'\n')))
+    judge_lines = list(filter(None, judge_output.split(b'\n')))
     if len(process_lines) != len(judge_lines):
         return False
-    for process_line, judge_line in izip(process_lines, judge_lines):
+    for process_line, judge_line in zip(process_lines, judge_lines):
         if process_line.split() != judge_line.split():
             return False
     return True

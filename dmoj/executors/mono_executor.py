@@ -59,10 +59,10 @@ class MonoExecutor(CompiledExecutor):
         def handle_open(debugger):
             file = debugger.readstr(debugger.uarg0)
             if fs.match(file) is None:
-                print('Not allowed to access:', f, file=sys.stderr)
+                print('Not allowed to access:', file, file=sys.stderr)
                 log.warning('Denied file open: %s', file)
                 return False
-            can = write_fs.match(f) is not None
+            can = write_fs.match(file) is not None
 
             def update():
                 writable[debugger.result] = can

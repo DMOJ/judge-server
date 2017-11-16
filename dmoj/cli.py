@@ -242,7 +242,7 @@ class SubmitCommand(Command):
                         temp.seek(0)
                         src = temp.read()
                 else:
-                    print ansi_style('#ansi[no editor, falling back](yellow)\n')
+                    print ansi_style('#ansi[no $EDITOR, falling back to stdin](yellow)\n')
                     src = []
                     try:
                         while True:
@@ -388,34 +388,44 @@ class DifferenceCommand(Command):
 
     def get_data(self, id_or_source):
         err = None
-        src = None
+        src = ''
         try:
             id = int(id_or_source)
-            try:
-                problem, lang, src, tl, ml = graded_submissions[id - 1]
-            except IndexError:
-                err = "invalid submission '%d'" % (id - 1)
         except ValueError:
             try:
                 with open(os.path.realpath(id_or_source)) as f:
                     src = f.read()
             except Exception as io:
                 err = str(io)
-
-        return src, err
+        else:
+            try:
+                _, _, src, _, _ = graded_submissions[id - 1]
+            except IndexError:
+                err = "invalid submission '%d'" % id
+        
+        return src.splitlines(), err
 
     def execute(self, line):
         args = self.arg_parser.parse_args(line)
 
-        data1, err1 = self.get_data(args.id_or_source_1)
-        data2, err2 = self.get_data(args.id_or_source_2)
-
         file1 = args.id_or_source_1
         file2 = args.id_or_source_2
 
-        difference = difflib.unified_diff(data1.splitlines(), data2.splitlines(), fromfile=file1, tofile=file2, lineterm='')
-        file_diff = '\n'.join(list(difference))
-        print pygments.highlight(file_diff, pygments.lexers.DiffLexer(), pygments.formatters.Terminal256Formatter())
+        data1, err1 = self.get_data(file1)
+        data2, err2 = self.get_data(file2)
+
+        err = err1 or err2
+
+        if err:
+            print ansi_style('#ansi[%s](red|bold)\n' % err)
+            return
+
+        difference = list(difflib.unified_diff(data1, data2, fromfile=file1, tofile=file2, lineterm=''))
+        if not difference:
+            print 'no difference\n'
+        else:
+            file_diff = '\n'.join(difference)
+            print pygments.highlight(file_diff, pygments.lexers.DiffLexer(), pygments.formatters.Terminal256Formatter())
 
 
 class ShowCommand(Command):
@@ -431,8 +441,18 @@ class ShowCommand(Command):
         lexer = None
         try:
             id = int(id_or_source)
+        except ValueError:
             try:
-                problem, lang, src, tl, ml = graded_submissions[id - 1]
+                with open(os.path.realpath(id_or_source)) as f:
+                    src = f.read()
+                    lexer = pygments.lexers.get_lexer_for_filename(id_or_source)
+            except Exception as io:
+                err = str(io)
+        else:
+            try:
+                _, lang, src, _, _ = graded_submissions[id - 1]
+
+                # TODO: after executor->extension mapping is built-in to the judge, redo this
                 if lang in ['PY2', 'PYPY2']:
                     lexer = pygments.lexers.PythonLexer()
                 elif lang in ['PY3', 'PYPY3']:
@@ -440,14 +460,7 @@ class ShowCommand(Command):
                 else:
                     lexer = pygments.lexers.guess_lexer(src)
             except IndexError:
-                err = "invalid submission '%d'" % (id - 1)
-        except ValueError:
-            try:
-                with open(os.path.realpath(id_or_source)) as f:
-                    src = f.read()
-                    lexer = pygments.lexers.guess_lexer_for_file(id_or_source, src)
-            except Exception as io:
-                err = str(io)
+                err = "invalid submission '%d'" % id
 
         return src, err, lexer
 
@@ -455,7 +468,10 @@ class ShowCommand(Command):
         args = self.arg_parser.parse_args(line)
         data, err, lexer = self.get_data(args.id_or_source)
 
-        print pygments.highlight(data, lexer, pygments.formatters.Terminal256Formatter())
+        if err:
+            print ansi_style('#ansi[%s](red|bold)\n' % err)
+        else:
+            print pygments.highlight(data, lexer, pygments.formatters.Terminal256Formatter())
 
 
 def main():

@@ -59,7 +59,7 @@ class GeneratorManager(object):
         except CompileError as err:
             # Strip ansi codes from CompileError message so we don't get wacky displays on the site like
             # 01m[K_generator.cpp:26:23:[m[K [01;31m[Kerror: [m[K'[01m[Kgets[m[K' was not declared in this scope
-            raise CompileError(ansi.strip_ansi(str(err)))
+            raise CompileError(ansi.strip_ansi(err.args[0]))
 
         self._cache[cache_key] = executor
         return executor

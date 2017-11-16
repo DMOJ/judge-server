@@ -15,7 +15,7 @@ class SignatureGrader(StandardGrader):
                 siggrader = i
                 break
         else:
-            raise CompileError("can't signature grade, why did I get this submission?")
+            raise CompileError(b"can't signature grade, why did I get this submission?")
         if self.language in siggraders:
             aux_sources = {}
             handler_data = self.problem.config['signature_grader']
@@ -39,7 +39,7 @@ class SignatureGrader(StandardGrader):
                                                      writable=handler_data['writable'] or (1, 2),
                                                      fds=handler_data['fds'], defines=['-DSIGNATURE_GRADER'])
             except CompileError as compilation_error:
-                self.judge.packet_manager.compile_error_packet(ansi.format_ansi(str(compilation_error)))
+                self.judge.packet_manager.compile_error_packet(ansi.format_ansi(compilation_error.args[0]))
 
                 # Compile error is fatal
                 raise

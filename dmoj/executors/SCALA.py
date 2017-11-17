@@ -61,7 +61,7 @@ object self_test {
         if not log:
             return result, False, 'Failed to parse: %s' % scala
 
-        cmdline = log[-1].lstrip(b'+ ').split()
+        cmdline = log[-1].lstrip('+ ').split()
         result['scala_vm'] = cls.unravel_java(cls.find_command_from_list([cmdline[0]]))
         result['scala_args'] = [i for i in cmdline[1:-1] if not i.startswith(('-Xmx', '-Xms'))]
 

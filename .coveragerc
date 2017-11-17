@@ -14,7 +14,7 @@ ignore_errors = True
 omit =
     dmoj/executors/FS.py
     dmoj/executors/VC.py
-
     dmoj/cli.py
+    dmoj/commands/*
     dmoj/packet.py
     dmoj/executors/autoconfig.py

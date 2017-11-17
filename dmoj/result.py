@@ -1,5 +1,7 @@
 import six
 
+from dmoj.utils.unicode import utf8text
+
 
 class Result(object):
     AC = 0
@@ -53,7 +55,7 @@ class Result(object):
 
     @property
     def output(self):
-        return self.proc_output[:self.case.output_prefix_length].decode('utf-8', 'replace')
+        return utf8text(self.proc_output[:self.case.output_prefix_length], 'replace')
 
 
 class CheckerResult(object):

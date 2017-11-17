@@ -5,7 +5,7 @@ from six.moves import map
 from dmoj.executors.C import Executor as CExecutor
 from dmoj.error import CompileError
 
-template = '''\
+template = b'''\
 #include <stdio.h>
 
 char array[16777216];
@@ -16,10 +16,10 @@ int main() {
 }
 '''
 
-trans = {'>': '++ptr;', '<': '--ptr;',
-         '+': '++*ptr;', '-': '--*ptr;',
-         '.': 'putchar(*ptr);', ',': '*ptr=getchar();',
-         '[': 'while(*ptr){', ']': '}'}
+trans = {b'>': b'++ptr;', b'<': b'--ptr;',
+         b'+': b'++*ptr;', b'-': b'--*ptr;',
+         b'.': b'putchar(*ptr);', b',': b'*ptr=getchar();',
+         b'[': b'while(*ptr){', b']': b'}'}
 
 
 class Executor(CExecutor):
@@ -27,10 +27,9 @@ class Executor(CExecutor):
     test_program = ',+[-.,+]'
 
     def __init__(self, problem_id, source_code, **kwargs):
-        source_code = source_code.decode('utf-8')
-        if source_code.count('[') != source_code.count(']'):
+        if source_code.count(b'[') != source_code.count(b']'):
             raise CompileError(b'Unmatched brackets\n')
-        code = (template % (''.join(map(trans.get, source_code, itertools.repeat(''))))).encode('utf-8')
+        code = template.replace(b'%s', b''.join(map(trans.get, source_code, itertools.repeat(b''))))
         super(Executor, self).__init__(problem_id, code, **kwargs)
 
     @classmethod

@@ -4,6 +4,7 @@ import subprocess
 from six import iteritems
 
 from dmoj.executors.java_executor import JavaExecutor
+from dmoj.utils.unicode import utf8text
 
 with open(os.path.join(os.path.dirname(__file__), 'groovy-security.policy')) as policy_file:
     policy = policy_file.read()
@@ -51,7 +52,7 @@ println System.in.newReader().readLine()
         groovy = result.pop('groovy')
         with open(os.devnull, 'w') as devnull:
             process = subprocess.Popen(['bash', '-x', groovy, '-version'], stdout=devnull, stderr=subprocess.PIPE)
-        output = process.communicate()[1].decode('utf-8')
+        output = utf8text(process.communicate()[1])
         log = [i for i in output.split('\n') if 'org.codehaus.groovy.tools.GroovyStarter' in i]
 
         if not log:

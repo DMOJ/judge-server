@@ -4,6 +4,7 @@ import subprocess
 from six import iteritems
 
 from dmoj.executors.java_executor import JavaExecutor
+from dmoj.utils.unicode import utf8text
 
 
 class Executor(JavaExecutor):
@@ -54,7 +55,7 @@ object self_test {
         scala = result.pop('scala')
         with open(os.devnull, 'w') as devnull:
             process = subprocess.Popen(['bash', '-x', scala, '-version'], stdout=devnull, stderr=subprocess.PIPE)
-        output = process.communicate()[1].decode('utf-8')
+        output = utf8text(process.communicate()[1])
         log = [i for i in output.split('\n') if 'scala.tools.nsc.MainGenericRunner' in i]
 
         if not log:

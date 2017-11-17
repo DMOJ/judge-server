@@ -17,6 +17,7 @@ from dmoj.judgeenv import env
 from dmoj.utils.ansi import ansi_style
 from dmoj.utils.communicate import *
 from dmoj.utils.error import print_protection_fault
+from dmoj.utils.unicode import utf8bytes, utf8text
 
 reversion = re.compile('.*?(\d+(?:\.\d+)+)', re.DOTALL)
 version_cache = {}
@@ -78,7 +79,7 @@ class BaseExecutor(PlatformExecutorMixin, ResourceProxy):
         if output:
             print(ansi_style("%-39s%s" % ('Self-testing #ansi[%s](|underline):' % cls.get_executor_name(), '')), end=' ')
         try:
-            executor = cls(cls.test_name, cls.test_program.encode('utf-8'))
+            executor = cls(cls.test_name, utf8bytes(cls.test_program))
             proc = executor.launch(time=cls.test_time, memory=cls.test_memory) if sandbox else executor.launch_unsafe()
             test_message = b'echo: Hello, World!'
             stdout, stderr = proc.communicate(test_message + b'\n')
@@ -89,10 +90,10 @@ class BaseExecutor(PlatformExecutorMixin, ResourceProxy):
                 cls.get_runtime_versions()
                 print(ansi_style(['#ansi[Failed](red|bold)', '#ansi[Success](green|bold)'][res]))
             if stdout.strip() != test_message and error_callback:
-                error_callback('Got unexpected stdout output:\n' + stdout.decode('utf-8'))
+                error_callback('Got unexpected stdout output:\n' + utf8text(stdout))
             if stderr:
                 if error_callback:
-                    error_callback('Got unexpected stderr output:\n' + stderr.decode('utf-8'))
+                    error_callback('Got unexpected stderr output:\n' + utf8text(stderr))
                 else:
                     print(stderr, file=sys.stderr)
             if hasattr(proc, 'protection_fault') and proc.protection_fault:
@@ -128,7 +129,7 @@ class BaseExecutor(PlatformExecutorMixin, ResourceProxy):
                         command.extend(flag)
                     else:
                         command.append(flag)
-                    output = subprocess.check_output(command, stderr=subprocess.STDOUT).decode('utf-8')
+                    output = utf8text(subprocess.check_output(command, stderr=subprocess.STDOUT))
                 except subprocess.CalledProcessError:
                     pass
                 else:

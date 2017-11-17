@@ -20,7 +20,7 @@ from dmoj.cptbox.handlers import DISALLOW, _CALLBACK
 from dmoj.cptbox.syscalls import translator, SYSCALL_COUNT, by_id
 from dmoj.error import InternalError
 from dmoj.utils.communicate import safe_communicate as _safe_communicate
-from dmoj.utils.unicode import utf8text
+from dmoj.utils.unicode import utf8text, utf8bytes
 
 PIPE = object()
 log = logging.getLogger('dmoj.cptbox')
@@ -34,7 +34,7 @@ def _find_exe(path):
     for dir in os.environ.get('PATH', os.defpath).split(os.pathsep):
         p = os.path.join(dir, path)
         if os.access(p, os.X_OK):
-            return p.encode('utf-8')
+            return utf8bytes(p)
     raise OSError()
 
 
@@ -109,7 +109,11 @@ class AdvancedDebugger(Debugger):
     def readstr(self, address, max_size=4096):
         if self.address_bits == 32:
             address &= 0xFFFFFFFF
-        return super(AdvancedDebugger, self).readstr(address, max_size).decode('utf-8')
+        try:
+            return utf8text(super(AdvancedDebugger, self).readstr(address, max_size))
+        except UnicodeDecodeError:
+            os.kill(self.pid, signal.SIGKILL)
+            return ''
 
 
 # SecurePopen is a subclass of a cython class, _cptbox.Process. Since it is exceedingly unwise
@@ -140,7 +144,7 @@ class SecurePopen(six.with_metaclass(SecurePopenMeta, Process)):
         self._executable = executable or _find_exe(args[0])
         self._args = args
         self._chdir = cwd
-        self._env = [('%s=%s' % i).encode('utf-8') for i in (env if env is not None else os.environ).items()]
+        self._env = [utf8bytes('%s=%s' % i) for i in six.iteritems(env if env is not None else os.environ)]
         self._time = time
         self._wall_time = time * 3 if wall_time is None else wall_time
         self._cpu_time = time + 5 if time else 0

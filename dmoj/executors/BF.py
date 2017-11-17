@@ -1,5 +1,6 @@
 import itertools
 
+import six
 from six.moves import map
 
 from dmoj.executors.C import Executor as CExecutor
@@ -20,6 +21,9 @@ trans = {b'>': b'++ptr;', b'<': b'--ptr;',
          b'+': b'++*ptr;', b'-': b'--*ptr;',
          b'.': b'putchar(*ptr);', b',': b'*ptr=getchar();',
          b'[': b'while(*ptr){', b']': b'}'}
+
+if six.PY3:
+    trans = {k[0]: v for k, v in trans.items()}
 
 
 class Executor(CExecutor):

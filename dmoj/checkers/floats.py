@@ -1,6 +1,7 @@
-def check(process_output, judge_output, precision, **kwargs):
-    from six.moves import zip
+from six.moves import zip, filter
 
+
+def check(process_output, judge_output, precision, **kwargs):
     # Discount empty lines
     process_lines = list(filter(None, process_output.split(b'\n')))
     judge_lines = list(filter(None, judge_output.split(b'\n')))

@@ -1,4 +1,5 @@
 import six
+from six.moves import filter
 
 from dmoj.result import CheckerResult
 

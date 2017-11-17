@@ -72,7 +72,8 @@ class PerformanceCounter(object):
 
     __del__ = close
 
-    def _query_counter(self, (counter, flags)):
+    def _query_counter(self, counters):
+        (counter, flags) = counters
         data = PDH_FMT_COUNTERVALUE()
         try:
             PdhGetFormattedCounterValue(counter, flags, None, byref(data))

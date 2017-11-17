@@ -2,13 +2,15 @@ from __future__ import print_function
 
 import os
 import sys
+
+if sys.version_info[1] >= 3 and os.name == 'nt':
+    print('DMOJ is unsupported on Windows Python 3, please use Python 2 instead.', file=sys.stderr)
+    sys.exit(0)
+
 import traceback
 from distutils.errors import DistutilsPlatformError
 
-if sys.version_info[1] >= 3:
-    from distutils._msvccompiler import MSVCCompiler
-else:
-    from distutils.msvccompiler import MSVCCompiler
+from distutils.msvccompiler import MSVCCompiler
 
 from setuptools import setup, Extension
 from setuptools.command import build_ext
@@ -73,7 +75,7 @@ if os.name == 'nt':
                              define_macros=[('UNICODE', None)]),
                    Extension('dmoj.utils.debugger.win._win_debugger',
                              sources=['dmoj/utils/debugger/win/_win_debugger.c'],
-                             include_dirs=['dmoj/utils/debugger'],  libraries=['kernel32'])]
+                             include_dirs=['dmoj/utils/debugger'], libraries=['kernel32'])]
 else:
     libs = ['rt']
     if sys.platform.startswith('freebsd'):
@@ -91,7 +93,6 @@ else:
                    Extension('dmoj.utils.debugger.nix._nix_debugger',
                              sources=['dmoj/utils/debugger/nix/_nix_debugger.c'],
                              include_dirs=['dmoj/utils/debugger'], libraries=['rt'])]
-
 
 setup(
     name='dmoj',

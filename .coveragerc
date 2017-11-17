@@ -6,7 +6,6 @@ exclude_lines =
     if __name__ == .__main__.:
     except ImportError:
     except OSError:
-    freebsd
 
 ignore_errors = True
 

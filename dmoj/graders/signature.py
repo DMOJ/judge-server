@@ -24,16 +24,12 @@ class SignatureGrader(StandardGrader):
             entry_point = self.problem.problem_data[handler_data['entry']]
             header = self.problem.problem_data[handler_data['header']]
 
-            submission_template = b'''#include "%s"
-#define main main_%s
-%s
-'''
+            submission_prefix = (
+                '#include "%s"\n'
+                '#define main main_%s\n'
+            ) % (handler_data['header'], str(uuid.uuid4()).replace('-', ''))
 
-            aux_sources[self.problem.id + '_submission'] = submission_template % (
-                utf8bytes(handler_data['header']),
-                utf8bytes(str(uuid.uuid4()).replace('-', '')),
-                self.source
-            )
+            aux_sources[self.problem.id + '_submission'] = utf8bytes(submission_prefix) + self.source
 
             aux_sources[handler_data['header']] = header
             entry = entry_point

@@ -39,10 +39,10 @@ def find_class(source):
     source = reinline_comment.sub(b'', restring.sub(b'', recomment.sub(b'', source)))
     class_name = reclass.search(source)
     if class_name is None:
-        raise CompileError(b'No public class: your main class must be declared as a "public class"\n')
+        raise CompileError('No public class: your main class must be declared as a "public class"\n')
     package = repackage.search(source)
     if package:
-        raise CompileError(b'Invalid package %s: do not declare package\n' % package.group(1))
+        raise CompileError('Invalid package %s: do not declare package\n' % utf8text(package.group(1), 'replace'))
     return class_name
 
 
@@ -205,8 +205,8 @@ class JavacExecutor(JavaExecutor):
                 fo.write(utf8bytes(source_code))
         except IOError as e:
             if e.errno in (errno.ENAMETOOLONG, errno.ENOENT):
-                raise CompileError(b'Why do you need a class name so long? '
-                                   b'As a judge, I sentence your code to death.\n')
+                raise CompileError('Why do you need a class name so long? '
+                                   'As a judge, I sentence your code to death.\n')
             raise
         self._class_name = class_name.group(1)
 
@@ -215,8 +215,8 @@ class JavacExecutor(JavaExecutor):
 
     def handle_compile_error(self, output):
         if b'is public, should be declared in a file named' in output:
-            raise CompileError(b'You are a troll. Trolls are not welcome. '
-                               b'As a judge, I sentence your code to death.\n')
+            raise CompileError('You are a troll. Trolls are not welcome. '
+                               'As a judge, I sentence your code to death.\n')
         raise CompileError(output)
 
     @classmethod

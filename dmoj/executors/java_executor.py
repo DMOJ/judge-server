@@ -9,7 +9,7 @@ from subprocess import Popen
 import six
 
 from dmoj.error import CompileError, InternalError
-from dmoj.utils.unicode import utf8bytes
+from dmoj.utils.unicode import utf8bytes, utf8text
 from .base_executor import CompiledExecutor
 from dmoj.result import Result
 
@@ -199,7 +199,7 @@ class JavacExecutor(JavaExecutor):
         super(JavacExecutor, self).create_files(problem_id, source_code, *args, **kwargs)
         source_code = deunicode(source_code)
         class_name = find_class(source_code)
-        self._code = self._file('%s.java' % class_name.group(1))
+        self._code = self._file('%s.java' % utf8text(class_name.group(1)))
         try:
             with open(self._code, 'wb') as fo:
                 fo.write(utf8bytes(source_code))

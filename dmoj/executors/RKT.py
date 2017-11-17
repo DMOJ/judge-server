@@ -6,7 +6,8 @@ import os
 class Executor(ScriptDirectoryMixin, CompiledExecutor):
     ext = '.rkt'
     name = 'RKT'
-    fs = ['/etc/nsswitch.conf$', '/etc/passwd$', os.path.expanduser('~/\.racket/.*?')]
+    fs = ['/etc/nsswitch.conf$', '/etc/passwd$', os.path.expanduser('~/\.racket/.*?'),
+          '/etc/racket/.*?']
 
     command = 'racket'
 

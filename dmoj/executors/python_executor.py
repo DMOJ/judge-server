@@ -25,6 +25,8 @@ runpy.run_path(sys.argv[0], run_name='__main__')\
     ext = '.py'
 
     def get_cmdline(self):
+        # -B: Don't write .pyc/.pyo, since sandbox will kill those writes
+        # -S: Disable site module for speed (no loading dist-packages nor site-packages)
         return [self.get_command(), '-BS', self._loader, self._code]
 
     def get_allowed_syscalls(self):
@@ -35,7 +37,9 @@ runpy.run_path(sys.argv[0], run_name='__main__')\
     def create_files(self, problem_id, source_code):
         self._loader = self._file('-loader.py')
         with open(self._code, 'wb') as fo, open(self._loader, 'w') as loader:
-            # UTF-8 BOM instead of comment to not modify line numbers.
+            # We want source code to be UTF-8, but the normal (Python 2) way of having 
+            # "# -*- coding: utf-8 -*-" in header changes line numbers, so we write
+            # UTF-8 BOM instead.
             fo.write(b'\xef\xbb\xbf')
             fo.write(utf8bytes(source_code))
             loader.write(self.loader_script)

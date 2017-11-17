@@ -112,6 +112,8 @@ class AdvancedDebugger(Debugger):
         try:
             return utf8text(super(AdvancedDebugger, self).readstr(address, max_size))
         except UnicodeDecodeError:
+            # It's possible for the text to crash utf8text, but this would mean a
+            # deliberate attack, so we kill the process here instead
             os.kill(self.pid, signal.SIGKILL)
             return ''
 

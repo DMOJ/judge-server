@@ -4,7 +4,11 @@ import os
 import sys
 import traceback
 from distutils.errors import DistutilsPlatformError
-from distutils.msvccompiler import MSVCCompiler
+
+if sys.version_info[1] >= 3:
+    from distutils._msvccompiler import MSVCCompiler
+else:
+    from distutils.msvccompiler import MSVCCompiler
 
 from setuptools import setup, Extension
 from setuptools.command import build_ext
@@ -27,6 +31,7 @@ class build_ext_dmoj(build_ext_old):
             self.unavailable(e)
 
     def build_extensions(self):
+        print(self.compiler)
         if isinstance(self.compiler, MSVCCompiler):
             self.compiler.initialize()
             self.compiler.compile_options.remove('/W3')

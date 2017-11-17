@@ -22,6 +22,8 @@ runpy.run_path(sys.argv[0], run_name='__main__')\
     ext = '.py'
 
     def get_cmdline(self):
+        # -B: Don't write .pyc/.pyo, since sandbox will kill those writes
+        # -S: Disable site module for speed (no loading dist-packages)
         return [self.get_command(), '-BS', self._loader, self._code]
 
     def get_allowed_syscalls(self):

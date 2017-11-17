@@ -1,7 +1,10 @@
 import os
 import subprocess
 
+from six import iteritems
+
 from dmoj.executors.java_executor import JavaExecutor
+from dmoj.utils.unicode import utf8text
 
 
 class Executor(JavaExecutor):
@@ -43,7 +46,7 @@ object self_test {
     def autoconfig(cls):
         result = {}
 
-        for key, files in {'scalac': ['scalac'], 'scala': ['scala']}.iteritems():
+        for key, files in iteritems({'scalac': ['scalac'], 'scala': ['scala']}):
             file = cls.find_command_from_list(files)
             if file is None:
                 return result, False, 'Failed to find "%s"' % key
@@ -52,7 +55,8 @@ object self_test {
         scala = result.pop('scala')
         with open(os.devnull, 'w') as devnull:
             process = subprocess.Popen(['bash', '-x', scala, '-version'], stdout=devnull, stderr=subprocess.PIPE)
-        log = [i for i in process.communicate()[1].split('\n') if 'scala.tools.nsc.MainGenericRunner' in i]
+        output = utf8text(process.communicate()[1])
+        log = [i for i in output.split('\n') if 'scala.tools.nsc.MainGenericRunner' in i]
 
         if not log:
             return result, False, 'Failed to parse: %s' % scala

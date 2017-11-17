@@ -1,7 +1,10 @@
 import os
 import subprocess
 
+from six import iteritems
+
 from dmoj.executors.java_executor import JavaExecutor
+from dmoj.utils.unicode import utf8text
 
 with open(os.path.join(os.path.dirname(__file__), 'groovy-security.policy')) as policy_file:
     policy = policy_file.read()
@@ -40,7 +43,7 @@ println System.in.newReader().readLine()
     def autoconfig(cls):
         result = {}
 
-        for key, files in {'groovyc': ['groovyc'], 'groovy': ['groovy']}.iteritems():
+        for key, files in iteritems({'groovyc': ['groovyc'], 'groovy': ['groovy']}):
             file = cls.find_command_from_list(files)
             if file is None:
                 return result, False, 'Failed to find "%s"' % key
@@ -49,7 +52,8 @@ println System.in.newReader().readLine()
         groovy = result.pop('groovy')
         with open(os.devnull, 'w') as devnull:
             process = subprocess.Popen(['bash', '-x', groovy, '-version'], stdout=devnull, stderr=subprocess.PIPE)
-        log = [i for i in process.communicate()[1].split('\n') if 'org.codehaus.groovy.tools.GroovyStarter' in i]
+        output = utf8text(process.communicate()[1])
+        log = [i for i in output.split('\n') if 'org.codehaus.groovy.tools.GroovyStarter' in i]
 
         if not log:
             return result, False, 'Failed to parse: %s' % groovy

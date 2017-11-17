@@ -6,6 +6,7 @@ from dmoj.cptbox.sandbox import X86, X64, can_debug
 from dmoj.error import CompileError
 from dmoj.executors.base_executor import CompiledExecutor
 from dmoj.judgeenv import env
+from dmoj.utils.unicode import utf8text
 
 refeatures = re.compile('^[#;@|!]\s*features:\s*([\w\s,]+)', re.M)
 feature_split = re.compile('[\s,]+').split
@@ -29,10 +30,10 @@ class ASMExecutor(CompiledExecutor):
         self.use_qemu = self.qemu_path is not None and os.path.isfile(self.qemu_path)
         self.features = self.find_features(source_code)
 
-        super(ASMExecutor, self).__init__(problem_id, source_code + '\n', *args, **kwargs)
+        super(ASMExecutor, self).__init__(problem_id, source_code + b'\n', *args, **kwargs)
 
     def find_features(self, source_code):
-        features = refeatures.search(source_code)
+        features = refeatures.search(utf8text(source_code))
         if features is not None:
             return set(filter(None, feature_split(features.group(1))))
         return set()
@@ -156,7 +157,7 @@ class NASMExecutor(ASMExecutor):
 
     def find_features(self, source_code):
         features = super(NASMExecutor, self).find_features(source_code)
-        if source_code.startswith('; libc'):
+        if source_code.startswith(b'; libc'):
             features.add('libc')
         return features
 

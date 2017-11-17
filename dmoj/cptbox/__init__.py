@@ -8,5 +8,5 @@ from dmoj.cptbox.syscalls import SYSCALL_COUNT
 
 class NullSecurity(defaultdict):
     def __init__(self):
-        for i in xrange(SYSCALL_COUNT):
+        for i in range(SYSCALL_COUNT):
             self[i] = ALLOW

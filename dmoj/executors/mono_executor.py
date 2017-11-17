@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import errno
 import logging
 import os
@@ -57,7 +59,7 @@ class MonoExecutor(CompiledExecutor):
         def handle_open(debugger):
             file = debugger.readstr(debugger.uarg0)
             if fs.match(file) is None:
-                print>>sys.stderr, 'Not allowed to access:', file
+                print('Not allowed to access:', file, file=sys.stderr)
                 log.warning('Denied file open: %s', file)
                 return False
             can = write_fs.match(file) is not None
@@ -93,7 +95,7 @@ class MonoExecutor(CompiledExecutor):
         def unlink(debugger):
             path = debugger.readstr(debugger.uarg0)
             if UNLINK_FS.match(path) is None:
-                print 'Not allowed to unlink:', path
+                print('Not allowed to unlink:', path)
                 log.warning('Denied file unlink: %s', path)
                 return False
             return True

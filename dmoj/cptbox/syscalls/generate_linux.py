@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import re
 from urllib2 import urlopen
 from contextlib import closing
@@ -15,7 +17,7 @@ with open('linux-x86.tbl', 'w') as x86, closing(urlopen(LINUX_SYSCALLS_32)) as d
         if len(syscall) > 3:
             func = syscall[3]
             func_to_name[func] = name
-        print>>x86, '%d\t%s' % (int(syscall[0]), name)
+        print('%d\t%s' % (int(syscall[0]), name), file=x86)
 
 with open('linux-x64.tbl', 'w') as x64, open('linux-x32.tbl', 'w') as x32, closing(urlopen(LINUX_SYSCALLS_64)) as data:
     for line in data:
@@ -26,9 +28,9 @@ with open('linux-x64.tbl', 'w') as x64, open('linux-x32.tbl', 'w') as x32, closi
         arch = syscall[1]
         name = syscall[2].strip('_')
         if arch in ('common', '64'):
-            print>>x64, '%d\t%s' % (id, name)
+            print('%d\t%s' % (id, name), file=x64)
         if arch in ('common', 'x32'):
-            print>>x32, '%d\t%s' % (id, name)
+            print('%d\t%s' % (id, name), file=x32)
 
 rewas = re.compile(r'/\* was (sys_[a-z0-9_]+) \*/')
 with open('linux-arm.tbl', 'w') as arm, closing(urlopen(LINUX_SYSCALLS_ARM)) as data:
@@ -45,5 +47,5 @@ with open('linux-arm.tbl', 'w') as arm, closing(urlopen(LINUX_SYSCALLS_ARM)) as 
             else:
                 name = func.replace('sys_', '').replace('_wrapper', '')
             if name != 'ni_syscall':
-                print>>arm, '%d\t%s' % (id, name)
+                print('%d\t%s' % (id, name), file=arm)
             id += 1

@@ -1,6 +1,10 @@
+from __future__ import print_function
+
 import os
 import sys
 from collections import OrderedDict
+
+from six.moves import input
 
 from dmoj.judge import Judge
 from dmoj.utils.ansi import ansi_style
@@ -90,7 +94,7 @@ def main():
 
     executors.load_executors()
 
-    print 'Running local judge...'
+    print('Running local judge...')
 
     logging.basicConfig(filename=judgeenv.log_file, level=logging.INFO,
                         format='%(levelname)s %(asctime)s %(module)s %(message)s')
@@ -98,9 +102,9 @@ def main():
     judge = LocalJudge()
 
     for warning in judgeenv.startup_warnings:
-        print ansi_style('#ansi[Warning: %s](yellow)' % warning)
+        print(ansi_style('#ansi[Warning: %s](yellow)' % warning))
     del judgeenv.startup_warnings
-    print
+    print()
 
     from dmoj.commands import all_commands
     for command in all_commands:
@@ -111,7 +115,7 @@ def main():
             judge.listen()
 
             while True:
-                command = raw_input(ansi_style("#ansi[dmoj](magenta)#ansi[>](green) ")).strip()
+                command = input(ansi_style("#ansi[dmoj](magenta)#ansi[>](green) ")).strip()
 
                 line = command.split(' ')
                 if line[0] in commands:
@@ -120,13 +124,13 @@ def main():
                         cmd.execute(line[1:])
                     except InvalidCommandException as e:
                         if e.message:
-                            print ansi_style("#ansi[%s](red|bold)\n" % e.message)
-                        print
+                            print(ansi_style("#ansi[%s](red|bold)\n" % e.message))
+                        print()
                 else:
-                    print ansi_style('#ansi[Unrecognized command %s](red|bold)' % line[0])
-                    print
+                    print(ansi_style('#ansi[Unrecognized command %s](red|bold)' % line[0]))
+                    print()
         except (EOFError, KeyboardInterrupt):
-            print
+            print()
         finally:
             judge.murder()
 

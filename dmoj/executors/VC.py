@@ -8,8 +8,8 @@ VC_ENV = env['runtime'].get('vc_env', {})
 VC_COMPILE = os.environ.copy()
 
 VC_COMPILE.update((k.encode('mbcs'), v.encode('mbcs')) for k, v in
-                  env['runtime'].get('vc_compile', VC_ENV).iteritems())
-VC_ENV = dict((k.encode('mbcs'), v.encode('mbcs')) for k, v in VC_ENV.iteritems())
+                  env['runtime'].get('vc_compile', VC_ENV).items())
+VC_ENV = dict((k.encode('mbcs'), v.encode('mbcs')) for k, v in VC_ENV.items())
 
 
 class Executor(NullStdoutMixin, CompiledExecutor):

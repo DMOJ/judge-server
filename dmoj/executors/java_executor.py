@@ -6,17 +6,20 @@ import re
 from shutil import copyfile
 from subprocess import Popen
 
+import six
+
 from dmoj.error import CompileError, InternalError
+from dmoj.utils.unicode import utf8bytes, utf8text
 from .base_executor import CompiledExecutor
 from dmoj.result import Result
 
-recomment = re.compile(r'/\*.*?\*/', re.DOTALL)
-restring = re.compile(r''''(?:\\.|[^'\\])'|"(?:\\.|[^"\\])*"''', re.DOTALL)
-reinline_comment = re.compile(r'//.*?(?=[\r\n])')
-reclass = re.compile(r'\bpublic\s+(?:strictfp\s+)?(?:(?:abstract|final)\s+)?(?:strictfp\s+)?class\s+([_a-zA-Z\$][_0-9a-zA-z\$]*?)\b')
-repackage = re.compile(r'\bpackage\s+([^.;]+(?:\.[^.;]+)*?);')
-redeunicode = re.compile(r'\\u([0-9a-f]{4})', re.I)
-deunicode = lambda x: redeunicode.sub(lambda a: unichr(int(a.group(1), 16)), x)
+recomment = re.compile(br'/\*.*?\*/', re.DOTALL)
+restring = re.compile(br''''(?:\\.|[^'\\])'|"(?:\\.|[^"\\])*"''', re.DOTALL)
+reinline_comment = re.compile(br'//.*?(?=[\r\n])')
+reclass = re.compile(br'\bpublic\s+(?:strictfp\s+)?(?:(?:abstract|final)\s+)?(?:strictfp\s+)?class\s+([_a-zA-Z\$][_0-9a-zA-z\$]*?)\b')
+repackage = re.compile(br'\bpackage\s+([^.;]+(?:\.[^.;]+)*?);')
+redeunicode = re.compile(br'\\u([0-9a-f]{4})', re.I)
+deunicode = lambda x: redeunicode.sub(lambda a: six.unichr(int(a.group(1), 16)), x)
 
 
 JAVA_SANDBOX = os.path.abspath(os.path.join(os.path.dirname(__file__), 'java-sandbox.jar'))
@@ -33,13 +36,13 @@ with open(os.path.join(os.path.dirname(__file__), 'java-security.policy')) as po
 
 
 def find_class(source):
-    source = reinline_comment.sub('', restring.sub('', recomment.sub('', source)))
+    source = reinline_comment.sub(b'', restring.sub(b'', recomment.sub(b'', source)))
     class_name = reclass.search(source)
     if class_name is None:
         raise CompileError('No public class: your main class must be declared as a "public class"\n')
     package = repackage.search(source)
     if package:
-        raise CompileError('Invalid package %s: do not declare package\n' % package.group(1))
+        raise CompileError('Invalid package %s: do not declare package\n' % utf8text(package.group(1), 'replace'))
     return class_name
 
 
@@ -196,12 +199,10 @@ class JavacExecutor(JavaExecutor):
         super(JavacExecutor, self).create_files(problem_id, source_code, *args, **kwargs)
         source_code = deunicode(source_code)
         class_name = find_class(source_code)
-        self._code = self._file('%s.java' % class_name.group(1))
+        self._code = self._file('%s.java' % utf8text(class_name.group(1)))
         try:
             with open(self._code, 'wb') as fo:
-                if isinstance(source_code, unicode):
-                    source_code.encode('utf-8')
-                fo.write(source_code)
+                fo.write(utf8bytes(source_code))
         except IOError as e:
             if e.errno in (errno.ENAMETOOLONG, errno.ENOENT):
                 raise CompileError('Why do you need a class name so long? '
@@ -213,7 +214,7 @@ class JavacExecutor(JavaExecutor):
         return [self.get_compiler(), '-Xlint', '-encoding', 'UTF-8', self._code]
 
     def handle_compile_error(self, output):
-        if 'is public, should be declared in a file named' in output:
+        if b'is public, should be declared in a file named' in output:
             raise CompileError('You are a troll. Trolls are not welcome. '
                                'As a judge, I sentence your code to death.\n')
         raise CompileError(output)

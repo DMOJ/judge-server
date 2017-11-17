@@ -1,4 +1,6 @@
 #!/usr/bin/python
+from __future__ import print_function
+
 import codecs
 import errno
 import logging
@@ -10,6 +12,8 @@ import traceback
 from functools import partial
 from itertools import chain
 
+import six
+
 from dmoj import packet, graders
 from dmoj.config import ConfigNode
 from dmoj.control import JudgeControlRequestHandler
@@ -20,6 +24,7 @@ from dmoj.problem import Problem, BatchedTestCase
 from dmoj.result import Result
 from dmoj.utils.ansi import ansi_style, strip_ansi
 from dmoj.utils.debugger import setup_all_debuggers
+from dmoj.utils.unicode import utf8bytes
 
 setup_all_debuggers()
 
@@ -111,22 +116,22 @@ class Judge(object):
                 result = grader.grade(InvocationCase())
             except TerminateGrading:
                 self.packet_manager.submission_terminated_packet()
-                print ansi_style('#ansi[Forcefully terminating invocation.](red|bold)')
+                print(ansi_style('#ansi[Forcefully terminating invocation.](red|bold)'))
                 pass
             except:
                 self.internal_error()
             else:
                 self.packet_manager.invocation_end_packet(result)
 
-        print ansi_style('Done invoking #ansi[%s](green|bold).\n' % (id))
+        print(ansi_style('Done invoking #ansi[%s](green|bold).\n' % (id)))
         self._terminate_grading = False
         self.current_submission_thread = None
         self.current_submission = None
 
     def _begin_grading(self, problem_id, language, source, time_limit, memory_limit, short_circuit, pretests_only):
         submission_id = self.current_submission
-        print ansi_style('Start grading #ansi[%s](yellow)/#ansi[%s](green|bold) in %s...'
-                         % (problem_id, submission_id, language))
+        print(ansi_style('Start grading #ansi[%s](yellow)/#ansi[%s](green|bold) in %s...'
+                         % (problem_id, submission_id, language)))
 
         try:
             problem = Problem(problem_id, time_limit, memory_limit, load_pretests_only=pretests_only)
@@ -157,7 +162,7 @@ class Judge(object):
                 for result in self.grade_cases(grader, problem.cases, short_circuit=short_circuit):
                     if isinstance(result, BatchBegin):
                         self.packet_manager.batch_begin_packet()
-                        print ansi_style("#ansi[Batch #%d](yellow|bold)" % batch_counter)
+                        print(ansi_style("#ansi[Batch #%d](yellow|bold)" % batch_counter))
                         in_batch = True
                     elif isinstance(result, BatchEnd):
                         self.packet_manager.batch_end_packet()
@@ -168,8 +173,8 @@ class Judge(object):
 
                         # here be cancer
                         is_sc = (result.result_flag & Result.SC)
-                        colored_codes = map(lambda x: '#ansi[%s](%s|bold)' % ('--' if x == 'SC' else x,
-                                                                              Result.COLORS_BYID[x]), codes)
+                        colored_codes = list(map(lambda x: '#ansi[%s](%s|bold)' % ('--' if x == 'SC' else x,
+                                                                                   Result.COLORS_BYID[x]), codes))
                         colored_aux_codes = '{%s}' % ', '.join(colored_codes[1:]) if len(codes) > 1 else ''
                         colored_feedback = '(#ansi[%s](|underline)) ' % result.feedback if result.feedback else ''
                         case_info = '[%.3fs (%.3fs) | %dkb] %s%s' % (result.execution_time,
@@ -178,23 +183,24 @@ class Judge(object):
                                                                      colored_feedback,
                                                                      colored_aux_codes) if not is_sc else ''
                         case_padding = '  ' * in_batch
-                        print ansi_style('%sTest case %2d %-3s %s' % (case_padding, case_number,
-                                                                      colored_codes[0], case_info))
+                        print(ansi_style('%sTest case %2d %-3s %s' % (case_padding, case_number,
+                                                                      colored_codes[0], case_info)))
 
                         self.packet_manager.test_case_status_packet(case_number, result)
 
                         case_number += 1
             except TerminateGrading:
                 self.packet_manager.submission_terminated_packet()
-                print ansi_style('#ansi[Forcefully terminating grading. Temporary files may not be deleted.](red|bold)')
+                print(
+                    ansi_style('#ansi[Forcefully terminating grading. Temporary files may not be deleted.](red|bold)'))
                 pass
             except:
                 self.internal_error()
             else:
                 self.packet_manager.grading_end_packet()
 
-        print ansi_style('Done grading #ansi[%s](yellow)/#ansi[%s](green|bold).' % (problem_id, submission_id))
-        print
+        print(ansi_style('Done grading #ansi[%s](yellow)/#ansi[%s](green|bold).' % (problem_id, submission_id)))
+        print()
         self._terminate_grading = False
         self.current_submission_thread = None
         self.current_submission = None
@@ -207,8 +213,8 @@ class Judge(object):
                 yield BatchBegin()
 
                 for batched_case in self.grade_cases(grader, case.batched_cases,
-                                          short_circuit=case.config['short_circuit'],
-                                          is_short_circuiting=is_short_circuiting):
+                                                     short_circuit=case.config['short_circuit'],
+                                                     is_short_circuiting=is_short_circuiting):
                     if (batched_case.result_flag & Result.WA) > 0 and not case.points:
                         is_short_circuiting = True
                     yield batched_case
@@ -239,14 +245,11 @@ class Judge(object):
             yield result
 
     def get_grader_from_source(self, grader_class, problem, language, source):
-        if isinstance(source, unicode):
-            source = source.encode('utf-8')
-
         try:
-            grader = grader_class(self, problem, language, source)
+            grader = grader_class(self, problem, language, utf8bytes(source))
         except CompileError as ce:
-            print ansi_style('#ansi[Failed compiling submission!](red|bold)')
-            print ce.message,  # don't print extra newline
+            print(ansi_style('#ansi[Failed compiling submission!](red|bold)'))
+            print(ce.args[0], end=' ')  # don't print extra newline
             grader = None
         except:  # if custom grader failed to initialize, report it to the site
             return self.internal_error()
@@ -278,7 +281,7 @@ class Judge(object):
         self.packet_manager.internal_error_packet(strip_ansi(message))
 
         # Logs can contain ANSI, and it'll display fine
-        print >> sys.stderr, message
+        print(message, file=sys.stderr)
 
     def terminate_grading(self):
         """
@@ -325,19 +328,19 @@ def sanity_check():
         try:
             import wbox
         except ImportError:
-            print >> sys.stderr, "wbox must be compiled to grade!"
+            print('wbox must be compiled to grade!', file=sys.stderr)
             return False
 
         # DMOJ needs to be run as admin on Windows
         import ctypes
         if ctypes.windll.shell32.IsUserAnAdmin() == 0:
-            print >> sys.stderr, "can't start, the DMOJ judge must be ran as admin"
+            print("can't start, the DMOJ judge must be ran as admin", file=sys.stderr)
             return False
     else:
         try:
             import cptbox
         except ImportError:
-            print >> sys.stderr, "cptbox must be compiled to grade!"
+            print('cptbox must be compiled to grade!', file=sys.stderr)
             return False
 
         # However running as root on Linux is a Bad Idea
@@ -397,7 +400,7 @@ def judge_proc(need_monitor):
     else:
         api_server = None
 
-    print
+    print()
     with monitor, judge:
         try:
             judge.listen()
@@ -613,6 +616,7 @@ class JudgeManager(object):
             self._try_respawn = False
             self.signal_all(signal.SIGINT)
             self._monitor()
+
         logpm.info('Exited gracefully: %d.', os.getpid())
 
     def signal_all(self, signum):
@@ -651,10 +655,10 @@ def main():  # pragma: no cover
     if hasattr(signal, 'SIGUSR2'):
         signal.signal(signal.SIGUSR2, signal.SIG_IGN)
 
-    print 'Running live judge...'
+    print('Running live judge...')
 
     for warning in judgeenv.startup_warnings:
-        print ansi_style('#ansi[Warning: %s](yellow)' % warning)
+        print(ansi_style('#ansi[Warning: %s](yellow)' % warning))
     del judgeenv.startup_warnings
 
     if os.name == 'posix' and 'judges' in env:

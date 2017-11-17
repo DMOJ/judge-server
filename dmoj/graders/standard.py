@@ -1,8 +1,12 @@
+from __future__ import print_function
+
 import gc
 import logging
 import os
 import platform
 import signal
+
+import six
 
 from dmoj.error import CompileError
 from dmoj.executors import executors
@@ -128,7 +132,7 @@ class StandardGrader(BaseGrader):
         if process.returncode < 0:
             # None < 0 == True
             # if process.returncode is not None:
-            # print>> sys.stderr, 'Killed by signal %d' % -process.returncode
+            # print('Killed by signal %d' % -process.returncode, file=sys.stderr)
             result.result_flag |= Result.RTE  # Killed by signal
         if process.tle:
             result.result_flag |= Result.TLE
@@ -164,7 +168,7 @@ class StandardGrader(BaseGrader):
                                                        hints=self.problem.config.hints or [])
         except CompileError as compilation_error:
             error = compilation_error.args[0]
-            error = error.decode('mbcs') if os.name == 'nt' and isinstance(error, str) else error
+            error = error.decode('mbcs') if os.name == 'nt' and isinstance(error, six.binary_type) else error
             self.judge.packet_manager.compile_error_packet(ansi.format_ansi(error or ''))
 
             # Compile error is fatal

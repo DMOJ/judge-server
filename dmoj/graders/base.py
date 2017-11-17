@@ -1,8 +1,9 @@
+from dmoj.utils.unicode import utf8bytes
+
+
 class BaseGrader(object):
     def __init__(self, judge, problem, language, source):
-        if isinstance(source, unicode):
-            source = source.encode('utf-8')
-        self.source = source
+        self.source = utf8bytes(source)
         self.language = language
         self.problem = problem
         self.judge = judge

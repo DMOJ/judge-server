@@ -37,8 +37,8 @@ puts $input
         # they also don't have --help.
         # Here, we just use subprocess to print the TCL version, and use that.
         process = subprocess.Popen([cls.get_command()], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
-        process.stdin.write('puts $tcl_version\n')
+        process.stdin.write(b'puts $tcl_version\n')
         process.stdin.close()
         retcode = process.poll()
-        return ('tclsh', tuple(map(int, process.stdout.read().split('.'))) if not retcode else ()),
+        return ('tclsh', tuple(map(int, process.stdout.read().split(b'.'))) if not retcode else ()),
 

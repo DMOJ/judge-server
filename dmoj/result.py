@@ -1,3 +1,8 @@
+import six
+
+from dmoj.utils.unicode import utf8text
+
+
 class Result(object):
     AC = 0
     WA = 1 << 0
@@ -50,7 +55,7 @@ class Result(object):
 
     @property
     def output(self):
-        return self.proc_output[:self.case.output_prefix_length].decode('utf-8', 'replace')
+        return utf8text(self.proc_output[:self.case.output_prefix_length], 'replace')
 
 
 class CheckerResult(object):
@@ -58,7 +63,7 @@ class CheckerResult(object):
         # Make sure we don't kill the site bridge
         assert isinstance(passed, bool)
         assert isinstance(points, int) or isinstance(points, float)
-        assert feedback is None or isinstance(feedback, str) or isinstance(feedback, unicode)
+        assert feedback is None or isinstance(feedback, six.string_types)
 
         self.passed = passed
         self.points = points

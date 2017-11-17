@@ -1,6 +1,11 @@
+from __future__ import print_function
+
 import os
 import sys
 import traceback
+
+import six
+from six import iteritems
 
 import yaml
 
@@ -14,7 +19,7 @@ all_executors = executors.executors
 
 class TestManager(object):
     def output(self, message):
-        print message
+        print(message)
 
     def fail(self, message):
         self.output(message)
@@ -112,10 +117,10 @@ class Tester(object):
                 self.case_files += ['test.linux.yml']
 
     def output(self, message=''):
-        print message
+        print(message)
 
     def error_output(self, message):
-        print ansi_style('#ansi[%s](red)') % message
+        print(ansi_style('#ansi[%s](red)') % message)
 
     def test_all(self):
         total_fails = 0
@@ -131,7 +136,7 @@ class Tester(object):
                     self.output(ansi_style('Problem #ansi[%s](cyan|bold) #ansi[failed %d case(s)](red|bold).') %
                                 (problem, fails))
                 else:
-                    print ansi_style('Problem #ansi[%s](cyan|bold) passed with flying colours.') % problem
+                    print(ansi_style('Problem #ansi[%s](cyan|bold) passed with flying colours.') % problem)
                 total_fails += fails
 
         return total_fails
@@ -185,7 +190,7 @@ class Tester(object):
             return 0
         time = config['time']
         memory = config['memory']
-        if isinstance(config['source'], (str, unicode)):
+        if isinstance(config['source'], six.string_types):
             with open(os.path.join(case_dir, config['source'])) as f:
                 sources = [f.read()]
         else:
@@ -213,14 +218,14 @@ class Tester(object):
         if isinstance(cases, list):
             cases = enumerate(cases, 1)
         else:
-            cases = cases.iteritems()
+            cases = iteritems(cases)
         case_expect = {id: func(codes) for id, codes in cases}
         return expect, case_expect
 
     def parse_expected_codes(self, codes):
         if codes == '*':
             return self.all_codes
-        elif isinstance(codes, (str, unicode)):
+        elif isinstance(codes, six.string_types):
             assert codes in self.all_codes
             return {codes}
         else:
@@ -231,7 +236,7 @@ class Tester(object):
     def parse_feedback(self, feedback):
         if feedback is None or feedback == '*':
             return None
-        elif isinstance(feedback, (str, unicode)):
+        elif isinstance(feedback, six.string_types):
             return {feedback}
         else:
             return set(feedback)
@@ -252,12 +257,12 @@ def main():
 
     tester = Tester(judgeenv.problem_regex, judgeenv.case_regex)
     fails = tester.test_all()
-    print
-    print 'Test complete'
+    print()
+    print('Test complete')
     if fails:
-        print ansi_style('#ansi[A total of %d case(s) failed](red|bold).') % fails
+        print(ansi_style('#ansi[A total of %d case(s) failed](red|bold).') % fails)
     else:
-        print ansi_style('#ansi[All cases passed.](green|bold)')
+        print(ansi_style('#ansi[All cases passed.](green|bold)'))
     raise SystemExit(int(fails != 0))
 
 if __name__ == '__main__':

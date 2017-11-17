@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import re
 import sys
 import os
@@ -160,7 +162,7 @@ class CHROOTSecurity(dict):
     def deny_with_file_path(self, syscall, argument):
         def check(debugger):
             file = debugger.readstr(getattr(debugger, 'uarg%d' % argument))
-            print>> sys.stderr, '%s: not allowed to access: %s' % (syscall, file)
+            print('%s: not allowed to access: %s' % (syscall, file), file=sys.stderr)
             log.warning('Denied access via syscall %s: %s', syscall, file)
             return False
 
@@ -218,7 +220,6 @@ class CHROOTSecurity(dict):
         file = self.get_full_path(debugger, file, dirfd)
         if self.fs_jail.match(file) is None:
             log.warning('Denied file open: %s', file)
-            print>> sys.stderr, 'Not allowed to access:', file
             return False
         return True
 

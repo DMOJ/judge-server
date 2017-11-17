@@ -1,6 +1,9 @@
+from __future__ import print_function
+
 from subprocess import list2cmdline, Popen
 import os
 
+import six
 from dmoj.wbox._wbox import UserManager, ProcessManager, NetworkManager, \
     update_address_x86, update_address_x64
 from dmoj.utils.winutils import execution_time
@@ -13,7 +16,7 @@ import sys
 def unicodify(path):
     if path is None:
         return None
-    if isinstance(path, unicode):
+    if isinstance(path, six.text_type):
         return path
     return path.decode('mbcs')
 
@@ -28,18 +31,13 @@ class WBoxPopen(object):
                  network_block=False, inject32=None, inject64=None, inject_func=None):
         username = u'wboxusr_%s' % judge_config.id
         if not ctypes.windll.netapi32.NetUserDel(None, username):
-            print>> sys.stderr, "found uncleaned wbox user '%s'; deleted." % username
+            print("found uncleaned wbox user '%s'; deleted." % username, file=sys.stderr)
         self.user = UserManager(username)
 
         self.process = ProcessManager(self.user.username, self.user.password)
-        argv = list2cmdline(argv)
-        if not isinstance(argv, unicode):
-            argv = argv.decode('mbcs')
-        self.process.command = argv
+        self.process.command = unicodify(list2cmdline(argv))
         if executable is not None:
-            if not isinstance(executable, unicode):
-                executable = executable.decode('mbcs')
-            self.process.executable = executable
+            self.process.executable = unicodify(executable)
         if cwd is not None:
             self.process.dir = unicodify(cwd)
         if env is not None:
@@ -68,12 +66,8 @@ class WBoxPopen(object):
     @staticmethod
     def _encode_environment(env):
         buf = []
-        for key, value in env.iteritems():
-            if not isinstance(key, unicode):
-                key = key.decode('mbcs')
-            if not isinstance(value, unicode):
-                value = value.decode('mbcs')
-            buf.append(u'%s=%s' % (key, value))
+        for key, value in six.iteritems(env):
+            buf.append(u'%s=%s' % (unicodify(key), unicodify(value)))
         return u'\0'.join(buf) + u'\0\0'
 
     def wait(self, timeout=None):

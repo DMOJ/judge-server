@@ -1,3 +1,6 @@
+from __future__ import print_function
+
+import os
 import re
 import signal
 import subprocess
@@ -14,6 +17,7 @@ from dmoj.judgeenv import env
 from dmoj.utils.ansi import ansi_style
 from dmoj.utils.communicate import *
 from dmoj.utils.error import print_protection_fault
+from dmoj.utils.unicode import utf8bytes, utf8text
 
 reversion = re.compile('.*?(\d+(?:\.\d+)+)', re.DOTALL)
 version_cache = {}
@@ -73,30 +77,31 @@ class BaseExecutor(PlatformExecutorMixin, ResourceProxy):
             return True
 
         if output:
-            print ansi_style("%-39s%s" % ('Self-testing #ansi[%s](|underline):' % cls.get_executor_name(), '')),
+            print(ansi_style("%-39s%s" % ('Self-testing #ansi[%s](|underline):' % cls.get_executor_name(), '')), end=' ')
         try:
-            executor = cls(cls.test_name, cls.test_program)
+            executor = cls(cls.test_name, utf8bytes(cls.test_program))
             proc = executor.launch(time=cls.test_time, memory=cls.test_memory) if sandbox else executor.launch_unsafe()
-            test_message = 'echo: Hello, World!'
-            stdout, stderr = proc.communicate(test_message + '\n')
+            test_message = b'echo: Hello, World!'
+            stdout, stderr = proc.communicate(test_message + b'\n')
+
             res = stdout.strip() == test_message and not stderr
             if output:
                 # Cache the versions now, so that the handshake packet doesn't take ages to generate
                 cls.get_runtime_versions()
-                print ansi_style(['#ansi[Failed](red|bold)', '#ansi[Success](green|bold)'][res])
+                print(ansi_style(['#ansi[Failed](red|bold)', '#ansi[Success](green|bold)'][res]))
             if stdout.strip() != test_message and error_callback:
-                error_callback('Got unexpected stdout output:\n' + stdout)
+                error_callback('Got unexpected stdout output:\n' + utf8text(stdout))
             if stderr:
                 if error_callback:
-                    error_callback('Got unexpected stderr output:\n' + stderr)
+                    error_callback('Got unexpected stderr output:\n' + utf8text(stderr))
                 else:
-                    print>> sys.stderr, stderr
+                    print(stderr, file=sys.stderr)
             if hasattr(proc, 'protection_fault') and proc.protection_fault:
                 print_protection_fault(proc.protection_fault)
             return res
         except Exception:
             if output:
-                print ansi_style('#ansi[Failed](red|bold)')
+                print(ansi_style('#ansi[Failed](red|bold)'))
                 traceback.print_exc()
             if error_callback:
                 error_callback(traceback.format_exc())
@@ -124,7 +129,7 @@ class BaseExecutor(PlatformExecutorMixin, ResourceProxy):
                         command.extend(flag)
                     else:
                         command.append(flag)
-                    output = subprocess.check_output(command, stderr=subprocess.STDOUT)
+                    output = utf8text(subprocess.check_output(command, stderr=subprocess.STDOUT))
                 except subprocess.CalledProcessError:
                     pass
                 else:
@@ -165,12 +170,11 @@ class BaseExecutor(PlatformExecutorMixin, ResourceProxy):
             return {}, False, 'Unimplemented'
         result = {}
 
-        for key, files in mapping.iteritems():
+        for key, files in mapping.items():
             file = cls.find_command_from_list(files)
             if file is None:
                 return result, False, 'Failed to find "%s"' % key
             result[key] = file
-
         return cls.autoconfig_run_test(result)
 
     @classmethod
@@ -182,7 +186,7 @@ class BaseExecutor(PlatformExecutorMixin, ResourceProxy):
         if success:
             message = ''
             if len(result) == 1:
-                message = 'Using %s' % result.values()[0]
+                message = 'Using %s' % list(result.values())[0]
         else:
             message = 'Failed self-test'
         return result, success, message, '\n'.join(errors)
@@ -369,7 +373,7 @@ class ShellExecutor(ScriptExecutor):
         return self.shell_commands
 
     def get_allowed_exec(self):
-        return map(find_executable, self.get_shell_commands())
+        return list(map(find_executable, self.get_shell_commands()))
 
     def get_fs(self):
         return super(ShellExecutor, self).get_fs() + self.get_allowed_exec()
@@ -389,7 +393,7 @@ class ShellExecutor(ScriptExecutor):
             path = sec.get_full_path(debugger, debugger.readstr(debugger.uarg0))
             if path in allowed:
                 return True
-            print>> sys.stderr, 'Not allowed to use command:', path
+            print('Not allowed to use command:', path, file=sys.stderr)
             return False
 
         sec[sys_execve] = handle_execve

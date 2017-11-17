@@ -3,6 +3,7 @@ import subprocess
 import zipfile
 from functools import partial
 
+import six
 import yaml
 from yaml.parser import ParserError
 from yaml.scanner import ScannerError
@@ -145,7 +146,7 @@ class TestCase(object):
                 raise InvalidInitException("no mode specified for redirect '%s'" % redirect)
             if mapping.mode not in 'rw':
                 raise InvalidInitException("invalid mode for redirect '%s': valid options are 'r', 'w'" % redirect)
-            if isinstance(mapping.fd, str):
+            if isinstance(mapping.fd, six.string_types):
                 mapped = {'stdin': 0, 'stdout': 1, 'stderr': 2}.get(mapping.fd, None)
                 if mapped is None:
                     raise InvalidInitException("unknown named fd for redirect '%s'" % redirect)
@@ -160,12 +161,12 @@ class TestCase(object):
         # data on Macs (\r newline) when judged programs assume \n
         if self.config.binary_data:
             return data
-        return data.replace('\r\n', '\r').replace('\r', '\n')
+        return data.replace(b'\r\n', b'\r').replace(b'\r', b'\n')
 
     def _run_generator(self, gen, args=None):
         flags = []
         args = args or []
-        if isinstance(gen, str):
+        if isinstance(gen, six.string_types):
             filename = os.path.join(get_problem_root(self.problem.id), gen)
         else:
             filename = gen.source
@@ -183,7 +184,7 @@ class TestCase(object):
             input = self.problem.problem_data[self.config['in']] if self.config['in'] else None
         except KeyError:
             input = None
-        self._generated = map(self._normalize, proc.communicate(input))
+        self._generated = list(map(self._normalize, proc.communicate(input)))
 
     def input_data(self):
         gen = self.config.generator
@@ -220,7 +221,7 @@ class TestCase(object):
             else:
                 checker = getattr(checkers, name)
         except AttributeError as e:
-            raise InvalidInitException('error loading checker: ' + e.message)
+            raise InvalidInitException('error loading checker: ' + str(e))
         if not hasattr(checker, 'check') or not callable(checker.check):
             raise InvalidInitException('malformed checker: no check method found')
 

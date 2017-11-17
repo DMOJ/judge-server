@@ -1,6 +1,7 @@
 import re
-from itertools import izip_longest
 from operator import itemgetter
+
+from six.moves import zip_longest
 
 from dmoj import judgeenv
 from dmoj.cli import InvalidCommandException
@@ -33,8 +34,8 @@ class ListProblemsCommand(Command):
         if len(all_problems):
             problems = iter(map(itemgetter(0), all_problems))
             max_len = max(len(p[0]) for p in all_problems)
-            for row in izip_longest(*[problems] * 4, fillvalue=''):
-                print ' '.join(('%*s' % (-max_len, row[i])) for i in xrange(4))
-            print
+            for row in zip_longest(*[problems] * 4, fillvalue=''):
+                print(' '.join(('%*s' % (-max_len, row[i])) for i in range(4)))
+            print()
         else:
             raise InvalidCommandException('No problems matching filter found.')

@@ -38,7 +38,7 @@ def max_memory(handle):
 
 
 def execution_time(handle):
-    times = [c_uint64() for i in xrange(4)]
+    times = [c_uint64() for i in 'a' * 4]
     GetProcessTimes(handle, *map(byref, times))
     return (times[2].value + times[3].value) / 10000000.
 

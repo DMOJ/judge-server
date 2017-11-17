@@ -1,7 +1,15 @@
+from __future__ import print_function
+
 import os
 import sys
+
+if sys.version_info[1] >= 3 and os.name == 'nt':
+    print('DMOJ is unsupported on Windows Python 3, please use Python 2 instead.', file=sys.stderr)
+    sys.exit(0)
+
 import traceback
 from distutils.errors import DistutilsPlatformError
+
 from distutils.msvccompiler import MSVCCompiler
 
 from setuptools import setup, Extension
@@ -11,9 +19,9 @@ from setuptools.command.build_ext import build_ext as build_ext_old
 try:
     from Cython.Build import cythonize
 except ImportError:
-    print>>sys.stderr, 'You need to install cython first before installing DMOJ.'
-    print>>sys.stderr, 'Run: pip install cython'
-    print>>sys.stderr, 'Or if you do not have pip: easy_install cython'
+    print('You need to install cython first before installing DMOJ.', file=sys.stderr)
+    print('Run: pip install cython', file=sys.stderr)
+    print('Or if you do not have pip: easy_install cython', file=sys.stderr)
     sys.exit(1)
 
 
@@ -25,6 +33,7 @@ class build_ext_dmoj(build_ext_old):
             self.unavailable(e)
 
     def build_extensions(self):
+        print(self.compiler)
         if isinstance(self.compiler, MSVCCompiler):
             self.compiler.initialize()
             self.compiler.compile_options.remove('/W3')
@@ -43,10 +52,10 @@ class build_ext_dmoj(build_ext_old):
         build_ext_old.build_extensions(self)
 
     def unavailable(self, e):
-        print '*' * 79
-        print 'Please procure the necessary *.pyd or *.so files yourself.'
+        print('*' * 79)
+        print('Please procure the necessary *.pyd or *.so files yourself.')
         traceback.print_exc()
-        print '*' * 79
+        print('*' * 79)
 
 
 build_ext.build_ext = build_ext_dmoj
@@ -66,7 +75,7 @@ if os.name == 'nt':
                              define_macros=[('UNICODE', None)]),
                    Extension('dmoj.utils.debugger.win._win_debugger',
                              sources=['dmoj/utils/debugger/win/_win_debugger.c'],
-                             include_dirs=['dmoj/utils/debugger'],  libraries=['kernel32'])]
+                             include_dirs=['dmoj/utils/debugger'], libraries=['kernel32'])]
 else:
     libs = ['rt']
     if sys.platform.startswith('freebsd'):
@@ -85,7 +94,6 @@ else:
                              sources=['dmoj/utils/debugger/nix/_nix_debugger.c'],
                              include_dirs=['dmoj/utils/debugger'], libraries=['rt'])]
 
-
 setup(
     name='dmoj',
     version='0.1',
@@ -98,7 +106,7 @@ setup(
         ]
     },
     ext_modules=cythonize(extensions),
-    install_requires=['watchdog', 'pyyaml', 'ansi2html', 'termcolor', 'pygments'],
+    install_requires=['watchdog', 'pyyaml', 'ansi2html', 'termcolor', 'pygments', 'six'],
 
     author='quantum5, Xyene',
     author_email='admin@dmoj.ca',

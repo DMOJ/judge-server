@@ -2,9 +2,11 @@ import argparse
 import os
 import sys
 
+import six
 import yaml
 
 from dmoj.config import ConfigNode
+from dmoj.utils.unicode import utf8text
 
 try:
     import ssl
@@ -17,7 +19,6 @@ env = ConfigNode(defaults={
     'runtime': {},
 }, dynamic=False)
 _root = os.path.dirname(__file__)
-fs_encoding = os.environ.get('DMOJ_ENCODING', sys.getfilesystemencoding())
 
 log_file = server_host = server_port = no_ansi = no_ansi_emu = no_watchdog = problem_regex = case_regex = None
 secure = no_cert_check = False
@@ -27,12 +28,6 @@ startup_warnings = []
 
 only_executors = set()
 exclude_executors = set()
-
-
-def unicodify(string):
-    if isinstance(string, str):
-        return string.decode(fs_encoding)
-    return string
 
 
 def load_env(cli=False, testsuite=False):  # pragma: no cover
@@ -120,7 +115,7 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
 
         dirs = env.problem_storage_root
         if dirs is not None:
-            get_path = lambda x, y: unicodify(os.path.normpath(os.path.join(x, y)))
+            get_path = lambda x, y: utf8text(os.path.normpath(os.path.join(x, y)))
             if isinstance(dirs, ConfigNode):
 
                 def find_directories_by_depth(dir, depth):
@@ -200,8 +195,7 @@ def get_supported_problems():
     problems = []
     for dir in get_problem_roots():
         for problem in os.listdir(dir):
-            if isinstance(problem, str):
-                problem = problem.decode(fs_encoding)
+            problem = utf8text(problem)
             if os.access(os.path.join(dir, problem, 'init.yml'), os.R_OK):
                 problems.append((problem, os.path.getmtime(os.path.join(dir, problem))))
     return problems

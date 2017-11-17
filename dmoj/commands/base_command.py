@@ -2,8 +2,9 @@ import argparse
 import os
 import subprocess
 import tempfile
-
 import sys
+
+from six.moves import input
 
 from dmoj.cli import InvalidCommandException
 from dmoj.executors import executors
@@ -47,7 +48,7 @@ class Command(object):
 
         raise InvalidCommandException("invalid submission '%d'" % submission_id)
 
-    def open_editor(self, lang, src=''):
+    def open_editor(self, lang, src=b''):
         file_suffix = executors[lang].Executor.ext
         editor = os.environ.get('EDITOR')
         if editor:
@@ -58,11 +59,11 @@ class Command(object):
                 temp.seek(0)
                 src = temp.read()
         else:
-            print ansi_style('#ansi[$EDITOR not set, falling back to stdin](yellow)\n')
+            print(ansi_style('#ansi[$EDITOR not set, falling back to stdin](yellow)\n'))
             src = []
             try:
                 while True:
-                    s = raw_input()
+                    s = input()
                     if s.strip() == ':q':
                         raise EOFError
                     src.append(s)

@@ -3,6 +3,7 @@ import sys
 from shutil import copyfile
 
 from dmoj.judgeenv import env
+from dmoj.utils.unicode import utf8bytes
 
 try:
     if os.name == 'nt':
@@ -100,13 +101,14 @@ try:
                 return {'LANG': 'C'}
 
             def launch(self, *args, **kwargs):
-                return SecurePopen(self.get_cmdline() + list(args), executable=self.get_executable(),
+                return SecurePopen([utf8bytes(a) for a in self.get_cmdline() + list(args)],
+                                   executable=utf8bytes(self.get_executable()),
                                    security=self.get_security(launch_kwargs=kwargs),
                                    address_grace=self.get_address_grace(),
                                    time=kwargs.get('time'), memory=kwargs.get('memory'),
                                    wall_time=kwargs.get('wall_time'),
                                    stderr=(PIPE if kwargs.get('pipe_stderr', False) else None),
-                                   env=self.get_env(), cwd=self._dir, nproc=self.get_nproc(),
+                                   env=self.get_env(), cwd=utf8bytes(self._dir), nproc=self.get_nproc(),
                                    unbuffered=kwargs.get('unbuffered', False))
 except ImportError:
     pass

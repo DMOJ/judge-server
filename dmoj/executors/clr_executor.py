@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import os
 import re
 import subprocess
@@ -5,6 +7,8 @@ import msvcrt
 from threading import Thread
 import time
 import sys
+
+import six
 
 from dmoj.utils.communicate import safe_communicate
 from dmoj.executors.base_executor import CompiledExecutor
@@ -18,7 +22,7 @@ reexc = re.compile(r'E1AE1B1F-C5FE-4335-B642-9446634350A0:\r?\n(.*?):')
 class CLRProcess(object):
     csbox = env.runtime.csbox or os.path.join(os.path.dirname(__file__), 'csbox.exe')
 
-    if not isinstance(csbox, unicode):
+    if not isinstance(csbox, six.text_type):
         csbox = csbox.decode('mbcs')
 
     def __init__(self, executable, dir, time, memory):
@@ -63,16 +67,16 @@ class CLRProcess(object):
     def _shocker(self):
         time.sleep(self.time_limit)
         if WaitForSingleObject(self._process, 0) == WAIT_TIMEOUT:
-            print>> sys.stderr, 'Ouch, shocker activated!'
+            print('Ouch, shocker activated!', file=sys.stderr)
             TerminateProcess(self._process, 0xDEADBEEF)
             WaitForSingleObject(self._process, INFINITE)
 
     def _execute(self, args, cwd):
         args = subprocess.list2cmdline(args)
-        if not isinstance(args, unicode):
+        if not isinstance(args, six.text_type):
             args = args.decode('mbcs')
 
-        if not isinstance(cwd, unicode):
+        if not isinstance(cwd, six.text_type):
             cwd = cwd.decode('mbcs')
 
         limits = JOBOBJECT_EXTENDED_LIMIT_INFORMATION()

@@ -34,4 +34,4 @@ class ShowCommand(Command):
         args = self.arg_parser.parse_args(line)
         data, lexer = self.get_data(args.id_or_source)
 
-        print pygments.highlight(data, lexer, pygments.formatters.Terminal256Formatter())
+        print(pygments.highlight(data, lexer, pygments.formatters.Terminal256Formatter()))

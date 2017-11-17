@@ -4,7 +4,7 @@ import re
 from dmoj.error import CompileError
 from .base_executor import CompiledExecutor
 
-recomment = re.compile(r'//.*?(?=[\r\n])')
+recomment = re.compile(br'//.*?(?=[\r\n])')
 decomment = lambda x: recomment.sub('', x)
 
 class Executor(CompiledExecutor):
@@ -39,6 +39,6 @@ func main() {
 
     def create_files(self, problem_id, source_code, *args, **kwargs):
         source_code = decomment(source_code).strip()
-        if source_code.split('\n')[0].strip().split() != ['package', 'main']:
-            raise CompileError('Your code must be defined in package main.\n')
+        if source_code.split(b'\n')[0].strip().split() != [b'package', b'main']:
+            raise CompileError(b'Your code must be defined in package main.\n')
         super(Executor, self).create_files(problem_id, source_code, *args, **kwargs)

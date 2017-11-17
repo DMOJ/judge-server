@@ -33,7 +33,7 @@ class DifferenceCommand(Command):
 
         difference = list(difflib.unified_diff(data1, data2, fromfile=file1, tofile=file2, lineterm=''))
         if not difference:
-            print 'no difference\n'
+            print('no difference\n')
         else:
             file_diff = '\n'.join(difference)
-            print pygments.highlight(file_diff, pygments.lexers.DiffLexer(), pygments.formatters.Terminal256Formatter())
+            print(pygments.highlight(file_diff, pygments.lexers.DiffLexer(), pygments.formatters.Terminal256Formatter()))

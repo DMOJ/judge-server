@@ -20,5 +20,5 @@ class ListSubmissionsCommand(Command):
         submissions = self.judge.graded_submissions if not args.limit else self.judge.graded_submissions[:args.limit]
 
         for i, (problem, lang, src, tl, ml) in enumerate(submissions):
-            print ansi_style('#ansi[%s](yellow)/#ansi[%s](green) in %s' % (problem, i + 1, lang))
-        print
+            print(ansi_style('#ansi[%s](yellow)/#ansi[%s](green) in %s' % (problem, i + 1, lang)))
+        print()

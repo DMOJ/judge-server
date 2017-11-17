@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import errno
 import logging
 import os
@@ -10,11 +12,15 @@ import sys
 import threading
 import time
 
+import six
+from six.moves import range
+
 from dmoj.cptbox._cptbox import *
 from dmoj.cptbox.handlers import DISALLOW, _CALLBACK
 from dmoj.cptbox.syscalls import translator, SYSCALL_COUNT, by_id
 from dmoj.error import InternalError
 from dmoj.utils.communicate import safe_communicate as _safe_communicate
+from dmoj.utils.unicode import utf8text, utf8bytes
 
 PIPE = object()
 log = logging.getLogger('dmoj.cptbox')
@@ -28,13 +34,13 @@ def _find_exe(path):
     for dir in os.environ.get('PATH', os.defpath).split(os.pathsep):
         p = os.path.join(dir, path)
         if os.access(p, os.X_OK):
-            return p
+            return utf8bytes(p)
     raise OSError()
 
 
 def file_info(path, split=re.compile(r'[\s,]').split):
     try:
-        return split(subprocess.check_output(['file', '-b', '-L', path]))
+        return split(utf8text(subprocess.check_output(['file', '-b', '-L', path])))
     except subprocess.CalledProcessError:
         return []
 
@@ -103,7 +109,13 @@ class AdvancedDebugger(Debugger):
     def readstr(self, address, max_size=4096):
         if self.address_bits == 32:
             address &= 0xFFFFFFFF
-        return super(AdvancedDebugger, self).readstr(address, max_size)
+        try:
+            return utf8text(super(AdvancedDebugger, self).readstr(address, max_size))
+        except UnicodeDecodeError:
+            # It's possible for the text to crash utf8text, but this would mean a
+            # deliberate attack, so we kill the process here instead
+            os.kill(self.pid, signal.SIGKILL)
+            return ''
 
 
 # SecurePopen is a subclass of a cython class, _cptbox.Process. Since it is exceedingly unwise
@@ -123,8 +135,7 @@ class SecurePopenMeta(type):
         return super(SecurePopenMeta, self).__call__(debugger, self.debugger_type, argv, executable, *args, **kwargs)
 
 
-class SecurePopen(Process):
-    __metaclass__ = SecurePopenMeta
+class SecurePopen(six.with_metaclass(SecurePopenMeta, Process)):
     debugger_type = AdvancedDebugger
 
     def __init__(self, debugger, _, args, executable=None, security=None, time=0, memory=0, stdin=PIPE, stdout=PIPE,
@@ -135,7 +146,7 @@ class SecurePopen(Process):
         self._executable = executable or _find_exe(args[0])
         self._args = args
         self._chdir = cwd
-        self._env = ['%s=%s' % i for i in (env if env is not None else os.environ).iteritems()]
+        self._env = [utf8bytes('%s=%s' % i) for i in six.iteritems(env if env is not None else os.environ)]
         self._time = time
         self._wall_time = time * 3 if wall_time is None else wall_time
         self._cpu_time = time + 5 if time else 0
@@ -156,7 +167,7 @@ class SecurePopen(Process):
         if security is None:
             self._trace_syscalls = False
         else:
-            for i in xrange(SYSCALL_COUNT):
+            for i in range(SYSCALL_COUNT):
                 handler = security.get(i, DISALLOW)
                 call = translator[i][index]
                 if call is None:
@@ -198,7 +209,7 @@ class SecurePopen(Process):
 
     def kill(self):
         log.warning('Request the killing of process: %s', self.pid)
-        print>> sys.stderr, 'Child is requested to be killed'
+        print('Child is requested to be killed', file=sys.stderr)
         try:
             os.killpg(self.pid, signal.SIGKILL)
         except OSError:
@@ -235,11 +246,15 @@ class SecurePopen(Process):
 
     def _cpu_time_exceeded(self):
         log.warning('SIGXCPU in process %d', self.pid)
-        print>> sys.stderr, 'SIGXCPU in child'
+        print('SIGXCPU in child', file=sys.stderr)
         self._tle = True
 
     def _run_process(self):
-        self._spawn(self._executable, self._args, self._env, self._chdir, self._fds)
+        self._spawn(self._executable,
+                    self._args,
+                    self._env,
+                    self._chdir,
+                    self._fds)
 
         if self._child_stdin >= 0:
             os.close(self._child_stdin)
@@ -268,7 +283,7 @@ class SecurePopen(Process):
 
         while not self._exited:
             if self.execution_time > self._time or self.wall_clock_time > self._wall_time:
-                print>> sys.stderr, 'Shocker activated, ouch!'
+                print('Shocker activated, ouch!', file=sys.stderr)
                 log.warning('Shocker activated and killed %d', self.pid)
                 os.killpg(self.pid, signal.SIGKILL)
                 self._tle = True
@@ -386,7 +401,7 @@ class SecurePopen(Process):
         while fd2file:
             try:
                 ready = poller.poll()
-            except select.error, e:
+            except select.error as e:
                 if e.args[0] == errno.EINTR:
                     continue
                 raise
@@ -415,9 +430,9 @@ class SecurePopen(Process):
 
         # All data exchanged.  Translate lists into strings.
         if stdout is not None:
-            stdout = ''.join(stdout)
+            stdout = b''.join(stdout)
         if stderr is not None:
-            stderr = ''.join(stderr)
+            stderr = b''.join(stderr)
 
         self.wait()
         return stdout, stderr

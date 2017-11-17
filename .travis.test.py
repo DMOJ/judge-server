@@ -1,13 +1,15 @@
+from __future__ import print_function
+
 import os
 
 from dmoj import judgeenv
 from dmoj.citest import ci_test, get_dirs, make_override
-
 EXECUTORS = ['ADA', 'AWK', 'BF', 'C', 'CBL', 'D', 'DART', 'CPP0X', 'CPP03', 'CPP11', 'CLANG', 'CLANGX',
              'F95', 'GO', 'GROOVY', 'HASK', 'JAVA7', 'JAVA8', 'JAVA9',
              'PAS', 'PRO', 'GAS32', 'GAS64', 'LUA', 'NASM', 'NASM64',
              'PERL', 'PHP', 'PY2', 'PY3', 'PYPY', 'PYPY3',
              'RUBY2', 'RUST', 'SCM', 'SED', 'SWIFT', 'TCL', 'TEXT']
+
 RVM_DIR = os.path.expanduser('~/.rvm/rubies/')
 PYENV_DIR = '/opt/python/'
 JVM_DIR = '/usr/lib/jvm/'
@@ -29,27 +31,27 @@ def main():
         'RUBY2': ['/home/travis/.gem/'],
     }
 
-    print 'Available JVMs:'
+    print('Available JVMs:')
     for jvm in get_dirs(JVM_DIR):
-        print '  -', jvm
-    print
+        print('  -', jvm)
+    print()
 
-    print 'Available Pythons:'
+    print('Available Pythons:')
     for python in get_dirs(PYENV_DIR):
-        print '  -', python
+        print('  -', python)
     print
 
-    print 'Available Rubies:'
+    print('Available Rubies:')
     for ruby in get_dirs(RVM_DIR):
-        print '  -', ruby
-    print
+        print('  -', ruby)
+    print()
 
-    print 'Using extra allowed filesystems:'
+    print('Using extra allowed filesystems:')
     for lang, fs in judgeenv.env['extra_fs'].iteritems():
-        print '%-6s: %s' % (lang, '|'.join(fs))
-    print
+        print('%-6s: %s' % (lang, '|'.join(fs)))
+    print()
 
-    print 'Testing executors...'
+    print('Testing executors...')
 
     ci_test(EXECUTORS, OVERRIDES)
 

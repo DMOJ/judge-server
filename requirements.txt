@@ -5,3 +5,4 @@ termcolor
 colorama
 cython
 pygments
+six

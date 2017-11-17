@@ -1,5 +1,9 @@
+from __future__ import print_function
+
 from ctypes import windll, WinError, byref, Union, Structure, c_double, c_int64
 from ctypes.wintypes import HANDLE, LONG, DWORD, LPCWSTR, LPCSTR
+
+import six
 
 
 def pdh_error_check(result, func, arguments):
@@ -55,7 +59,7 @@ class PerformanceCounter(object):
                 path, flags = counter
             else:
                 path, flags = counter, PDH_FMT_DOUBLE
-            if not isinstance(path, unicode):
+            if not isinstance(path, six.text_type):
                 path = path.decode('mbcs')
             if not flags & (PDH_FMT_LARGE | PDH_FMT_DOUBLE | PDH_FMT_LONG):
                 flags |= PDH_FMT_LONG if flags & PDH_FMT_1000 else PDH_FMT_DOUBLE
@@ -68,7 +72,8 @@ class PerformanceCounter(object):
 
     __del__ = close
 
-    def _query_counter(self, (counter, flags)):
+    def _query_counter(self, counters):
+        (counter, flags) = counters
         data = PDH_FMT_COUNTERVALUE()
         try:
             PdhGetFormattedCounterValue(counter, flags, None, byref(data))
@@ -101,7 +106,7 @@ def main():
             pql, pt = counter.query()
             pql_samples.append(pql)
             pt_samples.append(pt)
-            print '\rCPU load: %5.3f, %6.2f%%' % (sum(pql_samples) / len(pql_samples), pt),
+            print('\rCPU load: %5.3f, %6.2f%%' % (sum(pql_samples) / len(pql_samples), pt), end=' ')
             sleep(1)
     except KeyboardInterrupt:
         pass

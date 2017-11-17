@@ -3,7 +3,7 @@ from __future__ import print_function
 import os
 import sys
 
-if sys.version_info[1] >= 3 and os.name == 'nt':
+if sys.version_info[0] >= 3 and os.name == 'nt':
     print('DMOJ is unsupported on Windows Python 3, please use Python 2 instead.', file=sys.stderr)
     sys.exit(0)
 

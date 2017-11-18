@@ -7,6 +7,10 @@
 
 void print_err(const char *message, ...);
 
+#if defined(_MSC_VER) && _MSC_VER < 1900
+#   define inline __inline
+#endif
+
 inline void dump_threads()
 {
     PyInterpreterState *i;

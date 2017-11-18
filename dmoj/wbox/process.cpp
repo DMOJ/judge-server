@@ -3,6 +3,7 @@
 #include <objbase.h>
 #include <strsafe.h>
 #include <VersionHelpers.h>
+#include <stdint.h>
 
 bool JobbedProcessManager::canX86 = false;
 bool JobbedProcessManager::canX64 = false;

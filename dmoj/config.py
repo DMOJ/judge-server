@@ -67,10 +67,13 @@ class ConfigNode(object):
     def get(self, key, default=None):
         return self[key] or default
 
+    def items(self):
+        return self.iteritems()
+
     def iteritems(self):
         if not hasattr(self.raw_config, 'items'):
             raise InvalidInitException('config node is not a dict')
-        for key, value in list(self.raw_config.items()):
+        for key, value in self.raw_config.items():
             yield key, ConfigNode(value, self, dynamic=self.dynamic) \
                 if isinstance(value, list) or isinstance(value, dict) else value
 

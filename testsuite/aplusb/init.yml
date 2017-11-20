@@ -8,6 +8,8 @@ io_redirects:
 
 archive: aplusb.zip
 
+hints: [nobigmath]
+
 pretest_test_cases:
 - {in: aplusb.1.in, out: aplusb.1.out, points: 5}
 - {in: aplusb.2.in, out: aplusb.2.out, points: 20}

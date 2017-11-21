@@ -34,7 +34,7 @@ if os.name == 'posix':
     except ImportError:
         pass
 
-__
+
 class BatchBegin(object):
     pass
 

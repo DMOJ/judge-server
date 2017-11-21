@@ -22,7 +22,7 @@ class TestManager(object):
         print(message)
 
     def fail(self, message):
-        self.output('\t\t' + message.replace('\n', '\n\t\t'))
+        self.output('\t\t' + message.replace('\r\n', '\n').replace('\n', '\r\n\t\t'))
         self.failed = True
 
     def set_expected(self, codes_all, codes_cases, feedback_all, feedback_cases):

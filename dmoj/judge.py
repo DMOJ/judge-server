@@ -128,7 +128,7 @@ class Judge(object):
         self.current_submission_thread = None
         self.current_submission = None
 
-    def _begin_grading(self, problem_id, language, source, time_limit, memory_limit, short_circuit, pretests_only):
+    def _begin_grading(self, problem_id, language, source, time_limit, memory_limit, short_circuit, pretests_only, report=print):
         submission_id = self.current_submission
         print(ansi_style('Start grading #ansi[%s](yellow)/#ansi[%s](green|bold) in %s...'
                          % (problem_id, submission_id, language)))
@@ -162,7 +162,7 @@ class Judge(object):
                 for result in self.grade_cases(grader, problem.cases, short_circuit=short_circuit):
                     if isinstance(result, BatchBegin):
                         self.packet_manager.batch_begin_packet()
-                        print(ansi_style("#ansi[Batch #%d](yellow|bold)" % batch_counter))
+                        report(ansi_style("#ansi[Batch #%d](yellow|bold)" % batch_counter))
                         in_batch = True
                     elif isinstance(result, BatchEnd):
                         self.packet_manager.batch_end_packet()
@@ -183,7 +183,7 @@ class Judge(object):
                                                                      colored_feedback,
                                                                      colored_aux_codes) if not is_sc else ''
                         case_padding = '  ' * in_batch
-                        print(ansi_style('%sTest case %2d %-3s %s' % (case_padding, case_number,
+                        report(ansi_style('%sTest case %2d %-3s %s' % (case_padding, case_number,
                                                                       colored_codes[0], case_info)))
 
                         self.packet_manager.test_case_status_packet(case_number, result)
@@ -191,16 +191,15 @@ class Judge(object):
                         case_number += 1
             except TerminateGrading:
                 self.packet_manager.submission_terminated_packet()
-                print(
-                    ansi_style('#ansi[Forcefully terminating grading. Temporary files may not be deleted.](red|bold)'))
+                report(ansi_style('#ansi[Forcefully terminating grading. Temporary files may not be deleted.](red|bold)'))
                 pass
             except:
                 self.internal_error()
             else:
                 self.packet_manager.grading_end_packet()
 
-        print(ansi_style('Done grading #ansi[%s](yellow)/#ansi[%s](green|bold).' % (problem_id, submission_id)))
-        print()
+        report(ansi_style('Done grading #ansi[%s](yellow)/#ansi[%s](green|bold).\n' % (problem_id, submission_id)))
+
         self._terminate_grading = False
         self.current_submission_thread = None
         self.current_submission = None

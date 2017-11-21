@@ -12,8 +12,6 @@ import traceback
 from functools import partial
 from itertools import chain
 
-import six
-
 from dmoj import packet, graders
 from dmoj.config import ConfigNode
 from dmoj.control import JudgeControlRequestHandler
@@ -23,10 +21,7 @@ from dmoj.monitor import Monitor, DummyMonitor
 from dmoj.problem import Problem, BatchedTestCase
 from dmoj.result import Result
 from dmoj.utils.ansi import ansi_style, strip_ansi
-from dmoj.utils.debugger import setup_all_debuggers
 from dmoj.utils.unicode import utf8bytes
-
-setup_all_debuggers()
 
 if os.name == 'posix':
     try:
@@ -131,10 +126,11 @@ class Judge(object):
         self.current_submission_thread = None
         self.current_submission = None
 
-    def _begin_grading(self, problem_id, language, source, time_limit, memory_limit, short_circuit, pretests_only, report=print):
+    def _begin_grading(self, problem_id, language, source, time_limit, memory_limit, short_circuit, pretests_only,
+                       report=print):
         submission_id = self.current_submission
         report(ansi_style('Start grading #ansi[%s](yellow)/#ansi[%s](green|bold) in %s...'
-                         % (problem_id, submission_id, language)))
+                          % (problem_id, submission_id, language)))
 
         try:
             problem = Problem(problem_id, time_limit, memory_limit, load_pretests_only=pretests_only)
@@ -187,14 +183,15 @@ class Judge(object):
                                                                      colored_aux_codes) if not is_sc else ''
                         case_padding = '  ' * in_batch
                         report(ansi_style('%sTest case %2d %-3s %s' % (case_padding, case_number,
-                                                                      colored_codes[0], case_info)))
+                                                                       colored_codes[0], case_info)))
 
                         self.packet_manager.test_case_status_packet(case_number, result)
 
                         case_number += 1
             except TerminateGrading:
                 self.packet_manager.submission_terminated_packet()
-                report(ansi_style('#ansi[Forcefully terminating grading. Temporary files may not be deleted.](red|bold)'))
+                report(
+                    ansi_style('#ansi[Forcefully terminating grading. Temporary files may not be deleted.](red|bold)'))
                 pass
             except:
                 self.internal_error()

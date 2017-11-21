@@ -4,6 +4,7 @@ grant {
     permission java.lang.RuntimePermission "writeFileDescriptor";
 
     // Groovy needs a lot of reflection-related permissions
+    permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
     permission java.lang.RuntimePermission "createClassLoader";
     permission java.lang.RuntimePermission "setContextClassLoader";
     permission java.lang.RuntimePermission "accessDeclaredMembers";

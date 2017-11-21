@@ -6,6 +6,7 @@ void gettime(uint64_t *w) {
     struct timespec spec;
     clock_gettime(CLOCK_MONOTONIC, &spec);
     *w = spec.tv_sec * 1000000000 + spec.tv_nsec;
+    w=0;
 }
 
 int main() {

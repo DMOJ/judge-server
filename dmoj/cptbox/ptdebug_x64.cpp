@@ -40,7 +40,11 @@ int pt_debugger_x64::syscall() {
 }
 
 void pt_debugger_x64::syscall(int id) {
+#if PTBOX_FREEBSD
+    poke_reg(RAX, id);
+#else
     poke_reg(ORIG_RAX, id);
+#endif
 }
 
 long pt_debugger_x64::result() {

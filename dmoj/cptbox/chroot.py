@@ -1,14 +1,12 @@
 from __future__ import print_function
 
+import logging
+import os
 import re
 import sys
-import os
-import logging
 
-from dmoj.cptbox.handlers import ALLOW, STDOUTERR, ACCESS_DENIED
 from dmoj.cptbox._cptbox import bsd_get_proc_cwd, bsd_get_proc_fdno, AT_FDCWD
-from dmoj.cptbox.syscalls import *
-
+from dmoj.cptbox.handlers import ALLOW, STDOUTERR, ACCESS_DENIED
 
 log = logging.getLogger('dmoj.security')
 
@@ -219,7 +217,8 @@ class CHROOTSecurity(dict):
         file = self.get_full_path(debugger, rel_file, dirfd)
         if file_ptr and self._io_redirects:
             for path in (rel_file, os.path.basename(file), file):
-                self._handle_io_redirects(path, debugger, file_ptr)
+                if self._handle_io_redirects(path, debugger, file_ptr):
+                    return True
         if self.fs_jail.match(file) is None:
             log.warning('Denied file open: %s', file)
             return False

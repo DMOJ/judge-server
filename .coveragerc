@@ -14,6 +14,8 @@ omit =
     dmoj/executors/FS.py
     dmoj/executors/VC.py
     dmoj/cli.py
+    dmoj/citest.py
+    dmoj/testsuite.py
     dmoj/commands/*
     dmoj/packet.py
     dmoj/executors/autoconfig.py

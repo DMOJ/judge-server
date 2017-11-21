@@ -251,7 +251,7 @@ class Judge(object):
             grader = grader_class(self, problem, language, utf8bytes(source))
         except CompileError as ce:
             report(ansi_style('#ansi[Failed compiling submission!](red|bold)'))
-            report(ce.args[0], end=' ')  # don't print extra newline
+            report(ce.args[0].rstrip())  # don't print extra newline
             grader = None
         except:  # if custom grader failed to initialize, report it to the site
             return self.internal_error()

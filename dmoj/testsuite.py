@@ -146,9 +146,9 @@ class Tester(object):
         self.output(ansi_style('Testing problem #ansi[%s](cyan|bold)...') % problem)
         fails = 0
 
-        for case in os.listdir(test_dir):
-            if self.case_regex is not None and not self.case_regex.match(case):
-                continue
+        dirs = list(filter(self.case_regex is None or self.case_regex.match(case) for case in os.listdir(test_dir)))
+        for i in range(len(dirs)):
+            case = dirs[i]
             case_dir = os.path.join(test_dir, case)
             if os.path.isdir(case_dir):
                 self.output(ansi_style('\tRunning test case #ansi[%s](yellow|bold) for #ansi[%s](cyan|bold)...')
@@ -164,6 +164,10 @@ class Tester(object):
                                 % (case, problem) +
                                 ansi_style(['#ansi[Failed](red|bold)', '#ansi[Success](green|bold)'][not case_fails]))
                     fails += case_fails
+
+                if i != len(dirs) - 1:
+                    self.output()
+
         return fails
 
     def run_test_case(self, problem, case, case_dir):

@@ -30,7 +30,7 @@ The judge implements secure grading on Linux, Windows, and FreeBSD machines.
 The DMOJ Judge does **not** need a root user to run on Linux machines: it will run just fine under a normal user.
 
 Supported languages include:
-* C/++/0x/11/14
+* C/++/0x/11/14/17
 * Java 7/8/9
 * Python 2/3
 * PyPy 2/3

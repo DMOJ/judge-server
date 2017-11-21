@@ -146,7 +146,7 @@ class Tester(object):
         self.output(ansi_style('Testing problem #ansi[%s](cyan|bold)...') % problem)
         fails = 0
 
-        dirs = list(filter(self.case_regex is None or self.case_regex.match(case) for case in os.listdir(test_dir)))
+        dirs = [case for case in os.listdir(test_dir) if self.case_regex is None or self.case_regex.match(case)]
         for i in range(len(dirs)):
             case = dirs[i]
             case_dir = os.path.join(test_dir, case)

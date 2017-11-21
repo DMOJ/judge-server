@@ -136,7 +136,8 @@ class Tester(object):
                     self.output(ansi_style('Problem #ansi[%s](cyan|bold) #ansi[failed %d case(s)](red|bold).') %
                                 (problem, fails))
                 else:
-                    print(ansi_style('Problem #ansi[%s](cyan|bold) passed with flying colours.') % problem)
+                    self.output(ansi_style('Problem #ansi[%s](cyan|bold) passed with flying colours.') % problem)
+                self.output()
                 total_fails += fails
 
         return total_fails
@@ -163,7 +164,6 @@ class Tester(object):
                                 % (case, problem) +
                                 ansi_style(['#ansi[Failed](red|bold)', '#ansi[Success](green|bold)'][not case_fails]))
                     fails += case_fails
-        self.output()
         return fails
 
     def run_test_case(self, problem, case, case_dir):
@@ -205,7 +205,7 @@ class Tester(object):
                                                          self.parse_feedback)
 
         def output_case(data):
-            self.output('\t\t\t' + data.strip())
+            self.output('\t\t' + data.strip())
 
         fails = 0
         for source in sources:

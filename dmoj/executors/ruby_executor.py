@@ -9,6 +9,9 @@ class RubyExecutor(ScriptExecutor):
     address_grace = 65536
     test_program = 'puts gets'
 
+    def get_cmdline(self):
+        return [self.get_command(), '--disable-gems', self._code]
+
     @classmethod
     def get_version_flags(cls, command):
         return ['-v']

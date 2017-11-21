@@ -143,7 +143,6 @@ class Tester(object):
 
     def test_problem(self, problem, test_dir):
         self.output(ansi_style('Testing problem #ansi[%s](cyan|bold)...') % problem)
-        self.output()
         fails = 0
 
         for case in os.listdir(test_dir):
@@ -151,20 +150,20 @@ class Tester(object):
                 continue
             case_dir = os.path.join(test_dir, case)
             if os.path.isdir(case_dir):
-                self.output(ansi_style('Running test case #ansi[%s](yellow|bold) for #ansi[%s](cyan|bold)...')
+                self.output(ansi_style('\tRunning test case #ansi[%s](yellow|bold) for #ansi[%s](cyan|bold)...')
                             % (case, problem))
                 try:
                     case_fails = self.run_test_case(problem, case, case_dir)
                 except Exception:
                     fails += 1
-                    self.output(ansi_style('#ansi[Test case failed with exception:](red|bold)'))
+                    self.output(ansi_style('\t#ansi[Test case failed with exception:](red|bold)'))
                     self.output(traceback.format_exc())
                 else:
-                    self.output(ansi_style('Result of case #ansi[%s](yellow|bold) for #ansi[%s](cyan|bold): ')
+                    self.output(ansi_style('\tResult of case #ansi[%s](yellow|bold) for #ansi[%s](cyan|bold): ')
                                 % (case, problem) +
                                 ansi_style(['#ansi[Failed](red|bold)', '#ansi[Success](green|bold)'][not case_fails]))
                     fails += case_fails
-                self.output()
+        self.output()
         return fails
 
     def run_test_case(self, problem, case, case_dir):
@@ -177,16 +176,16 @@ class Tester(object):
                 pass
 
         if not config:
-            self.output(ansi_style('    #ansi[Skipped](magenta|bold) - No usable test.yml'))
+            self.output(ansi_style('\t\t#ansi[Skipped](magenta|bold) - No usable test.yml'))
             return 0
 
         if 'skip' in config and config['skip']:
-            self.output(ansi_style('    #ansi[Skipped](magenta|bold) - Unsupported on current platform'))
+            self.output(ansi_style('\t\t#ansi[Skipped](magenta|bold) - Unsupported on current platform'))
             return 0
 
         language = config['language']
         if language not in all_executors:
-            self.output(ansi_style('    #ansi[Skipped](magenta|bold) - Language not supported'))
+            self.output(ansi_style('\t\t#ansi[Skipped](magenta|bold) - Language not supported'))
             return 0
         time = config['time']
         memory = config['memory']
@@ -205,11 +204,14 @@ class Tester(object):
                                                          config.get('feedback_cases', {}),
                                                          self.parse_feedback)
 
+        def output_case(data):
+            self.output('\t\t\t' + data.strip())
+
         fails = 0
         for source in sources:
             self.sub_id += 1
             self.manager.set_expected(codes_all, codes_cases, feedback_all, feedback_cases)
-            self.judge.begin_grading(self.sub_id, problem, language, source, time, memory, False, False, blocking=True)
+            self.judge.begin_grading(self.sub_id, problem, language, source, time, memory, False, False, blocking=True, report=output_case)
             fails += self.manager.failed
         return fails
 

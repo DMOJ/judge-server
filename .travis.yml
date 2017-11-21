@@ -64,10 +64,10 @@ before_install:
   - wget http://downloads.dlang.org/releases/2.x/2.071.1/dmd_2.071.1-0_amd64.deb
   - sudo dpkg -i dmd_2.071.1-0_amd64.deb
   # Install Kotlin
-  - > 
-    wget -O kotlinc.zip https://github.com/JetBrains/kotlin/releases/download/v1.1.60/kotlin-compiler-1.1.60.zip &&
-    unzip kotlinc.zip &&
-    export PATH=${PWD}/kotlinc/bin:"${PATH}"
+  # - > 
+  #  wget -O kotlinc.zip https://github.com/JetBrains/kotlin/releases/download/v1.1.60/kotlin-compiler-1.1.60.zip &&
+  #  unzip kotlinc.zip &&
+  #  export PATH=${PWD}/kotlinc/bin:"${PATH}"
   # Install Groovy
   - >
     wget -O groovy.zip https://bintray.com/artifact/download/groovy/maven/apache-groovy-binary-2.4.12.zip &&

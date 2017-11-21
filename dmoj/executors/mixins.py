@@ -53,7 +53,7 @@ try:
                            '/etc/(?:localtime)$']
 
         if 'freebsd' in sys.platform:
-            BASE_FILESYSTEM += [r'/etc/s?pwd\.db$']
+            BASE_FILESYSTEM += [r'/etc/s?pwd\.db$', '/dev/hv_tsc$']
         else:
             BASE_FILESYSTEM += ['/sys/devices/system/cpu(?:$|/online)']
 

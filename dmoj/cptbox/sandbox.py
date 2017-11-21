@@ -283,7 +283,6 @@ class SecurePopen(six.with_metaclass(SecurePopenMeta, Process)):
 
         while not self._exited:
             if self.execution_time > self._time or self.wall_clock_time > self._wall_time:
-                print('Shocker activated, ouch!', file=sys.stderr)
                 log.warning('Shocker activated and killed %d', self.pid)
                 os.killpg(self.pid, signal.SIGKILL)
                 self._tle = True

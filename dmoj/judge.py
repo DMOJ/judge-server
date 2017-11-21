@@ -86,10 +86,13 @@ class Judge(object):
             pass
         self.process_type = type
         self.current_submission = id
-        self.current_submission_thread = threading.Thread(target=target, args=args)
+
+        is_blocking = kwargs.pop('blocking', False)
+        self.current_submission_thread = threading.Thread(target=target, args=args, kwargs=kwargs)
         self.current_submission_thread.daemon = True
         self.current_submission_thread.start()
-        if kwargs.pop('blocking', False):
+
+        if is_blocking:
             self.current_submission_thread.join()
 
     def _custom_invocation(self, language, source, memory_limit, time_limit, input_data):

@@ -1,3 +1,5 @@
+import logging
+
 from dmoj import judgeenv
 from dmoj.citest import ci_test
 
@@ -13,6 +15,8 @@ def main():
         'PERL': ['/dev/dtrace/helper$'],
         'RUBY2': ['/dev/dtrace/helper$'],
     }
+
+    logging.basicConfig(level=logging.INFO)
 
     print 'Using extra allowed filesystems:'
     for lang, fs in judgeenv.env['extra_fs'].iteritems():

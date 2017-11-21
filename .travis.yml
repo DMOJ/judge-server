@@ -63,12 +63,16 @@ before_install:
   # Install D
   - wget http://downloads.dlang.org/releases/2.x/2.071.1/dmd_2.071.1-0_amd64.deb
   - sudo dpkg -i dmd_2.071.1-0_amd64.deb
-  # Install sdkman for Groovy and Kotlin
-  - curl -s get.sdkman.io | bash
-  - source "$HOME/.sdkman/bin/sdkman-init.sh"
-  # Install Groovy, 2.4.8 is broken for reasons unknown to us
-  - yes | sdk install groovy 2.4.7
-  - export PATH=$HOME/.sdkman/candidates/groovy/current/bin:"${PATH}"
+  # Install Kotlin
+  - > 
+    wget -O kotlinc.zip https://github.com/JetBrains/kotlin/releases/download/v1.1.60/kotlin-compiler-1.1.60.zip &&
+    unzip kotlinc.zip &&
+    export PATH=${PWD}/kotlinc/bin:"${PATH}"
+  # Install Groovy
+  - >
+    wget -O groovy.zip https://bintray.com/artifact/download/groovy/maven/apache-groovy-binary-2.4.12.zip &&
+    unzip groovy.zip &&
+    export PATH=${PWD}/groovy-2.4.12/bin:"${PATH}"
 install:
   - pip install codecov
   - pip install Cython --install-option="--no-cython-compile"

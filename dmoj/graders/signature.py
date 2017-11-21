@@ -9,7 +9,7 @@ from dmoj.utils.unicode import utf8bytes
 
 class SignatureGrader(StandardGrader):
     def _generate_binary(self):
-        siggraders = ('C', 'CPP03', 'CPP0X', 'CPP11', 'CPP14')
+        siggraders = ('C', 'CPP03', 'CPP0X', 'CPP11', 'CPP14', 'CPP17')
 
         for i in reversed(siggraders):
             if i in executors:
@@ -33,7 +33,7 @@ class SignatureGrader(StandardGrader):
 
             aux_sources[handler_data['header']] = header
             entry = entry_point
-            # Compile as CPP11 regardless of what the submission language is
+            # Compile as CPP regardless of what the submission language is
             try:
                 return executors[siggrader].Executor(self.problem.id, entry, aux_sources=aux_sources,
                                                      writable=handler_data['writable'] or (1, 2),

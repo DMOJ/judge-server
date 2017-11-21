@@ -148,7 +148,7 @@ class Judge(object):
         else:
             grader_class = graders.StandardGrader
 
-        grader = self.get_grader_from_source(grader_class, problem, language, source)
+        grader = self.get_grader_from_source(grader_class, problem, language, source, report=report)
         binary = grader.binary if grader else None
 
         # the compiler may have failed, or an error could have happened while initializing a custom judge
@@ -246,12 +246,12 @@ class Judge(object):
 
             yield result
 
-    def get_grader_from_source(self, grader_class, problem, language, source):
+    def get_grader_from_source(self, grader_class, problem, language, source, report=print):
         try:
             grader = grader_class(self, problem, language, utf8bytes(source))
         except CompileError as ce:
-            print(ansi_style('#ansi[Failed compiling submission!](red|bold)'))
-            print(ce.args[0], end=' ')  # don't print extra newline
+            report(ansi_style('#ansi[Failed compiling submission!](red|bold)'))
+            report(ce.args[0], end=' ')  # don't print extra newline
             grader = None
         except:  # if custom grader failed to initialize, report it to the site
             return self.internal_error()

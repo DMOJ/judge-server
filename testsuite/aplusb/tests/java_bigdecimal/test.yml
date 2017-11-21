@@ -3,3 +3,4 @@ time: 2
 memory: 65535
 source: aplusb.java
 expect: IR
+feedeback: ca.dmoj.java.BigDecimalDisallowedException

@@ -102,10 +102,10 @@ class StandardGrader(BaseGrader):
         # See https://github.com/DMOJ/judge/issues/170
         if not result.result_flag:
             # Checkers might crash if any data is None, so force at least empty string
-            check = case.checker()(result.proc_output or '',
-                                   case.output_data() or '',
+            check = case.checker()(result.proc_output or b'',
+                                   case.output_data() or b'',
                                    submission_source=self.source,
-                                   judge_input=case.input_data() or '',
+                                   judge_input=case.input_data() or b'',
                                    point_value=case.points,
                                    case_position=case.position,
                                    batch=case.batch,

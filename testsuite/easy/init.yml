@@ -1,0 +1,7 @@
+checker: easy
+test_cases:
+- {in: out.txt, out: out.txt, points: 1}
+- {in: 1.in, out: out.txt, points: 1}
+- {in: 2.in, out: out.txt, points: 1}
+- {in: 3.in, out: out.txt, points: 1}
+- {in: 4.in, out: out.txt, points: 1}

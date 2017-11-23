@@ -82,7 +82,7 @@ install:
     curl https://codeload.github.com/DMOJ/judge-testsuite/legacy.tar.gz/master |
     tar xz -C testsuite --strip-components=1
 script:
-  - coverage run --source=dmoj -m unittest discover dmoj/
+  - coverage run --source=dmoj -m unittest discover dmoj/tests/
   - coverage run --append --source=dmoj .travis.test.py
 after_script:
   - codecov

@@ -23,6 +23,11 @@ from dmoj.result import Result
 from dmoj.utils.ansi import ansi_style, strip_ansi
 from dmoj.utils.unicode import utf8bytes
 
+try:
+    from http.server import HTTPServer
+except ImportError:
+    from BaseHTTPServer import HTTPServer
+
 if os.name == 'posix':
     try:
         import readline
@@ -386,7 +391,6 @@ def judge_proc(need_monitor):
         signal.signal(signal.SIGUSR2, update_problem_signal)
 
     if need_monitor and judgeenv.api_listen:
-        from BaseHTTPServer import HTTPServer
         judge_instance = judge
 
         class Handler(JudgeControlRequestHandler):
@@ -531,7 +535,6 @@ class JudgeManager(object):
 
     def _spawn_api(self):
         from dmoj import judgeenv
-        from BaseHTTPServer import HTTPServer
 
         master_pid = self.master_pid
 

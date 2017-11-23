@@ -1,5 +1,6 @@
 import threading
 import unittest
+
 import requests
 
 from dmoj.control import JudgeControlRequestHandler
@@ -24,7 +25,7 @@ class ControlServerTest(unittest.TestCase):
         class Handler(JudgeControlRequestHandler):
             judge = FakeJudge()
 
-        cls.judge_class = FakeJudge
+        cls.judge = Handler.judge
         cls.server = HTTPServer(('127.0.0.1', 0), Handler)
 
         thread = threading.Thread(target=cls.server.serve_forever)
@@ -34,11 +35,14 @@ class ControlServerTest(unittest.TestCase):
         cls.connect = 'http://%s:%s/' % cls.server.server_address
 
     def setUp(self):
-        self.update_mock = self.judge_class.update_problems = mock.Mock()
+        self.update_mock = self.judge.update_problems = mock.Mock()
 
     def test_get_404(self):
         self.assertEqual(requests.get(self.connect).status_code, 404)
         self.assertEqual(requests.get(self.connect + 'update/problems').status_code, 404)
+
+    def test_post_404(self):
+        self.assertEqual(requests.post(self.connect).status_code, 404)
 
     def test_update_problem(self):
         requests.post(self.connect + 'update/problems')

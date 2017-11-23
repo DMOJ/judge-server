@@ -17,7 +17,7 @@ class JudgeControlRequestHandler(BaseHTTPRequestHandler):
             self.update_problems()
             self.send_response(200)
             self.end_headers()
-            self.wfile.write('As you wish.')
+            self.wfile.write(b'As you wish.')
             return
         self.send_error(404)
 

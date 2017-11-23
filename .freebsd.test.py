@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import logging
 
 from dmoj import judgeenv
@@ -18,13 +20,12 @@ def main():
 
     logging.basicConfig(level=logging.INFO)
 
-    print 'Using extra allowed filesystems:'
+    print('Using extra allowed filesystems:')
     for lang, fs in judgeenv.env['extra_fs'].iteritems():
-        print '%-6s: %s' % (lang, '|'.join(fs))
-    print
+        print('%-6s: %s' % (lang, '|'.join(fs)))
+    print()
 
-    print 'Testing executors...'
-
+    print('Testing executors...')
     ci_test(EXECUTORS, OVERRIDES)
 
 

@@ -17,3 +17,7 @@ class CheckerTest(unittest.TestCase):
         assert not check(b'a', b'b')
         assert not check(b'\n\n\na \n b\n', b'a b')
         assert not check(b'a\n\n\nb', b'a b')
+
+        # Checkers should handle mixed bytes/str
+        assert check(b'a', u'a')
+        assert not check(b'a', u'b')

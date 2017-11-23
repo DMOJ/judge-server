@@ -97,10 +97,14 @@ setup(
             'dmoj = dmoj.judge:main',
             'dmoj-cli = dmoj.cli:main',
             'dmoj-autoconf = dmoj.executors.autoconfig:main',
-        ]
+        ],
     },
     ext_modules=cythonize(extensions),
     install_requires=['watchdog', 'pyyaml', 'ansi2html', 'termcolor', 'pygments', 'six'],
+    tests_require=['mock'],
+    extras_require={
+        'test': ['mock'],
+    },
 
     author='quantum5, Xyene',
     author_email='admin@dmoj.ca',

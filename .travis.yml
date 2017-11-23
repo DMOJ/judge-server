@@ -76,7 +76,7 @@ before_install:
 install:
   - pip install codecov
   - pip install Cython --install-option="--no-cython-compile"
-  - python setup.py develop
+  - pip install -e '.[test]'
   - >
     mkdir testsuite &&
     curl https://codeload.github.com/DMOJ/judge-testsuite/legacy.tar.gz/master |

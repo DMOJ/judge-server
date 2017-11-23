@@ -41,7 +41,7 @@ class Problem(object):
                 'binary_data': False,
                 'short_circuit': True,
             })
-        except (IOError, ParserError, ScannerError) as e:
+        except (IOError, KeyError, ParserError, ScannerError) as e:
             raise InvalidInitException(str(e))
 
         self.problem_data.archive = self._resolve_archive_files()

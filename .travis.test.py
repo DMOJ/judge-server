@@ -39,7 +39,7 @@ def main():
     print('Available Pythons:')
     for python in get_dirs(PYENV_DIR):
         print('  -', python)
-    print
+    print()
 
     print('Available Rubies:')
     for ruby in get_dirs(RVM_DIR):

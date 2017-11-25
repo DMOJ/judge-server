@@ -31,6 +31,7 @@ addons:
     - swi-prolog
     - r-base
     - dart/stable
+    - scala
 cache:
   directories:
     - $HOME/.cargo

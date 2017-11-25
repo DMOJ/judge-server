@@ -26,8 +26,8 @@ def check(process_output, judge_output, precision, **kwargs):
                         return False
                 else:
                     process_float = float(process_token)
-                    p1 = min(judge_float*(1-epsilon), judge_float*(1+epsilon))
-                    p2 = max(judge_float*(1-epsilon), judge_float*(1+epsilon))
+                    p1 = min(judge_float * (1 - epsilon), judge_float * (1 + epsilon))
+                    p2 = max(judge_float * (1 - epsilon), judge_float * (1 + epsilon))
                     # since process_float can be nan, this is NOT equivalent to (process_float < p1 or process_float > p2)
                     if not (p1 <= process_float <= p2):
                         return False

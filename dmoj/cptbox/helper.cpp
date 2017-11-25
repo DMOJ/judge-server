@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/resource.h>
+#include <sys/personality.h>
 #include <sys/types.h>
 
 #ifdef __FreeBSD__
@@ -35,6 +36,9 @@ inline void setrlimit2(int resource, rlim_t limit) {
 }
 
 int cptbox_child_run(const struct child_config *config) {
+    if (config->personality > 0)
+        personality(config->personality);
+
     if (config->address_space)
         setrlimit2(RLIMIT_AS, config->address_space);
 

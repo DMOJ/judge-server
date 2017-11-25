@@ -6,6 +6,7 @@ struct child_config {
     unsigned long memory;
     unsigned long address_space;
     unsigned int cpu_time;
+    unsigned long personality;
     int nproc;
     char *file;
     char *dir;

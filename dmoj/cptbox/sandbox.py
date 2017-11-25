@@ -139,8 +139,8 @@ class SecurePopen(six.with_metaclass(SecurePopenMeta, Process)):
     debugger_type = AdvancedDebugger
 
     def __init__(self, debugger, _, args, executable=None, security=None, time=0, memory=0, stdin=PIPE, stdout=PIPE,
-                 stderr=None, env=None, nproc=0, address_grace=4096, cwd='', fds=None, unbuffered=False,
-                 wall_time=None):
+                 stderr=None, env=None, nproc=0, address_grace=4096, personality=0, cwd='',
+                 fds=None, unbuffered=False, wall_time=None):
         self._debugger_type = debugger
         self._syscall_index = index = _SYSCALL_INDICIES[debugger]
         self._executable = executable or _find_exe(args[0])
@@ -151,6 +151,7 @@ class SecurePopen(six.with_metaclass(SecurePopenMeta, Process)):
         self._wall_time = time * 3 if wall_time is None else wall_time
         self._cpu_time = time + 5 if time else 0
         self._memory = memory
+        self._child_personality = personality
         self._child_memory = memory * 1024
         self._child_address = self._child_memory + address_grace * 1024 if memory else 0
         self._nproc = nproc

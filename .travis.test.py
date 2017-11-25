@@ -8,7 +8,7 @@ EXECUTORS = ['ADA', 'AWK', 'BF', 'C', 'CBL', 'D', 'DART', 'CPP0X', 'CPP03', 'CPP
              'F95', 'GO', 'GROOVY', 'HASK', 'JAVA7', 'JAVA8', 'JAVA9',
              'PAS', 'PRO', 'GAS32', 'GAS64', 'LUA', 'NASM', 'NASM64',
              'PERL', 'PHP', 'PY2', 'PY3', 'PYPY', 'PYPY3',
-             'RUBY2', 'RUST', 'SCM', 'SED', 'SWIFT', 'TCL', 'TEXT']
+             'RUBY2', 'RUST', 'SCALA', 'SCM', 'SED', 'SWIFT', 'TCL', 'TEXT']
 
 RVM_DIR = os.path.expanduser('~/.rvm/rubies/')
 PYENV_DIR = '/opt/python/'

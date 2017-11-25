@@ -4,10 +4,12 @@ import subprocess
 from six import iteritems
 
 from dmoj.executors.java_executor import JavaExecutor
+from dmoj.executors.mixins import EmulateTerminalMixin
 from dmoj.utils.unicode import utf8text
 
 
-class Executor(JavaExecutor):
+# Must emulate terminal, otherwise `scalac` hangs on a call to `stty`
+class Executor(EmulateTerminalMixin, JavaExecutor):
     name = 'SCALA'
     ext = '.scala'
 

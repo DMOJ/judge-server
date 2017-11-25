@@ -1,0 +1,41 @@
+grant {
+    // Scala: needed for "extends App" to work
+    permission java.util.PropertyPermission "scala.time", "read";
+
+    // The rest are typical Java permissions
+
+    // Read/write to system streams
+    permission java.lang.RuntimePermission "readFileDescriptor";
+    permission java.lang.RuntimePermission "writeFileDescriptor";
+
+    // Basic Threads
+    permission java.lang.RuntimePermission "stopThread";
+    permission java.lang.RuntimePermission "modifyThread";
+
+    // Locale.setDefault
+    permission java.util.PropertyPermission "user.language", "write";
+
+    // Date timezone
+    permission java.util.PropertyPermission "user.timezone", "write";
+
+    // Standard properties
+    permission java.util.PropertyPermission "java.version", "read";
+    permission java.util.PropertyPermission "java.vendor", "read";
+    permission java.util.PropertyPermission "java.vendor.url", "read";
+    permission java.util.PropertyPermission "java.class.version", "read";
+    permission java.util.PropertyPermission "os.name", "read";
+    permission java.util.PropertyPermission "os.version", "read";
+    permission java.util.PropertyPermission "os.arch", "read";
+    permission java.util.PropertyPermission "line.separator", "read";
+
+    permission java.util.PropertyPermission "java.specification.version", "read";
+    permission java.util.PropertyPermission "java.specification.vendor", "read";
+    permission java.util.PropertyPermission "java.specification.name", "read";
+
+    permission java.util.PropertyPermission "java.vm.specification.version", "read";
+    permission java.util.PropertyPermission "java.vm.specification.vendor", "read";
+    permission java.util.PropertyPermission "java.vm.specification.name", "read";
+    permission java.util.PropertyPermission "java.vm.version", "read";
+    permission java.util.PropertyPermission "java.vm.vendor", "read";
+    permission java.util.PropertyPermission "java.vm.name", "read";
+};

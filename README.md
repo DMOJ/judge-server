@@ -78,6 +78,7 @@ The Judge can also grade in the languages listed below. These languages are less
 * Scala
 * Scheme
 * sed
+* Steel Bank Common Lisp
 * Swift
 * Tcl
 * Turing

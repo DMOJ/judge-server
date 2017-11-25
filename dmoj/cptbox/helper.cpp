@@ -7,7 +7,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/resource.h>
-#include <sys/personality.h>
 #include <sys/types.h>
 
 #ifdef __FreeBSD__
@@ -16,6 +15,9 @@
 #   include <sys/socket.h>
 #   include <sys/sysctl.h>
 #   include <libprocstat.h>
+#else
+// No ASLR on FreeBSD... not as of 11.0, anyway
+#   include <sys/personality.h>
 #endif
 
 #if defined(__FreeBSD__) || (defined(__APPLE__) && defined(__MACH__))
@@ -36,8 +38,11 @@ inline void setrlimit2(int resource, rlim_t limit) {
 }
 
 int cptbox_child_run(const struct child_config *config) {
+#ifndef __FreeBSD__
+    // There is no ASLR on FreeBSD, but disable it elsewhere
     if (config->personality > 0)
         personality(config->personality);
+#endif
 
     if (config->address_space)
         setrlimit2(RLIMIT_AS, config->address_space);

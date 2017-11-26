@@ -1,3 +1,6 @@
 [submodule "java_sandbox"]
 	path = dmoj/executors/java_sandbox
 	url = https://github.com/DMOJ/java-sandbox-agent.git
+[submodule "dmoj/executors/csbox"]
+	path = dmoj/executors/csbox
+	url = https://github.com/DMOJ/csbox.git

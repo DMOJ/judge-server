@@ -6,8 +6,8 @@ from dmoj import judgeenv
 from dmoj.citest import ci_test
 
 EXECUTORS = ['AWK', 'BF', 'C', 'CPP03', 'CPP11', 'CLANG', 'CLANGX',
-             'JAVA8', 'PAS', 'PERL', 'PY2', 'PY3', 'RUBY2', 'SED',
-             'TEXT']
+             'JAVA8', 'MONOCS', 'MONOFS', 'MONOVB', 'PAS', 'PERL',
+             'PY2', 'PY3', 'RUBY2', 'SED', 'TEXT']
 OVERRIDES = {}
 
 

@@ -1,1 +1,1 @@
-print open('/etc/passwd', 'r').read()
+print open('/etc/passwd', 'w').read()

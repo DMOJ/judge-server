@@ -1,2 +1,2 @@
-import os
-os.system('cat "/etc/passwd"')
+with open('bad', 'w') as f:
+    f.write('this is bad')

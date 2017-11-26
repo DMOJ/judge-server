@@ -1,1 +1,2 @@
-print open('/etc/passwd', 'w').read()
+import os
+os.system('cat "/etc/passwd"')

@@ -48,7 +48,7 @@ class ControlServerTest(unittest.TestCase):
 
     def test_update_problem(self):
         requests.post(self.connect + 'update/problems')
-        self.update_mock.assert_called()
+        self.update_mock.assert_called_with()
 
     @classmethod
     def tearDownClass(cls):

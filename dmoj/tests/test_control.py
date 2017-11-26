@@ -1,3 +1,4 @@
+import mock
 import threading
 import unittest
 
@@ -6,15 +7,9 @@ import requests
 from dmoj.control import JudgeControlRequestHandler
 
 try:
-    from unittest import mock
-except ImportError:
-    import mock
-
-try:
     from http.server import HTTPServer
 except ImportError:
     from BaseHTTPServer import HTTPServer
-
 
 class ControlServerTest(unittest.TestCase):
     @classmethod

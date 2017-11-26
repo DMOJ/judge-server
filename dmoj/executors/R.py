@@ -16,9 +16,9 @@ class Executor(ScriptDirectoryMixin, ScriptExecutor):
 
     if os.name != 'nt':
         syscalls = ['mkdir', 'setup', 'fork', 'waitpid', 'wait4', 'getpgrp', 'execve',
-                    ('statfs64', ACCESS_DENIED), ('statfs', ACCESS_DENIED)]
+                    ('statfs64', ACCESS_DENIED), ('statfs', ACCESS_DENIED), 'newfstatat', 'unlinkat', 'openat']
 
-    fs = ['/etc/passwd$', '/etc/nsswitch.conf$', '/etc/group$']
+    fs = ['/etc/passwd$', '/etc/nsswitch.conf$', '/etc/group$', '/usr/lib/R/.*$', '/usr/share/locale/locale.alias$', '/sys/devices/system/cpu$', '/proc/filesystems$']
 
     def get_cmdline(self):
         return [self.get_command(), '--vanilla', self._code]

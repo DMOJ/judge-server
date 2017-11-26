@@ -5,7 +5,6 @@ from .base_executor import ScriptExecutor
 class Executor(ScriptDirectoryMixin, ScriptExecutor):
     name = 'FORTH'
     command = 'gforth'
-    command_paths = ['gforth']
     ext = '.fs'
     test_program = '''\
 : HELLO  ( -- ) ." echo: Hello, World!" CR ;

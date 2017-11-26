@@ -5,7 +5,6 @@ class Executor(ScriptExecutor):
     ext = '.sed'
     name = 'SED'
     command = 'sed'
-    command_paths = ['sed']
     test_program = 's/^//'
 
     def get_cmdline(self):

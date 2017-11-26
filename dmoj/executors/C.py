@@ -3,7 +3,6 @@ from .gcc_executor import GCCExecutor
 
 class Executor(GCCExecutor):
     command = 'gcc'
-    command_paths = ['gcc']
     flags = ['-std=c99']
     ext = '.c'
     name = 'C'

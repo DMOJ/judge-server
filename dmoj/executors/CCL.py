@@ -6,7 +6,6 @@ class Executor(ScriptDirectoryMixin, CompiledExecutor):
     ext = '.cl'
     name = 'CCL'
     command = 'ccl'
-    command_paths = ['ccl']
     syscalls = ['setrlimit']
     nproc = -1
     test_program = '(write-line (read-line))'

@@ -13,7 +13,6 @@ class Executor(NullStdoutMixin, ScriptDirectoryMixin, CompiledExecutor):
     ext = '.cl'
     name = 'SBCL'
     command = 'sbcl'
-    command_paths = ['sbcl']
     syscalls = ['personality', 'poll']
     test_program = '(write-line (read-line))'
     address_grace = 1048576 * 2  # *wipes brow*

@@ -6,7 +6,6 @@ class Executor(CompiledExecutor):
     name = 'D'
     address_grace = 32768
     command = 'dmd'
-    command_paths = ['dmd']
     test_program = '''\
 import std.stdio;
 

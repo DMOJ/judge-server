@@ -9,6 +9,7 @@ python:
 addons:
   apt:
     sources:
+    - mono
     - sourceline: 'ppa:swi-prolog/stable'
     - sourceline: 'deb http://cran.rstudio.com/bin/linux/ubuntu trusty/'
       key_url: 'http://keyserver.ubuntu.com/pks/lookup?op=get&fingerprint=on&search=0x51716619E084DAB9'
@@ -18,6 +19,8 @@ addons:
     - ghc
     - gnat
     - php5-cli
+    - mono-devel
+    - mono-vbnc
     - fp-compiler
     - coffeescript
     - binutils-multiarch

@@ -92,7 +92,7 @@ On a typical Linux install,
 ```
 $ git clone https://github.com/DMOJ/judge.git
 $ cd judge
-$ pip install -r requirements.txt
+$ git submodule update --init --recursive
 $ python setup.py develop
 ```
 

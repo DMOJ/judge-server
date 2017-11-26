@@ -12,7 +12,6 @@ class Executor(GCCExecutor):
     command = 'gobjc'
     name = 'OBJC'
     address_grace = 131072
-    syscalls = ['statfs']
 
     test_program = r'''
 #import <Foundation/Foundation.h>

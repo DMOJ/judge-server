@@ -7,7 +7,7 @@ class Executor(ScriptDirectoryMixin, CompiledExecutor):
     name = 'CCL'
     command = 'ccl'
     command_paths = ['ccl']
-    syscalls = ['setrlimit', 'write', 'modify_ldt']
+    syscalls = ['setrlimit', 'modify_ldt']
     nproc = -1
     test_program = '(write-line (read-line))'
     address_grace = 131072

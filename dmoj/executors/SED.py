@@ -7,7 +7,6 @@ class Executor(ScriptExecutor):
     command = 'sed'
     command_paths = ['sed']
     test_program = 's/^//'
-    syscalls = ['statfs64', 'statfs']
 
     def get_cmdline(self):
         return [self.get_command(), '-f', self._code]

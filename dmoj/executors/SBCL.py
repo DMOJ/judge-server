@@ -14,7 +14,7 @@ class Executor(NullStdoutMixin, ScriptDirectoryMixin, CompiledExecutor):
     name = 'SBCL'
     command = 'sbcl'
     command_paths = ['sbcl']
-    syscalls = ['personality', 'modify_ldt', 'poll']
+    syscalls = ['personality', 'poll']
     test_program = '(write-line (read-line))'
     address_grace = 1048576 * 2  # *wipes brow*
 

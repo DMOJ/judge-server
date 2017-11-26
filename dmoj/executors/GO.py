@@ -12,7 +12,6 @@ class Executor(CompiledExecutor):
     ext = '.go'
     name = 'GO'
     address_grace = 786432
-    syscalls = ['modify_ldt', 'select']
     command = 'go'
     test_name = 'echo'
     test_program = '''\

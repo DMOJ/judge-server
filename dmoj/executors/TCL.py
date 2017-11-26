@@ -9,7 +9,7 @@ class Executor(ScriptExecutor):
     nproc = -1  # TCL uses a bunch of threads internally
     address_grace = 131072
     command = 'tclsh'
-    syscalls = ['connect', 'access', 'getsockname', 'select']
+    syscalls = ['connect', 'access', 'getsockname']
     test_program = '''\
 gets stdin input
 puts $input

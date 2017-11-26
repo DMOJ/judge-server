@@ -6,7 +6,6 @@ class Executor(CompiledExecutor):
     name = 'SCM'
     command = 'chicken-csc'
     command_paths = ['chicken-csc', 'csc']
-    syscalls = ['newselect', 'select']
     test_program = '(declare (uses extras)) (map print (read-lines))'
 
     def get_compile_args(self):

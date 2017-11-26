@@ -23,7 +23,6 @@ class Executor(ScriptExecutor):
     syscalls = ['connect', 'access', 'getsockname', 'select',
                 # TCL uses some handles internally
                 ('write', do_write)]
-    fs = [r'/etc/nsswitch\.conf$', '/etc/passwd$']
     test_program = '''\
 gets stdin input
 puts $input

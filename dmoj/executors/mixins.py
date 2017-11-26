@@ -50,18 +50,20 @@ try:
 
         BASE_FILESYSTEM = ['/dev/(?:null|tty|zero|u?random)$',
                            '/usr/(?!home)', '/lib(?:32|64)?/', '/opt/',
-                           '/etc/(?:localtime)$']
+                           '/etc/(?:localtime|timezone|nsswitch.conf|resolv.conf|passwd)$',
+                           '/$']
 
         if 'freebsd' in sys.platform:
             BASE_FILESYSTEM += [r'/etc/s?pwd\.db$', '/dev/hv_tsc$']
         else:
-            BASE_FILESYSTEM += ['/sys/devices/system/cpu(?:$|/online)']
+            BASE_FILESYSTEM += ['/sys/devices/system/cpu(?:$|/online)',
+                                '/etc/selinux/config$']
 
         if sys.platform.startswith('freebsd'):
             BASE_FILESYSTEM += [r'/etc/libmap\.conf$', r'/var/run/ld-elf\.so\.hints$']
         else:
             # Linux and kFreeBSD mounts linux-style procfs.
-            BASE_FILESYSTEM += ['/proc/self/maps$', '/proc/self$', '/proc/(?:meminfo|stat|cpuinfo)$']
+            BASE_FILESYSTEM += ['/proc/self/(?:maps|exe)$', '/proc/self$', '/proc/(?:meminfo|stat|cpuinfo|filesystems)$']
 
             # Linux-style ld.
             BASE_FILESYSTEM += [r'/etc/ld\.so\.(?:nohwcap|preload|cache)$']

@@ -7,7 +7,6 @@ class Executor(ShellExecutor):
     command = 'bash'
     command_paths = ['bash']
     test_program = 'exec cat'
-    fs = ['/etc/nsswitch.conf$']
     syscalls = ['getpgrp']
 
     def get_cmdline(self):

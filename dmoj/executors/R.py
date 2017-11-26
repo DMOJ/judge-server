@@ -18,7 +18,7 @@ class Executor(ScriptDirectoryMixin, ScriptExecutor):
         syscalls = ['mkdir', 'setup', 'fork', 'waitpid', 'wait4', 'getpgrp', 'execve',
                     ('statfs64', ACCESS_DENIED), ('statfs', ACCESS_DENIED)]
 
-    fs = ['/etc/passwd$', '/etc/nsswitch.conf$', '/etc/group$']
+    fs = ['/etc/group$']
 
     def get_cmdline(self):
         return [self.get_command(), '--vanilla', self._code]

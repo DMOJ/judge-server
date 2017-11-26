@@ -8,7 +8,6 @@ class Executor(ScriptDirectoryMixin, CompiledExecutor):
     command = 'ccl'
     command_paths = ['ccl']
     syscalls = ['setrlimit', 'write', 'modify_ldt']
-    fs = ['/etc/(?:nsswitch.conf|passwd)$']
     nproc = -1
     test_program = '(write-line (read-line))'
     address_grace = 131072

@@ -37,6 +37,7 @@ class CHROOTSecurity(dict):
             sys_faccessat: self.do_faccessat,
             # Deny with report
             sys_mkdir: self.deny_with_file_path('mkdir', 0),
+            sys_unlink: self.deny_with_file_path('unlink', 0),
             sys_tgkill: self.do_tgkill,
             sys_kill: self.do_kill,
             sys_prctl: self.do_prctl,

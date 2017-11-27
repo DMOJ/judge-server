@@ -6,8 +6,6 @@ class Executor(NullStdoutMixin, CompiledExecutor):
     ext = '.hs'
     name = 'HASK'
     command = 'ghc'
-    command_paths = ['ghc']
-    syscalls = ['newselect', 'select']
     test_program = '''\
 main = do
     a <- getContents

@@ -29,16 +29,26 @@ class CHROOTSecurity(dict):
 
         self.update({
             sys_read: ALLOW,
-            sys_write: STDOUTERR if writable == (1, 2) and not io_redirects else self.do_write,
-            sys_writev: self.do_write,
+            sys_write: ALLOW,
+            sys_writev: ALLOW,
             sys_open: self.do_open,
             sys_openat: self.do_openat,
             sys_access: self.do_access,
             sys_faccessat: self.do_faccessat,
             # Deny with report
             sys_mkdir: self.deny_with_file_path('mkdir', 0),
+            sys_unlink: self.deny_with_file_path('unlink', 0),
             sys_tgkill: self.do_tgkill,
+            sys_kill: self.do_kill,
             sys_prctl: self.do_prctl,
+
+            sys_statfs: ALLOW,
+            sys_statfs64: ALLOW,
+            sys_getpgrp: ALLOW,
+            sys_restart_syscall: ALLOW,
+            sys_select: ALLOW,
+            sys_newselect: ALLOW,
+            sys_modify_ldt: ALLOW,
 
             sys_getgroups32: ALLOW,
             sys_sched_getaffinity: ALLOW,
@@ -168,9 +178,6 @@ class CHROOTSecurity(dict):
 
         return check
 
-    def do_write(self, debugger):
-        return debugger.arg0 in self._writable
-
     def do_access(self, debugger):
         file = debugger.readstr(debugger.uarg0)
         return self._file_access_check(file, debugger) or ACCESS_DENIED(debugger)
@@ -243,6 +250,9 @@ class CHROOTSecurity(dict):
     def do_faccessat(self, debugger):
         file = debugger.readstr(debugger.uarg1)
         return self._file_access_check(file, debugger, dirfd=debugger.arg0)
+
+    def do_kill(self, debugger):
+        return debugger.uarg0 == debugger.pid
 
     def do_tgkill(self, debugger):
         tgid = debugger.uarg0

@@ -5,7 +5,6 @@ class Executor(ScriptExecutor):
     ext = '.pl'
     name = 'PERL'
     command = 'perl'
-    command_paths = ['perl']
     fs = ['/etc/perl/.*?']
     test_program = 'print<>'
     syscalls = ['umtx_op']

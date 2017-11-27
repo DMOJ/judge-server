@@ -28,7 +28,7 @@ class MonoExecutor(CompiledExecutor):
     nproc = -1  # If you use Mono on Windows you are doing it wrong.
     address_grace = 262144
     cptbox_popen_class = MonoSecurePopen
-    fs = ['/proc/(?:self/|xen)', '/dev/shm', '/proc/stat', 'mono', '/etc/nsswitch.conf$', '/etc/passwd$',
+    fs = ['/proc/(?:self/|xen)', '/dev/shm', '/proc/stat', 'mono',
           '/etc/mono/', '.*/.mono/', '/sys/', '/proc/uptime$', '.*?/mono.\d+$']
 
     def get_compiled_file(self):
@@ -45,7 +45,6 @@ class MonoExecutor(CompiledExecutor):
         sec = CHROOTSecurity(fs, io_redirects=launch_kwargs.get('io_redirects', None))
         sec[sys_sched_getaffinity] = ALLOW
         sec[sys_sched_setscheduler] = ALLOW
-        sec[sys_statfs] = ALLOW
         sec[sys_ftruncate64] = ALLOW
         sec[sys_sched_yield] = ALLOW
         sec[sys_rt_sigsuspend] = ALLOW

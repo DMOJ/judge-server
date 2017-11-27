@@ -7,11 +7,11 @@ from .base_executor import CompiledExecutor
 recomment = re.compile(br'//.*?(?=[\r\n])')
 decomment = lambda x: recomment.sub('', x)
 
+
 class Executor(CompiledExecutor):
     ext = '.go'
     name = 'GO'
     address_grace = 786432
-    syscalls = ['modify_ldt', 'select', 'restart_syscall']
     command = 'go'
     test_name = 'echo'
     test_program = '''\

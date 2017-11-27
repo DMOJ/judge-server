@@ -5,10 +5,7 @@ class Executor(ScriptExecutor):
     ext = '.sed'
     name = 'SED'
     command = 'sed'
-    command_paths = ['sed']
     test_program = 's/^//'
-    syscalls = ['statfs64', 'statfs']
-    fs = ['/proc/filesystems$']
 
     def get_cmdline(self):
         return [self.get_command(), '-f', self._code]

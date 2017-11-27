@@ -7,6 +7,7 @@ import tempfile
 
 from dmoj.judgeenv import env
 
+
 class ResourceProxy(object):
     def __init__(self):
         self._dir = tempfile.mkdtemp(dir=env.tempdir)

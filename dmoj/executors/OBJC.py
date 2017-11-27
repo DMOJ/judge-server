@@ -12,8 +12,6 @@ class Executor(GCCExecutor):
     command = 'gobjc'
     name = 'OBJC'
     address_grace = 131072
-    fs = ['/proc/filesystems$', '/etc/selinux/config$']
-    syscalls = ['statfs']
 
     test_program = r'''
 #import <Foundation/Foundation.h>

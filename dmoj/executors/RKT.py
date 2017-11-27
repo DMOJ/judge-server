@@ -1,17 +1,17 @@
+import os
+
 from dmoj.executors.base_executor import CompiledExecutor
 from dmoj.executors.mixins import ScriptDirectoryMixin
-import os
 
 
 class Executor(ScriptDirectoryMixin, CompiledExecutor):
     ext = '.rkt'
     name = 'RKT'
-    fs = ['/etc/nsswitch.conf$', '/etc/passwd$', os.path.expanduser('~/\.racket/.*?'),
-          '/etc/racket/.*?']
+    fs = [os.path.expanduser('~/\.racket/.*?'), '/etc/racket/.*?']
 
     command = 'racket'
 
-    syscalls = ['epoll_create', 'epoll_wait', 'poll', 'select']
+    syscalls = ['epoll_create', 'epoll_wait', 'poll']
     address_grace = 131072
 
     test_program = '''\

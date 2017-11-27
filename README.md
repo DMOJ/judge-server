@@ -31,7 +31,7 @@ The DMOJ Judge does **not** need a root user to run on Linux machines: it will r
 
 Supported languages include:
 * C/++/0x/11/14/17
-* Java 7/8/9
+* Java 7/8/9/10
 * Python 2/3
 * PyPy 2/3
 * Pascal
@@ -71,7 +71,6 @@ The Judge can also grade in the languages listed below. These languages are less
 * PHP 5/7
 * Pike
 * Prolog
-* R
 * Racket
 * Ruby 2.1
 * Rust

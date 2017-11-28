@@ -1,2 +1,2 @@
-with open('/etc/sudoers', 'w') as f:
-    f.write('sudo? more like suNO')
+with open('/etc/sudoers', 'r') as f:
+    f.read()

@@ -71,7 +71,7 @@ def main():
                     if not silent:
                         if config:
                             print('  Attempted:')
-                            print('   ', yaml.dump(config, default_flow_style=False).rstrip().replace('\n', '\n' + ' ' * 4))
+                            print('   ', yaml.safe_dump(config, default_flow_style=False).rstrip().replace('\n', '\n' + ' ' * 4))
 
                         if errors:
                             print('  Errors:')
@@ -84,7 +84,7 @@ def main():
     if not silent:
       print()
       print(ansi_style('#ansi[Configuration result](green|bold|underline):'))
-    print(yaml.dump({'runtime': result}, default_flow_style=False).rstrip())
+    print(yaml.safe_dump({'runtime': result}, default_flow_style=False).rstrip())
 
 if __name__ == '__main__':
     main()

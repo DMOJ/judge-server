@@ -1,2 +1,2 @@
-with open('bad', 'w') as f:
-    f.write('this is bad')
+with open('/etc/sudoers', 'w') as f:
+    f.write('sudo? more like suNO')

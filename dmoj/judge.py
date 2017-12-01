@@ -70,14 +70,17 @@ class Judge(object):
         Pushes current problem set to server.
         """
         self._problem_is_stale = True
-        if not self._updating_problem:
+        if not self._updating_problem and self.current_submission is not None:
             # If a signal is received here, there is still a race.
             # But how probable is that?
             self._updating_problem = True
             while self._problem_is_stale:
-                self._problem_is_stale = False
-                self.packet_manager.supported_problems_packet(get_supported_problems())
+                self._update_problems()
             self._updating_problem = False
+
+    def _update_problems(self):
+        self._problem_is_stale = False
+        self.packet_manager.supported_problems_packet(get_supported_problems())
 
     def process_submission(self, type, target, id, *args, **kwargs):
         try:
@@ -209,6 +212,9 @@ class Judge(object):
         self.current_submission_thread = None
         self.current_submission = None
         self.current_grader = None
+
+        if self._problem_is_stale:
+            self._update_problems()
 
     def grade_cases(self, grader, cases, short_circuit=False, is_short_circuiting=False):
         for case in cases:

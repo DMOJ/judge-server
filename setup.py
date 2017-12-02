@@ -1,3 +1,4 @@
+# encoding: utf-8
 from __future__ import print_function
 
 import os
@@ -8,8 +9,8 @@ if sys.version_info[0] >= 3 and os.name == 'nt':
     sys.exit(0)
 
 import traceback
+import subprocess
 from distutils.errors import DistutilsPlatformError
-
 from distutils.msvccompiler import MSVCCompiler
 
 from setuptools import setup, Extension, find_packages
@@ -97,9 +98,23 @@ if os.name != 'nt' or 'sdist' in sys.argv:
     extensions += [Extension('dmoj.cptbox._cptbox', sources=cptbox_sources,
                              language='c++', libraries=libs, define_macros=macros)]
 
+rst_path = os.path.join(os.path.dirname(__file__), 'README.rst')
+
+if 'sdist' in sys.argv:
+    readme = subprocess.check_output("pandoc -f markdown_github README.md -t html | sed -e 's/❌/X/g' | "
+                                     'pandoc -f html -t rst --columns=300', shell=True)
+    with open(rst_path, 'w') as f:
+        f.write(readme)
+else:
+    try:
+        with open(rst_path) as f:
+            readme = f.read()
+    except IOError:
+        readme = None
+
 setup(
     name='dmoj',
-    version='1.0.0',
+    version='1.0.4',
     packages=find_packages(),
     package_data={
         'dmoj.cptbox': ['syscalls/aliases.list', 'syscalls/*.tbl'],
@@ -124,6 +139,7 @@ setup(
     author_email='admin@dmoj.ca',
     url='https://github.com/DMOJ/judge',
     description='The judge component of the DMOJ: Modern Online Judge platform',
+    long_description=readme,
     keywords='online-judge',
     classifiers=[
         'Development Status :: 4 - Beta',

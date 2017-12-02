@@ -12,6 +12,8 @@ import traceback
 from functools import partial
 from itertools import chain
 
+import six
+
 from dmoj import packet, graders
 from dmoj.config import ConfigNode
 from dmoj.control import JudgeControlRequestHandler
@@ -640,8 +642,12 @@ class JudgeManager(object):
 
 
 def main():  # pragma: no cover
-    sys.stdout = codecs.getwriter("utf-8")(os.fdopen(sys.stdout.fileno(), 'w', 0))
-    sys.stderr = codecs.getwriter("utf-8")(sys.stderr)
+    if six.PY2:
+        sys.stdout = codecs.getwriter('utf-8')(os.fdopen(sys.stdout.fileno(), 'w', 0))
+        sys.stderr = codecs.getwriter('utf-8')(sys.stderr)
+    else:
+        sys.stdout = codecs.getwriter('utf-8')(open(sys.stdout.fileno(), 'wb', 0, closefd=False))
+        sys.stderr = codecs.getwriter('utf-8')(sys.stderr.detach())
 
     if not sanity_check():
         return 1

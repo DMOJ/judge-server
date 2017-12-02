@@ -173,7 +173,7 @@ class BaseExecutor(PlatformExecutorMixin, ResourceProxy):
         for key, files in mapping.items():
             file = cls.find_command_from_list(files)
             if file is None:
-                return result, False, 'Failed to find "%s"' % key
+                return None, False, 'Failed to find "%s"' % key
             result[key] = file
         return cls.autoconfig_run_test(result)
 

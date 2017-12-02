@@ -10,8 +10,6 @@ runtime:
   csc: C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe
   cl.exe: C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\cl.exe
   go: C:\go\bin\go.exe
-  java: C:\Program Files (x86)\Java\jre7\bin\java.exe
-  javac: C:\Program Files (x86)\Java\jdk1.7.0\bin\javac.exe
   java8: C:\Program Files (x86)\Java\jre8\bin\java.exe
   javac8: C:\Program Files (x86)\Java\jdk1.8.0\bin\javac.exe
   perl: C:\Perl\bin\perl.exe

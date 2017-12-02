@@ -70,7 +70,7 @@ class Judge(object):
         Pushes current problem set to server.
         """
         self._problem_is_stale = True
-        if not self._updating_problem and self.current_submission is not None:
+        if not self._updating_problem and self.current_submission is None:
             # If a signal is received here, there is still a race.
             # But how probable is that?
             self._updating_problem = True

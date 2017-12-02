@@ -54,6 +54,7 @@ def main():
         if hasattr(Executor, 'autoconfig'):
             if not silent:
                 print(ansi_style('%-43s%s' % ('Auto-configuring #ansi[%s](|underline):' % name, '')), end=' ')
+                sys.stdout.flush()
 
             try:
                 data = Executor.autoconfig()

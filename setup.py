@@ -12,7 +12,7 @@ from distutils.errors import DistutilsPlatformError
 
 from distutils.msvccompiler import MSVCCompiler
 
-from setuptools import setup, Extension
+from setuptools import setup, Extension, find_packages
 from setuptools.command import build_ext
 from setuptools.command.build_ext import build_ext as build_ext_old
 
@@ -91,7 +91,12 @@ else:
 setup(
     name='dmoj',
     version='0.1',
-    packages=['dmoj'],
+    packages=find_packages(),
+    package_data={
+        'dmoj.cptbox': ['syscalls/aliases.list', 'syscalls/*.tbl'],
+        'dmoj.executors': ['csbox.exe', 'java-sandbox.jar', '*.policy'],
+        'dmoj.wbox': ['getaddr*.exe', 'dmsec*.dll'],
+    },
     entry_points={
         'console_scripts': [
             'dmoj = dmoj.judge:main',
@@ -112,7 +117,7 @@ setup(
     description='The judge component of the DMOJ: Modern Online Judge platform',
     keywords='online-judge',
     classifiers=[
-        'Development Status :: 3 - Beta',
+        'Development Status :: 4 - Beta',
         'Environment :: Console',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)',

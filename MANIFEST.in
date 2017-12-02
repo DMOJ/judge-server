@@ -1,5 +1,4 @@
 include MANIFEST.in
-include dmoj/cptbox/_cptbox.pyx
 include dmoj/cptbox/*.cpp
 include dmoj/cptbox/*.h
 include dmoj/cptbox/syscalls/aliases.list
@@ -11,9 +10,8 @@ include dmoj/wbox/dmsec32.dll
 include dmoj/wbox/dmsec64.dll
 include dmoj/wbox/getaddr32.exe
 include dmoj/wbox/getaddr64.exe
-include dmoj/wbox/_wbox.pyx
 include dmoj/wbox/*.cpp
 include dmoj/wbox/*.h
 
-exclude dmoj/cptbox/_cptbox.cpp
-exclude dmoj/cptbox/_wbox.cpp
+exclude dmoj/cptbox/_cptbox.pyx
+exclude dmoj/wbox/_wbox.pyx

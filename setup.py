@@ -16,13 +16,17 @@ from setuptools import setup, Extension, find_packages
 from setuptools.command import build_ext
 from setuptools.command.build_ext import build_ext as build_ext_old
 
+has_pyx = os.path.exists(os.path.join(os.path.dirname(__file__), 'dmoj', 'cptbox', '_cptbox.pyx'))
+
 try:
     from Cython.Build import cythonize
 except ImportError:
-    print('You need to install cython first before installing DMOJ.', file=sys.stderr)
-    print('Run: pip install cython', file=sys.stderr)
-    print('Or if you do not have pip: easy_install cython', file=sys.stderr)
-    sys.exit(1)
+    if has_pyx:
+        print('You need to install cython first before installing DMOJ.', file=sys.stderr)
+        print('Run: pip install cython', file=sys.stderr)
+        print('Or if you do not have pip: easy_install cython', file=sys.stderr)
+        sys.exit(1)
+    cythonize = lambda x: x
 
 
 class build_ext_dmoj(build_ext_old):
@@ -64,16 +68,21 @@ wbox_sources = ['_wbox.pyx', 'handles.cpp', 'process.cpp', 'user.cpp', 'helpers.
 cptbox_sources = ['_cptbox.pyx', 'helper.cpp', 'ptdebug.cpp', 'ptdebug_x86.cpp', 'ptdebug_x64.cpp',
                   'ptdebug_x86_on_x64.cpp', 'ptdebug_x32.cpp', 'ptdebug_arm.cpp', 'ptproc.cpp']
 
+if not has_pyx:
+    wbox_sources[0] = wbox_sources[0].replace('.pyx', '.cpp')
+    cptbox_sources[0] = cptbox_sources[0].replace('.pyx', '.cpp')
+
 SOURCE_DIR = os.path.dirname(__file__)
 wbox_sources = [os.path.join(SOURCE_DIR, 'dmoj', 'wbox', f) for f in wbox_sources]
 cptbox_sources = [os.path.join(SOURCE_DIR, 'dmoj', 'cptbox', f) for f in cptbox_sources]
 
 extensions = [Extension('dmoj.checkers._checker', sources=['dmoj/checkers/_checker.c'])]
-if os.name == 'nt':
+if os.name == 'nt' or 'sdist' in sys.argv:
     extensions += [Extension('dmoj.wbox._wbox', sources=wbox_sources, language='c++',
                              libraries=['netapi32', 'advapi32', 'ole32'],
                              define_macros=[('UNICODE', None)])]
-else:
+
+if os.name != 'nt' or 'sdist' in sys.argv:
     libs = ['rt']
     if sys.platform.startswith('freebsd'):
         libs += ['procstat']
@@ -90,7 +99,7 @@ else:
 
 setup(
     name='dmoj',
-    version='0.1',
+    version='1.0.0',
     packages=find_packages(),
     package_data={
         'dmoj.cptbox': ['syscalls/aliases.list', 'syscalls/*.tbl'],

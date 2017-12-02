@@ -148,6 +148,7 @@ setup(
         'License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)',
         'Operating System :: Microsoft :: Windows',
         'Operating System :: POSIX :: Linux',
+        'Operating System :: POSIX :: BSD :: FreeBSD',
         'Programming Language :: Python',
         'Topic :: Education',
         'Topic :: Software Development',

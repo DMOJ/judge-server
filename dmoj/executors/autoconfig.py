@@ -20,8 +20,7 @@ def main():
     parser.add_argument('-s', '--silent', action='store_true', help='silent mode')
     silent = parser.parse_args().silent
     
-    logging.basicConfig(filename=judgeenv.log_file, level=logging.INFO,
-                        format='%(levelname)s %(asctime)s %(module)s %(message)s')
+    logging.basicConfig(level=logging.INFO, format='%(message)s')
     
     result = {}
 

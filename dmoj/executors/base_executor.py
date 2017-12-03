@@ -40,6 +40,7 @@ class BaseExecutor(PlatformExecutorMixin):
         self.problem = problem_id
         self.source = source_code
         self._hints = kwargs.pop('hints', [])
+        self.unbuffered = kwargs.pop('unbuffered', None) or False
 
     def cleanup(self):
         if not hasattr(self, '_dir'):

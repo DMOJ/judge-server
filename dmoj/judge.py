@@ -338,7 +338,7 @@ def sanity_check():
     # Don't allow starting up without wbox/cptbox, saves cryptic errors later on
     if os.name == 'nt':
         try:
-            import wbox
+            from .wbox import _wbox
         except ImportError:
             print('wbox must be compiled to grade!', file=sys.stderr)
             return False
@@ -350,7 +350,7 @@ def sanity_check():
             return False
     else:
         try:
-            import cptbox
+            from .cptbox import _cptbox
         except ImportError:
             print('cptbox must be compiled to grade!', file=sys.stderr)
             return False

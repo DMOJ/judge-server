@@ -137,7 +137,7 @@ class PacketManager(object):
             return self._read_single()
         size = PacketManager.SIZE_PACK.unpack(data)[0]
         try:
-            packet = self.input.read(size).decode('zlib')
+            packet = zlib.decompress(self.input.read(size))
         except zlib.error:
             self._reconnect()
             return self._read_single()
@@ -162,7 +162,7 @@ class PacketManager(object):
                 # We cannot use utf8text because it may not be text.
                 packet[k] = v.decode('utf-8', 'replace')
 
-        raw = json.dumps(packet).encode('zlib')
+        raw = zlib.compress(json.dumps(packet))
         with self._lock:
             self.output.writelines((PacketManager.SIZE_PACK.pack(len(raw)), raw))
 
@@ -214,7 +214,7 @@ class PacketManager(object):
         try:
             data = self.input.read(PacketManager.SIZE_PACK.size)
             size = PacketManager.SIZE_PACK.unpack(data)[0]
-            packet = self.input.read(size).decode('zlib')
+            packet = zlib.decompress(self.input.read(size))
             resp = json.loads(packet)
         except Exception:
             log.exception('Cannot understand handshake response: [%s]:%s', self.host, self.port)

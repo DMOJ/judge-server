@@ -455,7 +455,6 @@ class JudgeManager(object):
         self.api_pid = None
 
         self.monitor = Monitor()
-        self.monitor.callback = lambda: os.kill(self.master_pid, signal.SIGUSR2)
 
     def __get_libc(self):
         from ctypes.util import find_library
@@ -543,11 +542,29 @@ class JudgeManager(object):
         def monitor_proc():
             signal.signal(signal.SIGUSR2, signal.SIG_IGN)
 
+            event = threading.Event()
+            stop = False
+
+            def worker():
+                while True:
+                    event.wait()
+                    event.clear()
+                    if stop:
+                        return
+                    event.wait(1)
+                    if event.is_set():
+                        continue
+                    os.kill(self.master_pid, signal.SIGUSR2)
+
+            threading.Thread(target=worker).start()
+            self.monitor.callback = event.set
             self.monitor.start()
             try:
                 self.monitor.join()
             except KeyboardInterrupt:
                 self.monitor.stop()
+                stop = True
+                event.set()
 
         self.monitor_pid = self._spawn_child(monitor_proc)
         logpm.info('Monitor is pid %d', self.monitor_pid)

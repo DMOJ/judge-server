@@ -67,6 +67,8 @@ class Judge(object):
         self.begin_grading = partial(self.process_submission, TYPE_SUBMISSION, self._begin_grading)
         self.custom_invocation = partial(self.process_submission, TYPE_INVOCATION, self._custom_invocation)
 
+        self.packet_manager = None
+
     def update_problems(self):
         """
         Pushes current problem set to server.
@@ -312,9 +314,6 @@ class Judge(object):
         """
         self.packet_manager.run()
 
-    def __del__(self):
-        del self.packet_manager
-
     def __enter__(self):
         return self
 
@@ -326,12 +325,14 @@ class Judge(object):
         End any submission currently executing, and exit the judge.
         """
         self.terminate_grading()
+        if self.packet_manager:
+            self.packet_manager.close()
 
 
 class ClassicJudge(Judge):
     def __init__(self, host, port, **kwargs):
-        self.packet_manager = packet.PacketManager(host, port, self, env['id'], env['key'], **kwargs)
         super(ClassicJudge, self).__init__()
+        self.packet_manager = packet.PacketManager(host, port, self, env['id'], env['key'], **kwargs)
 
 
 def sanity_check():

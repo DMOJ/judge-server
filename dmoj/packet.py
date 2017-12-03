@@ -38,6 +38,7 @@ class PacketManager(object):
         self.judge = judge
         self.name = name
         self.key = key
+        self._closed = False
 
         log.info('Preparing to connect to [%s]:%s as: %s', host, port, name)
         if secure and ssl:
@@ -115,7 +116,12 @@ class PacketManager(object):
             self._reconnect()
 
     def __del__(self):
-        self.conn.shutdown(socket.SHUT_RDWR)
+        if not self._closed:
+            self.close()
+
+    def close(self):
+        if self.conn:
+            self.conn.shutdown(socket.SHUT_RDWR)
 
     def _read_async(self):
         try:

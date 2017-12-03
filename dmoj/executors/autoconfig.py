@@ -1,14 +1,13 @@
 from __future__ import print_function
 
+import argparse
+import logging
 import os
 import sys
 import traceback
-import logging
 
 import yaml
 import yaml.representer
-
-import argparse
 
 from dmoj import judgeenv
 from dmoj.executors import get_available, load_executor
@@ -20,9 +19,10 @@ def main():
     parser = argparse.ArgumentParser(description='Automatically configures runtimes')
     parser.add_argument('-s', '--silent', action='store_true', help='silent mode')
     silent = parser.parse_args().silent
-    
-    logging.basicConfig(level=logging.INFO, format='%(message)s')
-    
+
+    if not silent:
+        logging.basicConfig(level=logging.INFO, format='%(message)s')
+
     result = {}
 
     if os.name == 'nt':
@@ -53,7 +53,8 @@ def main():
 
         if hasattr(Executor, 'autoconfig'):
             if not silent:
-                print(ansi_style('%-43s%s' % ('Auto-configuring #ansi[%s](|underline):' % name, '')), end=' ')
+                print(ansi_style('%-43s%s' % ('Auto-configuring #ansi[%s](|underline):' % name, '')),
+                      end=' ', file=sys.stderr)
                 sys.stdout.flush()
 
             try:
@@ -64,31 +65,32 @@ def main():
                 errors = '' if len(data) < 4 else data[3]
             except Exception:
                 if not silent:
-                    print(ansi_style('#ansi[Not supported](red|bold)'))
+                    print(ansi_style('#ansi[Not supported](red|bold)'), file=sys.stderr)
                     traceback.print_exc()
             else:
                 if not silent:
                     print(ansi_style(['#ansi[%s](red|bold)', '#ansi[%s](green|bold)'][success] %
-                                 (feedback or ['Failed', 'Success'][success])))
+                                     (feedback or ['Failed', 'Success'][success])), file=sys.stderr)
 
                 if not success:
                     if not silent:
                         if config:
-                            print('  Attempted:')
-                            print('   ', yaml.safe_dump(config, default_flow_style=False).rstrip().replace('\n', '\n' + ' ' * 4))
+                            print('  Attempted:', file=sys.stderr)
+                            print('   ', yaml.safe_dump(config, default_flow_style=False).rstrip()
+                                  .replace('\n', '\n' + ' ' * 4), file=sys.stderr)
 
                         if errors:
-                            print('  Errors:')
-                            print('   ', errors.replace('\n', '\n' + ' ' * 4))
-
+                            print('  Errors:', file=sys.stderr)
+                            print('   ', errors.replace('\n', '\n' + ' ' * 4), file=sys.stderr)
 
                 if success:
                     result.update(config)
 
-    if not silent:
-      print()
-      print(ansi_style('#ansi[Configuration result](green|bold|underline):'))
+    if not silent and sys.stdout.isatty():
+        print(file=sys.stderr)
+        print(ansi_style('#ansi[Configuration result](green|bold|underline):'), file=sys.stderr)
     print(yaml.safe_dump({'runtime': result}, default_flow_style=False).rstrip())
+
 
 if __name__ == '__main__':
     main()

@@ -84,8 +84,8 @@ class PacketManager(object):
             self.conn = self.ssl_context.wrap_socket(self.conn, server_hostname=self.host)
 
         log.info('Starting handshake with: [%s]:%s', self.host, self.port)
-        self.input = self.conn.makefile('r')
-        self.output = self.conn.makefile('w', 0)
+        self.input = self.conn.makefile('rb')
+        self.output = self.conn.makefile('wb', 0)
         self.handshake(problems, versions, self.name, self.key)
         log.info('Judge "%s" online: [%s]:%s', self.name, self.host, self.port)
 

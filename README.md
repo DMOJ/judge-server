@@ -90,6 +90,9 @@ local judge, useful for testing problems.
 For more detailed steps, read the [Linux Installation](https://docs.dmoj.ca/en/latest/judge/linux_installation/) or [Windows Installation](https://docs.dmoj.ca/en/latest/judge/windows_installation/) instructions.
 
 ### Stable Build
+[![PyPI version](https://badge.fury.io/py/dmoj.svg)](https://pypi.python.org/pypi/dmoj)
+[![PyPI](https://img.shields.io/pypi/pyversions/dmoj.svg)](https://pypi.python.org/pypi/dmoj)
+
 We periodically publish builds [on PyPI](https://pypi.python.org/pypi/dmoj). This is the easiest way to get started,
 but may not contain all the latest features and improvements.
 

@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+import errno
 import json
 import logging
 import os
@@ -77,7 +78,16 @@ class PacketManager(object):
         versions = get_runtime_versions()
 
         log.info('Opening connection to: [%s]:%s', self.host, self.port)
-        self.conn = socket.create_connection((self.host, self.port), timeout=5)
+
+        while True:
+            try:
+                self.conn = socket.create_connection((self.host, self.port), timeout=5)
+            except OSError as e:
+                if e.errno != errno.EINTR:
+                    raise
+            else:
+                break
+
         self.conn.settimeout(300)
         self.conn.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
 

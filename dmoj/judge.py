@@ -61,30 +61,39 @@ class Judge(object):
         self._terminate_grading = False
         self.process_type = 0
 
-        self._updating_problem = False
-        self._problem_is_stale = False
-
         self.begin_grading = partial(self.process_submission, TYPE_SUBMISSION, self._begin_grading)
         self.custom_invocation = partial(self.process_submission, TYPE_INVOCATION, self._custom_invocation)
 
         self.packet_manager = None
 
+        self.updater_exit = False
+        self.updater_signal = threading.Event()
+        self.updater = threading.Thread(target=self._updater_thread)
+
+    def _updater_thread(self):
+        log = logging.getLogger('dmoj.updater')
+        while True:
+            self.updater_signal.wait()
+            self.updater_signal.clear()
+            if self.updater_exit:
+                return
+
+            # Prevent problem updates while grading.
+            # Capture the value so it can't change.
+            thread = self.current_submission_thread
+            if thread:
+                thread.join()
+
+            try:
+                self.packet_manager.supported_problems_packet(get_supported_problems())
+            except Exception:
+                log.exception('Failed to update problems.')
+
     def update_problems(self):
         """
         Pushes current problem set to server.
         """
-        self._problem_is_stale = True
-        if not self._updating_problem and self.current_submission is None:
-            # If a signal is received here, there is still a race.
-            # But how probable is that?
-            self._updating_problem = True
-            while self._problem_is_stale:
-                self._update_problems()
-            self._updating_problem = False
-
-    def _update_problems(self):
-        self._problem_is_stale = False
-        self.packet_manager.supported_problems_packet(get_supported_problems())
+        self.updater_signal.set()
 
     def process_submission(self, type, target, id, *args, **kwargs):
         try:
@@ -133,7 +142,7 @@ class Judge(object):
             else:
                 self.packet_manager.invocation_end_packet(result)
 
-        print(ansi_style('Done invoking #ansi[%s](green|bold).\n' % (id)))
+        print(ansi_style('Done invoking #ansi[%s](green|bold).\n' % (id,)))
         self._terminate_grading = False
         self.current_submission_thread = None
         self.current_submission = None
@@ -202,8 +211,8 @@ class Judge(object):
                         case_number += 1
             except TerminateGrading:
                 self.packet_manager.submission_terminated_packet()
-                report(
-                    ansi_style('#ansi[Forcefully terminating grading. Temporary files may not be deleted.](red|bold)'))
+                report(ansi_style('#ansi[Forcefully terminating grading. '
+                                  'Temporary files may not be deleted.](red|bold)'))
                 pass
             except:
                 self.internal_error()
@@ -216,9 +225,6 @@ class Judge(object):
         self.current_submission_thread = None
         self.current_submission = None
         self.current_grader = None
-
-        if self._problem_is_stale:
-            self._update_problems()
 
     def grade_cases(self, grader, cases, short_circuit=False, is_short_circuiting=False):
         for case in cases:
@@ -312,6 +318,7 @@ class Judge(object):
         """
         Attempts to connect to the handler server specified in command line.
         """
+        self.updater.start()
         self.packet_manager.run()
 
     def __enter__(self):
@@ -325,6 +332,8 @@ class Judge(object):
         End any submission currently executing, and exit the judge.
         """
         self.terminate_grading()
+        self.updater_exit = True
+        self.updater_signal.set()
         if self.packet_manager:
             self.packet_manager.close()
 
@@ -394,7 +403,6 @@ def judge_proc(need_monitor):
 
     if hasattr(signal, 'SIGUSR2'):
         def update_problem_signal(signum, frame):
-            logging.getLogger('signal').info('Received SIGUSR2, updating problems.')
             judge.update_problems()
 
         signal.signal(signal.SIGUSR2, update_problem_signal)
@@ -416,9 +424,7 @@ def judge_proc(need_monitor):
     with monitor, judge:
         try:
             judge.listen()
-        except KeyboardInterrupt:
-            pass
-        except:
+        except Exception:
             traceback.print_exc()
         finally:
             judge.murder()
@@ -449,7 +455,6 @@ class JudgeManager(object):
         self.api_pid = None
 
         self.monitor = Monitor()
-        self.monitor.callback = lambda: os.kill(self.master_pid, signal.SIGUSR2)
 
     def __get_libc(self):
         from ctypes.util import find_library
@@ -458,10 +463,14 @@ class JudgeManager(object):
 
     def _forward_signal(self, sig, respawn=False):
         def handler(signum, frame):
-            logpm.info('Received signal (%s), forwarding...', self.signal_map.get(signum, signum))
-            if not respawn:
-                logpm.info('Will no longer respawn judges.')
-                self._try_respawn = False
+            # SIGUSR2, the signal for file updates, may be triggered very quickly.
+            # Due to processing delays, it may cause reentrancy issues when logging.
+            # Band-aid fix is to avoid logging SIGUSR2.
+            if signum not in (signal.SIGUSR2,):
+                logpm.info('Received signal (%s), forwarding...', self.signal_map.get(signum, signum))
+                if not respawn:
+                    logpm.info('Will no longer respawn judges.')
+                    self._try_respawn = False
             self.signal_all(signum)
 
         self.orig_signal[sig] = signal.signal(sig, handler)
@@ -533,11 +542,29 @@ class JudgeManager(object):
         def monitor_proc():
             signal.signal(signal.SIGUSR2, signal.SIG_IGN)
 
+            event = threading.Event()
+            stop = False
+
+            def worker():
+                while True:
+                    event.wait()
+                    event.clear()
+                    if stop:
+                        return
+                    event.wait(1)
+                    if event.is_set():
+                        continue
+                    os.kill(self.master_pid, signal.SIGUSR2)
+
+            threading.Thread(target=worker).start()
+            self.monitor.callback = event.set
             self.monitor.start()
             try:
                 self.monitor.join()
             except KeyboardInterrupt:
                 self.monitor.stop()
+                stop = True
+                event.set()
 
         self.monitor_pid = self._spawn_child(monitor_proc)
         logpm.info('Monitor is pid %d', self.monitor_pid)

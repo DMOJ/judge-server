@@ -456,10 +456,14 @@ class JudgeManager(object):
 
     def _forward_signal(self, sig, respawn=False):
         def handler(signum, frame):
-            logpm.info('Received signal (%s), forwarding...', self.signal_map.get(signum, signum))
-            if not respawn:
-                logpm.info('Will no longer respawn judges.')
-                self._try_respawn = False
+            # SIGUSR2, the signal for file updates, may be triggered very quickly.
+            # Due to processing delays, it may cause reentrancy issues when logging.
+            # Band-aid fix is to avoid logging SIGUSR2.
+            if signum not in (signal.SIGUSR2,):
+                logpm.info('Received signal (%s), forwarding...', self.signal_map.get(signum, signum))
+                if not respawn:
+                    logpm.info('Will no longer respawn judges.')
+                    self._try_respawn = False
             self.signal_all(signum)
 
         self.orig_signal[sig] = signal.signal(sig, handler)

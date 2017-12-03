@@ -116,12 +116,12 @@ class PacketManager(object):
             self._reconnect()
 
     def __del__(self):
-        if not self._closed:
-            self.close()
+        self.close()
 
     def close(self):
-        if self.conn:
+        if self.conn and not self._closed:
             self.conn.shutdown(socket.SHUT_RDWR)
+        self._closed = True
 
     def _read_async(self):
         try:

@@ -14,6 +14,7 @@ import six
 
 from dmoj import sysinfo
 from dmoj.judgeenv import get_supported_problems, get_runtime_versions
+from dmoj.utils.unicode import utf8text, utf8bytes
 
 try:
     import ssl
@@ -142,7 +143,7 @@ class PacketManager(object):
             self._reconnect()
             return self._read_single()
         else:
-            return json.loads(packet)
+            return json.loads(utf8text(packet))
 
     def run(self):
         self._read_async()
@@ -162,7 +163,7 @@ class PacketManager(object):
                 # We cannot use utf8text because it may not be text.
                 packet[k] = v.decode('utf-8', 'replace')
 
-        raw = zlib.compress(json.dumps(packet))
+        raw = zlib.compress(utf8bytes(json.dumps(packet)))
         with self._lock:
             self.output.writelines((PacketManager.SIZE_PACK.pack(len(raw)), raw))
 
@@ -214,7 +215,7 @@ class PacketManager(object):
         try:
             data = self.input.read(PacketManager.SIZE_PACK.size)
             size = PacketManager.SIZE_PACK.unpack(data)[0]
-            packet = zlib.decompress(self.input.read(size))
+            packet = utf8text(zlib.decompress(self.input.read(size)))
             resp = json.loads(packet)
         except Exception:
             log.exception('Cannot understand handshake response: [%s]:%s', self.host, self.port)

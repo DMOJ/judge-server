@@ -61,30 +61,28 @@ class Judge(object):
         self._terminate_grading = False
         self.process_type = 0
 
-        self._updating_problem = False
-        self._problem_is_stale = False
-
         self.begin_grading = partial(self.process_submission, TYPE_SUBMISSION, self._begin_grading)
         self.custom_invocation = partial(self.process_submission, TYPE_INVOCATION, self._custom_invocation)
 
         self.packet_manager = None
 
+        self.updater = threading.Thread(target=self._updater_thread)
+        self.updater_exit = False
+        self.updater_signal = threading.Event()
+
+    def _updater_thread(self):
+        while True:
+            self.updater_signal.wait()
+            self.updater_signal.clear()
+            if self.updater_exit:
+                return
+            self.packet_manager.supported_problems_packet(get_supported_problems())
+
     def update_problems(self):
         """
         Pushes current problem set to server.
         """
-        self._problem_is_stale = True
-        if not self._updating_problem and self.current_submission is None:
-            # If a signal is received here, there is still a race.
-            # But how probable is that?
-            self._updating_problem = True
-            while self._problem_is_stale:
-                self._update_problems()
-            self._updating_problem = False
-
-    def _update_problems(self):
-        self._problem_is_stale = False
-        self.packet_manager.supported_problems_packet(get_supported_problems())
+        self.updater_signal.set()
 
     def process_submission(self, type, target, id, *args, **kwargs):
         try:
@@ -133,7 +131,7 @@ class Judge(object):
             else:
                 self.packet_manager.invocation_end_packet(result)
 
-        print(ansi_style('Done invoking #ansi[%s](green|bold).\n' % (id)))
+        print(ansi_style('Done invoking #ansi[%s](green|bold).\n' % (id,)))
         self._terminate_grading = False
         self.current_submission_thread = None
         self.current_submission = None
@@ -202,8 +200,8 @@ class Judge(object):
                         case_number += 1
             except TerminateGrading:
                 self.packet_manager.submission_terminated_packet()
-                report(
-                    ansi_style('#ansi[Forcefully terminating grading. Temporary files may not be deleted.](red|bold)'))
+                report(ansi_style('#ansi[Forcefully terminating grading. '
+                                  'Temporary files may not be deleted.](red|bold)'))
                 pass
             except:
                 self.internal_error()
@@ -325,6 +323,8 @@ class Judge(object):
         End any submission currently executing, and exit the judge.
         """
         self.terminate_grading()
+        self.updater_exit = True
+        self.updater_signal.set()
         if self.packet_manager:
             self.packet_manager.close()
 

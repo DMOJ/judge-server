@@ -416,9 +416,7 @@ def judge_proc(need_monitor):
     with monitor, judge:
         try:
             judge.listen()
-        except KeyboardInterrupt:
-            pass
-        except:
+        except Exception:
             traceback.print_exc()
         finally:
             judge.murder()

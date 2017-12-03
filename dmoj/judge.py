@@ -66,9 +66,10 @@ class Judge(object):
 
         self.packet_manager = None
 
-        self.updater = threading.Thread(target=self._updater_thread)
         self.updater_exit = False
         self.updater_signal = threading.Event()
+        self.updater = threading.Thread(target=self._updater_thread)
+        self.updater.start()
 
     def _updater_thread(self):
         while True:

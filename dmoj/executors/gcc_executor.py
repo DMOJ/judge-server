@@ -2,8 +2,6 @@ import os
 import re
 from collections import deque
 
-import six
-
 from dmoj.judgeenv import env
 from dmoj.result import Result
 from dmoj.utils.unicode import utf8bytes, utf8text
@@ -77,7 +75,9 @@ class GCCExecutor(CompiledExecutor):
         )
 
     def get_env(self):
-        return GCC_ENV
+        env = super(GCCExecutor, self).get_env()
+        env.update(GCC_ENV)
+        return env
 
     def get_feedback(self, stderr, result, process):
         if not result.result_flag & Result.RTE or not stderr or len(stderr) > 2048:

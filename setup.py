@@ -14,8 +14,7 @@ from distutils.errors import DistutilsPlatformError
 from distutils.msvccompiler import MSVCCompiler
 
 from setuptools import setup, Extension, find_packages
-from setuptools.command import build_ext
-from setuptools.command.build_ext import build_ext as build_ext_old
+from setuptools.command.build_ext import build_ext
 
 has_pyx = os.path.exists(os.path.join(os.path.dirname(__file__), 'dmoj', 'cptbox', '_cptbox.pyx'))
 
@@ -30,15 +29,34 @@ except ImportError:
     cythonize = lambda x: x
 
 
-class build_ext_dmoj(build_ext_old):
+class SimpleSharedObject(Extension, object):
+    ext_names = set()
+
+    def __init__(self, name, *args, **kwargs):
+        super(SimpleSharedObject, self).__init__(name, *args, **kwargs)
+        self.ext_names.add(name)
+        if '.' in name:
+            self.ext_names.add(name.split('.')[-1])
+
+
+class build_ext_dmoj(build_ext, object):
+    def get_ext_filename(self, ext_name):
+        if ext_name in SimpleSharedObject.ext_names:
+            return ext_name.replace('.', os.sep) + ['.so', '.dll'][os.name == 'nt']
+        return super(build_ext_dmoj, self).get_ext_filename(ext_name)
+
+    def get_export_symbols(self, ext):
+        if isinstance(ext, SimpleSharedObject):
+            return ext.export_symbols
+        return super(build_ext_dmoj, self).get_export_symbols(ext)
+
     def run(self):
         try:
-            build_ext_old.run(self)
+            super(build_ext_dmoj, self).run()
         except DistutilsPlatformError as e:
             self.unavailable(e)
 
     def build_extensions(self):
-        print(self.compiler)
         if isinstance(self.compiler, MSVCCompiler):
             self.compiler.initialize()
             self.compiler.compile_options.remove('/W3')
@@ -54,7 +72,7 @@ class build_ext_dmoj(build_ext_old):
                 extra_compile_args = ['-march=native', '-O3']
             self.distribution.ext_modules[0].extra_compile_args = extra_compile_args
 
-        build_ext_old.build_extensions(self)
+        super(build_ext_dmoj, self).build_extensions()
 
     def unavailable(self, e):
         print('*' * 79)
@@ -62,8 +80,6 @@ class build_ext_dmoj(build_ext_old):
         traceback.print_exc()
         print('*' * 79)
 
-
-build_ext.build_ext = build_ext_dmoj
 
 wbox_sources = ['_wbox.pyx', 'handles.cpp', 'process.cpp', 'user.cpp', 'helpers.cpp', 'firewall.cpp']
 cptbox_sources = ['_cptbox.pyx', 'helper.cpp', 'ptdebug.cpp', 'ptdebug_x86.cpp', 'ptdebug_x64.cpp',
@@ -97,6 +113,9 @@ if os.name != 'nt' or 'sdist' in sys.argv:
         pass
     extensions += [Extension('dmoj.cptbox._cptbox', sources=cptbox_sources,
                              language='c++', libraries=libs, define_macros=macros)]
+
+if os.name != 'nt':
+    extensions += [SimpleSharedObject('dmoj.utils.nobuf', sources=['dmoj/utils/nobuf.c'])]
 
 rst_path = os.path.join(os.path.dirname(__file__), 'README.rst')
 
@@ -134,6 +153,7 @@ setup(
     extras_require={
         'test': ['mock'],
     },
+    cmdclass={'build_ext': build_ext_dmoj},
 
     author='quantum5, Xyene',
     author_email='admin@dmoj.ca',

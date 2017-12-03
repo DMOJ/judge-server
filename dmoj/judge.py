@@ -363,7 +363,7 @@ def sanity_check():
     # _checker implements standard checker functions in C
     # we fall back to a Python implementation if it's not compiled, but it's slower
     try:
-        from checkers import _checker
+        from .checkers import _checker
     except ImportError:
         startup_warnings.append('native checker module not found, compile _checker for optimal performance')
     return True

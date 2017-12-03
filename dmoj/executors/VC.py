@@ -1,8 +1,10 @@
 import os
 
-from dmoj.judgeenv import env
+import six
+
 from dmoj.executors.base_executor import CompiledExecutor
 from dmoj.executors.mixins import NullStdoutMixin
+from dmoj.judgeenv import env
 
 VC_ENV = env['runtime'].get('vc_env', {})
 VC_COMPILE = os.environ.copy()
@@ -32,7 +34,7 @@ int main() {
             aux_sources = {}
         aux_sources[problem_id + self.ext] = main_source
         sources = []
-        for name, source in aux_sources.iteritems():
+        for name, source in six.iteritems(aux_sources):
             if '.' not in name:
                 name += self.ext
             with open(self._file(name), 'wb') as fo:

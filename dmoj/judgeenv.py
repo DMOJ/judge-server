@@ -1,6 +1,5 @@
 import argparse
 import os
-import sys
 
 import six
 import yaml
@@ -203,4 +202,4 @@ def get_supported_problems():
 
 def get_runtime_versions():
     from dmoj.executors import executors
-    return {name: clazz.Executor.get_runtime_versions() for name, clazz in executors.iteritems()}
+    return {name: clazz.Executor.get_runtime_versions() for name, clazz in six.iteritems(executors)}

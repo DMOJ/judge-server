@@ -486,7 +486,7 @@ class JudgeManager(object):
             sys.stdin.close()
             os.close(pr)
 
-            for sig, handler in self.orig_signal.iteritems():
+            for sig, handler in self.orig_signal.items():
                 signal.signal(sig, handler)
             os.close(pw)
 

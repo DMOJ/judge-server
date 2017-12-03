@@ -1,4 +1,5 @@
 import os
+import re
 import shutil
 import sys
 from shutil import copyfile
@@ -96,7 +97,10 @@ try:
 
             def get_fs(self):
                 name = self.get_executor_name()
-                return BASE_FILESYSTEM + self.fs + env.get('extra_fs', {}).get(name, [])
+                fs = BASE_FILESYSTEM + self.fs + env.get('extra_fs', {}).get(name, [])
+                if self.unbuffered:
+                    fs += [re.escape(self._file('unbuf.so')) + '$']
+                return fs
 
             def get_allowed_syscalls(self):
                 return self.syscalls

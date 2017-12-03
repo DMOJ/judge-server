@@ -398,7 +398,6 @@ def judge_proc(need_monitor):
 
     if hasattr(signal, 'SIGUSR2'):
         def update_problem_signal(signum, frame):
-            logging.getLogger('signal').info('Received SIGUSR2, updating problems.')
             judge.update_problems()
 
         signal.signal(signal.SIGUSR2, update_problem_signal)

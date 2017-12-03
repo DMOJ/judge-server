@@ -69,9 +69,9 @@ class Judge(object):
         self.updater_exit = False
         self.updater_signal = threading.Event()
         self.updater = threading.Thread(target=self._updater_thread)
-        self.updater.start()
 
     def _updater_thread(self):
+        log = logging.getLogger('dmoj.updater')
         while True:
             self.updater_signal.wait()
             self.updater_signal.clear()
@@ -84,7 +84,10 @@ class Judge(object):
             if thread:
                 thread.join()
 
-            self.packet_manager.supported_problems_packet(get_supported_problems())
+            try:
+                self.packet_manager.supported_problems_packet(get_supported_problems())
+            except Exception:
+                log.exception('Failed to update problems.')
 
     def update_problems(self):
         """
@@ -315,6 +318,7 @@ class Judge(object):
         """
         Attempts to connect to the handler server specified in command line.
         """
+        self.updater.start()
         self.packet_manager.run()
 
     def __enter__(self):

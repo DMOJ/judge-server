@@ -56,4 +56,6 @@ int main() {
         return VC_COMPILE
 
     def get_env(self):
-        return VC_ENV
+        env = super(Executor, self).get_env()
+        env.update(VC_ENV)
+        return env

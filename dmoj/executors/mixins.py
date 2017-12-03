@@ -1,8 +1,10 @@
 import os
+import shutil
 import sys
 from shutil import copyfile
 
 from dmoj.judgeenv import env
+from dmoj.utils import nobuf_path
 from dmoj.utils.unicode import utf8bytes
 
 try:
@@ -103,7 +105,12 @@ try:
                 return self.address_grace
 
             def get_env(self):
-                return {'LANG': 'C'}
+                env = {'LANG': 'C'}
+                if self.unbuffered:
+                    unbuf = self._file('unbuf.so')
+                    shutil.copyfile(nobuf_path, unbuf)
+                    env['LD_PRELOAD'] = unbuf
+                return env
 
             def launch(self, *args, **kwargs):
                 return SecurePopen([utf8bytes(a) for a in self.get_cmdline() + list(args)],
@@ -114,8 +121,7 @@ try:
                                    time=kwargs.get('time'), memory=kwargs.get('memory'),
                                    wall_time=kwargs.get('wall_time'),
                                    stderr=(PIPE if kwargs.get('pipe_stderr', False) else None),
-                                   env=self.get_env(), cwd=utf8bytes(self._dir), nproc=self.get_nproc(),
-                                   unbuffered=kwargs.get('unbuffered', False))
+                                   env=self.get_env(), cwd=utf8bytes(self._dir), nproc=self.get_nproc())
 except ImportError:
     pass
 

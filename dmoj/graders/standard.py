@@ -33,8 +33,7 @@ class StandardGrader(BaseGrader):
         input = case.input_data()  # cache generator data
 
         self._current_proc = self.binary.launch(time=self.problem.time_limit, memory=self.problem.memory_limit,
-                                                pipe_stderr=True, unbuffered=case.config.unbuffered,
-                                                io_redirects=case.io_redirects(),
+                                                pipe_stderr=True, io_redirects=case.io_redirects(),
                                                 wall_time=case.config.wall_time_factor * self.problem.time_limit)
 
         error = self._interact_with_process(case, result, input)
@@ -165,7 +164,8 @@ class StandardGrader(BaseGrader):
         try:
             # Fetch an appropriate executor for the language
             binary = executors[self.language].Executor(self.problem.id, self.source,
-                                                       hints=self.problem.config.hints or [])
+                                                       hints=self.problem.config.hints or [],
+                                                       unbuffered=self.problem.config.unbuffered)
         except CompileError as compilation_error:
             error = compilation_error.args[0]
             error = error.decode('mbcs') if os.name == 'nt' and isinstance(error, six.binary_type) else error

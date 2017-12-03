@@ -1,10 +1,11 @@
 from __future__ import print_function
 
-import os
 import re
+import shutil
 import signal
 import subprocess
 import sys
+import tempfile
 import time
 import traceback
 from distutils.spawn import find_executable
@@ -12,7 +13,6 @@ from subprocess import Popen
 
 from dmoj.error import CompileError
 from dmoj.executors.mixins import PlatformExecutorMixin
-from dmoj.executors.resource_proxy import ResourceProxy
 from dmoj.judgeenv import env
 from dmoj.utils.ansi import ansi_style
 from dmoj.utils.communicate import *
@@ -23,7 +23,7 @@ reversion = re.compile('.*?(\d+(?:\.\d+)+)', re.DOTALL)
 version_cache = {}
 
 
-class BaseExecutor(PlatformExecutorMixin, ResourceProxy):
+class BaseExecutor(PlatformExecutorMixin):
     ext = None
     nproc = 0
     command = None
@@ -36,10 +36,27 @@ class BaseExecutor(PlatformExecutorMixin, ResourceProxy):
     test_memory = 65536
 
     def __init__(self, problem_id, source_code, **kwargs):
-        super(BaseExecutor, self).__init__()
+        self._dir = tempfile.mkdtemp(dir=env.tempdir)
         self.problem = problem_id
         self.source = source_code
         self._hints = kwargs.pop('hints', [])
+
+    def cleanup(self):
+        if not hasattr(self, '_dir'):
+            # We are really toasted, as constructor failed.
+            print('BaseExecutor error: not initialized?')
+            return
+        try:
+            shutil.rmtree(self._dir)  # delete directory
+        except OSError as exc:
+            if exc.errno != errno.ENOENT:
+                raise
+
+    def __del__(self):
+        self.cleanup()
+
+    def _file(self, *paths):
+        return os.path.join(self._dir, *paths)
 
     @classmethod
     def get_executor_name(cls):

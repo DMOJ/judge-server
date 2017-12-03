@@ -76,6 +76,13 @@ class Judge(object):
             self.updater_signal.clear()
             if self.updater_exit:
                 return
+
+            # Prevent problem updates while grading.
+            # Capture the value so it can't change.
+            thread = self.current_submission_thread
+            if thread:
+                thread.join()
+
             self.packet_manager.supported_problems_packet(get_supported_problems())
 
     def update_problems(self):
@@ -214,9 +221,6 @@ class Judge(object):
         self.current_submission_thread = None
         self.current_submission = None
         self.current_grader = None
-
-        if self._problem_is_stale:
-            self._update_problems()
 
     def grade_cases(self, grader, cases, short_circuit=False, is_short_circuiting=False):
         for case in cases:

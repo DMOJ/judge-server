@@ -5,8 +5,10 @@ class Grader(InteractiveGrader):
         N = int(case.input_data())
         guess = None
         guesses = 0
-        while guess != N:
-            guess = interactor.readint()
-            interactor.writeln(N - guess)
+        while True:
             guesses += 1
+            guess = interactor.readint()
+            if guess == N:
+                break
+            interactor.writeln(N - guess)
         return guesses < 10

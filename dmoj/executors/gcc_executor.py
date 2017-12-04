@@ -75,7 +75,7 @@ class GCCExecutor(CompiledExecutor):
         )
 
     def get_env(self):
-        env = super(GCCExecutor, self).get_env()
+        env = super(GCCExecutor, self).get_env() or {}
         env.update(GCC_ENV)
         return env
 

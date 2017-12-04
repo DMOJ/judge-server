@@ -1,17 +1,17 @@
 import errno
-import subprocess
-import sys
 import os
 import re
+import subprocess
+import sys
 from shutil import copyfile
 from subprocess import Popen
 
 import six
 
 from dmoj.error import CompileError, InternalError
+from dmoj.result import Result
 from dmoj.utils.unicode import utf8bytes, utf8text
 from .base_executor import CompiledExecutor
-from dmoj.result import Result
 
 recomment = re.compile(br'/\*.*?\*/', re.DOTALL)
 restring = re.compile(br''''(?:\\.|[^'\\])'|"(?:\\.|[^"\\])*"''', re.DOTALL)
@@ -22,7 +22,7 @@ redeunicode = re.compile(br'\\u([0-9a-f]{4})', re.I)
 deunicode = lambda x: redeunicode.sub(lambda a: six.unichr(int(a.group(1), 16)), x)
 
 
-JAVA_SANDBOX = os.path.abspath(os.path.join(os.path.dirname(__file__), 'java-sandbox.jar'))
+JAVA_SANDBOX = os.path.abspath(os.path.join(os.path.dirname(__file__), 'java_sandbox.jar'))
 
 POLICY_PREFIX = '''\
 grant codeBase "file:///{agent}" {{
@@ -93,6 +93,8 @@ class JavaExecutor(CompiledExecutor):
         agent_flags = '-javaagent:%s=policy:%s' % (self._agent_file, self._policy_file)
         for hint in self._hints:
             agent_flags += ',%s' % hint
+        if self.unbuffered:
+            agent_flags += ',nobuf'
         # 128m is equivalent to 1<<27 in Thread constructor
         return ['java', '-client', agent_flags, '-Xss128m', '-Xmx%dK' % self.__memory_limit,
                 '-XX:+UseSerialGC', '-XX:ErrorFile=submission_jvm_crash.log', self._class_name]

@@ -8,7 +8,7 @@ import logging
 from dmoj.cptbox.handlers import ALLOW, STDOUTERR, ACCESS_DENIED
 from dmoj.cptbox._cptbox import bsd_get_proc_cwd, bsd_get_proc_fdno, AT_FDCWD
 from dmoj.cptbox.syscalls import *
-
+from dmoj.utils.unicode import utf8text
 
 log = logging.getLogger('dmoj.security')
 
@@ -21,8 +21,8 @@ class CHROOTSecurity(dict):
         self._io_redirects = io_redirects
 
         if sys.platform.startswith('freebsd'):
-            self._getcwd_pid = bsd_get_proc_cwd
-            self._getfd_pid = bsd_get_proc_fdno
+            self._getcwd_pid = lambda pid: utf8text(bsd_get_proc_cwd(pid))
+            self._getfd_pid = lambda pid, fd: utf8text(bsd_get_proc_fdno(pid, fd))
         else:
             self._getcwd_pid = lambda pid: os.readlink('/proc/%d/cwd' % pid)
             self._getfd_pid = lambda pid, fd: os.readlink('/proc/%d/fd/%d' % (pid, fd))
@@ -223,7 +223,11 @@ class CHROOTSecurity(dict):
                 return True
 
     def _file_access_check(self, rel_file, debugger, file_ptr=None, dirfd=AT_FDCWD):
-        file = self.get_full_path(debugger, rel_file, dirfd)
+        try:
+            file = self.get_full_path(debugger, rel_file, dirfd)
+        except UnicodeDecodeError:
+            log.exception('Unicode decoding error while opening relative to %d: %r', dirfd, rel_file)
+            return False
         if file_ptr and self._io_redirects:
             for path in (rel_file, os.path.basename(file), file):
                 if self._handle_io_redirects(path, debugger, file_ptr):

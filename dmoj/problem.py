@@ -86,13 +86,14 @@ class ProblemDataManager(dict):
         self.archive = None
 
     def __missing__(self, key):
+        base = get_problem_root(self.problem_id)
         try:
-            return open(os.path.join(get_problem_root(self.problem_id), key), 'rb').read()
+            return open(os.path.join(base, key), 'rb').read()
         except IOError:
             if self.archive:
                 zipinfo = self.archive.getinfo(key)
                 return self.archive.open(zipinfo).read()
-            raise KeyError('file "%s" could not be found' % key)
+            raise KeyError('file "%s" could not be found in "%s"' % (key, base))
 
     def __del__(self):
         if self.archive:

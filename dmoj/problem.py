@@ -203,7 +203,10 @@ class TestCase(object):
         # e.g., an untrusted generator may be one generated via site-managed data by an
         # arbitrary user, who shouldn't be allowed to do arbitrary things on the host machine
         if use_sandbox:
-            proc = executor.launch(time=time_limit, memory=memory_limit, pipe_stderr=True)
+            # setting large buffers is really important, because otherwise stderr is unbuffered
+            # and the generator begins calling into cptbox Python code really frequently
+            proc = executor.launch(time=time_limit, memory=memory_limit, pipe_stderr=True,
+                                   stderr_buffer_size=65536, stdout_buffer_size=65536)
         else:
             proc = executor.launch_unsafe(*args, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                           stderr=subprocess.PIPE)

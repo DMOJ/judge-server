@@ -1,5 +1,3 @@
-from __future__ import print_function
-from __future__ import print_function
 import os
 import subprocess
 import zipfile
@@ -161,6 +159,8 @@ class TestCase(object):
         return filtered_data
 
     def _normalize(self, data):
+        # Perhaps the correct answer may be "no output", in which case it'll be None here if
+        # sourced from a generator
         data = data or ''
         # Normalize all newline formats (\r\n, \r, \n) to \n, otherwise we have problems with people creating
         # data on Macs (\r newline) when judged programs assume \n

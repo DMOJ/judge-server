@@ -10,6 +10,7 @@ from yaml.scanner import ScannerError
 
 from dmoj import checkers
 from dmoj.config import InvalidInitException, ConfigNode
+from dmoj.error import InternalError
 from dmoj.generator import GeneratorManager
 from dmoj.judgeenv import get_problem_root
 from dmoj.utils.module import load_module_from_file
@@ -186,6 +187,9 @@ class TestCase(object):
         except KeyError:
             input = None
         self._generated = list(map(self._normalize, proc.communicate(input)))
+
+        if proc.returncode:
+            raise InternalError('generator exited with nonzero code: %s' % proc.returncode)
 
     def input_data(self):
         gen = self.config.generator

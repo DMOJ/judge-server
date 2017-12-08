@@ -5,7 +5,7 @@ import sys
 from shutil import copyfile
 
 from dmoj.judgeenv import env
-from dmoj.utils import nobuf_path
+from dmoj.utils import setbufsize_path
 from dmoj.utils.unicode import utf8bytes
 
 try:
@@ -99,7 +99,7 @@ try:
                 name = self.get_executor_name()
                 fs = BASE_FILESYSTEM + self.fs + env.get('extra_fs', {}).get(name, [])
                 if self.unbuffered:
-                    fs += [re.escape(self._file('unbuf.so')) + '$']
+                    fs += [re.escape(self._file('setbufsize.so')) + '$']
                 return fs
 
             def get_allowed_syscalls(self):
@@ -111,9 +111,11 @@ try:
             def get_env(self):
                 env = {'LANG': 'C'}
                 if self.unbuffered:
-                    unbuf = self._file('unbuf.so')
-                    shutil.copyfile(nobuf_path, unbuf)
+                    unbuf = self._file('setbufsize.so')
+                    shutil.copyfile(setbufsize_path, unbuf)
                     env['LD_PRELOAD'] = unbuf
+                    env['CPTBOX_STDOUT_BUFFER_SIZE'] = 0
+                    print(env)
                 return env
 
             def launch(self, *args, **kwargs):

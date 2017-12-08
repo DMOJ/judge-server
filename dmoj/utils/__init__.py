@@ -1,4 +1,4 @@
 import os
 
-nobuf_path = os.path.join(os.path.dirname(__file__), 'nobuf.so')
+setbufsize_path = os.path.join(os.path.dirname(__file__), 'setbufsize.so')
 del os

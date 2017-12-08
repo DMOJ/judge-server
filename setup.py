@@ -115,7 +115,7 @@ if os.name != 'nt' or 'sdist' in sys.argv:
                              language='c++', libraries=libs, define_macros=macros)]
 
 if os.name != 'nt':
-    extensions += [SimpleSharedObject('dmoj.utils.nobuf', sources=['dmoj/utils/nobuf.c'])]
+    extensions += [SimpleSharedObject('dmoj.utils.setbufsize', sources=['dmoj/utils/setbufsize.c'])]
 
 rst_path = os.path.join(os.path.dirname(__file__), 'README.rst')
 

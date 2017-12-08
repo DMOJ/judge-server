@@ -7,9 +7,16 @@ void _DMOJ_setbuffer(FILE *handle, char *env_str) {
     char *buf_env_str = getenv(env_str);
     if (buf_env_str != NULL) {
         char *end;
-        unsigned long buf_env = strtoul(buf_env_str, &end, 10);
-        if (*end == '\0')
-            setvbuf(handle, NULL, _IOFBF, buf_env);
+        unsigned long buf_size = strtoul(buf_env_str, &end, 10);
+        if (*end == '\0') {
+            // Need this branch since IOFBF when buf_size=0 actually
+            // sets the buffer size to an OS-preferred, nonzero buffer
+            if (buf_size) {
+                setvbuf(handle, NULL, _IOFBF, buf_size);
+            } else {
+                setvbuf(stdout, NULL, _IONBF, 0);
+            }
+        }
     }
 }
 

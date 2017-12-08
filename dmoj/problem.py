@@ -220,7 +220,7 @@ class TestCase(object):
         if hasattr(proc, 'tle') and proc.tle:
             raise InternalError('generator timed out (> %s seconds)' % time_limit)
         if hasattr(proc, 'mle') and proc.mle:
-            raise InternalError('generator ran out of memory (> %s Kb)' % (memory_limit / 1024))
+            raise InternalError('generator ran out of memory (> %s Kb)' % memory_limit)
         if hasattr(proc, 'protection_fault') and proc.protection_fault:
             syscall, callname, args = proc.protection_fault
             raise InternalError('generator invoked disallowed syscall %s (%s)' % (syscall, callname))

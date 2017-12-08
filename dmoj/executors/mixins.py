@@ -115,7 +115,6 @@ try:
                     shutil.copyfile(setbufsize_path, unbuf)
                     env['LD_PRELOAD'] = unbuf
                     env['CPTBOX_STDOUT_BUFFER_SIZE'] = 0
-                    print(env)
                 return env
 
             def launch(self, *args, **kwargs):

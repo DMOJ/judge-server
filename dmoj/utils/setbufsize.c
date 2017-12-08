@@ -8,7 +8,7 @@ void _DMOJ_setbuffer(FILE *handle, char *env_str) {
     if (buf_env_str != NULL) {
         char *end;
         unsigned long buf_size = strtoul(buf_env_str, &end, 10);
-        if (*end == '\0') {
+        if (*end == NULL) {
             // Need this branch since IOFBF when buf_size=0 actually
             // sets the buffer size to an OS-preferred, nonzero buffer
             if (buf_size) {

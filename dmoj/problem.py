@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import print_function
 import os
 import subprocess
 import zipfile
@@ -159,6 +161,7 @@ class TestCase(object):
         return filtered_data
 
     def _normalize(self, data):
+        data = data or ''
         # Normalize all newline formats (\r\n, \r, \n) to \n, otherwise we have problems with people creating
         # data on Macs (\r newline) when judged programs assume \n
         if self.config.binary_data:
@@ -168,19 +171,42 @@ class TestCase(object):
     def _run_generator(self, gen, args=None):
         flags = []
         args = args or []
+
+        # resource limits on how to run the generator
+        time_limit = 20  # 20 seconds
+        memory_limit = 524288  # and 512mb of memory
+        use_sandbox = True
+
+        base = get_problem_root(self.problem.id)
         if isinstance(gen, six.string_types):
-            filename = os.path.join(get_problem_root(self.problem.id), gen)
+            filename = os.path.join(base, gen)
         else:
-            filename = gen.source
+            filename = os.path.join(base, gen.source)
             if gen.flags:
                 flags += gen.flags
             if not args and gen.args:
                 args += gen.args
 
+            time_limit = gen.time_limit or time_limit
+            memory_limit = gen.memory_limit or memory_limit
+
+            # Optionally allow disabling the sandbox
+            if gen.use_sandbox is not None:
+                use_sandbox = gen.use_sandbox
+
         executor = self.problem.generator_manager.get_generator(filename, flags)
+
         # convert all args to str before launching; allows for smoother int passing
-        proc = executor.launch_unsafe(*map(str, args), stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                                      stderr=subprocess.PIPE)
+        args = map(str, args)
+
+        # we allow both "trusted" and "untrusted" generators, for different scenarios:
+        # e.g., an untrusted generator may be one generated via site-managed data by an
+        # arbitrary user, who shouldn't be allowed to do arbitrary things on the host machine
+        if use_sandbox:
+            proc = executor.launch(time=time_limit, memory=memory_limit, pipe_stderr=True)
+        else:
+            proc = executor.launch_unsafe(*args, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                          stderr=subprocess.PIPE)
 
         try:
             input = self.problem.problem_data[self.config['in']] if self.config['in'] else None
@@ -188,6 +214,13 @@ class TestCase(object):
             input = None
         self._generated = list(map(self._normalize, proc.communicate(input)))
 
+        if hasattr(proc, 'tle') and proc.tle:
+            raise InternalError('generator timed out (> %s seconds)' % time_limit)
+        if hasattr(proc, 'mle') and proc.mle:
+            raise InternalError('generator ran out of memory (> %s Kb)' % (memory_limit / 1024))
+        if hasattr(proc, 'protection_fault') and proc.protection_fault:
+            syscall, callname, args = proc.protection_fault
+            raise InternalError('generator invoked disallowed syscall %s (%s)' % (syscall, callname))
         if proc.returncode:
             raise InternalError('generator exited with nonzero code: %s' % proc.returncode)
 

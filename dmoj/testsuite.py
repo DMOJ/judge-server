@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+import logging
 import os
 import sys
 import traceback
@@ -257,6 +258,9 @@ def main():
             init()
         except ImportError:
             pass
+
+    logging.basicConfig(filename=judgeenv.log_file, level=logging.INFO,
+                        format='%(levelname)s %(asctime)s %(module)s %(message)s')
 
     executors.load_executors()
 

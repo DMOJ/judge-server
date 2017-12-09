@@ -17,8 +17,9 @@ from dmoj.utils.ansi import ansi_style
 
 def main():
     parser = argparse.ArgumentParser(description='Automatically configures runtimes')
-    parser.add_argument('-s', '--silent', action='store_true', help='silent mode')
-    parser.add_argument('-V', '--verbose', action='store_true', help='verbose mode')
+    output_conf = parser.add_mutually_exclusive_group()
+    output_conf.add_argument('-s', '--silent', action='store_true', help='silent mode')
+    output_conf.add_argument('-V', '--verbose', action='store_true', help='verbose mode')
     args = parser.parse_args()
 
     if not args.silent:
@@ -47,7 +48,7 @@ def main():
             continue
 
         Executor = executor.Executor
-        if args.silent or not args.verbose and not issubclass(Executor, NullStdoutMixin):
+        if not args.verbose and not issubclass(Executor, NullStdoutMixin):
             # if you are printing errors into stdout, you may do so in your own blood
             # *cough* Racket *cough*
             Executor = type('Executor', (NullStdoutMixin, Executor), {})
@@ -73,16 +74,15 @@ def main():
                     print(ansi_style(['#ansi[%s](red|bold)', '#ansi[%s](green|bold)'][success] %
                                      (feedback or ['Failed', 'Success'][success])), file=sys.stderr)
 
-                if not success:
-                    if not args.silent and args.verbose:
-                        if config:
-                            print('  Attempted:', file=sys.stderr)
-                            print('   ', yaml.safe_dump(config, default_flow_style=False).rstrip()
-                                  .replace('\n', '\n' + ' ' * 4), file=sys.stderr)
+                if not success and args.verbose:
+                    if config:
+                        print('  Attempted:', file=sys.stderr)
+                        print('   ', yaml.safe_dump(config, default_flow_style=False).rstrip()
+                              .replace('\n', '\n' + ' ' * 4), file=sys.stderr)
 
-                        if errors:
-                            print('  Errors:', file=sys.stderr)
-                            print('   ', errors.replace('\n', '\n' + ' ' * 4), file=sys.stderr)
+                    if errors:
+                        print('  Errors:', file=sys.stderr)
+                        print('   ', errors.replace('\n', '\n' + ' ' * 4), file=sys.stderr)
 
                 if success:
                     result.update(config)

@@ -107,7 +107,7 @@ This is the version of the codebase we run live on [dmoj.ca](https://dmoj.ca).
 $ git clone https://github.com/DMOJ/judge.git
 $ cd judge
 $ git submodule update --init --recursive
-$ python setup.py develop
+$ pip install -e .
 ```
 
 ## Usage

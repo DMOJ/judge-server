@@ -175,7 +175,7 @@ class CHROOTSecurity(dict):
             file = debugger.readstr(file_ptr)
             if self._file_access_check(file, debugger, file_ptr):
                 return True
-            log.warning('Denied access via syscall %s: %s', syscall, file)
+            log.info('Denied access via syscall %s: %s', syscall, file)
             return ACCESS_ENOENT(debugger)
 
         return check

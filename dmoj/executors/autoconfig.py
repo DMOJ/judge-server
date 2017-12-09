@@ -21,7 +21,7 @@ def main():
     silent = parser.parse_args().silent
 
     if not silent:
-        logging.basicConfig(level=logging.INFO, format='%(message)s')
+        logging.basicConfig(level=logging.WARNING, format='%(message)s')
 
     result = {}
 

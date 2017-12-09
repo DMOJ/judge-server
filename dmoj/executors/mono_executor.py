@@ -58,7 +58,7 @@ class MonoExecutor(CompiledExecutor):
         def handle_open(debugger):
             file = debugger.readstr(debugger.uarg0)
             if fs.match(file) is None:
-                log.warning('Denied file open: %s', file)
+                log.info('Denied file open: %s', file)
                 return ACCESS_ENOENT(debugger)
             can = write_fs.match(file) is not None
 
@@ -93,7 +93,7 @@ class MonoExecutor(CompiledExecutor):
         def unlink(debugger):
             path = debugger.readstr(debugger.uarg0)
             if UNLINK_FS.match(path) is None:
-                log.warning('Denied file unlink: %s', path)
+                log.info('Denied file unlink: %s', path)
                 return ACCESS_ENOENT(debugger)
             return True
 

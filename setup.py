@@ -133,7 +133,7 @@ else:
 
 setup(
     name='dmoj',
-    version='1.0.5',
+    version='1.1.0',
     packages=find_packages(),
     package_data={
         'dmoj.cptbox': ['syscalls/aliases.list', 'syscalls/*.tbl'],

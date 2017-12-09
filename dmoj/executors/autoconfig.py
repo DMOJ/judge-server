@@ -17,11 +17,13 @@ from dmoj.utils.ansi import ansi_style
 
 def main():
     parser = argparse.ArgumentParser(description='Automatically configures runtimes')
-    parser.add_argument('-s', '--silent', action='store_true', help='silent mode')
-    silent = parser.parse_args().silent
+    output_conf = parser.add_mutually_exclusive_group()
+    output_conf.add_argument('-s', '--silent', action='store_true', help='silent mode')
+    output_conf.add_argument('-V', '--verbose', action='store_true', help='verbose mode')
+    args = parser.parse_args()
 
-    if not silent:
-        logging.basicConfig(level=logging.INFO, format='%(message)s')
+    if not args.silent:
+        logging.basicConfig(level=logging.DEBUG if args.verbose else logging.WARNING, format='%(message)s')
 
     result = {}
 
@@ -36,7 +38,7 @@ def main():
 
     judgeenv.env['runtime'] = {}
 
-    if silent:
+    if args.silent:
         sys.stderr = open(os.devnull, 'w')
 
     for name in get_available():
@@ -46,13 +48,13 @@ def main():
             continue
 
         Executor = executor.Executor
-        if silent and not issubclass(Executor, NullStdoutMixin):
+        if not args.verbose and not issubclass(Executor, NullStdoutMixin):
             # if you are printing errors into stdout, you may do so in your own blood
             # *cough* Racket *cough*
             Executor = type('Executor', (NullStdoutMixin, Executor), {})
 
         if hasattr(Executor, 'autoconfig'):
-            if not silent:
+            if not args.silent:
                 print(ansi_style('%-43s%s' % ('Auto-configuring #ansi[%s](|underline):' % name, '')),
                       end=' ', file=sys.stderr)
                 sys.stdout.flush()
@@ -64,29 +66,28 @@ def main():
                 feedback = data[2]
                 errors = '' if len(data) < 4 else data[3]
             except Exception:
-                if not silent:
+                if not args.silent:
                     print(ansi_style('#ansi[Not supported](red|bold)'), file=sys.stderr)
                     traceback.print_exc()
             else:
-                if not silent:
+                if not args.silent:
                     print(ansi_style(['#ansi[%s](red|bold)', '#ansi[%s](green|bold)'][success] %
                                      (feedback or ['Failed', 'Success'][success])), file=sys.stderr)
 
-                if not success:
-                    if not silent:
-                        if config:
-                            print('  Attempted:', file=sys.stderr)
-                            print('   ', yaml.safe_dump(config, default_flow_style=False).rstrip()
-                                  .replace('\n', '\n' + ' ' * 4), file=sys.stderr)
+                if not success and args.verbose:
+                    if config:
+                        print('  Attempted:', file=sys.stderr)
+                        print('   ', yaml.safe_dump(config, default_flow_style=False).rstrip()
+                              .replace('\n', '\n' + ' ' * 4), file=sys.stderr)
 
-                        if errors:
-                            print('  Errors:', file=sys.stderr)
-                            print('   ', errors.replace('\n', '\n' + ' ' * 4), file=sys.stderr)
+                    if errors:
+                        print('  Errors:', file=sys.stderr)
+                        print('   ', errors.replace('\n', '\n' + ' ' * 4), file=sys.stderr)
 
                 if success:
                     result.update(config)
 
-    if not silent and sys.stdout.isatty():
+    if not args.silent and sys.stdout.isatty():
         print(file=sys.stderr)
         print(ansi_style('#ansi[Configuration result](green|bold|underline):'), file=sys.stderr)
     print(yaml.safe_dump({'runtime': result}, default_flow_style=False).rstrip())

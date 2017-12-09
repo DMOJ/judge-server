@@ -229,7 +229,10 @@ class TestCase(object):
 
     def input_data(self):
         gen = self.config.generator
-        if gen:
+
+        # don't try running the generator if we specify an output file explicitly,
+        # otherwise generator may segfault and we end up returning the output file anyway
+        if gen and not self.config['out']:
             if self._generated is None:
                 self._run_generator(gen, args=self.config.generator_args)
             if self._generated[0]:

@@ -8,7 +8,7 @@ import sys
 from collections import defaultdict
 
 from dmoj.cptbox import CHROOTSecurity, SecurePopen
-from dmoj.cptbox.handlers import ALLOW, ACCESS_DENIED
+from dmoj.cptbox.handlers import ALLOW, ACCESS_DENIED, ACCESS_ENOENT
 from dmoj.cptbox.syscalls import *
 from .base_executor import CompiledExecutor
 
@@ -58,9 +58,8 @@ class MonoExecutor(CompiledExecutor):
         def handle_open(debugger):
             file = debugger.readstr(debugger.uarg0)
             if fs.match(file) is None:
-                print('Not allowed to access:', file, file=sys.stderr)
                 log.warning('Denied file open: %s', file)
-                return False
+                return ACCESS_ENOENT(debugger)
             can = write_fs.match(file) is not None
 
             def update():

@@ -74,7 +74,7 @@ def main():
                                      (feedback or ['Failed', 'Success'][success])), file=sys.stderr)
 
                 if not success:
-                    if not args.silent:
+                    if not args.silent and args.verbose:
                         if config:
                             print('  Attempted:', file=sys.stderr)
                             print('   ', yaml.safe_dump(config, default_flow_style=False).rstrip()

@@ -56,6 +56,9 @@ class LocalPacketManager(object):
     def run(self):
         pass
 
+    def close(self):
+        pass
+
 
 class LocalJudge(Judge):
     def __init__(self):

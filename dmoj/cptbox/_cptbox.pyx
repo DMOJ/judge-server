@@ -428,7 +428,9 @@ cdef class Process:
             if ret:
                 with gil:
                     if ret == 3307:
-                        raise RuntimeError('failed to ptrace child')
+                        raise RuntimeError('failed to ptrace child, check Yama config '
+                                           '(https://www.kernel.org/doc/Documentation/security/Yama.txt, should be '
+                                           'at most 1); if running in Docker, must run container with `--privileged`')
                     raise RuntimeError('failed to spawn child')
         free(config.argv)
         free(config.envp)

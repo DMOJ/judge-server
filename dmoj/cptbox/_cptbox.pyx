@@ -424,9 +424,14 @@ cdef class Process:
             for i in xrange(len(fds)):
                 config.fds[i] = fds[i]
         with nogil:
-            if self.process.spawn(pt_child, &config):
+            ret = self.process.spawn(pt_child, &config)
+            if ret:
                 with gil:
-                    raise RuntimeError('Failed to spawn child')
+                    if ret == 3307:
+                        raise RuntimeError('failed to ptrace child, check Yama config '
+                                           '(https://www.kernel.org/doc/Documentation/security/Yama.txt, should be '
+                                           'at most 1); if running in Docker, must run container with `--privileged`')
+                    raise RuntimeError('failed to spawn child')
         free(config.argv)
         free(config.envp)
 

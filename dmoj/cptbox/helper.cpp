@@ -71,7 +71,8 @@ int cptbox_child_run(const struct child_config *config) {
 
     cptbox_closefrom(config->max_fd + 1);
 
-    ptrace_traceme();
+    if (ptrace_traceme())
+        return 3307;
     kill(getpid(), SIGSTOP);
     execve(config->file, config->argv, config->envp);
     return 3306;

@@ -93,12 +93,13 @@ def main():
     if result:
         if not args.silent and sys.stdout.isatty():
             print(ansi_style('#ansi[Configuration result](green|bold|underline):'), file=sys.stderr)
-        print(yaml.safe_dump({'runtime': result}, default_flow_style=False).rstrip())
     else:
         print(ansi_style('#ansi[No runtimes configured.](red|bold)'), file=sys.__stderr__)
         if not args.verbose:
             print(ansi_style('Run #ansi[%s -V](|underline) to see why this is the case.') % (parser.prog,),
                   file=sys.__stderr__)
+
+    print(yaml.safe_dump({'runtime': result}, default_flow_style=False).rstrip())
 
 
 if __name__ == '__main__':

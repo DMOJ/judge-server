@@ -72,10 +72,10 @@ int cptbox_child_run(const struct child_config *config) {
     cptbox_closefrom(config->max_fd + 1);
 
     if (ptrace_traceme())
-        return 3307;
+        return 204;
     kill(getpid(), SIGSTOP);
     execve(config->file, config->argv, config->envp);
-    return 3306;
+    return 205;
 }
 
 // From python's _posixsubprocess

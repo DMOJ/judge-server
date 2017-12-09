@@ -427,7 +427,7 @@ cdef class Process:
             ret = self.process.spawn(pt_child, &config)
             if ret:
                 with gil:
-                    if ret == 3307:
+                    if ret == 204:
                         raise RuntimeError('failed to ptrace child, check Yama config '
                                            '(https://www.kernel.org/doc/Documentation/security/Yama.txt, should be '
                                            'at most 1); if running in Docker, must run container with `--privileged`')

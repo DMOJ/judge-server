@@ -129,7 +129,7 @@ else:
         with open(rst_path) as f:
             readme = f.read()
     except IOError:
-        readme = None
+        readme = ''
 
 setup(
     name='dmoj',

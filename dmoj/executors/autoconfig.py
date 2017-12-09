@@ -47,7 +47,7 @@ def main():
             continue
 
         Executor = executor.Executor
-        if args.silent and not issubclass(Executor, NullStdoutMixin):
+        if args.silent or not args.verbose and not issubclass(Executor, NullStdoutMixin):
             # if you are printing errors into stdout, you may do so in your own blood
             # *cough* Racket *cough*
             Executor = type('Executor', (NullStdoutMixin, Executor), {})

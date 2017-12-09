@@ -93,9 +93,8 @@ class MonoExecutor(CompiledExecutor):
         def unlink(debugger):
             path = debugger.readstr(debugger.uarg0)
             if UNLINK_FS.match(path) is None:
-                print('Not allowed to unlink:', path)
                 log.warning('Denied file unlink: %s', path)
-                return False
+                return ACCESS_ENOENT(debugger)
             return True
 
         sec[sys_open] = sec[sys_shm_open] = handle_open

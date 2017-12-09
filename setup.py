@@ -122,7 +122,7 @@ rst_path = os.path.join(os.path.dirname(__file__), 'README.rst')
 if 'sdist' in sys.argv:
     readme = subprocess.check_output("pandoc -f markdown_github README.md -t html | sed -e 's/❌/X/g' | "
                                      'pandoc -f html -t rst --columns=300', shell=True)
-    with open(rst_path, 'w') as f:
+    with open(rst_path, 'wb') as f:
         f.write(readme)
 else:
     try:
@@ -159,7 +159,7 @@ setup(
     author_email='admin@dmoj.ca',
     url='https://github.com/DMOJ/judge',
     description='The judge component of the DMOJ: Modern Online Judge platform',
-    long_description=readme,
+    long_description=readme.decode('utf-8', 'replace'),
     keywords='online-judge',
     classifiers=[
         'Development Status :: 5 - Production/Stable',

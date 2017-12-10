@@ -129,7 +129,7 @@ else:
         with open(rst_path) as f:
             readme = f.read()
     except IOError:
-        readme = ''
+        readme = None
 
 setup(
     name='dmoj',
@@ -159,7 +159,7 @@ setup(
     author_email='admin@dmoj.ca',
     url='https://github.com/DMOJ/judge',
     description='The judge component of the DMOJ: Modern Online Judge platform',
-    long_description=readme.decode('utf-8', 'replace'),
+    long_description=readme and readme.decode('utf-8', 'replace'),
     keywords='online-judge',
     classifiers=[
         'Development Status :: 5 - Production/Stable',

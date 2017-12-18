@@ -138,7 +138,7 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
                             try:
                                 problem_dirs += find_directories_by_depth(get_path(_root, recursive_root), int(depth))
                             except ValueError:
-                                startup_warnings.append('illegal depth arguement %s' % depth)
+                                startup_warnings.append('illegal depth argument %s' % depth)
                     else:
                         problem_dirs.append(get_path(_root, dir))
                 problem_dirs = tuple(problem_dirs)

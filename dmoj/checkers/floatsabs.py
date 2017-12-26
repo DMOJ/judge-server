@@ -26,7 +26,8 @@ def check(process_output, judge_output, precision, **kwargs):
                         return False
                 else:
                     process_float = float(process_token)
-                    if abs(process_float - judge_float) > epsilon:
+                    # since process_float can be nan, this is NOT equivalent to (process_float - judge_float) > epsilon
+                    if not abs(process_float - judge_float) <= epsilon:
                         return False
     except:
         return False

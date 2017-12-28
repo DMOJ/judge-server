@@ -374,3 +374,8 @@
 377	copy_file_range
 378	preadv2
 379	pwritev2
+380	pkey_mprotect
+381	pkey_alloc
+382	pkey_free
+383	statx
+384	arch_prctl

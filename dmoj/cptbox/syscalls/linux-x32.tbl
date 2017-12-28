@@ -280,6 +280,10 @@
 324	membarrier
 325	mlock2
 326	copy_file_range
+329	pkey_mprotect
+330	pkey_alloc
+331	pkey_free
+332	statx
 512	rt_sigaction
 513	rt_sigreturn
 514	ioctl
@@ -314,5 +318,5 @@
 543	io_setup
 544	io_submit
 545	execveat
-534	preadv2
-535	pwritev2
+546	preadv2
+547	pwritev2

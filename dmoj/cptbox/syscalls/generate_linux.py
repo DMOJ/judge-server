@@ -32,20 +32,21 @@ with open('linux-x64.tbl', 'w') as x64, open('linux-x32.tbl', 'w') as x32, closi
         if arch in ('common', 'x32'):
             print('%d\t%s' % (id, name), file=x32)
 
-rewas = re.compile(r'/\* was (sys_[a-z0-9_]+) \*/')
+rewas = re.compile(r'# (\d+) was (sys_[a-z0-9_]+)')
 with open('linux-arm.tbl', 'w') as arm, closing(urlopen(LINUX_SYSCALLS_ARM)) as data:
     id = 0
     for line in data:
-        if 'CALL' in line:
-            match = rewas.search(line)
-            if match is None:
-                func = line[line.rfind('(')+1:line.find(',') if ',' in line else line.find(')')]
-            else:
-                func = match.group(1)
+        match = rewas.search(line)
+        if match is None:
+            if not line or line.startswith('#'):
+                continue
+            syscall = line.split()
+            id = syscall[0]
+            name = syscall[2].strip('_')
+        else:
+            id, func = match.groups()
             if func in func_to_name:
                 name = func_to_name[func]
             else:
                 name = func.replace('sys_', '').replace('_wrapper', '')
-            if name != 'ni_syscall':
-                print('%d\t%s' % (id, name), file=arm)
-            id += 1
+        print('%d\t%s' % (int(id), name), file=arm)

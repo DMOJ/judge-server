@@ -6,3 +6,4 @@ colorama
 cython
 pygments
 six
+setproctitle

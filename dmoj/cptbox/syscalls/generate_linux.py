@@ -50,3 +50,15 @@ with open('linux-arm.tbl', 'w') as arm, closing(urlopen(LINUX_SYSCALLS_ARM)) as 
             else:
                 name = func.replace('sys_', '').replace('_wrapper', '')
         print('%d\t%s' % (int(id), name), file=arm)
+
+renr = re.compile('#define\s+__NR_([a-z0-9_]+)\s+(\d+)')
+with open('linux-generic.tbl', 'w') as generic, closing(urlopen(LINUX_SYSCALLS_GENERIC)) as data:
+    for line in data:
+        if '#undef __NR_syscalls' in line:
+            break
+        match = renr.search(line)
+        if match:
+            name, id = match.groups()
+            if name in ('arch_specific_syscall', 'sync_file_range2'):
+                continue
+            print('%d\t%s' % (int(id), name), file=generic)

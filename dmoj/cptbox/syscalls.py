@@ -1,6 +1,6 @@
 import os
 
-order = ['linux-x86.tbl', 'linux-x64.tbl', 'linux-x32.tbl', 'linux-arm.tbl', 'freebsd.tbl']
+order = ['linux-x86.tbl', 'linux-x64.tbl', 'linux-x32.tbl', 'linux-arm.tbl', 'freebsd.tbl', 'linux-generic.tbl']
 max_id = 0
 by_name = {}
 __all__ = by_id = []

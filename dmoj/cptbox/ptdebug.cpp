@@ -56,8 +56,8 @@ void pt_debugger::setpid(pid_t pid) {
 #else
 void pt_debugger::settid(pid_t tid) {
     this->tid = tid;
-    if (!syscall_.count(tid)) syscall_[tid] = -1;
-    syscall_[tid] = syscall_[tid] == -1 ? this->syscall() : -1;
+    if (!syscall_.count(tid)) syscall_[tid] = 0;
+    syscall_[tid] ^= 1;
 }
 #endif
 
@@ -122,9 +122,9 @@ char *pt_debugger::readstr(unsigned long addr, size_t max_size) {
     buf = (char *) malloc(max_size + 1);
 
     while (read < max_size) {
-        local.iov_base = (void *) buf + read;
+        local.iov_base = (void *) (buf + read);
         local.iov_len = remain;
-        remote.iov_base = (void *) addr + read;
+        remote.iov_base = (void *) (addr + read);
         remote.iov_len = remain;
 
         if (process_vm_readv(tid, &local, 1, &remote, 1, 0) > 0) {

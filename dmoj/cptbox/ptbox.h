@@ -151,7 +151,7 @@ public:
     void setpid(pid_t pid);
 #else
     void settid(pid_t tid);
-    bool is_enter() { return syscall_[tid] != -1; }
+    bool is_enter() { return syscall_[tid] != 0; }
 #endif
 
 #ifdef PTBOX_NEED_PRE_POST_SYSCALL

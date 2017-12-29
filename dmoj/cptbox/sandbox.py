@@ -166,7 +166,7 @@ class SecurePopen(six.with_metaclass(SecurePopenMeta, Process)):
         self.protection_fault = None
 
         self.debugger._syscall_index = index
-        self.debugger.address_bits = 64 if debugger == DEBUGGER_X64 else 32
+        self.debugger.address_bits = 64 if debugger in (DEBUGGER_X64, DEBUGGER_ARM64) else 32
 
         self._security = security
         self._callbacks = [None] * MAX_SYSCALL_NUMBER

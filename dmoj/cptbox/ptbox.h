@@ -309,7 +309,7 @@ public:
 #endif
 
 protected:
-    unsigned long arm64_reg[36];
+    unsigned long arm64_reg[34];
     bool arm64_reg_changed;
 };
 

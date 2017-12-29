@@ -12,10 +12,10 @@
 #define ARM_x6 6
 #define ARM_x7 7
 #define ARM_x8 8
-#define ARM_orig_x0 34
-#define ARM_syscallno 35
 
 #ifdef PTBOX_NEED_PRE_POST_SYSCALL
+#include <elf.h>
+
 void pt_debugger_arm64::pre_syscall() {
     struct iovec iovec;
     iovec.iov_base = arm64_reg;
@@ -72,7 +72,7 @@ void pt_debugger_arm64::result(long value) {
         poke_reg(reg, data); \
     }
 
-make_arg(0, ARM_orig_x0);
+make_arg(0, ARM_x0);
 make_arg(1, ARM_x1);
 make_arg(2, ARM_x2);
 make_arg(3, ARM_x3);
@@ -90,5 +90,9 @@ int pt_debugger_arm64::getpid_syscall() {
 }
 
 pt_debugger_arm64::pt_debugger_arm64() {
-    execve_id = 221;
+    // execve is actually 221, but...
+    // There is no orig_x8 on ARM, and execve clears all registers.
+    // Therefore, 0 is the register value when coming out of a system call.
+    // We will pretend 0 is execve.
+    execve_id = 0;
 }

@@ -319,7 +319,7 @@
 324	mknodat
 325	fchownat
 326	futimesat
-327	fstatat64
+327	fstatat
 328	unlinkat
 329	renameat
 330	linkat

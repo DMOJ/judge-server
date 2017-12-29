@@ -17,6 +17,8 @@ with open('linux-x86.tbl', 'w') as x86, closing(urlopen(LINUX_SYSCALLS_32)) as d
         if len(syscall) > 3:
             func = syscall[3]
             func_to_name[func] = name
+        if name == 'fstatat64':
+            name = 'fstatat'
         print('%d\t%s' % (int(syscall[0]), name), file=x86)
 
 with open('linux-x64.tbl', 'w') as x64, open('linux-x32.tbl', 'w') as x32, closing(urlopen(LINUX_SYSCALLS_64)) as data:
@@ -27,6 +29,8 @@ with open('linux-x64.tbl', 'w') as x64, open('linux-x32.tbl', 'w') as x32, closi
         id = int(syscall[0])
         arch = syscall[1]
         name = syscall[2].strip('_')
+        if name == 'newfstatat':
+            name = 'fstatat'
         if arch in ('common', '64'):
             print('%d\t%s' % (id, name), file=x64)
         if arch in ('common', 'x32'):
@@ -49,9 +53,11 @@ with open('linux-arm.tbl', 'w') as arm, closing(urlopen(LINUX_SYSCALLS_ARM)) as 
                 name = func_to_name[func]
             else:
                 name = func.replace('sys_', '').replace('_wrapper', '')
+        if name == 'fstatat64':
+            name = 'fstatat'
         print('%d\t%s' % (int(id), name), file=arm)
 
-renr = re.compile('#define\s+__NR_([a-z0-9_]+)\s+(\d+)')
+renr = re.compile('#define\s+__NR(?:3264)?_([a-z0-9_]+)\s+(\d+)')
 with open('linux-generic.tbl', 'w') as generic, closing(urlopen(LINUX_SYSCALLS_GENERIC)) as data:
     for line in data:
         if '#undef __NR_syscalls' in line:

@@ -294,7 +294,7 @@
 297	mknodat
 298	fchownat
 299	futimesat
-300	fstatat64
+300	fstatat
 301	unlinkat
 302	renameat
 303	linkat

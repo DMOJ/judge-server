@@ -23,6 +23,7 @@
 22	epoll_pwait
 23	dup
 24	dup3
+25	fcntl
 26	inotify_init1
 27	inotify_add_watch
 28	inotify_rm_watch
@@ -40,6 +41,10 @@
 40	mount
 41	pivot_root
 42	nfsservctl
+43	statfs
+44	fstatfs
+45	truncate
+46	ftruncate
 47	fallocate
 48	faccessat
 49	chdir
@@ -55,6 +60,7 @@
 59	pipe2
 60	quotactl
 61	getdents64
+62	lseek
 63	read
 64	write
 65	readv
@@ -63,6 +69,7 @@
 68	pwrite64
 69	preadv
 70	pwritev
+71	sendfile
 72	pselect6
 73	ppoll
 74	signalfd4
@@ -70,6 +77,8 @@
 76	splice
 77	tee
 78	readlinkat
+79	fstatat
+80	fstat
 81	sync
 82	fsync
 83	fdatasync
@@ -211,6 +220,8 @@
 219	keyctl
 220	clone
 221	execve
+222	mmap
+223	fadvise64
 224	swapon
 225	swapoff
 226	mprotect

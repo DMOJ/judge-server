@@ -26,7 +26,11 @@ int pt_debugger_arm::syscall() {
 }
 
 void pt_debugger_arm::syscall(int id) {
+#ifdef PTRACE_SET_SYSCALL
+    ptrace(PTRACE_SET_SYSCALL, tid, 0, id);
+#else
     poke_reg(ARM_r7, id);
+#endif
 }
 
 long pt_debugger_arm::result() {

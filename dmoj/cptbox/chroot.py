@@ -1,12 +1,13 @@
 from __future__ import print_function
 
+import logging
+import os
 import re
 import sys
-import os
-import logging
 
-from dmoj.cptbox.handlers import ALLOW, STDOUTERR, ACCESS_DENIED, ACCESS_ENOENT
 from dmoj.cptbox._cptbox import bsd_get_proc_cwd, bsd_get_proc_fdno, AT_FDCWD
+from dmoj.cptbox.handlers import ALLOW, ACCESS_DENIED, ACCESS_ENOENT
+# noinspection PyUnresolvedReferences
 from dmoj.cptbox.syscalls import *
 from dmoj.utils.unicode import utf8text
 
@@ -31,10 +32,10 @@ class CHROOTSecurity(dict):
             sys_read: ALLOW,
             sys_write: ALLOW,
             sys_writev: ALLOW,
-            sys_openat: self.do_openat,
-            sys_faccessat: self.do_faccessat,
+            sys_openat: self.check_file_access_at('openat', is_open=True),
+            sys_faccessat: self.check_file_access_at('faccessat'),
             # Deny with report
-            sys_open: self.check_file_access('open', 0),
+            sys_open: self.check_file_access('open', 0, is_open=True),
             sys_access: self.check_file_access('access', 0),
             sys_mkdir: self.check_file_access('mkdir', 0),
             sys_unlink: self.check_file_access('unlink', 0),
@@ -169,18 +170,29 @@ class CHROOTSecurity(dict):
                 sys_ktimer_delete: ALLOW,
             })
 
-    def check_file_access(self, syscall, argument):
+    def check_file_access(self, syscall, argument, is_open=False):
         def check(debugger):
             file_ptr = getattr(debugger, 'uarg%d' % argument)
             file = debugger.readstr(file_ptr)
-            if self._file_access_check(file, debugger, file_ptr):
+            file, accessible = self._file_access_check(file, debugger, debugger.uarg0 if is_open else None)
+            if accessible:
                 return True
             log.info('Denied access via syscall %s: %s', syscall, file)
             return ACCESS_ENOENT(debugger)
-
         return check
 
-    def _handle_io_redirects(self, file, debugger, file_ptr):
+    def check_file_access_at(self, syscall, is_open=False):
+        def check(debugger):
+            file = debugger.readstr(debugger.uarg1)
+            file, accessible = self._file_access_check(file, debugger, debugger.uarg0 if is_open else None,
+                                                       dirfd=debugger.arg0)
+            if accessible:
+                return True
+            log.info('Denied access via syscall %s: %s', syscall, file)
+            return ACCESS_ENOENT(debugger)
+        return check
+
+    def _handle_io_redirects(self, file, debugger, orig_uarg0):
         data = self._io_redirects.get(file, None)
 
         if data:
@@ -209,25 +221,25 @@ class CHROOTSecurity(dict):
                     # file pointer in case some program requires it to remain in the register post-syscall.
                     # The final two args for sys_open (flags & mode) are untouched by sys_dup, so we can leave
                     # them as-is.
-                    debugger.uarg0 = file_ptr
+                    debugger.uarg0 = orig_uarg0
 
                 debugger.on_return(on_return)
 
                 return True
 
-    def _file_access_check(self, rel_file, debugger, file_ptr=None, dirfd=AT_FDCWD):
+    def _file_access_check(self, rel_file, debugger, orig_uarg0=None, dirfd=AT_FDCWD):
         try:
             file = self.get_full_path(debugger, rel_file, dirfd)
         except UnicodeDecodeError:
             log.exception('Unicode decoding error while opening relative to %d: %r', dirfd, rel_file)
-            return False
-        if file_ptr and self._io_redirects:
+            return '(undecodable)', False
+        if orig_uarg0 is not None and self._io_redirects:
             for path in (rel_file, os.path.basename(file), file):
-                if self._handle_io_redirects(path, debugger, file_ptr):
-                    return True
+                if self._handle_io_redirects(path, debugger, orig_uarg0):
+                    return file, True
         if self.fs_jail.match(file) is None:
-            return False
-        return True
+            return file, False
+        return file, True
 
     def get_full_path(self, debugger, file, dirfd=AT_FDCWD):
         dirfd = (dirfd & 0x7FFFFFFF) - (dirfd & 0x80000000)
@@ -237,15 +249,6 @@ class CHROOTSecurity(dict):
             file = os.path.join(dir, file)
         file = '/' + os.path.normpath(file).lstrip('/')
         return file
-
-    def do_openat(self, debugger):
-        file_ptr = debugger.uarg1
-        file = debugger.readstr(file_ptr)
-        return self._file_access_check(file, debugger, file_ptr, dirfd=debugger.arg0)
-
-    def do_faccessat(self, debugger):
-        file = debugger.readstr(debugger.uarg1)
-        return self._file_access_check(file, debugger, dirfd=debugger.arg0)
 
     def do_kill(self, debugger):
         return debugger.uarg0 == debugger.pid

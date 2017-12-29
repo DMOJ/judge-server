@@ -127,7 +127,10 @@ char *pt_debugger::readstr(unsigned long addr, size_t max_size) {
         // TODO: we could use PT_IO to speed up this entire function by reading chunks rather than byte
         data.val = ptrace(PT_READ_D, tid, (caddr_t) (addr + read), 0);
 #else
+        errno = 0;
         data.val = ptrace(PTRACE_PEEKDATA, tid, addr + read, NULL);
+        if (data.val == -1 && errno)
+            perror("ptrace(PTRACE_PEEKDATA)");
 #endif
         memcpy(buf + read, data.byte, sizeof(ptrace_read_t));
         if (has_null(data.byte, sizeof(ptrace_read_t)))

@@ -169,6 +169,8 @@ protected:
     void *on_return_context;
     int execve_id;
     std::map<pid_t, int> syscall_;
+    static bool use_peekdata;
+    virtual char *readstr_peekdata(unsigned long addr, size_t max_size);
 #if PTBOX_FREEBSD
     linux_pt_reg bsd_converted_regs;
 #endif

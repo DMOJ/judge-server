@@ -6,10 +6,17 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/ptrace.h>
+#include <sys/uio.h>
 #include <unistd.h>
 #include "ptbox.h"
 
 pt_debugger::pt_debugger() : on_return_callback(NULL) {}
+
+#if PTBOX_FREEBSD
+    bool pt_debugger::use_peekdata = true;
+#else
+    bool pt_debugger::use_peekdata = false;
+#endif
 
 bool has_null(char *buf, unsigned long size) {
     for (unsigned long i = 0; i < size; ++i) {
@@ -98,6 +105,48 @@ typedef long ptrace_read_t;
 #endif
 
 char *pt_debugger::readstr(unsigned long addr, size_t max_size) {
+    static unsigned long page_size = -sysconf(_SC_PAGESIZE);
+    static unsigned long page_mask = (unsigned long) page_size;
+
+    char *buf;
+    unsigned long remain, read = 0;
+    struct iovec local, remote;
+
+    if (use_peekdata)
+        return readstr_peekdata(addr, max_size);
+
+    remain = addr - (addr & page_mask);
+    buf = (char *) malloc(max_size + 1);
+
+    while (read < max_size) {
+        local.iov_base = (void *) buf + read;
+        local.iov_len = remain;
+        remote.iov_base = (void *) addr + read;
+        remote.iov_len = remain;
+
+        if (process_vm_readv(tid, &local, 1, &remote, 1, 0) > 0) {
+            if (memchr(buf + read, '\0', remain))
+                return buf;
+            read += remain;
+        } else if (errno == ENOSYS || errno == EPERM) {
+            perror("process_vm_readv");
+            use_peekdata = true;
+            free(buf);
+            return readstr_peekdata(addr, max_size);
+        } else {
+            if (errno != EFAULT && errno != EIO)
+                perror("process_vm_readv");
+            buf[read] = 0;
+            return buf;
+        }
+
+        remain = page_size < max_size - read ? page_size : max_size - read;
+    }
+    buf[max_size] = 0;
+    return buf;
+}
+
+char *pt_debugger::readstr_peekdata(unsigned long addr, size_t max_size) {
     size_t size = 4096, read = 0;
     char *buf = (char *) malloc(size);
     union {

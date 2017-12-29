@@ -57,7 +57,12 @@ long pt_debugger::peek_reg(int idx) {
 #if PTBOX_FREEBSD
     return ((reg_type*)&bsd_converted_regs)[idx];
 #else
-    return ptrace(PTRACE_PEEKUSER, tid, sizeof(long) * idx, 0);
+    long res;
+    errno = 0;
+    res = ptrace(PTRACE_PEEKUSER, tid, sizeof(long) * idx, 0);
+    if (res == -1 && errno)
+        perror("ptrace");
+    return res;
 #endif
 }
 

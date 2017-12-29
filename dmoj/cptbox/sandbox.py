@@ -68,7 +68,7 @@ def file_arch(path):
 PYTHON_ARCH = file_arch(sys.executable)
 
 _PIPE_BUF = getattr(select, 'PIPE_BUF', 512)
-_SYSCALL_INDICIES = [None] * 5
+_SYSCALL_INDICIES = [None] * 6
 
 if 'freebsd' in sys.platform:
     _SYSCALL_INDICIES[DEBUGGER_X64] = 4
@@ -227,7 +227,11 @@ class SecurePopen(six.with_metaclass(SecurePopenMeta, Process)):
             traceback.print_exc()
 
     def _callback(self, syscall):
-        callback = self._callbacks[syscall]
+        try:
+            callback = self._callbacks[syscall]
+        except IndexError:
+            return False
+
         if callback is not None:
             return callback(self.debugger)
         return False

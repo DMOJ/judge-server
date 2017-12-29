@@ -201,7 +201,7 @@ int pt_process::monitor() {
 #else
                 in_syscall = debugger->is_enter();
 #endif
-                //printf("%d: %s syscall %d\n", pid, in_syscall ? "Enter" : "Exit", syscall);
+                // printf("%d: %s syscall %d\n", pid, in_syscall ? "Enter" : "Exit", syscall);
 
                 if (!spawned) {
                     // Does execve not return if the process hits an rlimit and gets SIGKILLed?
@@ -219,7 +219,7 @@ int pt_process::monitor() {
                     if (!in_syscall && syscall == debugger->execve_syscall())
                         spawned = this->_initialized = true;
                 } else if (in_syscall) {
-                    if (syscall < MAX_SYSCALL) {
+                    if (syscall >= 0 && syscall < MAX_SYSCALL) {
                         switch (handler[syscall]) {
                             case PTBOX_HANDLER_ALLOW:
                                 break;
@@ -232,15 +232,19 @@ int pt_process::monitor() {
                             case PTBOX_HANDLER_CALLBACK:
                                 if (callback(context, syscall))
                                     break;
-                                //printf("Killed by callback: %d\n", syscall);
+                                // printf("Killed by callback: %d\n", syscall);
                                 exit_reason = protection_fault(syscall);
                                 continue;
                             default:
                                 // Default is to kill, safety first.
-                                //printf("Killed by DISALLOW or None: %d\n", syscall);
+                                // printf("Killed by DISALLOW or None: %d\n", syscall);
                                 exit_reason = protection_fault(syscall);
                                 continue;
                         }
+                    } else if (!callback(context, syscall)) {
+                        // printf("Killed by callback: %d\n", syscall);
+                        exit_reason = protection_fault(syscall);
+                        continue;
                     }
                 } else if (debugger->on_return_callback) {
                     debugger->on_return_callback(debugger->on_return_context, syscall);

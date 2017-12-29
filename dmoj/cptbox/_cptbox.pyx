@@ -8,7 +8,7 @@ from posix.types cimport pid_t
 
 __all__ = ['Process', 'Debugger', 'bsd_get_proc_cwd', 'bsd_get_proc_fdno', 'MAX_SYSCALL_NUMBER',
            'DEBUGGER_X86', 'DEBUGGER_X64', 'DEBUGGER_X86_ON_X64', 'DEBUGGER_X32', 'DEBUGGER_ARM',
-           'AT_FDCWD']
+           'DEBUGGER_ARM64', 'AT_FDCWD']
 
 
 cdef extern from 'ptbox.h' nogil:
@@ -361,7 +361,7 @@ cdef class Process:
             self._debugger = new pt_debugger_x32()
         elif debugger == DEBUGGER_ARM:
             self._debugger = new pt_debugger_arm()
-        elif debugger == DEBUGGER_ARM:
+        elif debugger == DEBUGGER_ARM64:
             self._debugger = new pt_debugger_arm64()
         else:
             raise ValueError('Unsupported debugger configuration')

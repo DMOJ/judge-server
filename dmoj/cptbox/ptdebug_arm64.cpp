@@ -11,15 +11,15 @@
 #define ARM_x6 6
 #define ARM_x7 7
 #define ARM_x8 8
-#define ARM_orig_x0
+#define ARM_orig_x0 34
 #define ARM_syscallno 35
 
 int pt_debugger_arm64::syscall() {
-    return (int) peek_reg(ARM_syscallno);
+    return (int) peek_reg(ARM_x8);
 }
 
 void pt_debugger_arm64::syscall(int id) {
-    poke_reg(ARM_syscallno, id);
+    poke_reg(ARM_x8, id);
 }
 
 long pt_debugger_arm64::result() {
@@ -39,7 +39,7 @@ void pt_debugger_arm64::result(long value) {
         poke_reg(reg, data); \
     }
 
-make_arg(0, ARM_ORIG_x0);
+make_arg(0, ARM_orig_x0);
 make_arg(1, ARM_x1);
 make_arg(2, ARM_x2);
 make_arg(3, ARM_x3);

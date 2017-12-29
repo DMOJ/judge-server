@@ -268,6 +268,30 @@ public:
     virtual int getpid_syscall();
 };
 
+class pt_debugger_arm64 : public pt_debugger {
+public:
+    pt_debugger_arm64();
+
+    virtual int syscall();
+    virtual void syscall(int);
+    virtual long result();
+    virtual void result(long);
+    virtual long arg0();
+    virtual long arg1();
+    virtual long arg2();
+    virtual long arg3();
+    virtual long arg4();
+    virtual long arg5();
+    virtual void arg0(long);
+    virtual void arg1(long);
+    virtual void arg2(long);
+    virtual void arg3(long);
+    virtual void arg4(long);
+    virtual void arg5(long);
+    virtual bool is_exit(int syscall);
+    virtual int getpid_syscall();
+};
+
 pt_process *pt_alloc_process(pt_debugger *);
 void pt_free_process(pt_process *);
 #endif

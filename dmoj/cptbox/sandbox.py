@@ -48,6 +48,7 @@ X86 = 'x86'
 X64 = 'x64'
 X32 = 'x32'
 ARM = 'arm'
+A64 = 'arm64'
 
 
 def file_arch(path):
@@ -58,6 +59,8 @@ def file_arch(path):
             return ARM
         return X32 if 'x86-64' in info else X86
     elif '64-bit' in info:
+        if 'aarch64' in info:
+            return A64
         return X64
     return None
 
@@ -75,6 +78,7 @@ else:
     _SYSCALL_INDICIES[DEBUGGER_X64] = 1
     _SYSCALL_INDICIES[DEBUGGER_X32] = 2
     _SYSCALL_INDICIES[DEBUGGER_ARM] = 3
+    _SYSCALL_INDICIES[DEBUGGER_ARM64] = 5
 
 
 def _eintr_retry_call(func, *args):
@@ -96,6 +100,7 @@ _arch_map = {
     (X32, X32): DEBUGGER_X32,
     (X32, X86): DEBUGGER_X86_ON_X64,
     (ARM, ARM): DEBUGGER_ARM,
+    (A64, A64): DEBUGGER_ARM64,
 }
 
 

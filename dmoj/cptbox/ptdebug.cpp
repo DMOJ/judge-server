@@ -105,6 +105,9 @@ typedef long ptrace_read_t;
 #endif
 
 char *pt_debugger::readstr(unsigned long addr, size_t max_size) {
+#if PTBOX_FREEBSD
+    return readstr_peekdata(addr, max_size);
+#else
     static unsigned long page_size = -sysconf(_SC_PAGESIZE);
     static unsigned long page_mask = (unsigned long) page_size;
 
@@ -144,6 +147,7 @@ char *pt_debugger::readstr(unsigned long addr, size_t max_size) {
     }
     buf[max_size] = 0;
     return buf;
+#endif
 }
 
 char *pt_debugger::readstr_peekdata(unsigned long addr, size_t max_size) {

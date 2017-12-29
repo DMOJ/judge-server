@@ -190,6 +190,9 @@ int pt_process::monitor() {
 #else
             if (WSTOPSIG(status) == (0x80 | SIGTRAP)) {
                 debugger->settid(pid);
+#ifdef PTBOX_NEED_PRE_POST_SYSCALL
+                debugger->pre_syscall();
+#endif
 #endif
 #if defined(__FreeBSD_version) && __FreeBSD_version >= 1002501
                 int syscall = lwpi.pl_syscall_code;
@@ -251,6 +254,9 @@ int pt_process::monitor() {
                     debugger->on_return_callback = NULL;
                     debugger->on_return_context = NULL;
                 }
+#ifdef PTBOX_NEED_PRE_POST_SYSCALL
+                debugger->post_syscall();
+#endif
             } else {
 #if PTBOX_FREEBSD
                 // No events aside from signal event on FreeBSD

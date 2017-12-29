@@ -1,5 +1,6 @@
 #define _BSD_SOURCE
 #include <sys/ptrace.h>
+#include <sys/uio.h>
 #include "ptbox.h"
 
 #define ARM_x0 0
@@ -13,6 +14,38 @@
 #define ARM_x8 8
 #define ARM_orig_x0 34
 #define ARM_syscallno 35
+
+#ifdef PTBOX_NEED_PRE_POST_SYSCALL
+void pt_debugger_arm64::pre_syscall() {
+    struct iovec iovec;
+    iovec.iov_base = arm64_reg;
+    iovec.iov_len = sizeof arm64_reg;
+    if (ptrace(PTRACE_GETREGSET, tid, NT_PRSTATUS, &iovec))
+        perror("ptrace(PTRACE_GETREGSET)");
+
+    arm64_reg_changed = false;
+}
+
+void pt_debugger_arm64::post_syscall() {
+    if (!arm64_reg_changed)
+        return;
+
+    struct iovec iovec;
+    iovec.iov_base = arm64_reg;
+    iovec.iov_len = sizeof arm64_reg;
+    if (ptrace(PTRACE_SETREGSET, tid, NT_PRSTATUS, &iovec))
+        perror("ptrace(PTRACE_SETREGSET)");
+}
+#endif
+
+long pt_debugger_arm64::peek_reg(int reg) {
+    return arm64_reg[reg];
+}
+
+void pt_debugger_arm64::poke_reg(int reg, long data) {
+    arm64_reg[reg] = data;
+    arm64_reg_changed = true;
+}
 
 int pt_debugger_arm64::syscall() {
     return (int) peek_reg(ARM_x8);

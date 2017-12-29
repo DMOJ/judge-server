@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/ptrace.h>
@@ -53,6 +54,11 @@ void pt_debugger::settid(pid_t tid) {
 }
 #endif
 
+#ifdef PTBOX_NEED_PRE_POST_SYSCALL
+void pt_debugger::pre_syscall() {}
+void pt_debugger::post_syscall() {}
+#endif
+
 long pt_debugger::peek_reg(int idx) {
 #if PTBOX_FREEBSD
     return ((reg_type*)&bsd_converted_regs)[idx];
@@ -61,7 +67,7 @@ long pt_debugger::peek_reg(int idx) {
     errno = 0;
     res = ptrace(PTRACE_PEEKUSER, tid, sizeof(long) * idx, 0);
     if (res == -1 && errno)
-        perror("ptrace");
+        perror("ptrace(PTRACE_PEEKUSER)");
     return res;
 #endif
 }

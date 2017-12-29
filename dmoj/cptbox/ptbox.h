@@ -18,6 +18,10 @@
 #   define PTBOX_FREEBSD 0
 #endif
 
+#if defined(__arm64__) || defined(__aarch64__)
+#   define PTBOX_NEED_PRE_POST_SYSCALL
+#endif
+
 #if PTBOX_FREEBSD
 #include "ext_freebsd.h"
 #else
@@ -148,6 +152,11 @@ public:
 #else
     void settid(pid_t tid);
     bool is_enter() { return syscall_[tid] != -1; }
+#endif
+
+#ifdef PTBOX_NEED_PRE_POST_SYSCALL
+    virtual void pre_syscall();
+    virtual void post_syscall();
 #endif
 
     void on_return(pt_syscall_return_callback callback, void *context) {
@@ -290,6 +299,18 @@ public:
     virtual void arg5(long);
     virtual bool is_exit(int syscall);
     virtual int getpid_syscall();
+
+    virtual long peek_reg(int);
+    virtual void poke_reg(int, long);
+
+#ifdef PTBOX_NEED_PRE_POST_SYSCALL
+    virtual void pre_syscall();
+    virtual void post_syscall();
+#endif
+
+protected:
+    unsigned long arm64_reg[36];
+    bool arm64_reg_changed;
 };
 
 pt_process *pt_alloc_process(pt_debugger *);

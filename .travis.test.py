@@ -1,9 +1,11 @@
 from __future__ import print_function
 
+import logging
 import os
 
 from dmoj import judgeenv
 from dmoj.citest import ci_test, get_dirs, make_override
+
 EXECUTORS = ['ADA', 'AWK', 'BF', 'C', 'CBL', 'D', 'DART', 'CPP0X', 'CPP03', 'CPP11', 'CLANG', 'CLANGX',
              'F95', 'GO', 'GROOVY', 'HASK', 'JAVA8', 'JAVA9',
              'PAS', 'PRO', 'GAS32', 'GAS64', 'LUA', 'NASM', 'NASM64',
@@ -24,6 +26,8 @@ OVERRIDES = {
 
 
 def main():
+    logging.basicConfig(level=logging.INFO)
+
     judgeenv.env['runtime'] = {}
     judgeenv.env['extra_fs'] = {
         'PHP': ['/etc/php5/', '/etc/terminfo/', '/etc/protocols$'],

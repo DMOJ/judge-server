@@ -231,6 +231,9 @@ class SecurePopen(six.with_metaclass(SecurePopenMeta, Process)):
         try:
             callback = self._callbacks[syscall]
         except IndexError:
+            if self._syscall_index == 3:
+                # ARM-specific
+                return 0xf0000 < syscall < 0xf0006
             return False
 
         if callback is not None:

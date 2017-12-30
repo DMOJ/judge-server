@@ -62,9 +62,9 @@ int cptbox_child_run(const struct child_config *config) {
     setrlimit2(RLIMIT_STACK, RLIM_INFINITY);
     setrlimit2(RLIMIT_CORE, 0);
 
-    if (config->stdin >= 0)  dup2(config->stdin, 0);
-    if (config->stdout >= 0) dup2(config->stdout, 1);
-    if (config->stderr >= 0) dup2(config->stderr, 2);
+    if (config->stdin_ >= 0)  dup2(config->stdin_, 0);
+    if (config->stdout_ >= 0) dup2(config->stdout_, 1);
+    if (config->stderr_ >= 0) dup2(config->stderr_, 2);
 
     for (int i = 3; i <= config->max_fd; ++i)
         dup2(config->fds[i-3], i);

@@ -104,9 +104,9 @@ cdef extern from 'helper.h' nogil:
         char *dir
         char **argv
         char **envp
-        int stdin
-        int stdout
-        int stderr
+        int stdin_
+        int stdout_
+        int stderr_
         int max_fd
         int *fds
 
@@ -422,9 +422,9 @@ cdef class Process:
         config.personality = self._child_personality
         config.file = file
         config.dir = chdir
-        config.stdin = self._child_stdin
-        config.stdout = self._child_stdout
-        config.stderr = self._child_stderr
+        config.stdin_ = self._child_stdin
+        config.stdout_ = self._child_stdout
+        config.stderr_ = self._child_stderr
         config.argv = alloc_string_array(args)
         config.envp = alloc_string_array(env)
         if fds is None or not len(fds):

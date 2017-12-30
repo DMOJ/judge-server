@@ -12,9 +12,9 @@ struct child_config {
     char *dir;
     char **argv;
     char **envp;
-    int stdin;
-    int stdout;
-    int stderr;
+    int stdin_;
+    int stdout_;
+    int stderr_;
     int max_fd;
     int *fds;
 };

@@ -102,6 +102,17 @@ void pt_debugger::poke_reg(int idx, long data) {
 typedef int ptrace_read_t;
 #else
 typedef long ptrace_read_t;
+
+#ifndef SYS_process_vm_readv
+#define SYS_process_vm_readv 270
+#endif
+
+ssize_t __attribute__((weak)) process_vm_readv(
+    pid_t pid, const struct iovec *lvec, unsigned long liovcnt,
+    const struct iovec *rvec, unsigned long riovcnt, unsigned long flags
+) {
+    return syscall(SYS_process_vm_readv, (long) pid, lvec, liovcnt, rvec, riovcnt, flags);
+}
 #endif
 
 char *pt_debugger::readstr(unsigned long addr, size_t max_size) {

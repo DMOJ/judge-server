@@ -263,5 +263,7 @@ class CHROOTSecurity(dict):
         return tgid == debugger.pid
 
     def do_prctl(self, debugger):
+        # PR_GET_DUMPABLE = 3
         # PR_SET_NAME = 15
-        return debugger.arg0 in (15,)
+        # PR_SET_VMA = 0x53564d41, used on Android
+        return debugger.arg0 in (3, 15, 0x53564d41)

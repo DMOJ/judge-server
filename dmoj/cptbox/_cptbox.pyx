@@ -62,6 +62,9 @@ cdef extern from 'ptbox.h' nogil:
     cdef cppclass pt_debugger_arm64(pt_debugger):
         pass
 
+    cdef cppclass pt_debugger_arm_on_arm64(pt_debugger):
+        pass
+
     cdef cppclass pt_process:
         pt_process(pt_debugger *) except +
         void set_callback(pt_handler_callback callback, void* context)
@@ -364,6 +367,8 @@ cdef class Process:
             self._debugger = new pt_debugger_arm()
         elif debugger == DEBUGGER_ARM64:
             self._debugger = new pt_debugger_arm64()
+        elif debugger == DEBUGGER_ARM_ON_ARM64:
+            self._debugger = new pt_debugger_arm_on_arm64()
         else:
             raise ValueError('Unsupported debugger configuration')
 

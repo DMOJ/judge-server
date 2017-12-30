@@ -68,7 +68,7 @@ def file_arch(path):
 PYTHON_ARCH = file_arch(sys.executable)
 
 _PIPE_BUF = getattr(select, 'PIPE_BUF', 512)
-_SYSCALL_INDICIES = [None] * 6
+_SYSCALL_INDICIES = [None] * 7
 
 if 'freebsd' in sys.platform:
     _SYSCALL_INDICIES[DEBUGGER_X64] = 4

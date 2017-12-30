@@ -27,8 +27,8 @@
 
 void pt_debugger_arm_on_arm64::pre_syscall() {
     struct iovec iovec;
-    iovec.iov_base = arm_reg;
-    iovec.iov_len = sizeof arm_reg;
+    iovec.iov_base = arm32_reg;
+    iovec.iov_len = sizeof arm32_reg;
     if (ptrace(PTRACE_GETREGSET, tid, NT_PRSTATUS, &iovec))
         perror("ptrace(PTRACE_GETREGSET)");
 
@@ -40,19 +40,19 @@ void pt_debugger_arm_on_arm64::post_syscall() {
         return;
 
     struct iovec iovec;
-    iovec.iov_base = arm_reg;
-    iovec.iov_len = sizeof arm_reg;
+    iovec.iov_base = arm32_reg;
+    iovec.iov_len = sizeof arm32_reg;
     if (ptrace(PTRACE_SETREGSET, tid, NT_PRSTATUS, &iovec))
         perror("ptrace(PTRACE_SETREGSET)");
 }
 #endif
 
 long pt_debugger_arm_on_arm64::peek_reg(int reg) {
-    return arm_reg[reg];
+    return arm32_reg[reg];
 }
 
 void pt_debugger_arm_on_arm64::poke_reg(int reg, long data) {
-    arm_reg[reg] = (uint32_t) data;
+    arm32_reg[reg] = (uint32_t) data;
     arm64_reg_changed = true;
 }
 

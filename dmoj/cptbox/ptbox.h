@@ -343,6 +343,11 @@ public:
 
     virtual long peek_reg(int);
     virtual void poke_reg(int, long);
+
+#ifdef PTBOX_NEED_PRE_POST_SYSCALL
+    virtual void pre_syscall();
+    virtual void post_syscall();
+#endif
 };
 
 pt_process *pt_alloc_process(pt_debugger *);

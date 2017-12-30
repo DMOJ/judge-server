@@ -52,7 +52,19 @@ int pt_debugger_arm64::syscall() {
 }
 
 void pt_debugger_arm64::syscall(int id) {
+#ifdef PTBOX_NEED_PRE_POST_SYSCALL
+#ifndef NT_ARM_SYSTEM_CALL
+#define NT_ARM_SYSTEM_CALL 0x404
+#endif
+    struct iovec iovec;
+    iovec.iov_base = &id;
+    iovec.iov_len = sizeof id;
+
+    if (ptrace(PTRACE_SETREGSET, tid, NT_ARM_SYSTEM_CALL, &iovec))
+        perror("ptrace(PTRACE_SETREGSET, NT_ARM_SYSTEM_CALL)");
+#else
     poke_reg(ARM_x8, id);
+#endif
 }
 
 long pt_debugger_arm64::result() {
@@ -61,6 +73,15 @@ long pt_debugger_arm64::result() {
 
 void pt_debugger_arm64::result(long value) {
     poke_reg(ARM_x0, value);
+}
+
+long pt_debugger_arm64::arg0() {
+    return peek_reg(ARM_x0);
+}
+
+void pt_debugger_arm64::arg0(long data) {
+    if (is_enter())
+        poke_reg(ARM_x0, data);
 }
 
 #define make_arg(id, reg) \
@@ -72,7 +93,6 @@ void pt_debugger_arm64::result(long value) {
         poke_reg(reg, data); \
     }
 
-make_arg(0, ARM_x0);
 make_arg(1, ARM_x1);
 make_arg(2, ARM_x2);
 make_arg(3, ARM_x3);

@@ -3,6 +3,7 @@
 #define idA6398CB6_D711_4634_9D89FF6B1D215169
 
 #include <stddef.h>
+#include <inttypes.h>
 #include <sys/resource.h>
 #include <sys/types.h>
 #include <sys/time.h>
@@ -311,8 +312,37 @@ public:
 #endif
 
 protected:
-    unsigned long arm64_reg[34];
+    union {
+        unsigned long arm64_reg[34];
+        uint32_t arm32_reg[18];
+    };
     bool arm64_reg_changed;
+};
+
+class pt_debugger_arm_on_arm64 : public pt_debugger_arm64 {
+public:
+    pt_debugger_arm_on_arm64();
+
+    virtual int syscall();
+    virtual long result();
+    virtual void result(long);
+    virtual long arg0();
+    virtual long arg1();
+    virtual long arg2();
+    virtual long arg3();
+    virtual long arg4();
+    virtual long arg5();
+    virtual void arg0(long);
+    virtual void arg1(long);
+    virtual void arg2(long);
+    virtual void arg3(long);
+    virtual void arg4(long);
+    virtual void arg5(long);
+    virtual bool is_exit(int syscall);
+    virtual int getpid_syscall();
+
+    virtual long peek_reg(int);
+    virtual void poke_reg(int, long);
 };
 
 pt_process *pt_alloc_process(pt_debugger *);

@@ -219,7 +219,6 @@ class SecurePopen(six.with_metaclass(SecurePopenMeta, Process)):
 
     def kill(self):
         log.warning('Request the killing of process: %s', self.pid)
-        print('Child is requested to be killed', file=sys.stderr)
         try:
             os.killpg(self.pid, signal.SIGKILL)
         except OSError:
@@ -260,7 +259,6 @@ class SecurePopen(six.with_metaclass(SecurePopenMeta, Process)):
 
     def _cpu_time_exceeded(self):
         log.warning('SIGXCPU in process %d', self.pid)
-        print('SIGXCPU in child', file=sys.stderr)
         self._tle = True
 
     def _run_process(self):

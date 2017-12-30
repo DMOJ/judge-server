@@ -185,19 +185,19 @@ class CHROOTSecurity(dict):
         def check(debugger):
             file = debugger.readstr(debugger.uarg1)
             file, accessible = self._file_access_check(file, debugger, debugger.uarg0 if is_open else None,
-                                                       dirfd=debugger.arg0)
+                                                       dirfd=debugger.arg0, flag_reg=2)
             if accessible:
                 return True
             log.info('Denied access via syscall %s: %s', syscall, file)
             return ACCESS_ENOENT(debugger)
         return check
 
-    def _handle_io_redirects(self, file, debugger, orig_uarg0):
+    def _handle_io_redirects(self, file, debugger, orig_uarg0, flag_reg):
         data = self._io_redirects.get(file, None)
 
         if data:
             user_mode, redirect = data
-            kernel_flags = debugger.uarg1
+            kernel_flags = getattr(debugger, 'uarg%d' % (flag_reg,))
 
             # File is open for read if it is not open for write, unless it's open for both read/write
             is_valid_read = 'r' in user_mode and (not (kernel_flags & os.O_WRONLY) or kernel_flags & os.O_RDWR)
@@ -227,7 +227,7 @@ class CHROOTSecurity(dict):
 
                 return True
 
-    def _file_access_check(self, rel_file, debugger, orig_uarg0=None, dirfd=AT_FDCWD):
+    def _file_access_check(self, rel_file, debugger, orig_uarg0=None, flag_reg=1, dirfd=AT_FDCWD):
         try:
             file = self.get_full_path(debugger, rel_file, dirfd)
         except UnicodeDecodeError:
@@ -235,7 +235,7 @@ class CHROOTSecurity(dict):
             return '(undecodable)', False
         if orig_uarg0 is not None and self._io_redirects:
             for path in (rel_file, os.path.basename(file), file):
-                if self._handle_io_redirects(path, debugger, orig_uarg0):
+                if self._handle_io_redirects(path, debugger, orig_uarg0, flag_reg):
                     return file, True
         if self.fs_jail.match(file) is None:
             return file, False

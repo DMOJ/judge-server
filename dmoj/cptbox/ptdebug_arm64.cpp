@@ -80,8 +80,10 @@ long pt_debugger_arm64::arg0() {
 }
 
 void pt_debugger_arm64::arg0(long data) {
+#if !PTBOX_FREEBSD
     if (is_enter())
         poke_reg(ARM_x0, data);
+#endif
 }
 
 #define make_arg(id, reg) \

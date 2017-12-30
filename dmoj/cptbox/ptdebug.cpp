@@ -138,6 +138,7 @@ char *pt_debugger::readstr(unsigned long addr, size_t max_size) {
         remote.iov_base = (void *) (addr + read);
         remote.iov_len = remain;
 
+        errno = 0;
         if (process_vm_readv(tid, &local, 1, &remote, 1, 0) > 0) {
             if (memchr(buf + read, '\0', remain))
                 return buf;
@@ -148,7 +149,7 @@ char *pt_debugger::readstr(unsigned long addr, size_t max_size) {
             free(buf);
             return readstr_peekdata(addr, max_size);
         } else {
-            if (errno != EFAULT && errno != EIO)
+            if (errno && errno != EFAULT && errno != EIO)
                 perror("process_vm_readv");
             buf[read] = 0;
             return buf;

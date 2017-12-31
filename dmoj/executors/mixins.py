@@ -52,8 +52,8 @@ try:
         from dmoj.cptbox.handlers import ALLOW
 
         BASE_FILESYSTEM = ['/dev/(?:null|tty|zero|u?random)$',
-                           '/usr/(?!home)', '/lib(?:32|64)?/', '/opt/',
-                           '/etc/(?:localtime|timezone|nsswitch.conf|resolv.conf|passwd)$',
+                           '/usr/(?!home)', '/lib(?:32|64)?/', '/opt/', '/etc$',
+                           '/etc/(?:localtime|timezone|nsswitch.conf|resolv.conf|passwd|malloc.conf)$',
                            '/tmp$', '/$']
 
         if 'freebsd' in sys.platform:

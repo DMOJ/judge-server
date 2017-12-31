@@ -48,6 +48,10 @@ nosetests.xml
 *.exp
 *.pdb
 
+# Vim
+*.swp
+
+# DMOJ
 dmoj/wbox/_wbox.cpp
 dmoj/wbox/_wbox.html
 dmoj/cptbox/_cptbox.cpp

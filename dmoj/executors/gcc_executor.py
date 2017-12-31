@@ -9,7 +9,6 @@ from .base_executor import CompiledExecutor
 
 GCC_ENV = env.runtime.gcc_env or {}
 GCC_COMPILE = os.environ.copy()
-IS_ARM = hasattr(os, 'uname') and os.uname()[4].startswith('arm')
 
 if os.name == 'nt':
     GCC_COMPILE.update((k.encode('mbcs'), v.encode('mbcs')) for k, v in

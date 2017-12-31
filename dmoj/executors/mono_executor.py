@@ -50,6 +50,10 @@ class MonoExecutor(CompiledExecutor):
         sec[sys_rt_sigsuspend] = ALLOW
         sec[sys_wait4] = ALLOW
 
+        # Potentially dangerous, but it can only operate on fds already open so there's
+        # no issue in allowing it here
+        sec[sys_ftruncate] = ALLOW
+
         fs = sec.fs_jail
         write_fs = re.compile('|'.join(WRITE_FS))
         writable = defaultdict(bool)
@@ -78,9 +82,6 @@ class MonoExecutor(CompiledExecutor):
         def handle_write(debugger):
             return writable[debugger.arg0]
 
-        def handle_ftruncate(debugger):
-            return writable[debugger.arg0]
-
         def handle_kill(debugger):
             # Mono likes to signal other instances of it, but doesn't care if it fails.
             def kill_return():
@@ -102,7 +103,6 @@ class MonoExecutor(CompiledExecutor):
         sec[sys_dup2] = handle_dup
         sec[sys_dup3] = handle_dup
         sec[sys_write] = handle_write
-        sec[sys_ftruncate] = handle_ftruncate
         sec[sys_kill] = handle_kill
         sec[sys_tgkill] = handle_kill
         sec[sys_unlink] = sec[sys_shm_unlink] = unlink

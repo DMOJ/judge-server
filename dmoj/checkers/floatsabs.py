@@ -7,7 +7,7 @@ from dmoj.utils.unicode import utf8bytes
 
 def check(process_output, judge_output, precision, **kwargs):
     process_lines = list(filter(None, resplit(b'[\r\n]', utf8bytes(process_output))))
-    judge_lines = list(filter(None, resplit(b'[\r\n]', judge_output)))
+    judge_lines = list(filter(None, resplit(b'[\r\n]', utf8bytes(judge_output))))
 
     if len(process_lines) != len(judge_lines):
         return False

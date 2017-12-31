@@ -244,6 +244,8 @@ int pt_process::monitor() {
                                 exit_reason = protection_fault(syscall);
                                 continue;
                         }
+                    // We pass any system call that we can't record in our fixed-size array to python.
+                    // Python will decide your fate.
                     } else if (!callback(context, syscall)) {
                         // printf("Killed by callback: %d\n", syscall);
                         exit_reason = protection_fault(syscall);

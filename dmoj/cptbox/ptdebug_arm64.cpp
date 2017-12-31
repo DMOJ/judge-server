@@ -51,6 +51,8 @@ int pt_debugger_arm64::syscall() {
     return (int) peek_reg(ARM_x8);
 }
 
+// Note that this deliberately doesn't update arm64_reg.
+// The kernel only updates x0 on a system call, so x8 must not be changed.
 void pt_debugger_arm64::syscall(int id) {
 #ifdef PTBOX_NEED_PRE_POST_SYSCALL
 #ifndef NT_ARM_SYSTEM_CALL

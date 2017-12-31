@@ -132,7 +132,7 @@ class JavaExecutor(CompiledExecutor):
 
     @classmethod
     def get_vm_mode(cls):
-        return cls.runtime_dict.get(cls.vm + '_mode', '-client')
+        return '-%s' % cls.runtime_dict.get(cls.vm + '_mode', 'client')
 
     @classmethod
     def get_compiler(cls):
@@ -235,7 +235,7 @@ class JavacExecutor(JavaExecutor):
             # OpenJDK for ARM has no client VM, but has dcevm+server. So, we test
             # a bunch and if it's not the default (-client), then we list it
             # in the config.
-            vm_modes = ['-client', '-dcevm', '-server', '']
+            vm_modes = ['client', 'server', 'dcevm', 'zero']
             cls_vm_mode = cls.vm + '_mode'
             for mode in vm_modes:
                 result = {cls.vm: vm_path, cls_vm_mode: mode, cls.compiler: compiler_path}
@@ -244,7 +244,7 @@ class JavacExecutor(JavaExecutor):
                 success = executor.run_self_test(output=False)
                 if success:
                     # Don't pollute the YAML in the usual case where it's -client
-                    if mode == '-client':
+                    if mode == 'client':
                         del result[cls_vm_mode]
                     return result, success, 'Using %s' % vm_path
             else:

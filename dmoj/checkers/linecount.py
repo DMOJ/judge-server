@@ -11,7 +11,7 @@ verdict = u"\u2717\u2713"
 
 def check(process_output, judge_output, point_value, feedback=False,
           match=lambda p, j: p.strip() == j.strip(), **kwargs):
-    process_lines = list(filter(None, resplit(b'[\r\n]', utf8bytes(process_output.strip()))
+    process_lines = list(filter(None, resplit(b'[\r\n]', utf8bytes(process_output.strip()))))
     judge_lines = list(filter(None, resplit(b'[\r\n]', utf8bytes(judge_output.strip()))))
 
     if len(process_lines) > len(judge_lines):

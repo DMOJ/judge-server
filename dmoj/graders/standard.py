@@ -94,16 +94,6 @@ class StandardGrader(BaseGrader):
             }.get(callname, '%s syscall disallowed' % callname)
             result.feedback = message
 
-    def _normalize(self, data, binary_data):
-        # Perhaps the correct answer may be "no output", in which case it'll be None here if
-        # sourced from a generator
-        data = data or b''
-        # Normalize all newline formats (\r\n, \r, \n) to \n, otherwise we have problems with people creating
-        # data on Macs (\r newline) when judged programs assume \n
-        if binary_data:
-            return data
-        return data.replace(b'\r\n', b'\r').replace(b'\r', b'\n')
-
     def check_result(self, case, result):
         # If the submission didn't crash and didn't time out, there's a chance it might be AC
         # We shouldn't run checkers if the submission is already known to be incorrect, because some checkers
@@ -111,14 +101,15 @@ class StandardGrader(BaseGrader):
         # See https://github.com/DMOJ/judge/issues/170
         if not result.result_flag:
             # Checkers might crash if any data is None, so force at least empty string
-            check = case.checker()(self._normalize(result.proc_output, case.binary_data()) or b'',
+            check = case.checker()(result.proc_output,
                                    case.output_data() or b'',
                                    submission_source=self.source,
                                    judge_input=case.input_data() or b'',
                                    point_value=case.points,
                                    case_position=case.position,
                                    batch=case.batch,
-                                   submission_language=self.language)
+                                   submission_language=self.language,
+                                   binary_data=case.binary_data())
         else:
             # Solution is guaranteed to receive 0 points
             check = False

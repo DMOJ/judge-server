@@ -1,9 +1,13 @@
+from re import split as resplit
+
 from six.moves import zip, filter
+
+from dmoj.utils.unicode import utf8bytes
 
 
 def check(process_output, judge_output, precision, **kwargs):
-    process_lines = list(filter(None, process_output.split(b'\n')))
-    judge_lines = list(filter(None, judge_output.split(b'\n')))
+    process_lines = list(filter(None, resplit(b'[\r\n]', utf8bytes(process_output)))
+    judge_lines = list(filter(None, resplit(b'[\r\n]', judge_output)))
 
     if len(process_lines) != len(judge_lines):
         return False

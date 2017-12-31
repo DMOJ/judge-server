@@ -246,7 +246,7 @@ class JavacExecutor(JavaExecutor):
                     # Don't pollute the YAML in the usual case where it's -client
                     if mode == 'client':
                         del result[cls_vm_mode]
-                    return result, success, 'Using %s' % vm_path
+                    return result, success, 'Using %s (%s VM)' % (vm_path, mode)
             else:
                 # If absolutely no VM mode works, then we've failed the self test
                 return result, False, 'Failed self-test'

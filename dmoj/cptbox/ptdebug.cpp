@@ -107,6 +107,8 @@ typedef long ptrace_read_t;
 #define SYS_process_vm_readv 270
 #endif
 
+// Android's bionic C library doesn't have this system call wrapper.
+// Therefore, we use a weak symbol so it could be used when it doesn't exist.
 ssize_t __attribute__((weak)) process_vm_readv(
     pid_t pid, const struct iovec *lvec, unsigned long liovcnt,
     const struct iovec *rvec, unsigned long riovcnt, unsigned long flags
@@ -119,8 +121,8 @@ char *pt_debugger::readstr(unsigned long addr, size_t max_size) {
 #if PTBOX_FREEBSD
     return readstr_peekdata(addr, max_size);
 #else
-    static unsigned long page_size = -sysconf(_SC_PAGESIZE);
-    static unsigned long page_mask = (unsigned long) page_size;
+    static unsigned long page_size = sysconf(_SC_PAGESIZE);
+    static unsigned long page_mask = (unsigned long) -page_size;
 
     char *buf;
     unsigned long remain, read = 0;

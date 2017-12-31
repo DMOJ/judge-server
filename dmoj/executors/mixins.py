@@ -54,7 +54,7 @@ try:
         BASE_FILESYSTEM = ['/dev/(?:null|tty|zero|u?random)$',
                            '/usr/(?!home)', '/lib(?:32|64)?/', '/opt/', '/etc$',
                            '/etc/(?:localtime|timezone|nsswitch.conf|resolv.conf|passwd|malloc.conf)$',
-                           '/tmp$', '/$']
+                           '/usr$', '/tmp$', '/$']
 
         if 'freebsd' in sys.platform:
             BASE_FILESYSTEM += [r'/etc/s?pwd\.db$', '/dev/hv_tsc$']

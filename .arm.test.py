@@ -12,10 +12,8 @@ OVERRIDES = {}
 
 
 def main():
-    judgeenv.env['runtime'] = {
-        'clang_target_arch': None,  # Clang can't autodetect march=native
-    }
-    judgeenv.env['extra_fs'] = {};
+    judgeenv.env['runtime'] = {}
+    judgeenv.env['extra_fs'] = {}
 
     logging.basicConfig(level=logging.INFO)
 

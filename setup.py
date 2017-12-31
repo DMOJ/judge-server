@@ -66,8 +66,18 @@ class build_ext_dmoj(build_ext, object):
             self.compiler.compile_options += ['/Ox', '/W4', '/EHsc', '/GL', '/MT']
             self.compiler.ldflags_shared += ['/OPT:REF,ICF', '/LTCG']
         else:
-            if os.uname()[4].startswith('arm') or os.environ.get('DMOJ_REDIST'):
+            arch = os.uname()[4]
+            is_arm = arch.startswith('arm') or arch.startswith('aarch')
+            if is_arm or os.environ.get('DMOJ_REDIST'):
                 extra_compile_args = ['-O3']
+                target_arch = os.environ.get('DMOJ_TARGET_ARCH')
+                if target_arch:
+                    extra_compile_args.append('-march=%s' % target_arch)
+                elif is_arm:
+                    print('*' * 79)
+                    print('Building on ARM, specify DMOJ_TARGET_ARCH to CPU-specific arch for GCC!')
+                    print('Compiling slower generic build.')
+                    print('*' * 79)
             else:
                 extra_compile_args = ['-march=native', '-O3']
             self.distribution.ext_modules[0].extra_compile_args = extra_compile_args

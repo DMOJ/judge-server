@@ -158,13 +158,17 @@ class TestCase(object):
 
         return filtered_data
 
+    # this method exists solely because it will be called by the grader to check if it should normalize
+    def binary_data(self):
+        return self.config.binary_data
+
     def _normalize(self, data):
         # Perhaps the correct answer may be "no output", in which case it'll be None here if
         # sourced from a generator
         data = data or b''
         # Normalize all newline formats (\r\n, \r, \n) to \n, otherwise we have problems with people creating
         # data on Macs (\r newline) when judged programs assume \n
-        if self.config.binary_data:
+        if self.binary_data():
             return data
         return data.replace(b'\r\n', b'\r').replace(b'\r', b'\n')
 

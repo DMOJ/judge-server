@@ -68,9 +68,9 @@ class build_ext_dmoj(build_ext, object):
         else:
             arch = os.uname()[4]
             is_arm = arch.startswith('arm') or arch.startswith('aarch')
+            target_arch = os.environ.get('DMOJ_TARGET_ARCH')
             if is_arm or os.environ.get('DMOJ_REDIST'):
                 extra_compile_args = ['-O3']
-                target_arch = os.environ.get('DMOJ_TARGET_ARCH')
                 if target_arch:
                     extra_compile_args.append('-march=%s' % target_arch)
                 elif is_arm:
@@ -79,7 +79,7 @@ class build_ext_dmoj(build_ext, object):
                     print('Compiling slower generic build.')
                     print('*' * 79)
             else:
-                extra_compile_args = ['-march=native', '-O3']
+                extra_compile_args = ['-march=%s' % (target_arch or 'native'), '-O3']
             self.distribution.ext_modules[0].extra_compile_args = extra_compile_args
 
         super(build_ext_dmoj, self).build_extensions()

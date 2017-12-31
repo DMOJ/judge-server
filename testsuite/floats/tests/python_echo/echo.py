@@ -1,2 +1,2 @@
 import sys
-print sys.stdin.read()
+sys.stdout.write(sys.stdin.read())

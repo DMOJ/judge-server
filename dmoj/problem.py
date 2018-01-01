@@ -123,8 +123,8 @@ class TestCase(object):
         self.problem = problem
         self.points = config.points
         self.output_prefix_length = config.output_prefix_length
-        self._generated = None
         self.has_binary_data = config.binary_data
+        self._generated = None
 
     def io_redirects(self):
         redirects = self.config.io_redirects

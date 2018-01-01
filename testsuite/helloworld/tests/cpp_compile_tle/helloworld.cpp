@@ -1,4 +1,4 @@
-#include "/dev/stdin"
+#include "/dev/zero"
 
 int main() {
     return -1;

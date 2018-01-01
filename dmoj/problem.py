@@ -124,6 +124,7 @@ class TestCase(object):
         self.points = config.points
         self.output_prefix_length = config.output_prefix_length
         self._generated = None
+        self.has_binary_data = config.binary_data
 
     def io_redirects(self):
         redirects = self.config.io_redirects
@@ -158,16 +159,13 @@ class TestCase(object):
 
         return filtered_data
 
-    def has_binary_data(self):
-        return self.config.binary_data
-
     def _normalize(self, data):
         # Perhaps the correct answer may be "no output", in which case it'll be None here if
         # sourced from a generator
         data = data or b''
         # Normalize all newline formats (\r\n, \r, \n) to \n, otherwise we have problems with people creating
         # data on Macs (\r newline) when judged programs assume \n
-        if self.has_binary_data():
+        if self.has_binary_data:
             return data
         return data.replace(b'\r\n', b'\r').replace(b'\r', b'\n')
 

@@ -1,15 +1,18 @@
+from re import split as resplit
+
 import six
 from six.moves import filter, zip
 
 from dmoj.result import CheckerResult
+from dmoj.utils.unicode import utf8bytes
 
 verdict = u"\u2717\u2713"
 
 
 def check(process_output, judge_output, point_value, feedback=False,
           match=lambda p, j: p.strip() == j.strip(), **kwargs):
-    process_lines = list(filter(None, process_output.strip().split(b'\n')))
-    judge_lines = list(filter(None, judge_output.strip().split(b'\n')))
+    process_lines = list(filter(None, resplit(b'[\r\n]', utf8bytes(process_output))))
+    judge_lines = list(filter(None, resplit(b'[\r\n]', utf8bytes(judge_output))))
 
     if len(process_lines) > len(judge_lines):
         return False

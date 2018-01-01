@@ -123,6 +123,7 @@ class TestCase(object):
         self.problem = problem
         self.points = config.points
         self.output_prefix_length = config.output_prefix_length
+        self.has_binary_data = config.binary_data
         self._generated = None
 
     def io_redirects(self):
@@ -164,7 +165,7 @@ class TestCase(object):
         data = data or b''
         # Normalize all newline formats (\r\n, \r, \n) to \n, otherwise we have problems with people creating
         # data on Macs (\r newline) when judged programs assume \n
-        if self.config.binary_data:
+        if self.has_binary_data:
             return data
         return data.replace(b'\r\n', b'\r').replace(b'\r', b'\n')
 

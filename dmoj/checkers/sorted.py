@@ -1,3 +1,5 @@
+from re import split as resplit
+
 import six
 from six.moves import map, zip, filter
 
@@ -5,8 +7,8 @@ from dmoj.utils.unicode import utf8bytes
 
 
 def check(process_output, judge_output, **kwargs):
-    process_lines = list(filter(None, utf8bytes(process_output).split(b'\n')))
-    judge_lines = list(filter(None, utf8bytes(judge_output).split(b'\n')))
+    process_lines = list(filter(None, resplit(b'[\r\n]', utf8bytes(process_output))))
+    judge_lines = list(filter(None, resplit(b'[\r\n]', utf8bytes(judge_output))))
 
     if len(process_lines) != len(judge_lines):
         return False

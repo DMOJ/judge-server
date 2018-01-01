@@ -108,7 +108,8 @@ class StandardGrader(BaseGrader):
                                    point_value=case.points,
                                    case_position=case.position,
                                    batch=case.batch,
-                                   submission_language=self.language)
+                                   submission_language=self.language,
+                                   binary_data=case.has_binary_data)
         else:
             # Solution is guaranteed to receive 0 points
             check = False

@@ -2,7 +2,7 @@ language: CPP11
 time: 1
 memory: 4096
 source: badalloc.cpp
-expect: RTE
+expect: [RTE, MLE]
 feedback:
 - std::bad_alloc
 - std::bad_array_new_length

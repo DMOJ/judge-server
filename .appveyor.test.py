@@ -7,12 +7,14 @@ import sys
 from dmoj import judgeenv, executors
 from dmoj.testsuite import Tester
 from dmoj.utils.ansi import ansi_style
+from dmoj.utils.unicode import unicode_stdout_stderr
 
 required_executors = ['AWK', 'BF', 'C', 'CPP03', 'CPP11', 'CS', 'PERL', 'PY2', 'PY3',
                       'RUBY19', 'RUBY2', 'SED', 'VB']
 
 
 def main():
+    unicode_stdout_stderr()
     logging.basicConfig(level=logging.INFO)
 
     sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)

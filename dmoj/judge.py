@@ -1,7 +1,6 @@
 #!/usr/bin/python
 from __future__ import print_function
 
-import codecs
 import errno
 import logging
 import os
@@ -12,8 +11,6 @@ import traceback
 from functools import partial
 from itertools import chain
 
-import six
-
 from dmoj import packet, graders
 from dmoj.config import ConfigNode
 from dmoj.control import JudgeControlRequestHandler
@@ -23,7 +20,7 @@ from dmoj.monitor import Monitor, DummyMonitor
 from dmoj.problem import Problem, BatchedTestCase
 from dmoj.result import Result
 from dmoj.utils.ansi import ansi_style, strip_ansi
-from dmoj.utils.unicode import utf8bytes
+from dmoj.utils.unicode import utf8bytes, unicode_stdout_stderr
 
 try:
     from http.server import HTTPServer
@@ -690,12 +687,7 @@ class JudgeManager(object):
 
 
 def main():  # pragma: no cover
-    if six.PY2:
-        sys.stdout = codecs.getwriter('utf-8')(os.fdopen(sys.stdout.fileno(), 'w', 0))
-        sys.stderr = codecs.getwriter('utf-8')(sys.stderr)
-    else:
-        sys.stdout = codecs.getwriter('utf-8')(open(sys.stdout.fileno(), 'wb', 0, closefd=False))
-        sys.stderr = codecs.getwriter('utf-8')(sys.stderr.detach())
+    unicode_stdout_stderr()
 
     if not sanity_check():
         return 1

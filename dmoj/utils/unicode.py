@@ -3,7 +3,6 @@ import os
 import sys
 
 import six
-from six import __init__
 
 
 def utf8bytes(maybe_text):

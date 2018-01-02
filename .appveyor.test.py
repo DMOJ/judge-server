@@ -40,5 +40,6 @@ def main():
         print(ansi_style('#ansi[All cases passed.](green|bold)'))
     raise SystemExit(int(executor_fail or fails != 0))
 
+
 if __name__ == '__main__':
     main()

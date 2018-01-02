@@ -210,7 +210,7 @@ class JavacExecutor(JavaExecutor):
             with open(self._code, 'wb') as fo:
                 fo.write(utf8bytes(source_code))
         except IOError as e:
-            if e.errno in (errno.ENAMETOOLONG, errno.ENOENT):
+            if e.errno in (errno.ENAMETOOLONG, errno.ENOENT, errno.EINVAL):
                 raise CompileError('Why do you need a class name so long? '
                                    'As a judge, I sentence your code to death.\n')
             raise

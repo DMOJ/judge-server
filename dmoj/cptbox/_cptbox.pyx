@@ -44,27 +44,6 @@ cdef extern from 'ptbox.h' nogil:
         int getpid_syscall()
         void on_return(pt_syscall_return_callback callback, void *context)
 
-    cdef cppclass pt_debugger_x86(pt_debugger):
-        pass
-
-    cdef cppclass pt_debugger_x64(pt_debugger):
-        pass
-
-    cdef cppclass pt_debugger_x86_on_x64(pt_debugger):
-        pass
-
-    cdef cppclass pt_debugger_x32(pt_debugger):
-        pass
-
-    cdef cppclass pt_debugger_arm(pt_debugger):
-        pass
-
-    cdef cppclass pt_debugger_arm64(pt_debugger):
-        pass
-
-    cdef cppclass pt_debugger_arm_on_arm64(pt_debugger):
-        pass
-
     cdef cppclass pt_process:
         pt_process(pt_debugger *) except +
         void set_callback(pt_handler_callback callback, void* context)
@@ -115,20 +94,22 @@ cdef extern from 'helper.h' nogil:
     char *_bsd_get_proc_cwd "bsd_get_proc_cwd"(pid_t pid)
     char *_bsd_get_proc_fdno "bsd_get_proc_fdno"(pid_t pid, int fdno)
 
+    cpdef enum:
+        DEBUGGER_X86
+        DEBUGGER_X64
+        DEBUGGER_X86_ON_X64
+        DEBUGGER_X32
+        DEBUGGER_ARM
+        DEBUGGER_ARM64
+
+    pt_debugger *get_ptdebugger(int type)
+
+
 cdef extern from 'fcntl.h' nogil:
     cdef int _AT_FDCWD "AT_FDCWD"
 
 MAX_SYSCALL_NUMBER = MAX_SYSCALL
 AT_FDCWD = _AT_FDCWD
-
-cpdef enum:
-    DEBUGGER_X86 = 0
-    DEBUGGER_X64 = 1
-    DEBUGGER_X86_ON_X64 = 2
-    DEBUGGER_X32 = 3
-    DEBUGGER_ARM = 4
-    DEBUGGER_ARM64 = 5
-    DEBUGGER_ARM_ON_ARM64 = 6
 
 cdef int pt_child(void *context) nogil:
     cdef child_config *config = <child_config*> context
@@ -355,21 +336,8 @@ cdef class Process:
         self._nproc = -1
         self._signal = 0
 
-        if debugger == DEBUGGER_X86:
-            self._debugger = new pt_debugger_x86()
-        elif debugger == DEBUGGER_X64:
-            self._debugger = new pt_debugger_x64()
-        elif debugger == DEBUGGER_X86_ON_X64:
-            self._debugger = new pt_debugger_x86_on_x64()
-        elif debugger == DEBUGGER_X32:
-            self._debugger = new pt_debugger_x32()
-        elif debugger == DEBUGGER_ARM:
-            self._debugger = new pt_debugger_arm_on_arm64()
-        elif debugger == DEBUGGER_ARM64:
-            self._debugger = new pt_debugger_arm64()
-        elif debugger == DEBUGGER_ARM_ON_ARM64:
-            self._debugger = new pt_debugger_arm_on_arm64()
-        else:
+        self._debugger = get_ptdebugger(debugger)
+        if not self._debugger:
             raise ValueError('Unsupported debugger configuration')
 
         self.debugger = <Debugger?>debugger_type()

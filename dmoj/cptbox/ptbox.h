@@ -19,6 +19,21 @@
 #   define PTBOX_FREEBSD 0
 #endif
 
+#if defined(__amd64__)
+#   define HAS_DEBUGGER_X64
+#   define HAS_DEBUGGER_X86_ON_X64
+#   define HAS_DEBUGGER_X32
+#elif defined(__i386__)
+#   define HAS_DEBUGGER_X86
+#endif
+
+#if defined(__arm64__) || defined(__aarch64__)
+#   define HAS_DEBUGGER_ARM
+#   define HAS_DEBUGGER_ARM64
+#elif defined(__arm__)
+#   define HAS_DEBUGGER_ARM
+#endif
+
 #if defined(__arm__) || defined(__arm64__) || defined(__aarch64__)
 #   define PTBOX_NEED_PRE_POST_SYSCALL
 #endif
@@ -155,10 +170,8 @@ public:
     bool is_enter() { return syscall_[tid] != 0; }
 #endif
 
-#ifdef PTBOX_NEED_PRE_POST_SYSCALL
     virtual void pre_syscall();
     virtual void post_syscall();
-#endif
 
     void on_return(pt_syscall_return_callback callback, void *context) {
         on_return_callback = callback;
@@ -178,6 +191,7 @@ protected:
     friend class pt_process;
 };
 
+#ifdef HAS_DEBUGGER_X86
 class pt_debugger_x86 : public pt_debugger {
 public:
     pt_debugger_x86();
@@ -201,7 +215,9 @@ public:
     virtual bool is_exit(int syscall);
     virtual int getpid_syscall();
 };
+#endif
 
+#ifdef HAS_DEBUGGER_X64
 class pt_debugger_x64 : public pt_debugger {
 public:
     pt_debugger_x64();
@@ -225,8 +241,10 @@ public:
     virtual bool is_exit(int syscall);
     virtual int getpid_syscall();
 };
+#endif
 
-class pt_debugger_x86_on_x64 : public pt_debugger_x86 {
+#ifdef HAS_DEBUGGER_X86_ON_X64
+class pt_debugger_x86_on_x64 : public pt_debugger_x64 {
 public:
     pt_debugger_x86_on_x64();
 
@@ -246,16 +264,22 @@ public:
     virtual void arg3(long);
     virtual void arg4(long);
     virtual void arg5(long);
+    virtual bool is_exit(int syscall);
+    virtual int getpid_syscall();
 
     virtual long peek_reg(int);
     virtual void poke_reg(int, long);
 };
+#endif
 
+#ifdef HAS_DEBUGGER_X32
 class pt_debugger_x32 : public pt_debugger_x64 {
 public:
     virtual int syscall();
 };
+#endif
 
+#ifdef HAS_DEBUGGER_ARM
 class pt_debugger_arm : public pt_debugger {
 public:
     pt_debugger_arm();
@@ -278,14 +302,28 @@ public:
     virtual void arg5(long);
     virtual bool is_exit(int syscall);
     virtual int getpid_syscall();
-};
 
-class pt_debugger_arm64 : public pt_debugger {
+    virtual long peek_reg(int);
+    virtual void poke_reg(int, long);
+
+    virtual void pre_syscall();
+    virtual void post_syscall();
+
+protected:
+    union {
+        unsigned long arm64_reg[34];
+        uint32_t arm32_reg[18];
+    };
+    bool arm_reg_changed;
+};
+#endif
+
+#ifdef HAS_DEBUGGER_ARM64
+class pt_debugger_arm64 : public pt_debugger_arm {
 public:
     pt_debugger_arm64();
 
     virtual int syscall();
-    virtual void syscall(int);
     virtual long result();
     virtual void result(long);
     virtual long arg0();
@@ -306,10 +344,8 @@ public:
     virtual long peek_reg(int);
     virtual void poke_reg(int, long);
 
-#ifdef PTBOX_NEED_PRE_POST_SYSCALL
     virtual void pre_syscall();
     virtual void post_syscall();
-#endif
 
 protected:
     union {
@@ -318,37 +354,7 @@ protected:
     };
     bool arm64_reg_changed;
 };
-
-class pt_debugger_arm_on_arm64 : public pt_debugger_arm64 {
-public:
-    pt_debugger_arm_on_arm64();
-
-    virtual int syscall();
-    virtual long result();
-    virtual void result(long);
-    virtual long arg0();
-    virtual long arg1();
-    virtual long arg2();
-    virtual long arg3();
-    virtual long arg4();
-    virtual long arg5();
-    virtual void arg0(long);
-    virtual void arg1(long);
-    virtual void arg2(long);
-    virtual void arg3(long);
-    virtual void arg4(long);
-    virtual void arg5(long);
-    virtual bool is_exit(int syscall);
-    virtual int getpid_syscall();
-
-    virtual long peek_reg(int);
-    virtual void poke_reg(int, long);
-
-#ifdef PTBOX_NEED_PRE_POST_SYSCALL
-    virtual void pre_syscall();
-    virtual void post_syscall();
 #endif
-};
 
 pt_process *pt_alloc_process(pt_debugger *);
 void pt_free_process(pt_process *);

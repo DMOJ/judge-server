@@ -2,6 +2,8 @@
 #ifndef idABBEC9C1_3EF3_4A45_B187B10060CB9F85
 #define idABBEC9C1_3EF3_4A45_B187B10060CB9F85
 
+pt_debugger *get_ptdebugger(int type);
+
 struct child_config {
     unsigned long memory;
     unsigned long address_space;

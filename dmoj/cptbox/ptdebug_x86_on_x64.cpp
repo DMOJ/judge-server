@@ -1,3 +1,5 @@
+#ifdef HAS_DEBUGGER_X86_ON_X64
+#define _DEFAULT_SOURCE
 #define _BSD_SOURCE
 #include <stdint.h>
 #include <sys/ptrace.h>
@@ -78,6 +80,15 @@ long pt_debugger_x86_on_x64::arg5() {
 
 void pt_debugger_x86_on_x64::arg5(long data) {}
 
+bool pt_debugger_x86_on_x64::is_exit(int syscall) {
+    return syscall == 252 || syscall == 1;
+}
+
+int pt_debugger_x86_on_x64::getpid_syscall() {
+    return 20;
+}
+
 pt_debugger_x86_on_x64::pt_debugger_x86_on_x64() {
     execve_id = 59;
 }
+#endif /* HAS_DEBUGGER_X86_ON_X64 */

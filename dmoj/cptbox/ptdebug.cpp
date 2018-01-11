@@ -61,10 +61,8 @@ void pt_debugger::settid(pid_t tid) {
 }
 #endif
 
-#ifdef PTBOX_NEED_PRE_POST_SYSCALL
 void pt_debugger::pre_syscall() {}
 void pt_debugger::post_syscall() {}
-#endif
 
 long pt_debugger::peek_reg(int idx) {
 #if PTBOX_FREEBSD

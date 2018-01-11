@@ -1,3 +1,5 @@
+#ifdef HAS_DEBUGGER_X64
+#define _DEFAULT_SOURCE
 #define _BSD_SOURCE
 
 #include <errno.h>
@@ -92,3 +94,4 @@ int pt_debugger_x64::getpid_syscall() {
 pt_debugger_x64::pt_debugger_x64() {
     execve_id = 59;
 }
+#endif /* HAS_DEBUGGER_X64 */

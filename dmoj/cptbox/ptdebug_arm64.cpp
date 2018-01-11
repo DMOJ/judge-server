@@ -1,3 +1,5 @@
+#ifdef HAS_DEBUGGER_ARM64
+#define _DEFAULT_SOURCE
 #define _BSD_SOURCE
 #include <sys/ptrace.h>
 #include <sys/uio.h>
@@ -14,7 +16,6 @@
 #define ARM_x7 7
 #define ARM_x8 8
 
-#ifdef PTBOX_NEED_PRE_POST_SYSCALL
 #include <elf.h>
 
 void pt_debugger_arm64::pre_syscall() {
@@ -24,11 +25,11 @@ void pt_debugger_arm64::pre_syscall() {
     if (ptrace(PTRACE_GETREGSET, tid, NT_PRSTATUS, &iovec))
         perror("ptrace(PTRACE_GETREGSET)");
 
-    arm64_reg_changed = false;
+    arm_reg_changed = false;
 }
 
 void pt_debugger_arm64::post_syscall() {
-    if (!arm64_reg_changed)
+    if (!arm_reg_changed)
         return;
 
     struct iovec iovec;
@@ -37,7 +38,6 @@ void pt_debugger_arm64::post_syscall() {
     if (ptrace(PTRACE_SETREGSET, tid, NT_PRSTATUS, &iovec))
         perror("ptrace(PTRACE_SETREGSET)");
 }
-#endif
 
 long pt_debugger_arm64::peek_reg(int reg) {
     return arm64_reg[reg];
@@ -45,39 +45,11 @@ long pt_debugger_arm64::peek_reg(int reg) {
 
 void pt_debugger_arm64::poke_reg(int reg, long data) {
     arm64_reg[reg] = data;
-    arm64_reg_changed = true;
+    arm_reg_changed = true;
 }
 
 int pt_debugger_arm64::syscall() {
     return (int) peek_reg(ARM_x8);
-}
-
-// Note that this deliberately doesn't update arm64_reg.
-// The kernel only updates x0 on a system call, so x8 must not be changed.
-void pt_debugger_arm64::syscall(int id) {
-#if defined(__aarch64__) || defined(__arm64__)
-#ifndef NT_ARM_SYSTEM_CALL
-#define NT_ARM_SYSTEM_CALL 0x404
-#endif
-    struct iovec iovec;
-    iovec.iov_base = &id;
-    iovec.iov_len = sizeof id;
-
-    if (ptrace(PTRACE_SETREGSET, tid, NT_ARM_SYSTEM_CALL, &iovec))
-        perror("ptrace(PTRACE_SETREGSET, NT_ARM_SYSTEM_CALL)");
-#elif defined(__arm__)
-#ifndef SYS_ptrace
-#define SYS_ptrace 26
-#endif
-#ifndef PTRACE_SET_SYSCALL
-#define PTRACE_SET_SYSCALL 23
-#endif
-    errno = -::syscall(SYS_ptrace, PTRACE_SET_SYSCALL, tid, 0, id);
-    if (errno)
-        perror("ptrace(PTRACE_SET_SYSCALL");
-#else
-    poke_reg(ARM_x8, id);
-#endif
 }
 
 long pt_debugger_arm64::result() {
@@ -126,8 +98,9 @@ int pt_debugger_arm64::getpid_syscall() {
 
 pt_debugger_arm64::pt_debugger_arm64() {
     // execve is actually 221, but...
-    // There is no orig_x8 on ARM, and execve clears all registers.
+    // There is no orig_x8 on ARM64, and execve clears all registers.
     // Therefore, 0 is the register value when coming out of a system call.
     // We will pretend 0 is execve.
     execve_id = 0;
 }
+#endif /* HAS_DEBUGGER_ARM64 */

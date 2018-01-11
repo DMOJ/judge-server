@@ -1,9 +1,8 @@
-#ifdef HAS_DEBUGGER_X32
 #define _DEFAULT_SOURCE
 #define _BSD_SOURCE
-
 #include "ptbox.h"
 
+#ifdef HAS_DEBUGGER_X32
 #define ORIG_RAX 15
 
 int pt_debugger_x32::syscall() {

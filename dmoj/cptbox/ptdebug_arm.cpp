@@ -1,9 +1,11 @@
-#ifdef HAS_DEBUGGER_ARM
 #define _DEFAULT_SOURCE
 #define _BSD_SOURCE
+#include "ptbox.h"
+
+#ifdef HAS_DEBUGGER_ARM
 #include <sys/ptrace.h>
 #include <sys/uio.h>
-#include "ptbox.h"
+#include <unistd.h>
 
 #define ARM_cpsr 16
 #define ARM_pc 15

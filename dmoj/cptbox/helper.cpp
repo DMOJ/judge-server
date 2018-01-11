@@ -26,13 +26,6 @@
 #   define FD_DIR "/proc/self/fd"
 #endif
 
-#define DEBUGGER_X86        0
-#define DEBUGGER_X64        1
-#define DEBUGGER_X86_ON_X64 2
-#define DEBUGGER_X32        3
-#define DEBUGGER_ARM        4
-#define DEBUGGER_ARM64      5
-
 pt_debugger *get_ptdebugger(int type) {
     switch (type) {
 #ifdef HAS_DEBUGGER_X86

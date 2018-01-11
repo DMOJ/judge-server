@@ -1,8 +1,9 @@
-#ifdef HAS_DEBUGGER_X86
 #define _DEFAULT_SOURCE
 #define _BSD_SOURCE
-#include <sys/ptrace.h>
 #include "ptbox.h"
+
+#ifdef HAS_DEBUGGER_X86
+#include <sys/ptrace.h>
 
 #define EBX 0
 #define ECX 1

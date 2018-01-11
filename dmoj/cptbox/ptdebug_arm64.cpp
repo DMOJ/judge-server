@@ -1,10 +1,10 @@
-#ifdef HAS_DEBUGGER_ARM64
 #define _DEFAULT_SOURCE
 #define _BSD_SOURCE
+#include "ptbox.h"
+
+#ifdef HAS_DEBUGGER_ARM64
 #include <sys/ptrace.h>
 #include <sys/uio.h>
-#include <unistd.h>
-#include "ptbox.h"
 
 #define ARM_x0 0
 #define ARM_x1 1

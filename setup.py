@@ -94,7 +94,7 @@ class build_ext_dmoj(build_ext, object):
 wbox_sources = ['_wbox.pyx', 'handles.cpp', 'process.cpp', 'user.cpp', 'helpers.cpp', 'firewall.cpp']
 cptbox_sources = ['_cptbox.pyx', 'helper.cpp', 'ptdebug.cpp', 'ptdebug_x86.cpp', 'ptdebug_x64.cpp',
                   'ptdebug_x86_on_x64.cpp', 'ptdebug_x32.cpp', 'ptdebug_arm.cpp', 'ptdebug_arm64.cpp',
-                  'ptdebug_arm_on_arm64.cpp', 'ptproc.cpp']
+                  'ptproc.cpp']
 
 if not has_pyx:
     wbox_sources[0] = wbox_sources[0].replace('.pyx', '.cpp')

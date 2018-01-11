@@ -1,9 +1,10 @@
-#ifdef HAS_DEBUGGER_X86_ON_X64
 #define _DEFAULT_SOURCE
 #define _BSD_SOURCE
+#include "ptbox.h"
+
+#ifdef HAS_DEBUGGER_X86_ON_X64
 #include <stdint.h>
 #include <sys/ptrace.h>
-#include "ptbox.h"
 
 #define R15 0
 #define R14 1

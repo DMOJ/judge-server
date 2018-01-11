@@ -28,7 +28,7 @@ def main():
     judgeenv.env['extra_fs'] = {
         'PHP': ['/etc/php5/', '/etc/terminfo/', '/etc/protocols$'],
         'SWIFT': [os.path.abspath(os.path.join(os.path.dirname(__file__), 'swift'))],
-        'RUBY2': ['/home/travis/.gem/'],
+        'RUBY2': ['/home/travis/.gem/', '/home'],
     }
 
     print('Available JVMs:')

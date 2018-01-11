@@ -74,8 +74,7 @@ void pt_debugger_arm::syscall(int id) {
 #ifndef PTRACE_SET_SYSCALL
 #define PTRACE_SET_SYSCALL 23
 #endif
-    errno = -::syscall(SYS_ptrace, PTRACE_SET_SYSCALL, tid, 0, id);
-    if (errno)
+    if (::syscall(SYS_ptrace, PTRACE_SET_SYSCALL, tid, 0, id) == -1)
         perror("ptrace(PTRACE_SET_SYSCALL");
 #endif
 }

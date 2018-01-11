@@ -1,6 +1,7 @@
 #define _BSD_SOURCE
 #include <sys/ptrace.h>
 #include <sys/uio.h>
+#include <unistd.h>
 #include "ptbox.h"
 
 #define ARM_x0 0
@@ -54,7 +55,7 @@ int pt_debugger_arm64::syscall() {
 // Note that this deliberately doesn't update arm64_reg.
 // The kernel only updates x0 on a system call, so x8 must not be changed.
 void pt_debugger_arm64::syscall(int id) {
-#ifdef PTBOX_NEED_PRE_POST_SYSCALL
+#if defined(__aarch64__) || defined(__arm64__)
 #ifndef NT_ARM_SYSTEM_CALL
 #define NT_ARM_SYSTEM_CALL 0x404
 #endif
@@ -64,6 +65,16 @@ void pt_debugger_arm64::syscall(int id) {
 
     if (ptrace(PTRACE_SETREGSET, tid, NT_ARM_SYSTEM_CALL, &iovec))
         perror("ptrace(PTRACE_SETREGSET, NT_ARM_SYSTEM_CALL)");
+#elif defined(__arm__)
+#ifndef SYS_ptrace
+#define SYS_ptrace 26
+#endif
+#ifndef PTRACE_SET_SYSCALL
+#define PTRACE_SET_SYSCALL 23
+#endif
+    errno = -::syscall(SYS_ptrace, PTRACE_SET_SYSCALL, tid, 0, id);
+    if (errno)
+        perror("ptrace(PTRACE_SET_SYSCALL");
 #else
     poke_reg(ARM_x8, id);
 #endif

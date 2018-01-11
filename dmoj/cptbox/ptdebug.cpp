@@ -151,7 +151,7 @@ char *pt_debugger::readstr(unsigned long addr, size_t max_size) {
             free(buf);
             return readstr_peekdata(addr, max_size);
         } else {
-            if (errno && errno != EFAULT && errno != EIO)
+            if (errno && errno != EFAULT && errno != EIO && errno != EBADF)
                 perror("process_vm_readv");
             buf[read] = 0;
             return buf;

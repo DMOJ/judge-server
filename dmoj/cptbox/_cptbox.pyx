@@ -364,7 +364,7 @@ cdef class Process:
         elif debugger == DEBUGGER_X32:
             self._debugger = new pt_debugger_x32()
         elif debugger == DEBUGGER_ARM:
-            self._debugger = new pt_debugger_arm()
+            self._debugger = new pt_debugger_arm_on_arm64()
         elif debugger == DEBUGGER_ARM64:
             self._debugger = new pt_debugger_arm64()
         elif debugger == DEBUGGER_ARM_ON_ARM64:

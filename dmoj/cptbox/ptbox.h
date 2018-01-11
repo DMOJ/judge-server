@@ -19,7 +19,7 @@
 #   define PTBOX_FREEBSD 0
 #endif
 
-#if defined(__arm64__) || defined(__aarch64__)
+#if defined(__arm__) || defined(__arm64__) || defined(__aarch64__)
 #   define PTBOX_NEED_PRE_POST_SYSCALL
 #endif
 

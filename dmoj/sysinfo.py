@@ -11,6 +11,14 @@ if hasattr(os, 'getloadavg'):
         except OSError:  # as of May 2016, Windows' Linux subsystem throws OSError on getloadavg
             load = -1
         return 'load', load
+elif os.name != 'nt':
+    # There exist some Unix platforms (like Android) which don't
+    # have `getloadavg` implemented, but obviously aren't Windows
+    # so going down the below branch is worthless. There's not much
+    # we can do on these systems than report clearly that we can't
+    # determine the load.
+    def load_fair():
+        return 'load', -1
 else:  # pragma: no cover
     from dmoj.utils.winperfmon import PerformanceCounter
     from threading import Thread

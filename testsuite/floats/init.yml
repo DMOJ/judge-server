@@ -8,3 +8,4 @@ test_cases:
 - {in: 5.txt, out: 1.txt, points: 1}
 - {in: 6.txt, out: 1.txt, points: 1}
 - {in: 7.txt, out: 1.txt, points: 1}
+- {in: 8.txt, out: 1.txt, points: 1}

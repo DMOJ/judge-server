@@ -30,7 +30,7 @@
 29	pause
 30	utime
 31	stty
-32	getty
+32	gtty
 33	access
 34	nice
 35	ftime
@@ -99,6 +99,7 @@
 98	profil
 99	statfs
 100	fstatfs
+101	ioperm
 102	socketcall
 103	syslog
 104	setitimer
@@ -109,6 +110,7 @@
 109	olduname
 110	iopl
 111	vhangup
+112	idle
 113	syscall
 114	wait4
 115	swapoff
@@ -119,6 +121,7 @@
 120	clone
 121	setdomainname
 122	uname
+123	modify_ldt
 124	adjtimex
 125	mprotect
 126	sigprocmask
@@ -132,6 +135,7 @@
 134	bdflush
 135	sysfs
 136	personality
+137	afs_syscall
 138	setfsuid
 139	setfsgid
 140	llseek
@@ -160,8 +164,10 @@
 163	mremap
 164	setresuid
 165	getresuid
+166	vm86
 167	query_module
 168	poll
+169	nfsservctl
 170	setresgid
 171	getresgid
 172	prctl
@@ -299,6 +305,7 @@
 310	request_key
 311	keyctl
 312	semtimedop
+313	vserver
 314	ioprio_set
 315	ioprio_get
 316	inotify_init
@@ -312,7 +319,7 @@
 324	mknodat
 325	fchownat
 326	futimesat
-327	fstatat64
+327	fstatat
 328	unlinkat
 329	renameat
 330	linkat
@@ -326,7 +333,7 @@
 338	set_robust_list
 339	get_robust_list
 340	splice
-341	sync_file_range2
+341	arm_sync_file_range
 342	tee
 343	vmsplice
 344	move_pages
@@ -379,3 +386,7 @@
 391	copy_file_range
 392	preadv2
 393	pwritev2
+394	pkey_mprotect
+395	pkey_alloc
+396	pkey_free
+397	statx

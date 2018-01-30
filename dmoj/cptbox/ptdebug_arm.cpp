@@ -1,6 +1,11 @@
+#define _DEFAULT_SOURCE
 #define _BSD_SOURCE
-#include <sys/ptrace.h>
 #include "ptbox.h"
+
+#ifdef HAS_DEBUGGER_ARM
+#include <sys/ptrace.h>
+#include <sys/uio.h>
+#include <unistd.h>
 
 #define ARM_cpsr 16
 #define ARM_pc 15
@@ -21,12 +26,66 @@
 #define ARM_r0 0
 #define ARM_ORIG_r0 17
 
-int pt_debugger_arm::syscall() {
-    return (int) peek_reg(ARM_r7);
+#include <elf.h>
+
+void pt_debugger_arm::pre_syscall() {
+    struct iovec iovec;
+    iovec.iov_base = arm32_reg;
+    iovec.iov_len = sizeof arm32_reg;
+    if (ptrace(PTRACE_GETREGSET, tid, NT_PRSTATUS, &iovec))
+        perror("ptrace(PTRACE_GETREGSET)");
+
+    arm_reg_changed = false;
 }
 
+void pt_debugger_arm::post_syscall() {
+    if (!arm_reg_changed)
+        return;
+
+    struct iovec iovec;
+    iovec.iov_base = arm32_reg;
+    iovec.iov_len = sizeof arm32_reg;
+    if (ptrace(PTRACE_SETREGSET, tid, NT_PRSTATUS, &iovec))
+        perror("ptrace(PTRACE_SETREGSET)");
+}
+
+long pt_debugger_arm::peek_reg(int reg) {
+    return arm32_reg[reg];
+}
+
+// Note that this deliberately doesn't update arm64_reg.
+// The kernel only updates x0 on a system call, so x8 must not be changed.
 void pt_debugger_arm::syscall(int id) {
-    poke_reg(ARM_r7, id);
+#if defined(__aarch64__) || defined(__arm64__)
+// Even if we are debugging ARM on ARM64, we must still use NT_ARM_SYSTEM_CALL.
+#ifndef NT_ARM_SYSTEM_CALL
+#define NT_ARM_SYSTEM_CALL 0x404
+#endif
+    struct iovec iovec;
+    iovec.iov_base = &id;
+    iovec.iov_len = sizeof id;
+
+    if (ptrace(PTRACE_SETREGSET, tid, NT_ARM_SYSTEM_CALL, &iovec))
+        perror("ptrace(PTRACE_SETREGSET, NT_ARM_SYSTEM_CALL)");
+#else
+#ifndef SYS_ptrace
+#define SYS_ptrace 26
+#endif
+#ifndef PTRACE_SET_SYSCALL
+#define PTRACE_SET_SYSCALL 23
+#endif
+    if (::syscall(SYS_ptrace, PTRACE_SET_SYSCALL, tid, 0, id) == -1)
+        perror("ptrace(PTRACE_SET_SYSCALL");
+#endif
+}
+
+void pt_debugger_arm::poke_reg(int reg, long data) {
+    arm32_reg[reg] = (uint32_t) data;
+    arm_reg_changed = true;
+}
+
+int pt_debugger_arm::syscall() {
+    return (int) peek_reg(ARM_r7);
 }
 
 long pt_debugger_arm::result() {
@@ -64,5 +123,10 @@ int pt_debugger_arm::getpid_syscall() {
 }
 
 pt_debugger_arm::pt_debugger_arm() {
-    execve_id = 11;
+    // execve is actually 11, but...
+    // There is no orig_r8 on ARM, and execve clears all registers.
+    // Therefore, 0 is the register value when coming out of a system call.
+    // We will pretend 0 is execve.
+    execve_id = 0;
 }
+#endif /* HAS_DEBUGGER_ARM */

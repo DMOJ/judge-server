@@ -48,6 +48,7 @@ X86 = 'x86'
 X64 = 'x64'
 X32 = 'x32'
 ARM = 'arm'
+A64 = 'arm64'
 
 
 def file_arch(path):
@@ -58,6 +59,8 @@ def file_arch(path):
             return ARM
         return X32 if 'x86-64' in info else X86
     elif '64-bit' in info:
+        if 'aarch64' in info:
+            return A64
         return X64
     return None
 
@@ -65,7 +68,7 @@ def file_arch(path):
 PYTHON_ARCH = file_arch(sys.executable)
 
 _PIPE_BUF = getattr(select, 'PIPE_BUF', 512)
-_SYSCALL_INDICIES = [None] * 5
+_SYSCALL_INDICIES = [None] * 7
 
 if 'freebsd' in sys.platform:
     _SYSCALL_INDICIES[DEBUGGER_X64] = 4
@@ -75,6 +78,7 @@ else:
     _SYSCALL_INDICIES[DEBUGGER_X64] = 1
     _SYSCALL_INDICIES[DEBUGGER_X32] = 2
     _SYSCALL_INDICIES[DEBUGGER_ARM] = 3
+    _SYSCALL_INDICIES[DEBUGGER_ARM64] = 5
 
 
 def _eintr_retry_call(func, *args):
@@ -96,6 +100,8 @@ _arch_map = {
     (X32, X32): DEBUGGER_X32,
     (X32, X86): DEBUGGER_X86_ON_X64,
     (ARM, ARM): DEBUGGER_ARM,
+    (A64, ARM): DEBUGGER_ARM,
+    (A64, A64): DEBUGGER_ARM64,
 }
 
 
@@ -161,7 +167,7 @@ class SecurePopen(six.with_metaclass(SecurePopenMeta, Process)):
         self.protection_fault = None
 
         self.debugger._syscall_index = index
-        self.debugger.address_bits = 64 if debugger == DEBUGGER_X64 else 32
+        self.debugger.address_bits = 64 if debugger in (DEBUGGER_X64, DEBUGGER_ARM64) else 32
 
         self._security = security
         self._callbacks = [None] * MAX_SYSCALL_NUMBER
@@ -214,7 +220,6 @@ class SecurePopen(six.with_metaclass(SecurePopenMeta, Process)):
 
     def kill(self):
         log.warning('Request the killing of process: %s', self.pid)
-        print('Child is requested to be killed', file=sys.stderr)
         try:
             os.killpg(self.pid, signal.SIGKILL)
         except OSError:
@@ -222,7 +227,14 @@ class SecurePopen(six.with_metaclass(SecurePopenMeta, Process)):
             traceback.print_exc()
 
     def _callback(self, syscall):
-        callback = self._callbacks[syscall]
+        try:
+            callback = self._callbacks[syscall]
+        except IndexError:
+            if self._syscall_index == 3:
+                # ARM-specific
+                return 0xf0000 < syscall < 0xf0006
+            return False
+
         if callback is not None:
             return callback(self.debugger)
         return False
@@ -251,7 +263,6 @@ class SecurePopen(six.with_metaclass(SecurePopenMeta, Process)):
 
     def _cpu_time_exceeded(self):
         log.warning('SIGXCPU in process %d', self.pid)
-        print('SIGXCPU in child', file=sys.stderr)
         self._tle = True
 
     def _run_process(self):

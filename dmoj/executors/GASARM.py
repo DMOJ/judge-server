@@ -11,9 +11,9 @@ class Executor(GASExecutor):
     platform_prefixes = ['arm-linux-gnueabihf']
 
     qemu_path = env.runtime.qemu_arm
-    dynamic_linker = env.runtime['ld.so_x86'] or '/lib/ld-linux-armhf.so.3'
-    crt_pre = env.runtime.crt_pre_x86 or ['/usr/lib/arm-linux-gnueabihf/crt1.o', '/usr/lib/arm-linux-gnueabihf/crti.o']
-    crt_post = env.runtime.crt_post_x86 or ['/usr/lib/arm-linux-gnueabihf/crtn.o']
+    dynamic_linker = env.runtime['ld.so_arm'] or '/lib/ld-linux-armhf.so.3'
+    crt_pre = env.runtime.crt_pre_arm or ['/usr/lib/arm-linux-gnueabihf/crt1.o', '/usr/lib/arm-linux-gnueabihf/crti.o']
+    crt_post = env.runtime.crt_post_arm or ['/usr/lib/arm-linux-gnueabihf/crtn.o']
     name = 'GASARM'
     test_program = r'''
 .global _start

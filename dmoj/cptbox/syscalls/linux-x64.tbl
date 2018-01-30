@@ -260,7 +260,7 @@
 259	mknodat
 260	fchownat
 261	futimesat
-262	newfstatat
+262	fstatat
 263	unlinkat
 264	renameat
 265	linkat
@@ -327,3 +327,7 @@
 326	copy_file_range
 327	preadv2
 328	pwritev2
+329	pkey_mprotect
+330	pkey_alloc
+331	pkey_free
+332	statx

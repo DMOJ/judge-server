@@ -1,6 +1,9 @@
+#define _DEFAULT_SOURCE
 #define _BSD_SOURCE
-#include <sys/ptrace.h>
 #include "ptbox.h"
+
+#ifdef HAS_DEBUGGER_X86
+#include <sys/ptrace.h>
 
 #define EBX 0
 #define ECX 1
@@ -70,3 +73,4 @@ int pt_debugger_x86::getpid_syscall() {
 pt_debugger_x86::pt_debugger_x86() {
     execve_id = 11;
 }
+#endif /* HAS_DEBUGGER_X86 */

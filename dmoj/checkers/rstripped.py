@@ -1,9 +1,13 @@
+from re import split as resplit
+
 from six.moves import zip, filter
+
+from dmoj.utils.unicode import utf8bytes
 
 
 def check(process_output, judge_output, **kwargs):
-    process_lines = process_output.split(b'\n')
-    judge_lines = judge_output.split(b'\n')
+    process_lines = resplit(b'[\r\n]', utf8bytes(process_output))
+    judge_lines = resplit(b'[\r\n]', utf8bytes(judge_output))
 
     if 'filter_new_line' in kwargs:
         process_lines = list(filter(None, process_lines))

@@ -1,17 +1,22 @@
 from __future__ import print_function
 
+import logging
 import os
 import sys
 
 from dmoj import judgeenv, executors
 from dmoj.testsuite import Tester
 from dmoj.utils.ansi import ansi_style
+from dmoj.utils.unicode import unicode_stdout_stderr
 
 required_executors = ['AWK', 'BF', 'C', 'CPP03', 'CPP11', 'CS', 'PERL', 'PY2', 'PY3',
                       'RUBY19', 'RUBY2', 'SED', 'VB']
 
 
 def main():
+    unicode_stdout_stderr()
+    logging.basicConfig(level=logging.INFO)
+
     sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
     sys.stderr = os.fdopen(sys.stderr.fileno(), 'w', 0)
 
@@ -34,6 +39,7 @@ def main():
     else:
         print(ansi_style('#ansi[All cases passed.](green|bold)'))
     raise SystemExit(int(executor_fail or fails != 0))
+
 
 if __name__ == '__main__':
     main()

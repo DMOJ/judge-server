@@ -8,7 +8,7 @@ from posix.types cimport pid_t
 
 __all__ = ['Process', 'Debugger', 'bsd_get_proc_cwd', 'bsd_get_proc_fdno', 'MAX_SYSCALL_NUMBER',
            'DEBUGGER_X86', 'DEBUGGER_X64', 'DEBUGGER_X86_ON_X64', 'DEBUGGER_X32', 'DEBUGGER_ARM',
-           'AT_FDCWD']
+           'DEBUGGER_ARM64', 'AT_FDCWD']
 
 
 cdef extern from 'ptbox.h' nogil:
@@ -43,21 +43,6 @@ cdef extern from 'ptbox.h' nogil:
         pid_t gettid()
         int getpid_syscall()
         void on_return(pt_syscall_return_callback callback, void *context)
-
-    cdef cppclass pt_debugger_x86(pt_debugger):
-        pass
-
-    cdef cppclass pt_debugger_x64(pt_debugger):
-        pass
-
-    cdef cppclass pt_debugger_x86_on_x64(pt_debugger):
-        pass
-
-    cdef cppclass pt_debugger_x32(pt_debugger):
-        pass
-
-    cdef cppclass pt_debugger_arm(pt_debugger):
-        pass
 
     cdef cppclass pt_process:
         pt_process(pt_debugger *) except +
@@ -98,9 +83,9 @@ cdef extern from 'helper.h' nogil:
         char *dir
         char **argv
         char **envp
-        int stdin
-        int stdout
-        int stderr
+        int stdin_
+        int stdout_
+        int stderr_
         int max_fd
         int *fds
 
@@ -109,18 +94,22 @@ cdef extern from 'helper.h' nogil:
     char *_bsd_get_proc_cwd "bsd_get_proc_cwd"(pid_t pid)
     char *_bsd_get_proc_fdno "bsd_get_proc_fdno"(pid_t pid, int fdno)
 
+    cpdef enum:
+        DEBUGGER_X86
+        DEBUGGER_X64
+        DEBUGGER_X86_ON_X64
+        DEBUGGER_X32
+        DEBUGGER_ARM
+        DEBUGGER_ARM64
+
+    pt_debugger *get_ptdebugger(int type)
+
+
 cdef extern from 'fcntl.h' nogil:
     cdef int _AT_FDCWD "AT_FDCWD"
 
 MAX_SYSCALL_NUMBER = MAX_SYSCALL
 AT_FDCWD = _AT_FDCWD
-
-cpdef enum:
-    DEBUGGER_X86 = 0
-    DEBUGGER_X64 = 1
-    DEBUGGER_X86_ON_X64 = 2
-    DEBUGGER_X32 = 3
-    DEBUGGER_ARM = 4
 
 cdef int pt_child(void *context) nogil:
     cdef child_config *config = <child_config*> context
@@ -347,17 +336,8 @@ cdef class Process:
         self._nproc = -1
         self._signal = 0
 
-        if debugger == DEBUGGER_X86:
-            self._debugger = new pt_debugger_x86()
-        elif debugger == DEBUGGER_X64:
-            self._debugger = new pt_debugger_x64()
-        elif debugger == DEBUGGER_X86_ON_X64:
-            self._debugger = new pt_debugger_x86_on_x64()
-        elif debugger == DEBUGGER_X32:
-            self._debugger = new pt_debugger_x32()
-        elif debugger == DEBUGGER_ARM:
-            self._debugger = new pt_debugger_arm()
-        else:
+        self._debugger = get_ptdebugger(debugger)
+        if not self._debugger:
             raise ValueError('Unsupported debugger configuration')
 
         self.debugger = <Debugger?>debugger_type()
@@ -410,9 +390,9 @@ cdef class Process:
         config.personality = self._child_personality
         config.file = file
         config.dir = chdir
-        config.stdin = self._child_stdin
-        config.stdout = self._child_stdout
-        config.stderr = self._child_stderr
+        config.stdin_ = self._child_stdin
+        config.stdout_ = self._child_stdout
+        config.stderr_ = self._child_stderr
         config.argv = alloc_string_array(args)
         config.envp = alloc_string_array(env)
         if fds is None or not len(fds):

@@ -2,13 +2,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/ptrace.h>
+#include <sys/uio.h>
 #include <unistd.h>
 #include "ptbox.h"
 
 pt_debugger::pt_debugger() : on_return_callback(NULL) {}
+
+#if PTBOX_FREEBSD
+    bool pt_debugger::use_peekdata = true;
+#else
+    bool pt_debugger::use_peekdata = false;
+#endif
 
 bool has_null(char *buf, unsigned long size) {
     for (unsigned long i = 0; i < size; ++i) {
@@ -48,16 +56,24 @@ void pt_debugger::setpid(pid_t pid) {
 #else
 void pt_debugger::settid(pid_t tid) {
     this->tid = tid;
-    if (!syscall_.count(tid)) syscall_[tid] = -1;
-    syscall_[tid] = syscall_[tid] == -1 ? this->syscall() : -1;
+    if (!syscall_.count(tid)) syscall_[tid] = 0;
+    syscall_[tid] ^= 1;
 }
 #endif
+
+void pt_debugger::pre_syscall() {}
+void pt_debugger::post_syscall() {}
 
 long pt_debugger::peek_reg(int idx) {
 #if PTBOX_FREEBSD
     return ((reg_type*)&bsd_converted_regs)[idx];
 #else
-    return ptrace(PTRACE_PEEKUSER, tid, sizeof(long) * idx, 0);
+    long res;
+    errno = 0;
+    res = ptrace(PTRACE_PEEKUSER, tid, sizeof(long) * idx, 0);
+    if (res == -1 && errno)
+        perror("ptrace(PTRACE_PEEKUSER)");
+    return res;
 #endif
 }
 
@@ -84,9 +100,69 @@ void pt_debugger::poke_reg(int idx, long data) {
 typedef int ptrace_read_t;
 #else
 typedef long ptrace_read_t;
+
+#ifndef SYS_process_vm_readv
+#define SYS_process_vm_readv 270
+#endif
+
+// Android's bionic C library doesn't have this system call wrapper.
+// Therefore, we use a weak symbol so it could be used when it doesn't exist.
+ssize_t __attribute__((weak)) process_vm_readv(
+    pid_t pid, const struct iovec *lvec, unsigned long liovcnt,
+    const struct iovec *rvec, unsigned long riovcnt, unsigned long flags
+) {
+    return syscall(SYS_process_vm_readv, (long) pid, lvec, liovcnt, rvec, riovcnt, flags);
+}
 #endif
 
 char *pt_debugger::readstr(unsigned long addr, size_t max_size) {
+#if PTBOX_FREEBSD
+    return readstr_peekdata(addr, max_size);
+#else
+    static unsigned long page_size = sysconf(_SC_PAGESIZE);
+    static unsigned long page_mask = (unsigned long) -page_size;
+
+    char *buf;
+    unsigned long remain, read = 0;
+    struct iovec local, remote;
+
+    if (use_peekdata)
+        return readstr_peekdata(addr, max_size);
+
+    remain = addr - (addr & page_mask);
+    buf = (char *) malloc(max_size + 1);
+
+    while (read < max_size) {
+        local.iov_base = (void *) (buf + read);
+        local.iov_len = remain;
+        remote.iov_base = (void *) (addr + read);
+        remote.iov_len = remain;
+
+        errno = 0;
+        if (process_vm_readv(tid, &local, 1, &remote, 1, 0) > 0) {
+            if (memchr(buf + read, '\0', remain))
+                return buf;
+            read += remain;
+        } else if (errno == ENOSYS || errno == EPERM) {
+            perror("process_vm_readv");
+            use_peekdata = true;
+            free(buf);
+            return readstr_peekdata(addr, max_size);
+        } else {
+            if (errno && errno != EFAULT && errno != EIO && errno != EBADF)
+                perror("process_vm_readv");
+            buf[read] = 0;
+            return buf;
+        }
+
+        remain = page_size < max_size - read ? page_size : max_size - read;
+    }
+    buf[max_size] = 0;
+    return buf;
+#endif
+}
+
+char *pt_debugger::readstr_peekdata(unsigned long addr, size_t max_size) {
     size_t size = 4096, read = 0;
     char *buf = (char *) malloc(size);
     union {
@@ -116,7 +192,10 @@ char *pt_debugger::readstr(unsigned long addr, size_t max_size) {
         // TODO: we could use PT_IO to speed up this entire function by reading chunks rather than byte
         data.val = ptrace(PT_READ_D, tid, (caddr_t) (addr + read), 0);
 #else
+        errno = 0;
         data.val = ptrace(PTRACE_PEEKDATA, tid, addr + read, NULL);
+        if (data.val == -1 && errno)
+            perror("ptrace(PTRACE_PEEKDATA)");
 #endif
         memcpy(buf + read, data.byte, sizeof(ptrace_read_t));
         if (has_null(data.byte, sizeof(ptrace_read_t)))

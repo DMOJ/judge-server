@@ -96,7 +96,7 @@ class JavaExecutor(CompiledExecutor):
         if self.unbuffered:
             agent_flags += ',nobuf'
         # 128m is equivalent to 1<<27 in Thread constructor
-        return ['java', '-client', agent_flags, '-Xss128m', '-Xmx%dK' % self.__memory_limit,
+        return ['java', self.get_vm_mode(), agent_flags, '-Xss128m', '-Xmx%dK' % self.__memory_limit,
                 '-XX:+UseSerialGC', '-XX:ErrorFile=submission_jvm_crash.log', self._class_name]
 
     def launch(self, *args, **kwargs):
@@ -105,7 +105,7 @@ class JavaExecutor(CompiledExecutor):
         return super(JavaExecutor, self).launch(*args, **kwargs)
 
     def launch_unsafe(self, *args, **kwargs):
-        return Popen(['java', '-client', self._class_name] + list(args),
+        return Popen(['java', self.get_vm_mode(), self._class_name] + list(args),
                      executable=self.get_vm(), cwd=self._dir, **kwargs)
 
     def get_feedback(self, stderr, result, process):
@@ -129,6 +129,10 @@ class JavaExecutor(CompiledExecutor):
     @classmethod
     def get_vm(cls):
         return cls.runtime_dict.get(cls.vm)
+
+    @classmethod
+    def get_vm_mode(cls):
+        return '-%s' % cls.runtime_dict.get(cls.vm + '_mode', 'client')
 
     @classmethod
     def get_compiler(cls):
@@ -206,7 +210,7 @@ class JavacExecutor(JavaExecutor):
             with open(self._code, 'wb') as fo:
                 fo.write(utf8bytes(source_code))
         except IOError as e:
-            if e.errno in (errno.ENAMETOOLONG, errno.ENOENT):
+            if e.errno in (errno.ENAMETOOLONG, errno.ENOENT, errno.EINVAL):
                 raise CompileError('Why do you need a class name so long? '
                                    'As a judge, I sentence your code to death.\n')
             raise
@@ -225,11 +229,26 @@ class JavacExecutor(JavaExecutor):
     def test_jvm(cls, name, path):
         vm_path = os.path.join(path, 'bin', 'java')
         compiler_path = os.path.join(path, 'bin', 'javac')
-        result = {cls.vm: vm_path, cls.compiler: compiler_path}
 
         if os.path.isfile(vm_path) and os.path.isfile(compiler_path):
-            executor = type('Executor', (cls,), {'runtime_dict': result})
-            success = executor.run_self_test(output=False)
-            return result, success, 'Using %s' % vm_path if success else 'Failed self-test'
+            # Not all JVMs have the same VMs available; specifically,
+            # OpenJDK for ARM has no client VM, but has dcevm+server. So, we test
+            # a bunch and if it's not the default (-client), then we list it
+            # in the config.
+            vm_modes = ['client', 'server', 'dcevm', 'zero']
+            cls_vm_mode = cls.vm + '_mode'
+            for mode in vm_modes:
+                result = {cls.vm: vm_path, cls_vm_mode: mode, cls.compiler: compiler_path}
+
+                executor = type('Executor', (cls,), {'runtime_dict': result})
+                success = executor.run_self_test(output=False)
+                if success:
+                    # Don't pollute the YAML in the usual case where it's -client
+                    if mode == 'client':
+                        del result[cls_vm_mode]
+                    return result, success, 'Using %s (%s VM)' % (vm_path, mode)
+            else:
+                # If absolutely no VM mode works, then we've failed the self test
+                return result, False, 'Failed self-test'
         else:
             return result, False, 'Invalid JDK'

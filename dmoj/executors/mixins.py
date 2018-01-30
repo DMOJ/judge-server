@@ -52,9 +52,9 @@ try:
         from dmoj.cptbox.handlers import ALLOW
 
         BASE_FILESYSTEM = ['/dev/(?:null|tty|zero|u?random)$',
-                           '/usr/(?!home)', '/lib(?:32|64)?/', '/opt/',
-                           '/etc/(?:localtime|timezone|nsswitch.conf|resolv.conf|passwd)$',
-                           '/$']
+                           '/usr/(?!home)', '/lib(?:32|64)?/', '/opt/', '/etc$',
+                           '/etc/(?:localtime|timezone|nsswitch.conf|resolv.conf|passwd|malloc.conf)$',
+                           '/usr$', '/tmp$', '/$']
 
         if 'freebsd' in sys.platform:
             BASE_FILESYSTEM += [r'/etc/s?pwd\.db$', '/dev/hv_tsc$']
@@ -98,7 +98,7 @@ try:
             def get_fs(self):
                 name = self.get_executor_name()
                 fs = BASE_FILESYSTEM + self.fs + env.get('extra_fs', {}).get(name, [])
-                fs += [re.escape(self._file('setbufsize.so')) + '$']
+                fs += [re.escape(self._file('setbufsize.so')) + '$', re.escape(self._dir) + '$']
                 return fs
 
             def get_allowed_syscalls(self):

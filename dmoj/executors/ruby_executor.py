@@ -1,4 +1,5 @@
 import os
+import re
 
 from .base_executor import ScriptExecutor
 
@@ -8,6 +9,18 @@ class RubyExecutor(ScriptExecutor):
     name = 'RUBY'
     address_grace = 65536
     test_program = 'puts gets'
+
+    def get_fs(self):
+        fs = super(RubyExecutor, self).get_fs()
+        home = self.runtime_dict.get('%s_home' % self.get_executor_name().lower())
+        if home is not None:
+            fs.append(re.escape(home))
+            components = home.split('/')
+            components.pop()
+            while components and components[-1]:
+                fs.append(re.escape('/'.join(components)) + '$')
+                components.pop()
+        return fs
 
     def get_cmdline(self):
         return [self.get_command(), '--disable-gems', self._code]

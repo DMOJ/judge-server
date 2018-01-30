@@ -26,6 +26,36 @@
 #   define FD_DIR "/proc/self/fd"
 #endif
 
+pt_debugger *get_ptdebugger(int type) {
+    switch (type) {
+#ifdef HAS_DEBUGGER_X86
+        case DEBUGGER_X86:
+            return new pt_debugger_x86();
+#endif
+#ifdef HAS_DEBUGGER_X64
+        case DEBUGGER_X64:
+            return new pt_debugger_x64();
+#endif
+#ifdef HAS_DEBUGGER_X86_ON_X64
+        case DEBUGGER_X86_ON_X64:
+            return new pt_debugger_x86_on_x64();
+#endif
+#ifdef HAS_DEBUGGER_X32
+        case DEBUGGER_X32:
+            return new pt_debugger_x32();
+#endif
+#ifdef HAS_DEBUGGER_ARM
+        case DEBUGGER_ARM:
+            return new pt_debugger_arm();
+#endif
+#ifdef HAS_DEBUGGER_ARM64
+        case DEBUGGER_ARM64:
+            return new pt_debugger_arm64();
+#endif
+    }
+    return NULL;
+}
+
 inline void setrlimit2(int resource, rlim_t cur, rlim_t max) {
     rlimit limit;
     limit.rlim_cur = cur;
@@ -62,9 +92,9 @@ int cptbox_child_run(const struct child_config *config) {
     setrlimit2(RLIMIT_STACK, RLIM_INFINITY);
     setrlimit2(RLIMIT_CORE, 0);
 
-    if (config->stdin >= 0)  dup2(config->stdin, 0);
-    if (config->stdout >= 0) dup2(config->stdout, 1);
-    if (config->stderr >= 0) dup2(config->stderr, 2);
+    if (config->stdin_ >= 0)  dup2(config->stdin_, 0);
+    if (config->stdout_ >= 0) dup2(config->stdout_, 1);
+    if (config->stderr_ >= 0) dup2(config->stderr_, 2);
 
     for (int i = 3; i <= config->max_fd; ++i)
         dup2(config->fds[i-3], i);

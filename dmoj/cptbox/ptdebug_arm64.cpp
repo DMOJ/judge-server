@@ -1,6 +1,7 @@
 #define _DEFAULT_SOURCE
 #define _BSD_SOURCE
 #include "ptbox.h"
+#include <cstdio>
 
 #ifdef HAS_DEBUGGER_ARM64
 #include <sys/ptrace.h>

@@ -148,13 +148,21 @@ char *pt_debugger::readstr(unsigned long addr, size_t max_size) {
             use_peekdata = true;
             free(buf);
             return readstr_peekdata(addr, max_size);
-        } else {
-            if (errno && errno != EFAULT && errno != EIO && errno != EBADF)
-                perror("process_vm_readv");
+        } else if (!errno) {
             buf[read] = 0;
             return buf;
-        }
+        } else {
+            if (errno != EFAULT && errno != EIO && errno != EBADF)
+                perror("process_vm_readv");
+            free(buf);
 
+            char *result = readstr_peekdata(addr, max_size);
+            // This means process_vm_readv failed but peekdata succeeded.
+            // We should just give up on process_vm_readv.
+            if (!read && result && *result)
+                use_peekdata = true;
+            return result;
+        }
         remain = page_size < max_size - read ? page_size : max_size - read;
     }
     buf[max_size] = 0;

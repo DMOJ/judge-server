@@ -251,4 +251,4 @@ class JavacExecutor(JavaExecutor):
                 # If absolutely no VM mode works, then we've failed the self test
                 return result, False, 'Failed self-test'
         else:
-            return result, False, 'Invalid JDK'
+            return {}, False, 'Invalid JDK'

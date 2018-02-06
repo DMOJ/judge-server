@@ -5,7 +5,7 @@ class Executor(JavacExecutor):
     compiler = 'javac9'
     vm = 'java9'
     name = 'JAVA9'
-    jvm_regex = r'java-9-|openjdk9'
+    jvm_regex = r'java-9-|openjdk9|oracle-java9'
 
     test_program = '''\
 import java.io.IOException;

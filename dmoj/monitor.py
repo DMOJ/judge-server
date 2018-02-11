@@ -7,7 +7,7 @@ from threading import Thread, Event
 from six.moves.urllib.request import urlopen
 
 from dmoj import judgeenv
-from dmoj.judgeenv import startup_warnings, get_problem_roots
+from dmoj.judgeenv import startup_warnings, get_problem_watches
 from dmoj.utils.ansi import ansi_style
 
 try:
@@ -74,7 +74,7 @@ class Monitor(object):
 
             self._handler = SendProblemsHandler(self._refresher)
             self._monitor = monitor = Observer()
-            for dir in get_problem_roots():
+            for dir in get_problem_watches():
                 monitor.schedule(self._handler, dir, recursive=True)
                 logger.info('Scheduled for monitoring: %s', dir)
         else:

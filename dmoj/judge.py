@@ -15,7 +15,7 @@ from dmoj import packet, graders
 from dmoj.config import ConfigNode
 from dmoj.control import JudgeControlRequestHandler
 from dmoj.error import CompileError
-from dmoj.judgeenv import env, get_supported_problems, startup_warnings
+from dmoj.judgeenv import env, get_supported_problems, startup_warnings, clear_problem_dirs_cache
 from dmoj.monitor import Monitor, DummyMonitor
 from dmoj.problem import Problem, BatchedTestCase
 from dmoj.result import Result
@@ -88,6 +88,7 @@ class Judge(object):
                 thread.join()
 
             try:
+                clear_problem_dirs_cache()
                 self.packet_manager.supported_problems_packet(get_supported_problems())
             except Exception:
                 log.exception('Failed to update problems.')

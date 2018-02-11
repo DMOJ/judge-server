@@ -13,6 +13,7 @@ except ImportError:
     ssl = None
 
 problem_dirs = ()
+problem_watches = ()
 env = ConfigNode(defaults={
     'selftest_sandboxing': True,
     'runtime': {},
@@ -32,7 +33,8 @@ exclude_executors = set()
 def load_env(cli=False, testsuite=False):  # pragma: no cover
     global problem_dirs, only_executors, exclude_executors, log_file, server_host, \
         server_port, no_ansi, no_ansi_emu, env, startup_warnings, no_watchdog, \
-        problem_regex, case_regex, api_listen, secure, no_cert_check, cert_store
+        problem_regex, case_regex, api_listen, secure, no_cert_check, cert_store, \
+        problem_watches
     parser = argparse.ArgumentParser(description='''
         Spawns a judge for a submission server.
     ''')
@@ -112,48 +114,19 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
         if getattr(args, 'judge_key', None):
             env['key'] = args.judge_key
 
-        dirs = env.problem_storage_root
-        if dirs is not None:
+        problem_dirs = env.problem_storage_root
+        if problem_dirs is not None:
+            # Populate cache and send warnings
+            get_problem_roots(warnings=True)
+
+            problem_watches = []
             get_path = lambda x, y: utf8text(os.path.normpath(os.path.join(x, y)))
-            if isinstance(dirs, ConfigNode):
-
-                def find_directories_by_depth(dir, depth):
-                    if depth < 0: raise ValueError('negative depth reached')
-                    if not depth:
-                        if os.path.isdir(dir):
-                            return [dir]
-                        else:
-                            return []
-                    ret = []
-                    for child in os.listdir(dir):
-                        next = os.path.join(dir, child)
-                        if os.path.isdir(next):
-                            ret += find_directories_by_depth(next, depth - 1)
-                    return ret
-
-                problem_dirs = []
-                for dir in dirs:
-                    if isinstance(dir, ConfigNode):
-                        for depth, recursive_root in dir.iteritems():
-                            try:
-                                problem_dirs += find_directories_by_depth(get_path(_root, recursive_root), int(depth))
-                            except ValueError:
-                                startup_warnings.append('illegal depth argument %s' % depth)
-                    else:
-                        problem_dirs.append(get_path(_root, dir))
-                problem_dirs = tuple(problem_dirs)
-            else:
-                problem_dirs = os.path.join(_root, dirs)
-                problem_dirs = [get_path(problem_dirs, dir) for dir in os.listdir(problem_dirs)]
-                problem_dirs = tuple(dir for dir in problem_dirs if os.path.isdir(dir))
-
-            cleaned_dirs = []
             for dir in problem_dirs:
-                if not os.path.exists(dir) or not os.path.isdir(dir):
-                    startup_warnings.append('cannot access problem directory %s (does it exist?)' % dir)
-                    continue
-                cleaned_dirs.append(dir)
-            problem_dirs = cleaned_dirs
+                if isinstance(dir, ConfigNode):
+                    for _, recursive_root in dir.iteritems():
+                        problem_watches.append(get_path(_root, recursive_root))
+                else:
+                    problem_watches.append(get_path(_root, dir))
 
     if testsuite:
         if not os.path.isdir(args.tests_dir):
@@ -174,15 +147,74 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
 
 
 def get_problem_root(pid):
-    for dir in problem_dirs:
+    for dir in get_problem_roots():
         path = os.path.join(dir, pid)
         if os.path.exists(path):
             return path
     return None
 
 
-def get_problem_roots():
-    return problem_dirs
+_problem_dirs_cache = None
+
+
+def get_problem_roots(warnings=False):
+    global _problem_dirs_cache
+
+    if _problem_dirs_cache is not None:
+        return _problem_dirs_cache
+
+    get_path = lambda x, y: utf8text(os.path.normpath(os.path.join(x, y)))
+    if isinstance(problem_dirs, ConfigNode):
+        def find_directories_by_depth(dir, depth):
+            if depth < 0:
+                raise ValueError('negative depth reached')
+            if not depth:
+                if os.path.isdir(dir):
+                    return [dir]
+                else:
+                    return []
+            ret = []
+            for child in os.listdir(dir):
+                next = os.path.join(dir, child)
+                if os.path.isdir(next):
+                    ret += find_directories_by_depth(next, depth - 1)
+            return ret
+
+        dirs = []
+        for dir in problem_dirs:
+            if isinstance(dir, ConfigNode):
+                for depth, recursive_root in dir.iteritems():
+                    try:
+                        dirs += find_directories_by_depth(get_path(_root, recursive_root), int(depth))
+                    except ValueError:
+                        startup_warnings.append('illegal depth argument %s' % depth)
+            else:
+                dirs.append(get_path(_root, dir))
+    else:
+        dirs = os.path.join(_root, problem_dirs)
+        dirs = [get_path(dirs, dir) for dir in os.listdir(dirs)]
+        dirs = [dir for dir in dirs if os.path.isdir(dir)]
+
+    if warnings:
+        cleaned_dirs = []
+        for dir in dirs:
+            if not os.path.exists(dir) or not os.path.isdir(dir):
+                startup_warnings.append('cannot access problem directory %s (does it exist?)' % dir)
+                continue
+            cleaned_dirs.append(dir)
+    else:
+        cleaned_dirs = dirs
+    _problem_dirs_cache = cleaned_dirs
+    return cleaned_dirs
+
+
+def clear_problem_dirs_cache():
+    global _problem_dirs_cache
+    _problem_dirs_cache = None
+
+
+def get_problem_watches():
+    return problem_watches
 
 
 def get_supported_problems():

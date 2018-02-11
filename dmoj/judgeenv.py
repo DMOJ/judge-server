@@ -132,6 +132,7 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
         if not os.path.isdir(args.tests_dir):
             raise SystemExit('Invalid tests directory')
         problem_dirs = [args.tests_dir]
+        clear_problem_dirs_cache()
 
         import re
         if args.problem_regex:
@@ -164,7 +165,10 @@ def get_problem_roots(warnings=False):
         return _problem_dirs_cache
 
     get_path = lambda x, y: utf8text(os.path.normpath(os.path.join(x, y)))
-    if isinstance(problem_dirs, ConfigNode):
+    if isinstance(problem_dirs, list):
+        _problem_dirs_cache = problem_dirs
+        return problem_dirs
+    elif isinstance(problem_dirs, ConfigNode):
         def find_directories_by_depth(dir, depth):
             if depth < 0:
                 raise ValueError('negative depth reached')

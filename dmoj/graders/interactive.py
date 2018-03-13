@@ -91,6 +91,11 @@ class InteractiveGrader(StandardGrader):
         self._current_proc.wait()
 
     def check_result(self, case, result):
+        if result.result_flag:
+            # This is usually because of a TLE verdict caused by printing stuff after the interactor
+            # has issued the AC verdict
+            # This results in a TLE verdict getting full points, which should not be the case
+            return False
         if not isinstance(self.check, CheckerResult):
             return CheckerResult(self.check, case.points if self.check else 0.0, feedback=self.feedback)
         return self.check

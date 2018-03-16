@@ -16,10 +16,8 @@ from .base_executor import CompiledExecutor
 recomment = re.compile(br'/\*.*?\*/', re.DOTALL)
 restring = re.compile(br''''(?:\\.|[^'\\])'|"(?:\\.|[^"\\])*"''', re.DOTALL)
 reinline_comment = re.compile(br'//.*?(?=[\r\n])')
-reclass = re.compile(br'\bpublic\s+(?:strictfp\s+)?(?:(?:abstract|final)\s+)?(?:strictfp\s+)?class\s+([\$\w][\$\w]*?)\b',re.U)
+reclass = re.compile(br'\bpublic\s+(?:strictfp\s+)?(?:(?:abstract|final)\s+)?(?:strictfp\s+)?class\s+(\$?[\$\w]*?)\b',re.U)
 repackage = re.compile(br'\bpackage\s+([^.;]+(?:\.[^.;]+)*?);')
-redeunicode = re.compile(br'\\u([0-9a-f]{4})', re.I)
-deunicode = lambda x: redeunicode.sub(lambda a: six.unichr(int(a.group(1), 16)), x)
 
 
 JAVA_SANDBOX = os.path.abspath(os.path.join(os.path.dirname(__file__), 'java_sandbox.jar'))
@@ -203,7 +201,6 @@ class JavaExecutor(CompiledExecutor):
 class JavacExecutor(JavaExecutor):
     def create_files(self, problem_id, source_code, *args, **kwargs):
         super(JavacExecutor, self).create_files(problem_id, source_code, *args, **kwargs)
-        source_code = deunicode(source_code)
         class_name = find_class(source_code)
         self._code = self._file('%s.java' % utf8text(class_name.group(1)))
         try:

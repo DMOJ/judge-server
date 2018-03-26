@@ -1,0 +1,125 @@
+---
+swagger: "2.0"
+info:
+  description: "A modern contest platform for the modern web.\n"
+  version: "1.0.0"
+  title: "DMOJ REST API"
+  contact:
+    email: "simon.v.pettersson@gmail.com"
+  license:
+    name: "GNU Affero General Public License v3.0"
+    url: "https://raw.githubusercontent.com/DMOJ/judge/master/LICENSE"
+host: "localhost:8080"
+basePath: "/simonvpe/dmoj/1.0.0"
+tags:
+- name: "submission"
+  description: "Problem Submission"
+- name: "result"
+  description: "Submission Result"
+schemes:
+- "https"
+- "http"
+paths:
+  /submission:
+    post:
+      tags:
+      - "submission"
+      summary: "Submit a solution to the judge"
+      operationId: "add_submission"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Submission data"
+        required: true
+        schema:
+          $ref: "#/definitions/Submission"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/SubmissionResponse"
+        405:
+          description: "Invalid input"
+      x-swagger-router-controller: "dmoj.rest"
+  /submissionResult/{submissionId}:
+    get:
+      tags:
+      - "result"
+      summary: "Retrieve the result of a submission"
+      operationId: "submission_result_get"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "submissionId"
+        in: "path"
+        description: "id of submission to return"
+        required: true
+        type: "integer"
+        format: "int64"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/SubmissionResult"
+      x-swagger-router-controller: "dmoj.rest"
+definitions:
+  Submission:
+    type: "object"
+    required:
+    - "languageId"
+    - "problemId"
+    - "sourceCode"
+    properties:
+      problemId:
+        type: "string"
+        description: "id of problem to grade"
+      languageId:
+        type: "string"
+        description: "language of problem to grade"
+      sourceCode:
+        type: "string"
+        format: "base64"
+        description: "the source code to grade"
+      timeLimit:
+        type: "number"
+        description: "time limit for grading, in seconds"
+      memoryLimit:
+        type: "integer"
+        format: "int64"
+        description: "memory limit for grading, in kilobytes"
+        default: 65536
+    example:
+      timeLimit: 0.8008281904610115
+      sourceCode: "sourceCode"
+      languageId: "languageId"
+      memoryLimit: 6
+      problemId: "problemId"
+  SubmissionResponse:
+    type: "object"
+    required:
+    - "submissionId"
+    properties:
+      submissionId:
+        type: "integer"
+        format: "int64"
+        description: "id of the submission"
+    example:
+      submissionId: 0
+  SubmissionResult:
+    type: "object"
+    required:
+    - "submissionId"
+    properties:
+      submissionId:
+        type: "integer"
+        format: "int64"
+        description: "id of the submission"
+    example:
+      submissionId: 0
+externalDocs:
+  description: "Find out more about Swagger"
+  url: "http://swagger.io"

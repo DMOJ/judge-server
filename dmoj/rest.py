@@ -21,28 +21,21 @@ class LocalPacketManager(object):
         pass
 
     def test_case_status_packet(self, position, result):
-        print("TEST CASE STATUS %s, \"%s\"" % (str(position), result.readable_codes()))
-        pass
+        self.judge.graded_submissions[-1]['testCaseStatus'] = result.readable_codes()
 
-    def compile_error_packet(self, log):
-        self.judge.compile_error.append(log)
-        print("COMPILE ERROR: %s" % log)
-        pass
+    def compile_error_packet(self, message):
+        self.judge.graded_submissions[-1]['compileError'].append(message)
 
-    def compile_message_packet(self, log):
-        self.judge.compile_message.append(log)        
-        print("COMPILER MESSAGE: %s" % log)
+    def compile_message_packet(self, message):
+        self.judge.graded_submissions[-1]['compileMessage'].append(message)
 
     def internal_error_packet(self, message):
-        self.judge.internal_error.append(log)        
-        print("INTERNAL ERROR: %s" % message)
+        self.judge.graded_submissions[-1]['internalError'].append(message)
 
     def begin_grading_packet(self, is_pretested):
-        print("BEGIN GRADING")
         pass
 
     def grading_end_packet(self):
-        print("GRADING END")
         pass
 
     def batch_begin_packet(self):
@@ -55,7 +48,6 @@ class LocalPacketManager(object):
         pass
 
     def submission_terminated_packet(self):
-        print("SUBMISSION TERMINATED")
         pass
 
     def submission_acknowledged_packet(self, sub_id):
@@ -72,7 +64,7 @@ class LocalJudge(Judge):
     def __init__(self):
         super(LocalJudge, self).__init__()
         self.packet_manager = LocalPacketManager(self)
-        self.submission_id_counter = 0
+        self.next_submission_id = 0
         self.graded_submissions = []
 
 def get_judge():
@@ -105,9 +97,8 @@ def add_submission(body):
     if memory_limit <= 0:
         return jsonify({'error': "memoryLimit must be >= 0"}), 405
 
-    submission_id = judge.submission_id_counter    
-    judge.submission_id_counter += 1
-
+    submission_id = judge.next_submission_id
+    
     judge.graded_submissions.append({
         "submissionId":  submission_id,
         "problemId": problem_id,
@@ -120,9 +111,11 @@ def add_submission(body):
         "testCaseResults": [],
         "internalError":[]
     })
-
+    
     judge.begin_grading(submission_id, problem_id, language_id, source, time_limit,
                         memory_limit, False, False, blocking=True)
+
+    judge.next_submission_id += 1
     
     return jsonify(judge.graded_submissions[submission_id]), 200
 

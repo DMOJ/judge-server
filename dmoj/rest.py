@@ -5,6 +5,7 @@ from flask import jsonify, current_app
 from operator import itemgetter
 from flask import g
 from enum import Enum
+from base64 import b64decode
 
 class JudgeState(Enum):
     FAILED = 0
@@ -111,7 +112,9 @@ def add_submission(body):
         "testCaseResults": [],
         "internalError":[]
     })
-    
+
+    source = b64decode(source).decode('utf-8')
+    print(source)
     judge.begin_grading(submission_id, problem_id, language_id, source, time_limit,
                         memory_limit, False, False, blocking=True)
 
@@ -122,7 +125,7 @@ def add_submission(body):
 # GET /submissionResult/{submissionId}
 def submission_result_get(submissionId):
     judge = get_judge()
-    return 'do some magic 3!'
+    return jsonify(judge.graded_submissions[submission_id]), 200
 
 def main():
     judgeenv.load_env(cli=True)

@@ -20,7 +20,7 @@ class Executor(CompiledExecutor):
         return [self.get_command(), '-x', '-free', self._code]
 
     def get_compile_popen_kwargs(self):
-        return {'stdout': subprocess.PIPE, 'stderr': None}
+        return {'stdout': subprocess.PIPE, 'stderr': subprocess.STDOUT}
 
     def get_compile_output(self, process):
         output = process.communicate()[0]

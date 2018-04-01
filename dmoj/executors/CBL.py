@@ -17,11 +17,11 @@ class Executor(CompiledExecutor):
 '''
 
     def get_compile_args(self):
-        return [self.get_command(), '-x', self._code]
+        return [self.get_command(), '-x', '-free', self._code]
 
     def get_compile_popen_kwargs(self):
         return {'stdout': subprocess.PIPE, 'stderr': None}
 
     def get_compile_output(self, process):
         output = process.communicate()[0]
-        return output if b'Error:' in output or b'Note:' in output or b'Warning:' in output else None
+        return output if b'Error:' in output or b'Note:' in output or b'Warning:' in output else ''

@@ -137,18 +137,18 @@ if 'sdist' in sys.argv:
         f.write(readme)
 else:
     try:
-        with open(rst_path) as f:
-            readme = f.read()
+        with open(rst_path, 'rb') as f:
+            readme = f.read().replace(b'\r\n', b'\r').replace(b'\r', b'\n')
     except IOError:
         readme = None
 
 setup(
     name='dmoj',
-    version='1.1.0',
+    version='1.2.0',
     packages=find_packages(),
     package_data={
         'dmoj.cptbox': ['syscalls/aliases.list', 'syscalls/*.tbl'],
-        'dmoj.executors': ['csbox.exe', 'java-sandbox.jar', '*.policy'],
+        'dmoj.executors': ['csbox.exe', 'java_sandbox.jar', '*.policy'],
         'dmoj.wbox': ['getaddr*.exe', 'dmsec*.dll'],
     },
     entry_points={

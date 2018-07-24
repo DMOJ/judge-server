@@ -204,7 +204,7 @@ class JavacExecutor(JavaExecutor):
         # This step is necessary because of Unicode classnames
         try:
             source_code = utf8text(source_code)
-        except UnicodeEncodeError:
+        except UnicodeDecodeError:
             raise CompileError('Your UTF-8 is bad, and you should feel bad')
         class_name = find_class(source_code)
         self._code = self._file('%s.java' % class_name.group(1))

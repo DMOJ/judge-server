@@ -108,7 +108,7 @@ try:
                 return self.address_grace
 
             def get_env(self):
-                env = {'LANG': 'C'}
+                env = {'LANG': 'C.UTF-8'}
                 if self.unbuffered:
                     env['CPTBOX_STDOUT_BUFFER_SIZE'] = 0
                 return env

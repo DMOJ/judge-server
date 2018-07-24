@@ -4,11 +4,6 @@ import unittest
 from dmoj.error import CompileError
 from dmoj.executors.JAVA8 import Executor as JAVA8Executor
 
-try:
-    from unittest import mock
-except ImportError:
-    import mock
-
 
 class ProblemTest(unittest.TestCase):
     def test_malformed_unicode(self):

@@ -202,7 +202,10 @@ class JavacExecutor(JavaExecutor):
     def create_files(self, problem_id, source_code, *args, **kwargs):
         super(JavacExecutor, self).create_files(problem_id, source_code, *args, **kwargs)
         # This step is necessary because of Unicode classnames
-        source_code = utf8text(source_code)
+        try:
+            source_code = utf8text(source_code)
+        except UnicodeEncodeError:
+            raise CompileError('Your UTF-8 is bad, and you should feel bad')
         class_name = find_class(source_code)
         self._code = self._file('%s.java' % class_name.group(1))
         try:

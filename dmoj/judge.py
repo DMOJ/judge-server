@@ -20,7 +20,7 @@ from dmoj.monitor import Monitor, DummyMonitor
 from dmoj.problem import Problem, BatchedTestCase
 from dmoj.result import Result
 from dmoj.utils.ansi import ansi_style, strip_ansi
-from dmoj.utils.unicode import utf8bytes, unicode_stdout_stderr
+from dmoj.utils.unicode import utf8bytes, utf8text, unicode_stdout_stderr
 
 try:
     from http.server import HTTPServer
@@ -200,7 +200,7 @@ class Judge(object):
                         colored_codes = list(map(lambda x: '#ansi[%s](%s|bold)' % ('--' if x == 'SC' else x,
                                                                                    Result.COLORS_BYID[x]), codes))
                         colored_aux_codes = '{%s}' % ', '.join(colored_codes[1:]) if len(codes) > 1 else ''
-                        colored_feedback = '(#ansi[%s](|underline)) ' % result.feedback if result.feedback else ''
+                        colored_feedback = '(#ansi[%s](|underline)) ' % utf8text(result.feedback) if result.feedback else u''
                         case_info = '[%.3fs (%.3fs) | %dkb] %s%s' % (result.execution_time,
                                                                      result.r_execution_time,
                                                                      result.max_memory,

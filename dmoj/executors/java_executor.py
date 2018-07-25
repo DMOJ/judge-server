@@ -13,11 +13,11 @@ from dmoj.result import Result
 from dmoj.utils.unicode import utf8bytes, utf8text
 from .base_executor import CompiledExecutor
 
-recomment = re.compile(r'/\*.*?\*/', re.DOTALL)
-restring = re.compile(r''''(?:\\.|[^'\\])'|"(?:\\.|[^"\\])*"''', re.DOTALL)
-reinline_comment = re.compile(r'//.*?(?=[\r\n])')
-reclass = re.compile(r'\bpublic\s+(?:strictfp\s+)?(?:(?:abstract|final)\s+)?(?:strictfp\s+)?class\s+([\w\$][\w\$]*?)\b',re.U)
-repackage = re.compile(r'\bpackage\s+([^.;]+(?:\.[^.;]+)*?);')
+recomment = re.compile(r'/\*.*?\*/', re.DOTALL | re.U)
+restring = re.compile(r''''(?:\\.|[^'\\])'|"(?:\\.|[^"\\])*"''', re.DOTALL | re.U)
+reinline_comment = re.compile(r'//.*?(?=[\r\n])', re.U)
+reclass = re.compile(r'\bpublic\s+(?:strictfp\s+)?(?:(?:abstract|final)\s+)?(?:strictfp\s+)?class\s+([\w\$][\w\$]*?)\b', re.U)
+repackage = re.compile(r'\bpackage\s+([^.;]+(?:\.[^.;]+)*?);', re.U)
 
 
 JAVA_SANDBOX = os.path.abspath(os.path.join(os.path.dirname(__file__), 'java_sandbox.jar'))

@@ -3,6 +3,7 @@ from __future__ import print_function
 import re
 import shutil
 import signal
+import six
 import subprocess
 import sys
 import tempfile
@@ -344,7 +345,13 @@ class CompiledExecutor(BaseExecutor):
                   'preexec_fn': self.create_executable_limits(), 'time_limit': self.compiler_time_limit}
         kwargs.update(self.get_compile_popen_kwargs())
 
-        return self.TimedPopen(self.get_compile_args(), **kwargs)
+        args = self.get_compile_args()
+
+        if six.PY2 and os.name == 'nt':
+            # Unicode and Python 2 on Windows do not mix well
+            args[0] = utf8bytes(args[0])
+
+        return self.TimedPopen(args, **kwargs)
 
     def get_compile_output(self, process):
         # Use safe_communicate because otherwise, malicious submissions can cause a compiler

@@ -1,6 +1,7 @@
 import errno
 import os
 import re
+import six
 import subprocess
 import sys
 from shutil import copyfile
@@ -219,7 +220,8 @@ class JavacExecutor(JavaExecutor):
         self._class_name = class_name.group(1)
 
     def get_compile_args(self):
-        return [self.get_compiler(), '-Xlint', '-encoding', 'UTF-8', self._code]
+        encode = lambda x: utf8bytes(x) if six.PY2 and os.name == 'nt' else x
+        return [self.get_compiler(), '-Xlint', '-encoding', 'UTF-8', encode(self._code)]
 
     def handle_compile_error(self, output):
         if b'is public, should be declared in a file named' in output:

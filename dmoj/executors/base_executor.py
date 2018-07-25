@@ -3,7 +3,6 @@ from __future__ import print_function
 import re
 import shutil
 import signal
-import six
 import subprocess
 import sys
 import tempfile
@@ -268,8 +267,6 @@ class CompiledExecutor(BaseExecutor):
     class TimedPopen(subprocess.Popen):
         def __init__(self, *args, **kwargs):
             self._time = kwargs.pop('time_limit', None)
-            if six.PY2 and os.name == 'nt':
-                args = [utf8bytes(arg) for arg in args]
             super(CompiledExecutor.TimedPopen, self).__init__(*args, **kwargs)
 
             self._killed = False

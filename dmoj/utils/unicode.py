@@ -22,9 +22,13 @@ def utf8text(maybe_bytes, errors='strict'):
 
 
 def unicode_stdout_stderr():
+    sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
+    sys.stderr = codecs.getwriter('utf-8')(sys.stderr)
+'''
     if six.PY2:
         sys.stdout = codecs.getwriter('utf-8')(os.fdopen(sys.stdout.fileno(), 'w', 0))
         sys.stderr = codecs.getwriter('utf-8')(sys.stderr)
     else:
         sys.stdout = codecs.getwriter('utf-8')(open(sys.stdout.fileno(), 'wb', 0, closefd=False))
         sys.stderr = codecs.getwriter('utf-8')(sys.stderr.detach())
+'''

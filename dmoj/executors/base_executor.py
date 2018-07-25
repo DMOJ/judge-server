@@ -243,7 +243,7 @@ class ScriptExecutor(BaseExecutor):
 
     def create_files(self, problem_id, source_code):
         with open(self._code, 'wb') as fo:
-            fo.write(source_code)
+            fo.write(utf8bytes(source_code))
 
     def get_cmdline(self):
         return [self.get_command(), self._code]
@@ -316,7 +316,7 @@ class CompiledExecutor(BaseExecutor):
     def create_files(self, problem_id, source_code, *args, **kwargs):
         self._code = self._file(problem_id + self.ext)
         with open(self._code, 'wb') as fo:
-            fo.write(source_code)
+            fo.write(utf8bytes(source_code))
 
     def get_compile_args(self):
         raise NotImplementedError()

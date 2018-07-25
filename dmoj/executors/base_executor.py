@@ -349,7 +349,7 @@ class CompiledExecutor(BaseExecutor):
 
         if six.PY2 and os.name == 'nt':
             # Unicode and Python 2 on Windows do not mix well
-            args[0] = utf8bytes(args[0])
+            args = [utf8bytes(arg) for arg in args]
 
         return self.TimedPopen(args, **kwargs)
 

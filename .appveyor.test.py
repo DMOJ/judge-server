@@ -17,8 +17,8 @@ def main():
 #    unicode_stdout_stderr()
     logging.basicConfig(level=logging.INFO)
 
-#    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
-#    sys.stderr = os.fdopen(sys.stderr.fileno(), 'w', 0)
+    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+    sys.stderr = os.fdopen(sys.stderr.fileno(), 'w', 0)
 
     judgeenv.load_env(cli=True, testsuite=True)
     executors.load_executors()

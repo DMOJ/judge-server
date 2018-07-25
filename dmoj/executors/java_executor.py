@@ -13,13 +13,11 @@ from dmoj.result import Result
 from dmoj.utils.unicode import utf8bytes, utf8text
 from .base_executor import CompiledExecutor
 
-recomment = re.compile(br'/\*.*?\*/', re.DOTALL)
-restring = re.compile(br''''(?:\\.|[^'\\])'|"(?:\\.|[^"\\])*"''', re.DOTALL)
-reinline_comment = re.compile(br'//.*?(?=[\r\n])')
-reclass = re.compile(br'\bpublic\s+(?:strictfp\s+)?(?:(?:abstract|final)\s+)?(?:strictfp\s+)?class\s+([_a-zA-Z\$][_0-9a-zA-z\$]*?)\b')
-repackage = re.compile(br'\bpackage\s+([^.;]+(?:\.[^.;]+)*?);')
-redeunicode = re.compile(br'\\u([0-9a-f]{4})', re.I)
-deunicode = lambda x: redeunicode.sub(lambda a: six.unichr(int(a.group(1), 16)), x)
+recomment = re.compile(r'/\*.*?\*/', re.DOTALL | re.U)
+restring = re.compile(r''''(?:\\.|[^'\\])'|"(?:\\.|[^"\\])*"''', re.DOTALL | re.U)
+reinline_comment = re.compile(r'//.*?(?=[\r\n])', re.U)
+reclass = re.compile(r'\bpublic\s+(?:strictfp\s+)?(?:(?:abstract|final)\s+)?(?:strictfp\s+)?class\s+([\w\$][\w\$]*?)\b', re.U)
+repackage = re.compile(r'\bpackage\s+([^.;]+(?:\.[^.;]+)*?);', re.U)
 
 
 JAVA_SANDBOX = os.path.abspath(os.path.join(os.path.dirname(__file__), 'java_sandbox.jar'))
@@ -36,13 +34,13 @@ with open(os.path.join(os.path.dirname(__file__), 'java-security.policy')) as po
 
 
 def find_class(source):
-    source = reinline_comment.sub(b'', restring.sub(b'', recomment.sub(b'', source)))
+    source = reinline_comment.sub('', restring.sub('', recomment.sub('', source)))
     class_name = reclass.search(source)
     if class_name is None:
         raise CompileError('No public class: your main class must be declared as a "public class"\n')
     package = repackage.search(source)
     if package:
-        raise CompileError('Invalid package %s: do not declare package\n' % utf8text(package.group(1), 'replace'))
+        raise CompileError('Invalid package %s: do not declare package\n' % package.group(1))
     return class_name
 
 
@@ -203,9 +201,13 @@ class JavaExecutor(CompiledExecutor):
 class JavacExecutor(JavaExecutor):
     def create_files(self, problem_id, source_code, *args, **kwargs):
         super(JavacExecutor, self).create_files(problem_id, source_code, *args, **kwargs)
-        source_code = deunicode(source_code)
+        # This step is necessary because of Unicode classnames
+        try:
+            source_code = utf8text(source_code)
+        except UnicodeDecodeError:
+            raise CompileError('Your UTF-8 is bad, and you should feel bad')
         class_name = find_class(source_code)
-        self._code = self._file('%s.java' % utf8text(class_name.group(1)))
+        self._code = self._file('%s.java' % class_name.group(1))
         try:
             with open(self._code, 'wb') as fo:
                 fo.write(utf8bytes(source_code))

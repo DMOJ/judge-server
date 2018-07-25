@@ -267,6 +267,7 @@ class CompiledExecutor(BaseExecutor):
     class TimedPopen(subprocess.Popen):
         def __init__(self, *args, **kwargs):
             self._time = kwargs.pop('time_limit', None)
+            print(*args)
             super(CompiledExecutor.TimedPopen, self).__init__(*args, **kwargs)
 
             self._killed = False

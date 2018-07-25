@@ -4,6 +4,8 @@ import logging
 import os
 import sys
 
+import codecs
+
 from dmoj import judgeenv, executors
 from dmoj.testsuite import Tester
 from dmoj.utils.ansi import ansi_style
@@ -14,11 +16,13 @@ required_executors = ['AWK', 'BF', 'C', 'CPP03', 'CPP11', 'CS', 'PERL', 'PY2', '
 
 
 def main():
-    unicode_stdout_stderr()
+#    unicode_stdout_stderr()
     logging.basicConfig(level=logging.INFO)
 
-#    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
-#    sys.stderr = os.fdopen(sys.stderr.fileno(), 'w', 0)
+    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+    sys.stderr = os.fdopen(sys.stderr.fileno(), 'w', 0)
+    sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
+    sys.stderr = codecs.getwriter('utf-8')(sys.stderr)
 
     judgeenv.load_env(cli=True, testsuite=True)
     executors.load_executors()

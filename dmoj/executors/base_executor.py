@@ -350,7 +350,7 @@ class CompiledExecutor(BaseExecutor):
         if six.PY2 and os.name == 'nt':
             # Unicode and Python 2 on Windows do not mix well
             args = [arg.encode('mbcs') for arg in args]
-            print(args)
+            print('%r' % args)
 
         return self.TimedPopen(args, **kwargs)
 

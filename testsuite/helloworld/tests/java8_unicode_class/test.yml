@@ -1,5 +1,0 @@
-language: JAVA8
-time: 2
-memory: 65536
-source: helloworld.java
-expect: AC

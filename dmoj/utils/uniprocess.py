@@ -7,6 +7,7 @@ import six
 
 if six.PY2 and sys.platform == 'win32':
     import _subprocess
+    from types import FunctionType
 
     # Based on https://gist.github.com/vaab/2ad7051fc193167f15f85ef573e54eb9.
     from ctypes import byref, windll, c_char_p, c_wchar_p, c_void_p, Structure, sizeof, c_wchar, WinError, POINTER
@@ -114,8 +115,16 @@ if six.PY2 and sys.platform == 'win32':
                 return getattr(_subprocess, item)
 
 
+    def replace_globals(function, new_globals):
+        func_globals = function.func_globals.copy()
+        func_globals.update(new_globals)
+        return FunctionType(function.func_code, func_globals, function.func_name,
+                            function.func_defaults, function.func_closure)
+
+
     class Popen(OldPopen):
-        _execute_child = copy.deepcopy(OldPopen._execute_child.im_func)
-        _execute_child.func_globals['_subprocess'] = FakeSubprocess()
+        _execute_child = replace_globals(OldPopen._execute_child.im_func, {
+            '_subprocess': FakeSubprocess(),
+        })
 else:
     Popen = OldPopen

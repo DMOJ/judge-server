@@ -18,6 +18,7 @@ from dmoj.utils.ansi import ansi_style
 from dmoj.utils.communicate import *
 from dmoj.utils.error import print_protection_fault
 from dmoj.utils.unicode import utf8bytes, utf8text
+from dmoj.utils.uniprocess import Popen as UniPopen
 
 reversion = re.compile('.*?(\d+(?:\.\d+)+)', re.DOTALL)
 version_cache = {}
@@ -243,7 +244,7 @@ class ScriptExecutor(BaseExecutor):
 
     def create_files(self, problem_id, source_code):
         with open(self._code, 'wb') as fo:
-            fo.write(source_code)
+            fo.write(utf8bytes(source_code))
 
     def get_cmdline(self):
         return [self.get_command(), self._code]
@@ -264,7 +265,7 @@ class CompiledExecutor(BaseExecutor):
     executable_size = 131072 * 1024  # 128mb
     compiler_time_limit = 10
 
-    class TimedPopen(subprocess.Popen):
+    class TimedPopen(UniPopen):
         def __init__(self, *args, **kwargs):
             self._time = kwargs.pop('time_limit', None)
             super(CompiledExecutor.TimedPopen, self).__init__(*args, **kwargs)
@@ -316,7 +317,7 @@ class CompiledExecutor(BaseExecutor):
     def create_files(self, problem_id, source_code, *args, **kwargs):
         self._code = self._file(problem_id + self.ext)
         with open(self._code, 'wb') as fo:
-            fo.write(source_code)
+            fo.write(utf8bytes(source_code))
 
     def get_compile_args(self):
         raise NotImplementedError()

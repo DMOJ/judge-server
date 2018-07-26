@@ -33,8 +33,6 @@ if six.PY2 and sys.platform == 'win32':
         ]
 
 
-    LPSTARTUPINFOW = POINTER(STARTUPINFOW)
-
 
     class PROCESS_INFORMATION(Structure):
         _fields_ = [
@@ -42,8 +40,6 @@ if six.PY2 and sys.platform == 'win32':
             ('dwProcessId', DWORD), ('dwThreadId', DWORD),
         ]
 
-
-    LPPROCESS_INFORMATION = POINTER(PROCESS_INFORMATION)
 
 
     class WindowsHandle(c_void_p):
@@ -66,7 +62,7 @@ if six.PY2 and sys.platform == 'win32':
     CreateProcessW.argtypes = [
         LPWSTR, LPWSTR, LPSECURITY_ATTRIBUTES,
         LPSECURITY_ATTRIBUTES, BOOL, DWORD, LPVOID, LPWSTR,
-        LPSTARTUPINFOW, LPPROCESS_INFORMATION,
+        c_void_p, c_void_p,
     ]
     CreateProcessW.restype = BOOL
 

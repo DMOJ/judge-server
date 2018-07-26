@@ -345,9 +345,7 @@ class CompiledExecutor(BaseExecutor):
                   'preexec_fn': self.create_executable_limits(), 'time_limit': self.compiler_time_limit}
         kwargs.update(self.get_compile_popen_kwargs())
 
-        args = self.get_compile_args()
-
-        return self.TimedPopen(args, **kwargs)
+        return self.TimedPopen(self.get_compile_args(), **kwargs)
 
     def get_compile_output(self, process):
         # Use safe_communicate because otherwise, malicious submissions can cause a compiler

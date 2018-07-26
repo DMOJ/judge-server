@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+import codecs
 import logging
 import os
 import sys
@@ -16,9 +17,8 @@ required_executors = ['AWK', 'BF', 'C', 'CPP03', 'CPP11', 'CS', 'PERL', 'PY2', '
 def main():
     logging.basicConfig(level=logging.INFO)
 
-    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
-    sys.stderr = os.fdopen(sys.stderr.fileno(), 'w', 0)
-    unicode_stdout_stderr()
+    sys.stdout = codecs.getwriter('utf-8')(os.fdopen(sys.stdout.fileno(), 'w', 0))
+    sys.stderr = codecs.getwriter('utf-8')(os.fdopen(sys.stderr.fileno(), 'w', 0))
 
     judgeenv.load_env(cli=True, testsuite=True)
     executors.load_executors()

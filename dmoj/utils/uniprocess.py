@@ -1,21 +1,20 @@
 # Work around Python 2 not being able to use Unicode command lines on Windows.
-import copy
 import sys
 from subprocess import Popen as OldPopen
 
 import six
+
+from dmoj.utils.unicode import utf8text
 
 if six.PY2 and sys.platform == 'win32':
     import _subprocess
     from types import FunctionType
 
     # Based on https://gist.github.com/vaab/2ad7051fc193167f15f85ef573e54eb9.
-    from ctypes import byref, windll, c_char_p, c_wchar_p, c_void_p, Structure, sizeof, c_wchar, WinError, POINTER
+    from ctypes import byref, windll, c_void_p, Structure, sizeof, c_wchar, WinError, POINTER
     from ctypes.wintypes import BYTE, WORD, LPWSTR, BOOL, DWORD, LPVOID, HANDLE
 
     CREATE_UNICODE_ENVIRONMENT = 0x00000400
-    LPCTSTR = c_char_p
-    LPTSTR = c_wchar_p
     LPSECURITY_ATTRIBUTES = c_void_p
     LPBYTE = POINTER(BYTE)
 
@@ -65,8 +64,8 @@ if six.PY2 and sys.platform == 'win32':
 
     CreateProcessW = windll.kernel32.CreateProcessW
     CreateProcessW.argtypes = [
-        LPCTSTR, LPTSTR, LPSECURITY_ATTRIBUTES,
-        LPSECURITY_ATTRIBUTES, BOOL, DWORD, LPVOID, LPCTSTR,
+        LPWSTR, LPWSTR, LPSECURITY_ATTRIBUTES,
+        LPSECURITY_ATTRIBUTES, BOOL, DWORD, LPVOID, LPWSTR,
         LPSTARTUPINFOW, LPPROCESS_INFORMATION,
     ]
     CreateProcessW.restype = BOOL
@@ -101,7 +100,7 @@ if six.PY2 and sys.platform == 'win32':
 
         if CreateProcessW(executable, args, None, None,
                           inherit_handles, creation_flags,
-                          wenv, cwd, byref(si), byref(pi)):
+                          wenv, utf8text(cwd), byref(si), byref(pi)):
             return (WindowsHandle(pi.hProcess), WindowsHandle(pi.hThread),
                     pi.dwProcessId, pi.dwThreadId)
         raise WinError()

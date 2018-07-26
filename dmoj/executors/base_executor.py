@@ -349,6 +349,8 @@ class CompiledExecutor(BaseExecutor):
 
         if six.PY2 and os.name == 'nt':
             # Unicode and Python 2 on Windows do not mix well
+            from ctypes import *
+            print(windll.kernel32.GetACP())
             print('%r' % args)
             print('%r' % [utf8text(arg) for arg in args])
             args = [utf8text(arg).encode('mbcs') for arg in args]

@@ -3,7 +3,6 @@ from __future__ import print_function
 import re
 import shutil
 import signal
-import six
 import subprocess
 import sys
 import tempfile
@@ -347,15 +346,6 @@ class CompiledExecutor(BaseExecutor):
         kwargs.update(self.get_compile_popen_kwargs())
 
         args = self.get_compile_args()
-
-        if six.PY2 and os.name == 'nt':
-            # Unicode and Python 2 on Windows do not mix well
-            from ctypes import *
-            print(windll.kernel32.GetACP())
-            print('%r' % args)
-            print('%r' % [utf8text(arg) for arg in args])
-            args = [utf8text(arg).encode('mbcs') for arg in args]
-            print('%r' % args)
 
         return self.TimedPopen(args, **kwargs)
 

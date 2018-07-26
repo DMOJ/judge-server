@@ -5,6 +5,8 @@ from subprocess import Popen as OldPopen
 
 import six
 
+from dmoj.utils.unicode import utf8text
+
 if six.PY2 and sys.platform == 'win32':
     import _subprocess
     from types import FunctionType
@@ -101,7 +103,7 @@ if six.PY2 and sys.platform == 'win32':
 
         if CreateProcessW(executable, args, None, None,
                           inherit_handles, creation_flags,
-                          wenv, cwd, byref(si), byref(pi)):
+                          wenv, utf8text(cwd), byref(si), byref(pi)):
             return (WindowsHandle(pi.hProcess), WindowsHandle(pi.hThread),
                     pi.dwProcessId, pi.dwThreadId)
         raise WinError()

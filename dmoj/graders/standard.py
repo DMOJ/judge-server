@@ -170,7 +170,7 @@ class StandardGrader(BaseGrader):
         except CompileError as compilation_error:
             error = compilation_error.args[0]
             error = error.decode('mbcs') if os.name == 'nt' and isinstance(error, six.binary_type) else error
-            self.judge.packet_manager.compile_error_packet(ansi.format_ansi(error or ''))
+            self.judge.packet_manager.compile_error_packet(ansi.format_ansi(error or 'compiler exited abnormally'))
 
             # Compile error is fatal
             raise

@@ -18,7 +18,7 @@ end.
         return [self.get_command(), '-Fe/dev/stderr', '-So', '-O2', self._code]
 
     def get_compile_output(self, process):
-        output = process.communicate()[1]
+        output = super(Executor, self).get_compile_output(process)
         return output if b'Fatal:' in output or b'Warning:' in output or b'Note:' in output else ''
 
     @classmethod

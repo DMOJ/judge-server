@@ -264,6 +264,7 @@ class ScriptExecutor(BaseExecutor):
 class CompiledExecutor(BaseExecutor):
     executable_size = 131072 * 1024  # 128mb
     compiler_time_limit = 10
+    compile_output_index = 1
 
     class TimedPopen(UniPopen):
         def __init__(self, *args, **kwargs):
@@ -351,7 +352,7 @@ class CompiledExecutor(BaseExecutor):
         # Use safe_communicate because otherwise, malicious submissions can cause a compiler
         # to output hundreds of megabytes of data as output before being killed by the time limit,
         # which effectively murders the MySQL database waiting on the site server.
-        return safe_communicate(process, None, outlimit=65536, errlimit=65536)[1]
+        return safe_communicate(process, None, outlimit=65536, errlimit=65536)[self.compile_output_index]
 
     def get_compiled_file(self):
         return self._file(self.problem)

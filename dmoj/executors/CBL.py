@@ -8,6 +8,7 @@ class Executor(CompiledExecutor):
     name = 'CBL'
     command = 'cobc'
     address_grace = 131072
+    compile_output_index = 0
     test_program = '''\
 	IDENTIFICATION DIVISION.
 	PROGRAM-ID. HELLO-WORLD.
@@ -23,5 +24,5 @@ class Executor(CompiledExecutor):
         return {'stdout': subprocess.PIPE, 'stderr': subprocess.STDOUT}
 
     def get_compile_output(self, process):
-        output = process.communicate()[0]
+        output = super(Executor, self).get_compile_output(process)
         return output if b'Error:' in output or b'Note:' in output or b'Warning:' in output else ''

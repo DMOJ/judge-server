@@ -1,6 +1,7 @@
 # encoding: utf-8
 from __future__ import print_function
 
+import io
 import os
 import sys
 
@@ -128,19 +129,8 @@ if os.name != 'nt' or 'sdist' in sys.argv:
 if os.name != 'nt':
     extensions += [SimpleSharedObject('dmoj.utils.setbufsize', sources=['dmoj/utils/setbufsize.c'])]
 
-rst_path = os.path.join(os.path.dirname(__file__), 'README.rst')
-
-if 'sdist' in sys.argv:
-    readme = subprocess.check_output("pandoc -f markdown_github README.md -t html | sed -e 's/❌/X/g' | "
-                                     'pandoc -f html -t rst --columns=300', shell=True)
-    with open(rst_path, 'wb') as f:
-        f.write(readme)
-else:
-    try:
-        with open(rst_path, 'rb') as f:
-            readme = f.read().replace(b'\r\n', b'\r').replace(b'\r', b'\n')
-    except IOError:
-        readme = None
+with io.open(os.path.join(os.path.dirname(__file__), 'README.md'), encoding='utf-8') as f:
+    readme = f.read()
 
 setup(
     name='dmoj',
@@ -170,7 +160,8 @@ setup(
     author_email='admin@dmoj.ca',
     url='https://github.com/DMOJ/judge',
     description='The judge component of the DMOJ: Modern Online Judge platform',
-    long_description=readme and readme.decode('utf-8', 'replace'),
+    long_description=readme,
+    long_description_content_type='text/markdown',
     keywords='online-judge',
     classifiers=[
         'Development Status :: 5 - Production/Stable',

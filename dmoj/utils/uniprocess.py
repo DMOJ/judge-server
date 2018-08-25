@@ -1,6 +1,5 @@
-# Work around Python 2 not being able to use Unicode command lines on Windows.
 import sys
-from subprocess import Popen as OldPopen
+import subprocess
 
 import six
 
@@ -8,9 +7,8 @@ from dmoj.utils.unicode import utf8text
 
 if six.PY2 and sys.platform == 'win32':
     import _subprocess
-    from types import FunctionType
+    from types import FunctionType, CodeType
 
-    # Based on https://gist.github.com/vaab/2ad7051fc193167f15f85ef573e54eb9.
     from ctypes import byref, windll, c_void_p, Structure, sizeof, c_wchar, WinError, POINTER
     from ctypes.wintypes import BYTE, WORD, LPWSTR, BOOL, DWORD, LPVOID, HANDLE
 
@@ -33,6 +31,8 @@ if six.PY2 and sys.platform == 'win32':
         ]
 
 
+    LPSTARTUPINFOW = POINTER(STARTUPINFOW)
+
 
     class PROCESS_INFORMATION(Structure):
         _fields_ = [
@@ -40,6 +40,8 @@ if six.PY2 and sys.platform == 'win32':
             ('dwProcessId', DWORD), ('dwThreadId', DWORD),
         ]
 
+
+    LPPROCESS_INFORMATION = POINTER(PROCESS_INFORMATION)
 
 
     class WindowsHandle(c_void_p):
@@ -58,11 +60,12 @@ if six.PY2 and sys.platform == 'win32':
             return self.value
 
 
-    CreateProcessW = windll.kernel32.CreateProcessW
+    # Using LoadLibrary to avoid our argtypes conflicting.
+    CreateProcessW = windll.LoadLibrary('kernel32.dll').CreateProcessW
     CreateProcessW.argtypes = [
         LPWSTR, LPWSTR, LPSECURITY_ATTRIBUTES,
         LPSECURITY_ATTRIBUTES, BOOL, DWORD, LPVOID, LPWSTR,
-        c_void_p, c_void_p,
+        LPSTARTUPINFOW, LPPROCESS_INFORMATION,
     ]
     CreateProcessW.restype = BOOL
 
@@ -70,10 +73,6 @@ if six.PY2 and sys.platform == 'win32':
     def CreateProcess(executable, args, _p_attr, _t_attr,
                       inherit_handles, creation_flags, env, cwd,
                       startup_info):
-        """Create a process supporting unicode executable and args for win32
-        Python implementation of CreateProcess using CreateProcessW for Win32
-        """
-
         int_or_none = lambda x: None if x is None else int(x)
 
         si = STARTUPINFOW(
@@ -117,9 +116,27 @@ if six.PY2 and sys.platform == 'win32':
                             function.func_defaults, function.func_closure)
 
 
-    class Popen(OldPopen):
-        _execute_child = replace_globals(OldPopen._execute_child.im_func, {
+    def replace_consts(function, new_consts):
+        code = function.func_code
+        consts = tuple(new_consts.get(const, const) for const in code.co_consts)
+        new_code = CodeType(code.co_argcount, code.co_nlocals, code.co_stacksize, code.co_flags,
+                            code.co_code, consts, code.co_names, code.co_varnames, code.co_filename,
+                            code.co_name, code.co_firstlineno, code.co_lnotab)
+        function.func_code = new_code
+
+
+    class Popen(subprocess.Popen):
+        _execute_child = replace_globals(subprocess.Popen._execute_child.im_func, {
             '_subprocess': FakeSubprocess(),
         })
+        replace_consts(_execute_child, {'{} /c "{}"': u'{} /c "{}"'})
+
+
+    call = replace_globals(subprocess.call, {'Popen': Popen})
+    check_call = replace_globals(subprocess.check_call, {'call': call})
+    check_output = replace_globals(subprocess.check_output, {'Popen': Popen})
 else:
-    Popen = OldPopen
+    Popen = subprocess.Popen
+    call = subprocess.call
+    check_call = subprocess.check_call
+    check_output = subprocess.check_output

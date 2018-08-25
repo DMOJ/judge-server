@@ -121,7 +121,8 @@ if six.PY2 and sys.platform == 'win32':
         consts = tuple(new_consts.get(const, const) for const in code.co_consts)
         new_code = CodeType(code.co_argcount, code.co_nlocals, code.co_stacksize, code.co_flags,
                             code.co_code, consts, code.co_names, code.co_varnames, code.co_filename,
-                            code.co_name, code.co_firstlineno, code.co_lnotab)
+                            code.co_name, code.co_firstlineno, code.co_lnotab, code.co_freevars,
+                            code.co_cellvars)
         function.func_code = new_code
 
 

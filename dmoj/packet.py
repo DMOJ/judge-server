@@ -6,6 +6,7 @@ import logging
 import os
 import socket
 import struct
+import sys
 import threading
 import time
 import traceback
@@ -164,6 +165,11 @@ class PacketManager(object):
     def run(self):
         self._read_async()
 
+    def disconnect(self):
+        self.close()
+        self.judge.terminate_grading()
+        sys.exit(0)
+
     def run_async(self):
         threading.Thread(target=self._read_async).start()
 
@@ -218,6 +224,9 @@ class PacketManager(object):
         elif name == 'terminate-submission':
             log.info('Received abortion request for %s', self.judge.current_submission)
             self.judge.terminate_grading()
+        elif name == 'disconnect':
+            log.info('Received disconnect request, shutting down...')
+            self.disconnect()
         else:
             log.error('Unknown packet %s, payload %s', name, packet)
 

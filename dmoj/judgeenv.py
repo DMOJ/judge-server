@@ -44,8 +44,8 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
         parser.add_argument('judge_key', nargs='?', help='judge key (overrides configuration)')
         parser.add_argument('-p', '--server-port', type=int, default=9999,
                             help='port to connect for the server')
-    parser.add_argument('-c', '--config', type=str, default=None, required=True,
-                        help='file to load judge configurations from')
+    parser.add_argument('-c', '--config', type=str, default='~/.dmojrc',
+                        help='file to load judge configurations from (default: ~/.dmojrc)')
 
     if not cli:
         parser.add_argument('-l', '--log-file',
@@ -103,7 +103,7 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
     only_executors |= args.only_executors and set(args.only_executors.split(',')) or set()
     exclude_executors |= args.exclude_executors and set(args.exclude_executors.split(',')) or set()
 
-    model_file = args.config
+    model_file = os.path.expanduser(args.config)
 
     with open(model_file) as init_file:
         env.update(yaml.safe_load(init_file))

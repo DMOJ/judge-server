@@ -5,7 +5,7 @@ class Executor(MonoExecutor):
     ext = '.cs'
     name = 'MONOCS'
     command = 'mono-csc'
-    command_paths = ['mono-csc', 'dmcs', 'mcs', 'gmcs']
+    command_paths = ['mono-csc', 'mcs', 'dmcs', 'gmcs']
 
     test_program = '''\
 using System;

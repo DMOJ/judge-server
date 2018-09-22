@@ -14,11 +14,14 @@ if hasattr(os, 'getloadavg'):
 elif os.name != 'nt':
     # There exist some Unix platforms (like Android) which don't
     # have `getloadavg` implemented, but obviously aren't Windows
-    # so going down the below branch is worthless. There's not much
-    # we can do on these systems than report clearly that we can't
-    # determine the load.
+    # so we manually read the `/proc/loadavg` file.
     def load_fair():
-        return 'load', -1
+        try:
+            with open('/proc/loadavg', 'r') as f:
+                load = float(f.read().split()[0]) / _cpu_count
+        except FileNotFoundError:
+            load = -1
+        return 'load', load
 else:  # pragma: no cover
     from dmoj.utils.winperfmon import PerformanceCounter
     from threading import Thread

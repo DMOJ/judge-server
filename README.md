@@ -114,25 +114,38 @@ $ pip install -e .
 ### Running a Judge Server
 ```
 $ dmoj --help
-usage: dmoj [-h] [-p SERVER_PORT] -c CONFIG [-l LOG_FILE]
+usage: dmoj [-h] [-p SERVER_PORT] -c CONFIG [-l LOG_FILE] [--no-watchdog]
+            [-a API_PORT] [-A API_HOST] [-s] [-k] [-T TRUSTED_CERTIFICATES]
             [-e ONLY_EXECUTORS | -x EXCLUDE_EXECUTORS] [--no-ansi]
             server_host [judge_name] [judge_key]
 
 Spawns a judge for a submission server.
 
 positional arguments:
-  server_host           host to listen for the server
+  server_host           host to connect for the server
   judge_name            judge name (overrides configuration)
   judge_key             judge key (overrides configuration)
 
 optional arguments:
   -h, --help            show this help message and exit
   -p SERVER_PORT, --server-port SERVER_PORT
-                        port to listen for the server
+                        port to connect for the server
   -c CONFIG, --config CONFIG
                         file to load judge configurations from
   -l LOG_FILE, --log-file LOG_FILE
                         log file to use
+  --no-watchdog         disable use of watchdog on problem directories
+  -a API_PORT, --api-port API_PORT
+                        port to listen for the judge API (do not expose to
+                        public, security is left as an exercise for the
+                        reverse proxy)
+  -A API_HOST, --api-host API_HOST
+                        IPv4 address to listen for judge API
+  -s, --secure          connect to server via TLS
+  -k, --no-certificate-check
+                        do not check TLS certificate
+  -T TRUSTED_CERTIFICATES, --trusted-certificates TRUSTED_CERTIFICATES
+                        use trusted certificate file instead of system
   -e ONLY_EXECUTORS, --only-executors ONLY_EXECUTORS
                         only listed executors will be loaded (comma-separated)
   -x EXCLUDE_EXECUTORS, --exclude-executors EXCLUDE_EXECUTORS
@@ -160,7 +173,6 @@ optional arguments:
                         prevent listed executors from loading (comma-
                         separated)
   --no-ansi             disable ANSI output
-  --no-ansi-emu         disable ANSI emulation on Windows
 ```
 
 ## Documentation

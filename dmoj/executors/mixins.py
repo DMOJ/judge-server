@@ -117,6 +117,9 @@ try:
                 agent = self._file('setbufsize.so')
                 shutil.copyfile(setbufsize_path, agent)
                 env = {
+                    # Forward LD_LIBRARY_PATH for systems (e.g. Android Termux) that require
+                    # it to find shared libraries
+                    'LD_LIBRARY_PATH': os.environ.get('LD_LIBRARY_PATH', ''),
                     'LD_PRELOAD': agent,
                     'CPTBOX_STDOUT_BUFFER_SIZE': kwargs.get('stdout_buffer_size'),
                     'CPTBOX_STDERR_BUFFER_SIZE': kwargs.get('stderr_buffer_size'),

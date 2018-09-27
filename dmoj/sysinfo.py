@@ -11,6 +11,17 @@ if hasattr(os, 'getloadavg'):
         except OSError:  # as of May 2016, Windows' Linux subsystem throws OSError on getloadavg
             load = -1
         return 'load', load
+elif os.name != 'nt':
+    # There exist some Unix platforms (like Android) which don't
+    # have `getloadavg` implemented, but obviously aren't Windows
+    # so we manually read the `/proc/loadavg` file.
+    def load_fair():
+        try:
+            with open('/proc/loadavg', 'r') as f:
+                load = float(f.read().split()[0]) / _cpu_count
+        except FileNotFoundError:
+            load = -1
+        return 'load', load
 else:  # pragma: no cover
     from dmoj.utils.winperfmon import PerformanceCounter
     from threading import Thread

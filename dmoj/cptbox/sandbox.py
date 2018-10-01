@@ -40,7 +40,8 @@ def _find_exe(path):
 def file_info(path, split=re.compile(r'[\s,]').split):
     try:
         return split(utf8text(subprocess.check_output(['file', '-b', '-L', path])))
-    except subprocess.CalledProcessError:
+    except (OSError, subprocess.CalledProcessError):
+        log.exception('call to file(1) failed -- does the utility exist?')
         return []
 
 

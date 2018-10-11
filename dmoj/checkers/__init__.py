@@ -1,1 +1,1 @@
-from dmoj.checkers import easy, floats, floatsrel, floatsabs, identical, identical_with_pe, rstripped, sorted, standard, unordered, linecount
+from dmoj.checkers import easy, floats, floatsrel, floatsabs, identical, rstripped, sorted, standard, unordered, linecount

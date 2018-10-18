@@ -1,6 +1,7 @@
 import os
 import subprocess
 import zipfile
+from collections import defaultdict
 from functools import partial
 
 import six
@@ -17,11 +18,13 @@ from dmoj.utils.module import load_module_from_file
 
 
 class Problem(object):
+    generator_cache = defaultdict(GeneratorManager)
+
     def __init__(self, problem_id, time_limit, memory_limit, load_pretests_only=False):
         self.id = problem_id
         self.time_limit = time_limit
         self.memory_limit = memory_limit
-        self.generator_manager = GeneratorManager()
+        self.generator_manager = self.generator_cache[problem_id]
 
         self.problem_data = ProblemDataManager(problem_id)
 

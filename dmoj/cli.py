@@ -81,6 +81,10 @@ def register(command):
 
 
 def main():
+    sys.exit(cli_main())
+
+
+def cli_main():
     global commands
     import logging
     from dmoj import judgeenv, executors
@@ -117,21 +121,23 @@ def main():
         if line[0] in commands:
             cmd = commands[line[0]]
             try:
-                cmd.execute(line[1:])
+                return cmd.execute(line[1:])
             except InvalidCommandException as e:
                 if e.message:
                     print(ansi_style("#ansi[%s](red|bold)\n" % e.message))
                 print()
+                return 1
         else:
             print(ansi_style('#ansi[Unrecognized command %s](red|bold)' % line[0]))
             print()
+            return 127
 
     with judge:
         try:
             judge.listen()
 
             if judgeenv.cli_command:
-                run_command(judgeenv.cli_command)
+                return run_command(judgeenv.cli_command)
             else:
                 while True:
                     command = input(ansi_style("#ansi[dmoj](magenta)#ansi[>](green) ")).strip()
@@ -143,4 +149,4 @@ def main():
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    main()

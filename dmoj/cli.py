@@ -6,6 +6,8 @@ from collections import OrderedDict
 
 from six.moves import input
 
+from shlex import split as shlexsplit
+
 from dmoj.judge import Judge
 from dmoj.utils.ansi import ansi_style
 
@@ -120,7 +122,7 @@ def main():
             while True:
                 command = input(ansi_style("#ansi[dmoj](magenta)#ansi[>](green) ")).strip()
 
-                line = command.split(' ')
+                line = shlexsplit(command)
                 if line[0] in commands:
                     cmd = commands[line[0]]
                     try:

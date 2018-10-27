@@ -87,7 +87,7 @@ def ci_test(executors_to_test, overrides):
 
                 if config:
                     print('  Attempted:')
-                    print('   ', yaml.dump(config, default_flow_style=False).rstrip().replace('\n', '\n' + ' ' * 4))
+                    print('   ', yaml.safe_dump(config, default_flow_style=False).rstrip().replace('\n', '\n' + ' ' * 4))
 
                 if errors:
                     print('  Errors:')
@@ -96,7 +96,7 @@ def ci_test(executors_to_test, overrides):
 
     print()
     print(ansi_style('#ansi[Configuration result](green|bold|underline):'))
-    print(yaml.dump({'runtime': result}, default_flow_style=False).rstrip())
+    print(yaml.safe_dump({'runtime': result}, default_flow_style=False).rstrip())
     print()
     if failed:
         print(ansi_style('#ansi[Executor configuration failed.](red|bold).'))

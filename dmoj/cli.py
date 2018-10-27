@@ -1,8 +1,9 @@
 from __future__ import print_function
 
-import os
-import sys
 from collections import OrderedDict
+import os
+import shlex
+import sys
 
 from six.moves import input
 
@@ -141,7 +142,7 @@ def cli_main():
             else:
                 while True:
                     command = input(ansi_style("#ansi[dmoj](magenta)#ansi[>](green) ")).strip()
-                    run_command(command.split(' '))
+                    run_command(shlex.split(command))
         except (EOFError, KeyboardInterrupt):
             print()
         finally:

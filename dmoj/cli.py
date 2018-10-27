@@ -113,25 +113,29 @@ def main():
     for command in all_commands:
         register(command(judge))
 
+    def run_command(line):
+        if line[0] in commands:
+            cmd = commands[line[0]]
+            try:
+                cmd.execute(line[1:])
+            except InvalidCommandException as e:
+                if e.message:
+                    print(ansi_style("#ansi[%s](red|bold)\n" % e.message))
+                print()
+        else:
+            print(ansi_style('#ansi[Unrecognized command %s](red|bold)' % line[0]))
+            print()
+
     with judge:
         try:
             judge.listen()
 
-            while True:
-                command = input(ansi_style("#ansi[dmoj](magenta)#ansi[>](green) ")).strip()
-
-                line = command.split(' ')
-                if line[0] in commands:
-                    cmd = commands[line[0]]
-                    try:
-                        cmd.execute(line[1:])
-                    except InvalidCommandException as e:
-                        if e.message:
-                            print(ansi_style("#ansi[%s](red|bold)\n" % e.message))
-                        print()
-                else:
-                    print(ansi_style('#ansi[Unrecognized command %s](red|bold)' % line[0]))
-                    print()
+            if judgeenv.cli_command:
+                run_command(judgeenv.cli_command)
+            else:
+                while True:
+                    command = input(ansi_style("#ansi[dmoj](magenta)#ansi[>](green) ")).strip()
+                    run_command(command.split(' '))
         except (EOFError, KeyboardInterrupt):
             print()
         finally:

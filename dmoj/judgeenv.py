@@ -36,9 +36,13 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
         server_port, no_ansi, no_ansi_emu, env, startup_warnings, no_watchdog, \
         problem_regex, case_regex, api_listen, secure, no_cert_check, cert_store, \
         problem_watches, cli_command
-    parser = argparse.ArgumentParser(description='''
-        Spawns a judge for a submission server.
-    ''')
+
+    if cli:
+        description = 'Starts a shell for interfacing with a local judge instance.'
+    else:
+        description = 'Spawns a judge for a submission server.'
+
+    parser = argparse.ArgumentParser(description=description)
     if not cli:
         parser.add_argument('server_host', help='host to connect for the server')
         parser.add_argument('judge_name', nargs='?', help='judge name (overrides configuration)')

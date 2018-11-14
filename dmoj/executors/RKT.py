@@ -12,7 +12,7 @@ class Executor(ScriptDirectoryMixin, CompiledExecutor):
     command = 'racket'
 
     syscalls = ['epoll_create', 'epoll_wait', 'poll']
-    address_grace = 131072
+    address_grace = 1310720
 
     test_program = '''\
 #lang racket

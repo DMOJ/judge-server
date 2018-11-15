@@ -1,6 +1,8 @@
-# DMOJ Judge [![Linux Build Status](https://img.shields.io/travis/SchOJ/judge.svg?logo=linux)](https://travis-ci.org/SchOJ/judge)
+# SchOJ Judge [![Linux Build Status](https://img.shields.io/travis/SchOJ/judge.svg?logo=linux)](https://travis-ci.org/SchOJ/judge)
 
-Python [AGPLv3](https://github.com/DMOJ/judge/blob/master/LICENSE) contest judge backend for the [DMOJ site](http://github.com/DMOJ/site) interface. See it in action at [dmoj.ca](https://dmoj.ca/)!
+**Modified from [DMOJ/judge](https://github.com/DMOJ/judge)**
+
+Python [AGPLv3](https://github.com/DMOJ/judge/blob/master/LICENSE) contest judge backend for the [DMOJ site](http://github.com/DMOJ/site) interface.
 
 <table>
 <tr>

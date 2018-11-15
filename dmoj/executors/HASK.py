@@ -14,4 +14,4 @@ main = do
     '''
 
     def get_compile_args(self):
-	return ['ghc', '-O2', '-o', self.problem, self._code]
+        return [self.get_command(), '-O2', '-o', self.problem, self._code]

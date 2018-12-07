@@ -166,6 +166,8 @@ class Judge(object):
             grader_class = graders.SignatureGrader
         elif 'custom_judge' in problem.config:
             grader_class = graders.CustomGrader
+        elif 'unit_test' in problem.config:
+            grader_class = graders.UnitTestGrader
         else:
             grader_class = graders.StandardGrader
 

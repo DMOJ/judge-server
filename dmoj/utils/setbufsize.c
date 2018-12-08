@@ -14,7 +14,7 @@ void _DMOJ_setbuffer(FILE *handle, char *env_str) {
             if (buf_size) {
                 setvbuf(handle, NULL, _IOFBF, buf_size);
             } else {
-                setvbuf(stdout, NULL, _IONBF, 0);
+                setvbuf(handle, NULL, _IONBF, 0);
             }
         }
     }

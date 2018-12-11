@@ -4,6 +4,7 @@ import shutil
 import sys
 from shutil import copyfile
 
+from dmoj.error import InternalError
 from dmoj.judgeenv import env
 from dmoj.utils import setbufsize_path
 from dmoj.utils.unicode import utf8bytes
@@ -114,6 +115,18 @@ try:
                 return env
 
             def launch(self, *args, **kwargs):
+                for src, dst in kwargs.get('symlinks', {}).items():
+                    src = os.path.abspath(os.path.join(self._dir, src))
+                    # Disallow the creation of symlinks outside the submission directory.
+                    if os.path.commonprefix([src, self._dir]) == self._dir:
+                        # If a link already exists under this name, it's probably from a
+                        # previous case, but might point to something different.
+                        if os.path.islink(src):
+                            os.unlink(src)
+                        os.symlink(dst, src)
+                    else:
+                        raise InternalError('cannot symlink outside of submission directory')
+
                 agent = self._file('setbufsize.so')
                 shutil.copyfile(setbufsize_path, agent)
                 env = {

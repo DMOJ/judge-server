@@ -34,7 +34,8 @@ class StandardGrader(BaseGrader):
 
         self._current_proc = self.binary.launch(time=self.problem.time_limit, memory=self.problem.memory_limit,
                                                 pipe_stderr=True, io_redirects=case.io_redirects(),
-                                                wall_time=case.config.wall_time_factor * self.problem.time_limit)
+                                                wall_time=case.config.wall_time_factor * self.problem.time_limit,
+                                                symlinks=case.config.symlinks)
 
         error = self._interact_with_process(case, result, input)
 

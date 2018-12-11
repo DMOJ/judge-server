@@ -1,5 +1,7 @@
-import re
+from __future__ import print_function
+
 from operator import itemgetter
+import re
 
 from six.moves import zip_longest
 

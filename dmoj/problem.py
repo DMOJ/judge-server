@@ -41,6 +41,7 @@ class Problem(object):
                 'output_limit_length': 25165824,
                 'binary_data': False,
                 'short_circuit': True,
+                'symlinks': {},
             })
         except (IOError, KeyError, ParserError, ScannerError) as e:
             raise InvalidInitException(str(e))

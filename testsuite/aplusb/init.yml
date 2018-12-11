@@ -8,6 +8,11 @@ io_redirects:
 
 archive: aplusb.zip
 
+symlinks: {
+  in_link: /dev/stdin,
+  out_link: /dev/stdout
+}
+
 hints: [nobigmath]
 
 pretest_test_cases:

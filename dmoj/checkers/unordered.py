@@ -1,4 +1,8 @@
+import warnings
+
+from dmoj.checkers.sorted import check as sorted_check
+
 def check(process_output, judge_output, **kwargs):
-    process_tokens = process_output.split()
-    judge_tokens = judge_output.split()
-    return len(process_tokens) == len(judge_tokens) and sorted(process_tokens) == sorted(judge_tokens)
+    warnings.warn('`unordered` checker is deprecated, use `sorted` with '
+                  '`split_on` parameter instead', DeprecationWarning)
+    return sorted_check(process_output, judge_output, split_on='whitespace')

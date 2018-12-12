@@ -34,3 +34,18 @@ class CheckerTest(unittest.TestCase):
         assert is_pe(check(b'a\nb\nc', b'a\nb\nc\n'))
         assert is_pe(check(b'a\nb\nc', b'a\nb\nc\n', pe_allowed=False), feedback=None)
 
+    def test_sorted(self):
+        from dmoj.checkers.sorted import check
+
+        assert not check(b'1 2 3', b'3 2 1')
+        assert check(b'1 2 3', b'3 2 1', split_on='whitespace')
+        assert not check(b'1 2 3', b'3 2 1', split_on='lines')
+        assert check(b'1 2 3', b'1 2 3')
+        assert not check(b'1 2 2', b'1 2 3')
+        assert not check(b'1 2', b'1')
+        assert not check(b'1\n2', b'1')
+        assert not check(b'12', b'1 2')
+
+        assert check(b'1 2\n3', b'3\n1 2')
+        assert not check(b'1 2\n3', b'3\n2 1')
+        assert check(b'1 2\n3', b'3\n2 1', split_on='whitespace')

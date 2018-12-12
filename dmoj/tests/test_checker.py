@@ -21,3 +21,16 @@ class CheckerTest(unittest.TestCase):
         # Checkers should handle mixed bytes/str
         assert check(b'a', u'a')
         assert not check(b'a', u'b')
+
+    def test_identical(self):
+        from dmoj.checkers.identical import check
+
+        def is_pe(res, feedback='Presentation Error, check your whitespace'):
+            return res is not True and not res.passed and res.feedback == feedback
+
+        assert check(b'a\nb\nc', b'a\nb\nc')
+        assert check(b'a\nb\nc', b'a\nb\nc')
+        assert is_pe(check(b'a \nb\nc', b'a\nb\nc'))
+        assert is_pe(check(b'a\nb\nc', b'a\nb\nc\n'))
+        assert is_pe(check(b'a\nb\nc', b'a\nb\nc\n', pe_allowed=False), feedback=None)
+

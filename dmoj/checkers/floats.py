@@ -5,13 +5,45 @@ from six.moves import zip, filter
 from dmoj.utils.unicode import utf8bytes
 
 
-def check(process_output, judge_output, precision, **kwargs):
+def verify_absolute(process_float, judge_float, epsilon):
+    # Since process_float can be NaN, this is NOT equivalent to
+    # (process_float - judge_float) > epsilon;  the code below will always
+    # reject NaN, even if judge_float is NaN
+    return abs(process_float - judge_float) <= epsilon
+
+
+def verify_relative(process_float, judge_float, epsilon):
+    p1 = min(judge_float * (1 - epsilon), judge_float * (1 + epsilon))
+    p2 = max(judge_float * (1 - epsilon), judge_float * (1 + epsilon))
+    # Since process_float can be NaN, this is NOT equivalent to
+    # (process_float < p1 or process_float > p2)
+    return p1 <= process_float <= p2
+
+
+def verify_default(process_float, judge_float, epsilon):
+    # process_float can be NaN
+    # in this case, we reject NaN as a possible answer, even if judge_float is NaN
+    return (abs(process_float - judge_float) <= epsilon or
+            abs(judge_float) >= epsilon and
+            abs(1.0 - process_float / judge_float) <= epsilon)
+
+
+def check(process_output, judge_output, precision=6, error_mode='default', **kwargs):
     # Discount empty lines
     process_lines = list(filter(None, resplit(b'[\r\n]', utf8bytes(process_output))))
     judge_lines = list(filter(None, resplit(b'[\r\n]', utf8bytes(judge_output))))
 
     if len(process_lines) != len(judge_lines):
         return False
+
+    verify_float = {
+        'absolute': verify_absolute,
+        'relative': verify_relative,
+        'default': verify_default,
+    }.get(error_mode)
+
+    if not verify_float:
+        raise InternalError('invalid `error_mode` value')
 
     epsilon = 10 ** -int(precision)
 
@@ -33,10 +65,8 @@ def check(process_output, judge_output, precision, **kwargs):
                         return False
                 else:
                     process_float = float(process_token)
-                    # process_float can be nan
-                    # in this case, we reject nan as a possible answer, even if judge_float is nan
-                    if not abs(process_float - judge_float) <= epsilon and \
-                            (not abs(judge_float) >= epsilon or not abs(1.0 - process_float / judge_float) <= epsilon):
+
+                    if not verify_float(process_float, judge_float, epsilon):
                         return False
     except:
         return False

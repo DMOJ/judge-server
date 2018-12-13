@@ -127,7 +127,6 @@ class Judge(object):
 
         class InvocationCase(object):
             config = ConfigNode({'unbuffered': False})
-            io_redirects = lambda: None
             input_data = lambda: input_data
 
         grader = self.get_grader_from_source(InvocationGrader, InvocationProblem(), language, source)

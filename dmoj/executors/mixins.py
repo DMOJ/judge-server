@@ -93,7 +93,7 @@ try:
             def get_security(self, launch_kwargs=None):
                 if CHROOTSecurity is None:
                     raise NotImplementedError('No security manager on Windows')
-                sec = CHROOTSecurity(self.get_fs(), io_redirects=launch_kwargs.get('io_redirects', None))
+                sec = CHROOTSecurity(self.get_fs())
                 return self._add_syscalls(sec)
 
             def get_fs(self):

@@ -12,7 +12,7 @@ from dmoj import checkers
 from dmoj.config import InvalidInitException, ConfigNode
 from dmoj.error import InternalError
 from dmoj.generator import GeneratorManager
-from dmoj.judgeenv import get_problem_root
+from dmoj.judgeenv import env, get_problem_root
 from dmoj.utils.module import load_module_from_file
 
 
@@ -175,9 +175,9 @@ class TestCase(object):
         args = args or []
 
         # resource limits on how to run the generator
-        time_limit = 20  # 20 seconds
-        memory_limit = 524288  # and 512mb of memory
-        use_sandbox = True
+        time_limit = env.generator_time_limit
+        memory_limit = env.generator_memory_limit
+        use_sandbox = env.generator_sandboxing
 
         base = get_problem_root(self.problem.id)
         if isinstance(gen, six.string_types):

@@ -18,7 +18,7 @@ addons:
     packages:
     - ghc
     - gnat
-    - php5-cli
+    - php7.0-cli
     - fp-compiler
     - coffeescript
     - binutils-multiarch

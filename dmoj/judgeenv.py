@@ -16,6 +16,9 @@ problem_dirs = ()
 problem_watches = ()
 env = ConfigNode(defaults={
     'selftest_sandboxing': True,
+    'generator_sandboxing': True,
+    'generator_time_limit': 20,  # 20 seconds
+    'generator_memory_limit': 524288,  # 512mb of RAM
     'runtime': {},
 }, dynamic=False)
 _root = os.path.dirname(__file__)

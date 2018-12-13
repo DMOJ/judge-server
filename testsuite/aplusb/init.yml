@@ -1,11 +1,3 @@
-io_redirects:
-  DATA.out:
-    fd: stdout
-    mode: w
-  DATA.in:
-    fd: stdin
-    mode: r
-
 archive: aplusb.zip
 
 symlinks: {

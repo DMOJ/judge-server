@@ -42,7 +42,7 @@ class MonoExecutor(CompiledExecutor):
 
     def get_security(self, launch_kwargs=None):
         fs = self.get_fs() + [self._dir]
-        sec = CHROOTSecurity(fs, io_redirects=launch_kwargs.get('io_redirects', None))
+        sec = CHROOTSecurity(fs)
         sec[sys_sched_getaffinity] = ALLOW
         sec[sys_sched_setscheduler] = ALLOW
         sec[sys_ftruncate64] = ALLOW

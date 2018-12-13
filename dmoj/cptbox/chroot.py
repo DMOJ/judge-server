@@ -15,11 +15,10 @@ log = logging.getLogger('dmoj.security')
 
 
 class CHROOTSecurity(dict):
-    def __init__(self, filesystem, writable=(1, 2), io_redirects=None):
+    def __init__(self, filesystem, writable=(1, 2)):
         super(CHROOTSecurity, self).__init__()
         self.fs_jail = re.compile('|'.join(filesystem) if filesystem else '^')
         self._writable = list(writable)
-        self._io_redirects = io_redirects
 
         if sys.platform.startswith('freebsd'):
             self._getcwd_pid = lambda pid: utf8text(bsd_get_proc_cwd(pid))
@@ -195,51 +194,12 @@ class CHROOTSecurity(dict):
             return ACCESS_ENOENT(debugger)
         return check
 
-    def _handle_io_redirects(self, file, debugger, orig_uarg0, flag_reg):
-        data = self._io_redirects.get(file, None)
-
-        if data:
-            user_mode, redirect = data
-            kernel_flags = getattr(debugger, 'uarg%d' % (flag_reg,))
-
-            # File is open for read if it is not open for write, unless it's open for both read/write
-            is_valid_read = 'r' in user_mode and (not (kernel_flags & os.O_WRONLY) or kernel_flags & os.O_RDWR)
-            is_valid_write = 'w' in user_mode and (kernel_flags & os.O_WRONLY or kernel_flags & os.O_RDWR) \
-                             and redirect in self._writable
-
-            if is_valid_read or is_valid_write:
-                # We have to duplicate the handle so that in case a program decides to close it,
-                # the original will not be closed as well.
-                # To do this, we can hijack the current open call and replace it with a dup call.
-                # The structure of a dup call is syscall=sys_dup, arg0=id to dup, so let's set that up.
-                debugger.syscall = debugger.get_syscall_id(sys_dup)
-                debugger.uarg0 = redirect
-
-                # Once the syscall executes, the result will be our dup'd handle.
-                def on_return():
-                    handle = debugger.result
-                    self._writable.append(handle)
-
-                    # dup overrides the ebx register with the redirect fd, but we should return it back to the
-                    # file pointer in case some program requires it to remain in the register post-syscall.
-                    # The final two args for sys_open (flags & mode) are untouched by sys_dup, so we can leave
-                    # them as-is.
-                    debugger.uarg0 = orig_uarg0
-
-                debugger.on_return(on_return)
-
-                return True
-
     def _file_access_check(self, rel_file, debugger, orig_uarg0=None, flag_reg=1, dirfd=AT_FDCWD):
         try:
             file = self.get_full_path(debugger, rel_file, dirfd)
         except UnicodeDecodeError:
             log.exception('Unicode decoding error while opening relative to %d: %r', dirfd, rel_file)
             return '(undecodable)', False
-        if orig_uarg0 is not None and self._io_redirects:
-            for path in (rel_file, os.path.basename(file), file):
-                if self._handle_io_redirects(path, debugger, orig_uarg0, flag_reg):
-                    return file, True
         if self.fs_jail.match(file) is None:
             return file, False
         return file, True

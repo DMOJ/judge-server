@@ -14,6 +14,7 @@ addons:
   apt:
     sources:
     - sourceline: 'ppa:swi-prolog/stable'
+    - sourceline: 'deb http://cran.rstudio.com/bin/linux/ubuntu xenial/'
       key_url: 'http://keyserver.ubuntu.com/pks/lookup?op=get&fingerprint=on&search=0x51716619E084DAB9'
     - sourceline: 'deb [arch=amd64] https://storage.googleapis.com/download.dartlang.org/linux/debian stable main'
       key_url: 'https://dl-ssl.google.com/linux/linux_signing_key.pub'

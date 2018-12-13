@@ -98,8 +98,7 @@ try:
 
             def get_fs(self):
                 name = self.get_executor_name()
-                fs = BASE_FILESYSTEM + self.fs + env.get('extra_fs', {}).get(name, [])
-                fs += [re.escape(self._file('setbufsize.so')) + '$', re.escape(self._dir) + '$']
+                fs = BASE_FILESYSTEM + self.fs + env.get('extra_fs', {}).get(name, []) + [re.escape(self._dir)]
                 return fs
 
             def get_allowed_syscalls(self):

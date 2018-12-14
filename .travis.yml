@@ -12,7 +12,7 @@ env:
 - DMOJ_USE_SECCOMP="no"
 jdk:
   - oraclejdk9
-  - oraclejdk11
+  - oraclejdk10
 addons:
   apt:
     sources:

@@ -9,7 +9,7 @@ python:
   - 3.7
 jdk:
   - oraclejdk9
-  - oraclejdk11
+  - oraclejdk10
 addons:
   apt:
     sources:

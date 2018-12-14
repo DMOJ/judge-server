@@ -10,6 +10,9 @@ python:
 env:
 - DMOJ_USE_SECCOMP="yes"
 - DMOJ_USE_SECCOMP="no"
+jdk:
+  - oraclejdk9
+  - oraclejdk11
 addons:
   apt:
     sources:

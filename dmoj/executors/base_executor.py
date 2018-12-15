@@ -29,12 +29,12 @@ class BaseExecutor(PlatformExecutorMixin):
     nproc = 0
     command = None
     command_paths = []
-    runtime_dict = env['runtime']
+    runtime_dict = env.runtime
     name = '(unknown)'
     test_program = ''
     test_name = 'self_test'
-    test_time = 10
-    test_memory = 65536
+    test_time = env.selftest_time_limit
+    test_memory = env.selftest_memory_limit
 
     def __init__(self, problem_id, source_code, **kwargs):
         self._dir = tempfile.mkdtemp(dir=env.tempdir)

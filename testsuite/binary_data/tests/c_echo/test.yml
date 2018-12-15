@@ -1,5 +1,5 @@
 language: C
-time: 5
+time: 1
 memory: 65536
 source: echo.c
 expect: AC

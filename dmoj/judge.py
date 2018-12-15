@@ -354,6 +354,13 @@ class ClassicJudge(Judge):
 def sanity_check():
     # Don't allow starting up without wbox/cptbox, saves cryptic errors later on
     if os.name == 'nt':
+        from judgeenv import env
+
+        # Nasty crashes will happen if tempdir isn't specified.
+        if not env.tempdir:
+            print('must specify `tempdir` in judge config to a directory readable by all users')
+            return False
+
         try:
             from .wbox import _wbox
         except ImportError:

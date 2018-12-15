@@ -66,9 +66,9 @@ class SendProblemsHandler(FileSystemEventHandler):
 class Monitor(object):
     def __init__(self):
         if Observer is not None and not judgeenv.no_watchdog:
-            if 'update_pings' in judgeenv.env:
-                logger.info('Using thread to ping urls: %r', judgeenv.env['update_pings'])
-                self._refresher = RefreshWorker(judgeenv.env['update_pings'])
+            if judgeenv.env.update_pings:
+                logger.info('Using thread to ping urls: %r', judgeenv.env.update_pings)
+                self._refresher = RefreshWorker(judgeenv.env.update_pings)
             else:
                 self._refresher = None
 

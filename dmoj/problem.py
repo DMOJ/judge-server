@@ -161,14 +161,26 @@ class TestCase(object):
         return filtered_data
 
     def _normalize(self, data):
-        # Perhaps the correct answer may be "no output", in which case it'll be None here if
-        # sourced from a generator
+        # Perhaps the correct answer may be "no output", in which case it'll be
+        # None here if sourced from a generator.
         data = data or b''
-        # Normalize all newline formats (\r\n, \r, \n) to \n, otherwise we have problems with people creating
-        # data on Macs (\r newline) when judged programs assume \n
-        if self.has_binary_data:
+
+        # Leave binary and empty data alone, don't want to muck up newlines
+        # there.
+        if self.has_binary_data or not data:
             return data
-        return data.replace(b'\r\n', b'\r').replace(b'\r', b'\n')
+
+        # Normalize all newline formats (\r\n, \r, \n) to \n, otherwise we have
+        # problems with people creating data on Macs (\r newline) when judged
+        # programs assume \n.
+        data = data.replace(b'\r\n', b'\r').replace(b'\r', b'\n')
+
+        # Some data might be missing a trailing newline, which makes the last
+        # line in the file not-a-line.
+        if not data.endswith(b'\n'):
+            data += b'\n'
+
+        return data
 
     def _run_generator(self, gen, args=None):
         flags = []

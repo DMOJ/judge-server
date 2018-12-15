@@ -20,6 +20,21 @@ env = ConfigNode(defaults={
     'generator_time_limit': 20,  # 20 seconds
     'generator_memory_limit': 524288,  # 512mb of RAM
     'runtime': {},
+    # Map of executor: [list of extra allowed file regexes], used to configure
+    # the filesystem sandbox on a per-machine basis, without having to hack
+    # executor source.
+    'extra_fs': {},
+    # List of judge URLs to ping on problem data updates (the URLs are expected
+    # to host judges running with --api-host and --api-port)
+    'update_pings': [],
+    # Directory to use as temporary submission storage, system default
+    # (e.g. /tmp) if left blank. MANDATORY on Windows.
+    'tempdir': None,
+
+    # Windows-only settings
+    'inject32': None,  # Path to wbox's dmsec32.dll
+    'inject64': None,  # Path to wbox's dmsec64.dll
+    'inject_func': None,  # Name of injected DLL's entry point (e.g. InjectMain)
 }, dynamic=False)
 _root = os.path.dirname(__file__)
 

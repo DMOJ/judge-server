@@ -57,7 +57,7 @@ before_install:
     tar xj -C pypy3 --strip-components=1 &&
     ./pypy3/bin/pypy -mcompileall
   # Install Rust
-  - curl -sSf https://static.rust-lang.org/rustup.sh | sudo sh
+  - curl https://sh.rustup.rs -sSf | sh
   # Install latest Scala
   - wget http://downloads.lightbend.com/scala/2.11.8/scala-2.11.8.deb
   - sudo dpkg -i scala-2.11.8.deb

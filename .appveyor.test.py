@@ -21,6 +21,7 @@ def main():
     sys.stderr = codecs.getwriter('utf-8')(os.fdopen(sys.stderr.fileno(), 'w', 0))
 
     judgeenv.load_env(cli=True, testsuite=True)
+    judgeenv.env['id'] = 'testsuite'
     executors.load_executors()
 
     executor_fail = not all(name in executors.executors for name in required_executors)

@@ -13,6 +13,13 @@
 
 #include <map>
 
+// TODO: only if seccomp is available
+#define PTBOX_SECCOMP 1
+
+#if PTBOX_SECCOMP
+#include <seccomp.h>
+#endif
+
 #if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
 #   define PTBOX_FREEBSD 1
 #else
@@ -167,7 +174,10 @@ public:
     void setpid(pid_t pid);
 #else
     void settid(pid_t tid);
-    bool is_enter() { return syscall_[tid] != 0; }
+    bool is_enter() {
+      // All seccomp events are enter events.
+      return PTBOX_SECCOMP ? true : syscall_[tid] != 0;
+    }
 #endif
 
     virtual void pre_syscall();

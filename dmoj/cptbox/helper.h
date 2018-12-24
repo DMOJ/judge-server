@@ -26,6 +26,9 @@ struct child_config {
     int stderr_;
     int max_fd;
     int *fds;
+    int debugger_type;
+    int trace_syscalls;
+    int *syscall_whitelist;
 };
 
 void cptbox_closefrom(int lowfd);

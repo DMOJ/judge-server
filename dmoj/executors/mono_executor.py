@@ -87,7 +87,7 @@ class MonoExecutor(CompiledExecutor):
             def kill_return():
                 debugger.result = -errno.EPERM
             if debugger.arg0 != debugger.pid:
-                debugger.syscall = debugger.getpid_syscall
+                debugger.syscall = -1
                 debugger.on_return(kill_return)
             return True
 

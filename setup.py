@@ -112,7 +112,7 @@ if os.name == 'nt' or 'sdist' in sys.argv:
                              define_macros=[('UNICODE', None)])]
 
 if os.name != 'nt' or 'sdist' in sys.argv:
-    libs = ['rt']
+    libs = ['rt', 'seccomp']
     if sys.platform.startswith('freebsd'):
         libs += ['procstat']
 

@@ -134,7 +134,6 @@ int cptbox_child_run(const struct child_config *config) {
 
     kill(getpid(), SIGSTOP);
 
-
 #if PTBOX_SECCOMP
     if (config->trace_syscalls) {
         scmp_filter_ctx ctx = seccomp_init(SCMP_ACT_TRACE(0));

@@ -37,6 +37,7 @@ cdef extern from 'ptbox.h' nogil:
         void arg3(long)
         void arg4(long)
         void arg5(long)
+        bint is_exit(int)
         char *readstr(unsigned long, size_t)
         void freestr(char*)
         pid_t getpid()
@@ -316,6 +317,9 @@ cdef class Debugger:
         def __get__(self):
             return self.thisptr.getpid()
 
+    def is_exit(self, syscall):
+        return self.thisptr.is_exit(syscall)
+
     def on_return(self, callback):
         self.on_return_callback = callback
         self.thisptr.on_return(pt_syscall_return_handler, <void*>self)
@@ -417,7 +421,11 @@ cdef class Process:
         config.trace_syscalls = self._trace_syscalls
         config.syscall_whitelist = <bint*>malloc(sizeof(bint) * MAX_SYSCALL_NUMBER)
         for i in xrange(MAX_SYSCALL_NUMBER):
-            config.syscall_whitelist[i] = self._syscall_whitelist[i]
+            # We have to force exit syscalls to trap, so that we can be notified
+            # that the process spawned successfully when using `seccomp`. Otherwise,
+            # a simple assembly program could terminate without ever trapping.
+            if not self.debugger.is_exit(i):
+                config.syscall_whitelist[i] = self._syscall_whitelist[i]
 
         with nogil:
             if self.process.spawn(pt_child, &config):

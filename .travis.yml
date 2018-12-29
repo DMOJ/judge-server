@@ -6,6 +6,9 @@ python:
   - 3.4
   - 3.5
   - 3.6
+env:
+- DMOJ_USE_SECCOMP="yes"
+- DMOJ_USE_SECCOMP="no"
 addons:
   apt:
     sources:

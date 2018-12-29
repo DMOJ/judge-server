@@ -19,8 +19,11 @@
 #   define PTBOX_FREEBSD 0
 #endif
 
-// TODO: only if seccomp is available
+#ifndef PTBOX_NO_SECCOMP
 #define PTBOX_SECCOMP !PTBOX_FREEBSD
+#else
+#define PTBOX_SECCOMP 0
+#endif
 
 #if PTBOX_SECCOMP
 #include <seccomp.h>

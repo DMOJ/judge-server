@@ -13,17 +13,17 @@
 
 #include <map>
 
-// TODO: only if seccomp is available
-#define PTBOX_SECCOMP 1
-
-#if PTBOX_SECCOMP
-#include <seccomp.h>
-#endif
-
 #if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
 #   define PTBOX_FREEBSD 1
 #else
 #   define PTBOX_FREEBSD 0
+#endif
+
+// TODO: only if seccomp is available
+#define PTBOX_SECCOMP !PTBOX_FREEBSD
+
+#if PTBOX_SECCOMP
+#include <seccomp.h>
 #endif
 
 #if defined(__amd64__)

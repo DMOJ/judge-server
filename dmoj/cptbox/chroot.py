@@ -171,6 +171,7 @@ class CHROOTSecurity(dict):
                 sys_ktimer_settime: ALLOW,
                 sys_ktimer_delete: ALLOW,
                 sys_cap_getmode: ALLOW,
+                sys_minherit: ALLOW,
             })
 
     def check_file_access(self, syscall, argument, is_open=False):

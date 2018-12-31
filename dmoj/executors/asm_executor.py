@@ -73,6 +73,7 @@ class ASMExecutor(CompiledExecutor):
             raise CompileError(ld_output)
 
         self.warning = ('%s\n%s' % (as_output, ld_output)).strip()
+        self._executable = executable
         return executable
 
     def get_cmdline(self):

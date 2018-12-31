@@ -27,23 +27,27 @@ class GCCExecutor(CompiledExecutor):
     arch = 'gcc_target_arch'
     has_color = False
 
-    def create_files(self, problem_id, main_source, **kwargs):
-        aux_sources = kwargs.get('aux_sources', {})
-        fds = kwargs.get('fds', None)
-        writable = kwargs.get('writable', (1, 2))
-        aux_sources[problem_id + self.ext] = main_source
+    def __init__(self, problem_id, main_source, **kwargs):
+        super(GCCExecutor, self).__init__(problem_id, main_source, **kwargs)
 
-        sources = []
-        for name, source in aux_sources.items():
+        self.source_dict = kwargs.get('aux_sources', {})
+        self.source_dict[problem_id + self.ext] = main_source
+        self.defines = kwargs.get('defines', [])
+
+    def create_files(self, problem_id, main_source, **kwargs):
+        self.source_paths = []
+        for name, source in self.source_dict.items():
             if '.' not in name:
                 name += self.ext
             with open(self._file(name), 'wb') as fo:
                 fo.write(utf8bytes(source))
-            sources.append(name)
-        self.sources = sources
-        self._fds = fds
-        self._writable = writable
-        self.defines = kwargs.get('defines', [])
+            self.source_paths.append(name)
+
+    def get_binary_cache_key(self):
+        key_components = ([self.problem, self.get_command(), self.get_march_flag()] +
+                          self.get_defines() + self.get_flags() + self.get_ldflags() +
+                          list(self.source_dict.values()))
+        return ''.join(key_components)
 
     def get_ldflags(self):
         if os.name == 'nt':
@@ -61,15 +65,11 @@ class GCCExecutor(CompiledExecutor):
 
     def get_compile_args(self):
         return ([self.get_command(), '-Wall'] + (['-fdiagnostics-color=always'] if self.has_color else []) +
-                self.sources + self.get_defines() + ['-O2', '-lm', self.get_march_flag()] +
+                self.source_paths + self.get_defines() + ['-O2', '-lm', self.get_march_flag()] +
                 self.get_flags() + self.get_ldflags() + ['-s', '-o', self.get_compiled_file()])
 
     def get_compile_env(self):
         return GCC_COMPILE
-
-    def get_security(self, launch_kwargs=None):
-        from dmoj.cptbox import CHROOTSecurity
-        return self._add_syscalls(CHROOTSecurity(self.get_fs(), writable=self._writable))
 
     def get_env(self):
         env = super(GCCExecutor, self).get_env() or {}

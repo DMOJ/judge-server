@@ -11,6 +11,8 @@ import traceback
 from distutils.spawn import find_executable
 from subprocess import Popen
 
+import pylru
+
 from dmoj.error import CompileError
 from dmoj.executors.mixins import PlatformExecutorMixin
 from dmoj.judgeenv import env
@@ -36,8 +38,8 @@ class BaseExecutor(PlatformExecutorMixin):
     test_time = env.selftest_time_limit
     test_memory = env.selftest_memory_limit
 
-    def __init__(self, problem_id, source_code, **kwargs):
-        self._dir = tempfile.mkdtemp(dir=env.tempdir)
+    def __init__(self, problem_id, source_code, dest_dir=env.tempdir, **kwargs):
+        self._dir = tempfile.mkdtemp(dir=dest_dir or env.tempdir)
         self.problem = problem_id
         self.source = source_code
         self._hints = kwargs.pop('hints', [])
@@ -265,6 +267,8 @@ class CompiledExecutor(BaseExecutor):
     executable_size = env.compiler_size_limit * 1024
     compiler_time_limit = env.compiler_time_limit
     compile_output_index = 1
+    compiled_binary_cache = pylru.lrucache(env.compiled_binary_cache_size)
+    compiled_binary_cache_dir = env.compiled_binary_cache_dir
 
     class TimedPopen(UniPopen):
         def __init__(self, *args, **kwargs):
@@ -310,7 +314,9 @@ class CompiledExecutor(BaseExecutor):
             return ret
 
     def __init__(self, problem_id, source_code, *args, **kwargs):
-        super(CompiledExecutor, self).__init__(problem_id, source_code, **kwargs)
+        super(CompiledExecutor, self).__init__(problem_id, source_code,
+                                               dest_dir=self.compiled_binary_cache_dir,
+                                               **kwargs)
         self.create_files(problem_id, source_code, *args, **kwargs)
         self.warning = None
         self._executable = self.compile()

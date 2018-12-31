@@ -24,6 +24,8 @@ env = ConfigNode(defaults={
     'compiler_time_limit': 10,  # Kill compiler after 10 seconds
     'compiler_size_limit': 131072,  # Maximum allowable compiled file size, 128mb
     'compiler_output_character_limit': 65536,  # Number of characters allowed in compile output
+    'compiled_binary_cache_dir': None,  # Location to store cached binaries, defaults to tempdir
+    'compiled_binary_cache_size': 100,  # Maximum number of executables to cache (LRU order)
     'runtime': {},
     # Map of executor: [list of extra allowed file regexes], used to configure
     # the filesystem sandbox on a per-machine basis, without having to hack

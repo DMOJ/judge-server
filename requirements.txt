@@ -7,3 +7,4 @@ cython
 pygments
 six
 setproctitle
+pylru

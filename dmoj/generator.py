@@ -6,19 +6,13 @@ from dmoj.utils import ansi
 
 
 class GeneratorManager(object):
-    def __init__(self):
-        self._cache = {}
-
     def get_generator(self, filename, flags):
         from dmoj.executors import executors
 
         filename = os.path.abspath(filename)
-        cache_key = filename, tuple(flags)
-        if cache_key in self._cache:
-            return self._cache[cache_key]
 
         try:
-            with open(filename) as file:
+            with open(filename, 'r') as file:
                 source = file.read()
         except:
             traceback.print_exc()
@@ -39,7 +33,7 @@ class GeneratorManager(object):
             '.rb': executors.get(find_runtime(('RUBY2', 'RUBY19', 'RUBY18')), None)
         }
         ext = os.path.splitext(filename)[1]
-        pass_platform_flags = ['.c', '.cpp']
+        pass_platform_flags = ext in ['.c', '.cpp']
 
         if pass_platform_flags:
             flags += ['-DWINDOWS_JUDGE', '-DWIN32'] if os.name == 'nt' else ['-DLINUX_JUDGE']
@@ -55,11 +49,16 @@ class GeneratorManager(object):
             clazz = type('FlaggedExecutor', (clazz,), {'flags': flags + list(clazz.flags)})
 
         try:
-            executor = clazz('_generator', source)
+            from dmoj.executors.base_executor import CompiledExecutor
+            kwargs = {}
+            # Some generators (like those using testlib.h) take an extremely long time
+            # to compile, so we cache them.
+            if issubclass(clazz, CompiledExecutor):
+                kwargs['cached'] = True
+            executor = clazz('_generator', source, **kwargs)
         except CompileError as err:
             # Strip ansi codes from CompileError message so we don't get wacky displays on the site like
             # 01m[K_generator.cpp:26:23:[m[K [01;31m[Kerror: [m[K'[01m[Kgets[m[K' was not declared in this scope
             raise CompileError(ansi.strip_ansi(err.args[0]))
 
-        self._cache[cache_key] = executor
         return executor

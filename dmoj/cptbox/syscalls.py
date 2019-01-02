@@ -19,7 +19,7 @@ def create():
         for i, line in enumerate(f):
             names = line.split()
             by_id.append('sys_' + names[0])
-            iid_map[i] = [None] * size
+            iid_map[i] = [[] for _ in range(size)]
             for call in names:
                 by_name[call] = i
 
@@ -32,14 +32,15 @@ def create():
         max_id += 1
         by_name[name] = max_id
         by_id.append('sys_' + name)
-        iid_map[max_id] = [None] * size
+        iid_map[max_id] = [[] for _ in range(size)]
         return max_id
 
     for i, file in enumerate(order):
         with open(os.path.join(dir, file)) as f:
             for line in f:
                 id, name = line.split()
-                iid_map[alloc_id(name)][i] = int(id)
+                key = alloc_id(name)
+                iid_map[key][i].append(int(id))
 
     max_id += 1
     blank = (None,) * size
@@ -48,7 +49,8 @@ def create():
         translator[id] = tuple(data)
 
     for name, id in list(by_name.items()):
-        globals()['sys_' + name] = by_name['sys_' + name] = id
+        key = 'sys_' + name
+        globals()[key] = by_name[key] = id
 
 
 create()

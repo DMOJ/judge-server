@@ -109,9 +109,6 @@ _arch_map = {
 class AdvancedDebugger(Debugger):
     # Implements additional debugging functionality for convenience.
 
-    def get_syscall_id(self, syscall):
-        return translator[syscall][self._syscall_index]
-
     def readstr(self, address, max_size=4096):
         if self.address_bits == 32:
             address &= 0xFFFFFFFF
@@ -176,16 +173,14 @@ class SecurePopen(six.with_metaclass(SecurePopenMeta, Process)):
             self._trace_syscalls = False
         else:
             for i in range(SYSCALL_COUNT):
-                handler = security.get(i, DISALLOW)
-                call = translator[i][index]
-                if call is None:
-                    continue
-                if not isinstance(handler, int):
-                    if not callable(handler):
-                        raise ValueError('Handler not callable: ' + handler)
-                    self._callbacks[call] = handler
-                    handler = _CALLBACK
-                self._handler(call, handler)
+                for call in translator[i][index]:
+                    handler = security.get(i, DISALLOW)
+                    if not isinstance(handler, int):
+                        if not callable(handler):
+                            raise ValueError('Handler not callable: ' + handler)
+                        self._callbacks[call] = handler
+                        handler = _CALLBACK
+                    self._handler(call, handler)
 
         self._started = threading.Event()
         self._died = threading.Event()
@@ -254,7 +249,7 @@ class SecurePopen(six.with_metaclass(SecurePopenMeta, Process)):
             callname = 'unknown'
             index = self._syscall_index
             for id, call in enumerate(translator):
-                if call[index] == syscall:
+                if syscall in call[index]:
                     callname = by_id[id]
                     break
 

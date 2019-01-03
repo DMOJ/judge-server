@@ -53,6 +53,9 @@ class ConfigNode(object):
             self.raw_config = raw_config or {}
         self.parent = parent
 
+    def unwrap(self):
+        return self.raw_config
+
     def update(self, dct):
         if hasattr(self.raw_config, 'update'):
             self.raw_config.update(dct)

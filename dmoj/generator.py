@@ -6,14 +6,16 @@ from dmoj.utils import ansi
 
 
 class GeneratorManager(object):
-    def get_generator(self, filename, flags):
+    def get_generator(self, filenames, flags, lang=None):
         from dmoj.executors import executors
 
-        filename = os.path.abspath(filename)
+        filenames = map(os.path.abspath, filenames)
+        sources = {}
 
         try:
-            with open(filename, 'r') as file:
-                source = file.read()
+            for filename in filenames:
+                with open(filename, 'r') as f:
+                    sources[os.path.basename(filename)] = f.read()
         except:
             traceback.print_exc()
             raise IOError('could not read generator source')
@@ -24,40 +26,36 @@ class GeneratorManager(object):
                     return grader
             return None
 
-        lookup = {
-            '.py': executors.get('PY2', None),
-            '.py3': executors.get('PY3', None),
-            '.c': executors.get('C', None),
-            '.cpp': executors.get(find_runtime(('CPP14', 'CPP11', 'CPP0X', 'CPP03')), None),
-            '.java': executors.get(find_runtime(('JAVA9', 'JAVA8', 'JAVA7')), None),
-            '.rb': executors.get(find_runtime(('RUBY2', 'RUBY19', 'RUBY18')), None)
-        }
-        ext = os.path.splitext(filename)[1]
-        pass_platform_flags = ext in ['.c', '.cpp']
+        use_cpp = any(map(lambda name: os.path.splitext(name)[1] == '.cpp', filenames))
+        if lang is None:
+            best_choices = ('CPP17', 'CPP14', 'CPP11', 'CPP0X', 'CPP03') if use_cpp else ('C11', 'C')
+            lang = find_runtime(best_choices)
 
-        if pass_platform_flags:
-            flags += ['-DWINDOWS_JUDGE', '-DWIN32'] if os.name == 'nt' else ['-DLINUX_JUDGE']
-
-        clazz = lookup.get(ext, None)
+        clazz = executors.get(lang)
         if not clazz:
-            raise IOError('could not identify generator extension')
+            raise IOError('could not find a C++ executor for generator')
+
         clazz = clazz.Executor
 
         if hasattr(clazz, 'flags'):
-            # We shouldn't be mutating the base class flags
-            # See https://github.com/DMOJ/judge/issues/174
+            flags += ['-DWINDOWS_JUDGE', '-DWIN32'] if os.name == 'nt' else ['-DLINUX_JUDGE']
+
+            # We shouldn't be mutating the base class flags.
+            # See <https://github.com/DMOJ/judge/issues/174>.
             clazz = type('FlaggedExecutor', (clazz,), {'flags': flags + list(clazz.flags)})
 
         try:
-            from dmoj.executors.base_executor import CompiledExecutor
-            kwargs = {}
-            # Some generators (like those using testlib.h) take an extremely long time
-            # to compile, so we cache them.
-            if issubclass(clazz, CompiledExecutor):
-                kwargs['cached'] = True
-            executor = clazz('_generator', source, **kwargs)
+            # Optimize the common case.
+            if use_cpp:
+                # Some generators (like those using testlib.h) take an extremely long time
+                # to compile, so we cache them.
+                executor = clazz('_generator', None, aux_sources=sources, cached=True)
+            else:
+                if len(sources) > 1:
+                    raise InternalError('non-C/C++ generator cannot be multi-file')
+                executor = clazz('_generator', list(sources.values())[0])
         except CompileError as err:
-            # Strip ansi codes from CompileError message so we don't get wacky displays on the site like
+            # Strip ANSI codes from CompileError message so we don't get wacky displays on the site like
             # 01m[K_generator.cpp:26:23:[m[K [01;31m[Kerror: [m[K'[01m[Kgets[m[K' was not declared in this scope
             raise CompileError(ansi.strip_ansi(err.args[0]))
 

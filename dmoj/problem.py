@@ -157,25 +157,35 @@ class TestCase(object):
         time_limit = env.generator_time_limit
         memory_limit = env.generator_memory_limit
         use_sandbox = env.generator_sandboxing
+        lang = None  # Default to C/C++
 
         base = get_problem_root(self.problem.id)
         if isinstance(gen, six.string_types):
-            filename = os.path.join(base, gen)
+            filenames = gen
+        elif isinstance(gen.unwrap(), list):
+            filenames = list(gen.unwrap())
         else:
-            filename = os.path.join(base, gen.source)
+            filenames = gen.source
             if gen.flags:
                 flags += gen.flags
             if not args and gen.args:
                 args += gen.args
 
+
             time_limit = gen.time_limit or time_limit
             memory_limit = gen.memory_limit or memory_limit
+            lang = gen.language
 
             # Optionally allow disabling the sandbox
             if gen.use_sandbox is not None:
                 use_sandbox = gen.use_sandbox
 
-        executor = self.problem.generator_manager.get_generator(filename, flags)
+        if not isinstance(filenames, list):
+            filenames = [filenames]
+
+        filenames = [os.path.join(base, name) for name in filenames]
+
+        executor = self.problem.generator_manager.get_generator(filenames, flags, lang=lang)
 
         # convert all args to str before launching; allows for smoother int passing
         args = map(str, args)

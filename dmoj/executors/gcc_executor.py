@@ -31,7 +31,8 @@ class GCCExecutor(CompiledExecutor):
         super(GCCExecutor, self).__init__(problem_id, main_source, **kwargs)
 
         self.source_dict = kwargs.get('aux_sources', {})
-        self.source_dict[problem_id + self.ext] = main_source
+        if main_source:
+            self.source_dict[problem_id + self.ext] = main_source
         self.defines = kwargs.get('defines', [])
 
     def create_files(self, problem_id, main_source, **kwargs):

@@ -1,5 +1,0 @@
-language: PY2
-time: 2
-memory: 65536
-source: echo_checker.py
-cases: [WA, AC, AC, AC, WA, WA, AC, WA, WA, WA, AC, AC, AC]

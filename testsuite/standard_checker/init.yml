@@ -1,2 +1,0 @@
-generator++: "node = 'gen.py'"
-test_cases+: "[{'points': 1, 'generator_args': [x]} for x in range(0, 12)]"

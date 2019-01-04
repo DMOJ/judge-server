@@ -1,3 +1,5 @@
-generator: generator.cpp
+generator:
+    source: generator.cpp
+    memory_limit: 65536
 test_cases:
 - {points: 10}

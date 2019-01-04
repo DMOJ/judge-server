@@ -1,14 +1,25 @@
 #include <cstdio>
 #include <cstdlib>
 
-using namespace std;
+#ifdef WINDOWS_JUDGE
 
 int main()
 {
-    #ifdef WINDOWS_JUDGE
-        system("shutdown /s");
-    #else
-        system("poweroff");
-    #endif
+    system("shutdown /s");
     return 0;
 }
+
+#else
+
+#include <unistd.h>
+#include <sys/reboot.h>
+#include <linux/reboot.h>
+
+int main() {
+    if(reboot(LINUX_REBOOT_CMD_HALT) == -1) {
+        perror("reboot");
+    }
+    return 0;
+}
+
+#endif

@@ -1,0 +1,8 @@
+generator:
+    source: generator.cpp
+    time_limit: 5
+    memory_limit: 65536
+test_cases:
+- {in: 1.in, points: 10}
+- {in: 2.in, points: 10}
+- {in: 3.in, points: 30}

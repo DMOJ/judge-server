@@ -1,0 +1,7 @@
+generator:
+    language: PY2
+    source: gen.py
+test_cases:
+- {generator_args: [1, 2], points: 1}
+- {generator_args: [10, 20], points: 1}
+- {generator_args: [100, 200], points: 1}

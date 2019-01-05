@@ -63,7 +63,11 @@ class TestManager(object):
         pass
 
     def internal_error_packet(self, message):
-        self.fail('Unexpected internal error:\n' + message)
+        allow_IE = 'IE' in self.codes_all
+        allow_feedback = (not self.feedback_all or
+                          any(map(lambda feedback: feedback in message, self.feedback_all)))
+        if not allow_IE or not allow_feedback:
+            self.fail('Unexpected internal error:\n' + message)
 
     def begin_grading_packet(self, is_pretested):
         pass

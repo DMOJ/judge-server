@@ -23,6 +23,7 @@ addons:
     - libc6-dev-i386
     - nasm
     - open-cobol
+    - ocaml
     - lua5.2
     - gfortran
     - chicken-bin

@@ -140,16 +140,18 @@ setup(
         'dmoj.cptbox': ['syscalls/aliases.list', 'syscalls/*.tbl'],
         'dmoj.executors': ['csbox.exe', 'java_sandbox.jar', '*.policy'],
         'dmoj.wbox': ['getaddr*.exe', 'dmsec*.dll'],
+        '': ['api/api.yaml']
     },
     entry_points={
         'console_scripts': [
             'dmoj = dmoj.judge:main',
             'dmoj-cli = dmoj.cli:main',
             'dmoj-autoconf = dmoj.executors.autoconfig:main',
+            'dmoj-rest = dmoj.rest:main'
         ],
     },
     ext_modules=cythonize(extensions),
-    install_requires=['watchdog', 'pyyaml', 'ansi2html', 'termcolor', 'pygments', 'six', 'setproctitle'],
+    install_requires=['watchdog', 'pyyaml', 'ansi2html', 'termcolor', 'pygments', 'six', 'setproctitle', 'connexion'],
     tests_require=['mock', 'requests'],
     extras_require={
         'test': ['mock'],

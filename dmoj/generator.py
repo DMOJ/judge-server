@@ -1,7 +1,7 @@
 import os
 import traceback
 
-from dmoj.error import CompileError
+from dmoj.error import CompileError, InternalError
 from dmoj.utils import ansi
 
 

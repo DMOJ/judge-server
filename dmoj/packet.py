@@ -286,6 +286,7 @@ class PacketManager(object):
                            'total-points': result.total_points,
                            'memory': result.max_memory,
                            'output': result.output,
+                           'extended-feedback': result.extended_feedback,
                            'feedback': result.feedback})
 
     def compile_error_packet(self, message):

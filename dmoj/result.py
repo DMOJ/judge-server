@@ -32,6 +32,7 @@ class Result(object):
         self.max_memory = 0
         self.proc_output = ''
         self.feedback = ''
+        self.extended_feedback = ''
         self.case = case
         self.points = 0
 
@@ -59,12 +60,14 @@ class Result(object):
 
 
 class CheckerResult(object):
-    def __init__(self, passed, points, feedback=None):
+    def __init__(self, passed, points, feedback=None, extended_feedback=None):
         # Make sure we don't kill the site bridge
         assert isinstance(passed, bool)
         assert isinstance(points, int) or isinstance(points, float)
         assert feedback is None or isinstance(feedback, six.string_types)
+        assert extended_feedback is None or isinstance(extended_feedback, six.string_types)
 
         self.passed = passed
         self.points = points
         self.feedback = feedback
+        self.extended_feedback = extended_feedback

@@ -58,6 +58,7 @@ class StandardGrader(BaseGrader):
 
         result.result_flag |= [Result.WA, Result.AC][check.passed]
         result.points = check.points
+        result.extended_feedback = check.extended_feedback
 
         self.update_feedback(check, error, process, result)
         case.free_data()

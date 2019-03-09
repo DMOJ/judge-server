@@ -19,6 +19,16 @@
 #   define PTBOX_FREEBSD 0
 #endif
 
+#ifndef PTBOX_NO_SECCOMP
+#define PTBOX_SECCOMP !PTBOX_FREEBSD
+#else
+#define PTBOX_SECCOMP 0
+#endif
+
+#if PTBOX_SECCOMP
+#include <seccomp.h>
+#endif
+
 #if defined(__amd64__)
 #   define HAS_DEBUGGER_X64
 #   define HAS_DEBUGGER_X86_ON_X64
@@ -167,7 +177,10 @@ public:
     void setpid(pid_t pid);
 #else
     void settid(pid_t tid);
-    bool is_enter() { return syscall_[tid] != 0; }
+    bool is_enter() {
+      // All seccomp events are enter events.
+      return PTBOX_SECCOMP ? true : syscall_[tid] != 0;
+    }
 #endif
 
     virtual void pre_syscall();

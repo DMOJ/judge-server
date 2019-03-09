@@ -80,7 +80,7 @@ The judge can also grade in the languages listed below. These languages are less
 * Tcl
 * Turing
 * V8 JavaScript
-* Brain****
+* Brain\*\*\*\*
 
 ## Installation
 Installing the DMOJ judge creates two executables in your Python's script directory: `dmoj` and `dmoj-cli`.
@@ -109,6 +109,13 @@ $ cd judge
 $ git submodule update --init --recursive
 $ pip install -e .
 ```
+
+Several environment variables can be specified to control the compilation of the sandbox:
+
+* `DMOJ_USE_SECCOMP`; set it to `no` if you're building on a pre-Linux 3.5 kernel to disable `seccomp` filtering in favour of pure `ptrace` (slower).
+   This flag has no effect when building outside of Linux.
+* `DMOJ_TARGET_ARCH`; use it to override the default architecture specified for compiling the sandbox (via `-march`).
+   Usually this is `native`, but will not be specified on ARM unless `DMOJ_TARGET_ARCH` is set (a generic, slow build will be compiled instead).
 
 ## Usage
 ### Running a Judge Server

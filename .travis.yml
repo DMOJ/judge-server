@@ -6,6 +6,9 @@ python:
   - 3.4
   - 3.5
   - 3.6
+env:
+- DMOJ_USE_SECCOMP="yes"
+- DMOJ_USE_SECCOMP="no"
 addons:
   apt:
     sources:
@@ -21,6 +24,7 @@ addons:
     - coffeescript
     - binutils-multiarch
     - libc6-dev-i386
+    - libseccomp-dev
     - nasm
     - open-cobol
     - ocaml

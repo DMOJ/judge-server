@@ -384,6 +384,16 @@ def sanity_check():
             startup_warnings.append('running the judge as root can be potentially unsafe, '
                                     'consider using an unprivileged user instead')
 
+        # Our sandbox filter is long but simple, so we can see large improvements
+        # in overhead by enabling the BPF JIT for seccomp.
+        bpf_jit_path = '/proc/sys/net/core/bpf_jit_enable'
+        if os.path.exists(bpf_jit_path):
+            with open(bpf_jit_path, 'r') as f:
+                if f.read().strip() != '1':
+                    startup_warnings.append('running without BPF JIT enabled, consider running'
+                                            '`echo 1 > /proc/sys/net/core/bpf_jit_enable` '
+                                            'to reduce sandbox overhead')
+
     # _checker implements standard checker functions in C
     # we fall back to a Python implementation if it's not compiled, but it's slower
     try:

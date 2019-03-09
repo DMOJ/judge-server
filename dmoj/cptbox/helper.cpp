@@ -26,6 +26,34 @@
 #   define FD_DIR "/proc/self/fd"
 #endif
 
+inline unsigned int get_seccomp_arch(int type) {
+    switch (type) {
+#ifdef SCMP_ARCH_X86
+        case DEBUGGER_X86:
+        case DEBUGGER_X86_ON_X64:
+            return SCMP_ARCH_X86;
+#endif
+#ifdef SCMP_ARCH_X86_64
+        case DEBUGGER_X64:
+            return SCMP_ARCH_X86_64;
+#endif
+#ifdef SCMP_ARCH_X32
+        case DEBUGGER_X32:
+            return SCMP_ARCH_X32;
+#endif
+#ifdef SCMP_ARCH_ARM
+        case DEBUGGER_ARM:
+            return SCMP_ARCH_ARM;
+#endif
+#ifdef SCMP_ARCH_AARCH64
+        case DEBUGGER_ARM64:
+            return SCMP_ARCH_AARCH64;
+#endif
+    }
+
+    return 0;
+}
+
 pt_debugger *get_ptdebugger(int type) {
     switch (type) {
 #ifdef HAS_DEBUGGER_X86
@@ -103,7 +131,32 @@ int cptbox_child_run(const struct child_config *config) {
 
     if (ptrace_traceme())
         return 204;
+
     kill(getpid(), SIGSTOP);
+
+#if PTBOX_SECCOMP
+    if (config->trace_syscalls) {
+        scmp_filter_ctx ctx = seccomp_init(SCMP_ACT_TRACE(0));
+        if (!ctx) return 203;
+
+        unsigned int child_arch = get_seccomp_arch(config->debugger_type);
+
+        if (seccomp_arch_exist(ctx, child_arch) == -EEXIST &&
+            seccomp_arch_add(ctx, child_arch) != 0) {
+            return 203;
+        }
+
+        for (int syscall = 0; syscall < MAX_SYSCALL; syscall++) {
+            if (config->syscall_whitelist[syscall]) {
+                seccomp_rule_add(ctx, SCMP_ACT_ALLOW, syscall, 0);
+            }
+        }
+
+        if (seccomp_load(ctx)) return 203;
+        seccomp_release(ctx);
+    }
+#endif
+
     execve(config->file, config->argv, config->envp);
     return 205;
 }

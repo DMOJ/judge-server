@@ -37,6 +37,7 @@ cdef extern from 'ptbox.h' nogil:
         void arg3(long)
         void arg4(long)
         void arg5(long)
+        bint is_exit(int)
         char *readstr(unsigned long, size_t)
         void freestr(char*)
         pid_t getpid()
@@ -60,6 +61,7 @@ cdef extern from 'ptbox.h' nogil:
         bint was_initialized()
 
     cdef bint PTBOX_FREEBSD
+    cdef bint PTBOX_SECCOMP
     cdef int MAX_SYSCALL
 
     cdef int PTBOX_EVENT_ATTACH
@@ -88,6 +90,9 @@ cdef extern from 'helper.h' nogil:
         int stderr_
         int max_fd
         int *fds
+        int debugger_type
+        bint trace_syscalls
+        bint *syscall_whitelist
 
     void cptbox_closefrom(int lowfd)
     int cptbox_child_run(child_config *)
@@ -193,7 +198,12 @@ cdef class Debugger:
             return self.thisptr.syscall()
 
         def __set__(self, value):
-            self.thisptr.syscall(value)
+            # When using seccomp, -1 as syscall means "skip"; when we are not,
+            # we swap with a harmless syscall without side-effects (getpid).
+            if not PTBOX_SECCOMP and value == -1:
+                self.thisptr.syscall(self._getpid_syscall)
+            else:
+                self.thisptr.syscall(value)
 
     property result:
         def __get__(self):
@@ -307,6 +317,9 @@ cdef class Debugger:
         def __get__(self):
             return self.thisptr.getpid()
 
+    def is_exit(self, syscall):
+        return self.thisptr.is_exit(syscall)
+
     def on_return(self, callback):
         self.on_return_callback = callback
         self.thisptr.on_return(pt_syscall_return_handler, <void*>self)
@@ -403,6 +416,17 @@ cdef class Process:
             config.fds = <int*>malloc(sizeof(int) * len(fds))
             for i in xrange(len(fds)):
                 config.fds[i] = fds[i]
+
+        config.debugger_type = self.debugger._debugger_type
+        config.trace_syscalls = self._trace_syscalls
+        config.syscall_whitelist = <bint*>malloc(sizeof(bint) * MAX_SYSCALL_NUMBER)
+        for i in xrange(MAX_SYSCALL_NUMBER):
+            # We have to force exit syscalls to trap, so that we can be notified
+            # that the process spawned successfully when using `seccomp`. Otherwise,
+            # a simple assembly program could terminate without ever trapping.
+            if not self.debugger.is_exit(i):
+                config.syscall_whitelist[i] = self._syscall_whitelist[i]
+
         with nogil:
             if self.process.spawn(pt_child, &config):
                 with gil:

@@ -20,6 +20,15 @@ from setuptools.command.build_ext import build_ext
 has_pyx = os.path.exists(os.path.join(os.path.dirname(__file__), 'dmoj', 'cptbox', '_cptbox.pyx'))
 
 try:
+    with open('/proc/version') as f:
+        is_wsl = 'microsoft' in f.read().lower()
+except IOError:
+    is_wsl = False
+
+# Allow manually disabling seccomp on old kernels. WSL doesn't have seccomp.
+has_seccomp = not is_wsl and os.environ.get('DMOJ_USE_SECCOMP') != 'no'
+
+try:
     from Cython.Build import cythonize
 except ImportError:
     if has_pyx:
@@ -70,8 +79,10 @@ class build_ext_dmoj(build_ext, object):
             arch = os.uname()[4]
             is_arm = arch.startswith('arm') or arch.startswith('aarch')
             target_arch = os.environ.get('DMOJ_TARGET_ARCH')
+
+            extra_compile_args = []
             if is_arm or os.environ.get('DMOJ_REDIST'):
-                extra_compile_args = ['-O3']
+                extra_compile_args.append('-O3')
                 if target_arch:
                     extra_compile_args.append('-march=%s' % target_arch)
                 elif is_arm:
@@ -80,7 +91,7 @@ class build_ext_dmoj(build_ext, object):
                     print('Compiling slower generic build.')
                     print('*' * 79)
             else:
-                extra_compile_args = ['-march=%s' % (target_arch or 'native'), '-O3']
+                extra_compile_args += ['-march=%s' % (target_arch or 'native'), '-O3']
             self.distribution.ext_modules[0].extra_compile_args = extra_compile_args
 
         super(build_ext_dmoj, self).build_extensions()
@@ -113,16 +124,22 @@ if os.name == 'nt' or 'sdist' in sys.argv:
 
 if os.name != 'nt' or 'sdist' in sys.argv:
     libs = ['rt']
+
+    if has_seccomp:
+        libs += ['seccomp']
     if sys.platform.startswith('freebsd'):
         libs += ['procstat']
 
     macros = []
-    try:
-        with open('/proc/version') as f:
-            if 'microsoft' in f.read().lower():
-                macros.append(('WSL', None))
-    except IOError:
-        pass
+    if is_wsl:
+        macros.append(('WSL', None))
+
+    if not has_seccomp:
+        print('*' * 79)
+        print('Building without seccomp, expect lower sandbox performance.')
+        print('*' * 79)
+        macros.append(('PTBOX_NO_SECCOMP', None))
+
     extensions += [Extension('dmoj.cptbox._cptbox', sources=cptbox_sources,
                              language='c++', libraries=libs, define_macros=macros)]
 

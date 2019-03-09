@@ -104,7 +104,7 @@ int pt_process::protection_fault(int syscall) {
 }
 
 int pt_process::monitor() {
-    bool in_syscall = false, first = true, spawned = false;
+    bool in_syscall = false, first = true, spawned = false, execve_allowed = true;
     struct timespec start, end, delta;
     int status, exit_reason = PTBOX_EXIT_NORMAL;
     // Set pgid to -this->pid such that -pgid becomes pid, resulting
@@ -171,7 +171,12 @@ int pt_process::monitor() {
             ptrace(PT_FOLLOW_FORK, pid, 0, 1);
 #else
             // This is right after SIGSTOP is received:
-            ptrace(PTRACE_SETOPTIONS, pid, NULL, PTRACE_O_TRACESYSGOOD | PTRACE_O_TRACEEXIT |
+            ptrace(PTRACE_SETOPTIONS, pid, NULL, PTRACE_O_TRACEEXIT |
+#if PTBOX_SECCOMP // Use seccomp to lower tracing overhead.
+                                                 PTRACE_O_TRACESECCOMP |
+#else
+                                                 PTRACE_O_TRACESYSGOOD |
+#endif
 #ifdef PTRACE_O_EXITKILL // Kill all sandboxed process automatically when process exits.
                                                  PTRACE_O_EXITKILL |
 #endif
@@ -182,132 +187,170 @@ int pt_process::monitor() {
             pgid = pid;
         }
 
-        if (WIFSTOPPED(status)) {
+        if (!WIFSTOPPED(status)) {
+            goto resume_process;
+        }
+
+        //printf("%d: WSTOPSIG(status): %d\n", pid, WSTOPSIG(status));
 #if PTBOX_FREEBSD
-            if (WSTOPSIG(status) == SIGTRAP && lwpi.pl_flags & (PL_FLAG_SCE | PL_FLAG_SCX)) {
-                debugger->setpid(pid);
-                debugger->update_syscall(&lwpi);
+        if (WSTOPSIG(status) == SIGTRAP && lwpi.pl_flags & (PL_FLAG_SCE | PL_FLAG_SCX)) {
+            debugger->setpid(pid);
+            debugger->update_syscall(&lwpi);
 #else
-            if (WSTOPSIG(status) == (0x80 | SIGTRAP)) {
-                debugger->settid(pid);
-                debugger->pre_syscall();
+#if PTBOX_SECCOMP
+        if (WSTOPSIG(status) == SIGTRAP && (status >> 16) == PTRACE_EVENT_SECCOMP) {
+#else
+        if (WSTOPSIG(status) == (0x80 | SIGTRAP)) {
+#endif
+            debugger->settid(pid);
+            debugger->pre_syscall();
 #endif
 #if defined(__FreeBSD_version) && __FreeBSD_version >= 1002501
-                int syscall = lwpi.pl_syscall_code;
+            int syscall = lwpi.pl_syscall_code;
 #else
-                int syscall = debugger->syscall();
+            int syscall = debugger->syscall();
 #endif
 #if PTBOX_FREEBSD
-                in_syscall = lwpi.pl_flags & PL_FLAG_SCE;
+            in_syscall = lwpi.pl_flags & PL_FLAG_SCE;
 #else
-                in_syscall = debugger->is_enter();
+            in_syscall = debugger->is_enter();
 #endif
-                // printf("%d: %s syscall %d\n", pid, in_syscall ? "Enter" : "Exit", syscall);
 
-                if (!spawned) {
-                    // Does execve not return if the process hits an rlimit and gets SIGKILLed?
-                    //
-                    // It doesn't. See the strace below.
-                    //      $ ulimit -Sv50000
-                    //      $ strace ./a.out
-                    //      execve("./a.out", ["./a.out"], [/* 17 vars */] <unfinished ...>
-                    //      +++ killed by SIGKILL +++
-                    //      Killed
-                    //
-                    // From this we can see that execve doesn't return (<unfinished ...>) if the process fails to
-                    // initialize, so we don't need to wait until the next non-execve syscall to set
-                    // _initialized to true - if it exited execve, it's good to go.
-                    if (!in_syscall && syscall == debugger->execve_syscall())
-                        spawned = this->_initialized = true;
-                } else if (in_syscall) {
-                    if (syscall >= 0 && syscall < MAX_SYSCALL) {
-                        switch (handler[syscall]) {
-                            case PTBOX_HANDLER_ALLOW:
-                                break;
-                            case PTBOX_HANDLER_STDOUTERR: {
-                                int arg0 = debugger->arg0();
-                                if (arg0 != 1 && arg0 != 2)
-                                    exit_reason = protection_fault(syscall);
-                                break;
-                            }
-                            case PTBOX_HANDLER_CALLBACK:
-                                if (callback(context, syscall))
-                                    break;
-                                // printf("Killed by callback: %d\n", syscall);
-                                exit_reason = protection_fault(syscall);
-                                continue;
-                            default:
-                                // Default is to kill, safety first.
-                                // printf("Killed by DISALLOW or None: %d\n", syscall);
-                                exit_reason = protection_fault(syscall);
-                                continue;
-                        }
-                    // We pass any system call that we can't record in our fixed-size array to python.
-                    // Python will decide your fate.
-                    } else if (!callback(context, syscall)) {
-                        // printf("Killed by callback: %d\n", syscall);
-                        exit_reason = protection_fault(syscall);
-                        continue;
+            //printf("%d: %s syscall %d\n", pid, in_syscall ? "Enter" : "Exit", syscall);
+            if (!spawned) {
+                // Detecting whether a process spawned successfully is difficult.
+                //
+                // Without `seccomp`: different kernel versions do different things when
+                // an rlimit is hit during the `execve`. It's possible for the process to
+                // receive a SIGKILL midway through the call; it's also possible for the
+                // call to return with a nonzero value (e.g. -ENOMEM).
+                //
+                // So, we only mark the process as spawned if we receive a post-`execve`
+                // trap (meaning the process was not SIGKILLed halfway through), and the
+                // return value of `execve` is 0.
+                //
+                // With `seccomp`: we have no post-syscall trap, so we mark the process
+                // as spawned when we hit the first non-`execve` syscall. This can be
+                // problematic if we don't trap on exit syscalls, since a simple assembly
+                // program could theoretically run without causing any syscall traps.
+                //
+                // We take some care when building the syscall whitelist to not add exit
+                // syscalls to the whitelist, so that their invocation will cause a trap
+                // (after which they'll go down the PTBOX_HANDLER_ALLOW branch below).
+
+                // Allow exactly one invocation of `execve`, no questions asked.
+                if (syscall == debugger->execve_syscall()) {
+                    if (execve_allowed) {
+                        execve_allowed = false;
+                        goto resume_process;
                     }
-                } else if (debugger->on_return_callback) {
-                    debugger->on_return_callback(debugger->on_return_context, syscall);
-                    debugger->on_return_callback = NULL;
-                    debugger->on_return_context = NULL;
+                    // Fall through to in_syscall branch below, which will kill the process
+                    // if `execve` was invoked more than once without being whitelisted.
                 }
-                debugger->post_syscall();
-            } else {
-#if PTBOX_FREEBSD
-                // No events aside from signal event on FreeBSD
-                // (TODO: maybe check for PL_SIGNAL instead of both PL_SIGNAL and PL_NONE?)
-                signal = WSTOPSIG(status);
 
-                // Swallow SIGSTOP. This is because no one should send it, nor should it
-                // be self-send, hence perfect for implementing shocker.
-                if (signal == SIGSTOP)
-                    signal = 0;
-                //else printf("%d: WSTOPSIG(status): %d\n", pid, signal);
+#if PTBOX_SECCOMP
+                if (syscall != debugger->execve_syscall() /* always true */) {
 #else
-                switch (WSTOPSIG(status)) {
-                    case SIGTRAP:
-                        switch (status >> 16) {
-                            case PTRACE_EVENT_EXIT:
-                                if (exit_reason != PTBOX_EXIT_NORMAL)
-                                    dispatch(PTBOX_EVENT_EXITING, PTBOX_EXIT_NORMAL);
-                                break;
-                            case PTRACE_EVENT_CLONE: {
-                                unsigned long tid;
-                                ptrace(PTRACE_GETEVENTMSG, pid, NULL, &tid);
-                                //printf("Created thread: %d\n", tid);
-                                break;
-                            }
-                            case PTRACE_EVENT_FORK:
-                            case PTRACE_EVENT_VFORK: {
-                                unsigned long npid;
-                                ptrace(PTRACE_GETEVENTMSG, pid, NULL, &npid);
-                                children.insert(npid);
-                                //printf("Created process: %d\n", npid);
-                                break;
-                            }
-                        }
-                        break;
-                    default:
-                        signal = WSTOPSIG(status);
+                if (!in_syscall && syscall == debugger->execve_syscall() && debugger->result() == 0) {
+#endif
+                  spawned = this->_initialized = true;
+                  goto resume_process;
                 }
+            }
+
+            if (in_syscall) {
+                if (syscall >= 0 && syscall < MAX_SYSCALL) {
+                    switch (handler[syscall]) {
+                        case PTBOX_HANDLER_ALLOW:
+                            break;
+                        case PTBOX_HANDLER_STDOUTERR: {
+                            int arg0 = debugger->arg0();
+                            if (arg0 != 1 && arg0 != 2)
+                                exit_reason = protection_fault(syscall);
+                            break;
+                        }
+                        case PTBOX_HANDLER_CALLBACK:
+                            if (callback(context, syscall))
+                                break;
+                            //printf("Killed by callback: %d\n", syscall);
+                            exit_reason = protection_fault(syscall);
+                            continue;
+                        default:
+                            // Default is to kill, safety first.
+                            //printf("Killed by DISALLOW or None: %d\n", syscall);
+                            exit_reason = protection_fault(syscall);
+                            continue;
+                    }
+                // We pass any system call that we can't record in our fixed-size array to python.
+                // Python will decide your fate.
+                } else if (!callback(context, syscall)) {
+                    //printf("Killed by callback: %d\n", syscall);
+                    exit_reason = protection_fault(syscall);
+                    continue;
+                }
+            }
+
+            // Syscall has "ended". What we do here varies a bit between if we're using seccomp
+            // or not, since with seccomp we will have no return event.
+            if ((PTBOX_SECCOMP || !in_syscall) && debugger->on_return_callback) {
+                debugger->on_return_callback(debugger->on_return_context, syscall);
+                debugger->on_return_callback = NULL;
+                debugger->on_return_context = NULL;
+            }
+
+            debugger->post_syscall();
+        } else {
+#if PTBOX_FREEBSD
+            // No events aside from signal event on FreeBSD
+            // (TODO: maybe check for PL_SIGNAL instead of both PL_SIGNAL and PL_NONE?)
+            signal = WSTOPSIG(status);
+
+            // Swallow SIGSTOP. This is because no one should send it, nor should it
+            // be self-send, hence perfect for implementing shocker.
+            if (signal == SIGSTOP)
+                signal = 0;
+#else
+            switch (WSTOPSIG(status)) {
+                case SIGTRAP:
+                    switch (status >> 16) {
+                        case PTRACE_EVENT_EXIT:
+                            if (exit_reason != PTBOX_EXIT_NORMAL) {
+                                dispatch(PTBOX_EVENT_EXITING, PTBOX_EXIT_NORMAL);
+                            }
+                            break;
+                        case PTRACE_EVENT_CLONE: {
+                            unsigned long tid;
+                            ptrace(PTRACE_GETEVENTMSG, pid, NULL, &tid);
+                            //printf("Created thread: %d\n", tid);
+                            break;
+                        }
+                        case PTRACE_EVENT_FORK:
+                        case PTRACE_EVENT_VFORK: {
+                            unsigned long npid;
+                            ptrace(PTRACE_GETEVENTMSG, pid, NULL, &npid);
+                            children.insert(npid);
+                            //printf("Created process: %d\n", npid);
+                            break;
+                        }
+                    }
+                    break;
+                default:
+                    signal = WSTOPSIG(status);
+            }
 #endif
 
-                //printf("%d: WSTOPSIG(status): %d\n", pid, signal);
-                // Only main process signals are meaningful.
-                if (!first && pid == pgid) // *** Don't set _signal to SIGSTOP if this is the /first/ SIGSTOP
-                    dispatch(PTBOX_EVENT_SIGNAL, WSTOPSIG(status));
-            }
+            // Only main process signals are meaningful.
+            if (!first && pid == pgid) // *** Don't set _signal to SIGSTOP if this is the /first/ SIGSTOP
+                dispatch(PTBOX_EVENT_SIGNAL, WSTOPSIG(status));
         }
+resume_process:
         // Pass NULL as signal in case of our first SIGSTOP because the runtime tends to resend it, making all our
         // work for naught. Like abort(), it catches the signal, prints something (^Z?) and then resends it.
         // Doing this prevents a second SIGSTOP from being dispatched to our event handler above. ***
 #if PTBOX_FREEBSD
         ptrace(_trace_syscalls ? PT_SYSCALL : PT_CONTINUE, pid, (caddr_t) 1, first ? 0 : signal);
 #else
-        ptrace(_trace_syscalls ? PTRACE_SYSCALL : PTRACE_CONT, pid, NULL, first ? NULL : (void*) signal);
+        ptrace(_trace_syscalls && !PTBOX_SECCOMP ? PTRACE_SYSCALL : PTRACE_CONT, pid, NULL, first ? NULL : (void*) signal);
 #endif
         first = false;
     }

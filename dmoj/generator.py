@@ -9,7 +9,7 @@ class GeneratorManager(object):
     def get_generator(self, filenames, flags, lang=None):
         from dmoj.executors import executors
 
-        filenames = map(os.path.abspath, filenames)
+        filenames = list(map(os.path.abspath, filenames))
         sources = {}
 
         try:

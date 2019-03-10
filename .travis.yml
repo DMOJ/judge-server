@@ -59,9 +59,11 @@ script:
     EOF
   - chmod a+x run run-su
   - docker run -e PYTHON_VERSION="$PYTHON_VERSION" -e DMOJ_USE_SECCOMP="$DMOJ_USE_SECCOMP" -v "$(pwd):/code" --cap-add=SYS_PTRACE "$DOCKER_IMAGE"
-after_script:
-  - sed -i 's:"/code/:"'"$(pwd)"'/:g' .coverage
-  - sudo pip install codecov && codecov
-notifications:
-  slack:
-    secure: "cJMFsXwvAZxSR/p8WFYUAtJmPxnq+MZKhXQgaHZp7D0tveh6v0/O/GDfO+3B3Ep7/SBNiAj/wfH/ivDVjiSWVN/2DYSiHtzMZ9Jkq2CQzMzX5u3l7J04bO617K8+eRGOFQcYj+GPRntF4GebSgfMuhXwba2N/KjAA9QMKOTlJpU="
+after_success:
+  - wget https://raw.githubusercontent.com/DiscordHooks/travis-ci-discord-webhook/master/send.sh
+  - chmod +x send.sh
+  - ./send.sh success $WEBHOOK_URL
+after_failure:
+  - wget https://raw.githubusercontent.com/DiscordHooks/travis-ci-discord-webhook/master/send.sh
+  - chmod +x send.sh
+  - ./send.sh failure $WEBHOOK_URL

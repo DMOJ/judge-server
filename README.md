@@ -80,6 +80,7 @@ The judge can also grade in the languages listed below. These languages are less
 * Tcl
 * Turing
 * V8 JavaScript
+* SpiderMonkey JavaScript
 * Brain\*\*\*\*
 
 ## Installation

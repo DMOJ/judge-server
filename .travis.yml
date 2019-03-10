@@ -80,7 +80,7 @@ before_install:
     unzip groovy.zip &&
     export PATH=${PWD}/groovy-2.4.12/bin:"${PATH}"
   # Install Mozilla Spidermonkey
-  - sudo apt install libmozjs-52-0 libmozjs-52-dev
+  - sudo apt install libmozjs-24-0v5 libmozjs-24-bin
 install:
   - pip install codecov
   - pip install Cython --install-option="--no-cython-compile"

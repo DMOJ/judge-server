@@ -101,18 +101,20 @@ class StandardGrader(BaseGrader):
         # We shouldn't run checkers if the submission is already known to be incorrect, because some checkers
         # might be very computationally expensive.
         # See https://github.com/DMOJ/judge/issues/170
-        if not result.result_flag:
+        checker = case.checker()
+        # checker is a `partial` object, NOT a `function` object
+        if not result.result_flag or getattr(checker.func, 'run_on_error', False):
             # Checkers might crash if any data is None, so force at least empty string
-            check = case.checker()(result.proc_output or b'',
-                                   case.output_data() or b'',
-                                   submission_source=self.source,
-                                   judge_input=case.input_data() or b'',
-                                   point_value=case.points,
-                                   case_position=case.position,
-                                   batch=case.batch,
-                                   submission_language=self.language,
-                                   binary_data=case.has_binary_data,
-                                   execution_time=result.execution_time)
+            check = checker(result.proc_output or b'',
+                            case.output_data() or b'',
+                            submission_source=self.source,
+                            judge_input=case.input_data() or b'',
+                            point_value=case.points,
+                            case_position=case.position,
+                            batch=case.batch,
+                            submission_language=self.language,
+                            binary_data=case.has_binary_data,
+                            execution_time=result.execution_time)
         else:
             # Solution is guaranteed to receive 0 points
             check = False

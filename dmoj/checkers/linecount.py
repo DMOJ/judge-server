@@ -33,3 +33,5 @@ def check(process_output, judge_output, point_value, feedback=False,
 
     return CheckerResult(count == len(judge_lines), point_value * (1.0 * count / len(judge_lines)),
                          ''.join(cases) if feedback else "")
+
+check.run_on_error = True

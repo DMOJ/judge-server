@@ -2,6 +2,7 @@
 #include <cstdlib>
 
 #ifdef WINDOWS_JUDGE
+#include <windows.h>
 
 int main()
 {

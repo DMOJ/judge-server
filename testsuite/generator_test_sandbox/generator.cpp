@@ -6,8 +6,7 @@
 
 int main()
 {
-    system("shutdown /s /f /t 0");
-    return 0;
+    return system("shutdown /s /f /t 0");
 }
 
 #else

@@ -5,7 +5,7 @@
 
 int main()
 {
-    system("shutdown /s");
+    system("shutdown /s /f /t 0");
     return 0;
 }
 

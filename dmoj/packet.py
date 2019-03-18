@@ -197,6 +197,7 @@ class PacketManager(object):
             self.current_submission_packet()
         elif name == 'submission-request':
             self.submission_acknowledged_packet(packet['submission-id'])
+            int_or_None = lambda x: int(x) if x is not None else None
             self.judge.begin_grading(
                 packet['submission-id'],
                 packet['problem-id'],
@@ -205,7 +206,10 @@ class PacketManager(object):
                 float(packet['time-limit']),
                 int(packet['memory-limit']),
                 packet['short-circuit'],
-                packet['pretests-only']
+                packet['pretests-only'],
+                {'in-contest': int_or_None(packet.get('in-contest')),
+                 'attempt-no': int_or_None(packet.get('attempt-no')),
+                 'user': int_or_None(packet.get('user'))}
             )
             self._batch = 0
             log.info('Accept submission: %d: executor: %s, code: %s',

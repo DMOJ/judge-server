@@ -390,7 +390,7 @@ def sanity_check():
         if os.path.exists(bpf_jit_path):
             with open(bpf_jit_path, 'r') as f:
                 if f.read().strip() != '1':
-                    startup_warnings.append('running without BPF JIT enabled, consider running'
+                    startup_warnings.append('running without BPF JIT enabled, consider running '
                                             '`echo 1 > /proc/sys/net/core/bpf_jit_enable` '
                                             'to reduce sandbox overhead')
 

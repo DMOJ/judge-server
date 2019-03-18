@@ -153,14 +153,13 @@ class Judge(object):
         self.current_submission_thread = None
         self.current_submission = None
 
-    def _begin_grading(self, problem_id, language, source, time_limit, memory_limit, short_circuit, pretests_only,
-                       report=print):
+    def _begin_grading(self, problem_id, language, source, time_limit, memory_limit, short_circuit, meta, report=print):
         submission_id = self.current_submission
         report(ansi_style('Start grading #ansi[%s](yellow)/#ansi[%s](green|bold) in %s...'
                           % (problem_id, submission_id, language)))
 
         try:
-            problem = Problem(problem_id, time_limit, memory_limit, load_pretests_only=pretests_only)
+            problem = Problem(problem_id, time_limit, memory_limit)
         except Exception:
             return self.internal_error()
 
@@ -171,13 +170,13 @@ class Judge(object):
         else:
             grader_class = graders.StandardGrader
 
-        grader = self.get_grader_from_source(grader_class, problem, language, source, report=report)
+        grader = self.get_grader_from_source(grader_class, problem, language, source, meta, report=report)
         binary = grader.binary if grader else None
 
         # the compiler may have failed, or an error could have happened while initializing a custom judge
         # either way, we can't continue
         if binary:
-            self.packet_manager.begin_grading_packet(problem.is_pretested)
+            self.packet_manager.begin_grading_packet(grader.is_pretested)
 
             batch_counter = 1
             in_batch = False
@@ -185,7 +184,7 @@ class Judge(object):
             # cases are indexed at 1
             case_number = 1
             try:
-                for result in self.grade_cases(grader, problem.cases, short_circuit=short_circuit):
+                for result in self.grade_cases(grader, grader.cases(), short_circuit=short_circuit):
                     if isinstance(result, BatchBegin):
                         self.packet_manager.batch_begin_packet()
                         report(ansi_style("#ansi[Batch #%d](yellow|bold)" % batch_counter))
@@ -274,9 +273,9 @@ class Judge(object):
 
             yield result
 
-    def get_grader_from_source(self, grader_class, problem, language, source, report=print):
+    def get_grader_from_source(self, grader_class, problem, language, source, meta, report=print):
         try:
-            grader = grader_class(self, problem, language, utf8bytes(source))
+            grader = grader_class(self, problem, language, utf8bytes(source), meta)
         except CompileError as ce:
             report(ansi_style('#ansi[Failed compiling submission!](red|bold)'))
             report(ce.args[0].rstrip())  # don't print extra newline

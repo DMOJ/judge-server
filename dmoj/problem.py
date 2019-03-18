@@ -17,7 +17,7 @@ from dmoj.utils.module import load_module_from_file
 
 
 class Problem(object):
-    def __init__(self, problem_id, time_limit, memory_limit, load_pretests_only=False):
+    def __init__(self, problem_id, time_limit, memory_limit):
         self.id = problem_id
         self.time_limit = time_limit
         self.memory_limit = memory_limit
@@ -28,8 +28,6 @@ class Problem(object):
         # Checkers modules must be stored in a dict, for the duration of execution,
         # lest globals be deleted with the module.
         self._checkers = {}
-        self._testcase_counter = 0
-        self._batch_counter = 0
 
         try:
             doc = yaml.safe_load(self.problem_data['init.yml'])
@@ -48,9 +46,6 @@ class Problem(object):
 
         self.problem_data.archive = self._resolve_archive_files()
 
-        self.is_pretested = load_pretests_only and 'pretest_test_cases' in self.config
-        self.cases = self._resolve_testcases(self.config['pretest_test_cases' if self.is_pretested else 'test_cases'])
-
     def load_checker(self, name):
         if name in self._checkers:
             return self._checkers[name]
@@ -68,17 +63,6 @@ class Problem(object):
                 raise InvalidInitException('bad archive: "%s"' % archive_path)
             return archive
         return None
-
-    def _resolve_testcases(self, cfg, batch_no=0):
-        cases = []
-        for case_config in cfg:
-            if 'batched' in case_config.raw_config:
-                self._batch_counter += 1
-                cases.append(BatchedTestCase(self._batch_counter, case_config, self))
-            else:
-                cases.append(TestCase(self._testcase_counter, batch_no, case_config, self))
-                self._testcase_counter += 1
-        return cases
 
 
 class ProblemDataManager(dict):
@@ -103,11 +87,11 @@ class ProblemDataManager(dict):
 
 
 class BatchedTestCase(object):
-    def __init__(self, batch_no, config, problem):
+    def __init__(self, batch_no, config, problem, cases):
         self.config = config
         self.batch_no = batch_no
         self.points = config.points
-        self.batched_cases = problem._resolve_testcases(config['batched'], batch_no=batch_no)
+        self.batched_cases = cases
         if any(isinstance(case, BatchedTestCase) for case in self.batched_cases):
             raise InvalidInitException("nested batches")
         self.problem = problem

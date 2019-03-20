@@ -166,7 +166,11 @@ class TestCase(object):
         elif isinstance(gen.unwrap(), list):
             filenames = list(gen.unwrap())
         else:
-            filenames = gen.source
+            if isinstance(gen.source, six.string_types):
+                filenames = gen.source
+            elif isinstance(gen.source.unwrap(), list):
+                filenames = list(gen.source.unwrap())
+
             if gen.flags:
                 flags += gen.flags
             if not args and gen.args:

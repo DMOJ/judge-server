@@ -191,7 +191,8 @@ class TestCase(object):
 
         filenames = [os.path.join(base, name) for name in filenames]
 
-        executor = self.problem.generator_manager.get_generator(filenames, flags, lang=lang, compiler_time_limit=compiler_time_limit)
+        executor = self.problem.generator_manager.get_generator(filenames, flags, lang=lang,
+                                                                compiler_time_limit=compiler_time_limit)
 
         # convert all args to str before launching; allows for smoother int passing
         args = map(str, args)

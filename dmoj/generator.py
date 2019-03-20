@@ -39,7 +39,8 @@ class GeneratorManager(object):
         clazz = clazz.Executor
 
         if issubclass(clazz, CompiledExecutor):
-            clazz = type('Executor', (clazz,), {'compiler_time_limit': compiler_time_limit or clazz.compiler_time_limit})
+            compiler_time_limit = compiler_time_limit or clazz.compiler_time_limit
+            clazz = type('Executor', (clazz,), {'compiler_time_limit': compiler_time_limit})
 
         if hasattr(clazz, 'flags'):
             flags += ['-DWINDOWS_JUDGE', '-DWIN32'] if os.name == 'nt' else ['-DLINUX_JUDGE']

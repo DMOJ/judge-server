@@ -1,4 +1,6 @@
-generator: [gen.cpp, testlib.h]
+generator:
+  source: [gen.cpp, testlib.h]
+  compiler_time_limit: 60
 test_cases:
 - {generator_args: [10, 5], points: 1}
 - {generator_args: [24, 89], points: 1}

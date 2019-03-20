@@ -116,6 +116,9 @@ class ConfigNode(object):
             cfg = self.parent[item] if self.parent else None
         return cfg
 
+    def __len__(self):
+        return len(self.raw_config)
+
     def __setitem__(self, item, value):
         self.raw_config[item] = value
 

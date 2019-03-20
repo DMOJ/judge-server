@@ -6,8 +6,9 @@ from dmoj.utils import ansi
 
 
 class GeneratorManager(object):
-    def get_generator(self, filenames, flags, lang=None):
+    def get_generator(self, filenames, flags, lang=None, compiler_time_limit=None):
         from dmoj.executors import executors
+        from dmoj.executors.base_executor import CompiledExecutor
 
         filenames = list(map(os.path.abspath, filenames))
         sources = {}
@@ -36,6 +37,10 @@ class GeneratorManager(object):
             raise IOError('could not find a C++ executor for generator')
 
         clazz = clazz.Executor
+
+        if issubclass(clazz, CompiledExecutor):
+            compiler_time_limit = compiler_time_limit or clazz.compiler_time_limit
+            clazz = type('Executor', (clazz,), {'compiler_time_limit': compiler_time_limit})
 
         if hasattr(clazz, 'flags'):
             flags += ['-DWINDOWS_JUDGE', '-DWIN32'] if os.name == 'nt' else ['-DLINUX_JUDGE']

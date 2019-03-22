@@ -5,15 +5,18 @@ import logging
 import os
 import re
 import sys
-from collections import defaultdict
+from collections import defaultdict, deque
 
 from dmoj.cptbox import CHROOTSecurity, SecurePopen
 from dmoj.cptbox.handlers import ALLOW, ACCESS_DENIED, ACCESS_ENOENT
 from dmoj.cptbox.syscalls import *
+from dmoj.result import Result
+from dmoj.utils.unicode import utf8text
 from .base_executor import CompiledExecutor
 
 WRITE_FS = ['/proc/self/task/\d+/comm$', '.*?/mono\.\d+$']
 UNLINK_FS = re.compile('.*?/mono.\d+$')
+reexception = re.compile(r'\bFATAL UNHANDLED EXCEPTION: (.*?):', re.U)
 
 log = logging.getLogger('dmoj.security')
 
@@ -115,6 +118,21 @@ class MonoExecutor(CompiledExecutor):
         res = super(MonoExecutor, cls).get_find_first_mapping()
         res['mono'] = ['mono']
         return res
+
+    def get_feedback(self, stderr, result, process):
+        if not result.result_flag & Result.IR:
+            return ''
+
+        if 'Garbage collector could not allocate' in stderr:
+            result.result_flag |= Result.MLE
+            return ''
+
+        match = deque(reexception.finditer(utf8text(stderr, 'replace')), maxlen=1)
+        if not match:
+            return ''
+
+        exception = match[0].group(1)
+        return exception
 
     @classmethod
     def initialize(cls, sandbox=True):

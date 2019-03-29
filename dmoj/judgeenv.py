@@ -6,6 +6,7 @@ import yaml
 
 from dmoj.config import ConfigNode
 from dmoj.utils.unicode import utf8text
+from dmoj.utils import pyyaml_patch
 
 try:
     import ssl

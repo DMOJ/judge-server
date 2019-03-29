@@ -423,7 +423,7 @@ def judge_proc(need_monitor):
     logging.basicConfig(filename=logfile, level=logging.INFO,
                         format='%(levelname)s %(asctime)s %(process)d %(module)s %(message)s')
 
-    setproctitle('DMOJ Judge: %s on %s' % (env['id'], make_host_port(judgeenv)))
+    setproctitle(utf8bytes('DMOJ Judge: %s on %s' % (env['id'], make_host_port(judgeenv))))
 
     judge = ClassicJudge(judgeenv.server_host, judgeenv.server_port,
                          secure=judgeenv.secure, no_cert_check=judgeenv.no_cert_check,

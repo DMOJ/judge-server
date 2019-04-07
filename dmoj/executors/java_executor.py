@@ -222,7 +222,7 @@ class JavacExecutor(JavaExecutor):
         return [self.get_compiler(), '-Xlint', '-encoding', 'UTF-8', self._code]
 
     def handle_compile_error(self, output):
-        if b'is public, should be declared in a file named' in output:
+        if b'is public, should be declared in a file named' in utf8bytes(output):
             raise CompileError('You are a troll. Trolls are not welcome. '
                                'As a judge, I sentence your code to death.\n')
         raise CompileError(output)

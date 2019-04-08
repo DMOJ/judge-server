@@ -77,6 +77,7 @@ try:
 
         class PlatformExecutorMixin(object):
             address_grace = 65536
+            data_grace = 0
             personality = 0x0040000  # ADDR_NO_RANDOMIZE
             fs = []
             syscalls = []
@@ -142,6 +143,7 @@ try:
                                    executable=utf8bytes(self.get_executable()),
                                    security=self.get_security(launch_kwargs=kwargs),
                                    address_grace=self.get_address_grace(),
+                                   data_grace=self.data_grace,
                                    personality=self.personality, fds=kwargs.get('fds'),
                                    time=kwargs.get('time'), memory=kwargs.get('memory'),
                                    wall_time=kwargs.get('wall_time'),

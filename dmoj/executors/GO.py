@@ -11,6 +11,7 @@ decomment = lambda x: recomment.sub('', x)
 class Executor(CompiledExecutor):
     ext = '.go'
     name = 'GO'
+    data_grace = 65536  # Go uses data segment for heap arena map
     address_grace = 786432
     command = 'go'
     test_name = 'echo'

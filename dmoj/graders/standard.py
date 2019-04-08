@@ -105,17 +105,22 @@ class StandardGrader(BaseGrader):
         checker = case.checker()
         # checker is a `partial` object, NOT a `function` object
         if not result.result_flag or getattr(checker.func, 'run_on_error', False):
-            # Checkers might crash if any data is None, so force at least empty string
-            check = checker(result.proc_output or b'',
-                            case.output_data() or b'',
-                            submission_source=self.source,
-                            judge_input=case.input_data() or b'',
-                            point_value=case.points,
-                            case_position=case.position,
-                            batch=case.batch,
-                            submission_language=self.language,
-                            binary_data=case.has_binary_data,
-                            execution_time=result.execution_time)
+            try:
+                # Checkers might crash if any data is None, so force at least empty string
+                check = checker(result.proc_output or b'',
+                                case.output_data() or b'',
+                                submission_source=self.source,
+                                judge_input=case.input_data() or b'',
+                                point_value=case.points,
+                                case_position=case.position,
+                                batch=case.batch,
+                                submission_language=self.language,
+                                binary_data=case.has_binary_data,
+                                execution_time=result.execution_time)
+            except UnicodeDecodeError:
+                # Don't rely on problemsetters to do sane things when it comes to Unicode handling, so
+                # just proactively swallow all Unicode-related checker errors.
+                return CheckerResult(False, 0, feedback='invalid unicode')
         else:
             # Solution is guaranteed to receive 0 points
             check = False

@@ -1,4 +1,10 @@
 # encoding: utf-8
+import traceback
+import subprocess
+from distutils.errors import DistutilsPlatformError
+from distutils.msvccompiler import MSVCCompiler
+from setuptools import setup, Extension, find_packages
+from setuptools.command.build_ext import build_ext
 from __future__ import print_function
 
 import io
@@ -9,13 +15,7 @@ if sys.version_info[0] >= 3 and os.name == 'nt':
     print('DMOJ is unsupported on Windows Python 3, please use Python 2 instead.', file=sys.stderr)
     sys.exit(0)
 
-import traceback
-import subprocess
-from distutils.errors import DistutilsPlatformError
-from distutils.msvccompiler import MSVCCompiler
 
-from setuptools import setup, Extension, find_packages
-from setuptools.command.build_ext import build_ext
 
 has_pyx = os.path.exists(os.path.join(os.path.dirname(__file__), 'dmoj', 'cptbox', '_cptbox.pyx'))
 

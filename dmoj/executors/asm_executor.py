@@ -113,7 +113,7 @@ class ASMExecutor(CompiledExecutor):
 
     @classmethod
     def get_versionable_commands(cls):
-        for runtime in cls.get_find_first_mapping().keys():
+        for runtime in (cls.as_name, cls.ld_name):
             yield runtime, cls.runtime_dict[runtime]
 
     @classmethod

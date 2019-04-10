@@ -27,4 +27,3 @@ puts $input
         process.stdin.close()
         retcode = process.poll()
         return ('tclsh', tuple(map(int, process.stdout.read().split(b'.'))) if not retcode else ()),
-

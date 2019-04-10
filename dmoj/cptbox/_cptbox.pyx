@@ -8,7 +8,7 @@ from posix.types cimport pid_t
 
 __all__ = ['Process', 'Debugger', 'bsd_get_proc_cwd', 'bsd_get_proc_fdno', 'MAX_SYSCALL_NUMBER',
            'DEBUGGER_X86', 'DEBUGGER_X64', 'DEBUGGER_X86_ON_X64', 'DEBUGGER_X32', 'DEBUGGER_ARM',
-           'DEBUGGER_ARM64', 'AT_FDCWD']
+           'DEBUGGER_ARM64', 'AT_FDCWD', 'HAS_PCRE']
 
 
 cdef extern from 'ptbox.h' nogil:
@@ -59,9 +59,11 @@ cdef extern from 'ptbox.h' nogil:
         double wall_clock_time()
         const rusage *getrusage()
         bint was_initialized()
+        bint set_re_fs_read(char *pattern, int length, char *error, int error_length, int *offset)
 
     cdef bint PTBOX_FREEBSD
     cdef bint PTBOX_SECCOMP
+    cdef bint PTBOX_PCRE
     cdef int MAX_SYSCALL
 
     cdef int PTBOX_EVENT_ATTACH
@@ -115,6 +117,7 @@ cdef extern from 'fcntl.h' nogil:
 
 MAX_SYSCALL_NUMBER = MAX_SYSCALL
 AT_FDCWD = _AT_FDCWD
+HAS_PCRE = PTBOX_PCRE
 
 cdef int pt_child(void *context) nogil:
     cdef child_config *config = <child_config*> context
@@ -341,6 +344,7 @@ cdef class Process:
     cdef public unsigned int _cpu_time
     cdef public int _nproc
     cdef unsigned long _max_memory
+    cdef bytes _re_fs_read
 
     def __cinit__(self, int debugger, debugger_type, *args, **kwargs):
         self._child_memory = self._child_address = 0
@@ -348,6 +352,7 @@ cdef class Process:
         self._cpu_time = 0
         self._nproc = -1
         self._signal = 0
+        self._re_fs_read = None
 
         self._debugger = get_ptdebugger(debugger)
         if not self._debugger:
@@ -441,6 +446,20 @@ cdef class Process:
         self._exitcode = exitcode
         self._exited = True
         return self._exitcode
+
+    property re_fs_read:
+        def __get__(self):
+            return self._re_fs_read
+
+        def __set__(self, bytes regex):
+            cdef char error[128]
+            cdef int offset
+            if not self.process.set_re_fs_read(regex, len(regex), error, 128, &offset):
+                if offset >= 0:
+                    raise RuntimeError('%s at %d' % ((<bytes>error).decode('utf-8', 'replace'), offset))
+                else:
+                    raise RuntimeError((<bytes>error).decode('utf-8', 'replace'))
+            self._re_fs_read = regex
 
     property was_initialized:
         def __get__(self):

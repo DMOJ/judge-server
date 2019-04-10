@@ -7,8 +7,10 @@ python:
   - 3.6
   - 3.7
 env:
-- DMOJ_USE_SECCOMP="yes"
-- DMOJ_USE_SECCOMP="no"
+- DMOJ_USE_SECCOMP="yes" DMOJ_USE_PCRE="yes"
+- DMOJ_USE_SECCOMP="yes" DMOJ_USE_PCRE="no"
+- DMOJ_USE_SECCOMP="no" DMOJ_USE_PCRE="yes"
+- DMOJ_USE_SECCOMP="no" DMOJ_USE_PCRE="no"
 addons:
   apt:
     sources:
@@ -35,6 +37,7 @@ addons:
     - swi-prolog
     - dart/stable
     - scala
+    - libpcre2-dev
 cache:
   directories:
     - $HOME/.cargo

@@ -27,6 +27,7 @@ except IOError:
 
 # Allow manually disabling seccomp on old kernels. WSL doesn't have seccomp.
 has_seccomp = not is_wsl and os.environ.get('DMOJ_USE_SECCOMP') != 'no'
+has_pcre = os.environ.get('DMOJ_USE_PCRE') != 'no'
 
 try:
     from Cython.Build import cythonize
@@ -127,6 +128,8 @@ if os.name != 'nt' or 'sdist' in sys.argv:
 
     if has_seccomp:
         libs += ['seccomp']
+    if has_pcre:
+        libs += ['pcre2-8']
     if sys.platform.startswith('freebsd'):
         libs += ['procstat']
 
@@ -139,6 +142,12 @@ if os.name != 'nt' or 'sdist' in sys.argv:
         print('Building without seccomp, expect lower sandbox performance.')
         print('*' * 79)
         macros.append(('PTBOX_NO_SECCOMP', None))
+
+    if not has_pcre:
+        print('*' * 79)
+        print('Building without pcre, expect lower sandbox performance.')
+        print('*' * 79)
+        macros.append(('PTBOX_NO_PCRE', None))
 
     extensions += [Extension('dmoj.cptbox._cptbox', sources=cptbox_sources,
                              language='c++', libraries=libs, define_macros=macros)]

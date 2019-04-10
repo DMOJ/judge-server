@@ -184,8 +184,11 @@ class SecurePopen(six.with_metaclass(SecurePopenMeta, Process)):
                         if not callable(handler):
                             raise ValueError('Handler not callable: ' + handler)
                         self._callbacks[call] = handler
-                        handler = _CALLBACK
+                        handler = getattr(handler, 'with_handler', _CALLBACK)
                     self._handler(call, handler)
+
+            if HAS_PCRE and hasattr(security, 'fs_jail'):
+                self.re_fs_read = utf8bytes(security.fs_jail.pattern)
 
         self._started = threading.Event()
         self._died = threading.Event()

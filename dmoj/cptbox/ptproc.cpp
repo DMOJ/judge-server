@@ -27,6 +27,10 @@ void pt_free_process(pt_process *process) {
 pt_process::pt_process(pt_debugger *debugger) :
     pid(0), callback(NULL), context(NULL), debugger(debugger),
     event_proc(NULL), event_context(NULL), _trace_syscalls(true),
+#if PTBOX_PCRE
+    re_fs_read(NULL), re_fs_read_data(NULL), re_fs_read_context(NULL),
+    re_fs_read_jit(NULL),
+#endif
     _initialized(false)
 {
     memset(&exec_time, 0, sizeof exec_time);
@@ -34,6 +38,15 @@ pt_process::pt_process(pt_debugger *debugger) :
     memset(&end_time, 0, sizeof exec_time);
     memset(handler, 0, sizeof handler);
     debugger->set_process(this);
+}
+
+pt_process::~pt_process() {
+#if PTBOX_PCRE
+    if (re_fs_read) pcre2_code_free(re_fs_read);
+    if (re_fs_read_data) pcre2_match_data_free(re_fs_read_data);
+    if (re_fs_read_context) pcre2_match_context_free(re_fs_read_context);
+    if (re_fs_read_jit) pcre2_jit_stack_free(re_fs_read_jit);
+#endif
 }
 
 double pt_process::wall_clock_time() {
@@ -65,6 +78,66 @@ int pt_process::set_handler(int syscall, int handler) {
         return 1;
     this->handler[syscall] = handler;
     return 0;
+}
+
+bool pt_process::set_re_fs_read(const char *pattern, int length, char *error,
+                                int error_length, int *offset) {
+#if PTBOX_PCRE
+    int errcode;
+    PCRE2_SIZE erroffset;
+
+    re_fs_read = pcre2_compile((PCRE2_SPTR8) pattern, length, 0, &errcode, &erroffset, NULL);
+    if (re_fs_read == NULL) {
+        *offset = (int) erroffset;
+        pcre2_get_error_message(errcode, (PCRE2_UCHAR8*) error, error_length);
+        return false;
+    }
+
+    re_fs_read_context = pcre2_match_context_create(NULL);
+    if (re_fs_read_context == NULL) {
+        *error = '\0';
+        strncat(error, "failed to create match context", error_length - 1);
+        *offset = -1;
+        pcre2_code_free(re_fs_read);
+        re_fs_read = NULL;
+        return false;
+    }
+
+    re_fs_read_jit = pcre2_jit_stack_create(32*1024, 512*1024, NULL);
+    if (re_fs_read_jit == NULL) {
+        *error = '\0';
+        strncat(error, "failed to create JIT stack", error_length - 1);
+        *offset = -1;
+        pcre2_match_context_free(re_fs_read_context);
+        pcre2_code_free(re_fs_read);
+        re_fs_read_context = NULL;
+        re_fs_read = NULL;
+        return false;
+    }
+
+    pcre2_jit_stack_assign(re_fs_read_context, NULL, re_fs_read_jit);
+
+    re_fs_read_data = pcre2_match_data_create_from_pattern(re_fs_read, NULL);
+    if (re_fs_read_data == NULL) {
+        *error = '\0';
+        strncat(error, "failed to create match data", error_length - 1);
+        *offset = -1;
+        pcre2_jit_stack_free(re_fs_read_jit);
+        pcre2_match_context_free(re_fs_read_context);
+        pcre2_code_free(re_fs_read);
+        re_fs_read_jit = NULL;
+        re_fs_read_context = NULL;
+        re_fs_read = NULL;
+        return false;
+    }
+
+    return true;
+#else
+    *error = '\0';
+    strncat(error, "not compiled with PCRE support", error_length - 1);
+    *offset = -1;
+    return false;
+#endif
 }
 
 int pt_process::dispatch(int event, unsigned long param) {
@@ -101,6 +174,34 @@ int pt_process::protection_fault(int syscall) {
         ptrace(PT_KILL, debugger->tid, (caddr_t) 1, 0);
 #endif
     return PTBOX_EXIT_PROTECTION;
+}
+
+bool pt_process::handle_open_call() {
+#if PTBOX_PCRE
+    if (!re_fs_read) {
+        return false;
+    }
+
+    unsigned long file_ptr = (unsigned long) debugger->arg0();
+    char *file = debugger->readstr(file_ptr, 4096);
+    int result;
+
+    result = pcre2_match(re_fs_read, (PCRE2_SPTR8) file, PCRE2_ZERO_TERMINATED,
+                         0, 0, re_fs_read_data, re_fs_read_context);
+    printf("Opening file: %s... %s\n", file, result >= 0 ? "allowed" : "denied");
+    debugger->freestr(file);
+
+    if (result >= 0) {
+        return true;
+    } else if (result == PCRE2_ERROR_NOMATCH) {
+        return false;
+    } else {
+        fprintf(stderr, "PCRE2 match error: %d\n", result);
+        return false;
+    }
+#else
+    return false;
+#endif
 }
 
 int pt_process::monitor() {
@@ -275,6 +376,12 @@ int pt_process::monitor() {
                             //printf("Killed by callback: %d\n", syscall);
                             exit_reason = protection_fault(syscall);
                             continue;
+                        case PTBOX_HANDLER_OPEN:
+                            if (!handle_open_call() && !callback(context, syscall)) {
+                                exit_reason = protection_fault(syscall);
+                                continue;
+                            }
+                            break;
                         default:
                             // Default is to kill, safety first.
                             //printf("Killed by DISALLOW or None: %d\n", syscall);

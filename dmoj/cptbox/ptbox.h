@@ -13,6 +13,17 @@
 
 #include <map>
 
+#ifndef PTBOX_NO_PCRE
+#   define PTBOX_PCRE 1
+#else
+#   define PTBOX_PCRE 0
+#endif
+
+#if PTBOX_PCRE
+#   define PCRE2_CODE_UNIT_WIDTH 8
+#   include <pcre2.h>
+#endif
+
 #if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
 #   define PTBOX_FREEBSD 1
 #else
@@ -59,6 +70,8 @@
 #define PTBOX_HANDLER_ALLOW 1
 #define PTBOX_HANDLER_CALLBACK 2
 #define PTBOX_HANDLER_STDOUTERR 3
+#define PTBOX_HANDLER_OPEN 4
+#define PTBOX_HANDLER_OPENAT 5
 
 #define PTBOX_EVENT_ATTACH 0
 #define PTBOX_EVENT_EXITING 1
@@ -105,6 +118,7 @@ typedef int (*pt_event_callback)(void *context, int event, unsigned long param);
 class pt_process {
 public:
     pt_process(pt_debugger *debugger);
+    ~pt_process();
     void set_callback(pt_handler_callback, void *context);
     void set_event_proc(pt_event_callback, void *context);
     int set_handler(int syscall, int handler);
@@ -117,10 +131,12 @@ public:
     double wall_clock_time();
     const rusage *getrusage() { return &_rusage; }
     bool was_initialized() { return _initialized; }
+    bool set_re_fs_read(const char *pattern, int length, char *error, int error_length, int *offset);
 protected:
     int dispatch(int event, unsigned long param);
     int protection_fault(int syscall);
 private:
+    bool handle_open_call();
     pid_t pid;
     int handler[MAX_SYSCALL];
     pt_handler_callback callback;
@@ -132,6 +148,12 @@ private:
     void *event_context;
     bool _trace_syscalls;
     bool _initialized;
+#if PTBOX_PCRE
+    pcre2_code *re_fs_read;
+    pcre2_match_data *re_fs_read_data;
+    pcre2_match_context *re_fs_read_context;
+    pcre2_jit_stack *re_fs_read_jit;
+#endif
 };
 
 class pt_debugger {

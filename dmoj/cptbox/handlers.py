@@ -4,7 +4,8 @@ DISALLOW = 0
 ALLOW = 1
 _CALLBACK = 2
 STDOUTERR = 3
-
+OPEN = 4
+OPENAT = 5
 
 def errno_handler(code):
     def handler(debugger):

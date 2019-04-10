@@ -16,4 +16,3 @@ void main() {
     syscalls = ['epoll_create', 'epoll_ctl', 'epoll_wait', 'timerfd_settime', 'pipe2']
 
     fs = ['.*/vm-service$']
-

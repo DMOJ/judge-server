@@ -38,4 +38,3 @@ End Module
         res = super(Executor, cls).get_find_first_mapping()
         res['mono-vbnc'] = ['mono-vbnc', 'vbnc']
         return res
-

@@ -34,7 +34,7 @@ runpy.run_path(sys.argv[0], run_name='__main__')
     def create_files(self, problem_id, source_code):
         self._loader = self._file('-loader.py')
         with open(self._code, 'wb') as fo, open(self._loader, 'w') as loader:
-            # We want source code to be UTF-8, but the normal (Python 2) way of having 
+            # We want source code to be UTF-8, but the normal (Python 2) way of having
             # "# -*- coding: utf-8 -*-" in header changes line numbers, so we write
             # UTF-8 BOM instead.
             fo.write(b'\xef\xbb\xbf')

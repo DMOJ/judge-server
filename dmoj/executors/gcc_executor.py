@@ -26,6 +26,7 @@ class GCCExecutor(CompiledExecutor):
     name = 'GCC'
     arch = 'gcc_target_arch'
     has_color = False
+    static_link = True
 
     def __init__(self, problem_id, main_source, **kwargs):
         super(GCCExecutor, self).__init__(problem_id, main_source, **kwargs)
@@ -51,9 +52,15 @@ class GCCExecutor(CompiledExecutor):
         return ''.join(key_components)
 
     def get_ldflags(self):
+        flags = []
+
+        if self.static_link:
+            flags.append('-static')
+
         if os.name == 'nt':
-            return ['-Wl,--stack,67108864']
-        return []
+            flags.append('-Wl,--stack,67108864')
+
+        return flags
 
     def get_flags(self):
         return self.flags

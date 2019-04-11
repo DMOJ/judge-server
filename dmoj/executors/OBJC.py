@@ -11,6 +11,7 @@ class Executor(GCCExecutor):
     objc_ldflags = []
     command = 'gobjc'
     name = 'OBJC'
+    static_link = False
     address_grace = 131072
 
     test_program = r'''

@@ -36,11 +36,6 @@ def main():
         'RUBY2': ['/home/travis/.gem/'],
     }
 
-    print('Stuff in ~')
-    for item in get_dirs(os.path.expanduser('~')):
-        print('  -', item)
-    print()
-
     print('Available JVMs:')
     for jvm in get_dirs(JVM_DIR):
         print('  -', jvm)

@@ -12,6 +12,7 @@ void main() {
 }
 '''
     address_grace = 786432
+    data_grace = 65536
 
     syscalls = ['epoll_create', 'epoll_ctl', 'epoll_wait', 'timerfd_settime', 'pipe2']
 

@@ -6,6 +6,9 @@ python:
   - 3.5
   - 3.6
   - 3.7
+jdk:
+  - openjdk9
+  - oraclejdk10
 env:
 - DMOJ_USE_SECCOMP="yes"
 - DMOJ_USE_SECCOMP="no"

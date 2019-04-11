@@ -6,11 +6,11 @@ import os
 from dmoj import judgeenv
 from dmoj.citest import ci_test, get_dirs, make_override
 
-EXECUTORS = ['ADA', 'AWK', 'BF', 'C', 'CBL', 'D', 'DART', 'CPP0X', 'CPP03', 'CPP11', 'CLANG', 'CLANGX',
-             'F95', 'GO', 'GROOVY', 'HASK', 'JAVA8', 'JAVA9', 'OCAML',
+EXECUTORS = ['ADA', 'AWK', 'BF', 'C', 'CBL', 'D', 'DART', 'CPP03', 'CPP11', 'CLANG', 'CLANGX',
+             'F95', 'GO', 'HASK', 'JAVA8', 'OCAML',
              'PAS', 'PRO', 'GAS32', 'GAS64', 'LUA', 'NASM', 'NASM64',
              'PERL', 'PHP', 'PY2', 'PY3', 'PYPY', 'PYPY3',
-             'RUBY2', 'RUST', 'SCALA', 'SCM', 'SED', 'SWIFT', 'TCL', 'TEXT']
+             'RUBY2', 'RUST', 'SCM', 'SED', 'SWIFT', 'TCL', 'TEXT']
 
 RVM_DIR = os.path.expanduser('~/.rvm/rubies/')
 PYENV_DIR = '/opt/python/'
@@ -22,6 +22,7 @@ OVERRIDES = {
     'RUBY2': make_override('ruby2_home', RVM_DIR, r'ruby-2\.'),
     'PYPY': {'pypy_home': os.path.abspath('pypy2')},
     'PYPY3': {'pypy3_home': os.path.abspath('pypy3')},
+    'PHP': {'php': '/usr/bin/php'},
 }
 
 

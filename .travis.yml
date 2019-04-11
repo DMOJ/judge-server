@@ -45,6 +45,8 @@ cache:
 before_cache:
   - rm -f $HOME/.cache/pip/log/debug.log
 before_install:
+  - jdk_switcher use openjdk10
+  - echo "$JAVA_HOME"
   # Install Swift
   - >
     mkdir swift &&

@@ -15,6 +15,8 @@ EXECUTORS = ['ADA', 'AWK', 'BF', 'C', 'CBL', 'D', 'DART', 'CPP0X', 'CPP03', 'CPP
 RVM_DIR = os.path.expanduser('~/.rvm/rubies/')
 PYENV_DIR = '/opt/python/'
 JVM_DIR = '/usr/lib/jvm/'
+JDK9_DIR = os.path.expanduser('~/openjdk9')
+JDK10_DIR = os.path.expanduser('~/oraclejdk10')
 
 OVERRIDES = {
     'PY2': make_override('py2_home', PYENV_DIR, r'2\.'),
@@ -22,6 +24,14 @@ OVERRIDES = {
     'RUBY2': make_override('ruby2_home', RVM_DIR, r'ruby-2\.'),
     'PYPY': {'pypy_home': os.path.abspath('pypy2')},
     'PYPY3': {'pypy3_home': os.path.abspath('pypy3')},
+    'JAVA9': {
+        'java9': os.path.join(JDK9_DIR, 'bin/java'),
+        'javac9': os.path.join(JDK9_DIR, 'bin/javac'),
+    },
+    'JAVA10': {
+        'java10': os.path.join(JDK10_DIR, 'bin/java'),
+        'javac10': os.path.join(JDK10_DIR, 'bin/javac'),
+    },
 }
 
 

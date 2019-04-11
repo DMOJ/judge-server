@@ -3,16 +3,12 @@ dist: xenial
 language: python
 python:
   - 2.7
-  - 3.4
   - 3.5
   - 3.6
   - 3.7
 env:
 - DMOJ_USE_SECCOMP="yes"
 - DMOJ_USE_SECCOMP="no"
-jdk:
-  - oraclejdk9
-  - oraclejdk10
 addons:
   apt:
     sources:

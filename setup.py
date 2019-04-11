@@ -93,7 +93,7 @@ class build_ext_dmoj(build_ext, object):
                     print('*' * 79)
             else:
                 extra_compile_args += ['-march=%s' % (target_arch or 'native'), '-O3']
-            self.distribution.ext_modules[0].extra_compile_args = extra_compile_args
+            self.distribution.ext_modules[0].extra_compile_args += extra_compile_args
 
         super(build_ext_dmoj, self).build_extensions()
 
@@ -107,7 +107,7 @@ class build_ext_dmoj(build_ext, object):
 wbox_sources = ['_wbox.pyx', 'handles.cpp', 'process.cpp', 'user.cpp', 'helpers.cpp', 'firewall.cpp']
 cptbox_sources = ['_cptbox.pyx', 'helper.cpp', 'ptdebug.cpp', 'ptdebug_x86.cpp', 'ptdebug_x64.cpp',
                   'ptdebug_x86_on_x64.cpp', 'ptdebug_x32.cpp', 'ptdebug_arm.cpp', 'ptdebug_arm64.cpp',
-                  'ptproc.cpp']
+                  'ptproc.cpp', 'posixpath.cpp']
 
 if not has_pyx:
     wbox_sources[0] = wbox_sources[0].replace('.pyx', '.cpp')
@@ -150,7 +150,8 @@ if os.name != 'nt' or 'sdist' in sys.argv:
         macros.append(('PTBOX_NO_PCRE', None))
 
     extensions += [Extension('dmoj.cptbox._cptbox', sources=cptbox_sources,
-                             language='c++', libraries=libs, define_macros=macros)]
+                             language='c++', libraries=libs, define_macros=macros,
+                             extra_compile_args=['-std=c++11'])]
 
 if os.name != 'nt':
     extensions += [SimpleSharedObject('dmoj.utils.setbufsize', sources=['dmoj/utils/setbufsize.c'])]

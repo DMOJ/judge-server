@@ -12,9 +12,11 @@
 #include <unistd.h>
 #include <sys/ptrace.h>
 
+#include <string>
 #include <set>
 
 #include "ptbox.h"
+#include "posixpath.h"
 
 pt_process *pt_alloc_process(pt_debugger *debugger) {
     return new pt_process(debugger);
@@ -182,14 +184,22 @@ bool pt_process::handle_open_call() {
         return false;
     }
 
+    int result;
     unsigned long file_ptr = (unsigned long) debugger->arg0();
     char *file = debugger->readstr(file_ptr, 4096);
-    int result;
+    std::string path(file);
 
-    result = pcre2_match(re_fs_read, (PCRE2_SPTR8) file, PCRE2_ZERO_TERMINATED,
-                         0, 0, re_fs_read_data, re_fs_read_context);
-    printf("Opening file: %s... %s\n", file, result >= 0 ? "allowed" : "denied");
     debugger->freestr(file);
+    if (path.empty() || path[0] != '/') {
+        // TODO: handle relative paths in C++.
+        printf("Skip checking relative path: %s\n", path.c_str());
+        return false;
+    }
+    path = posixpath::normpath(path);
+
+    result = pcre2_match(re_fs_read, (PCRE2_SPTR8) path.c_str(), PCRE2_ZERO_TERMINATED,
+                         0, 0, re_fs_read_data, re_fs_read_context);
+    printf("Opening file: %s... %s\n", path.c_str(), result >= 0 ? "allowed" : "denied");
 
     if (result >= 0) {
         return true;

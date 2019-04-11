@@ -203,6 +203,7 @@ class CHROOTSecurity(dict):
         except UnicodeDecodeError:
             log.exception('Unicode decoding error while opening relative to %d: %r', dirfd, rel_file)
             return '(undecodable)', False
+        print('Python checking:', file)
         if self.fs_jail.match(file) is None:
             return file, False
         return file, True

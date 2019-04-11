@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <sys/ptrace.h>
 #include <sys/uio.h>
 #include <unistd.h>
@@ -217,6 +218,44 @@ char *pt_debugger::readstr_peekdata(unsigned long addr, size_t max_size) {
 
 void pt_debugger::freestr(char *buf) {
     free(buf);
+}
+
+std::string pt_debugger::get_fd(int fd) {
+    std::string path = "/proc/" + std::to_string(getpid());
+    if (fd == AT_FDCWD) {
+        path += "/cwd";
+    } else {
+        path += "/fd/" + std::to_string(fd);
+    }
+    int size = 1024;
+    char *buffer = (char*) malloc(size);
+
+    if (!buffer) {
+        return "";
+    }
+
+    while (true) {
+        int r = readlink(path.c_str(), buffer, size);
+
+        if (r < 0) {
+            perror("readlink");
+            free(buffer);
+            return "";
+        }
+
+        if (r < size) {
+            buffer[r] = 0;
+            std::string result(buffer);
+            free(buffer);
+            return result;
+        }
+
+        size *= 2;
+        if (!(buffer = (char*) realloc(buffer, size))) {
+            free(buffer);
+            return "";
+        }
+    }
 }
 
 pt_debugger::~pt_debugger() {}

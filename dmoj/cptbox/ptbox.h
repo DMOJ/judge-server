@@ -194,6 +194,8 @@ public:
     pid_t tid; // TODO maybe call super instead
     pid_t getpid() { return process->getpid(); }
 
+    std::string get_fd(int fd);
+
 #if PTBOX_FREEBSD
     void update_syscall(struct ptrace_lwpinfo *info);
     void setpid(pid_t pid);

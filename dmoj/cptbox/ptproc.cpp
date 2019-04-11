@@ -1,6 +1,7 @@
 #define _BSD_SOURCE
 
 #include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -191,9 +192,7 @@ bool pt_process::handle_open_call() {
 
     debugger->freestr(file);
     if (path.empty() || path[0] != '/') {
-        // TODO: handle relative paths in C++.
-        printf("Skip checking relative path: %s\n", path.c_str());
-        return false;
+        path = posixpath::join(debugger->get_fd(AT_FDCWD), path);
     }
     path = posixpath::normpath(path);
 

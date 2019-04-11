@@ -6,7 +6,7 @@ import re
 import sys
 
 from dmoj.cptbox._cptbox import bsd_get_proc_cwd, bsd_get_proc_fdno, AT_FDCWD
-from dmoj.cptbox.handlers import ALLOW, ACCESS_DENIED, ACCESS_ENOENT, OPEN
+from dmoj.cptbox.handlers import ALLOW, ACCESS_DENIED, ACCESS_ENOENT, OPEN, OPENAT
 # noinspection PyUnresolvedReferences
 from dmoj.cptbox.syscalls import *
 from dmoj.utils.unicode import utf8text
@@ -195,6 +195,7 @@ class CHROOTSecurity(dict):
                 return True
             log.info('Denied access via syscall %s: %s', syscall, file)
             return ACCESS_ENOENT(debugger)
+        check.with_handler = OPENAT
         return check
 
     def _file_access_check(self, rel_file, debugger, orig_uarg0=None, flag_reg=1, dirfd=AT_FDCWD):

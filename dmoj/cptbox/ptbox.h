@@ -137,6 +137,7 @@ protected:
     int protection_fault(int syscall);
 private:
     bool handle_open_call();
+    bool handle_openat_call();
     pid_t pid;
     int handler[MAX_SYSCALL];
     pt_handler_callback callback;
@@ -153,6 +154,7 @@ private:
     pcre2_match_data *re_fs_read_data;
     pcre2_match_context *re_fs_read_context;
     pcre2_jit_stack *re_fs_read_jit;
+    bool do_pcre_match(const char *path);
 #endif
 };
 

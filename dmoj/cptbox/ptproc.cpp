@@ -179,6 +179,25 @@ int pt_process::protection_fault(int syscall) {
     return PTBOX_EXIT_PROTECTION;
 }
 
+#if PTBOX_PCRE
+bool pt_process::do_pcre_match(const char *path) {
+    int result;
+
+    result = pcre2_match(re_fs_read, (PCRE2_SPTR8) path, PCRE2_ZERO_TERMINATED,
+                         0, 0, re_fs_read_data, re_fs_read_context);
+    printf("Opening file: %s... %s\n", path, result >= 0 ? "allowed" : "denied");
+
+    if (result >= 0) {
+        return true;
+    } else if (result == PCRE2_ERROR_NOMATCH) {
+        return false;
+    } else {
+        fprintf(stderr, "PCRE2 match error: %d\n", result);
+        return false;
+    }
+}
+#endif
+
 bool pt_process::handle_open_call() {
 #if PTBOX_PCRE
     if (!re_fs_read) {
@@ -196,18 +215,28 @@ bool pt_process::handle_open_call() {
     }
     path = posixpath::normpath(path);
 
-    result = pcre2_match(re_fs_read, (PCRE2_SPTR8) path.c_str(), PCRE2_ZERO_TERMINATED,
-                         0, 0, re_fs_read_data, re_fs_read_context);
-    printf("Opening file: %s... %s\n", path.c_str(), result >= 0 ? "allowed" : "denied");
+    return do_pcre_match(path.c_str());
+#else
+    return false;
+#endif
+}
 
-    if (result >= 0) {
-        return true;
-    } else if (result == PCRE2_ERROR_NOMATCH) {
-        return false;
-    } else {
-        fprintf(stderr, "PCRE2 match error: %d\n", result);
+bool pt_process::handle_openat_call() {
+#if PTBOX_PCRE
+    if (!re_fs_read) {
         return false;
     }
+
+    int result;
+    int dirfd = (int) debugger->arg0();
+    unsigned long file_ptr = (unsigned long) debugger->arg1();
+    char *file = debugger->readstr(file_ptr, 4096);
+    std::string path = posixpath::join(debugger->get_fd(dirfd), file);
+
+    debugger->freestr(file);
+    path = posixpath::normpath(path);
+
+    return do_pcre_match(path.c_str());
 #else
     return false;
 #endif
@@ -387,6 +416,12 @@ int pt_process::monitor() {
                             continue;
                         case PTBOX_HANDLER_OPEN:
                             if (!handle_open_call() && !callback(context, syscall)) {
+                                exit_reason = protection_fault(syscall);
+                                continue;
+                            }
+                            break;
+                        case PTBOX_HANDLER_OPENAT:
+                            if (!handle_openat_call() && !callback(context, syscall)) {
                                 exit_reason = protection_fault(syscall);
                                 continue;
                             }

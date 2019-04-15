@@ -113,11 +113,19 @@ class BaseExecutor(PlatformExecutorMixin):
             test_message = b'echo: Hello, World!'
             stdout, stderr = proc.communicate(test_message + b'\n')
 
+            if proc.tle:
+                print(ansi_style('#ansi[Time Limit Exceeded](red|bold)'))
+                return False
+            if proc.mle:
+                print(ansi_style('#ansi[Memory Limit Exceeded](red|bold)'))
+                return False
+
             res = stdout.strip() == test_message and not stderr
             if output:
                 # Cache the versions now, so that the handshake packet doesn't take ages to generate
                 cls.get_runtime_versions()
-                print(ansi_style(['#ansi[Failed](red|bold)', '#ansi[Success](green|bold)'][res]))
+                usage = '[%.3fs, %d KB]' % (proc.execution_time, proc.max_memory)
+                print(ansi_style(['#ansi[Failed](red|bold)', '#ansi[Success](green|bold)'][res]), usage)
             if stdout.strip() != test_message and error_callback:
                 error_callback('Got unexpected stdout output:\n' + utf8text(stdout))
             if stderr:

@@ -10,6 +10,8 @@ grant {
     permission java.lang.RuntimePermission "accessDeclaredMembers";
     permission java.lang.RuntimePermission "getProtectionDomain";
     permission java.lang.RuntimePermission "accessClassInPackage.sun.reflect";
+    permission java.lang.RuntimePermission "accessClassInPackage.jdk.internal.reflect";
+    permission java.lang.RuntimePermission "accessClassInPackage.jdk.internal";
     permission java.lang.RuntimePermission "exitVM.*";
 
     // A lot of files, too

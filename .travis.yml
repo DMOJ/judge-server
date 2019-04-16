@@ -33,7 +33,6 @@ addons:
     - ocaml
     - lua5.2
     - gfortran
-    - chicken-bin
     - tcl
     - swi-prolog
     - dart/stable

@@ -12,6 +12,7 @@ env:
 addons:
   apt:
     sources:
+    - mono
     - sourceline: 'ppa:swi-prolog/stable'
       key_url: 'http://keyserver.ubuntu.com/pks/lookup?op=get&fingerprint=on&search=0x51716619E084DAB9'
     - sourceline: 'deb [arch=amd64] https://storage.googleapis.com/download.dartlang.org/linux/debian stable main'
@@ -20,6 +21,8 @@ addons:
     - ghc
     - gnat
     - php7.0-cli
+    - mono-devel
+    - mono-vbnc
     - fp-compiler
     - coffeescript
     - binutils-multiarch

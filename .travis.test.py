@@ -7,7 +7,7 @@ from dmoj import judgeenv
 from dmoj.citest import ci_test, get_dirs, make_override
 
 EXECUTORS = ['ADA', 'AWK', 'BF', 'C', 'CBL', 'D', 'DART', 'CPP03', 'CPP11', 'CLANG', 'CLANGX',
-             'F95', 'GO', 'GROOVY', 'HASK', 'JAVA8', 'OCAML', 'SCALA',
+             'F95', 'GO', 'GROOVY', 'HASK', 'JAVA8', 'OCAML', 'SCALA', 'MONOCS', 'MONOVB',
              'PAS', 'PRO', 'GAS32', 'GAS64', 'LUA', 'NASM', 'NASM64',
              'PERL', 'PHP', 'PY2', 'PY3', 'PYPY', 'PYPY3',
              'RUBY2', 'RUST', 'SCM', 'SED', 'SWIFT', 'TCL', 'TEXT']

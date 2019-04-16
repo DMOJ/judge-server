@@ -85,7 +85,7 @@ class ConfigNode(object):
 
     def __getitem__(self, item):
         try:
-            if self.dynamic:
+            if self.dynamic and isinstance(self.raw_config, dict):
                 def run_dynamic_key(dynamic_key, run_func):
                     # Wrap in a ConfigNode so dynamic keys can benefit from the nice features of ConfigNode
                     local = {'node': ConfigNode(self.raw_config.get(item, {}), self)}
@@ -108,8 +108,8 @@ class ConfigNode(object):
                     run_dynamic_key(item + '++', full)
                 elif item + '+' in self.raw_config:
                     run_dynamic_key(item + '+', lambda code, local: eval(code, local))
-            cfg = self.raw_config[item]
 
+            cfg = self.raw_config[item]
             if isinstance(cfg, list) or isinstance(cfg, dict):
                 cfg = ConfigNode(cfg, self, dynamic=self.dynamic)
         except (KeyError, IndexError, TypeError):

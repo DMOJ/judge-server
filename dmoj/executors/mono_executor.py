@@ -123,7 +123,7 @@ class MonoExecutor(CompiledExecutor):
         if not result.result_flag & Result.IR:
             return ''
 
-        if 'Garbage collector could not allocate' in stderr:
+        if b'Garbage collector could not allocate' in stderr:
             result.result_flag |= Result.MLE
             return ''
 

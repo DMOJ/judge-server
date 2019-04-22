@@ -75,8 +75,8 @@ trigger_build() {
     commit_sha="${TRAVIS_COMMIT}"
     message="Running on upstream ${slug} commit \"${TRAVIS_COMMIT_MESSAGE}\""
   else
-    slug="${TRAVIS_PULL_REQUEST_SLUG}"
     branch="${TRAVIS_PULL_REQUEST_BRANCH}"
+    slug="${TRAVIS_PULL_REQUEST_SLUG}"
     commit_sha="${TRAVIS_PULL_REQUEST_SHA}"
     message="Running on upstream PR ${TRAVIS_REPO_SLUG}#${TRAVIS_PULL_REQUEST}"
   fi
@@ -100,6 +100,8 @@ trigger_build() {
     }
   }")
 
+  log "Scheduling upstream build for ${slug}, ${branch} branch @ ${commit_sha}"
+
   local status=
   local request_id=
   read -r status request_id <<<$(\
@@ -110,10 +112,9 @@ trigger_build() {
     die "Failed to schedule build via request ${request_id}: ${status} :-("
   fi
 
-  log "Waiting on request ${request_id} to complete..."
   until poll_build_status "${request_id}"; do
-    sleep 60
-    log "Still waiting on ${request_id}..."
+    log "Waiting on request ${request_id} to complete..."
+    sleep 30
   done
 }
 

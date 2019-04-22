@@ -70,7 +70,7 @@ trigger_build() {
 
   if [[ "${TRAVIS_PULL_REQUEST}" == "false" ]]; then
     branch="${TRAVIS_BRANCH}"
-    if [ "${branch}" != "master" ]; then
+    if [[ "${branch}" != "master" ]]; then
       log "Skipping non-master branch build."
       exit 0
     fi
@@ -116,8 +116,12 @@ trigger_build() {
 
   log "Waiting on request ${request_id} to complete..."
   until poll_build_status "${request_id}"; do
-    sleep 5
+    sleep 30
   done
 }
+
+if [[ -z "${UPSTREAM_SLUG}" || -z "${UPSTREAM_TRAVIS_TOKEN}" ]]; then
+  print_help_and_exit
+fi
 
 trigger_build

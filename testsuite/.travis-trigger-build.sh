@@ -13,7 +13,8 @@ die() {
 }
 
 print_help_and_exit() {
-  die "$0 <upstream slug> <upstream Travis token>"
+  echo "$0 <upstream slug> <upstream Travis token>"
+  exit 0
 }
 
 urlencode() {
@@ -70,7 +71,7 @@ trigger_build() {
   if [[ "${TRAVIS_PULL_REQUEST}" == "false" ]]; then
     branch="${TRAVIS_BRANCH}"
     if [ "${branch}" != "master" ]; then
-      log "skipping non-master branch build."
+      log "Skipping non-master branch build."
       exit 0
     fi
 
@@ -110,7 +111,7 @@ trigger_build() {
   )
 
   if [[ "${status}" != "pending" ]]; then
-    die "Failed to schedule build :-("
+    die "Failed to schedule build via request ${request_id}: ${status} :-("
   fi
 
   log "Waiting on request ${request_id} to complete..."

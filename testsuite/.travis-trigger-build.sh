@@ -1,6 +1,13 @@
 #!/bin/bash
 
-# Usage: .travis-trigger-build.sh <upstream>
+die() {
+  echo "$1" >&2
+  exit 1
+}
+
+print_help_and_exit() {
+  die "UPSTREAM_TRAVIS_TOKEN=xxxx $0 <upstream-slug>"
+}
 
 urlencode() {
   echo -ne "$1" | xxd -plain | tr -d '\n' | sed 's/\(..\)/%\1/g'
@@ -44,16 +51,24 @@ trigger_build() {
           }
         }")
 
-  {
-    set +x
-    curl -s -X POST \
-      -H "Content-Type: application/json" \
-      -H "Accept: application/json" \
-      -H "Travis-API-Version: 3" \
-      -H "Authorization: token ${UPSTREAM_TRAVIS_TOKEN}" \
-      -d "${body}" \
-      https://api.travis-ci.org/repo/$(urlencode "${upstream_slug}")/requests
-  }
+  set +x
+  resp=$(curl -s -X POST \
+          -H "Content-Type: application/json" \
+          -H "Accept: application/json" \
+          -H "Travis-API-Version: 3" \
+          -H "Authorization: token ${UPSTREAM_TRAVIS_TOKEN}" \
+          -d "${body}" \
+          https://api.travis-ci.org/repo/$(urlencode "${upstream_slug}")/requests)
+  set -x
+
+  echo "Response from Travis API:"
+  echo "${resp}"
+
+  if [ "$(jq -r '.["@type"]' <<< "${resp}")" == "pending" ]; then
+    echo "Success!"
+  else
+    die "Failed to schedule build :-("
+  fi
 }
 
 trigger_build "$1"

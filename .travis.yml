@@ -88,9 +88,8 @@ install:
   - pip install -e '.[test]'
   - >
     git clone --depth 1 https://github.com/${TESTSUITE_SLUG:-DMOJ/judge} testsuite &&
-    cd testsuite &&
-    git checkout ${TESTSUITE_BRANCH:-master} &&
-    git reset --hard ${TESTSUITE_COMMIT_SHA:-HEAD}
+    git -C testsuite checkout ${TESTSUITE_BRANCH:-master} &&
+    git -C testsuite reset --hard ${TESTSUITE_COMMIT_SHA:-HEAD}
 script:
   - coverage run --source=dmoj -m unittest discover dmoj/tests/
   - coverage run --append --source=dmoj .travis.test.py

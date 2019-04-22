@@ -7,3 +7,5 @@ install:
   - echo TRAVIS_PULL_REQUEST_SHA=$TRAVIS_PULL_REQUEST_SHA
   - echo TRAVIS_PULL_REQUEST_SLUG=$TRAVIS_PULL_REQUEST_SLUG
   - env
+script:
+  - bash -x .travis-trigger-build.sh "DMOJ/judge"

@@ -87,7 +87,7 @@ install:
   - pip install Cython --install-option="--no-cython-compile"
   - pip install -e '.[test]'
   - >
-    git clone --depth 1 \
+    git clone --depth 25 \
               --single-branch \
               --branch ${DMOJ_JUDGE_TESTSUITE_BRANCH:-master} \
               https://github.com/${DMOJ_JUDGE_TESTSUITE_SLUG:-DMOJ/judge-testsuite} testsuite &&

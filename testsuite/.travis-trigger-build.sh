@@ -1,16 +1,19 @@
 #!/bin/bash
 
+UPSTREAM_SLUG="$1"
+UPSTREAM_TRAVIS_TOKEN="$2"
+
 log() {
-  echo "$0: $1"
+  echo "$0[${UPSTREAM_SLUG}]: $1"
 }
 
 die() {
-  echo "$0: $1" >&2
+  echo "$0[${UPSTREAM_SLUG}]: $1" >&2
   exit 1
 }
 
 print_help_and_exit() {
-  die "UPSTREAM_TRAVIS_TOKEN=xxxx $0 <upstream-slug>"
+  die "$0 <upstream slug> <upstream Travis token>"
 }
 
 urlencode() {
@@ -18,10 +21,9 @@ urlencode() {
 }
 
 api_call() {
-  local upstream_slug="$1"
-  local method="$2"
-  local endpoint="$3"
-  local body="$4"
+  local method="$1"
+  local endpoint="$2"
+  local body="$3"
 
   set +x
   curl -s -X "${method}" \
@@ -30,18 +32,17 @@ api_call() {
     -H "Travis-API-Version: 3" \
     -H "Authorization: token ${UPSTREAM_TRAVIS_TOKEN}" \
     -d "${body}" \
-    https://api.travis-ci.org/repo/$(urlencode "${upstream_slug}")"${endpoint}"
+    https://api.travis-ci.org/repo/$(urlencode "${UPSTREAM_SLUG}")"${endpoint}"
   set -x
 }
 
 poll_build_status() {
-  local upstream_slug="$1"
-  local request_id="$2"
+  local request_id="$1"
   local status=
   local is_finished=
 
   read -r status is_finished <<<$(\
-      api_call "${upstream_slug}" "GET" "/request/${request_id}" \
+      api_call GET "/request/${request_id}" \
       | jq -r '.builds[0].state,.builds[0].finished_at != null' \
   )
 
@@ -59,7 +60,6 @@ poll_build_status() {
 }
 
 trigger_build() {
-  local upstream_slug="$1"
   local slug=
   local branch=
   local commit_sha=
@@ -106,8 +106,7 @@ trigger_build() {
   local status=
   local request_id=
   read -r status request_id <<<$(\
-    api_call "${upstream_slug}" POST "/requests" "${body}" \
-    | jq -r '.["@type"],.request.id' \
+    api_call POST "/requests" "${body}" | jq -r '.["@type"],.request.id' \
   )
 
   if [[ "${status}" != "pending" ]]; then
@@ -115,9 +114,9 @@ trigger_build() {
   fi
 
   log "Waiting on request ${request_id} to complete..."
-  until poll_build_status "${upstream_slug}" "${request_id}"; do
+  until poll_build_status "${request_id}"; do
     sleep 5
   done
 }
 
-trigger_build "$1"
+trigger_build

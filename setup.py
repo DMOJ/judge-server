@@ -1,8 +1,8 @@
 # encoding: utf-8
 from __future__ import print_function
 
-import io
 import os
+import io
 import sys
 
 if sys.version_info[0] >= 3 and os.name == 'nt':

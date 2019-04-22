@@ -27,17 +27,21 @@ trigger_build() {
     message="testsuite: Running on new tests from ${TRAVIS_REPO_SLUG}#${TRAVIS_PULL_REQUEST}"
   fi
 
-  body=$(jq -n \
-            --arg message "${message}" \
-            --arg slug "${slug}" \
-            --arg branch "${branch}" \
-            --arg commit_sha "${commit_sha}" \
-        '{
+  body=$(jq -n --arg message "${message}" "{
           request: {
-            message: $message,
-            branch: "master"
+            message: \$message,
+            branch: \"master\"
+          },
+          config: {
+            env: {
+              global: [
+                \"TESTSUITE_SLUG=$slug\",
+                \"TESTSUITE_BRANCH=$branch\",
+                \"TESTSUITE_COMMIT_SHA=$commit_sha\"
+              ]
+            }
           }
-        }')
+        }")
 
   {
     set +x

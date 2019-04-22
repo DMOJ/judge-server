@@ -33,6 +33,7 @@ trigger_build() {
             branch: \"master\"
           },
           config: {
+            merge_mode: \"deep_merge\",
             env: {
               global: [
                 \"TESTSUITE_SLUG=$slug\",

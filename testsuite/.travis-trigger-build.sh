@@ -1,7 +1,11 @@
 #!/bin/bash
 
+log() {
+  echo "$0: $1"
+}
+
 die() {
-  echo "$1" >&2
+  echo "$0: $1" >&2
   exit 1
 }
 
@@ -23,17 +27,23 @@ trigger_build() {
   set -x
 
   if [ "${TRAVIS_PULL_REQUEST}" == "false" ]; then
-    slug="${TRAVIS_REPO_SLUG}"
     branch="${TRAVIS_BRANCH}"
+    if [ "${branch}" != "master" ]; then
+      log "skipping non-master branch build."
+      exit 0
+    fi
+
+    slug="${TRAVIS_REPO_SLUG}"
     commit_sha="${TRAVIS_COMMIT}"
-    message="testsuite: \"${TRAVIS_COMMIT_MESSAGE}\""
+    message="Running on upstream ${slug} commit \"${TRAVIS_COMMIT_MESSAGE}\""
   else
     slug="${TRAVIS_PULL_REQUEST_SLUG}"
     branch="${TRAVIS_PULL_REQUEST_BRANCH}"
     commit_sha="${TRAVIS_PULL_REQUEST_SHA}"
-    message="testsuite: Running on new tests from ${TRAVIS_REPO_SLUG}#${TRAVIS_PULL_REQUEST}"
+    message="Running on upstream PR ${TRAVIS_REPO_SLUG}#${TRAVIS_PULL_REQUEST}"
   fi
 
+  env_base=$(sed 's/[\/-]/_/g' <<< "${TRAVIS_REPO_SLUG}" | tr '[:lower:]' '[:upper:]')
   body=$(jq -n --arg message "${message}" "{
           request: {
             message: \$message,
@@ -43,9 +53,9 @@ trigger_build() {
             merge_mode: \"deep_merge\",
             env: {
               global: [
-                \"TESTSUITE_SLUG=$slug\",
-                \"TESTSUITE_BRANCH=$branch\",
-                \"TESTSUITE_COMMIT_SHA=$commit_sha\"
+                \"${env_base}_SLUG=${slug}\",
+                \"${env_base}_BRANCH=${branch}\",
+                \"${env_base}_COMMIT_SHA=${commit_sha}\"
               ]
             }
           }

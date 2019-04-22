@@ -86,16 +86,16 @@ trigger_build() {
   local body=$(jq -n --arg message "${message}" "{
     request: {
       message: \$message,
-      branch: \"master\"
-    },
-    config: {
-      merge_mode: \"deep_merge\",
-      env: {
-        global: [
-          \"${env_base}_SLUG=${slug}\",
-          \"${env_base}_BRANCH=${branch}\",
-          \"${env_base}_COMMIT_SHA=${commit_sha}\"
-        ]
+      branch: \"master\",
+      config: {
+        merge_mode: \"deep_merge\",
+        env: {
+          global: [
+            \"${env_base}_SLUG=${slug}\",
+            \"${env_base}_BRANCH=${branch}\",
+            \"${env_base}_COMMIT_SHA=${commit_sha}\"
+          ]
+        }
       }
     }
   }")

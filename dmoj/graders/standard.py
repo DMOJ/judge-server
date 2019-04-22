@@ -138,12 +138,8 @@ class StandardGrader(BaseGrader):
                 result.result_flag |= Result.RTE
                 process.signal = signal.SIGSEGV
             else:
-                # print>> sys.stderr, 'Exited with error: %d' % process.returncode
                 result.result_flag |= Result.IR
-        if process.returncode < 0:
-            # None < 0 == True
-            # if process.returncode is not None:
-            # print('Killed by signal %d' % -process.returncode, file=sys.stderr)
+        if process.returncode is None or process.returncode < 0:
             result.result_flag |= Result.RTE  # Killed by signal
         if process.tle:
             result.result_flag |= Result.TLE

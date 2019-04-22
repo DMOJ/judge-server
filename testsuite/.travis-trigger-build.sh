@@ -26,7 +26,6 @@ api_call() {
   local endpoint="$2"
   local body="$3"
 
-  set +x
   curl -s -X "${method}" \
     -H "Content-Type: application/json" \
     -H "Accept: application/json" \
@@ -34,7 +33,6 @@ api_call() {
     -H "Authorization: token ${UPSTREAM_TRAVIS_TOKEN}" \
     -d "${body}" \
     https://api.travis-ci.org/repo/$(urlencode "${UPSTREAM_SLUG}")"${endpoint}"
-  set -x
 }
 
 poll_build_status() {
@@ -65,8 +63,6 @@ trigger_build() {
   local branch=
   local commit_sha=
   local message=
-
-  set -x
 
   if [[ "${TRAVIS_PULL_REQUEST}" == "false" ]]; then
     branch="${TRAVIS_BRANCH}"

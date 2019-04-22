@@ -7,8 +7,9 @@ python:
   - 3.6
   - 3.7
 env:
-- DMOJ_USE_SECCOMP="yes"
-- DMOJ_USE_SECCOMP="no"
+  matrix:
+  - DMOJ_USE_SECCOMP="yes"
+  - DMOJ_USE_SECCOMP="no"
 addons:
   apt:
     sources:

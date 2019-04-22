@@ -1,0 +1,3 @@
+dist: xenial
+script:
+  - ./.travis-trigger-build.sh "DMOJ/judge" "${UPSTREAM_TRAVIS_TOKEN}"

@@ -2,6 +2,10 @@
 
 # Usage: .travis-trigger-build.sh <upstream>
 
+urlencode() {
+  echo -ne "$1" | xxd -plain | tr -d '\n' | sed 's/\(..\)/%\1/g'
+}
+
 trigger_build() {
   local upstream_slug="$1"
   local slug=
@@ -13,7 +17,7 @@ trigger_build() {
     slug="${TRAVIS_REPO_SLUG}"
     branch="${TRAVIS_BRANCH}"
     commit_sha="${TRAVIS_COMMIT}"
-    message="testsuite: \"${TRAVIS_COMMIT_MESSAGE}\""
+    message="testsuite: \\\"${TRAVIS_COMMIT_MESSAGE}\\\""
   else
     slug="${TRAVIS_PULL_REQUEST_SLUG}"
     branch="${TRAVIS_PULL_REQUEST_BRANCH}"
@@ -22,6 +26,24 @@ trigger_build() {
   fi
 
   echo "slug=${slug}, branch=${branch}, commit=${commit_sha}, message=${message}"
+
+  body="{
+    \"request\": {
+      \"message\": \""${message}"\",
+      \"branch\": \"master\",
+    }
+  }"
+
+  {
+    set +x
+    curl -s -X POST \
+      -H "Content-Type: application/json" \
+      -H "Accept: application/json" \
+      -H "Travis-API-Version: 3" \
+      -H "Authorization: token ${UPSTREAM_TRAVIS_TOKEN}" \
+      -d "${body}" \
+      https://api.travis-ci.org/repo/$(urlencode "${upstream_slug}")/requests
+  }
 }
 
 trigger_build "$1"

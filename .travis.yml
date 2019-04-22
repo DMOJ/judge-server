@@ -7,8 +7,9 @@ python:
   - 3.6
   - 3.7
 env:
-- DMOJ_USE_SECCOMP="yes"
-- DMOJ_USE_SECCOMP="no"
+  matrix:
+  - DMOJ_USE_SECCOMP="yes"
+  - DMOJ_USE_SECCOMP="no"
 addons:
   apt:
     sources:
@@ -86,9 +87,11 @@ install:
   - pip install Cython --install-option="--no-cython-compile"
   - pip install -e '.[test]'
   - >
-    mkdir testsuite &&
-    curl https://codeload.github.com/DMOJ/judge-testsuite/legacy.tar.gz/master |
-    tar xz -C testsuite --strip-components=1
+    git clone --depth 1 \
+              --single-branch \
+              --branch ${DMOJ_JUDGE_TESTSUITE_BRANCH:-master} \
+              https://github.com/${DMOJ_JUDGE_TESTSUITE_SLUG:-DMOJ/judge-testsuite} testsuite &&
+    git -C testsuite reset --hard ${DMOJ_JUDGE_TESTSUITE_COMMIT_SHA:-HEAD}
 script:
   - coverage run --source=dmoj -m unittest discover dmoj/tests/
   - coverage run --append --source=dmoj .travis.test.py

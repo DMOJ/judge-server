@@ -87,8 +87,10 @@ install:
   - pip install Cython --install-option="--no-cython-compile"
   - pip install -e '.[test]'
   - >
-    git clone --depth 1 https://github.com/${TESTSUITE_SLUG:-DMOJ/judge} testsuite &&
-    git -C testsuite checkout ${TESTSUITE_BRANCH:-master} &&
+    git clone --depth 1 \
+              --single-branch \
+              --branch ${TESTSUITE_BRANCH:-master} \
+              https://github.com/${TESTSUITE_SLUG:-DMOJ/judge} testsuite &&
     git -C testsuite reset --hard ${TESTSUITE_COMMIT_SHA:-HEAD}
 script:
   - coverage run --source=dmoj -m unittest discover dmoj/tests/

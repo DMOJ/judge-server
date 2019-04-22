@@ -86,9 +86,10 @@ install:
   - pip install Cython --install-option="--no-cython-compile"
   - pip install -e '.[test]'
   - >
-    mkdir testsuite &&
-    curl https://codeload.github.com/DMOJ/judge-testsuite/legacy.tar.gz/master |
-    tar xz -C testsuite --strip-components=1
+    git clone --depth 1 https://github.com/${TESTSUITE_SLUG:-DMOJ/judge} testsuite &&
+    cd testsuite &&
+    git checkout ${TESTSUITE_BRANCH:-master} &&
+    git reset --hard ${TESTSUITE_COMMIT_SHA:-HEAD}
 script:
   - coverage run --source=dmoj -m unittest discover dmoj/tests/
   - coverage run --append --source=dmoj .travis.test.py

@@ -112,7 +112,8 @@ trigger_build() {
 
   log "Waiting on request ${request_id} to complete..."
   until poll_build_status "${request_id}"; do
-    sleep 30
+    sleep 60
+    log "Still waiting on ${request_id}..."
   done
 }
 

@@ -25,40 +25,37 @@ api_call() {
 
   set +x
   curl -s -X "${method}" \
-      -H "Content-Type: application/json" \
-      -H "Accept: application/json" \
-      -H "Travis-API-Version: 3" \
-      -H "Authorization: token ${UPSTREAM_TRAVIS_TOKEN}" \
-      -d "${body}" \
-      https://api.travis-ci.org/repo/$(urlencode "${upstream_slug}")"${endpoint}"
+    -H "Content-Type: application/json" \
+    -H "Accept: application/json" \
+    -H "Travis-API-Version: 3" \
+    -H "Authorization: token ${UPSTREAM_TRAVIS_TOKEN}" \
+    -d "${body}" \
+    https://api.travis-ci.org/repo/$(urlencode "${upstream_slug}")"${endpoint}"
   set -x
 }
 
 poll_build_status() {
   local upstream_slug="$1"
   local request_id="$2"
-  local resp=
   local status=
+  local is_finished=
 
-  resp=$(api_call "${upstream_slug}" "GET" "/request/${request_id}")
-  if [ "$(jq -r '.builds[0].finished_at == null' <<< "${resp}")" == "true" ]; then
+  read -r status is_finished <<<$(\
+      api_call "${upstream_slug}" "GET" "/request/${request_id}" \
+      | jq -r '.builds[0].state,.builds[0].finished_at != null' \
+  )
+
+  if [[ "${is_finished}" == "false" ]]; then
     return 1
   fi
 
-  status=$(jq -r '.builds[0].state' <<< "${resp}")
   if [[ "${status}" != "passed" && "${status}" != "canceled" ]]; then
     die "Upstream build failed, status: ${status}"
   fi
 
   # Successful build!
-  echo "Upstream build completed with non-error status: ${status}"
+  log "Upstream build completed with non-error status: ${status}"
   return 0
-}
-
-wait_on_request() {
-  until poll_build_status "$1" "$2"; do
-    sleep 5
-  done
 }
 
 trigger_build() {
@@ -67,13 +64,10 @@ trigger_build() {
   local branch=
   local commit_sha=
   local message=
-  local resp=
-  local env_base=
-  local request_id=
 
   set -x
 
-  if [ "${TRAVIS_PULL_REQUEST}" == "false" ]; then
+  if [[ "${TRAVIS_PULL_REQUEST}" == "false" ]]; then
     branch="${TRAVIS_BRANCH}"
     if [ "${branch}" != "master" ]; then
       log "skipping non-master branch build."
@@ -90,36 +84,40 @@ trigger_build() {
     message="Running on upstream PR ${TRAVIS_REPO_SLUG}#${TRAVIS_PULL_REQUEST}"
   fi
 
-  env_base=$(sed 's/[\/-]/_/g' <<< "${TRAVIS_REPO_SLUG}" | tr '[:lower:]' '[:upper:]')
-  resp=$(api_call "${upstream_slug}" POST "/requests" \
-          "$(jq -n --arg message "${message}" "{
-            request: {
-              message: \$message,
-              branch: \"master\"
-            },
-            config: {
-              merge_mode: \"deep_merge\",
-              env: {
-                global: [
-                  \"${env_base}_SLUG=${slug}\",
-                  \"${env_base}_BRANCH=${branch}\",
-                  \"${env_base}_COMMIT_SHA=${commit_sha}\"
-                ]
-              }
-            }
-          }")"
-        )
+  local env_base=$(sed 's/[\/-]/_/g' <<< "${TRAVIS_REPO_SLUG}" \
+                   | tr '[:lower:]' '[:upper:]')
+  local body=$(jq -n --arg message "${message}" "{
+    request: {
+      message: \$message,
+      branch: \"master\"
+    },
+    config: {
+      merge_mode: \"deep_merge\",
+      env: {
+        global: [
+          \"${env_base}_SLUG=${slug}\",
+          \"${env_base}_BRANCH=${branch}\",
+          \"${env_base}_COMMIT_SHA=${commit_sha}\"
+        ]
+      }
+    }
+  }")
 
-  echo "Response from Travis API:"
-  echo "${resp}"
+  local status=
+  local request_id=
+  read -r status request_id <<<$(\
+    api_call "${upstream_slug}" POST "/requests" "${body}" \
+    | jq -r '.["@type"],.request.id' \
+  )
 
-  if [ "$(jq -r '.["@type"]' <<< "${resp}")" != "pending" ]; then
+  if [[ "${status}" != "pending" ]]; then
     die "Failed to schedule build :-("
   fi
 
-  request_id=$(jq -r '.request.id' <<< "${resp}")
-  echo "Going to wait on request ${request_id} to complete..."
-  wait_on_request "${upstream_slug}" "${request_id}"
+  log "Waiting on request ${request_id} to complete..."
+  until poll_build_status "${upstream_slug}" "${request_id}"; do
+    sleep 5
+  done
 }
 
 trigger_build "$1"

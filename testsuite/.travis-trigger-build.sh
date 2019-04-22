@@ -13,11 +13,13 @@ trigger_build() {
   local commit_sha=
   local message=
 
+  set -x
+
   if [ "${TRAVIS_PULL_REQUEST}" == "false" ]; then
     slug="${TRAVIS_REPO_SLUG}"
     branch="${TRAVIS_BRANCH}"
     commit_sha="${TRAVIS_COMMIT}"
-    message="testsuite: \\\"${TRAVIS_COMMIT_MESSAGE}\\\""
+    message="testsuite: \"${TRAVIS_COMMIT_MESSAGE}\""
   else
     slug="${TRAVIS_PULL_REQUEST_SLUG}"
     branch="${TRAVIS_PULL_REQUEST_BRANCH}"
@@ -25,14 +27,17 @@ trigger_build() {
     message="testsuite: Running on new tests from ${TRAVIS_REPO_SLUG}#${TRAVIS_PULL_REQUEST}"
   fi
 
-  echo "slug=${slug}, branch=${branch}, commit=${commit_sha}, message=${message}"
-
-  body="{
-    \"request\": {
-      \"message\": \""${message}"\",
-      \"branch\": \"master\",
-    }
-  }"
+  body=$(jq -n \
+            --arg message "${message}" \
+            --arg slug "${slug}" \
+            --arg branch "${branch}" \
+            --arg commit_sha "${commit_sha}" \
+        '{
+          request: {
+            message: $message,
+            branch: "master"
+          }
+        }')
 
   {
     set +x

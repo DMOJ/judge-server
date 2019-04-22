@@ -119,6 +119,9 @@ def cli_main():
         register(command(judge))
 
     def run_command(line):
+        if not line:
+            return 127
+
         if line[0] in commands:
             cmd = commands[line[0]]
             try:

@@ -14,6 +14,7 @@ class Executor(CompiledExecutor):
     data_grace = 65536  # Go uses data segment for heap arena map
     address_grace = 786432
     command = 'go'
+    syscalls = ['mincore']
     test_name = 'echo'
     test_program = '''\
 package main

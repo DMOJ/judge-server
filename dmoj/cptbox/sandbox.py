@@ -109,6 +109,19 @@ _arch_map = {
 class AdvancedDebugger(Debugger):
     # Implements additional debugging functionality for convenience.
 
+    @property
+    def syscall_name(self):
+        return self.get_syscall_name(self.syscall)
+
+    def get_syscall_name(self, syscall):
+        callname = 'unknown'
+        index = self._syscall_index
+        for id, call in enumerate(translator):
+            if syscall in call[index]:
+                callname = by_id[id]
+                break
+        return callname
+
     def readstr(self, address, max_size=4096):
         if self.address_bits == 32:
             address &= 0xFFFFFFFF
@@ -254,13 +267,7 @@ class SecurePopen(six.with_metaclass(SecurePopenMeta, Process)):
             # err = ...
             # raise InternalError('ptrace error: %d (%s: %s)' % (err, errno.errorcode[err], os.strerror(err)))
         else:
-            callname = 'unknown'
-            index = self._syscall_index
-            for id, call in enumerate(translator):
-                if syscall in call[index]:
-                    callname = by_id[id]
-                    break
-
+            callname = self.debugger.get_syscall_name(syscall)
             self.protection_fault = (syscall, callname, [self.debugger.uarg0, self.debugger.uarg1,
                                                          self.debugger.uarg2, self.debugger.uarg3,
                                                          self.debugger.uarg4, self.debugger.uarg5])

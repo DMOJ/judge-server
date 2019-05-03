@@ -1,4 +1,3 @@
-import mock
 import threading
 import unittest
 
@@ -10,6 +9,12 @@ try:
     from http.server import HTTPServer
 except ImportError:
     from BaseHTTPServer import HTTPServer
+
+try:
+    from unittest import mock
+except ImportError:
+    import mock
+
 
 class ControlServerTest(unittest.TestCase):
     @classmethod

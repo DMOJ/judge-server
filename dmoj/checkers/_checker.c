@@ -44,16 +44,16 @@ static inline int iswhite(char ch) {
 
 static int check_standard(const char *judge, size_t jlen, const char *process, size_t plen) {
 	size_t j = 0, p = 0;
-	int nj, np;
+	int nj, np, sj, sp, wj, wp;
 
 	while (j < jlen && iswhite(judge[j])) ++j;
 	while (p < plen && iswhite(process[p])) ++p;
 	for (;;) {
-		nj = np = 0;
-		while (j < jlen && ((nj |= isline(judge[j])), iswhite(judge[j]))) ++j;
-		while (p < plen && ((np |= isline(process[p])), iswhite(process[p]))) ++p;
+		nj = np = sj = sp = 0;
+		while (j < jlen && ((nj |= isline(judge[j])), (sj |= wj = iswhite(judge[j])), wj)) ++j;
+		while (p < plen && ((np |= isline(process[p])), (sp |= wp = iswhite(process[p])), wp)) ++p;
 		if (j == jlen || p == plen) return j == jlen && p == plen;
-		if (nj != np) return 0;
+		if (nj != np || sj != sp) return 0;
 
 		while (j < jlen && !iswhite(judge[j])) {
 			if (p >= plen) return 0;

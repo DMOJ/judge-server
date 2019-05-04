@@ -42,18 +42,31 @@ static inline int iswhite(char ch) {
 	return 0;
 }
 
+/* Increment *pos to the next non-whitespace character, and returns
+ * 2 if a new line was seen, 1 if only spaces were seen, and 0 if no whitespace was seen */
+static inline int skip_spaces(const char *str, int *pos, int length) {
+	int saw_line = 0, saw_space = 0;
+	while (*pos < length) {
+		saw_line |= isline(str[*pos]);
+		if (!iswhite(str[*pos])) {
+			break;
+		}
+		++*pos;
+		saw_space = 1;
+	}
+	return saw_line ? 2 : saw_space;
+}
+
 static int check_standard(const char *judge, size_t jlen, const char *process, size_t plen) {
 	size_t j = 0, p = 0;
-	int nj, np, sj, sp, wj, wp;
 
 	while (j < jlen && iswhite(judge[j])) ++j;
 	while (p < plen && iswhite(process[p])) ++p;
 	for (;;) {
-		nj = np = sj = sp = 0;
-		while (j < jlen && ((nj |= isline(judge[j])), (sj |= wj = iswhite(judge[j])), wj)) ++j;
-		while (p < plen && ((np |= isline(process[p])), (sp |= wp = iswhite(process[p])), wp)) ++p;
+		int js = skip_spaces(judge, &j, jlen);
+		int ps = skip_spaces(process, &p, plen);
 		if (j == jlen || p == plen) return j == jlen && p == plen;
-		if (nj != np || sj != sp) return 0;
+		if (js != ps) return 0;
 
 		while (j < jlen && !iswhite(judge[j])) {
 			if (p >= plen) return 0;

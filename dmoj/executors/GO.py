@@ -5,7 +5,7 @@ from dmoj.error import CompileError
 from .base_executor import CompiledExecutor
 
 recomment = re.compile(br'//.*?(?=[\r\n])')
-decomment = lambda x: recomment.sub('', x)
+decomment = lambda x: recomment.sub(b'', x)
 
 
 class Executor(CompiledExecutor):

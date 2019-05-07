@@ -92,9 +92,7 @@ class StandardGrader(BaseGrader):
             syscall, callname, args = process.protection_fault
             print_protection_fault(process.protection_fault)
             callname = callname.replace('sys_', '', 1)
-            message = {
-                'open': 'opening files is not allowed',
-            }.get(callname, '%s syscall disallowed' % callname)
+            message = '%s syscall disallowed' % callname
             result.feedback = message
 
     def check_result(self, case, result):

@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import logging
 import os
 import re
@@ -174,13 +172,23 @@ class CHROOTSecurity(dict):
                 sys_minherit: ALLOW,
             })
 
+    def check_open_flags(self, flags):
+        disallowed_flags = [os.O_WRONLY, os.O_RDWR, os.O_TRUNC]
+
+        for flag in disallowed_flags:
+            if flags & flag:
+                return False
+
+        return True
+
     def check_file_access(self, syscall, argument, is_open=False):
         def check(debugger):
             file_ptr = getattr(debugger, 'uarg%d' % argument)
             file = debugger.readstr(file_ptr)
             file, accessible = self._file_access_check(file, debugger, debugger.uarg0 if is_open else None)
-            if accessible:
+            if accessible and (not is_open or self.check_open_flags(debugger.uarg1)):
                 return True
+
             log.info('Denied access via syscall %s: %s', syscall, file)
             return ACCESS_ENOENT(debugger)
         return check
@@ -190,8 +198,9 @@ class CHROOTSecurity(dict):
             file = debugger.readstr(debugger.uarg1)
             file, accessible = self._file_access_check(file, debugger, debugger.uarg0 if is_open else None,
                                                        dirfd=debugger.arg0, flag_reg=2)
-            if accessible:
+            if accessible and (not is_open or self.check_open_flags(debugger.uarg2)):
                 return True
+
             log.info('Denied access via syscall %s: %s', syscall, file)
             return ACCESS_ENOENT(debugger)
         return check

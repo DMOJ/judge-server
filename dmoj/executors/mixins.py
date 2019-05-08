@@ -67,8 +67,8 @@ try:
             BASE_FILESYSTEM += [r'/etc/libmap\.conf$', r'/var/run/ld-elf\.so\.hints$']
         else:
             # Linux and kFreeBSD mounts linux-style procfs.
-            BASE_FILESYSTEM += ['/proc/self/(?:maps|exe|auxv)$', '/proc/self$',
-                                '/proc/(?:meminfo|stat|cpuinfo|filesystems)$',
+            BASE_FILESYSTEM += ['/proc$', '/proc/self/(?:maps|exe|auxv)$', '/proc/self$',
+                                '/proc/(?:meminfo|stat|cpuinfo|filesystems|xen|uptime)$',
                                 '/proc/sys/vm/overcommit_memory$']
 
             # Linux-style ld.

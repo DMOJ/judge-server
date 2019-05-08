@@ -4,7 +4,7 @@ import re
 import sys
 
 from dmoj.cptbox._cptbox import bsd_get_proc_cwd, bsd_get_proc_fdno, AT_FDCWD
-from dmoj.cptbox.handlers import ALLOW, ACCESS_DENIED, ACCESS_ENOENT
+from dmoj.cptbox.handlers import ALLOW, ACCESS_DENIED, ACCESS_EPERM, ACCESS_ENOENT
 # noinspection PyUnresolvedReferences
 from dmoj.cptbox.syscalls import *
 from dmoj.utils.unicode import utf8text
@@ -40,7 +40,7 @@ class CHROOTSecurity(dict):
             sys_lstat: self.check_file_access('lstat', 0),
             sys_lstat64: self.check_file_access('lstat64', 0),
             sys_fstatat: self.check_file_access_at('fstatat'),
-            sys_tgkill: self.do_tgkill,
+            sys_tgkill: self.do_kill,
             sys_kill: self.do_kill,
             sys_prctl: self.do_prctl,
 
@@ -225,14 +225,9 @@ class CHROOTSecurity(dict):
         return file
 
     def do_kill(self, debugger):
-        return debugger.uarg0 == debugger.pid
-
-    def do_tgkill(self, debugger):
-        tgid = debugger.uarg0
-
         # Allow tgkill to execute as long as the target thread group is the debugged process
         # libstdc++ seems to use this to signal itself, see <https://github.com/DMOJ/judge/issues/183>
-        return tgid == debugger.pid
+        return True if debugger.uarg0 == debugger.pid else ACCESS_EPERM(debugger)
 
     def do_prctl(self, debugger):
         # PR_GET_DUMPABLE = 3

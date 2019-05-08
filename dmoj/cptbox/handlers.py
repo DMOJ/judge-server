@@ -17,4 +17,5 @@ def errno_handler(code):
     return handler
 
 ACCESS_DENIED = errno_handler(errno.EACCES)
+ACCESS_EPERM = errno_handler(errno.EPERM)
 ACCESS_ENOENT = errno_handler(errno.ENOENT)

@@ -56,6 +56,7 @@ try:
                            '/usr/(?!home)', '/lib(?:32|64)?/', '/opt/', '/etc$',
                            '/etc/(?:localtime|timezone|nsswitch.conf|resolv.conf|passwd|malloc.conf)$',
                            '/usr$', '/tmp$', '/$']
+        BASE_WRITE_FILESYSTEM = ['/dev/stdout$', '/dev/stderr$', '/dev/null$']
 
         if 'freebsd' in sys.platform:
             BASE_FILESYSTEM += [r'/etc/s?pwd\.db$', '/dev/hv_tsc$']
@@ -67,7 +68,8 @@ try:
             BASE_FILESYSTEM += [r'/etc/libmap\.conf$', r'/var/run/ld-elf\.so\.hints$']
         else:
             # Linux and kFreeBSD mounts linux-style procfs.
-            BASE_FILESYSTEM += ['/proc$', '/proc/self/(?:maps|exe|auxv)$', '/proc/self$',
+            BASE_FILESYSTEM += ['/proc$', '/proc/(?:self|{pid})/(?:maps|exe|auxv)$',
+                                '/proc/(?:self|{pid})$',
                                 '/proc/(?:meminfo|stat|cpuinfo|filesystems|xen|uptime)$',
                                 '/proc/sys/vm/overcommit_memory$']
 
@@ -80,6 +82,7 @@ try:
             data_grace = 0
             personality = 0x0040000  # ADDR_NO_RANDOMIZE
             fs = []
+            write_fs = []
             syscalls = []
 
             def _add_syscalls(self, sec):
@@ -94,13 +97,16 @@ try:
             def get_security(self, launch_kwargs=None):
                 if CHROOTSecurity is None:
                     raise NotImplementedError('No security manager on Windows')
-                sec = CHROOTSecurity(self.get_fs())
+                sec = CHROOTSecurity(self.get_fs(), write_fs=self.get_write_fs())
                 return self._add_syscalls(sec)
 
             def get_fs(self):
                 name = self.get_executor_name()
                 fs = BASE_FILESYSTEM + self.fs + env.get('extra_fs', {}).get(name, []) + [re.escape(self._dir)]
                 return fs
+
+            def get_write_fs(self):
+                return BASE_WRITE_FILESYSTEM + self.write_fs
 
             def get_allowed_syscalls(self):
                 return self.syscalls

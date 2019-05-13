@@ -13,9 +13,13 @@ log = logging.getLogger('dmoj.security')
 
 
 class CHROOTSecurity(dict):
-    def __init__(self, filesystem, writable=(1, 2)):
+    def __init__(self, read_fs, write_fs=None, writable=(1, 2)):
         super(CHROOTSecurity, self).__init__()
-        self.fs_jail = re.compile('|'.join(filesystem) if filesystem else '^')
+        self.read_fs = read_fs
+        self.write_fs = write_fs
+        self.read_fs_jail = {}
+        self.write_fs_jail = {}
+
         self._writable = list(writable)
 
         if sys.platform.startswith('freebsd'):
@@ -28,11 +32,9 @@ class CHROOTSecurity(dict):
         self.update({
             # Deny with report
             sys_openat: self.check_file_access_at('openat', is_open=True),
-            sys_faccessat: self.check_file_access_at('faccessat'),
             sys_open: self.check_file_access('open', 0, is_open=True),
+            sys_faccessat: self.check_file_access_at('faccessat'),
             sys_access: self.check_file_access('access', 0),
-            sys_mkdir: self.check_file_access('mkdir', 0),
-            sys_unlink: self.check_file_access('unlink', 0),
             sys_readlink: self.check_file_access('readlink', 0),
             sys_readlinkat: self.check_file_access_at('readlinkat'),
             sys_stat: self.check_file_access('stat', 0),
@@ -40,6 +42,8 @@ class CHROOTSecurity(dict):
             sys_lstat: self.check_file_access('lstat', 0),
             sys_lstat64: self.check_file_access('lstat64', 0),
             sys_fstatat: self.check_file_access_at('fstatat'),
+            sys_mkdir: ACCESS_EPERM, 
+            sys_unlink: ACCESS_EPERM,
             sys_tgkill: self.do_kill,
             sys_kill: self.do_kill,
             sys_prctl: self.do_prctl,
@@ -172,21 +176,21 @@ class CHROOTSecurity(dict):
                 sys_minherit: ALLOW,
             })
 
-    def check_open_flags(self, flags):
-        disallowed_flags = [os.O_WRONLY, os.O_RDWR, os.O_TRUNC]
+    def is_write_flags(self, flags):
+        write_flags = [os.O_WRONLY, os.O_RDWR, os.O_TRUNC]
 
-        for flag in disallowed_flags:
+        for flag in write_flags:
             if flags & flag:
-                return False
+                return True
 
-        return True
+        return False
 
     def check_file_access(self, syscall, argument, is_open=False):
         def check(debugger):
             file_ptr = getattr(debugger, 'uarg%d' % argument)
             file = debugger.readstr(file_ptr)
-            file, accessible = self._file_access_check(file, debugger, debugger.uarg0 if is_open else None)
-            if accessible and (not is_open or self.check_open_flags(debugger.uarg1)):
+            file, accessible = self._file_access_check(file, debugger, is_open)
+            if accessible:
                 return True
 
             log.info('Denied access via syscall %s: %s', syscall, file)
@@ -196,22 +200,43 @@ class CHROOTSecurity(dict):
     def check_file_access_at(self, syscall, is_open=False):
         def check(debugger):
             file = debugger.readstr(debugger.uarg1)
-            file, accessible = self._file_access_check(file, debugger, debugger.uarg0 if is_open else None,
-                                                       dirfd=debugger.arg0, flag_reg=2)
-            if accessible and (not is_open or self.check_open_flags(debugger.uarg2)):
+            file, accessible = self._file_access_check(file, debugger, is_open, dirfd=debugger.arg0, flag_reg=2)
+            if accessible:
                 return True
 
             log.info('Denied access via syscall %s: %s', syscall, file)
             return ACCESS_ENOENT(debugger)
         return check
 
-    def _file_access_check(self, rel_file, debugger, orig_uarg0=None, flag_reg=1, dirfd=AT_FDCWD):
+    def _get_fs_jail(self, debugger, is_write):
+        # The only syscalls that can ever have is_write=True are open and
+        # openat: if we ever want to support syscalls like unlink or mkdir,
+        # this behaviour will need to be changed. Currently, they result in
+        # an unconditional EPERM.
+        jail = self.write_fs_jail if is_write else self.read_fs_jail
+        fs = jail.get(debugger.pid)
+
+        if fs is None:
+            fs_parts = self.write_fs if is_write else self.read_fs
+            if fs_parts:
+                fs_re = '|'.join(map(lambda p: p.format(pid=debugger.pid), fs_parts))
+            else:
+                fs_re = '(?!)'  # Disallow accessing everything by default.
+
+            fs = re.compile(fs_re)
+            jail[debugger.pid] = fs
+
+        return fs
+
+    def _file_access_check(self, rel_file, debugger, is_open, flag_reg=1, dirfd=AT_FDCWD):
         try:
             file = self.get_full_path(debugger, rel_file, dirfd)
         except UnicodeDecodeError:
             log.exception('Unicode decoding error while opening relative to %d: %r', dirfd, rel_file)
             return '(undecodable)', False
-        if self.fs_jail.match(file) is None:
+
+        is_write = is_open and self.is_write_flags(getattr(debugger, 'uarg%d' % flag_reg))
+        if self._get_fs_jail(debugger, is_write).match(file) is None:
             return file, False
         return file, True
 

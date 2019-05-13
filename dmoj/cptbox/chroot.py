@@ -111,6 +111,7 @@ class CHROOTSecurity(dict):
             sys_getrusage: ALLOW,
             sys_sigaltstack: ALLOW,
             sys_pipe: ALLOW,
+            sys_pipe2: ALLOW,
             sys_clock_gettime: ALLOW,
             sys_clock_getres: ALLOW,
             sys_gettimeofday: ALLOW,

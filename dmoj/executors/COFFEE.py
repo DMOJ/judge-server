@@ -8,8 +8,8 @@ class Executor(ScriptExecutor):
     name = 'COFFEE'
     nproc = -1
     command = 'node'
-    syscalls = ['newselect', 'select', 'pipe2', 'poll', 'write', 'epoll_create1', 'eventfd2', 'epoll_ctl', 'epoll_wait',
-                'epoll_pwait', 'sched_yield', 'setrlimit']
+    syscalls = ['newselect', 'select', 'poll', 'epoll_create1', 'epoll_ctl',
+                'epoll_wait', 'epoll_pwait', 'sched_yield', 'setrlimit']
     test_program = '''\
 process.stdin.on 'readable', () ->
   chunk = process.stdin.read()

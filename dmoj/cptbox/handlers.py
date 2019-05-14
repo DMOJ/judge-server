@@ -16,7 +16,7 @@ def errno_handler(code):
         return True
     return handler
 
-ACCESS_DENIED = errno_handler(errno.EACCES)
-ACCESS_EAGAIN = errno_handler(errno.EAGAIN)
-ACCESS_EPERM = errno_handler(errno.EPERM)
-ACCESS_ENOENT = errno_handler(errno.ENOENT)
+
+for err in dir(errno):
+    if err[0] == 'E':
+        globals()['ACCESS_%s' % err] = errno_handler(getattr(errno, err))

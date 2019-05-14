@@ -4,7 +4,7 @@ import re
 import sys
 
 from dmoj.cptbox._cptbox import bsd_get_proc_cwd, bsd_get_proc_fdno, AT_FDCWD
-from dmoj.cptbox.handlers import ALLOW, ACCESS_DENIED, ACCESS_EPERM, ACCESS_ENOENT
+from dmoj.cptbox.handlers import ALLOW, ACCESS_EACCES, ACCESS_EPERM, ACCESS_ENOENT
 # noinspection PyUnresolvedReferences
 from dmoj.cptbox.syscalls import *
 from dmoj.utils.unicode import utf8text
@@ -78,8 +78,8 @@ class CHROOTSecurity(dict):
             sys_sysinfo: ALLOW,
             sys_getrandom: ALLOW,
 
-            sys_socket: ACCESS_DENIED,
-            sys_socketcall: ACCESS_DENIED,
+            sys_socket: ACCESS_EACCES,
+            sys_socketcall: ACCESS_EACCES,
 
             sys_close: ALLOW,
             sys_dup: ALLOW,

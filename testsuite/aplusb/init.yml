@@ -1,8 +1,7 @@
 archive: aplusb.zip
 
 symlinks: {
-  in_link: /dev/stdin,
-  out_link: /dev/stdout
+  in_link: /dev/stdin
 }
 
 hints: [nobigmath]

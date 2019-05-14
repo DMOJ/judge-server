@@ -4,7 +4,6 @@ using namespace std;
 
 int main()
 {
-    freopen("out_link", "w", stdout);
     freopen("in_link", "r", stdin);
 
     int N;

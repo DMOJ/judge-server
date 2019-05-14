@@ -255,7 +255,8 @@ class CHROOTSecurity(dict):
         return True if debugger.uarg0 == debugger.pid else ACCESS_EPERM(debugger)
 
     def do_prctl(self, debugger):
-        # PR_GET_DUMPABLE = 3
-        # PR_SET_NAME = 15
-        # PR_SET_VMA = 0x53564d41, used on Android
-        return debugger.arg0 in (3, 15, 0x53564d41)
+        PR_GET_DUMPABLE = 3
+        PR_SET_NAME = 15
+        PR_GET_NAME = 16
+        PR_SET_VMA = 0x53564d41  # Used on Android
+        return debugger.arg0 in (PR_GET_DUMPABLE, PR_SET_NAME, PR_GET_NAME, PR_SET_VMA)

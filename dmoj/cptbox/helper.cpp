@@ -114,6 +114,9 @@ int cptbox_child_run(const struct child_config *config) {
     if (config->nproc >= 0)
         setrlimit2(RLIMIT_NPROC, config->nproc);
 
+    if (config->fsize >= 0)
+        setrlimit2(RLIMIT_FSIZE, config->fsize);
+
     if (config->dir && *config->dir)
         chdir(config->dir);
 

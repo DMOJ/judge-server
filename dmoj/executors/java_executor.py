@@ -50,6 +50,7 @@ class JavaExecutor(CompiledExecutor):
     vm = None
     compiler = None
     nproc = -1
+    fsize = 64  # Allow 64 bytes for dumping state file.
     address_grace = 786432
 
     jvm_regex = None

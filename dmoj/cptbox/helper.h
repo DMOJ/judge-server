@@ -17,6 +17,7 @@ struct child_config {
     unsigned int cpu_time;
     unsigned long personality;
     int nproc;
+    int fsize;
     char *file;
     char *dir;
     char **argv;

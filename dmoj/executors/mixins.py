@@ -80,6 +80,7 @@ try:
         class PlatformExecutorMixin(object):
             address_grace = 65536
             data_grace = 0
+            fsize = 0
             personality = 0x0040000  # ADDR_NO_RANDOMIZE
             fs = []
             write_fs = []
@@ -150,11 +151,15 @@ try:
                                    security=self.get_security(launch_kwargs=kwargs),
                                    address_grace=self.get_address_grace(),
                                    data_grace=self.data_grace,
-                                   personality=self.personality, fds=kwargs.get('fds'),
-                                   time=kwargs.get('time'), memory=kwargs.get('memory'),
+                                   personality=self.personality,
+                                   fds=kwargs.get('fds'),
+                                   time=kwargs.get('time'),
+                                   memory=kwargs.get('memory'),
                                    wall_time=kwargs.get('wall_time'),
                                    stderr=(PIPE if kwargs.get('pipe_stderr', False) else None),
-                                   env=env, cwd=utf8bytes(self._dir), nproc=self.get_nproc())
+                                   env=env, cwd=utf8bytes(self._dir),
+                                   nproc=self.get_nproc(),
+                                   fsize=self.fsize)
 except ImportError:
     pass
 

@@ -54,11 +54,16 @@ class BaseExecutor(PlatformExecutorMixin):
             # We are really toasted, as constructor failed.
             print('BaseExecutor error: not initialized?')
             return
-        try:
-            shutil.rmtree(self._dir)  # delete directory
-        except OSError as exc:
-            if exc.errno != errno.ENOENT:
-                raise
+
+        # _dir may be None if an exception (e.g. CompileError) was raised during
+        # create_files, e.g. by executors that perform source validation like
+        # Java or Go.
+        if self._dir:
+            try:
+                shutil.rmtree(self._dir)  # delete directory
+            except OSError as exc:
+                if exc.errno != errno.ENOENT:
+                    raise
 
     def __del__(self):
         self.cleanup()

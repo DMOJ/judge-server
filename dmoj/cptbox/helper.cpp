@@ -123,6 +123,11 @@ int cptbox_child_run(const struct child_config *config) {
     setrlimit2(RLIMIT_STACK, RLIM_INFINITY);
     setrlimit2(RLIMIT_CORE, 0);
 
+#ifdef PR_SET_NO_NEW_PRIVS  // Since Linux 3.5
+    if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0))
+        return 202;
+#endif
+
     if (config->stdin_ >= 0)  dup2(config->stdin_, 0);
     if (config->stdout_ >= 0) dup2(config->stdout_, 1);
     if (config->stderr_ >= 0) dup2(config->stderr_, 2);

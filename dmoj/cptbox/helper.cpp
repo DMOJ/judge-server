@@ -128,6 +128,14 @@ int cptbox_child_run(const struct child_config *config) {
         return 202;
 #endif
 
+#ifdef PR_SET_SPECULATION_CTRL  // Since Linux 4.17
+    // Turn off Spectre Variant 4 protection in case it is turned on; we don't
+    // care if submissions shoot themselves in the foot. Let this be a
+    // best-effort attempt, and don't stop the submission from running if the
+    // prctl fails.
+    prctl(PR_SET_SPECULATION_CTRL, PR_SPEC_STORE_BYPASS, PR_SPEC_ENABLE, 0, 0);
+#endif
+
     if (config->stdin_ >= 0)  dup2(config->stdin_, 0);
     if (config->stdout_ >= 0) dup2(config->stdout_, 1);
     if (config->stderr_ >= 0) dup2(config->stderr_, 2);

@@ -49,7 +49,11 @@ nosetests.xml
 *.pdb
 
 # Vim
-*.swp
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
 
 # DMOJ
 dmoj/wbox/_wbox.cpp

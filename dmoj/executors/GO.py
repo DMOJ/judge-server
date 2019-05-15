@@ -4,8 +4,9 @@ import re
 from dmoj.error import CompileError
 from .base_executor import CompiledExecutor
 
-recomment = re.compile(br'//.*?(?=[\r\n])')
-decomment = lambda x: recomment.sub(b'', x)
+reinline_comment = re.compile(br'//.*?(?=[\r\n])')
+recomment = re.compile(br'/\*.*?\*/', re.DOTALL)
+decomment = lambda x: reinline_comment.sub(b'', recomment.sub(b'', x))
 
 
 class Executor(CompiledExecutor):

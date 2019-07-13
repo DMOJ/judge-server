@@ -24,7 +24,6 @@ from dmoj.utils.error import print_protection_fault
 from dmoj.utils.unicode import utf8bytes, utf8text
 from dmoj.utils.uniprocess import Popen as UniPopen
 
-reversion = re.compile('.*?(\d+(?:\.\d+)+)', re.DOTALL)
 version_cache = {}
 
 
@@ -39,6 +38,7 @@ class BaseExecutor(PlatformExecutorMixin):
     test_name = 'self_test'
     test_time = env.selftest_time_limit
     test_memory = env.selftest_memory_limit
+    version_regex = re.compile('.*?(\d+(?:\.\d+)+)', re.DOTALL)
 
     def __init__(self, problem_id, source_code, dest_dir=None, hints=None,
                  unbuffered=False, **kwargs):
@@ -186,7 +186,7 @@ class BaseExecutor(PlatformExecutorMixin):
 
     @classmethod
     def parse_version(cls, command, output):
-        match = reversion.match(output)
+        match = cls.version_regex.match(output)
         if match:
             return map(int, match.group(1).split('.'))
         return None

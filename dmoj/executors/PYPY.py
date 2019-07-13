@@ -1,4 +1,3 @@
-from dmoj.executors.base_executor import reversion
 from dmoj.executors.python_executor import PythonExecutor
 
 
@@ -10,7 +9,8 @@ class Executor(PythonExecutor):
     @classmethod
     def parse_version(cls, command, output):
         try:
-            cls._pypy_versions = [tuple(map(int, version.split('.'))) for version in reversion.findall(output)]
+            cls._pypy_versions = [tuple(map(int, version.split('.')))
+                                  for version in cls.version_regex.findall(output)]
             return cls._pypy_versions[1]
         except:
             return None

@@ -5,7 +5,7 @@ from dmoj.executors.mixins import ScriptDirectoryMixin
 # Running DART normally results in unholy memory usage
 # Thankfully compiling it results in something...far more sane
 class Executor(ScriptDirectoryMixin, CompiledExecutor):
-    ext = '.dart'
+    ext = 'dart'
     name = 'DART'
     nproc = -1  # Dart uses a really, really large number of threads
     command = 'dart'

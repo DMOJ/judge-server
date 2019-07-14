@@ -4,7 +4,7 @@ from .base_executor import CompiledExecutor
 
 
 class Executor(CompiledExecutor):
-    ext = '.cbl'
+    ext = 'cbl'
     name = 'CBL'
     command = 'cobc'
     address_grace = 131072

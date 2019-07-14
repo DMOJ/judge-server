@@ -2,7 +2,7 @@ from .base_executor import ScriptExecutor
 
 
 class Executor(ScriptExecutor):
-    ext = '.js'
+    ext = 'js'
     name = 'V8JS'
     command = 'v8dmoj'
     test_program = 'print(gets());'

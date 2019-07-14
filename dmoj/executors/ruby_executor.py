@@ -5,7 +5,7 @@ from .base_executor import ScriptExecutor
 
 
 class RubyExecutor(ScriptExecutor):
-    ext = '.rb'
+    ext = 'rb'
     name = 'RUBY'
     address_grace = 65536
     test_program = 'puts gets'

@@ -12,7 +12,7 @@ with open(os.path.join(os.path.dirname(__file__), 'groovy-security.policy')) as 
 
 class Executor(JavaExecutor):
     name = 'GROOVY'
-    ext = '.groovy'
+    ext = 'groovy'
 
     compiler = 'groovyc'
     vm = 'groovy_vm'

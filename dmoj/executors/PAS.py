@@ -3,7 +3,7 @@ from dmoj.executors.mixins import NullStdoutMixin
 
 
 class Executor(NullStdoutMixin, CompiledExecutor):
-    ext = '.pas'
+    ext = 'pas'
     name = 'PAS'
     command = 'fpc'
     test_program = '''\

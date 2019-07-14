@@ -2,7 +2,7 @@ from .base_executor import CompiledExecutor
 
 
 class Executor(CompiledExecutor):
-    ext = '.nim'
+    ext = 'nim'
     name = 'NIM'
     command = 'nim'
     test_program = '''\

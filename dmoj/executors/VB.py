@@ -2,7 +2,7 @@ from dmoj.executors.clr_executor import CLRExecutor
 
 
 class Executor(CLRExecutor):
-    ext = '.vb'
+    ext = 'vb'
     name = 'VB'
 
     compiler = 'vbc'

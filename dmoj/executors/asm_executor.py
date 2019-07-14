@@ -24,7 +24,7 @@ class ASMExecutor(CompiledExecutor):
     platform_prefixes = None
 
     name = 'ASM'
-    ext = '.asm'
+    ext = 'asm'
 
     def __init__(self, problem_id, source_code, *args, **kwargs):
         self.use_qemu = self.qemu_path is not None and os.path.isfile(self.qemu_path)

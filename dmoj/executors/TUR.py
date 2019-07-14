@@ -3,7 +3,7 @@ from dmoj.judgeenv import env
 
 
 class Executor(CompiledExecutor):
-    ext = '.t'
+    ext = 't'
     name = 'TUR'
     command = 'tprologc'
     test_program = '''\

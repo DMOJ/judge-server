@@ -24,7 +24,7 @@ del sys.argv[0]
 runpy.run_path(sys.argv[0], run_name='__main__')
 '''
     address_grace = 131072
-    ext = '.py'
+    ext = 'py'
 
     def get_cmdline(self):
         # -B: Don't write .pyc/.pyo, since sandbox will kill those writes

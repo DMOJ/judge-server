@@ -10,7 +10,7 @@ decomment = lambda x: reinline_comment.sub(b'', recomment.sub(b'', x))
 
 
 class Executor(CompiledExecutor):
-    ext = '.go'
+    ext = 'go'
     name = 'GO'
     data_grace = 65536  # Go uses data segment for heap arena map
     address_grace = 786432

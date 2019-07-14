@@ -2,7 +2,7 @@ from .base_executor import CompiledExecutor
 
 
 class Executor(CompiledExecutor):
-    ext = '.scm'
+    ext = 'scm'
     name = 'SCM'
     command = 'chicken-csc'
     command_paths = ['chicken-csc', 'csc']

@@ -4,7 +4,7 @@ from .gcc_executor import GCCExecutor
 class Executor(GCCExecutor):
     command = 'gcc'
     flags = ['-std=c99']
-    ext = '.c'
+    ext = 'c'
     name = 'C'
     test_program = '''
 #include <stdio.h>

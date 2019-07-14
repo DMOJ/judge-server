@@ -2,7 +2,7 @@ from dmoj.executors.mono_executor import MonoExecutor
 
 
 class Executor(MonoExecutor):
-    ext = '.cs'
+    ext = 'cs'
     name = 'MONOCS'
     command = 'mono-csc'
     command_paths = ['mono-csc', 'mcs', 'dmcs', 'gmcs']

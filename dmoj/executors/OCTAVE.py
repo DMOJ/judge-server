@@ -3,7 +3,7 @@ from dmoj.executors.mixins import ScriptDirectoryMixin
 
 
 class Executor(ScriptDirectoryMixin, ScriptExecutor):
-    ext = '.m'
+    ext = 'm'
     name = 'OCTAVE'
     command = 'octave'
     address_grace = 262144

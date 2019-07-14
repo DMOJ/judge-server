@@ -10,7 +10,7 @@ from dmoj.executors.mixins import ScriptDirectoryMixin, NullStdoutMixin
 # so allowing (or blocking) the execve hack is not necessary: SBCL detects that ASLR is disabled,
 # and proceeds to run.
 class Executor(NullStdoutMixin, ScriptDirectoryMixin, CompiledExecutor):
-    ext = '.cl'
+    ext = 'cl'
     name = 'SBCL'
     command = 'sbcl'
     syscalls = ['personality', 'poll']

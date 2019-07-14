@@ -40,7 +40,7 @@ class GCCExecutor(CompiledExecutor):
         self.source_paths = []
         for name, source in self.source_dict.items():
             if '.' not in name:
-                name += self.ext
+                name += '.' + self.ext
             with open(self._file(name), 'wb') as fo:
                 fo.write(utf8bytes(source))
             self.source_paths.append(name)

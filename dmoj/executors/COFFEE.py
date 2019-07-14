@@ -4,7 +4,7 @@ from .base_executor import ScriptExecutor
 
 
 class Executor(ScriptExecutor):
-    ext = '.coffee'
+    ext = 'coffee'
     name = 'COFFEE'
     nproc = -1
     command = 'node'

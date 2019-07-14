@@ -5,7 +5,7 @@ class Executor(GCCExecutor):
     command = 'gcc11'
     flags = ['-std=c11']
     command_paths = ['gcc']
-    ext = '.c'
+    ext = 'c'
     name = 'C11'
     test_program = '''
 #include <stdio.h>

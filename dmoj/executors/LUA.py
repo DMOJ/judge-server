@@ -2,7 +2,7 @@ from .base_executor import ScriptExecutor
 
 
 class Executor(ScriptExecutor):
-    ext = '.lua'
+    ext = 'lua'
     name = 'LUA'
     command = 'lua'
     command_paths = ['lua', 'lua5.3', 'lua5.2', 'lua5.1']

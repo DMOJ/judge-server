@@ -39,6 +39,7 @@ class BaseExecutor(PlatformExecutorMixin):
     test_time = env.selftest_time_limit
     test_memory = env.selftest_memory_limit
     version_regex = re.compile('.*?(\d+(?:\.\d+)+)', re.DOTALL)
+    source_filename_format = '{problem_id}.{ext}'
 
     def __init__(self, problem_id, source_code, dest_dir=None, hints=None,
                  unbuffered=False, **kwargs):
@@ -247,7 +248,8 @@ class BaseExecutor(PlatformExecutorMixin):
 class ScriptExecutor(BaseExecutor):
     def __init__(self, problem_id, source_code, **kwargs):
         super(ScriptExecutor, self).__init__(problem_id, source_code, **kwargs)
-        self._code = self._file(problem_id + self.ext)
+        self._code = self._file(
+            self.source_filename_format.format(problem_id=problem_id, ext=self.ext))
         self.create_files(problem_id, source_code)
 
     @classmethod
@@ -390,7 +392,7 @@ class CompiledExecutor(six.with_metaclass(CompiledExecutorMeta, BaseExecutor)):
             super(CompiledExecutor, self).cleanup()
 
     def create_files(self, problem_id, source_code, *args, **kwargs):
-        self._code = self._file(problem_id + self.ext)
+        self._code = self._file(self.source_filename_format.format(problem_id=problem_id, ext=self.ext))
         with open(self._code, 'wb') as fo:
             fo.write(utf8bytes(source_code))
 

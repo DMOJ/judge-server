@@ -6,7 +6,7 @@ from dmoj.judgeenv import env
 
 
 class Executor(GCCExecutor):
-    ext = '.m'
+    ext = 'm'
     objc_flags = []
     objc_ldflags = []
     command = 'gobjc'

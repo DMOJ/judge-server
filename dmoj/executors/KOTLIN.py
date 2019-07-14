@@ -8,7 +8,7 @@ with open(os.path.join(os.path.dirname(__file__), 'java-security.policy')) as po
 
 class Executor(JavaExecutor):
     name = 'KOTLIN'
-    ext = '.kt'
+    ext = 'kt'
 
     compiler = 'kotlinc'
     compiler_time_limit = 20

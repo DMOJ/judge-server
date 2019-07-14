@@ -4,7 +4,7 @@ from .gcc_executor import GCCExecutor
 class Executor(GCCExecutor):
     command = 'g++'
     std = None
-    ext = '.cpp'
+    ext = 'cpp'
     name = 'CPP03'
     test_program = '''
 #include <iostream>

@@ -3,7 +3,7 @@ from dmoj.executors.mixins import NullStdoutMixin
 
 
 class Executor(NullStdoutMixin, CompiledExecutor):
-    ext = '.hs'
+    ext = 'hs'
     name = 'HASK'
     command = 'ghc'
     syscalls = ['poll']

@@ -2,7 +2,7 @@ from .base_executor import ScriptExecutor
 
 
 class Executor(ScriptExecutor):
-    ext = '.pl'
+    ext = 'pl'
     name = 'PERL'
     command = 'perl'
     fs = ['/etc/perl/.*?']

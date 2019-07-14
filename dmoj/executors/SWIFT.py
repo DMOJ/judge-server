@@ -3,7 +3,7 @@ from dmoj.executors.mixins import EmulateTerminalMixin
 
 
 class Executor(EmulateTerminalMixin, CompiledExecutor):
-    ext = '.swift'
+    ext = 'swift'
     name = 'SWIFT'
     command = 'swiftc'
     test_program = 'print(readLine()!)'

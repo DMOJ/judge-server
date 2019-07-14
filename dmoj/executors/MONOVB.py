@@ -4,7 +4,7 @@ from dmoj.executors.mono_executor import MonoExecutor
 
 
 class Executor(MonoExecutor):
-    ext = '.vb'
+    ext = 'vb'
     name = 'MONOVB'
     command = 'mono-vbnc'
     compile_output_index = 0

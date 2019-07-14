@@ -14,7 +14,7 @@ with open(os.path.join(os.path.dirname(__file__), 'scala-security.policy')) as p
 # Must emulate terminal, otherwise `scalac` hangs on a call to `stty`
 class Executor(EmulateTerminalMixin, JavaExecutor):
     name = 'SCALA'
-    ext = '.scala'
+    ext = 'scala'
 
     compiler = 'scalac'
     compiler_time_limit = 20

@@ -45,7 +45,7 @@ def find_class(source):
 
 
 class JavaExecutor(CompiledExecutor):
-    ext = '.java'
+    ext = 'java'
 
     vm = None
     compiler = None

@@ -3,7 +3,7 @@ from dmoj.cptbox.handlers import ACCESS_EACCES
 
 
 class Executor(ScriptExecutor):
-    ext = '.pike'
+    ext = 'pike'
     name = 'PIKE'
     command = 'pike'
     syscalls = ['epoll_create', 'epoll_ctl', ('fstatfs', ACCESS_EACCES),  # Linux

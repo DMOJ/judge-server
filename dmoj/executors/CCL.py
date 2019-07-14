@@ -3,7 +3,7 @@ from dmoj.executors.mixins import ScriptDirectoryMixin
 
 
 class Executor(ScriptDirectoryMixin, CompiledExecutor):
-    ext = '.cl'
+    ext = 'cl'
     name = 'CCL'
     command = 'ccl'
     syscalls = ['setrlimit']

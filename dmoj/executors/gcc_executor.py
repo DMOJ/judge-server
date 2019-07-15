@@ -21,7 +21,6 @@ class GCCExecutor(CompiledExecutor):
     name = 'GCC'
     arch = 'gcc_target_arch'
     has_color = False
-    version_regex = re.compile(r'.*?(\d+(?:\.\d+)*)', re.DOTALL)
 
     source_dict: Dict[str, bytes] = {}
 
@@ -100,7 +99,7 @@ class GCCExecutor(CompiledExecutor):
 
     @classmethod
     def get_version_flags(cls, command: str) -> List[str]:
-        return ['-dumpversion']
+        return ['--version']
 
     @classmethod
     def autoconfig_run_test(cls, result):

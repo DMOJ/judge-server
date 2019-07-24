@@ -13,6 +13,7 @@ from dmoj.config import InvalidInitException, ConfigNode
 from dmoj.error import InternalError
 from dmoj.generator import GeneratorManager
 from dmoj.judgeenv import env, get_problem_root
+from dmoj.result import Result
 from dmoj.utils.module import load_module_from_file
 
 
@@ -198,7 +199,9 @@ class TestCase(object):
             input = self.problem.problem_data[self.config['in']] if self.config['in'] else None
         except KeyError:
             input = None
-        self._generated = list(map(self._normalize, proc.communicate(input)))
+
+        stdout, stderr = proc.communicate(input)
+        self._generated = list(map(self._normalize, (stdout, stderr)))
 
         if hasattr(proc, 'tle') and proc.tle:
             raise InternalError('generator timed out (> %s seconds)' % time_limit)
@@ -208,7 +211,16 @@ class TestCase(object):
             syscall, callname, args = proc.protection_fault
             raise InternalError('generator invoked disallowed syscall %s (%s)' % (syscall, callname))
         if proc.returncode:
-            raise InternalError('generator exited with nonzero code: %s' % proc.returncode)
+            error = 'generator exited with nonzero code %s' % proc.returncode
+            # To get the feedback, we need a Result object, but we lack a Case object
+            # So we set it to None because we don't need to access it
+            result = Result(None)
+            result.set_result_flag(proc)
+            feedback = (proc.feedback if hasattr(executor, 'feedback') and proc.feedback
+                            else (getattr(executor, 'get_feedback', lambda x, y, z: '')(stderr, result, proc)))
+            if feedback:
+                error += ' with feedback: %s' % feedback
+            raise InternalError(error)
 
     def input_data(self):
         gen = self.config.generator

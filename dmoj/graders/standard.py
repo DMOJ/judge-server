@@ -12,7 +12,7 @@ import six
 from dmoj.error import CompileError
 from dmoj.executors import executors
 from dmoj.graders.base import BaseGrader
-from dmoj.result import Result, CheckerResult
+from dmoj.result import CheckerResult, Result
 from dmoj.utils.communicate import OutputLimitExceeded
 from dmoj.utils.error import print_protection_fault
 
@@ -47,7 +47,7 @@ class StandardGrader(BaseGrader):
         result.r_execution_time = process.r_execution_time or 0.0
 
         # Translate status codes/process results into Result object for status codes
-        self.set_result_flag(process, result)
+        result.set_result_flag(process)
 
         check = self.check_result(case, result)
 
@@ -124,16 +124,6 @@ class StandardGrader(BaseGrader):
             check = False
 
         return check
-
-    def set_result_flag(self, process, result):
-        if process.returncode > 0:
-            result.result_flag |= Result.IR
-        if process.returncode is None or process.returncode < 0:
-            result.result_flag |= Result.RTE  # Killed by signal
-        if process.tle:
-            result.result_flag |= Result.TLE
-        if process.mle:
-            result.result_flag |= Result.MLE
 
     def _interact_with_process(self, case, result, input):
         process = self._current_proc

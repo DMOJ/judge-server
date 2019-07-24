@@ -58,6 +58,16 @@ class Result(object):
     def output(self):
         return utf8text(self.proc_output[:self.case.output_prefix_length], 'replace')
 
+    def set_result_flag(self, process):
+        if process.returncode > 0:
+            self.result_flag |= Result.IR
+        if process.returncode is None or process.returncode < 0:
+            self.result_flag |= Result.RTE  # Killed by signal
+        if process.tle:
+            self.result_flag |= Result.TLE
+        if process.mle:
+            self.result_flag |= Result.MLE
+
 
 class CheckerResult(object):
     def __init__(self, passed, points, feedback=None, extended_feedback=None):

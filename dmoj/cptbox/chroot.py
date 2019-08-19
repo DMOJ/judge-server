@@ -178,7 +178,7 @@ class CHROOTSecurity(dict):
             })
 
     def is_write_flags(self, flags):
-        write_flags = [os.O_WRONLY, os.O_RDWR, os.O_TRUNC]
+        write_flags = [os.O_WRONLY, os.O_RDWR, os.O_TRUNC, os.O_TMPFILE, os.O_CREAT, os.O_EXCL]
 
         for flag in write_flags:
             if flags & flag:

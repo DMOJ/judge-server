@@ -181,7 +181,7 @@ class CHROOTSecurity(dict):
         O_TMPFILE = 0x410000  # os.O_TMPFILE not defined in Python 2
         for flag in [os.O_WRONLY, os.O_RDWR, os.O_TRUNC, os.O_CREAT, os.O_EXCL, O_TMPFILE]:
             # Strict equality is necessary here, since e.g. O_TMPFILE has multiple bits set,
-            # and O_TMPFILE & O_DIRECTORY > 0.
+            # and O_DIRECTORY & O_TMPFILE > 0.
             if open_flags & flag == flag:
                 return True
 

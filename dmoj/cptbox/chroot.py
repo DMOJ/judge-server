@@ -182,7 +182,9 @@ class CHROOTSecurity(dict):
         write_flags = [os.O_WRONLY, os.O_RDWR, os.O_TRUNC, os.O_CREAT, os.O_EXCL, O_TMPFILE]
 
         for flag in write_flags:
-            if flags & flag:
+            # Strict equality is necessary here, since e.g. O_TMPFILE has multiple bits set,
+            # and O_DIRECTORY & O_TMPFILE > 0.
+            if flags & flag == flag:
                 return True
 
         return False

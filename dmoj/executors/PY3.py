@@ -12,4 +12,5 @@ class Executor(PythonExecutor):
     def get_env(self):
         env = super(Executor, self).get_env()
         env['PYTHONHOME'] = os.path.dirname(self.get_executable())
+        env['PYTHONPATH'] = None
         return env

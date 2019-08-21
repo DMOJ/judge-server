@@ -137,7 +137,7 @@ class CHROOTSecurity(dict):
             sys_llseek: ALLOW,
             sys_fcntl64: ALLOW,
             sys_time: ALLOW,
-            sys_prlimit64: ALLOW,
+            sys_prlimit64: self.do_prlimit,
             sys_getdents64: ALLOW,
         })
 
@@ -256,6 +256,9 @@ class CHROOTSecurity(dict):
         # libstdc++ seems to use this to signal itself, see <https://github.com/DMOJ/judge/issues/183>
         return True if debugger.uarg0 == debugger.pid else ACCESS_EPERM(debugger)
 
+    def do_prlimit(self, debugger):
+        return debugger.uarg0 in (0, debugger.pid)
+    
     def do_prctl(self, debugger):
         PR_GET_DUMPABLE = 3
         PR_SET_NAME = 15

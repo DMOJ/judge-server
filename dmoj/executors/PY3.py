@@ -1,5 +1,3 @@
-import os
-
 from dmoj.executors.python_executor import PythonExecutor
 
 

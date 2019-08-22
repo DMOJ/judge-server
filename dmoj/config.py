@@ -81,7 +81,7 @@ class ConfigNode(object):
                 if isinstance(value, list) or isinstance(value, dict) else value
 
     def __getattr__(self, item):
-        return self[item] or self[item.replace('_', '-')]
+        return self[item.replace('_', '-')] if self[item] is None else self[item]
 
     def __getitem__(self, item):
         try:

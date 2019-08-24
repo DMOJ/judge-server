@@ -257,7 +257,7 @@ class CHROOTSecurity(dict):
         return True if debugger.uarg0 == debugger.pid else ACCESS_EPERM(debugger)
 
     def do_prlimit(self, debugger):
-        return debugger.uarg0 in (0, debugger.pid)
+        return True if debugger.uarg0 in (0, debugger.pid) else ACCESS_EPERM(debugger)
     
     def do_prctl(self, debugger):
         PR_GET_DUMPABLE = 3

@@ -5,6 +5,7 @@ import logging
 import os
 import platform
 import signal
+import subprocess
 
 import six
 
@@ -35,7 +36,9 @@ class StandardGrader(BaseGrader):
         self._current_proc = self.binary.launch(time=self.problem.time_limit,
                                                 memory=self.problem.memory_limit,
                                                 symlinks=case.config.symlinks,
-                                                pipe_stderr=True,
+                                                stdin=subprocess.PIPE,
+                                                stdout=subprocess.PIPE,
+                                                stderr=subprocess.PIPE,
                                                 wall_time=case.config.wall_time_factor * self.problem.time_limit)
 
         error = self._interact_with_process(case, result, input)

@@ -115,7 +115,11 @@ class BaseExecutor(PlatformExecutorMixin):
             print(ansi_style("%-39s%s" % ('Self-testing #ansi[%s](|underline):' % cls.get_executor_name(), '')), end=' ')
         try:
             executor = cls(cls.test_name, utf8bytes(cls.test_program))
-            proc = executor.launch(time=cls.test_time, memory=cls.test_memory) if sandbox else executor.launch_unsafe()
+            if sandbox:
+                proc = executor.launch(time=cls.test_time, memory=cls.test_memory,
+                                       stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+            else:
+                proc = executor.launch_unsafe()
             test_message = b'echo: Hello, World!'
             stdout, stderr = proc.communicate(test_message + b'\n')
 

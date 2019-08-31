@@ -21,7 +21,7 @@ from dmoj.error import InternalError
 from dmoj.utils.communicate import safe_communicate as _safe_communicate
 from dmoj.utils.unicode import utf8text, utf8bytes
 
-PIPE = object()
+PIPE = subprocess.PIPE
 log = logging.getLogger('dmoj.cptbox')
 
 
@@ -326,7 +326,7 @@ class SecurePopen(six.with_metaclass(SecurePopenMeta, Process)):
     def __init_streams(self, stdin, stdout, stderr):
         self.stdin = self.stdout = self.stderr = None
 
-        if stdin is PIPE:
+        if stdin == PIPE:
             self._child_stdin, self._stdin = os.pipe()
             self.stdin = os.fdopen(self._stdin, 'w')
         elif isinstance(stdin, int):
@@ -336,7 +336,7 @@ class SecurePopen(six.with_metaclass(SecurePopenMeta, Process)):
         else:
             self._child_stdin = self._stdin = -1
 
-        if stdout is PIPE:
+        if stdout == PIPE:
             self._stdout, self._child_stdout = os.pipe()
             self.stdout = os.fdopen(self._stdout, 'r')
         elif isinstance(stdout, int):
@@ -346,7 +346,7 @@ class SecurePopen(six.with_metaclass(SecurePopenMeta, Process)):
         else:
             self._stdout = self._child_stdout = -1
 
-        if stderr is PIPE:
+        if stderr == PIPE:
             self._stderr, self._child_stderr = os.pipe()
             self.stderr = os.fdopen(self._stderr, 'r')
         elif isinstance(stderr, int):

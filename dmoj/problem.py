@@ -187,7 +187,8 @@ class TestCase(object):
         if use_sandbox:
             # setting large buffers is really important, because otherwise stderr is unbuffered
             # and the generator begins calling into cptbox Python code really frequently
-            proc = executor.launch(*args, time=time_limit, memory=memory_limit, pipe_stderr=True,
+            proc = executor.launch(*args, time=time_limit, memory=memory_limit,
+                                   stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                    stderr_buffer_size=65536, stdout_buffer_size=65536)
         else:
             proc = executor.launch_unsafe(*args, stdin=subprocess.PIPE, stdout=subprocess.PIPE,

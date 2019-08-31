@@ -49,7 +49,7 @@ try:
                                  inject64=self.get_inject64(),
                                  inject_func=self.get_inject_func())
     else:
-        from dmoj.cptbox import SecurePopen, PIPE, CHROOTSecurity, syscalls
+        from dmoj.cptbox import SecurePopen, CHROOTSecurity, syscalls
         from dmoj.cptbox.handlers import ALLOW
 
         BASE_FILESYSTEM = ['/dev/(?:null|tty|zero|u?random)$',
@@ -156,7 +156,9 @@ try:
                                    time=kwargs.get('time'),
                                    memory=kwargs.get('memory'),
                                    wall_time=kwargs.get('wall_time'),
-                                   stderr=(PIPE if kwargs.get('pipe_stderr', False) else None),
+                                   stdin=kwargs.get('stdin'),
+                                   stdout=kwargs.get('stdout'),
+                                   stderr=kwargs.get('stderr'),
                                    env=env, cwd=utf8bytes(self._dir),
                                    nproc=self.get_nproc(),
                                    fsize=self.fsize)

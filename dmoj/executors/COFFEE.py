@@ -9,7 +9,7 @@ class Executor(ScriptExecutor):
     nproc = -1
     command = 'node'
     syscalls = ['newselect', 'select', 'poll', 'epoll_create1', 'epoll_ctl',
-                'epoll_wait', 'epoll_pwait', 'sched_yield', 'setrlimit']
+                'epoll_wait', 'epoll_pwait', 'sched_yield', 'setrlimit', 'eventfd2']
     test_program = '''\
 process.stdin.on 'readable', () ->
   chunk = process.stdin.read()

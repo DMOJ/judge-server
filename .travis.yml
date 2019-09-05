@@ -38,6 +38,7 @@ addons:
     - swi-prolog
     - dart/stable
     - scala
+    - racket
 cache:
   directories:
     - $HOME/.cargo

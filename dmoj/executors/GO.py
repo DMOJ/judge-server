@@ -31,9 +31,13 @@ func main() {
 }'''
 
     def get_compile_env(self):
-        # Disable cgo, as it may be used for nefarious things (like linking
-        # against arbitrary libraries).
-        return {'CGO_ENABLED': '0'}
+        return {
+            # Disable cgo, as it may be used for nefarious things, like linking
+            # against arbitrary libraries.
+            'CGO_ENABLED': '0',
+            # We need GOCACHE to compile on Debian 10.0+.
+            'GOCACHE': self._dir,
+        }
 
     def get_compile_args(self):
         return [self.get_command(), 'build', self._code]

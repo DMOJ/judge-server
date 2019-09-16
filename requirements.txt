@@ -2,7 +2,6 @@ watchdog
 pyyaml
 ansi2html
 termcolor
-colorama
 cython
 pygments
 six

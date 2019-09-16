@@ -91,15 +91,6 @@ def cli_main():
     from dmoj import judgeenv, executors
 
     judgeenv.load_env(cli=True)
-
-    # Emulate ANSI colors with colorama
-    if os.name == 'nt' and not judgeenv.no_ansi_emu:
-        try:
-            from colorama import init
-            init()
-        except ImportError:
-            pass
-
     executors.load_executors()
 
     print('Running local judge...')

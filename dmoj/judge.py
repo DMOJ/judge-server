@@ -655,14 +655,6 @@ def main():  # pragma: no cover
 
     judgeenv.load_env()
 
-    # Emulate ANSI colors with colorama
-    if os.name == 'nt' and not judgeenv.no_ansi_emu:
-        try:
-            from colorama import init
-            init()
-        except ImportError:
-            pass
-
     executors.load_executors()
 
     if hasattr(signal, 'SIGUSR2'):

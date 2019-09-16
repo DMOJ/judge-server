@@ -104,8 +104,6 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
                         help='prevent listed executors from loading (comma-separated)')
 
     parser.add_argument('--no-ansi', action='store_true', help='disable ANSI output')
-    if os.name == 'nt':
-        parser.add_argument('--no-ansi-emu', action='store_true', help='disable ANSI emulation on Windows')
 
     if testsuite:
         parser.add_argument('tests_dir', help='directory where tests are stored')

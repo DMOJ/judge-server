@@ -55,21 +55,12 @@ class TerminateGrading(Exception):
     pass
 
 
-TYPE_SUBMISSION = 1
-TYPE_INVOCATION = 2
-
-
 class Judge(object):
     def __init__(self):
         self.current_submission = None
         self.current_grader = None
         self.current_submission_thread = None
         self._terminate_grading = False
-        self.process_type = 0
-
-        self.begin_grading = partial(self.process_submission, TYPE_SUBMISSION, self._begin_grading)
-        self.custom_invocation = partial(self.process_submission, TYPE_INVOCATION, self._custom_invocation)
-
         self.packet_manager = None
 
         self.updater_exit = False
@@ -101,57 +92,6 @@ class Judge(object):
         Pushes current problem set to server.
         """
         self.updater_signal.set()
-
-    def process_submission(self, type, target, id, *args, **kwargs):
-        try:
-            self.current_submission_thread.join()
-        except AttributeError:
-            pass
-        self.process_type = type
-        self.current_submission = id
-
-        is_blocking = kwargs.pop('blocking', False)
-        self.current_submission_thread = threading.Thread(target=target, args=args, kwargs=kwargs)
-        self.current_submission_thread.daemon = True
-        self.current_submission_thread.start()
-
-        if is_blocking:
-            self.current_submission_thread.join()
-
-    def _custom_invocation(self, language, source, memory_limit, time_limit, input_data):
-        class InvocationGrader(graders.StandardGrader):
-            def check_result(self, case, result):
-                return not result.result_flag
-
-        class InvocationProblem(object):
-            id = 'CustomInvocation'
-            time_limit = time_limit
-            memory_limit = memory_limit
-
-        class InvocationCase(object):
-            config = ConfigNode({'unbuffered': False})
-            input_data = lambda: input_data
-
-        grader = self.get_grader_from_source(InvocationGrader, InvocationProblem(), language, source)
-        binary = grader.binary if grader else None
-
-        if binary:
-            self.packet_manager.invocation_begin_packet()
-            try:
-                result = grader.grade(InvocationCase())
-            except TerminateGrading:
-                self.packet_manager.submission_terminated_packet()
-                print(ansi_style('#ansi[Forcefully terminating invocation.](red|bold)'))
-                pass
-            except:
-                self.internal_error()
-            else:
-                self.packet_manager.invocation_end_packet(result)
-
-        print(ansi_style('Done invoking #ansi[%s](green|bold).\n' % (id,)))
-        self._terminate_grading = False
-        self.current_submission_thread = None
-        self.current_submission = None
 
     def _begin_grading(self, problem_id, language, source, time_limit, memory_limit, short_circuit, meta, report=print):
         submission_id = self.current_submission
@@ -231,6 +171,21 @@ class Judge(object):
         self.current_submission = None
         self.current_grader = None
 
+    def begin_grading(self, id, *args, **kwargs):
+        try:
+            self.current_submission_thread.join()
+        except AttributeError:
+            pass
+        self.current_submission = id
+
+        is_blocking = kwargs.pop('blocking', False)
+        self.current_submission_thread = threading.Thread(target=self._begin_grading, args=args, kwargs=kwargs)
+        self.current_submission_thread.daemon = True
+        self.current_submission_thread.start()
+
+        if is_blocking:
+            self.current_submission_thread.join()
+
     def grade_cases(self, grader, cases, short_circuit=False, is_short_circuiting=False):
         for case in cases:
             # Yield notifying objects for batch begin/end, and unwrap all cases inside the batches
@@ -284,13 +239,6 @@ class Judge(object):
             return self.internal_error()
 
         return grader
-
-    def get_process_type(self):
-        return {0: None,
-                TYPE_SUBMISSION: 'submission',
-                TYPE_INVOCATION: 'invocation',
-                #   TYPE_HACK:       'hack',
-                }[self.process_type]
 
     def internal_error(self, exc=None):
         # If exc is exists, raise it so that sys.exc_info() is populated with its data

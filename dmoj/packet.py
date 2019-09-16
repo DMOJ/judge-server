@@ -210,17 +210,6 @@ class PacketManager(object):
             self._batch = 0
             log.info('Accept submission: %d: executor: %s, code: %s',
                      packet['submission-id'], packet['language'], packet['problem-id'])
-        elif name == 'invocation-request':
-            self.invocation_acknowledged_packet(packet['invocation-id'])
-            self.judge.custom_invocation(
-                packet['invocation-id'],
-                packet['language'],
-                packet['source'],
-                float(packet['time-limit']),
-                int(packet['memory-limit']),
-                packet['input-data']
-            )
-            log.info('Accept invocation: %d: executor: %s', packet['invocation-id'], packet['language'])
         elif name == 'terminate-submission':
             log.info('Received abortion request for %s', self.judge.current_submission)
             self.judge.terminate_grading()
@@ -249,22 +238,6 @@ class PacketManager(object):
             if resp['name'] != 'handshake-success':
                 log.error('Handshake failed.')
                 raise JudgeAuthenticationFailed()
-
-    def invocation_begin_packet(self):
-        log.info('Begin invoking: %d', self.judge.current_submission)
-        self._send_packet({'name': 'invocation-begin',
-                           'invocation-id': self.judge.current_submission})
-
-    def invocation_end_packet(self, result):
-        log.info('End invoking: %d', self.judge.current_submission)
-        self.fallback = 4
-        self._send_packet({'name': 'invocation-end',
-                           'output': result.proc_output,
-                           'status': result.status_flag,
-                           'time': result.execution_time,
-                           'memory': result.max_memory,
-                           'feedback': result.feedback,
-                           'invocation-id': self.judge.current_submission})
 
     def supported_problems_packet(self, problems):
         log.info('Update problems')
@@ -353,7 +326,3 @@ class PacketManager(object):
     def submission_acknowledged_packet(self, sub_id):
         self._send_packet({'name': 'submission-acknowledged',
                            'submission-id': sub_id}, rewrite=False)
-
-    def invocation_acknowledged_packet(self, sub_id):
-        self._send_packet({'name': 'submission-acknowledged',
-                           'invocation-id': sub_id}, rewrite=False)

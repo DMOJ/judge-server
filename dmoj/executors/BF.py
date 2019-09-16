@@ -11,12 +11,7 @@ template = b'''\
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-#ifdef WIN32
-#   define WIN32_LEAN_AND_MEAN
-#   include <windows.h>
-#else
-#   include <sys/mman.h>
-#endif
+#include <sys/mman.h>
 
 int main(int argc, char **argv) {
     char *p;
@@ -28,19 +23,11 @@ int main(int argc, char **argv) {
         return 2;
     }
 
-#ifdef WIN32
-    p = VirtualAlloc(NULL, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-    if (!p) {
-        fprintf(stderr, "Failed to VirtualAlloc with %u\\n", (unsigned) GetLastError());
-        return 2;
-    }
-#else
     p = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     if (p == MAP_FAILED) {
         perror("mmap");
         return 2;
     }
-#endif
 
     {code}
 }

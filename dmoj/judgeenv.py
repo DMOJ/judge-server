@@ -36,13 +36,8 @@ env = ConfigNode(defaults={
     # to host judges running with --api-host and --api-port)
     'update_pings': [],
     # Directory to use as temporary submission storage, system default
-    # (e.g. /tmp) if left blank. MANDATORY on Windows.
+    # (e.g. /tmp) if left blank.
     'tempdir': None,
-
-    # Windows-only settings
-    'inject32': None,  # Path to wbox's dmsec32.dll
-    'inject64': None,  # Path to wbox's dmsec64.dll
-    'inject_func': None,  # Name of injected DLL's entry point (e.g. InjectMain)
 }, dynamic=False)
 _root = os.path.dirname(__file__)
 

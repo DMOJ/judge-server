@@ -302,27 +302,11 @@ class ClassicJudge(Judge):
 
 
 def sanity_check():
-    # Don't allow starting up without wbox/cptbox, saves cryptic errors later on
     if os.name == 'nt':
-        from judgeenv import env
-
-        # Nasty crashes will happen if tempdir isn't specified.
-        if not env.tempdir:
-            print('must specify `tempdir` in judge config to a directory readable by all users')
-            return False
-
-        try:
-            from .wbox import _wbox
-        except ImportError:
-            print('wbox must be compiled to grade!', file=sys.stderr)
-            return False
-
-        # DMOJ needs to be run as admin on Windows
-        import ctypes
-        if ctypes.windll.shell32.IsUserAnAdmin() == 0:
-            print("can't start, the DMOJ judge must be ran as admin", file=sys.stderr)
-            return False
+        print('cannot run judge on Windows', file=sys.stderr)
+        return False
     else:
+        # Don't allow starting up without cptbox, saves cryptic errors later on
         try:
             from .cptbox import _cptbox
         except ImportError:

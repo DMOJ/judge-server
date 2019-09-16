@@ -7,12 +7,11 @@ import sys
 
 if sys.version_info[0] >= 3 and os.name == 'nt':
     print('DMOJ is unsupported on Windows Python 3, please use Python 2 instead.', file=sys.stderr)
-    sys.exit(0)
+    sys.exit(1)
 
 import traceback
 import subprocess
 from distutils.errors import DistutilsPlatformError
-from distutils.msvccompiler import MSVCCompiler
 
 from setuptools import setup, Extension, find_packages
 from setuptools.command.build_ext import build_ext
@@ -67,32 +66,23 @@ class build_ext_dmoj(build_ext, object):
             self.unavailable(e)
 
     def build_extensions(self):
-        if isinstance(self.compiler, MSVCCompiler):
-            self.compiler.initialize()
-            self.compiler.compile_options.remove('/W3')
-            self.compiler.compile_options.remove('/MD')
-            if '/GS-' in self.compiler.compile_options:
-                self.compiler.compile_options.remove('/GS-')
-            self.compiler.compile_options += ['/Ox', '/W4', '/EHsc', '/GL', '/MT']
-            self.compiler.ldflags_shared += ['/OPT:REF,ICF', '/LTCG']
-        else:
-            arch = os.uname()[4]
-            is_arm = arch.startswith('arm') or arch.startswith('aarch')
-            target_arch = os.environ.get('DMOJ_TARGET_ARCH')
+        arch = os.uname()[4]
+        is_arm = arch.startswith('arm') or arch.startswith('aarch')
+        target_arch = os.environ.get('DMOJ_TARGET_ARCH')
 
-            extra_compile_args = []
-            if is_arm or os.environ.get('DMOJ_REDIST'):
-                extra_compile_args.append('-O3')
-                if target_arch:
-                    extra_compile_args.append('-march=%s' % target_arch)
-                elif is_arm:
-                    print('*' * 79)
-                    print('Building on ARM, specify DMOJ_TARGET_ARCH to CPU-specific arch for GCC!')
-                    print('Compiling slower generic build.')
-                    print('*' * 79)
-            else:
-                extra_compile_args += ['-march=%s' % (target_arch or 'native'), '-O3']
-            self.distribution.ext_modules[0].extra_compile_args = extra_compile_args
+        extra_compile_args = []
+        if is_arm or os.environ.get('DMOJ_REDIST'):
+            extra_compile_args.append('-O3')
+            if target_arch:
+                extra_compile_args.append('-march=%s' % target_arch)
+            elif is_arm:
+                print('*' * 79)
+                print('Building on ARM, specify DMOJ_TARGET_ARCH to CPU-specific arch for GCC!')
+                print('Compiling slower generic build.')
+                print('*' * 79)
+        else:
+            extra_compile_args += ['-march=%s' % (target_arch or 'native'), '-O3']
+        self.distribution.ext_modules[0].extra_compile_args = extra_compile_args
 
         super(build_ext_dmoj, self).build_extensions()
 
@@ -103,48 +93,37 @@ class build_ext_dmoj(build_ext, object):
         print('*' * 79)
 
 
-wbox_sources = ['_wbox.pyx', 'handles.cpp', 'process.cpp', 'user.cpp', 'helpers.cpp', 'firewall.cpp']
 cptbox_sources = ['_cptbox.pyx', 'helper.cpp', 'ptdebug.cpp', 'ptdebug_x86.cpp', 'ptdebug_x64.cpp',
                   'ptdebug_x86_on_x64.cpp', 'ptdebug_x32.cpp', 'ptdebug_arm.cpp', 'ptdebug_arm64.cpp',
                   'ptproc.cpp']
 
 if not has_pyx:
-    wbox_sources[0] = wbox_sources[0].replace('.pyx', '.cpp')
     cptbox_sources[0] = cptbox_sources[0].replace('.pyx', '.cpp')
 
 SOURCE_DIR = os.path.dirname(__file__)
-wbox_sources = [os.path.join(SOURCE_DIR, 'dmoj', 'wbox', f) for f in wbox_sources]
 cptbox_sources = [os.path.join(SOURCE_DIR, 'dmoj', 'cptbox', f) for f in cptbox_sources]
 
-extensions = [Extension('dmoj.checkers._checker', sources=['dmoj/checkers/_checker.c'])]
-if os.name == 'nt' or 'sdist' in sys.argv:
-    extensions += [Extension('dmoj.wbox._wbox', sources=wbox_sources, language='c++',
-                             libraries=['netapi32', 'advapi32', 'ole32'],
-                             define_macros=[('UNICODE', None)])]
+libs = ['rt']
 
-if os.name != 'nt' or 'sdist' in sys.argv:
-    libs = ['rt']
+if has_seccomp:
+    libs += ['seccomp']
+if sys.platform.startswith('freebsd'):
+    libs += ['procstat']
 
-    if has_seccomp:
-        libs += ['seccomp']
-    if sys.platform.startswith('freebsd'):
-        libs += ['procstat']
+macros = []
+if is_wsl:
+    macros.append(('WSL', None))
 
-    macros = []
-    if is_wsl:
-        macros.append(('WSL', None))
+if not has_seccomp:
+    print('*' * 79)
+    print('Building without seccomp, expect lower sandbox performance.')
+    print('*' * 79)
+    macros.append(('PTBOX_NO_SECCOMP', None))
 
-    if not has_seccomp:
-        print('*' * 79)
-        print('Building without seccomp, expect lower sandbox performance.')
-        print('*' * 79)
-        macros.append(('PTBOX_NO_SECCOMP', None))
-
-    extensions += [Extension('dmoj.cptbox._cptbox', sources=cptbox_sources,
-                             language='c++', libraries=libs, define_macros=macros)]
-
-if os.name != 'nt':
-    extensions += [SimpleSharedObject('dmoj.utils.setbufsize', sources=['dmoj/utils/setbufsize.c'])]
+extensions = [Extension('dmoj.checkers._checker', sources=['dmoj/checkers/_checker.c']),
+              Extension('dmoj.cptbox._cptbox', sources=cptbox_sources,
+                        language='c++', libraries=libs, define_macros=macros),
+              SimpleSharedObject('dmoj.utils.setbufsize', sources=['dmoj/utils/setbufsize.c'])]
 
 with io.open(os.path.join(os.path.dirname(__file__), 'README.md'), encoding='utf-8') as f:
     readme = f.read()
@@ -156,7 +135,6 @@ setup(
     package_data={
         'dmoj.cptbox': ['syscalls/aliases.list', 'syscalls/*.tbl'],
         'dmoj.executors': ['csbox.exe', 'java_sandbox.jar', '*.policy'],
-        'dmoj.wbox': ['getaddr*.exe', 'dmsec*.dll'],
     },
     entry_points={
         'console_scripts': [
@@ -173,8 +151,8 @@ setup(
     },
     cmdclass={'build_ext': build_ext_dmoj},
 
-    author='quantum5, Xyene',
-    author_email='admin@dmoj.ca',
+    author='DMOJ Team',
+    author_email='contact@dmoj.ca',
     url='https://github.com/DMOJ/judge',
     description='The judge component of the DMOJ: Modern Online Judge platform',
     long_description=readme,
@@ -185,7 +163,6 @@ setup(
         'Environment :: Console',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)',
-        'Operating System :: Microsoft :: Windows',
         'Operating System :: POSIX :: Linux',
         'Operating System :: POSIX :: BSD :: FreeBSD',
         'Programming Language :: Python',

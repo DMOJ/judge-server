@@ -37,7 +37,6 @@ def load_executor(name):
         # Python 2 has no quotes, Python 3 has quotes :|
         if str(e).replace("'", '') not in ('No module named _cptbox',
                                            'No module named msvcrt',
-                                           'No module named _wbox',
                                            'No module named termios'):
             traceback.print_exc()
 

@@ -20,7 +20,7 @@ class MonoSecurePopen(SecurePopen):
 
 class MonoExecutor(CompiledExecutor):
     name = 'MONO'
-    nproc = -1  # If you use Mono on Windows you are doing it wrong.
+    nproc = -1
     address_grace = 262144
     # Give Mono access to 64mb more data segment memory. This is a hack, for
     # dealing with the fact that Mono behaves extremely poorly when handling

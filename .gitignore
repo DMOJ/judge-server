@@ -56,8 +56,6 @@ nosetests.xml
 [._]sw[a-p]
 
 # DMOJ
-dmoj/wbox/_wbox.cpp
-dmoj/wbox/_wbox.html
 dmoj/cptbox/_cptbox.cpp
 
 java_sandbox/objs/

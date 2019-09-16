@@ -109,16 +109,14 @@ class Tester(object):
         self.case_regex = case_regex
 
         self.case_files = ['test.yml']
-        if os.name == 'nt':
-            self.case_files += ['test.windows.yml']
-        elif os.name == 'posix':
-            self.case_files += ['test.posix.yml']
-            if 'freebsd' in sys.platform:
-                self.case_files += ['test.freebsd.yml']
-                if not sys.platform.startswith('freebsd'):
-                    self.case_files += ['test.kfreebsd.yml']
-            elif sys.platform.startswith('linux'):
-                self.case_files += ['test.linux.yml']
+
+        self.case_files += ['test.posix.yml']
+        if 'freebsd' in sys.platform:
+            self.case_files += ['test.freebsd.yml']
+            if not sys.platform.startswith('freebsd'):
+                self.case_files += ['test.kfreebsd.yml']
+        elif sys.platform.startswith('linux'):
+            self.case_files += ['test.linux.yml']
 
     def output(self, message=''):
         print(message)

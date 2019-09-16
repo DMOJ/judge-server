@@ -173,7 +173,8 @@ class Judge(object):
         self.current_submission_thread.daemon = True
         self.current_submission_thread.start()
 
-        if blocking:
+        # Submission may have been killed already, but block if it hasn't been.
+        if blocking and self.current_submission_thread is not None:
             self.current_submission_thread.join()
 
     def grade_cases(self, grader, cases, short_circuit=False, is_short_circuiting=False):

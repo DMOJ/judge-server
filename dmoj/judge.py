@@ -635,7 +635,7 @@ def main():  # pragma: no cover
     print('Running live judge...')
 
     for warning in judgeenv.startup_warnings:
-        print(ansi_style('#ansi[Warning: %s](yellow)' % warning))
+        print_ansi('#ansi[Warning: %s](yellow)' % warning)
     del judgeenv.startup_warnings
 
     if 'judges' in env:

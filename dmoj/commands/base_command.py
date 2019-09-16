@@ -6,7 +6,7 @@ import sys
 
 from dmoj.cli import InvalidCommandException
 from dmoj.executors import executors
-from dmoj.utils.ansi import ansi_style
+from dmoj.utils.ansi import print_ansi
 
 
 class CommandArgumentParser(argparse.ArgumentParser):
@@ -57,7 +57,7 @@ class Command(object):
                 temp.seek(0)
                 src = temp.read()
         else:
-            print(ansi_style('#ansi[$EDITOR not set, falling back to stdin](yellow)\n'))
+            print_ansi('#ansi[$EDITOR not set, falling back to stdin](yellow)\n')
             src = []
             try:
                 while True:

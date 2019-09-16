@@ -3,7 +3,7 @@ import shlex
 import sys
 
 from dmoj.judge import Judge
-from dmoj.utils.ansi import ansi_style
+from dmoj.utils.ansi import ansi_style, print_ansi
 
 
 class LocalPacketManager(object):
@@ -96,7 +96,7 @@ def cli_main():
     judge = LocalJudge()
 
     for warning in judgeenv.startup_warnings:
-        print(ansi_style('#ansi[Warning: %s](yellow)' % warning))
+        print_ansi('#ansi[Warning: %s](yellow)' % warning)
     del judgeenv.startup_warnings
     print()
 
@@ -114,11 +114,11 @@ def cli_main():
                 return cmd.execute(line[1:])
             except InvalidCommandException as e:
                 if e.message:
-                    print(ansi_style("#ansi[%s](red|bold)\n" % e.message))
+                    print_ansi("#ansi[%s](red|bold)\n" % e.message)
                 print()
                 return 1
         else:
-            print(ansi_style('#ansi[Unrecognized command %s](red|bold)' % line[0]))
+            print_ansi('#ansi[Unrecognized command %s](red|bold)' % line[0])
             print()
             return 127
 

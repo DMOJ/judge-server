@@ -15,7 +15,7 @@ import pylru
 from dmoj.error import CompileError
 from dmoj.executors.mixins import PlatformExecutorMixin
 from dmoj.judgeenv import env
-from dmoj.utils.ansi import ansi_style
+from dmoj.utils.ansi import print_ansi
 from dmoj.utils.communicate import *
 from dmoj.utils.error import print_protection_fault
 from dmoj.utils.unicode import utf8bytes, utf8text
@@ -108,7 +108,7 @@ class BaseExecutor(PlatformExecutorMixin):
             return True
 
         if output:
-            print(ansi_style("%-39s%s" % ('Self-testing #ansi[%s](|underline):' % cls.get_executor_name(), '')), end=' ')
+            print_ansi("%-39s%s" % ('Self-testing #ansi[%s](|underline):' % cls.get_executor_name(), ''), end=' ')
         try:
             executor = cls(cls.test_name, utf8bytes(cls.test_program))
             if sandbox:
@@ -120,10 +120,10 @@ class BaseExecutor(PlatformExecutorMixin):
             stdout, stderr = proc.communicate(test_message + b'\n')
 
             if proc.tle:
-                print(ansi_style('#ansi[Time Limit Exceeded](red|bold)'))
+                print_ansi('#ansi[Time Limit Exceeded](red|bold)')
                 return False
             if proc.mle:
-                print(ansi_style('#ansi[Memory Limit Exceeded](red|bold)'))
+                print_ansi('#ansi[Memory Limit Exceeded](red|bold)')
                 return False
 
             res = stdout.strip() == test_message and not stderr
@@ -131,7 +131,7 @@ class BaseExecutor(PlatformExecutorMixin):
                 # Cache the versions now, so that the handshake packet doesn't take ages to generate
                 cls.get_runtime_versions()
                 usage = '[%.3fs, %d KB]' % (proc.execution_time, proc.max_memory)
-                print(ansi_style(['#ansi[Failed](red|bold)', '#ansi[Success](green|bold)'][res]), usage)
+                print_ansi(['#ansi[Failed](red|bold)', '#ansi[Success](green|bold)'][res], usage)
             if stdout.strip() != test_message and error_callback:
                 error_callback('Got unexpected stdout output:\n' + utf8text(stdout))
             if stderr:
@@ -144,7 +144,7 @@ class BaseExecutor(PlatformExecutorMixin):
             return res
         except Exception:
             if output:
-                print(ansi_style('#ansi[Failed](red|bold)'))
+                print_ansi('#ansi[Failed](red|bold)')
                 traceback.print_exc()
             if error_callback:
                 error_callback(traceback.format_exc())

@@ -8,7 +8,7 @@ import yaml
 from dmoj import judgeenv, executors
 from dmoj.judge import Judge
 from dmoj.judgeenv import get_supported_problems, get_problem_root
-from dmoj.utils.ansi import ansi_style
+from dmoj.utils.ansi import ansi_style, print_ansi
 
 all_executors = executors.executors
 
@@ -118,7 +118,7 @@ class Tester(object):
         print(message)
 
     def error_output(self, message):
-        print(ansi_style('#ansi[%s](red)') % message)
+        print_ansi('#ansi[%s](red)' % message)
 
     def test_all(self):
         total_fails = 0
@@ -259,9 +259,9 @@ def main():
     print()
     print('Test complete')
     if fails:
-        print(ansi_style('#ansi[A total of %d case(s) failed](red|bold).') % fails)
+        print_ansi('#ansi[A total of %d case(s) failed](red|bold).' % fails)
     else:
-        print(ansi_style('#ansi[All cases passed.](green|bold)'))
+        print_ansi('#ansi[All cases passed.](green|bold)')
     raise SystemExit(int(fails != 0))
 
 if __name__ == '__main__':

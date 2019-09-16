@@ -97,7 +97,7 @@ class Monitor(object):
                 self._monitor.start()
             except OSError:
                 logger.exception('Failed to start problem monitor.')
-                print(ansi_style('#ansi[Warning: failed to start problem monitor!](yellow)'))
+                print_ansi('#ansi[Warning: failed to start problem monitor!](yellow)')
         if self._refresher is not None:
             self._refresher.start()
 

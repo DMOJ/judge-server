@@ -28,3 +28,7 @@ def ansi_style(text):
 
     return re.sub(r'#ansi\[(.*?)\]\((.*?)\)',
                   lambda x: format_inline(x.group(1), x.group(2)) if not no_ansi else x.group(1), text)
+
+
+def print_ansi(*args, **kwargs):
+    print(*map(ansi_style, args), **kwargs)

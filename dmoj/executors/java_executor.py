@@ -114,14 +114,18 @@ class JavaExecutor(CompiledExecutor):
                     raise InternalError('\n\n' + err.read())
             except IOError:
                 pass
+
         if not result.result_flag & Result.IR:
             return ''
 
-        try:
-            with open(os.path.join(self._dir, 'state'), 'r') as state:
-                exception = state.read().strip()
-        except IOError:
-            exception = "abnormal termination"  # Probably exited without calling shutdown hooks
+        if b'Error: Main method not found in class' in stderr:
+            exception = "public static void main(String[] args) entry point not found"
+        else:
+            try:
+                with open(os.path.join(self._dir, 'state'), 'r') as state:
+                    exception = state.read().strip()
+            except IOError:
+                exception = "abnormal termination"  # Probably exited without calling shutdown hooks
 
         return exception
 

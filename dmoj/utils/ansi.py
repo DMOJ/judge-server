@@ -1,6 +1,5 @@
 import re
 
-import ansi2html
 from termcolor import colored
 
 from dmoj.utils.unicode import utf8text
@@ -9,10 +8,6 @@ from dmoj.utils.unicode import utf8text
 def strip_ansi(s):
     # http://stackoverflow.com/questions/13506033/filtering-out-ansi-escape-sequences
     return re.sub(r'\x1b\[([0-9,A-Z]{1,2}(;[0-9]{1,2})?(;[0-9]{3})?)?[m|K]?', '', s)
-
-
-def format_ansi(s):
-    return ansi2html.Ansi2HTMLConverter(inline=True).convert(utf8text(s), full=False)
 
 
 def ansi_style(text):

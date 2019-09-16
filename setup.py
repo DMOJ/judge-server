@@ -142,7 +142,7 @@ setup(
         ],
     },
     ext_modules=cythonize(extensions),
-    install_requires=['watchdog', 'pyyaml', 'ansi2html', 'termcolor', 'pygments', 'setproctitle', 'pylru'],
+    install_requires=['watchdog', 'pyyaml', 'termcolor', 'pygments', 'setproctitle', 'pylru'],
     tests_require=['requests'],
     extras_require={
         'test': ['requests'],

@@ -19,10 +19,7 @@ from dmoj.utils.error import print_protection_fault
 try:
     from dmoj.utils.nixutils import strsignal
 except ImportError:
-    try:
-        from dmoj.utils.winutils import strsignal
-    except ImportError:
-        strsignal = lambda x: 'signal %s' % x
+    strsignal = lambda x: 'signal %s' % x
 
 log = logging.getLogger('dmoj.graders')
 

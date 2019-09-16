@@ -30,11 +30,10 @@ try:
 except ImportError:
     from BaseHTTPServer import HTTPServer
 
-if os.name == 'posix':
-    try:
-        import readline
-    except ImportError:
-        pass
+try:
+    import readline
+except ImportError:
+    pass
 
 
 try:
@@ -666,7 +665,7 @@ def main():  # pragma: no cover
         print(ansi_style('#ansi[Warning: %s](yellow)' % warning))
     del judgeenv.startup_warnings
 
-    if os.name == 'posix' and 'judges' in env:
+    if 'judges' in env:
         logfile = judgeenv.log_file
         try:
             logfile = logfile % 'master'

@@ -12,6 +12,7 @@ decomment = lambda x: reinline_comment.sub(b'', recomment.sub(b'', x))
 class Executor(CompiledExecutor):
     ext = 'go'
     name = 'GO'
+    nproc = -1
     data_grace = 65536  # Go uses data segment for heap arena map
     address_grace = 786432
     command = 'go'
@@ -45,9 +46,6 @@ func main() {
     @classmethod
     def get_version_flags(cls, command):
         return ['version']
-
-    def get_nproc(self):
-        return [-1, 1][os.name == 'nt']
 
     def create_files(self, problem_id, source_code, *args, **kwargs):
         source_lines = decomment(source_code).strip().split(b'\n')

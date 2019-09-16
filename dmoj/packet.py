@@ -24,7 +24,6 @@ except ImportError:
     ssl = None
 
 log = logging.getLogger(__name__)
-timer = time.clock if os.name == 'nt' else time.time
 
 
 class JudgeAuthenticationFailed(Exception):

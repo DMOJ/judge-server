@@ -5,8 +5,8 @@ import io
 import os
 import sys
 
-if sys.version_info[0] >= 3 and os.name == 'nt':
-    print('DMOJ is unsupported on Windows Python 3, please use Python 2 instead.', file=sys.stderr)
+if os.name == 'nt':
+    print('DMOJ is unsupported on Windows.', file=sys.stderr)
     sys.exit(1)
 
 import traceback
@@ -51,7 +51,7 @@ class SimpleSharedObject(Extension, object):
 class build_ext_dmoj(build_ext, object):
     def get_ext_filename(self, ext_name):
         if ext_name in SimpleSharedObject.ext_names:
-            return ext_name.replace('.', os.sep) + ['.so', '.dll'][os.name == 'nt']
+            return ext_name.replace('.', os.sep) + '.so'
         return super(build_ext_dmoj, self).get_ext_filename(ext_name)
 
     def get_export_symbols(self, ext):

@@ -9,14 +9,8 @@ from .base_executor import CompiledExecutor
 
 GCC_ENV = env.runtime.gcc_env or {}
 GCC_COMPILE = os.environ.copy()
+GCC_COMPILE.update(env.runtime.gcc_compile or {})
 MAX_ERRORS = 5
-
-if os.name == 'nt':
-    GCC_COMPILE.update((k.encode('mbcs'), v.encode('mbcs')) for k, v in
-                       (env.runtime.gcc_compile or GCC_ENV).iteritems())
-    GCC_ENV = dict((k.encode('mbcs'), v.encode('mbcs')) for k, v in GCC_ENV.iteritems())
-else:
-    GCC_COMPILE.update(env.runtime.gcc_compile or {})
 
 recppexc = re.compile(br"terminate called after throwing an instance of \'([A-Za-z0-9_:]+)\'\r?$", re.M)
 
@@ -53,18 +47,13 @@ class GCCExecutor(CompiledExecutor):
         return ''.join(key_components)
 
     def get_ldflags(self):
-        if os.name == 'nt':
-            return ['-Wl,--stack,67108864']
         return []
 
     def get_flags(self):
         return self.flags + ['-fmax-errors=%d' % MAX_ERRORS]
 
     def get_defines(self):
-        defines = ['-DONLINE_JUDGE'] + self.defines
-        if os.name == 'nt':
-            defines.append('-DWIN32')
-        return defines
+        return ['-DONLINE_JUDGE'] + self.defines
 
     def get_compile_args(self):
         return ([self.get_command(), '-Wall'] + (['-fdiagnostics-color=always'] if self.has_color else []) +

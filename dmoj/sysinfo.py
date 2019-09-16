@@ -11,9 +11,9 @@ if hasattr(os, 'getloadavg'):
         except OSError:  # as of May 2016, Windows' Linux subsystem throws OSError on getloadavg
             load = -1
         return 'load', load
-elif os.name != 'nt':
+else:
     # There exist some Unix platforms (like Android) which don't
-    # have `getloadavg` implemented, but obviously aren't Windows
+    # have `getloadavg` implemented, but aren't Windows
     # so we manually read the `/proc/loadavg` file.
     def load_fair():
         try:

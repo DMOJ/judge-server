@@ -1,6 +1,5 @@
 watchdog
 pyyaml
-ansi2html
 termcolor
 cython
 pygments

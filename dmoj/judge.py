@@ -16,7 +16,7 @@ from dmoj.judgeenv import env, get_supported_problems, startup_warnings, clear_p
 from dmoj.monitor import Monitor, DummyMonitor
 from dmoj.problem import Problem, BatchedTestCase
 from dmoj.result import Result
-from dmoj.utils.ansi import ansi_style, strip_ansi, format_ansi
+from dmoj.utils.ansi import ansi_style, strip_ansi
 from dmoj.utils.unicode import utf8bytes, utf8text, unicode_stdout_stderr
 
 try:
@@ -97,12 +97,12 @@ class Judge(object):
             report(ansi_style('#ansi[Failed compiling submission!](red|bold)'))
             report(error.rstrip())  # don't print extra newline
 
-            self.packet_manager.compile_error_packet(format_ansi(error))
+            self.packet_manager.compile_error_packet(error)
             return
         else:
             binary = self.current_grader.binary
             if hasattr(binary, 'warning') and binary.warning:
-                self.packet_manager.compile_message_packet(format_ansi(binary.warning or ''))
+                self.packet_manager.compile_message_packet(binary.warning or '')
 
         self.packet_manager.begin_grading_packet(self.current_grader.is_pretested)
 

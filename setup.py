@@ -134,7 +134,7 @@ setup(
     packages=find_packages(),
     package_data={
         'dmoj.cptbox': ['syscalls/aliases.list', 'syscalls/*.tbl'],
-        'dmoj.executors': ['csbox.exe', 'java_sandbox.jar', '*.policy'],
+        'dmoj.executors': ['java_sandbox.jar', '*.policy'],
     },
     entry_points={
         'console_scripts': [

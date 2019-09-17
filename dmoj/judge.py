@@ -101,8 +101,8 @@ class Judge(object):
             return
         else:
             binary = self.current_grader.binary
-            if hasattr(binary, 'warning') and binary.warning:
-                self.packet_manager.compile_message_packet(binary.warning or '')
+            if hasattr(binary, 'warning') and binary.warning is not None:
+                self.packet_manager.compile_message_packet(binary.warning)
 
         self.packet_manager.begin_grading_packet(self.current_grader.is_pretested)
 

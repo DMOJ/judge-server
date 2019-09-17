@@ -437,15 +437,16 @@ class CompiledExecutor(BaseExecutor, metaclass=CompiledExecutorMeta):
     def compile(self):
         process = self.get_compile_process()
         try:
-            output = self.get_compile_output(process)
+            compiler_output = self.get_compile_output(process)
         except OutputLimitExceeded:
-            output = b'compiler output too long (> 64kb)'
+            compiler_output = b'compiler output too long (> 64kb)'
 
         if self.is_failed_compile(process):
             if process.timed_out:
-                output = b'compiler timed out (> %d seconds)' % self.compiler_time_limit
-            self.handle_compile_error(output)
-        self.warning = output
+                compiler_output = b'compiler timed out (> %d seconds)' % self.compiler_time_limit
+            self.handle_compile_error(compiler_output)
+        elif compiler_output:
+            self.warning = compiler_output
 
         self._executable = self.get_compiled_file()
         return self._executable

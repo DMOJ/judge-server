@@ -9,6 +9,7 @@ from .base_executor import CompiledExecutor
 
 GCC_ENV = env.runtime.gcc_env or {}
 GCC_COMPILE = os.environ.copy()
+MAX_ERRORS = 5
 
 if os.name == 'nt':
     GCC_COMPILE.update((k.encode('mbcs'), v.encode('mbcs')) for k, v in
@@ -57,7 +58,7 @@ class GCCExecutor(CompiledExecutor):
         return []
 
     def get_flags(self):
-        return self.flags
+        return self.flags + ['-fmax-errors=%d' % MAX_ERRORS]
 
     def get_defines(self):
         defines = ['-DONLINE_JUDGE'] + self.defines

@@ -173,11 +173,7 @@ class PacketManager(object):
     def run_async(self):
         threading.Thread(target=self._read_async).start()
 
-    def _send_packet(self, packet, rewrite=True):
-        if rewrite and 'submission-id' in packet and self.judge.get_process_type() != 'submission':
-            packet['%s-id' % self.judge.get_process_type()] = packet['submission-id']
-            del packet['submission-id']
-
+    def _send_packet(self, packet):
         for k, v in packet.items():
             if isinstance(v, six.binary_type):
                 # Make sure we don't have any garbage utf-8 from e.g. weird compilers
@@ -325,4 +321,4 @@ class PacketManager(object):
 
     def submission_acknowledged_packet(self, sub_id):
         self._send_packet({'name': 'submission-acknowledged',
-                           'submission-id': sub_id}, rewrite=False)
+                           'submission-id': sub_id})

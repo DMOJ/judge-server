@@ -89,6 +89,7 @@ class InteractiveGrader(StandardGrader):
             pass
 
         self._current_proc.wait()
+        return self._current_proc.stderr.read()
 
     def check_result(self, case, result):
         if result.result_flag:

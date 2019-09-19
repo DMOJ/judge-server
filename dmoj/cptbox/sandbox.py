@@ -328,7 +328,7 @@ class SecurePopen(six.with_metaclass(SecurePopenMeta, Process)):
 
         if stdin == PIPE:
             self._child_stdin, self._stdin = os.pipe()
-            self.stdin = os.fdopen(self._stdin, 'w')
+            self.stdin = os.fdopen(self._stdin, 'wb')
         elif isinstance(stdin, int):
             self._child_stdin, self._stdin = stdin, -1
         elif stdin is not None:
@@ -338,7 +338,7 @@ class SecurePopen(six.with_metaclass(SecurePopenMeta, Process)):
 
         if stdout == PIPE:
             self._stdout, self._child_stdout = os.pipe()
-            self.stdout = os.fdopen(self._stdout, 'r')
+            self.stdout = os.fdopen(self._stdout, 'rb')
         elif isinstance(stdout, int):
             self._stdout, self._child_stdout = -1, stdout
         elif stdout is not None:
@@ -348,7 +348,7 @@ class SecurePopen(six.with_metaclass(SecurePopenMeta, Process)):
 
         if stderr == PIPE:
             self._stderr, self._child_stderr = os.pipe()
-            self.stderr = os.fdopen(self._stderr, 'r')
+            self.stderr = os.fdopen(self._stderr, 'rb')
         elif isinstance(stderr, int):
             self._stderr, self._child_stderr = -1, stderr
         elif stderr is not None:

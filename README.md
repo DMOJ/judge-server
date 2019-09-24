@@ -1,4 +1,4 @@
-DMOJ Judge [![Linux Build Status](https://img.shields.io/travis/DMOJ/judge.svg?logo=linux)](https://travis-ci.org/DMOJ/judge) [![Windows Build Status](https://img.shields.io/appveyor/ci/quantum5/judge.svg?logo=windows)](https://ci.appveyor.com/project/quantum5/judge) [![FreeBSD Build Status](https://img.shields.io/jenkins/s/https/ci.dmoj.ca/job/dmoj-judge-freebsd.svg?logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB3aWR0aD0iMTQiIGhlaWdodD0iMTQiIHZpZXdCb3g9IjAgMCAyNTYgMjUyIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIj48ZyBmaWxsPSJ3aGl0ZSI%2BPHBhdGggZD0iTTI1Mi43MjMgNS4xMWMxMy41MDggMTMuNS0yMy45MzkgNzIuODQ4LTMwLjI3IDc5LjE4Mi02LjMzIDYuMzIxLTIyLjQwOS41MDUtMzUuOTEtMTMtMTMuNTA4LTEzLjUtMTkuMzI3LTI5LjU4My0xMi45OTYtMzUuOTE0IDYuMzI3LTYuMzMzIDY1LjY3MS00My43NzcgNzkuMTc2LTMwLjI2OU02My4zMDUgMTkuMzk0Yy0yMC42MjItMTEuNy00OS45NjYtMjQuNzE2LTU5LjMtMTUuMzgtOS40NTggOS40NTQgNC4wMzQgMzkuNDU4IDE1Ljg1OCA2MC4xMTdhMTI2LjgxMiAxMjYuODEyIDAgMCAxIDQzLjQ0Mi00NC43MzciLz48cGF0aCBkPSJNMjMyLjEyMyA3OS42MzZjMS44OTkgNi40NCAxLjU1OCAxMS43Ni0xLjUyMiAxNC44MzQtNy4xOTMgNy4xOTYtMjYuNjI0LS40NjQtNDQuMTQtMTcuMTM0YTg5LjM4MyA4OS4zODMgMCAwIDEtMy42MjctMy40MjhjLTYuMzM0LTYuMzM2LTExLjI2Mi0xMy4wOC0xNC40MTQtMTkuMjkxLTYuMTM1LTExLjAwNi03LjY3LTIwLjcyNi0zLjAzMy0yNS4zNjQgMi41MjctMi41MjQgNi41Ny0zLjIxMiAxMS41MDItMi4zMjUgMy4yMTYtMi4wMzQgNy4wMTMtNC4zIDExLjE3Ni02LjYyMS0xNi45MjktOC44My0zNi4xNzYtMTMuODE3LTU2LjU5My0xMy44MTdDNjMuNzUzIDYuNDkgOC44NTQgNjEuMzggOC44NTQgMTI5LjEwNWMwIDY3LjcxMyA1NC45IDEyMi42MSAxMjIuNjE4IDEyMi42MSA2Ny43MiAwIDEyMi42MTYtNTQuODk3IDEyMi42MTYtMTIyLjYxIDAtMjEuODctNS43NC00Mi4zNzctMTUuNzY3LTYwLjE1Ni0yLjE2NyAzLjk1NS00LjI3NCA3LjU3OC02LjE5OCAxMC42ODciLz48L2c%2BPC9zdmc%2B)](https://ci.dmoj.ca/job/dmoj-judge-freebsd/lastBuild/consoleFull) [![Coverage](https://img.shields.io/codecov/c/github/DMOJ/judge.svg)](https://codecov.io/gh/DMOJ/judge) [![Documentation Status](https://readthedocs.org/projects/dmoj/badge/?version=latest)](https://docs.dmoj.ca) [![Slack](https://slack.dmoj.ca/badge.svg)](https://slack.dmoj.ca)
+DMOJ Judge [![Linux Build Status](https://img.shields.io/travis/DMOJ/judge.svg?logo=linux)](https://travis-ci.org/DMOJ/judge) [![FreeBSD Build Status](https://img.shields.io/jenkins/s/https/ci.dmoj.ca/job/dmoj-judge-freebsd.svg?logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB3aWR0aD0iMTQiIGhlaWdodD0iMTQiIHZpZXdCb3g9IjAgMCAyNTYgMjUyIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIj48ZyBmaWxsPSJ3aGl0ZSI%2BPHBhdGggZD0iTTI1Mi43MjMgNS4xMWMxMy41MDggMTMuNS0yMy45MzkgNzIuODQ4LTMwLjI3IDc5LjE4Mi02LjMzIDYuMzIxLTIyLjQwOS41MDUtMzUuOTEtMTMtMTMuNTA4LTEzLjUtMTkuMzI3LTI5LjU4My0xMi45OTYtMzUuOTE0IDYuMzI3LTYuMzMzIDY1LjY3MS00My43NzcgNzkuMTc2LTMwLjI2OU02My4zMDUgMTkuMzk0Yy0yMC42MjItMTEuNy00OS45NjYtMjQuNzE2LTU5LjMtMTUuMzgtOS40NTggOS40NTQgNC4wMzQgMzkuNDU4IDE1Ljg1OCA2MC4xMTdhMTI2LjgxMiAxMjYuODEyIDAgMCAxIDQzLjQ0Mi00NC43MzciLz48cGF0aCBkPSJNMjMyLjEyMyA3OS42MzZjMS44OTkgNi40NCAxLjU1OCAxMS43Ni0xLjUyMiAxNC44MzQtNy4xOTMgNy4xOTYtMjYuNjI0LS40NjQtNDQuMTQtMTcuMTM0YTg5LjM4MyA4OS4zODMgMCAwIDEtMy42MjctMy40MjhjLTYuMzM0LTYuMzM2LTExLjI2Mi0xMy4wOC0xNC40MTQtMTkuMjkxLTYuMTM1LTExLjAwNi03LjY3LTIwLjcyNi0zLjAzMy0yNS4zNjQgMi41MjctMi41MjQgNi41Ny0zLjIxMiAxMS41MDItMi4zMjUgMy4yMTYtMi4wMzQgNy4wMTMtNC4zIDExLjE3Ni02LjYyMS0xNi45MjktOC44My0zNi4xNzYtMTMuODE3LTU2LjU5My0xMy44MTdDNjMuNzUzIDYuNDkgOC44NTQgNjEuMzggOC44NTQgMTI5LjEwNWMwIDY3LjcxMyA1NC45IDEyMi42MSAxMjIuNjE4IDEyMi42MSA2Ny43MiAwIDEyMi42MTYtNTQuODk3IDEyMi42MTYtMTIyLjYxIDAtMjEuODctNS43NC00Mi4zNzctMTUuNzY3LTYwLjE1Ni0yLjE2NyAzLjk1NS00LjI3NCA3LjU3OC02LjE5OCAxMC42ODciLz48L2c%2BPC9zdmc%2B)](https://ci.dmoj.ca/job/dmoj-judge-freebsd/lastBuild/consoleFull) [![Coverage](https://img.shields.io/codecov/c/github/DMOJ/judge.svg)](https://codecov.io/gh/DMOJ/judge) [![Documentation Status](https://readthedocs.org/projects/dmoj/badge/?version=latest)](https://docs.dmoj.ca) [![Slack](https://slack.dmoj.ca/badge.svg)](https://slack.dmoj.ca)
 =====
 
 Python [AGPLv3](https://github.com/DMOJ/judge/blob/master/LICENSE) contest judge backend for the [DMOJ site](http://github.com/DMOJ/site) interface. See it in action at [dmoj.ca](https://dmoj.ca/)!
@@ -19,14 +19,16 @@ A modern online judge and contest platform system, supporting <b>IO-based</b>, <
 
 ## Supported Platforms and Runtimes
 
-The judge implements secure grading on Linux, Windows, and FreeBSD machines.
+The judge implements secure grading on Linux and FreeBSD machines.
 
-|           | Linux 	| Windows 	| FreeBSD 	|
-|------	|-------	|---------	|---------	|
-| x64  	| [✔](https://travis-ci.org/DMOJ/judge)     	| [✔](https://ci.appveyor.com/project/quantum5/judge)        | [✔](https://ci.dmoj.ca/job/dmoj-judge-freebsd/)       	|
-| x86  	| ✔     	| ✔      |       ¯\\\_(ツ)\_/¯   |
-| x32 	| ✔     	|    &mdash;	|      &mdash;   	|
-| ARM  	| ✔     	|      &mdash;   	|      ❌   	|
+|           | Linux 	| FreeBSD 	|
+|------	|-------	|---------	|
+| x64  	| [✔](https://travis-ci.org/DMOJ/judge)     	| [✔](https://ci.dmoj.ca/job/dmoj-judge-freebsd/)       	|
+| x86  	| ✔     	|       ¯\\\_(ツ)\_/¯   |
+| x32 	| ✔     	|      &mdash;   	|
+| ARM  	| ✔     	|      ❌   	|
+
+Versions up to and including [v1.4.0](https://github.com/DMOJ/judge/releases/tag/v1.4.0) also supported grading on Windows machines.
 
 The DMOJ judge does **not** need a root user to run on Linux machines: it will run just fine under a normal user.
 
@@ -39,12 +41,6 @@ Supported languages include:
 * Pascal
 * Perl
 * Mono C#/F#/VB
-
-The following runtimes are also supported, but only on Windows machines:
-* Visual C++
-* C#
-* F#
-* VB.NET
 
 The judge can also grade in the languages listed below. These languages are less tested and more likely to be buggy.
 * Ada
@@ -87,7 +83,7 @@ Installing the DMOJ judge creates two executables in your Python's script direct
 `dmoj` is used to connect a judge to a DMOJ site instance, while `dmoj-cli` provides a command-line interface to a
 local judge, useful for testing problems.
 
-For more detailed steps, read the [Linux Installation](https://docs.dmoj.ca/en/latest/judge/linux_installation/) or [Windows Installation](https://docs.dmoj.ca/en/latest/judge/windows_installation/) instructions.
+For more detailed steps, read the [installation instructions](https://docs.dmoj.ca/en/latest/judge/linux_installation/).
 
 Note that **the only officially-supported Linux distribution is the latest Debian**, with the default `apt` versions of all runtimes. This is [what we run on dmoj.ca](https://dmoj.ca/runtimes/matrix/), and it should "just work". While the judge will likely still work with other distributions and runtime versions, some runtimes might fail to initialize. In these cases, please [file an issue](https://github.com/DMOJ/judge/issues).
 
@@ -168,7 +164,7 @@ optional arguments:
 $ dmoj-cli --help
 usage: dmoj-cli [-h] -c CONFIG
                 [-e ONLY_EXECUTORS | -x EXCLUDE_EXECUTORS]
-                [--no-ansi] [--no-ansi-emu]
+                [--no-ansi]
 
 Spawns a judge for a submission server.
 

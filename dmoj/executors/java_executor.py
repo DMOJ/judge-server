@@ -63,12 +63,7 @@ class JavaExecutor(CompiledExecutor):
     def create_files(self, problem_id, source_code, *args, **kwargs):
         super(JavaExecutor, self).create_files(problem_id, source_code, *args, **kwargs)
 
-        if os.name == 'nt':
-            self._agent_file = self._file('java-sandbox.jar')
-            copyfile(JAVA_SANDBOX, self._agent_file)
-        else:
-            self._agent_file = JAVA_SANDBOX
-
+        self._agent_file = JAVA_SANDBOX
         self._policy_file = self._file('security.policy')
         with open(self._policy_file, 'w') as file:
             # Normalize path separators because the security policy is processed by a StringTokenizer which treats

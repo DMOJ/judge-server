@@ -26,16 +26,6 @@ def main():
         logging.basicConfig(level=logging.DEBUG if args.verbose else logging.WARNING, format='%(message)s')
 
     result = {}
-
-    if os.name == 'nt':
-        judgeenv.load_env(cli=True)
-        if not judgeenv.no_ansi_emu:
-            try:
-                from colorama import init
-                init()
-            except ImportError:
-                pass
-
     judgeenv.env['runtime'] = {}
 
     if args.silent:

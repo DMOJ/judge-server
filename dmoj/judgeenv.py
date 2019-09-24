@@ -36,17 +36,12 @@ env = ConfigNode(defaults={
     # to host judges running with --api-host and --api-port)
     'update_pings': [],
     # Directory to use as temporary submission storage, system default
-    # (e.g. /tmp) if left blank. MANDATORY on Windows.
+    # (e.g. /tmp) if left blank.
     'tempdir': None,
-
-    # Windows-only settings
-    'inject32': None,  # Path to wbox's dmsec32.dll
-    'inject64': None,  # Path to wbox's dmsec64.dll
-    'inject_func': None,  # Name of injected DLL's entry point (e.g. InjectMain)
 }, dynamic=False)
 _root = os.path.dirname(__file__)
 
-log_file = server_host = server_port = no_ansi = no_ansi_emu = no_watchdog = problem_regex = case_regex = None
+log_file = server_host = server_port = no_ansi = no_watchdog = problem_regex = case_regex = None
 secure = no_cert_check = False
 cert_store = api_listen = None
 
@@ -109,8 +104,6 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
                         help='prevent listed executors from loading (comma-separated)')
 
     parser.add_argument('--no-ansi', action='store_true', help='disable ANSI output')
-    if os.name == 'nt':
-        parser.add_argument('--no-ansi-emu', action='store_true', help='disable ANSI emulation on Windows')
 
     if testsuite:
         parser.add_argument('tests_dir', help='directory where tests are stored')
@@ -123,7 +116,6 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
     server_port = getattr(args, 'server_port', None)
     cli_command = getattr(args, 'command', [])
 
-    no_ansi_emu = args.no_ansi_emu if os.name == 'nt' else True
     no_ansi = args.no_ansi
     no_watchdog = True if cli else args.no_watchdog
     if not cli:

@@ -1,8 +1,5 @@
 import os
 
-if os.name != 'posix':
-    raise ImportError('No module named nixutils')
-
 try:
     # in large part from http://code.activestate.com/recipes/578899-strsignal/
 

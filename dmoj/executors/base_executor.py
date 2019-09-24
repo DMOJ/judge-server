@@ -370,10 +370,7 @@ class CompiledExecutor(six.with_metaclass(CompiledExecutorMeta, BaseExecutor)):
                 if time.time() - start_time > self._time:
                     self._killed = True
                     try:
-                        if os.name != 'nt':
-                            os.killpg(self.pid, signal.SIGKILL)
-                        else:
-                            self.terminate()
+                        os.killpg(self.pid, signal.SIGKILL)
                     except OSError:
                         # This can happen if the process exits quickly
                         pass

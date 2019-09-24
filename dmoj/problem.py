@@ -155,12 +155,13 @@ class TestCase(object):
                 filenames = gen.source
             elif isinstance(gen.source.unwrap(), list):
                 filenames = list(gen.source.unwrap())
+            else:
+                raise InvalidInitException("invalid generator declaration")
 
             if gen.flags:
                 flags += gen.flags
             if not args and gen.args:
                 args += gen.args
-
 
             time_limit = gen.time_limit or time_limit
             memory_limit = gen.memory_limit or memory_limit
@@ -175,7 +176,6 @@ class TestCase(object):
             filenames = [filenames]
 
         filenames = [os.path.join(base, name) for name in filenames]
-
         executor = self.problem.generator_manager.get_generator(filenames, flags, lang=lang,
                                                                 compiler_time_limit=compiler_time_limit)
 

@@ -22,7 +22,7 @@ from dmoj.judgeenv import env, get_supported_problems, startup_warnings, clear_p
 from dmoj.monitor import Monitor, DummyMonitor
 from dmoj.problem import Problem, BatchedTestCase
 from dmoj.result import Result
-from dmoj.utils.ansi import ansi_style, strip_ansi
+from dmoj.utils.ansi import ansi_style, strip_ansi, format_ansi
 from dmoj.utils.unicode import utf8bytes, utf8text, unicode_stdout_stderr
 
 try:
@@ -56,8 +56,8 @@ class TerminateGrading(Exception):
 
 class Judge(object):
     def __init__(self):
-        self.current_submission = None
         self.current_grader = None
+        self.current_submission_id = None
         self.current_submission_thread = None
         self._terminate_grading = False
         self.packet_manager = None
@@ -92,16 +92,7 @@ class Judge(object):
         """
         self.updater_signal.set()
 
-    def _begin_grading(self, problem_id, language, source, time_limit, memory_limit, short_circuit, meta, report=print):
-        submission_id = self.current_submission
-        report(ansi_style('Start grading #ansi[%s](yellow)/#ansi[%s](green|bold) in %s...'
-                          % (problem_id, submission_id, language)))
-
-        try:
-            problem = Problem(problem_id, time_limit, memory_limit)
-        except Exception:
-            return self.internal_error()
-
+    def _block_and_grade(self, problem, language, source, short_circuit, meta, report=print):
         if 'signature_grader' in problem.config:
             grader_class = graders.SignatureGrader
         elif 'custom_judge' in problem.config:
@@ -109,80 +100,91 @@ class Judge(object):
         else:
             grader_class = graders.StandardGrader
 
-        grader = self.get_grader_from_source(grader_class, problem, language, source, meta, report=report)
-        binary = grader.binary if grader else None
-
-        # the compiler may have failed, or an error could have happened while initializing a custom judge
-        # either way, we can't continue
-        if binary:
-            self.packet_manager.begin_grading_packet(grader.is_pretested)
-
-            batch_counter = 1
-            in_batch = False
-
-            # cases are indexed at 1
-            case_number = 1
-            try:
-                for result in self.grade_cases(grader, grader.cases(), short_circuit=short_circuit):
-                    if isinstance(result, BatchBegin):
-                        self.packet_manager.batch_begin_packet()
-                        report(ansi_style("#ansi[Batch #%d](yellow|bold)" % batch_counter))
-                        in_batch = True
-                    elif isinstance(result, BatchEnd):
-                        self.packet_manager.batch_end_packet()
-                        batch_counter += 1
-                        in_batch = False
-                    else:
-                        codes = result.readable_codes()
-
-                        # here be cancer
-                        is_sc = (result.result_flag & Result.SC)
-                        colored_codes = list(map(lambda x: '#ansi[%s](%s|bold)' % ('--' if x == 'SC' else x,
-                                                                                   Result.COLORS_BYID[x]), codes))
-                        colored_aux_codes = '{%s}' % ', '.join(colored_codes[1:]) if len(codes) > 1 else ''
-                        colored_feedback = '(#ansi[%s](|underline)) ' % utf8text(result.feedback) if result.feedback else u''
-                        case_info = '[%.3fs (%.3fs) | %dkb] %s%s' % (result.execution_time,
-                                                                     result.r_execution_time,
-                                                                     result.max_memory,
-                                                                     colored_feedback,
-                                                                     colored_aux_codes) if not is_sc else ''
-                        case_padding = '  ' * in_batch
-                        report(ansi_style('%sTest case %2d %-3s %s' % (case_padding, case_number,
-                                                                       colored_codes[0], case_info)))
-
-                        self.packet_manager.test_case_status_packet(case_number, result)
-
-                        case_number += 1
-            except TerminateGrading:
-                self.packet_manager.submission_terminated_packet()
-                report(ansi_style('#ansi[Forcefully terminating grading. '
-                                  'Temporary files may not be deleted.](red|bold)'))
-                pass
-            except:
-                self.internal_error()
-            else:
-                self.packet_manager.grading_end_packet()
-
-        report(ansi_style('Done grading #ansi[%s](yellow)/#ansi[%s](green|bold).\n' % (problem_id, submission_id)))
-
-        self._terminate_grading = False
-        self.current_submission_thread = None
-        self.current_submission = None
-        self.current_grader = None
-
-    def begin_grading(self, id, *args, **kwargs):
         try:
-            self.current_submission_thread.join()
-        except AttributeError:
-            pass
-        self.current_submission = id
+            self.current_grader = grader_class(self, problem, language, utf8bytes(source), meta)
+        except CompileError as compilation_error:
+            error = compilation_error.args[0] or b'compiler exited abnormally'
 
-        is_blocking = kwargs.pop('blocking', False)
-        self.current_submission_thread = threading.Thread(target=self._begin_grading, args=args, kwargs=kwargs)
+            report(ansi_style('#ansi[Failed compiling submission!](red|bold)'))
+            report(error.rstrip())  # don't print extra newline
+
+            self.packet_manager.compile_error_packet(format_ansi(error))
+            return
+        else:
+            binary = self.current_grader.binary
+            if hasattr(binary, 'warning') and binary.warning:
+                self.packet_manager.compile_message_packet(format_ansi(binary.warning or ''))
+
+        self.packet_manager.begin_grading_packet(self.current_grader.is_pretested)
+
+        batch_counter = 1
+        in_batch = False
+
+        # cases are indexed at 1
+        case_number = 1
+        try:
+            for result in self.grade_cases(self.current_grader, self.current_grader.cases(), short_circuit=short_circuit):
+                if isinstance(result, BatchBegin):
+                    self.packet_manager.batch_begin_packet()
+                    report(ansi_style("#ansi[Batch #%d](yellow|bold)" % batch_counter))
+                    in_batch = True
+                elif isinstance(result, BatchEnd):
+                    self.packet_manager.batch_end_packet()
+                    batch_counter += 1
+                    in_batch = False
+                else:
+                    codes = result.readable_codes()
+
+                    # here be cancer
+                    is_sc = (result.result_flag & Result.SC)
+                    colored_codes = list(map(lambda x: '#ansi[%s](%s|bold)' % ('--' if x == 'SC' else x,
+                                                                               Result.COLORS_BYID[x]), codes))
+                    colored_aux_codes = '{%s}' % ', '.join(colored_codes[1:]) if len(codes) > 1 else ''
+                    colored_feedback = '(#ansi[%s](|underline)) ' % utf8text(result.feedback) if result.feedback else u''
+                    case_info = '[%.3fs (%.3fs) | %dkb] %s%s' % (result.execution_time,
+                                                                 result.r_execution_time,
+                                                                 result.max_memory,
+                                                                 colored_feedback,
+                                                                 colored_aux_codes) if not is_sc else ''
+                    case_padding = '  ' * in_batch
+                    report(ansi_style('%sTest case %2d %-3s %s' % (case_padding, case_number,
+                                                                   colored_codes[0], case_info)))
+
+                    self.packet_manager.test_case_status_packet(case_number, result)
+
+                    case_number += 1
+        except TerminateGrading:
+            self.packet_manager.submission_terminated_packet()
+            report(ansi_style('#ansi[Forcefully terminating grading. '
+                              'Temporary files may not be deleted.](red|bold)'))
+            pass
+        else:
+            self.packet_manager.grading_end_packet()
+
+    def begin_grading(self, id, problem_id, language, source, time_limit, memory_limit, short_circuit, meta, report=print, blocking=False):
+        self.current_submission_id = id
+
+        def grading_cleanup_wrapper():
+            report(ansi_style('Start grading #ansi[%s](yellow)/#ansi[%s](green|bold) in %s...'
+                              % (problem_id, id, language)))
+
+            try:
+                problem = Problem(problem_id, time_limit, memory_limit)
+                self._block_and_grade(problem, language, source, short_circuit, meta, report=report)
+            except:
+                self.log_internal_error()
+
+            self._terminate_grading = False
+            self.current_submission_id = None
+            self.current_submission_thread = None
+            self.current_grader = None
+            report(ansi_style('Done grading #ansi[%s](yellow)/#ansi[%s](green|bold).\n' % (problem_id, id)))
+
+        self.current_submission_thread = threading.Thread(target=grading_cleanup_wrapper)
         self.current_submission_thread.daemon = True
         self.current_submission_thread.start()
 
-        if is_blocking:
+        if blocking:
             self.current_submission_thread.join()
 
     def grade_cases(self, grader, cases, short_circuit=False, is_short_circuiting=False):
@@ -211,13 +213,11 @@ class Judge(object):
                 yield result
                 continue
 
-            # Must check here because we might be interrupted mid-execution
-            # If we don't bail out, we get an IR.
-            # In Java's case, all the code after this will crash.
+            result = grader.grade(case)
+
+            # If the submission was killed due to an user-initiated abort, any result is meaningless.
             if self._terminate_grading:
                 raise TerminateGrading()
-
-            result = grader.grade(case)
 
             # If the WA bit of result_flag is set and we are set to short-circuit (e.g., in a batch),
             # short circuit the rest of the cases.
@@ -227,19 +227,7 @@ class Judge(object):
 
             yield result
 
-    def get_grader_from_source(self, grader_class, problem, language, source, meta, report=print):
-        try:
-            grader = grader_class(self, problem, language, utf8bytes(source), meta)
-        except CompileError as ce:
-            report(ansi_style('#ansi[Failed compiling submission!](red|bold)'))
-            report(ce.args[0].rstrip())  # don't print extra newline
-            grader = None
-        except:  # if custom grader failed to initialize, report it to the site
-            return self.internal_error()
-
-        return grader
-
-    def internal_error(self, exc=None):
+    def log_internal_error(self, exc=None):
         # If exc is exists, raise it so that sys.exc_info() is populated with its data
         if exc:
             try:
@@ -266,7 +254,7 @@ class Judge(object):
         if self.current_submission_thread:
             self._terminate_grading = True
             if self.current_grader:
-                self.current_grader.terminate()
+                self.current_grader.terminate_grading()
             self.current_submission_thread.join()
             self.current_submission_thread = None
 

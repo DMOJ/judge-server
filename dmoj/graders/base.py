@@ -30,7 +30,6 @@ class BaseGrader(object):
                 self._current_proc.kill()
             except OSError:
                 pass
-        pass
 
     def _resolve_testcases(self, cfg, batch_no=0):
         cases = []

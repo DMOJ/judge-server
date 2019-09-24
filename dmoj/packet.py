@@ -206,7 +206,7 @@ class PacketManager(object):
             log.info('Accept submission: %d: executor: %s, code: %s',
                      packet['submission-id'], packet['language'], packet['problem-id'])
         elif name == 'terminate-submission':
-            log.info('Received abortion request for %s', self.judge.current_submission)
+            log.info('Received abortion request for %s', self.judge.current_submission_id)
             self.judge.terminate_grading()
         elif name == 'disconnect':
             log.info('Received disconnect request, shutting down...')
@@ -241,12 +241,12 @@ class PacketManager(object):
 
     def test_case_status_packet(self, position, result):
         log.info('Test case on %d: #%d, %s [%.3fs | %.2f MB], %.1f/%.0f',
-                 self.judge.current_submission, position,
+                 self.judge.current_submission_id, position,
                  ', '.join(result.readable_codes()),
                  result.execution_time, result.max_memory / 1024.0,
                  result.points, result.total_points)
         self._send_packet({'name': 'test-case-status',
-                           'submission-id': self.judge.current_submission,
+                           'submission-id': self.judge.current_submission_id,
                            'position': position,
                            'status': result.result_flag,
                            'time': result.execution_time,
@@ -258,56 +258,56 @@ class PacketManager(object):
                            'feedback': result.feedback})
 
     def compile_error_packet(self, message):
-        log.info('Compile error: %d', self.judge.current_submission)
+        log.info('Compile error: %d', self.judge.current_submission_id)
         self.fallback = 4
         self._send_packet({'name': 'compile-error',
-                           'submission-id': self.judge.current_submission,
+                           'submission-id': self.judge.current_submission_id,
                            'log': message})
 
     def compile_message_packet(self, message):
-        log.info('Compile message: %d', self.judge.current_submission)
+        log.info('Compile message: %d', self.judge.current_submission_id)
         self._send_packet({'name': 'compile-message',
-                           'submission-id': self.judge.current_submission,
+                           'submission-id': self.judge.current_submission_id,
                            'log': message})
 
     def internal_error_packet(self, message):
-        log.info('Internal error: %d', self.judge.current_submission)
+        log.info('Internal error: %d', self.judge.current_submission_id)
         self._send_packet({'name': 'internal-error',
-                           'submission-id': self.judge.current_submission,
+                           'submission-id': self.judge.current_submission_id,
                            'message': message})
 
     def begin_grading_packet(self, is_pretested):
-        log.info('Begin grading: %d', self.judge.current_submission)
+        log.info('Begin grading: %d', self.judge.current_submission_id)
         self._send_packet({'name': 'grading-begin',
-                           'submission-id': self.judge.current_submission,
+                           'submission-id': self.judge.current_submission_id,
                            'pretested': is_pretested})
 
     def grading_end_packet(self):
-        log.info('End grading: %d', self.judge.current_submission)
+        log.info('End grading: %d', self.judge.current_submission_id)
         self.fallback = 4
         self._send_packet({'name': 'grading-end',
-                           'submission-id': self.judge.current_submission})
+                           'submission-id': self.judge.current_submission_id})
 
     def batch_begin_packet(self):
         self._batch += 1
-        log.info('Enter batch number %d: %d', self._batch, self.judge.current_submission)
+        log.info('Enter batch number %d: %d', self._batch, self.judge.current_submission_id)
         self._send_packet({'name': 'batch-begin',
-                           'submission-id': self.judge.current_submission})
+                           'submission-id': self.judge.current_submission_id})
 
     def batch_end_packet(self):
-        log.info('Exit batch number %d: %d', self._batch, self.judge.current_submission)
+        log.info('Exit batch number %d: %d', self._batch, self.judge.current_submission_id)
         self._send_packet({'name': 'batch-end',
-                           'submission-id': self.judge.current_submission})
+                           'submission-id': self.judge.current_submission_id})
 
     def current_submission_packet(self):
-        log.info('Current submission query: %d', self.judge.current_submission)
+        log.info('Current submission query: %d', self.judge.current_submission_id)
         self._send_packet({'name': 'current-submission-id',
-                           'submission-id': self.judge.current_submission})
+                           'submission-id': self.judge.current_submission_id})
 
     def submission_terminated_packet(self):
-        log.info('Submission aborted: %d', self.judge.current_submission)
+        log.info('Submission aborted: %d', self.judge.current_submission_id)
         self._send_packet({'name': 'submission-terminated',
-                           'submission-id': self.judge.current_submission})
+                           'submission-id': self.judge.current_submission_id})
 
     def ping_packet(self, when):
         data = {'name': 'ping-response',

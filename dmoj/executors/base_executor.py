@@ -457,11 +457,8 @@ class CompiledExecutor(six.with_metaclass(CompiledExecutorMeta, BaseExecutor)):
     def get_cmdline(self):
         return [self.problem]
 
-    def get_executable_ext(self):
-        return ['', '.exe'][os.name == 'nt']
-
     def get_executable(self):
-        return self._executable + self.get_executable_ext()
+        return self._executable
 
 
 class ShellExecutor(ScriptExecutor):

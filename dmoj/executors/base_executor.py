@@ -348,7 +348,7 @@ class CompiledExecutor(six.with_metaclass(CompiledExecutorMeta, BaseExecutor)):
             self._time = kwargs.pop('time_limit', None)
             super(CompiledExecutor.TimedPopen, self).__init__(*args, **kwargs)
 
-            self._killed = False
+            self.timed_out = False
             if self._time:
                 # Spawn thread to kill process after it times out
                 self._shocker = threading.Thread(target=self._shocker_thread)
@@ -368,7 +368,7 @@ class CompiledExecutor(six.with_metaclass(CompiledExecutorMeta, BaseExecutor)):
 
             while self.returncode is None:
                 if time.time() - start_time > self._time:
-                    self._killed = True
+                    self.timed_out = True
                     try:
                         os.killpg(self.pid, signal.SIGKILL)
                     except OSError:
@@ -376,12 +376,6 @@ class CompiledExecutor(six.with_metaclass(CompiledExecutorMeta, BaseExecutor)):
                         pass
                     break
                 time.sleep(0.25)
-
-        def communicate(self, input=None):
-            ret = super(CompiledExecutor.TimedPopen, self).communicate(input=input)
-            if self._killed:
-                return ret[0], 'compiler timed out (> %d seconds)\n%s' % (self._time, ret[1])
-            return ret
 
     def __init__(self, problem_id, source_code, *args, **kwargs):
         super(CompiledExecutor, self).__init__(problem_id, source_code, **kwargs)
@@ -436,7 +430,7 @@ class CompiledExecutor(six.with_metaclass(CompiledExecutorMeta, BaseExecutor)):
         return self._file(self.problem)
 
     def is_failed_compile(self, process):
-        return process.returncode != 0 or (hasattr(process, '_killed') and process._killed)
+        return process.returncode != 0
 
     def handle_compile_error(self, output):
         raise CompileError(output)
@@ -449,9 +443,11 @@ class CompiledExecutor(six.with_metaclass(CompiledExecutorMeta, BaseExecutor)):
         try:
             output = self.get_compile_output(process)
         except OutputLimitExceeded:
-            output = 'compiler output too long (> 64kb)'
+            output = b'compiler output too long (> 64kb)'
 
         if self.is_failed_compile(process):
+            if process.timed_out:
+                output = b'compiler timed out (> %d seconds)' % self.compiler_time_limit
             self.handle_compile_error(output)
         self.warning = output
 

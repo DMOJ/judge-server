@@ -66,10 +66,7 @@ class JavaExecutor(CompiledExecutor):
         self._agent_file = JAVA_SANDBOX
         self._policy_file = self._file('security.policy')
         with open(self._policy_file, 'w') as file:
-            # Normalize path separators because the security policy is processed by a StringTokenizer which treats
-            # escapes sequences as... escape sequences.
-            path = self._agent_file.replace('\\', '/') if os.name == 'nt' else self._agent_file
-            file.write(POLICY_PREFIX.format(agent=path) + self.security_policy)
+            file.write(POLICY_PREFIX.format(agent=self._agent_file) + self.security_policy)
 
     def get_compile_popen_kwargs(self):
         return {'executable': self.get_compiler()}

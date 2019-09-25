@@ -114,7 +114,7 @@ class JavaExecutor(CompiledExecutor):
             return ''
 
         if b'Error: Main method not found in class' in stderr:
-            exception = "public static void main(String[] args) entry point not found"
+            exception = "public static void main(String[] args) not found"
         else:
             try:
                 with open(os.path.join(self._dir, 'state'), 'r') as state:

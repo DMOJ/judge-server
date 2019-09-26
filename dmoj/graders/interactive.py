@@ -1,12 +1,13 @@
 from dmoj.graders.standard import StandardGrader
 from dmoj.result import CheckerResult
+from dmoj.utils.unicode import utf8bytes, utf8text
 
 
 class WrongAnswer(BaseException):
     pass
 
 
-EOF = ''
+EOF = b''
 
 
 class Interactor(object):
@@ -15,6 +16,7 @@ class Interactor(object):
         self._tokens = None
 
     def _abbreviate(self, s, n=5):
+        s = utf8text(s)
         if len(s) > n:
             return s[:n] + '...'
         return s
@@ -64,15 +66,15 @@ class Interactor(object):
         return ret
 
     def write(self, val):
-        self.process.stdin.write(str(val))
+        self.process.stdin.write(utf8bytes(str(val)))
         self.process.stdin.flush()
 
     def writeln(self, val):
-        self.write(str(val) + '\n')
+        self.process.stdin.write(utf8bytes(str(val) + '\n'))
+        self.process.stdin.flush()
 
     def close(self):
-        for stream in [self.process.stdin, self.process.stdout, self.process.stderr]:
-            stream.close()
+        self.process.stdin.close()
 
 
 class InteractiveGrader(StandardGrader):

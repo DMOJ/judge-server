@@ -1,13 +1,9 @@
 import os
 import unittest
+from unittest import mock
 
 from dmoj.config import InvalidInitException
 from dmoj.problem import Problem
-
-try:
-    from unittest import mock
-except ImportError:
-    import mock
 
 
 class ProblemTest(unittest.TestCase):

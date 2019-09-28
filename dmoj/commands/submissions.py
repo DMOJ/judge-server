@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 from dmoj.cli import InvalidCommandException
 from dmoj.commands.base_command import Command
 from dmoj.utils.ansi import ansi_style

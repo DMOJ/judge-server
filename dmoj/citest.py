@@ -1,4 +1,3 @@
-from __future__ import print_function
 import os
 import traceback
 from distutils.version import LooseVersion

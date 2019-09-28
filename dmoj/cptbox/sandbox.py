@@ -11,10 +11,10 @@ import time
 
 from dmoj.cptbox._cptbox import *
 from dmoj.cptbox.handlers import ALLOW, DISALLOW, _CALLBACK
-from dmoj.cptbox.syscalls import translator, SYSCALL_COUNT, by_id
+from dmoj.cptbox.syscalls import SYSCALL_COUNT, by_id, translator
 from dmoj.error import InternalError
 from dmoj.utils.communicate import safe_communicate as _safe_communicate
-from dmoj.utils.unicode import utf8text, utf8bytes
+from dmoj.utils.unicode import utf8bytes, utf8text
 
 PIPE = subprocess.PIPE
 log = logging.getLogger('dmoj.cptbox')

@@ -1,5 +1,5 @@
-import re
 import codecs
+import re
 from urllib.request import urlopen
 
 utf8reader = codecs.getreader('utf-8')

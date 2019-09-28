@@ -1,5 +1,5 @@
-from .base_executor import CompiledExecutor
 from dmoj.judgeenv import env
+from .base_executor import CompiledExecutor
 
 
 class Executor(CompiledExecutor):

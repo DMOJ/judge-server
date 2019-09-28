@@ -5,9 +5,9 @@ import traceback
 
 import yaml
 
-from dmoj import judgeenv, executors
+from dmoj import executors, judgeenv
 from dmoj.judge import Judge
-from dmoj.judgeenv import get_supported_problems, get_problem_root
+from dmoj.judgeenv import get_problem_root, get_supported_problems
 from dmoj.utils.ansi import ansi_style, print_ansi
 
 all_executors = executors.executors

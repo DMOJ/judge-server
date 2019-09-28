@@ -1,5 +1,5 @@
-import os
 import imp
+import os
 
 
 def load_module(name, code, filename=None):

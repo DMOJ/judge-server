@@ -1,9 +1,9 @@
 import os
+import re
 import traceback
 from distutils.version import LooseVersion
 from importlib import import_module
 
-import re
 import yaml
 
 from dmoj import judgeenv

@@ -3,7 +3,7 @@ import re
 import shutil
 import sys
 
-from dmoj.cptbox import SecurePopen, CHROOTSecurity, syscalls
+from dmoj.cptbox import CHROOTSecurity, SecurePopen, syscalls
 from dmoj.cptbox.handlers import ALLOW
 from dmoj.error import InternalError
 from dmoj.judgeenv import env

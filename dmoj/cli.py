@@ -1,6 +1,6 @@
-from collections import OrderedDict
 import shlex
 import sys
+from collections import OrderedDict
 
 from dmoj.judge import Judge
 from dmoj.utils.ansi import ansi_style, print_ansi

@@ -9,15 +9,15 @@ import traceback
 from http.server import HTTPServer
 from itertools import chain
 
-from dmoj import packet, graders
+from dmoj import graders, packet
 from dmoj.control import JudgeControlRequestHandler
 from dmoj.error import CompileError
-from dmoj.judgeenv import env, get_supported_problems, startup_warnings, clear_problem_dirs_cache
-from dmoj.monitor import Monitor, DummyMonitor
-from dmoj.problem import Problem, BatchedTestCase
+from dmoj.judgeenv import clear_problem_dirs_cache, env, get_supported_problems, startup_warnings
+from dmoj.monitor import DummyMonitor, Monitor
+from dmoj.problem import BatchedTestCase, Problem
 from dmoj.result import Result
 from dmoj.utils.ansi import ansi_style, print_ansi, strip_ansi
-from dmoj.utils.unicode import utf8bytes, utf8text, unicode_stdout_stderr
+from dmoj.utils.unicode import unicode_stdout_stderr, utf8bytes, utf8text
 
 try:
     import readline  # noqa: F401, imported for the side-effect of making `input()` have readline.

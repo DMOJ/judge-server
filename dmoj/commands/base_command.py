@@ -1,8 +1,8 @@
 import argparse
 import os
 import subprocess
-import tempfile
 import sys
+import tempfile
 
 from dmoj.cli import InvalidCommandException
 from dmoj.executors import executors

@@ -1,7 +1,7 @@
 import os
 import re
 
-from .base_executor import ScriptExecutor
+from dmoj.executors.script_executor import ScriptExecutor
 
 
 class RubyExecutor(ScriptExecutor):

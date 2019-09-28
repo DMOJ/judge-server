@@ -1,5 +1,5 @@
 from dmoj.executors.mixins import ScriptDirectoryMixin
-from .base_executor import ScriptExecutor
+from dmoj.executors.script_executor import ScriptExecutor
 
 
 class Executor(ScriptDirectoryMixin, ScriptExecutor):

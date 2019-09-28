@@ -4,7 +4,7 @@ import subprocess
 
 from dmoj.cptbox.sandbox import X64, X86, can_debug
 from dmoj.error import CompileError
-from dmoj.executors.base_executor import CompiledExecutor
+from dmoj.executors.compiled_executor import CompiledExecutor, TimedPopen
 from dmoj.judgeenv import env
 from dmoj.utils.unicode import utf8text
 
@@ -65,9 +65,9 @@ class ASMExecutor(CompiledExecutor):
             to_link = ['-dynamic-linker', self.dynamic_linker] + self.crt_pre + ['-lc'] + to_link + self.crt_post
 
         executable = self._file(self.problem)
-        process = self.TimedPopen([self.get_ld_path(), '-s', '-o', executable, '-m', self.ld_m] + to_link,
-                                  cwd=self._dir, stderr=subprocess.PIPE, preexec_fn=self.create_executable_limits(),
-                                  time_limit=self.compiler_time_limit)
+        process = TimedPopen([self.get_ld_path(), '-s', '-o', executable, '-m', self.ld_m] + to_link,
+                             cwd=self._dir, stderr=subprocess.PIPE, preexec_fn=self.create_executable_limits(),
+                             time_limit=self.compiler_time_limit)
         ld_output = process.communicate()[1]
         if process.returncode != 0 or (hasattr(process, '_killed') and process._killed):
             raise CompileError(ld_output)

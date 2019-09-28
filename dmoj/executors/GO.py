@@ -1,7 +1,7 @@
 import re
 
 from dmoj.error import CompileError
-from .base_executor import CompiledExecutor
+from dmoj.executors.compiled_executor import CompiledExecutor
 
 reinline_comment = re.compile(br'//.*?(?=[\r\n])')
 recomment = re.compile(br'/\*.*?\*/', re.DOTALL)

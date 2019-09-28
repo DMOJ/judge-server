@@ -1,4 +1,4 @@
-from .base_executor import ShellExecutor
+from dmoj.executors.shell_executor import ShellExecutor
 
 
 class Executor(ShellExecutor):

@@ -1,5 +1,5 @@
-from .base_executor import CompiledExecutor
-from .mixins import ScriptDirectoryMixin
+from dmoj.executors.compiled_executor import CompiledExecutor
+from dmoj.executors.mixins import ScriptDirectoryMixin
 
 
 # Running DART normally results in unholy memory usage

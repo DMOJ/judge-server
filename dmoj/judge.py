@@ -8,12 +8,10 @@ import signal
 import sys
 import threading
 import traceback
-
-from functools import partial
+from http.server import HTTPServer
 from itertools import chain
 
 from dmoj import packet, graders
-from dmoj.config import ConfigNode
 from dmoj.control import JudgeControlRequestHandler
 from dmoj.error import CompileError
 from dmoj.judgeenv import env, get_supported_problems, startup_warnings, clear_problem_dirs_cache
@@ -22,11 +20,6 @@ from dmoj.problem import Problem, BatchedTestCase
 from dmoj.result import Result
 from dmoj.utils.ansi import ansi_style, strip_ansi, format_ansi
 from dmoj.utils.unicode import utf8bytes, utf8text, unicode_stdout_stderr
-
-try:
-    from http.server import HTTPServer
-except ImportError:
-    from BaseHTTPServer import HTTPServer
 
 try:
     import readline

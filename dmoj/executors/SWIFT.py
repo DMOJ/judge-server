@@ -1,5 +1,5 @@
+from dmoj.executors.compiled_executor import CompiledExecutor
 from dmoj.executors.mixins import EmulateTerminalMixin
-from .base_executor import CompiledExecutor
 
 
 class Executor(EmulateTerminalMixin, CompiledExecutor):

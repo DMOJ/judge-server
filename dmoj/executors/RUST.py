@@ -1,6 +1,6 @@
 import os
 
-from .base_executor import CompiledExecutor
+from dmoj.executors.compiled_executor import CompiledExecutor
 
 CARGO_TOML = b'''\
 [package]

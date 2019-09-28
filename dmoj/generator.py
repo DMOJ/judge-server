@@ -7,7 +7,7 @@ from dmoj.error import InternalError
 class GeneratorManager(object):
     def get_generator(self, filenames, flags, lang=None, compiler_time_limit=None):
         from dmoj.executors import executors
-        from dmoj.executors.base_executor import CompiledExecutor
+        from dmoj.executors.compiled_executor import CompiledExecutor
 
         filenames = list(map(os.path.abspath, filenames))
         sources = {}

@@ -2,9 +2,9 @@ import re
 from collections import deque
 
 from dmoj.executors.mixins import ScriptDirectoryMixin
+from dmoj.executors.script_executor import ScriptExecutor
 from dmoj.result import Result
 from dmoj.utils.unicode import utf8bytes, utf8text
-from .base_executor import ScriptExecutor
 
 retraceback = re.compile(r'Traceback \(most recent call last\):\n.*?\n([a-zA-Z_]\w*)(?::[^\n]*?)?$', re.S | re.M)
 

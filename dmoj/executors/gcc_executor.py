@@ -2,10 +2,10 @@ import os
 import re
 from collections import deque
 
+from dmoj.executors.compiled_executor import CompiledExecutor
 from dmoj.judgeenv import env
 from dmoj.result import Result
 from dmoj.utils.unicode import utf8bytes, utf8text
-from .base_executor import CompiledExecutor
 
 GCC_ENV = env.runtime.gcc_env or {}
 GCC_COMPILE = os.environ.copy()

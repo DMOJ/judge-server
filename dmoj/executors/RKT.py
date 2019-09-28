@@ -1,6 +1,6 @@
 import os
 
-from dmoj.executors.base_executor import CompiledExecutor
+from dmoj.executors.compiled_executor import CompiledExecutor
 from dmoj.executors.mixins import ScriptDirectoryMixin
 
 

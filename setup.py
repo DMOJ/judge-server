@@ -145,9 +145,9 @@ setup(
     },
     ext_modules=cythonize(extensions),
     install_requires=['watchdog', 'pyyaml', 'ansi2html', 'termcolor', 'pygments', 'six', 'setproctitle', 'pylru'],
-    tests_require=["mock ; python_version<'3.3'", 'requests'],
+    tests_require=['requests'],
     extras_require={
-        'test': ["mock ; python_version<'3.3'", 'requests'],
+        'test': ['requests'],
     },
     cmdclass={'build_ext': build_ext_dmoj},
 
@@ -166,7 +166,6 @@ setup(
         'Operating System :: POSIX :: Linux',
         'Operating System :: POSIX :: BSD :: FreeBSD',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',

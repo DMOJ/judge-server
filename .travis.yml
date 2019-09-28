@@ -38,6 +38,23 @@ addons:
     - dart/stable
     - scala
     - racket
+matrix:
+  include:
+  - name: flake8
+    stage: lint
+    python: 3.7
+    env: LINTER="yes"
+    addons:
+      apt:
+        sources: []
+        packages: []
+    before_install: []
+    install: pip install flake8
+    script: flake8
+    cache:
+stages:
+  - lint
+  - test
 cache:
   directories:
     - $HOME/.cargo

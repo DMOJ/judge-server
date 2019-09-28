@@ -4,14 +4,6 @@ include dmoj/cptbox/*.h
 include dmoj/cptbox/syscalls/aliases.list
 include dmoj/cptbox/syscalls/*.tbl
 include dmoj/executors/*.policy
-include dmoj/executors/csbox.exe
 include dmoj/executors/java_sandbox.jar
-include dmoj/wbox/dmsec32.dll
-include dmoj/wbox/dmsec64.dll
-include dmoj/wbox/getaddr32.exe
-include dmoj/wbox/getaddr64.exe
-include dmoj/wbox/*.cpp
-include dmoj/wbox/*.h
 
 exclude dmoj/cptbox/_cptbox.pyx
-exclude dmoj/wbox/_wbox.pyx

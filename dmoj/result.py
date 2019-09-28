@@ -20,7 +20,7 @@ class Result(object):
         'IR': 'yellow',
         'SC': 'magenta',
         'OLE': 'yellow',
-        'IE': 'red'
+        'IE': 'red',
     }
 
     def __init__(self, case):

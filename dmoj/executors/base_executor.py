@@ -155,7 +155,7 @@ class BaseExecutor(PlatformExecutorMixin):
 
     @classmethod
     def get_versionable_commands(cls):
-        return ((cls.command, cls.get_command())),
+        return (cls.command, cls.get_command()),
 
     @classmethod
     def get_runtime_versions(cls):
@@ -476,7 +476,7 @@ class ShellExecutor(ScriptExecutor):
 
     def get_allowed_syscalls(self):
         return super(ShellExecutor, self).get_allowed_syscalls() + [
-            'fork', 'waitpid', 'wait4'
+            'fork', 'waitpid', 'wait4',
         ]
 
     def get_security(self, launch_kwargs=None):

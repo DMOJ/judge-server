@@ -47,7 +47,7 @@ class SubmitCommand(Command):
                     language_id = {
                         'PY': 'PY2',
                         'CPP': 'CPP11',
-                        'JAVA': 'JAVA8'
+                        'JAVA': 'JAVA8',
                     }.get(ext, ext)
             else:
                 raise InvalidCommandException("no language is selected")

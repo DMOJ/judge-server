@@ -279,11 +279,11 @@ class SecurePopen(Process, metaclass=SecurePopenMeta):
                     self._chdir,
                     self._fds)
 
-        if self._child_stdin >= 0:
+        if self.stdin_needs_close:
             os.close(self._child_stdin)
-        if self._child_stdout >= 0:
+        if self.stdout_needs_close:
             os.close(self._child_stdout)
-        if self._child_stderr >= 0:
+        if self.stderr_needs_close:
             os.close(self._child_stderr)
         self._started.set()
         code = self._monitor()
@@ -320,10 +320,12 @@ class SecurePopen(Process, metaclass=SecurePopenMeta):
 
     def __init_streams(self, stdin, stdout, stderr):
         self.stdin = self.stdout = self.stderr = None
+        self.stdin_needs_close = self.stdout_needs_close = self.stderr_needs_close = False
 
         if stdin == PIPE:
             self._child_stdin, self._stdin = os.pipe()
             self.stdin = os.fdopen(self._stdin, 'wb')
+            self.stdin_needs_close = True
         elif isinstance(stdin, int):
             self._child_stdin, self._stdin = stdin, -1
         elif stdin is not None:
@@ -334,6 +336,7 @@ class SecurePopen(Process, metaclass=SecurePopenMeta):
         if stdout == PIPE:
             self._stdout, self._child_stdout = os.pipe()
             self.stdout = os.fdopen(self._stdout, 'rb')
+            self.stdout_needs_close = True
         elif isinstance(stdout, int):
             self._stdout, self._child_stdout = -1, stdout
         elif stdout is not None:
@@ -344,6 +347,7 @@ class SecurePopen(Process, metaclass=SecurePopenMeta):
         if stderr == PIPE:
             self._stderr, self._child_stderr = os.pipe()
             self.stderr = os.fdopen(self._stderr, 'rb')
+            self.stderr_needs_close = True
         elif isinstance(stderr, int):
             self._stderr, self._child_stderr = -1, stderr
         elif stderr is not None:

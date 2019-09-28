@@ -5,7 +5,9 @@ import-order-style = pycharm
 ignore =
     W504, # line break occurred after a binary operator
     # allow only generator_stop and annotations future imports
-    FI10,FI11,FI12,FI13,FI14,FI15,FI16,FI17,FI18,FI55,FI58
+    FI10,FI11,FI12,FI13,FI14,FI15,FI16,FI17,FI18,FI55,FI58,
+    C814, # missing trailing comma in Python 2 only
+    C818  # trailing comma on bare tuple prohibited
 per-file-ignores =
     # F403: import *, F405: name comes from import *
     ./dmoj/cptbox/chroot.py:F403,F405

@@ -38,5 +38,5 @@ process.stdin.on 'readable', () ->
     def get_find_first_mapping(cls):
         return {
             'node': ['nodejs', 'node'],
-            'coffee': ['coffee']
+            'coffee': ['coffee'],
         }

@@ -1,8 +1,5 @@
 from re import split as resplit
 
-import six
-from six.moves import map, zip, filter
-
 from dmoj.error import InternalError
 from dmoj.utils.unicode import utf8bytes
 
@@ -23,8 +20,8 @@ def check(process_output, judge_output, split_on='lines', **kwargs):
         return False
 
     if split_on == 'lines':
-        process_lines = list(map(six.binary_type.split, process_lines))
-        judge_lines = list(map(six.binary_type.split, judge_lines))
+        process_lines = list(map(bytes.split, process_lines))
+        judge_lines = list(map(bytes.split, judge_lines))
 
     process_lines.sort()
     judge_lines.sort()

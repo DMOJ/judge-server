@@ -5,9 +5,7 @@ import os
 import sys
 import traceback
 
-import six
 import yaml
-from six import iteritems
 
 from dmoj import judgeenv, executors
 from dmoj.judge import Judge
@@ -195,7 +193,7 @@ class Tester(object):
             return 0
         time = config['time']
         memory = config['memory']
-        if isinstance(config['source'], six.string_types):
+        if isinstance(config['source'], str):
             with open(os.path.join(case_dir, config['source'])) as f:
                 sources = [f.read()]
         else:
@@ -226,14 +224,14 @@ class Tester(object):
         if isinstance(cases, list):
             cases = enumerate(cases, 1)
         else:
-            cases = iteritems(cases)
+            cases = cases.items()
         case_expect = {id: func(codes) for id, codes in cases}
         return expect, case_expect
 
     def parse_expected_codes(self, codes):
         if codes == '*':
             return self.all_codes
-        elif isinstance(codes, six.string_types):
+        elif isinstance(codes, str):
             assert codes in self.all_codes
             return {codes}
         else:
@@ -244,7 +242,7 @@ class Tester(object):
     def parse_feedback(self, feedback):
         if feedback is None or feedback == '*':
             return None
-        elif isinstance(feedback, six.string_types):
+        elif isinstance(feedback, str):
             return {feedback}
         else:
             return set(feedback)

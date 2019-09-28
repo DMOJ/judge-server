@@ -11,9 +11,6 @@ import sys
 import threading
 import time
 
-import six
-from six.moves import range
-
 from dmoj.cptbox._cptbox import *
 from dmoj.cptbox.handlers import ALLOW, DISALLOW, _CALLBACK
 from dmoj.cptbox.syscalls import translator, SYSCALL_COUNT, by_id
@@ -151,7 +148,7 @@ class SecurePopenMeta(type):
         return super(SecurePopenMeta, self).__call__(debugger, self.debugger_type, argv, executable, *args, **kwargs)
 
 
-class SecurePopen(six.with_metaclass(SecurePopenMeta, Process)):
+class SecurePopen(Process, metaclass=SecurePopenMeta):
     debugger_type = AdvancedDebugger
 
     def __init__(self, debugger, _, args, executable=None, security=None, time=0, memory=0, stdin=PIPE, stdout=PIPE,
@@ -163,7 +160,7 @@ class SecurePopen(six.with_metaclass(SecurePopenMeta, Process)):
         self._args = args
         self._chdir = cwd
         self._env = [utf8bytes('%s=%s' % (arg, val))
-                     for arg, val in six.iteritems(env if env is not None else os.environ) if val is not None]
+                     for arg, val in (env if env is not None else os.environ).items() if val is not None]
         self._time = time
         self._wall_time = time * 3 if wall_time is None else wall_time
         self._cpu_time = time + 5 if time else 0

@@ -1,11 +1,8 @@
 from __future__ import print_function
 
 from collections import OrderedDict
-import os
 import shlex
 import sys
-
-from six.moves import input
 
 from dmoj.judge import Judge
 from dmoj.utils.ansi import ansi_style

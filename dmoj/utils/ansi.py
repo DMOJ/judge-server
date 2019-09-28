@@ -1,8 +1,7 @@
 import re
 
-import six
-from termcolor import colored
 import ansi2html
+from termcolor import colored
 
 from dmoj.utils.unicode import utf8text
 

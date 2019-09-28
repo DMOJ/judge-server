@@ -1,8 +1,5 @@
 from re import split as resplit
 
-import six
-from six.moves import filter, zip
-
 from dmoj.result import CheckerResult
 from dmoj.utils.unicode import utf8bytes
 
@@ -20,7 +17,7 @@ def check(process_output, judge_output, point_value, feedback=True,
     if not judge_lines:
         return True
 
-    if isinstance(match, six.string_types):
+    if isinstance(match, str):
         match = eval(match)
 
     cases = [verdict[0]] * len(judge_lines)

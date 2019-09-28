@@ -13,7 +13,6 @@ from distutils.spawn import find_executable
 from subprocess import Popen
 
 import pylru
-import six
 
 from dmoj.error import CompileError
 from dmoj.executors.mixins import PlatformExecutorMixin
@@ -22,7 +21,6 @@ from dmoj.utils.ansi import ansi_style
 from dmoj.utils.communicate import *
 from dmoj.utils.error import print_protection_fault
 from dmoj.utils.unicode import utf8bytes, utf8text
-from dmoj.utils.uniprocess import Popen as UniPopen
 
 version_cache = {}
 
@@ -338,12 +336,12 @@ class CompiledExecutorMeta(type):
         return obj
 
 
-class CompiledExecutor(six.with_metaclass(CompiledExecutorMeta, BaseExecutor)):
+class CompiledExecutor(BaseExecutor, metaclass=CompiledExecutorMeta):
     executable_size = env.compiler_size_limit * 1024
     compiler_time_limit = env.compiler_time_limit
     compile_output_index = 1
 
-    class TimedPopen(UniPopen):
+    class TimedPopen(subprocess.Popen):
         def __init__(self, *args, **kwargs):
             self._time = kwargs.pop('time_limit', None)
             super(CompiledExecutor.TimedPopen, self).__init__(*args, **kwargs)

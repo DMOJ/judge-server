@@ -9,8 +9,6 @@ import sys
 import threading
 import traceback
 
-import six
-
 from functools import partial
 from itertools import chain
 
@@ -344,11 +342,7 @@ def judge_proc(need_monitor):
     logging.basicConfig(filename=logfile, level=logging.INFO,
                         format='%(levelname)s %(asctime)s %(process)d %(module)s %(message)s')
 
-    proctitle = 'DMOJ Judge: %s on %s' % (env['id'], make_host_port(judgeenv))
-    if six.PY2:
-        setproctitle(utf8bytes(proctitle))
-    else:
-        setproctitle(proctitle)
+    setproctitle('DMOJ Judge: %s on %s' % (env['id'], make_host_port(judgeenv)))
 
     judge = ClassicJudge(judgeenv.server_host, judgeenv.server_port,
                          secure=judgeenv.secure, no_cert_check=judgeenv.no_cert_check,

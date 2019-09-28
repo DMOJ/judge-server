@@ -3,7 +3,6 @@ import subprocess
 import zipfile
 from functools import partial
 
-import six
 import yaml
 from yaml.parser import ParserError
 from yaml.scanner import ScannerError
@@ -146,12 +145,12 @@ class TestCase(object):
         lang = None  # Default to C/C++
 
         base = get_problem_root(self.problem.id)
-        if isinstance(gen, six.string_types):
+        if isinstance(gen, str):
             filenames = gen
         elif isinstance(gen.unwrap(), list):
             filenames = list(gen.unwrap())
         else:
-            if isinstance(gen.source, six.string_types):
+            if isinstance(gen.source, str):
                 filenames = gen.source
             elif isinstance(gen.source.unwrap(), list):
                 filenames = list(gen.source.unwrap())

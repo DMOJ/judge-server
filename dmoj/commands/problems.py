@@ -1,9 +1,8 @@
 from __future__ import print_function
 
-from operator import itemgetter
 import re
-
-from six.moves import zip_longest
+from itertools import zip_longest
+from operator import itemgetter
 
 from dmoj import judgeenv
 from dmoj.cli import InvalidCommandException

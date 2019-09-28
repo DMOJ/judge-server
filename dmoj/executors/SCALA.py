@@ -1,8 +1,6 @@
 import os
 import subprocess
 
-from six import iteritems
-
 from dmoj.executors.java_executor import JavaExecutor
 from dmoj.executors.mixins import EmulateTerminalMixin
 from dmoj.utils.unicode import utf8text
@@ -50,7 +48,7 @@ object self_test extends App {
     def autoconfig(cls):
         result = {}
 
-        for key, files in iteritems({'scalac': ['scalac'], 'scala': ['scala']}):
+        for key, files in {'scalac': ['scalac'], 'scala': ['scala']}.items():
             file = cls.find_command_from_list(files)
             if file is None:
                 return result, False, 'Failed to find "%s"' % key

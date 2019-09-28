@@ -1,7 +1,5 @@
 from re import split as resplit
 
-from six.moves import zip, filter
-
 from dmoj.utils.unicode import utf8bytes
 
 

@@ -1,10 +1,7 @@
 import itertools
 
-import six
-from six.moves import map
-
-from dmoj.executors.C import Executor as CExecutor
 from dmoj.error import CompileError
+from dmoj.executors.C import Executor as CExecutor
 
 template = b'''\
 #define _GNU_SOURCE
@@ -33,13 +30,10 @@ int main(int argc, char **argv) {
 }
 '''
 
-trans = {b'>': b'++p;', b'<': b'--p;',
-         b'+': b'++*p;', b'-': b'--*p;',
-         b'.': b'putchar(*p);', b',': b'*p=getchar();',
-         b'[': b'while(*p){', b']': b'}'}
-
-if six.PY3:
-    trans = {k[0]: v for k, v in trans.items()}
+trans = {ord('>'): b'++p;', ord('<'): b'--p;',
+         ord('+'): b'++*p;', ord('-'): b'--*p;',
+         ord('.'): b'putchar(*p);', ord(','): b'*p=getchar();',
+         ord('['): b'while(*p){', ord(']'): b'}'}
 
 
 class Executor(CExecutor):

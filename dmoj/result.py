@@ -1,5 +1,3 @@
-import six
-
 from dmoj.utils.unicode import utf8text
 
 
@@ -74,8 +72,8 @@ class CheckerResult(object):
         # Make sure we don't kill the site bridge
         assert isinstance(passed, bool)
         assert isinstance(points, int) or isinstance(points, float)
-        assert feedback is None or isinstance(feedback, six.string_types)
-        assert extended_feedback is None or isinstance(extended_feedback, six.string_types)
+        assert feedback is None or isinstance(feedback, str)
+        assert extended_feedback is None or isinstance(extended_feedback, str)
 
         self.passed = passed
         self.points = points

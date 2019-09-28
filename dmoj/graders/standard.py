@@ -2,14 +2,9 @@ from __future__ import print_function
 
 import gc
 import logging
-import os
 import platform
-import signal
 import subprocess
 
-import six
-
-from dmoj.error import CompileError
 from dmoj.executors import executors
 from dmoj.graders.base import BaseGrader
 from dmoj.result import CheckerResult, Result

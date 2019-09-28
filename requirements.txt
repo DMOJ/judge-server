@@ -4,6 +4,5 @@ ansi2html
 termcolor
 cython
 pygments
-six
 setproctitle
 pylru

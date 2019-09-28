@@ -6,8 +6,6 @@ import sys
 from shutil import copyfile
 from subprocess import Popen
 
-import six
-
 from dmoj.error import CompileError, InternalError
 from dmoj.result import Result
 from dmoj.utils.unicode import utf8bytes, utf8text

@@ -3,8 +3,7 @@ from __future__ import print_function
 import logging
 from contextlib import closing
 from threading import Thread, Event
-
-from six.moves.urllib.request import urlopen
+from urllib.request import urlopen
 
 from dmoj import judgeenv
 from dmoj.judgeenv import startup_warnings, get_problem_watches

@@ -4,8 +4,6 @@ import subprocess
 import tempfile
 import sys
 
-from six.moves import input
-
 from dmoj.cli import InvalidCommandException
 from dmoj.executors import executors
 from dmoj.utils.ansi import ansi_style

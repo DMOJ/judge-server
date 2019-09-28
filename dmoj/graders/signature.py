@@ -2,7 +2,7 @@ import uuid
 
 from dmoj.error import CompileError, InternalError
 from dmoj.executors import executors
-from dmoj.graders import StandardGrader
+from dmoj.graders.standard import StandardGrader
 from dmoj.utils.unicode import utf8bytes
 
 

@@ -4,8 +4,9 @@ import os
 import yaml
 
 from dmoj.config import ConfigNode
-from dmoj.utils.unicode import utf8text
+# noinspection PyUnresolvedReferences
 from dmoj.utils import pyyaml_patch  # noqa: F401, imported for side effect
+from dmoj.utils.unicode import utf8text
 
 try:
     import ssl

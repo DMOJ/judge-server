@@ -1,7 +1,7 @@
 import difflib
 
-import pygments.lexers
 import pygments.formatters
+import pygments.lexers
 
 from dmoj.commands.base_command import Command
 

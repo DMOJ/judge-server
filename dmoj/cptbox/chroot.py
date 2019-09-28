@@ -3,8 +3,8 @@ import os
 import re
 import sys
 
-from dmoj.cptbox._cptbox import bsd_get_proc_cwd, bsd_get_proc_fdno, AT_FDCWD
-from dmoj.cptbox.handlers import ALLOW, ACCESS_EACCES, ACCESS_EPERM, ACCESS_ENOENT
+from dmoj.cptbox._cptbox import AT_FDCWD, bsd_get_proc_cwd, bsd_get_proc_fdno
+from dmoj.cptbox.handlers import ACCESS_EACCES, ACCESS_ENOENT, ACCESS_EPERM, ALLOW
 # noinspection PyUnresolvedReferences
 from dmoj.cptbox.syscalls import *
 from dmoj.utils.unicode import utf8text

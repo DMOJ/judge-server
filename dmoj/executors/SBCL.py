@@ -1,5 +1,5 @@
 from dmoj.executors.base_executor import CompiledExecutor
-from dmoj.executors.mixins import ScriptDirectoryMixin, NullStdoutMixin
+from dmoj.executors.mixins import NullStdoutMixin, ScriptDirectoryMixin
 
 
 # SBCL implements its own heap management, and relies on ASLR being disabled. So, on startup,

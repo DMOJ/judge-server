@@ -10,8 +10,8 @@ import traceback
 import zlib
 
 from dmoj import sysinfo
-from dmoj.judgeenv import get_supported_problems, get_runtime_versions
-from dmoj.utils.unicode import utf8text, utf8bytes
+from dmoj.judgeenv import get_runtime_versions, get_supported_problems
+from dmoj.utils.unicode import utf8bytes, utf8text
 
 try:
     import ssl

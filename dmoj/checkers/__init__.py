@@ -1,3 +1,3 @@
 from dmoj.checkers import (
-    easy, floats, floatsrel, floatsabs, identical, rstripped, sorted, standard, unordered, linecount
+    easy, floats, floatsabs, floatsrel, identical, linecount, rstripped, sorted, standard, unordered
 )

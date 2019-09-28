@@ -2,7 +2,7 @@ import os
 import re
 import subprocess
 
-from dmoj.cptbox.sandbox import X86, X64, can_debug
+from dmoj.cptbox.sandbox import X64, X86, can_debug
 from dmoj.error import CompileError
 from dmoj.executors.base_executor import CompiledExecutor
 from dmoj.judgeenv import env

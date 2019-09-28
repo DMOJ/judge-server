@@ -3,7 +3,7 @@ import re
 import traceback
 from importlib import import_module
 
-from dmoj.judgeenv import env, only_executors, exclude_executors
+from dmoj.judgeenv import env, exclude_executors, only_executors
 
 _reexecutor = re.compile(r'([A-Z0-9]+)\.py$')
 

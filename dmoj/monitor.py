@@ -1,10 +1,10 @@
 import logging
 from contextlib import closing
-from threading import Thread, Event
+from threading import Event, Thread
 from urllib.request import urlopen
 
 from dmoj import judgeenv
-from dmoj.judgeenv import startup_warnings, get_problem_watches
+from dmoj.judgeenv import get_problem_watches, startup_warnings
 from dmoj.utils.ansi import print_ansi
 
 try:

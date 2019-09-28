@@ -19,7 +19,7 @@ from dmoj.error import CompileError
 from dmoj.executors.mixins import PlatformExecutorMixin
 from dmoj.judgeenv import env
 from dmoj.utils.ansi import print_ansi
-from dmoj.utils.communicate import safe_communicate, OutputLimitExceeded
+from dmoj.utils.communicate import OutputLimitExceeded, safe_communicate
 from dmoj.utils.error import print_protection_fault
 from dmoj.utils.unicode import utf8bytes, utf8text
 

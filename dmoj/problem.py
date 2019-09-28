@@ -8,7 +8,7 @@ from yaml.parser import ParserError
 from yaml.scanner import ScannerError
 
 from dmoj import checkers
-from dmoj.config import InvalidInitException, ConfigNode
+from dmoj.config import ConfigNode, InvalidInitException
 from dmoj.error import InternalError
 from dmoj.generator import GeneratorManager
 from dmoj.judgeenv import env, get_problem_root

@@ -8,8 +8,8 @@ from dmoj.executors.base_executor import CompiledExecutor
 from dmoj.judgeenv import env
 from dmoj.utils.unicode import utf8text
 
-refeatures = re.compile('^[#;@|!]\s*features:\s*([\w\s,]+)', re.M)
-feature_split = re.compile('[\s,]+').split
+refeatures = re.compile(r'^[#;@|!]\s*features:\s*([\w\s,]+)', re.M)
+feature_split = re.compile(r'[\s,]+').split
 
 
 class ASMExecutor(CompiledExecutor):

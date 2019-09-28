@@ -5,7 +5,7 @@ import yaml
 
 from dmoj.config import ConfigNode
 from dmoj.utils.unicode import utf8text
-from dmoj.utils import pyyaml_patch
+from dmoj.utils import pyyaml_patch  # noqa: F401, imported for side effect
 
 try:
     import ssl
@@ -149,8 +149,10 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
             # Populate cache and send warnings
             get_problem_roots(warnings=True)
 
+            def get_path(x, y):
+                return utf8text(os.path.normpath(os.path.join(x, y)))
+
             problem_watches = []
-            get_path = lambda x, y: utf8text(os.path.normpath(os.path.join(x, y)))
             for dir in problem_dirs:
                 if isinstance(dir, ConfigNode):
                     for _, recursive_root in dir.iteritems():
@@ -194,7 +196,9 @@ def get_problem_roots(warnings=False):
     if _problem_dirs_cache is not None:
         return _problem_dirs_cache
 
-    get_path = lambda x, y: utf8text(os.path.normpath(os.path.join(x, y)))
+    def get_path(x, y):
+        return utf8text(os.path.normpath(os.path.join(x, y)))
+
     if isinstance(problem_dirs, list):
         _problem_dirs_cache = problem_dirs
         return problem_dirs

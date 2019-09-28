@@ -1,8 +1,7 @@
 import os
 import traceback
 
-from dmoj.error import CompileError, InternalError
-from dmoj.utils import ansi
+from dmoj.error import InternalError
 
 
 class GeneratorManager(object):
@@ -17,7 +16,7 @@ class GeneratorManager(object):
             for filename in filenames:
                 with open(filename, 'r') as f:
                     sources[os.path.basename(filename)] = f.read()
-        except:
+        except Exception:
             traceback.print_exc()
             raise IOError('could not read generator source')
 

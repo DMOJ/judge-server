@@ -5,7 +5,7 @@ from importlib import import_module
 
 from dmoj.judgeenv import env, only_executors, exclude_executors
 
-_reexecutor = re.compile('([A-Z0-9]+)\.py$')
+_reexecutor = re.compile(r'([A-Z0-9]+)\.py$')
 
 # List of executors that exist for historical purposes, but which shouldn't ever be run on a normal system
 # We keep them for compatibility purposes, but they are not important enough to have a commandline flag for enabling

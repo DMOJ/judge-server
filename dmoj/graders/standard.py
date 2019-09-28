@@ -8,11 +8,7 @@ from dmoj.graders.base import BaseGrader
 from dmoj.result import CheckerResult, Result
 from dmoj.utils.communicate import OutputLimitExceeded
 from dmoj.utils.error import print_protection_fault
-
-try:
-    from dmoj.utils.nixutils import strsignal
-except ImportError:
-    strsignal = lambda x: 'signal %s' % x
+from dmoj.utils.nixutils import strsignal
 
 log = logging.getLogger('dmoj.graders')
 
@@ -70,7 +66,7 @@ class StandardGrader(BaseGrader):
 
     def update_feedback(self, check, error, process, result):
         result.feedback = (check.feedback or (process.feedback if hasattr(process, 'feedback') else
-                            getattr(self.binary, 'get_feedback', lambda x, y, z: '')(error, result, process)))
+                           getattr(self.binary, 'get_feedback', lambda x, y, z: '')(error, result, process)))
         if not result.feedback and result.get_main_code() == Result.RTE:
             if hasattr(process, 'was_initialized') and not process.was_initialized:
                 # Process may failed to initialize, resulting in a SIGKILL without any prior signals.

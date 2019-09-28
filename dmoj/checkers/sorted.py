@@ -7,7 +7,7 @@ from dmoj.utils.unicode import utf8bytes
 def check(process_output, judge_output, split_on='lines', **kwargs):
     split_pattern = {
         'lines': b'[\r\n]',
-        'whitespace': b'[\s]',
+        'whitespace': br'[\s]',
     }.get(split_on)
 
     if not split_pattern:

@@ -35,4 +35,4 @@ _exit:
 .bss
 buffer:
 	.skip	4096
-'''
+'''  # noqa: W191

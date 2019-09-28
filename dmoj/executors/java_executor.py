@@ -3,7 +3,6 @@ import os
 import re
 import subprocess
 import sys
-from shutil import copyfile
 from subprocess import Popen
 
 from dmoj.error import CompileError, InternalError
@@ -14,7 +13,8 @@ from .base_executor import CompiledExecutor
 recomment = re.compile(r'/\*.*?\*/', re.DOTALL | re.U)
 restring = re.compile(r''''(?:\\.|[^'\\])'|"(?:\\.|[^"\\])*"''', re.DOTALL | re.U)
 reinline_comment = re.compile(r'//.*?(?=[\r\n])', re.U)
-reclass = re.compile(r'\bpublic\s+(?:strictfp\s+)?(?:(?:abstract|final)\s+)?(?:strictfp\s+)?class\s+([\w\$][\w\$]*?)\b', re.U)
+reclass = re.compile(r'\bpublic\s+(?:strictfp\s+)?(?:(?:abstract|final)\s+)?(?:strictfp\s+)?class\s+([\w\$][\w\$]*?)\b',
+                     re.U)
 repackage = re.compile(r'\bpackage\s+([^.;]+(?:\.[^.;]+)*?);', re.U)
 
 

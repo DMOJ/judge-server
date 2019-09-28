@@ -1,5 +1,3 @@
-import os
-
 try:
     # in large part from http://code.activestate.com/recipes/578899-strsignal/
 
@@ -11,7 +9,6 @@ try:
     strsignal_c = ctypes.CFUNCTYPE(ctypes.c_char_p, ctypes.c_int)(("strsignal", libc), ((1,),))
     NSIG = signal.NSIG
 
-
     def strsignal_ctypes_wrapper(signo):
         # The behavior of the C library strsignal() is unspecified if
         # called with an out-of-range argument.  Range-check on entry
@@ -22,7 +19,7 @@ try:
                 return s.decode("utf-8")
         return "Unknown signal %d" % signo
 
-
     strsignal = strsignal_ctypes_wrapper
-except:
-    strsignal = lambda x: 'signal %d' % x
+except Exception:
+    def strsignal(x):
+        return 'signal %d' % x

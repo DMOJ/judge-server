@@ -2,8 +2,6 @@ import re
 
 from termcolor import colored
 
-from dmoj.utils.unicode import utf8text
-
 
 def strip_ansi(s):
     # http://stackoverflow.com/questions/13506033/filtering-out-ansi-escape-sequences

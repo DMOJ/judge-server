@@ -1,7 +1,6 @@
+import errno
 import os
 import select
-import errno
-import threading
 
 _PIPE_BUF = getattr(select, 'PIPE_BUF', 512)
 
@@ -89,8 +88,9 @@ def safe_communicate(proc, input, outlimit=None, errlimit=None):
                     if stderr is not None:
                         stderr = b''.join(stderr)
 
-                    raise OutputLimitExceeded(['stderr', 'stdout'][proc.stdout is not None and proc.stdout.fileno() == fd],
-                                              stdout, stderr)
+                    raise OutputLimitExceeded(
+                        ['stderr', 'stdout'][proc.stdout is not None and proc.stdout.fileno() == fd],
+                        stdout, stderr)
             else:
                 # Ignore hang up or errors.
                 close_unregister_and_remove(fd)

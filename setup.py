@@ -2,17 +2,15 @@
 import io
 import os
 import sys
-
-if os.name == 'nt':
-    print('DMOJ is unsupported on Windows.', file=sys.stderr)
-    sys.exit(1)
-
 import traceback
-import subprocess
 from distutils.errors import DistutilsPlatformError
 
 from setuptools import setup, Extension, find_packages
 from setuptools.command.build_ext import build_ext
+
+if os.name == 'nt':
+    print('DMOJ is unsupported on Windows.', file=sys.stderr)
+    sys.exit(1)
 
 has_pyx = os.path.exists(os.path.join(os.path.dirname(__file__), 'dmoj', 'cptbox', '_cptbox.pyx'))
 
@@ -33,7 +31,9 @@ except ImportError:
         print('Run: pip install cython', file=sys.stderr)
         print('Or if you do not have pip: easy_install cython', file=sys.stderr)
         sys.exit(1)
-    cythonize = lambda x: x
+
+    def cythonize(module_list):
+        return module_list
 
 
 class SimpleSharedObject(Extension, object):

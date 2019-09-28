@@ -33,7 +33,7 @@ int main (int argc, const char * argv[]) {
         return self.objc_ldflags + super(Executor, self).get_ldflags()
 
     def get_fs(self):
-        return super(Executor, self).get_fs() + ['/proc/\d+/cmdline$']
+        return super(Executor, self).get_fs() + [r'/proc/\d+/cmdline$']
 
     @classmethod
     def initialize(cls, sandbox=True):

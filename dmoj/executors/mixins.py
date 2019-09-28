@@ -2,7 +2,6 @@ import os
 import re
 import shutil
 import sys
-from shutil import copyfile
 
 from dmoj.cptbox import SecurePopen, CHROOTSecurity, syscalls
 from dmoj.cptbox.handlers import ALLOW
@@ -10,7 +9,6 @@ from dmoj.error import InternalError
 from dmoj.judgeenv import env
 from dmoj.utils import setbufsize_path
 from dmoj.utils.unicode import utf8bytes
-
 
 BASE_FILESYSTEM = ['/dev/(?:null|tty|zero|u?random)$',
                    '/usr/(?!home)', '/lib(?:32|64)?/', '/opt/', '/etc$',

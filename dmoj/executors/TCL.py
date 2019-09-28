@@ -1,7 +1,7 @@
 import subprocess
 
 from dmoj.executors.base_executor import ScriptExecutor
-import os
+
 
 class Executor(ScriptExecutor):
     ext = 'tcl'

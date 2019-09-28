@@ -15,7 +15,7 @@ class Executor(CompiledExecutor):
 	PROCEDURE DIVISION.
 		DISPLAY 'echo: Hello, World!'.
 		STOP RUN.
-'''
+'''  # noqa: W191
 
     def get_compile_args(self):
         return [self.get_command(), '-x', '-free', self._code]

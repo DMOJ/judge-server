@@ -1,5 +1,4 @@
 import logging
-import sys
 
 log = logging.getLogger('dmoj.cptbox')
 

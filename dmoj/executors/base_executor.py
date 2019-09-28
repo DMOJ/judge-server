@@ -1,10 +1,13 @@
+import errno
 import hashlib
+import os
 import re
 import shutil
 import signal
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import traceback
 from distutils.spawn import find_executable
@@ -16,7 +19,7 @@ from dmoj.error import CompileError
 from dmoj.executors.mixins import PlatformExecutorMixin
 from dmoj.judgeenv import env
 from dmoj.utils.ansi import print_ansi
-from dmoj.utils.communicate import *
+from dmoj.utils.communicate import safe_communicate, OutputLimitExceeded
 from dmoj.utils.error import print_protection_fault
 from dmoj.utils.unicode import utf8bytes, utf8text
 
@@ -34,7 +37,7 @@ class BaseExecutor(PlatformExecutorMixin):
     test_name = 'self_test'
     test_time = env.selftest_time_limit
     test_memory = env.selftest_memory_limit
-    version_regex = re.compile('.*?(\d+(?:\.\d+)+)', re.DOTALL)
+    version_regex = re.compile(r'.*?(\d+(?:\.\d+)+)', re.DOTALL)
     source_filename_format = '{problem_id}.{ext}'
 
     def __init__(self, problem_id, source_code, dest_dir=None, hints=None,

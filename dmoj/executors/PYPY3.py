@@ -1,4 +1,3 @@
-from dmoj.cptbox.handlers import ACCESS_EACCES
 from dmoj.executors.PYPY import Executor as PYPYExecutor
 
 

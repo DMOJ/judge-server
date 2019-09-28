@@ -85,7 +85,8 @@ def ci_test(executors_to_test, overrides):
 
                 if config:
                     print('  Attempted:')
-                    print('   ', yaml.safe_dump(config, default_flow_style=False).rstrip().replace('\n', '\n' + ' ' * 4))
+                    print('   ',
+                          yaml.safe_dump(config, default_flow_style=False).rstrip().replace('\n', '\n' + ' ' * 4))
 
                 if errors:
                     print('  Errors:')

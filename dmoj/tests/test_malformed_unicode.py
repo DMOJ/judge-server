@@ -1,4 +1,3 @@
-import os
 import unittest
 
 from dmoj.error import CompileError

@@ -61,7 +61,7 @@ with open('linux-arm.tbl', 'w') as arm, utf8reader(urlopen(LINUX_SYSCALLS_ARM)) 
             name = 'fstatat'
         print('%d\t%s' % (int(id), name), file=arm)
 
-renr = re.compile('#define\s+__NR(?:3264)?_([a-z0-9_]+)\s+(\d+)')
+renr = re.compile(r'#define\s+__NR(?:3264)?_([a-z0-9_]+)\s+(\d+)')
 with open('linux-generic.tbl', 'w') as generic, utf8reader(urlopen(LINUX_SYSCALLS_GENERIC)) as data:
     for line in data:
         if '#undef __NR_syscalls' in line:

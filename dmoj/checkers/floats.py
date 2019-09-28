@@ -1,5 +1,6 @@
 from re import split as resplit
 
+from dmoj.error import InternalError
 from dmoj.utils.unicode import utf8bytes
 
 
@@ -57,7 +58,7 @@ def check(process_output, judge_output, precision=6, error_mode='default', **kwa
                 # Allow mixed tokens, for lines like "abc 0.68 def 0.70"
                 try:
                     judge_float = float(judge_token)
-                except:
+                except ValueError:
                     # If it's not a float the token must match exactly
                     if process_token != judge_token:
                         return False
@@ -66,6 +67,6 @@ def check(process_output, judge_output, precision=6, error_mode='default', **kwa
 
                     if not verify_float(process_float, judge_float, epsilon):
                         return False
-    except:
+    except Exception:
         return False
     return True

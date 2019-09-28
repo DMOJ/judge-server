@@ -12,7 +12,7 @@ class Executor(PythonExecutor):
             cls._pypy_versions = [tuple(map(int, version.split('.')))
                                   for version in cls.version_regex.findall(output)]
             return cls._pypy_versions[1]
-        except:
+        except Exception:
             return None
 
     @classmethod

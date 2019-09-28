@@ -3,7 +3,6 @@ import unittest
 
 class CheckerTest(unittest.TestCase):
     def assert_pass(self, check, str1, str2, expect=True):
-        result = check(str1, str2)
         if expect:
             message = 'expecting %r to equal %r'
         else:

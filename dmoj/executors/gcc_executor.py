@@ -21,7 +21,7 @@ class GCCExecutor(CompiledExecutor):
     name = 'GCC'
     arch = 'gcc_target_arch'
     has_color = False
-    version_regex = re.compile('.*?(\d+(?:\.\d+)*)', re.DOTALL)
+    version_regex = re.compile(r'.*?(\d+(?:\.\d+)*)', re.DOTALL)
 
     def __init__(self, problem_id, main_source, **kwargs):
         super(GCCExecutor, self).__init__(problem_id, main_source, **kwargs)

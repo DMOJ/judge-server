@@ -213,7 +213,8 @@ class Tester(object):
         for source in sources:
             self.sub_id += 1
             self.manager.set_expected(codes_all, codes_cases, feedback_all, feedback_cases)
-            self.judge.begin_grading(self.sub_id, problem, language, source, time, memory, False, False, blocking=True, report=output_case)
+            self.judge.begin_grading(self.sub_id, problem, language, source, time, memory, False, False, blocking=True,
+                                     report=output_case)
             fails += self.manager.failed
         return fails
 
@@ -263,6 +264,7 @@ def main():
     else:
         print_ansi('#ansi[All cases passed.](green|bold)')
     raise SystemExit(int(fails != 0))
+
 
 if __name__ == '__main__':
     main()

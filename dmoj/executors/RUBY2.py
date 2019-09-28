@@ -1,5 +1,3 @@
-import os
-
 from .ruby_executor import RubyExecutor
 
 

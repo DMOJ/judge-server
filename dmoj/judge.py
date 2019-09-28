@@ -16,19 +16,19 @@ from dmoj.judgeenv import env, get_supported_problems, startup_warnings, clear_p
 from dmoj.monitor import Monitor, DummyMonitor
 from dmoj.problem import Problem, BatchedTestCase
 from dmoj.result import Result
-from dmoj.utils.ansi import ansi_style, strip_ansi
+from dmoj.utils.ansi import ansi_style, print_ansi, strip_ansi
 from dmoj.utils.unicode import utf8bytes, utf8text, unicode_stdout_stderr
 
 try:
-    import readline
+    import readline  # noqa: F401, imported for the side-effect of making `input()` have readline.
 except ImportError:
     pass
-
 
 try:
     from setproctitle import setproctitle
 except ImportError:
-    setproctitle = lambda x: None
+    def setproctitle(title):
+        pass
 
 
 class BatchBegin(object):
@@ -112,7 +112,8 @@ class Judge(object):
         # cases are indexed at 1
         case_number = 1
         try:
-            for result in self.grade_cases(self.current_grader, self.current_grader.cases(), short_circuit=short_circuit):
+            for result in self.grade_cases(self.current_grader, self.current_grader.cases(),
+                                           short_circuit=short_circuit):
                 if isinstance(result, BatchBegin):
                     self.packet_manager.batch_begin_packet()
                     report(ansi_style("#ansi[Batch #%d](yellow|bold)" % batch_counter))
@@ -129,7 +130,7 @@ class Judge(object):
                     colored_codes = list(map(lambda x: '#ansi[%s](%s|bold)' % ('--' if x == 'SC' else x,
                                                                                Result.COLORS_BYID[x]), codes))
                     colored_aux_codes = '{%s}' % ', '.join(colored_codes[1:]) if len(codes) > 1 else ''
-                    colored_feedback = '(#ansi[%s](|underline)) ' % utf8text(result.feedback) if result.feedback else u''
+                    colored_feedback = '(#ansi[%s](|underline)) ' % utf8text(result.feedback) if result.feedback else ''
                     case_info = '[%.3fs (%.3fs) | %dkb] %s%s' % (result.execution_time,
                                                                  result.r_execution_time,
                                                                  result.max_memory,
@@ -150,7 +151,8 @@ class Judge(object):
         else:
             self.packet_manager.grading_end_packet()
 
-    def begin_grading(self, id, problem_id, language, source, time_limit, memory_limit, short_circuit, meta, report=print, blocking=False):
+    def begin_grading(self, id, problem_id, language, source, time_limit, memory_limit, short_circuit, meta,
+                      report=print, blocking=False):
         self.current_submission_id = id
 
         def grading_cleanup_wrapper():
@@ -160,7 +162,7 @@ class Judge(object):
             try:
                 problem = Problem(problem_id, time_limit, memory_limit)
                 self._block_and_grade(problem, language, source, short_circuit, meta, report=report)
-            except:
+            except Exception:
                 self.log_internal_error()
 
             self._terminate_grading = False
@@ -222,7 +224,7 @@ class Judge(object):
         if exc:
             try:
                 raise exc
-            except:
+            except:  # noqa: E722, we want to catch everything
                 pass
         exc = sys.exc_info()
 
@@ -285,7 +287,7 @@ def sanity_check():
     else:
         # Don't allow starting up without cptbox, saves cryptic errors later on
         try:
-            from .cptbox import _cptbox
+            from .cptbox import _cptbox  # noqa: F401, we want to see if this imports
         except ImportError:
             print('cptbox must be compiled to grade!', file=sys.stderr)
             return False
@@ -308,7 +310,7 @@ def sanity_check():
     # _checker implements standard checker functions in C
     # we fall back to a Python implementation if it's not compiled, but it's slower
     try:
-        from .checkers import _checker
+        from .checkers import _checker  # noqa: F401, we want to see if this imports
     except ImportError:
         startup_warnings.append('native checker module not found, compile _checker for optimal performance')
     return True

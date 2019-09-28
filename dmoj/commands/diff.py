@@ -36,4 +36,5 @@ class DifferenceCommand(Command):
             print('no difference\n')
         else:
             file_diff = '\n'.join(difference)
-            print(pygments.highlight(file_diff, pygments.lexers.DiffLexer(), pygments.formatters.Terminal256Formatter()))
+            print(pygments.highlight(file_diff, pygments.lexers.DiffLexer(),
+                                     pygments.formatters.Terminal256Formatter()))

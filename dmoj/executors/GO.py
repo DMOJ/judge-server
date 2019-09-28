@@ -1,4 +1,3 @@
-import os
 import re
 
 from dmoj.error import CompileError
@@ -6,7 +5,10 @@ from .base_executor import CompiledExecutor
 
 reinline_comment = re.compile(br'//.*?(?=[\r\n])')
 recomment = re.compile(br'/\*.*?\*/', re.DOTALL)
-decomment = lambda x: reinline_comment.sub(b'', recomment.sub(b'', x))
+
+
+def decomment(x):
+    return reinline_comment.sub(b'', recomment.sub(b'', x))
 
 
 class Executor(CompiledExecutor):

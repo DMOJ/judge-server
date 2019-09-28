@@ -1,11 +1,9 @@
 import os
 import re
-
 from collections import deque
 
 from dmoj.cptbox import SecurePopen
 from dmoj.cptbox.handlers import ACCESS_EAGAIN
-from dmoj.cptbox.syscalls import *
 from dmoj.result import Result
 from dmoj.utils.unicode import utf8text
 from .base_executor import CompiledExecutor

@@ -2,6 +2,7 @@ import warnings
 
 from dmoj.checkers.sorted import check as sorted_check
 
+
 def check(process_output, judge_output, **kwargs):
     warnings.warn('`unordered` checker is deprecated, use `sorted` with '
                   '`split_on` parameter instead', DeprecationWarning)

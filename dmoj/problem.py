@@ -216,7 +216,7 @@ class TestCase(object):
             result = Result(None)
             result.set_result_flag(proc)
             feedback = (proc.feedback if hasattr(executor, 'feedback') and proc.feedback
-                            else (getattr(executor, 'get_feedback', lambda x, y, z: '')(stderr, result, proc)))
+                        else (getattr(executor, 'get_feedback', lambda x, y, z: '')(stderr, result, proc)))
             if feedback:
                 error += ' with feedback: %s' % feedback
             raise InternalError(error)

@@ -42,7 +42,7 @@ class CHROOTSecurity(dict):
             sys_lstat: self.check_file_access('lstat', 0),
             sys_lstat64: self.check_file_access('lstat64', 0),
             sys_fstatat: self.check_file_access_at('fstatat'),
-            sys_mkdir: ACCESS_EPERM, 
+            sys_mkdir: ACCESS_EPERM,
             sys_unlink: ACCESS_EPERM,
             sys_tgkill: self.do_kill,
             sys_kill: self.do_kill,
@@ -258,7 +258,7 @@ class CHROOTSecurity(dict):
 
     def do_prlimit(self, debugger):
         return True if debugger.uarg0 in (0, debugger.pid) else ACCESS_EPERM(debugger)
-    
+
     def do_prctl(self, debugger):
         PR_GET_DUMPABLE = 3
         PR_SET_NAME = 15

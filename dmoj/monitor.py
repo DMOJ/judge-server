@@ -5,7 +5,7 @@ from urllib.request import urlopen
 
 from dmoj import judgeenv
 from dmoj.judgeenv import startup_warnings, get_problem_watches
-from dmoj.utils.ansi import ansi_style
+from dmoj.utils.ansi import print_ansi
 
 try:
     from watchdog.observers import Observer

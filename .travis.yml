@@ -50,7 +50,9 @@ matrix:
         packages: []
     before_install: []
     install: pip install flake8 flake8-import-order flake8-future-import flake8-commas flake8-logging-format
-    script: flake8
+    script:
+      - flake8 --version
+      - flake8
     cache:
 stages:
   - lint

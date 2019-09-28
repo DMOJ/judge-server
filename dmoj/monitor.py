@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import logging
 from contextlib import closing
 from threading import Thread, Event

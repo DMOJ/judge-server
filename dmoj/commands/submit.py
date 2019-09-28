@@ -1,4 +1,3 @@
-from __future__ import print_function
 from operator import itemgetter
 
 from dmoj import judgeenv

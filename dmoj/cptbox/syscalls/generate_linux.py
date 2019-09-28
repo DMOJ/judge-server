@@ -1,14 +1,17 @@
-from __future__ import print_function
-
 import re
-from urllib2 import urlopen
-from contextlib import closing
+import codecs
+from urllib.request import urlopen
 
-from syscall_tables import *
+utf8reader = codecs.getreader('utf-8')
+
+LINUX_SYSCALLS_32 = 'https://raw.githubusercontent.com/torvalds/linux/master/arch/x86/entry/syscalls/syscall_32.tbl'
+LINUX_SYSCALLS_64 = 'https://raw.githubusercontent.com/torvalds/linux/master/arch/x86/entry/syscalls/syscall_64.tbl'
+LINUX_SYSCALLS_ARM = 'https://raw.githubusercontent.com/torvalds/linux/master/arch/arm/tools/syscall.tbl'
+LINUX_SYSCALLS_GENERIC = 'https://raw.githubusercontent.com/torvalds/linux/master/include/uapi/asm-generic/unistd.h'
 
 func_to_name = {}
 
-with open('linux-x86.tbl', 'w') as x86, closing(urlopen(LINUX_SYSCALLS_32)) as data:
+with open('linux-x86.tbl', 'w') as x86, utf8reader(urlopen(LINUX_SYSCALLS_32)) as data:
     for line in data:
         if line.startswith('#') or line.isspace():
             continue
@@ -21,7 +24,8 @@ with open('linux-x86.tbl', 'w') as x86, closing(urlopen(LINUX_SYSCALLS_32)) as d
             name = 'fstatat'
         print('%d\t%s' % (int(syscall[0]), name), file=x86)
 
-with open('linux-x64.tbl', 'w') as x64, open('linux-x32.tbl', 'w') as x32, closing(urlopen(LINUX_SYSCALLS_64)) as data:
+with open('linux-x64.tbl', 'w') as x64, open('linux-x32.tbl', 'w') as x32, \
+        utf8reader(urlopen(LINUX_SYSCALLS_64)) as data:
     for line in data:
         if line.startswith('#') or line.isspace():
             continue
@@ -37,7 +41,7 @@ with open('linux-x64.tbl', 'w') as x64, open('linux-x32.tbl', 'w') as x32, closi
             print('%d\t%s' % (id, name), file=x32)
 
 rewas = re.compile(r'# (\d+) was (sys_[a-z0-9_]+)')
-with open('linux-arm.tbl', 'w') as arm, closing(urlopen(LINUX_SYSCALLS_ARM)) as data:
+with open('linux-arm.tbl', 'w') as arm, utf8reader(urlopen(LINUX_SYSCALLS_ARM)) as data:
     id = 0
     for line in data:
         match = rewas.search(line)
@@ -58,7 +62,7 @@ with open('linux-arm.tbl', 'w') as arm, closing(urlopen(LINUX_SYSCALLS_ARM)) as 
         print('%d\t%s' % (int(id), name), file=arm)
 
 renr = re.compile('#define\s+__NR(?:3264)?_([a-z0-9_]+)\s+(\d+)')
-with open('linux-generic.tbl', 'w') as generic, closing(urlopen(LINUX_SYSCALLS_GENERIC)) as data:
+with open('linux-generic.tbl', 'w') as generic, utf8reader(urlopen(LINUX_SYSCALLS_GENERIC)) as data:
     for line in data:
         if '#undef __NR_syscalls' in line:
             break

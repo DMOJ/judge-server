@@ -1,0 +1,24 @@
+name: update-syscalls
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+    - name: Update Linux syscalls
+      run: |
+        cd dmoj/cptbox/syscalls
+        python generate_linux.py
+    - name: Create pull request
+      uses: peter-evans/create-pull-request@v1.3.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        COMMIT_MESSAGE: Update Linux syscall list
+        PULL_REQUEST_TITLE: 'Update Linux syscall list'
+        PULL_REQUEST_LABELS: cptbox, security, enhancement
+        PULL_REQUEST_REVIEWERS: Xyene
+        PULL_REQUEST_BRANCH: update-syscalls

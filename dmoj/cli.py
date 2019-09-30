@@ -19,6 +19,9 @@ class LocalPacketManager:
     def test_case_status_packet(self, position, result):
         pass
 
+    def multi_test_case_status_packet(self, updates):
+        pass
+
     def compile_error_packet(self, log):
         pass
 

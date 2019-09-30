@@ -239,23 +239,32 @@ class PacketManager:
         self._send_packet({'name': 'supported-problems',
                            'problems': problems})
 
-    def test_case_status_packet(self, position: int, result):
-        log.info('Test case on %d: #%d, %s [%.3fs | %.2f MB], %.1f/%.0f',
-                 self.judge.current_submission_id, position,
-                 ', '.join(result.readable_codes()),
-                 result.execution_time, result.max_memory / 1024.0,
-                 result.points, result.total_points)
+    def multi_test_case_status_packet(self, updates):
+        for result, position in updates:
+            log.info('Test case on %d: #%d, %s [%.3fs | %.2f MB], %.1f/%.0f',
+                     self.judge.current_submission_id, position,
+                     ', '.join(result.readable_codes()),
+                     result.execution_time, result.max_memory / 1024.0,
+                     result.points, result.total_points)
+
         self._send_packet({'name': 'test-case-status',
                            'submission-id': self.judge.current_submission_id,
-                           'position': position,
-                           'status': result.result_flag,
-                           'time': result.execution_time,
-                           'points': result.points,
-                           'total-points': result.total_points,
-                           'memory': result.max_memory,
-                           'output': result.output,
-                           'extended-feedback': result.extended_feedback,
-                           'feedback': result.feedback})
+                           'cases': [
+                               {
+                                   'position': position,
+                                   'status': result.result_flag,
+                                   'time': result.execution_time,
+                                   'points': result.points,
+                                   'total-points': result.total_points,
+                                   'memory': result.max_memory,
+                                   'output': result.output,
+                                   'extended-feedback': result.extended_feedback,
+                                   'feedback': result.feedback,
+                               } for position, result in updates
+                           ]})
+
+    def test_case_status_packet(self, position: int, result):
+        self.multi_test_case_status_packet([(position, result)])
 
     def compile_error_packet(self, message: str):
         log.info('Compile error: %d', self.judge.current_submission_id)

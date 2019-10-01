@@ -3,7 +3,7 @@ from dmoj.result import CheckerResult
 from dmoj.utils.unicode import utf8bytes
 
 
-def check(process_output, judge_output, pe_allowed=True, **kwargs):
+def check(process_output: str, judge_output: str, pe_allowed: Optional[bool] = True, **kwargs) -> Union[CheckerResult, bool]:
     if judge_output == process_output:
         return True
     feedback = None

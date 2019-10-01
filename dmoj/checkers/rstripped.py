@@ -3,7 +3,7 @@ from re import split as resplit
 from dmoj.utils.unicode import utf8bytes
 
 
-def check(process_output, judge_output, **kwargs):
+def check(process_output: str, judge_output: str, **kwargs) -> bool:
     process_lines = resplit(b'[\r\n]', utf8bytes(process_output))
     judge_lines = resplit(b'[\r\n]', utf8bytes(judge_output))
 

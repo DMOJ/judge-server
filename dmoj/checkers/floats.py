@@ -4,14 +4,14 @@ from dmoj.error import InternalError
 from dmoj.utils.unicode import utf8bytes
 
 
-def verify_absolute(process_float, judge_float, epsilon):
+def verify_absolute(process_float: float, judge_float: float, epsilon: float) -> bool:
     # Since process_float can be NaN, this is NOT equivalent to
     # (process_float - judge_float) > epsilon;  the code below will always
     # reject NaN, even if judge_float is NaN
     return abs(process_float - judge_float) <= epsilon
 
 
-def verify_relative(process_float, judge_float, epsilon):
+def verify_relative(process_float: float, judge_float: float, epsilon: float) -> bool:
     p1 = min(judge_float * (1 - epsilon), judge_float * (1 + epsilon))
     p2 = max(judge_float * (1 - epsilon), judge_float * (1 + epsilon))
     # Since process_float can be NaN, this is NOT equivalent to
@@ -19,7 +19,7 @@ def verify_relative(process_float, judge_float, epsilon):
     return p1 <= process_float <= p2
 
 
-def verify_default(process_float, judge_float, epsilon):
+def verify_default(process_float: float, judge_float: float, epsilon: float) -> bool:
     # process_float can be NaN
     # in this case, we reject NaN as a possible answer, even if judge_float is NaN
     return (abs(process_float - judge_float) <= epsilon or
@@ -27,7 +27,7 @@ def verify_default(process_float, judge_float, epsilon):
             abs(1.0 - process_float / judge_float) <= epsilon)
 
 
-def check(process_output, judge_output, precision=6, error_mode='default', **kwargs):
+def check(process_output: str, judge_output: str, precision: Optional[int] = 6, error_mode: Optional[str] = 'default', **kwargs) -> bool:
     # Discount empty lines
     process_lines = list(filter(None, resplit(b'[\r\n]', utf8bytes(process_output))))
     judge_lines = list(filter(None, resplit(b'[\r\n]', utf8bytes(judge_output))))

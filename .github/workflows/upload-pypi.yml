@@ -1,0 +1,28 @@
+name: upload-pypi
+on:
+  push:
+    tags: v*
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.7
+      - name: Install build dependencies
+        run: pip install cython
+      - name: Create sdist
+        run: python setup.py sdist
+      - name: Install test dependencies
+        run: sudo apt-get install -y libseccomp-dev
+      - name: Test sdist
+        run: |
+          pip install dist/*.tar.gz
+          dmoj-autoconf
+      - name: Publish package to PyPI
+        uses: pypa/gh-action-pypi-publish@v1.0.0a0
+        with:
+          user: __token__
+          password: ${{ secrets.pypi_password }}

@@ -33,7 +33,7 @@ class BaseExecutor(PlatformExecutorMixin):
     source_filename_format = '{problem_id}.{ext}'
 
     def __init__(self, problem_id: str, source_code: bytes, dest_dir: Optional[str] = None,
-                 hints: Optional[list, str] = None,
+                 hints: Optional[Union[list, str]] = None,
                  unbuffered: Optional[bool] = False, **kwargs):
         self._tempdir = dest_dir or env.tempdir
         self._dir = None

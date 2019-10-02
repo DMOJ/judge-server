@@ -4,6 +4,7 @@ import signal
 import subprocess
 import threading
 import time
+from typing import Tuple, List
 
 import pylru
 

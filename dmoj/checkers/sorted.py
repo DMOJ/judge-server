@@ -1,10 +1,11 @@
+from typing import Optional
 from re import split as resplit
 
 from dmoj.error import InternalError
 from dmoj.utils.unicode import utf8bytes
 
 
-def check(process_output: str, judge_output: str, split_on: Optional[str]='lines', **kwargs) -> bool:
+def check(process_output: str, judge_output: str, split_on: Optional[str] = 'lines', **kwargs) -> bool:
     split_pattern = {
         'lines': b'[\r\n]',
         'whitespace': br'[\s]',

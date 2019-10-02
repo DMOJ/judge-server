@@ -8,6 +8,7 @@ import threading
 import time
 import traceback
 import zlib
+from typing import Optional, Union
 
 from dmoj import sysinfo
 from dmoj.judgeenv import get_runtime_versions, get_supported_problems
@@ -28,7 +29,9 @@ class JudgeAuthenticationFailed(Exception):
 class PacketManager(object):
     SIZE_PACK = struct.Struct('!I')
 
-    def __init__(self, host: str, port: Union[str, int], judge: Judge, name: str, key: str, secure: Optional[bool]=False, no_cert_check: Optional[bool]=False, cert_store: Optional[str]=None):
+    def __init__(self, host: str, port: Union[str, int], judge: object, name: str, key: str,
+                 secure: Optional[bool] = False, no_cert_check: Optional[bool] = False,
+                 cert_store: Optional[str] = None):
         self.host = host
         self.port = port
         self.judge = judge
@@ -234,7 +237,7 @@ class PacketManager(object):
         self._send_packet({'name': 'supported-problems',
                            'problems': problems})
 
-    def test_case_status_packet(self, position: Union[str, int], result: obj):
+    def test_case_status_packet(self, position: Union[str, int], result: object):
         log.info('Test case on %d: #%d, %s [%.3fs | %.2f MB], %.1f/%.0f',
                  self.judge.current_submission_id, position,
                  ', '.join(result.readable_codes()),

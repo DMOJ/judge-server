@@ -7,6 +7,7 @@ import sys
 import tempfile
 import traceback
 from distutils.spawn import find_executable
+from typing import Tuple, List, Dict, Optional, Union, Callable
 
 from dmoj.executors.mixins import PlatformExecutorMixin
 from dmoj.judgeenv import env
@@ -31,7 +32,8 @@ class BaseExecutor(PlatformExecutorMixin):
     version_regex = re.compile(r'.*?(\d+(?:\.\d+)+)', re.DOTALL)
     source_filename_format = '{problem_id}.{ext}'
 
-    def __init__(self, problem_id: str, source_code: bytes, dest_dir: Optional[str] = None, hints: Optional[list, str] = None,
+    def __init__(self, problem_id: str, source_code: bytes, dest_dir: Optional[str] = None,
+                 hints: Optional[list, str] = None,
                  unbuffered: Optional[bool] = False, **kwargs):
         self._tempdir = dest_dir or env.tempdir
         self._dir = None
@@ -97,7 +99,8 @@ class BaseExecutor(PlatformExecutorMixin):
         return cls.run_self_test(sandbox)
 
     @classmethod
-    def run_self_test(cls, sandbox: Optional[bool] = True, output: Optional[bool] = True, error_callback: Optional[Callable[any]] = None) -> bool:
+    def run_self_test(cls, sandbox: Optional[bool] = True, output: Optional[bool] = True,
+                      error_callback: Optional[Callable[any]] = None) -> bool:
         if not cls.test_program:
             return True
 

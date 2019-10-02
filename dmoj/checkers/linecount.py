@@ -1,3 +1,4 @@
+from typing import Optional, Union
 from re import split as resplit
 
 from dmoj.result import CheckerResult

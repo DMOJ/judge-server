@@ -1,5 +1,6 @@
 import os
 import re
+from typing import List
 
 from dmoj.executors.base_executor import BaseExecutor
 from dmoj.utils.unicode import utf8bytes
@@ -7,7 +8,7 @@ from dmoj.utils.unicode import utf8bytes
 
 class ScriptExecutor(BaseExecutor):
     def __init__(self, problem_id: str, source_code: str, **kwargs):
-        super(ScriptExecutor, self).__init__(problem_id: str, source_code: str, **kwargs)
+        super(ScriptExecutor, self).__init__(problem_id, source_code, **kwargs)
         self._code = self._file(
             self.source_filename_format.format(problem_id=problem_id, ext=self.ext))
         self.create_files(problem_id, source_code)

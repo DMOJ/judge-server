@@ -1,8 +1,7 @@
 name: upload-pypi
-on: [push]
-# on:
-#  push:
-#    tags: v*
+on:
+  push:
+    tags: v*
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -22,9 +21,8 @@ jobs:
         run: |
           pip install dist/*.tar.gz
           dmoj-autoconf
-      - name: Publish package to TestPyPI
+      - name: Publish package to PyPI
         uses: pypa/gh-action-pypi-publish@v1.0.0a0
         with:
           user: __token__
-          password: ${{ secrets.test_pypi_password }}
-          repository_url: https://test.pypi.org/legacy/
+          password: ${{ secrets.pypi_password }}

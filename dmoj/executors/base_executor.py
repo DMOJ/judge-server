@@ -257,7 +257,7 @@ class ScriptExecutor(BaseExecutor):
         if '%s_home' % name in cls.runtime_dict:
             return os.path.join(cls.runtime_dict['%s_home' % name], 'bin', cls.command)
 
-    def get_fs(self) -> list[str]:
+    def get_fs(self) -> List[str]:
         home = self.runtime_dict.get('%s_home' % self.get_executor_name().lower())
         fs = super(ScriptExecutor, self).get_fs() + [self._code]
         if home is not None:

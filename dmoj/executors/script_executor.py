@@ -32,7 +32,7 @@ class ScriptExecutor(BaseExecutor):
         with open(self._code, 'wb') as fo:
             fo.write(utf8bytes(source_code))
 
-    def get_cmdline(self) -> List[str, str]:
+    def get_cmdline(self) -> List[str]:
         return [self.get_command(), self._code]
 
     def get_executable(self) -> str:

@@ -1,5 +1,5 @@
-from typing import Optional
 from re import split as resplit
+from typing import Optional
 
 from dmoj.error import InternalError
 from dmoj.utils.unicode import utf8bytes

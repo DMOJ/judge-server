@@ -4,8 +4,7 @@ import signal
 import subprocess
 import threading
 import time
-from typing import Tuple, List
-
+from typing import List, Tuple
 import pylru
 
 from dmoj.error import CompileError

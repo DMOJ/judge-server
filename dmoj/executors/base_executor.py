@@ -100,7 +100,7 @@ class BaseExecutor(PlatformExecutorMixin):
 
     @classmethod
     def run_self_test(cls, sandbox: Optional[bool] = True, output: Optional[bool] = True,
-                      error_callback: Optional[Callable[any]] = None) -> bool:
+                      error_callback: Optional[Callable[[any], any]] = None) -> bool:
         if not cls.test_program:
             return True
 

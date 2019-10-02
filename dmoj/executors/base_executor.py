@@ -31,7 +31,7 @@ class BaseExecutor(PlatformExecutorMixin):
     version_regex = re.compile(r'.*?(\d+(?:\.\d+)+)', re.DOTALL)
     source_filename_format = '{problem_id}.{ext}'
 
-    def __init__(self, problem_id: str, source_code: str, dest_dir: Optional[str] = None, hints: Optional[list, str] = None,
+    def __init__(self, problem_id: str, source_code: bytes, dest_dir: Optional[str] = None, hints: Optional[list, str] = None,
                  unbuffered: Optional[bool] = False, **kwargs):
         self._tempdir = dest_dir or env.tempdir
         self._dir = None
@@ -67,10 +67,10 @@ class BaseExecutor(PlatformExecutorMixin):
         return os.path.join(self._dir, *paths)
 
     @classmethod
-    def get_executor_name(cls) -> list:
+    def get_executor_name(cls) -> str:
         return cls.__module__.split('.')[-1]
 
-    def get_executable(self) -> None:
+    def get_executable(self) -> Optional[str]:
         return None
 
     def get_cmdline(self):
@@ -145,7 +145,7 @@ class BaseExecutor(PlatformExecutorMixin):
             return False
 
     @classmethod
-    def get_versionable_commands(cls) -> Tuple[str, str]:
+    def get_versionable_commands(cls) -> Tuple[Tuple[str, str], ...]:
         return (cls.command, cls.get_command()),
 
     @classmethod
@@ -229,7 +229,7 @@ class BaseExecutor(PlatformExecutorMixin):
         return result, success, message, '\n'.join(errors)
 
     @classmethod
-    def get_find_first_mapping(cls) -> Union[None, str, List[str]]:
+    def get_find_first_mapping(cls) -> Optional[Dict[str, List[str]]]:
         if cls.command is None:
             return None
         return {cls.command: cls.command_paths or [cls.command]}
@@ -240,7 +240,7 @@ class BaseExecutor(PlatformExecutorMixin):
 
 
 class ScriptExecutor(BaseExecutor):
-    def __init__(self, problem_id: str, source_code: str, **kwargs):
+    def __init__(self, problem_id: str, source_code: bytes, **kwargs):
         super(ScriptExecutor, self).__init__(problem_id, source_code, **kwargs)
         self._code = self._file(
             self.source_filename_format.format(problem_id=problem_id, ext=self.ext))
@@ -254,18 +254,18 @@ class ScriptExecutor(BaseExecutor):
         if '%s_home' % name in cls.runtime_dict:
             return os.path.join(cls.runtime_dict['%s_home' % name], 'bin', cls.command)
 
-    def get_fs(self) -> Union[list, tuple]:
+    def get_fs(self) -> list[str]:
         home = self.runtime_dict.get('%s_home' % self.get_executor_name().lower())
         fs = super(ScriptExecutor, self).get_fs() + [self._code]
         if home is not None:
             fs.append(re.escape(home))
         return fs
 
-    def create_files(self, problem_id: str, source_code: str) -> None:
+    def create_files(self, problem_id: str, source_code: bytes) -> None:
         with open(self._code, 'wb') as fo:
             fo.write(utf8bytes(source_code))
 
-    def get_cmdline(self) -> List[str, str]:
+    def get_cmdline(self) -> List[str]:
         return [self.get_command(), self._code]
 
     def get_executable(self) -> str:

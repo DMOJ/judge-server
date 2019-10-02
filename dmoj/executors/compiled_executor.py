@@ -103,7 +103,7 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
     compiler_time_limit = env.compiler_time_limit
     compile_output_index = 1
 
-    def __init__(self, problem_id: str, source_code: str, *args, **kwargs):
+    def __init__(self, problem_id: str, source_code: bytes, *args, **kwargs):
         super(CompiledExecutor, self).__init__(problem_id, source_code, **kwargs)
         self.warning = None
         self._executable = None
@@ -112,7 +112,7 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
         if not self.is_cached:
             super(CompiledExecutor, self).cleanup()
 
-    def create_files(self, problem_id, source_code, *args, **kwargs) -> None:
+    def create_files(self, problem_id: str, source_code: bytes, *args, **kwargs) -> None:
         self._code = self._file(self.source_filename_format.format(problem_id=problem_id, ext=self.ext))
         with open(self._code, 'wb') as fo:
             fo.write(utf8bytes(source_code))
@@ -145,7 +145,7 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
 
         return TimedPopen(self.get_compile_args(), **kwargs)
 
-    def get_compile_output(self, process) -> Tuple[str, str]:
+    def get_compile_output(self, process: TimedPopen) -> Tuple[bytes, bytes]:
         # Use safe_communicate because otherwise, malicious submissions can cause a compiler
         # to output hundreds of megabytes of data as output before being killed by the time limit,
         # which effectively murders the MySQL database waiting on the site server.
@@ -158,7 +158,7 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
     def is_failed_compile(self, process: TimedPopen) -> bool:
         return process.returncode != 0
 
-    def handle_compile_error(self, output) -> None:
+    def handle_compile_error(self, output: str) -> None:
         raise CompileError(output)
 
     def get_binary_cache_key(self) -> str:

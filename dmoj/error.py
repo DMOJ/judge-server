@@ -8,3 +8,8 @@ class CompileError(Exception):
 
 class InternalError(Exception):
     pass
+
+
+class OutputLimitExceeded(Exception):
+    def __init__(self, stream, limit):
+        super().__init__("exceeded %d-byte limit on %s stream" % (limit, stream))

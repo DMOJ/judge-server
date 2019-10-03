@@ -2,11 +2,9 @@ import errno
 import os
 import select
 
+from dmoj.error import OutputLimitExceeded
+
 _PIPE_BUF = getattr(select, 'PIPE_BUF', 512)
-
-
-class OutputLimitExceeded(Exception):
-    pass
 
 
 def safe_communicate(proc, input, outlimit=None, errlimit=None):
@@ -83,14 +81,9 @@ def safe_communicate(proc, input, outlimit=None, errlimit=None):
                 fd2output[fd].append(data)
                 fd2length[fd] += len(data)
                 if fd2length[fd] > fd2limit[fd]:
-                    if stdout is not None:
-                        stdout = b''.join(stdout)
-                    if stderr is not None:
-                        stderr = b''.join(stderr)
-
                     raise OutputLimitExceeded(
-                        ['stderr', 'stdout'][proc.stdout is not None and proc.stdout.fileno() == fd],
-                        stdout, stderr)
+                        'stdout' if proc.stdout is not None and proc.stdout.fileno() == fd else 'stderr',
+                        fd2limit[fd])
             else:
                 # Ignore hang up or errors.
                 close_unregister_and_remove(fd)

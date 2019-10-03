@@ -1,6 +1,8 @@
+import abc
 import os
 import re
 import subprocess
+from typing import List
 
 from dmoj.cptbox.sandbox import X64, X86, can_debug
 from dmoj.error import CompileError
@@ -13,15 +15,8 @@ feature_split = re.compile(r'[\s,]+').split
 
 
 class ASMExecutor(CompiledExecutor):
-    arch = None
-    ld_m = None
-    as_name = None
-    ld_name = None
     qemu_path = None
     dynamic_linker = None
-    crt_pre = None
-    crt_post = None
-    platform_prefixes = None
 
     name = 'ASM'
     ext = 'asm'
@@ -31,6 +26,41 @@ class ASMExecutor(CompiledExecutor):
         self.features = self.find_features(source_code)
 
         super(ASMExecutor, self).__init__(problem_id, source_code + b'\n', *args, **kwargs)
+
+    @property
+    @abc.abstractmethod
+    def as_name(self) -> str:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def arch(self) -> str:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def ld_m(self) -> str:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def ld_name(self) -> str:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def crt_pre(self) -> List[str]:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def crt_post(self) -> List[str]:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def platform_prefixes(self) -> List[str]:
+        pass
 
     def find_features(self, source_code):
         features = refeatures.search(utf8text(source_code))
@@ -126,7 +156,11 @@ class ASMExecutor(CompiledExecutor):
 
 class GASExecutor(ASMExecutor):
     name = 'GAS'
-    as_platform_flag = None
+
+    @property
+    @abc.abstractmethod
+    def as_platform_flag(self) -> str:
+        pass
 
     def get_as_args(self, object):
         as_args = [self.get_as_path(), '-o', object, self._code]
@@ -155,7 +189,11 @@ class GASExecutor(ASMExecutor):
 class NASMExecutor(ASMExecutor):
     name = 'NASM'
     as_name = 'nasm'
-    nasm_format = None
+
+    @property
+    @abc.abstractmethod
+    def nasm_format(self) -> str:
+        pass
 
     def find_features(self, source_code):
         features = super(NASMExecutor, self).find_features(source_code)
@@ -177,7 +215,7 @@ class NASMExecutor(ASMExecutor):
         return {cls.ld_name: ['%s-ld' % i for i in cls.platform_prefixes] + ['ld'], 'nasm': ['nasm']}
 
 
-class PlatformX86Mixin(object):
+class PlatformX86Mixin(ASMExecutor):
     arch = X86
     ld_name = 'ld_x86'
     ld_m = 'elf_i386'
@@ -195,7 +233,7 @@ class PlatformX86Mixin(object):
         crt_post = env.runtime.crt_post_x86 or ['/usr/lib/i386-linux-gnu/crtn.o']
 
 
-class PlatformX64Mixin(object):
+class PlatformX64Mixin(ASMExecutor):
     arch = X64
     ld_name = 'ld_x64'
     ld_m = 'elf_x86_64'

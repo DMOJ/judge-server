@@ -8,7 +8,7 @@ import threading
 import time
 import traceback
 import zlib
-from typing import Optional, Union
+from typing import List, Optional, Union
 
 from dmoj import sysinfo
 from dmoj.judgeenv import get_runtime_versions, get_supported_problems
@@ -212,7 +212,7 @@ class PacketManager(object):
         else:
             log.error('Unknown packet %s, payload %s', name, packet)
 
-    def handshake(self, problems: str, runtimes: str, id: str, key: str):
+    def handshake(self, problems: str, runtimes, id: str, key: str):
         self._send_packet({'name': 'handshake',
                            'problems': problems,
                            'executors': runtimes,
@@ -232,7 +232,7 @@ class PacketManager(object):
                 log.error('Handshake failed.')
                 raise JudgeAuthenticationFailed()
 
-    def supported_problems_packet(self, problems: str):
+    def supported_problems_packet(self, problems: List[str]):
         log.info('Update problems')
         self._send_packet({'name': 'supported-problems',
                            'problems': problems})

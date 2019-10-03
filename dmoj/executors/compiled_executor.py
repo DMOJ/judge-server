@@ -4,7 +4,7 @@ import signal
 import subprocess
 import threading
 import time
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
 import pylru
 
@@ -146,7 +146,7 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
 
         return TimedPopen(self.get_compile_args(), **kwargs)
 
-    def get_compile_output(self, process: TimedPopen) -> Tuple[bytes, bytes]:
+    def get_compile_output(self, process: TimedPopen) -> bytes:
         # Use safe_communicate because otherwise, malicious submissions can cause a compiler
         # to output hundreds of megabytes of data as output before being killed by the time limit,
         # which effectively murders the MySQL database waiting on the site server.

@@ -131,7 +131,7 @@ class ASMExecutor(CompiledExecutor):
         return grace
 
     @classmethod
-    def initialize(cls, sandbox=True):
+    def initialize(cls):
         if cls.qemu_path is None and not can_debug(cls.arch):
             return False
         if any(i is None for i in
@@ -141,7 +141,7 @@ class ASMExecutor(CompiledExecutor):
             return False
         if any(not os.path.isfile(i) for i in cls.crt_pre) or any(not os.path.isfile(i) for i in cls.crt_post):
             return False
-        return cls.run_self_test(sandbox)
+        return cls.run_self_test()
 
     @classmethod
     def get_versionable_commands(cls):

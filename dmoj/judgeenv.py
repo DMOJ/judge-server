@@ -16,10 +16,8 @@ except ImportError:
 problem_dirs = ()
 problem_watches = ()
 env = ConfigNode(defaults={
-    'selftest_sandboxing': True,
     'selftest_time_limit': 10,  # 10 seconds
     'selftest_memory_limit': 131072,  # 128mb of RAM
-    'generator_sandboxing': True,
     'generator_time_limit': 20,  # 20 seconds
     'generator_memory_limit': 524288,  # 512mb of RAM
     'compiler_time_limit': 10,  # Kill compiler after 10 seconds

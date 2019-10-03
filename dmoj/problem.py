@@ -141,7 +141,6 @@ class TestCase:
         time_limit = env.generator_time_limit
         memory_limit = env.generator_memory_limit
         compiler_time_limit = env.compiler_time_limit
-        use_sandbox = env.generator_sandboxing
         lang = None  # Default to C/C++
 
         base = get_problem_root(self.problem.id)
@@ -167,10 +166,6 @@ class TestCase:
             compiler_time_limit = gen.compiler_time_limit or compiler_time_limit
             lang = gen.language
 
-            # Optionally allow disabling the sandbox
-            if gen.use_sandbox is not None:
-                use_sandbox = gen.use_sandbox
-
         if not isinstance(filenames, list):
             filenames = [filenames]
 
@@ -181,19 +176,11 @@ class TestCase:
         # convert all args to str before launching; allows for smoother int passing
         args = map(str, args)
 
-        # we allow both "trusted" and "untrusted" generators, for different scenarios:
-        # e.g., an untrusted generator may be one generated via site-managed data by an
-        # arbitrary user, who shouldn't be allowed to do arbitrary things on the host machine
-        if use_sandbox:
-            # setting large buffers is really important, because otherwise stderr is unbuffered
-            # and the generator begins calling into cptbox Python code really frequently
-            proc = executor.launch(*args, time=time_limit, memory=memory_limit,
-                                   stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                   stderr_buffer_size=65536, stdout_buffer_size=65536)
-        else:
-            proc = executor.launch_unsafe(*args, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                                          stderr=subprocess.PIPE)
-            proc.unsafe_communicate = proc.communicate
+        # setting large buffers is really important, because otherwise stderr is unbuffered
+        # and the generator begins calling into cptbox Python code really frequently
+        proc = executor.launch(*args, time=time_limit, memory=memory_limit,
+                               stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                               stderr_buffer_size=65536, stdout_buffer_size=65536)
 
         try:
             input = self.problem.problem_data[self.config['in']] if self.config['in'] else None
@@ -203,11 +190,11 @@ class TestCase:
         stdout, stderr = proc.unsafe_communicate(input)
         self._generated = list(map(self._normalize, (stdout, stderr)))
 
-        if hasattr(proc, 'tle') and proc.tle:
+        if proc.tle:
             raise InternalError('generator timed out (> %s seconds)' % time_limit)
-        if hasattr(proc, 'mle') and proc.mle:
+        if proc.mle:
             raise InternalError('generator ran out of memory (> %s Kb)' % memory_limit)
-        if hasattr(proc, 'protection_fault') and proc.protection_fault:
+        if proc.protection_fault:
             syscall, callname, args = proc.protection_fault
             raise InternalError('generator invoked disallowed syscall %s (%s)' % (syscall, callname))
         if proc.returncode:

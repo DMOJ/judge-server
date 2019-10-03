@@ -132,7 +132,7 @@ class Judge:
                     colored_aux_codes = '{%s}' % ', '.join(colored_codes[1:]) if len(codes) > 1 else ''
                     colored_feedback = '(#ansi[%s](|underline)) ' % utf8text(result.feedback) if result.feedback else ''
                     case_info = '[%.3fs (%.3fs) | %dkb] %s%s' % (result.execution_time,
-                                                                 result.r_execution_time,
+                                                                 result.wall_clock_time,
                                                                  result.max_memory,
                                                                  colored_feedback,
                                                                  colored_aux_codes) if not is_sc else ''

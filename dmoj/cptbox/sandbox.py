@@ -8,6 +8,7 @@ import subprocess
 import sys
 import threading
 import time
+from typing import List, Optional
 
 from dmoj.cptbox._cptbox import *
 from dmoj.cptbox.handlers import ALLOW, DISALLOW, _CALLBACK
@@ -64,7 +65,7 @@ def file_arch(path):
 PYTHON_ARCH = file_arch(sys.executable)
 
 _PIPE_BUF = getattr(select, 'PIPE_BUF', 512)
-_SYSCALL_INDICIES = [None] * 7
+_SYSCALL_INDICIES: List[Optional[int]] = [None] * 7
 
 if 'freebsd' in sys.platform:
     _SYSCALL_INDICIES[DEBUGGER_X64] = 4

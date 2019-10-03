@@ -147,11 +147,11 @@ class BaseExecutor(PlatformExecutorMixin):
             return False
 
     @classmethod
-    def get_versionable_commands(cls) -> Tuple[Tuple[str, Optional[Tuple[int, ...]]], ...]:
+    def get_versionable_commands(cls) -> Tuple[Tuple[str, str], ...]:
         return (cls.command, cls.get_command()),
 
     @classmethod
-    def get_runtime_versions(cls) -> Union[str, tuple]:
+    def get_runtime_versions(cls) -> Tuple[Tuple[str, Optional[Tuple[int, ...]]], ...]:
         key = cls.get_executor_name()
         if key in version_cache:
             return version_cache[key]

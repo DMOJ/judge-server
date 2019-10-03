@@ -18,7 +18,7 @@ jobs:
     - name: Create pull request
       uses: peter-evans/create-pull-request@v1.4.1-multi
       env:
-        GITHUB_TOKEN: ${{ secrets.REPO_SCOPED_TOKEN }}}}
+        GITHUB_TOKEN: ${{ secrets.REPO_SCOPED_TOKEN }}
         COMMIT_MESSAGE: 'cptbox: update Linux syscall list'
         PULL_REQUEST_TITLE: 'Update Linux syscall list'
         PULL_REQUEST_BODY: This PR has been auto-generated to update the syscall definitions in `cptbox`.

@@ -12,7 +12,7 @@ from dmoj.utils.unicode import utf8text
 log = logging.getLogger('dmoj.security')
 
 
-class CHROOTSecurity(dict):
+class IsolateTracer(dict):
     def __init__(self, read_fs, write_fs=None, writable=(1, 2)):
         super().__init__()
         self.read_fs = read_fs

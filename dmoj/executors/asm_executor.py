@@ -4,7 +4,7 @@ import re
 import subprocess
 from typing import List
 
-from dmoj.cptbox.sandbox import can_debug
+from dmoj.cptbox.tracer import can_debug
 from dmoj.error import CompileError
 from dmoj.executors.compiled_executor import CompiledExecutor, TimedPopen
 from dmoj.judgeenv import env

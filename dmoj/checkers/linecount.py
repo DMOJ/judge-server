@@ -7,8 +7,8 @@ from dmoj.utils.unicode import utf8bytes
 verdict = u"\u2717\u2713"
 
 
-def check(process_output: str, judge_output: str, point_value: float, feedback: Optional[bool] = True,
-          match: Optional[Union[callable, str]] = lambda p, j: p.strip() == j.strip(),
+def check(process_output: bytes, judge_output: bytes, point_value: float, feedback: bool = True,
+          match: Union[callable, str] = lambda p, j: p.strip() == j.strip(),
           **kwargs) -> Union[CheckerResult, bool]:
     process_lines = list(filter(None, resplit(b'[\r\n]', utf8bytes(process_output))))
     judge_lines = list(filter(None, resplit(b'[\r\n]', utf8bytes(judge_output))))

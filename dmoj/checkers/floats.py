@@ -28,8 +28,8 @@ def verify_default(process_float: float, judge_float: float, epsilon: float) -> 
             abs(1.0 - process_float / judge_float) <= epsilon)
 
 
-def check(process_output: str, judge_output: str, precision: Optional[int] = 6,
-          error_mode: Optional[str] = 'default', **kwargs) -> bool:
+def check(process_output: bytes, judge_output: bytes, precision: int = 6,
+          error_mode: str = 'default', **kwargs) -> bool:
     # Discount empty lines
     process_lines = list(filter(None, resplit(b'[\r\n]', utf8bytes(process_output))))
     judge_lines = list(filter(None, resplit(b'[\r\n]', utf8bytes(judge_output))))

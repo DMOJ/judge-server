@@ -5,7 +5,7 @@ from dmoj.error import InternalError
 from dmoj.utils.unicode import utf8bytes
 
 
-def check(process_output: str, judge_output: str, split_on: Optional[str] = 'lines', **kwargs) -> bool:
+def check(process_output: bytes, judge_output: bytes, split_on: str = 'lines', **kwargs) -> bool:
     split_pattern = {
         'lines': b'[\r\n]',
         'whitespace': br'[\s]',

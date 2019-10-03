@@ -8,7 +8,7 @@ from dmoj.executors import executors
 from dmoj.graders.base import BaseGrader
 from dmoj.result import CheckerResult, Result
 from dmoj.utils.error import print_protection_fault
-from dmoj.utils.nixutils import strsignal
+from dmoj.utils.os_ext import strsignal
 
 log = logging.getLogger('dmoj.graders')
 

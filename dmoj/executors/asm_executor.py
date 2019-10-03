@@ -4,10 +4,11 @@ import re
 import subprocess
 from typing import List
 
-from dmoj.cptbox.sandbox import X64, X86, can_debug
+from dmoj.cptbox.sandbox import can_debug
 from dmoj.error import CompileError
 from dmoj.executors.compiled_executor import CompiledExecutor, TimedPopen
 from dmoj.judgeenv import env
+from dmoj.utils.os_ext import ARCH_X64, ARCH_X86
 from dmoj.utils.unicode import utf8text
 
 refeatures = re.compile(r'^[#;@|!]\s*features:\s*([\w\s,]+)', re.M)
@@ -216,7 +217,7 @@ class NASMExecutor(ASMExecutor):
 
 
 class PlatformX86Mixin(ASMExecutor):
-    arch = X86
+    arch = ARCH_X86
     ld_name = 'ld_x86'
     ld_m = 'elf_i386'
     platform_prefixes = ['i586-linux-gnu']
@@ -234,7 +235,7 @@ class PlatformX86Mixin(ASMExecutor):
 
 
 class PlatformX64Mixin(ASMExecutor):
-    arch = X64
+    arch = ARCH_X64
     ld_name = 'ld_x64'
     ld_m = 'elf_x86_64'
     platform_prefixes = ['x86_64-linux-gnu']

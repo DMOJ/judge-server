@@ -1,7 +1,5 @@
-import errno
 import logging
 import os
-import re
 import select
 import signal
 import subprocess
@@ -15,54 +13,13 @@ from dmoj.cptbox.handlers import ALLOW, DISALLOW, _CALLBACK
 from dmoj.cptbox.syscalls import SYSCALL_COUNT, by_id, translator
 from dmoj.error import InternalError
 from dmoj.utils.communicate import safe_communicate as _safe_communicate
+from dmoj.utils.os_ext import (
+    ARCH_A64, ARCH_ARM, ARCH_X32, ARCH_X64, ARCH_X86, INTERPRETER_ARCH, file_arch, find_exe_in_path,
+)
 from dmoj.utils.unicode import utf8bytes, utf8text
 
 PIPE = subprocess.PIPE
 log = logging.getLogger('dmoj.cptbox')
-
-
-def _find_exe(path):
-    if os.path.isabs(path):
-        return path
-    if os.sep in path:
-        return os.path.abspath(path)
-    for dir in os.environ.get('PATH', os.defpath).split(os.pathsep):
-        p = os.path.join(dir, path)
-        if os.access(p, os.X_OK):
-            return utf8bytes(p)
-    raise OSError()
-
-
-def file_info(path, split=re.compile(r'[\s,]').split):
-    try:
-        return split(utf8text(subprocess.check_output(['file', '-b', '-L', path])))
-    except (OSError, subprocess.CalledProcessError):
-        log.exception('call to file(1) failed -- does the utility exist?')
-        return []
-
-
-X86 = 'x86'
-X64 = 'x64'
-X32 = 'x32'
-ARM = 'arm'
-A64 = 'arm64'
-
-
-def file_arch(path):
-    info = file_info(path)
-
-    if '32-bit' in info:
-        if 'ARM' in info:
-            return ARM
-        return X32 if 'x86-64' in info else X86
-    elif '64-bit' in info:
-        if 'aarch64' in info:
-            return A64
-        return X64
-    return None
-
-
-PYTHON_ARCH = file_arch(sys.executable)
 
 _PIPE_BUF = getattr(select, 'PIPE_BUF', 512)
 _SYSCALL_INDICIES: List[Optional[int]] = [None] * 7
@@ -77,28 +34,17 @@ else:
     _SYSCALL_INDICIES[DEBUGGER_ARM] = 3
     _SYSCALL_INDICIES[DEBUGGER_ARM64] = 5
 
-
-def _eintr_retry_call(func, *args):
-    while True:
-        try:
-            return func(*args)
-        except (OSError, IOError) as e:
-            if e.errno == errno.EINTR:
-                continue
-            raise
-
-
 # (python arch, executable arch) -> debugger
 _arch_map = {
-    (X86, X86): DEBUGGER_X86,
-    (X64, X64): DEBUGGER_X64,
-    (X64, X86): DEBUGGER_X86_ON_X64,
-    (X64, X32): DEBUGGER_X32,
-    (X32, X32): DEBUGGER_X32,
-    (X32, X86): DEBUGGER_X86_ON_X64,
-    (ARM, ARM): DEBUGGER_ARM,
-    (A64, ARM): DEBUGGER_ARM,
-    (A64, A64): DEBUGGER_ARM64,
+    (ARCH_X86, ARCH_X86): DEBUGGER_X86,
+    (ARCH_X64, ARCH_X64): DEBUGGER_X64,
+    (ARCH_X64, ARCH_X86): DEBUGGER_X86_ON_X64,
+    (ARCH_X64, ARCH_X32): DEBUGGER_X32,
+    (ARCH_X32, ARCH_X32): DEBUGGER_X32,
+    (ARCH_X32, ARCH_X86): DEBUGGER_X86_ON_X64,
+    (ARCH_ARM, ARCH_ARM): DEBUGGER_ARM,
+    (ARCH_A64, ARCH_ARM): DEBUGGER_ARM,
+    (ARCH_A64, ARCH_A64): DEBUGGER_ARM64,
 }
 
 
@@ -139,11 +85,11 @@ class AdvancedDebugger(Debugger):
 # __new__ and __init__.
 class SecurePopenMeta(type):
     def __call__(self, argv, executable=None, *args, **kwargs):
-        executable = executable or _find_exe(argv[0])
+        executable = executable or find_exe_in_path(argv[0])
         arch = file_arch(executable)
-        debugger = _arch_map.get((PYTHON_ARCH, arch))
+        debugger = _arch_map.get((INTERPRETER_ARCH, arch))
         if debugger is None:
-            raise RuntimeError('Executable type %s could not be debugged on Python type %s' % (arch, PYTHON_ARCH))
+            raise RuntimeError('Executable type %s could not be debugged on Python type %s' % (arch, INTERPRETER_ARCH))
         return super().__call__(debugger, self.debugger_type, argv, executable, *args, **kwargs)
 
 
@@ -155,7 +101,7 @@ class SecurePopen(Process, metaclass=SecurePopenMeta):
                  fds=None, wall_time=None):
         self._debugger_type = debugger
         self._syscall_index = index = _SYSCALL_INDICIES[debugger]
-        self._executable = executable or _find_exe(args[0])
+        self._executable = executable or find_exe_in_path(args[0])
         self._args = args
         self._chdir = cwd
         self._env = [utf8bytes('%s=%s' % (arg, val))
@@ -363,4 +309,4 @@ class SecurePopen(Process, metaclass=SecurePopenMeta):
 
 
 def can_debug(arch):
-    return (PYTHON_ARCH, arch) in _arch_map
+    return (INTERPRETER_ARCH, arch) in _arch_map

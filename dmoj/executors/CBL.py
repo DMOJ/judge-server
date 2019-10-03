@@ -24,5 +24,5 @@ class Executor(CompiledExecutor):
         return {'stdout': subprocess.PIPE, 'stderr': subprocess.STDOUT}
 
     def get_compile_output(self, process):
-        output = super(Executor, self).get_compile_output(process)
+        output = super().get_compile_output(process)
         return output if b'Error:' in output or b'Note:' in output or b'Warning:' in output else ''

@@ -276,7 +276,7 @@ class Judge:
 
 class ClassicJudge(Judge):
     def __init__(self, host, port, **kwargs):
-        super(ClassicJudge, self).__init__()
+        super().__init__()
         self.packet_manager = packet.PacketManager(host, port, self, env['id'], env['key'], **kwargs)
 
 

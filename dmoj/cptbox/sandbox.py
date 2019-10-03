@@ -122,7 +122,7 @@ class AdvancedDebugger(Debugger):
         if self.address_bits == 32:
             address &= 0xFFFFFFFF
         try:
-            return utf8text(super(AdvancedDebugger, self).readstr(address, max_size))
+            return utf8text(super().readstr(address, max_size))
         except UnicodeDecodeError:
             # It's possible for the text to crash utf8text, but this would mean a
             # deliberate attack, so we kill the process here instead
@@ -144,7 +144,7 @@ class SecurePopenMeta(type):
         debugger = _arch_map.get((PYTHON_ARCH, arch))
         if debugger is None:
             raise RuntimeError('Executable type %s could not be debugged on Python type %s' % (arch, PYTHON_ARCH))
-        return super(SecurePopenMeta, self).__call__(debugger, self.debugger_type, argv, executable, *args, **kwargs)
+        return super().__call__(debugger, self.debugger_type, argv, executable, *args, **kwargs)
 
 
 class SecurePopen(Process, metaclass=SecurePopenMeta):

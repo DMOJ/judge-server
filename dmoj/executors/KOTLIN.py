@@ -22,11 +22,11 @@ fun main(args: Array<String>) {
 '''
 
     def create_files(self, problem_id, source_code, *args, **kwargs):
-        super(Executor, self).create_files(problem_id, source_code, *args, **kwargs)
+        super().create_files(problem_id, source_code, *args, **kwargs)
         self._jar_name = '%s.jar' % problem_id
 
     def get_cmdline(self):
-        res = super(Executor, self).get_cmdline()
+        res = super().get_cmdline()
         res[-2:] = ['-jar', self._jar_name]
         return res
 

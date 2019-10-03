@@ -13,7 +13,7 @@ put echo
 '''
 
     def get_fs(self):
-        return super(Executor, self).get_fs() + [self._code + 'bc']
+        return super().get_fs() + [self._code + 'bc']
 
     def get_compile_args(self):
         return [self.get_command(), self._code, env['runtime']['turing_dir']]
@@ -28,4 +28,4 @@ put echo
     def initialize(cls, sandbox=True):
         if 'tprolog' not in env['runtime'] or 'tprologc' not in env['runtime'] or 'turing_dir' not in env['runtime']:
             return False
-        return super(Executor, cls).initialize(sandbox=sandbox)
+        return super().initialize(sandbox=sandbox)

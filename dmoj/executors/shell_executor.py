@@ -16,17 +16,17 @@ class ShellExecutor(ScriptExecutor):
         return list(map(find_executable, self.get_shell_commands()))
 
     def get_fs(self):
-        return super(ShellExecutor, self).get_fs() + self.get_allowed_exec()
+        return super().get_fs() + self.get_allowed_exec()
 
     def get_allowed_syscalls(self):
-        return super(ShellExecutor, self).get_allowed_syscalls() + [
+        return super().get_allowed_syscalls() + [
             'fork', 'waitpid', 'wait4',
         ]
 
     def get_security(self, launch_kwargs=None):
         from dmoj.cptbox.syscalls import sys_execve, sys_access, sys_eaccess
 
-        sec = super(ShellExecutor, self).get_security(launch_kwargs)
+        sec = super().get_security(launch_kwargs)
         allowed = set(self.get_allowed_exec())
 
         def handle_execve(debugger):
@@ -41,6 +41,6 @@ class ShellExecutor(ScriptExecutor):
         return sec
 
     def get_env(self):
-        env = super(ShellExecutor, self).get_env()
+        env = super().get_env()
         env['PATH'] = os.environ['PATH']
         return env

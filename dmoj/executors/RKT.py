@@ -35,7 +35,7 @@ class Executor(ScriptDirectoryMixin, CompiledExecutor):
     def initialize(cls, sandbox=True):
         if 'raco' not in cls.runtime_dict:
             return False
-        return super(Executor, cls).initialize(sandbox)
+        return super().initialize(sandbox)
 
     @classmethod
     def get_versionable_commands(cls):

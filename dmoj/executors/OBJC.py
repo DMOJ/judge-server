@@ -27,13 +27,13 @@ int main (int argc, const char * argv[]) {
 '''
 
     def get_flags(self):
-        return self.objc_flags + super(Executor, self).get_flags()
+        return self.objc_flags + super().get_flags()
 
     def get_ldflags(self):
-        return self.objc_ldflags + super(Executor, self).get_ldflags()
+        return self.objc_ldflags + super().get_ldflags()
 
     def get_fs(self):
-        return super(Executor, self).get_fs() + [r'/proc/\d+/cmdline$']
+        return super().get_fs() + [r'/proc/\d+/cmdline$']
 
     @classmethod
     def initialize(cls, sandbox=True):
@@ -44,4 +44,4 @@ int main (int argc, const char * argv[]) {
             cls.objc_ldflags = check_output([env['runtime']['gnustep-config'], '--base-libs']).split()
         except CalledProcessError:
             return False
-        return super(Executor, cls).initialize(sandbox=sandbox)
+        return super().initialize(sandbox=sandbox)

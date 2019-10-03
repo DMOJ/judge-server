@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 class RefreshWorker(Thread):
     def __init__(self, urls):
-        super(RefreshWorker, self).__init__()
+        super().__init__()
         self.urls = urls
         self.daemon = True
         self._trigger = Event()

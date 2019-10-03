@@ -11,7 +11,7 @@ class RubyExecutor(ScriptExecutor):
     test_program = 'puts gets'
 
     def get_fs(self):
-        fs = super(RubyExecutor, self).get_fs()
+        fs = super().get_fs()
         home = self.runtime_dict.get('%s_home' % self.get_executor_name().lower())
         if home is not None:
             fs.append(re.escape(home))

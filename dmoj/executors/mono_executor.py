@@ -39,7 +39,7 @@ class MonoExecutor(CompiledExecutor):
                 'fadvise64', ('fork', ACCESS_EAGAIN)]
 
     def get_env(self):
-        env = super(MonoExecutor, self).get_env()
+        env = super().get_env()
         # Disable Mono's usage of /dev/shm, so we don't have to deal with
         # its extremely messy access patterns to it.
         env['MONO_DISABLE_SHARED_AREA'] = '1'
@@ -58,7 +58,7 @@ class MonoExecutor(CompiledExecutor):
 
     @classmethod
     def get_find_first_mapping(cls):
-        res = super(MonoExecutor, cls).get_find_first_mapping()
+        res = super().get_find_first_mapping()
         res['mono'] = ['mono']
         return res
 
@@ -81,4 +81,4 @@ class MonoExecutor(CompiledExecutor):
     def initialize(cls, sandbox=True):
         if 'mono' not in cls.runtime_dict or not os.path.isfile(cls.runtime_dict['mono']):
             return False
-        return super(MonoExecutor, cls).initialize(sandbox=sandbox)
+        return super().initialize(sandbox=sandbox)

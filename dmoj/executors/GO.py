@@ -53,4 +53,4 @@ func main() {
         source_lines = decomment(source_code).strip().split(b'\n')
         if source_lines[0].strip().split() != [b'package', b'main']:
             raise CompileError(b'Your code must be defined in package main.\n')
-        super(Executor, self).create_files(problem_id, source_code, *args, **kwargs)
+        super().create_files(problem_id, source_code, *args, **kwargs)

@@ -66,6 +66,7 @@ fn main() {
 
 
 class Executor(CompiledExecutor):
+    ext = 'rs'
     name = 'RUST'
     command = 'cargo'
     test_program = HELLO_WORLD_PROGRAM

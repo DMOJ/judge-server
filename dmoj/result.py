@@ -26,7 +26,7 @@ class Result:
     def __init__(self, case):
         self.result_flag = 0
         self.execution_time = 0
-        self.r_execution_time = 0
+        self.wall_clock_time = 0
         self.max_memory = 0
         self.proc_output = ''
         self.feedback = ''

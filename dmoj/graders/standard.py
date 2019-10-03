@@ -33,7 +33,7 @@ class StandardGrader(BaseGrader):
 
         result.max_memory = process.max_memory or 0.0
         result.execution_time = process.execution_time or 0.0
-        result.r_execution_time = process.r_execution_time or 0.0
+        result.wall_clock_time = process.wall_clock_time or 0.0
 
         # Translate status codes/process results into Result object for status codes
         result.set_result_flag(process)

@@ -174,10 +174,6 @@ class TracedPopen(Process, metaclass=TracedPopenMeta):
     def tle(self):
         return self._tle
 
-    @property
-    def r_execution_time(self):
-        return self.wall_clock_time
-
     def kill(self):
         log.warning('Request the killing of process: %s', self.pid)
         try:

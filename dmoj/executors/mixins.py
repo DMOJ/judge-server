@@ -121,7 +121,7 @@ class PlatformExecutorMixin(metaclass=abc.ABCMeta):
                            fsize=self.fsize)
 
 
-class NullStdoutMixin(object):
+class NullStdoutMixin:
     """
     Some compilers print a lot of debug info to stdout even with successful compiles. This mixin pipes that generally-
     useless data into os.devnull so that the user never sees it.
@@ -142,7 +142,7 @@ class NullStdoutMixin(object):
         return result
 
 
-class EmulateTerminalMixin(object):
+class EmulateTerminalMixin:
     """
     Some languages may insist on providing certain functionality (e.g. colored highlighting of errors) if they feel
     they are connected to a terminal. Some are more persistent than others in enforcing this, so this mixin aims
@@ -159,7 +159,7 @@ class EmulateTerminalMixin(object):
         self._master, self._slave = pty.openpty()
         proc = super(EmulateTerminalMixin, self).get_compile_process()
 
-        class io_error_wrapper(object):
+        class io_error_wrapper:
             """
             Wrap pty-related IO errors so that we don't crash Popen.communicate()
             """
@@ -198,7 +198,7 @@ class EmulateTerminalMixin(object):
         return env
 
 
-class ScriptDirectoryMixin(object):
+class ScriptDirectoryMixin:
     """
     Certain script executors need access to the entire directory of the script,
     usually for some searching purposes.

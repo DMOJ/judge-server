@@ -60,7 +60,7 @@ class SendProblemsHandler(FileSystemEventHandler):
             self.refresher.refresh()
 
 
-class Monitor(object):
+class Monitor:
     def __init__(self):
         if Observer is not None and not judgeenv.no_watchdog:
             if judgeenv.env.update_pings:
@@ -122,7 +122,7 @@ class Monitor(object):
         self.stop()
 
 
-class DummyMonitor(object):
+class DummyMonitor:
     def __enter__(self):
         return self
 

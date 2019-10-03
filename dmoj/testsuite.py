@@ -13,7 +13,7 @@ from dmoj.utils.ansi import ansi_style, print_ansi
 all_executors = executors.executors
 
 
-class TestManager(object):
+class TestManager:
     def output(self, message):
         print(message)
 
@@ -93,7 +93,7 @@ class TestJudge(Judge):
         self.packet_manager = manager
 
 
-class Tester(object):
+class Tester:
     all_codes = {'AC', 'IE', 'TLE', 'MLE', 'OLE', 'RTE', 'IR', 'WA', 'CE', 'SC'}
 
     def __init__(self, problem_regex=None, case_regex=None):

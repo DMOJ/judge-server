@@ -31,11 +31,11 @@ except ImportError:
         pass
 
 
-class BatchBegin(object):
+class BatchBegin:
     pass
 
 
-class BatchEnd(object):
+class BatchEnd:
     pass
 
 
@@ -43,7 +43,7 @@ class TerminateGrading(Exception):
     pass
 
 
-class Judge(object):
+class Judge:
     def __init__(self):
         self.current_grader = None
         self.current_submission_id = None
@@ -383,7 +383,7 @@ PR_SET_PDEATHSIG = 1
 logpm = logging.getLogger('dmoj.judgepm')
 
 
-class JudgeManager(object):
+class JudgeManager:
     signal_map = {k: v for v, k in sorted(signal.__dict__.items(), reverse=True)
                   if v.startswith('SIG') and not v.startswith('SIG_')}
 

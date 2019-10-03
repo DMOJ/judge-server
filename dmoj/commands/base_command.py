@@ -20,7 +20,7 @@ class CommandArgumentParser(argparse.ArgumentParser):
         raise InvalidCommandException
 
 
-class Command(object):
+class Command:
     name = 'command'
     help = ''
 

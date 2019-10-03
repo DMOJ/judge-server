@@ -7,7 +7,7 @@ class InvalidInitException(Exception):
         super(InvalidInitException, self).__init__(message)
 
 
-class ConfigNode(object):
+class ConfigNode:
     """
     A wrapper around a YAML configuration object for easier use.
 

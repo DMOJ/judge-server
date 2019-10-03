@@ -10,7 +10,7 @@ class WrongAnswer(BaseException):
 EOF = b''
 
 
-class Interactor(object):
+class Interactor:
     def __init__(self, process):
         self.process = process
         self._tokens = None

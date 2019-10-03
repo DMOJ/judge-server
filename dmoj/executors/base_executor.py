@@ -33,8 +33,7 @@ class BaseExecutor(PlatformExecutorMixin):
     source_filename_format = '{problem_id}.{ext}'
 
     def __init__(self, problem_id: str, source_code: bytes, dest_dir: Optional[str] = None,
-                 hints: Optional[List[str]] = None,
-                 unbuffered: bool = False, **kwargs):
+                 hints: Optional[List[str]] = None, unbuffered: bool = False, **kwargs):
         self._tempdir = dest_dir or env.tempdir
         self._dir = None
         self.problem = problem_id
@@ -87,7 +86,7 @@ class BaseExecutor(PlatformExecutorMixin):
                                 cwd=self._dir, **kwargs)
 
     @classmethod
-    def get_command(cls) -> str:
+    def get_command(cls) -> Optional[str]:
         return cls.runtime_dict.get(cls.command)
 
     @classmethod
@@ -183,7 +182,7 @@ class BaseExecutor(PlatformExecutorMixin):
         return version_cache[key]
 
     @classmethod
-    def parse_version(cls, command: str, output: str) -> Union[Iterable[int], None]:
+    def parse_version(cls, command: str, output: str) -> Optional[Iterable[int]]:
         match = cls.version_regex.match(output)
         if match:
             return map(int, match.group(1).split('.'))

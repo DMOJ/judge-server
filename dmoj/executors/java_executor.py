@@ -1,9 +1,11 @@
+import abc
 import errno
 import os
 import re
 import subprocess
 import sys
 from subprocess import Popen
+from typing import Optional
 
 from dmoj.error import CompileError, InternalError
 from dmoj.executors.compiled_executor import CompiledExecutor
@@ -45,18 +47,26 @@ def find_class(source):
 class JavaExecutor(CompiledExecutor):
     ext = 'java'
 
-    vm = None
-    compiler = None
     nproc = -1
     fsize = 64  # Allow 64 bytes for dumping state file.
     address_grace = 786432
 
-    jvm_regex = None
+    jvm_regex: Optional[str] = None
     security_policy = policy
 
     def __init__(self, problem_id, source_code, **kwargs):
         self._class_name = None
         super(JavaExecutor, self).__init__(problem_id, source_code, **kwargs)
+
+    @property
+    @abc.abstractmethod
+    def compiler(self) -> str:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def vm(self) -> str:
+        pass
 
     def create_files(self, problem_id, source_code, *args, **kwargs):
         super(JavaExecutor, self).create_files(problem_id, source_code, *args, **kwargs)

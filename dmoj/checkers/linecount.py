@@ -8,7 +8,7 @@ verdict = u"\u2717\u2713"
 
 
 def check(process_output: bytes, judge_output: bytes, point_value: float, feedback: bool = True,
-          match: Union[callable, str] = lambda p, j: p.strip() == j.strip(),
+          match: Callable[[bytes, bytes], bool] = lambda p, j: p.strip() == j.strip(),
           **kwargs) -> Union[CheckerResult, bool]:
     process_lines = list(filter(None, resplit(b'[\r\n]', utf8bytes(process_output))))
     judge_lines = list(filter(None, resplit(b'[\r\n]', utf8bytes(judge_output))))

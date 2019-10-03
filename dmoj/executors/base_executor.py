@@ -202,6 +202,7 @@ class BaseExecutor(PlatformExecutorMixin):
                 path = find_executable(file)
                 if path is not None:
                     return os.path.abspath(path)
+        return None
 
     @classmethod
     def autoconfig_find_first(cls, mapping) -> Tuple[dict, bool, str]:

@@ -1,5 +1,5 @@
 from re import split as resplit
-from typing import Optional, Union
+from typing import Union
 
 from dmoj.result import CheckerResult
 from dmoj.utils.unicode import utf8bytes

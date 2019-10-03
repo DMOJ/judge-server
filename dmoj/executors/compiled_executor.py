@@ -4,7 +4,7 @@ import signal
 import subprocess
 import threading
 import time
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import pylru
 
@@ -127,7 +127,7 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
     def get_compile_popen_kwargs(self) -> dict:
         return {}
 
-    def create_executable_limits(self) -> None:
+    def create_executable_limits(self) -> Optional[callable]:
         try:
             import resource
 
@@ -159,7 +159,7 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
     def is_failed_compile(self, process: TimedPopen) -> bool:
         return process.returncode != 0
 
-    def handle_compile_error(self, output: str) -> None:
+    def handle_compile_error(self, output: str) -> bytes:
         raise CompileError(output)
 
     def get_binary_cache_key(self) -> str:

@@ -7,7 +7,7 @@ import sys
 import tempfile
 import traceback
 from distutils.spawn import find_executable
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from typing import Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 from dmoj.executors.mixins import PlatformExecutorMixin
 from dmoj.judgeenv import env
@@ -33,8 +33,8 @@ class BaseExecutor(PlatformExecutorMixin):
     source_filename_format = '{problem_id}.{ext}'
 
     def __init__(self, problem_id: str, source_code: bytes, dest_dir: Optional[str] = None,
-                 hints: Optional[Union[list, str]] = None,
-                 unbuffered: Optional[bool] = False, **kwargs):
+                 hints: Optional[List[str]] = None,
+                 unbuffered: bool = False, **kwargs):
         self._tempdir = dest_dir or env.tempdir
         self._dir = None
         self.problem = problem_id
@@ -81,7 +81,7 @@ class BaseExecutor(PlatformExecutorMixin):
     def get_nproc(self) -> int:
         return self.nproc
 
-    def launch_unsafe(self, *args: str, **kwargs: str) -> subprocess.Popen:
+    def launch_unsafe(self, *args: str, **kwargs) -> subprocess.Popen:
         return subprocess.Popen(self.get_cmdline() + list(args),
                                 env=self.get_env(), executable=self.get_executable(),
                                 cwd=self._dir, **kwargs)
@@ -99,7 +99,7 @@ class BaseExecutor(PlatformExecutorMixin):
         return cls.run_self_test(sandbox)
 
     @classmethod
-    def run_self_test(cls, sandbox: Optional[bool] = True, output: Optional[bool] = True,
+    def run_self_test(cls, sandbox: bool = True, output: bool = True,
                       error_callback: Optional[Callable[[any], any]] = None) -> bool:
         if not cls.test_program:
             return True
@@ -148,7 +148,7 @@ class BaseExecutor(PlatformExecutorMixin):
             return False
 
     @classmethod
-    def get_versionable_commands(cls) -> Tuple[Tuple[str, str], ...]:
+    def get_versionable_commands(cls) -> Tuple[Tuple[str, Optional[Tuple[int, ...]]], ...]:
         return (cls.command, cls.get_command()),
 
     @classmethod
@@ -183,7 +183,7 @@ class BaseExecutor(PlatformExecutorMixin):
         return version_cache[key]
 
     @classmethod
-    def parse_version(cls, command: str, output: str) -> Union[map, None]:
+    def parse_version(cls, command: str, output: str) -> Union[Iterable[int], None]:
         match = cls.version_regex.match(output)
         if match:
             return map(int, match.group(1).split('.'))
@@ -194,7 +194,7 @@ class BaseExecutor(PlatformExecutorMixin):
         return ['--version']
 
     @classmethod
-    def find_command_from_list(cls, files: str) -> str:
+    def find_command_from_list(cls, files: str) -> Optional[str]:
         for file in files:
             if os.path.isabs(file):
                 if os.path.exists(file):
@@ -205,7 +205,7 @@ class BaseExecutor(PlatformExecutorMixin):
                     return os.path.abspath(path)
 
     @classmethod
-    def autoconfig_find_first(cls, mapping) -> Union[Tuple[dict, bool, str], bool]:
+    def autoconfig_find_first(cls, mapping) -> Tuple[dict, bool, str]:
         if mapping is None:
             return {}, False, 'Unimplemented'
         result = {}
@@ -238,7 +238,7 @@ class BaseExecutor(PlatformExecutorMixin):
         return {cls.command: cls.command_paths or [cls.command]}
 
     @classmethod
-    def autoconfig(cls) -> Union[Tuple[dict, bool, str], bool]:
+    def autoconfig(cls) -> Tuple[dict, bool, str]:
         return cls.autoconfig_find_first(cls.get_find_first_mapping())
 
 

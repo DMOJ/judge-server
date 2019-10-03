@@ -30,7 +30,7 @@ class PacketManager(object):
     SIZE_PACK = struct.Struct('!I')
 
     def __init__(self, host: str, port: Union[str, int], judge: object, name: str, key: str,
-                 secure: Optional[bool] = False, no_cert_check: Optional[bool] = False,
+                 secure: bool = False, no_cert_check: bool = False,
                  cert_store: Optional[str] = None):
         self.host = host
         self.port = port
@@ -237,7 +237,7 @@ class PacketManager(object):
         self._send_packet({'name': 'supported-problems',
                            'problems': problems})
 
-    def test_case_status_packet(self, position: Union[str, int], result: object):
+    def test_case_status_packet(self, position: int, result: object):
         log.info('Test case on %d: #%d, %s [%.3fs | %.2f MB], %.1f/%.0f',
                  self.judge.current_submission_id, position,
                  ', '.join(result.readable_codes()),
@@ -307,7 +307,7 @@ class PacketManager(object):
         self._send_packet({'name': 'submission-terminated',
                            'submission-id': self.judge.current_submission_id})
 
-    def ping_packet(self, when: str):
+    def ping_packet(self, when: float):
         data = {'name': 'ping-response',
                 'when': when,
                 'time': time.time()}
@@ -316,6 +316,6 @@ class PacketManager(object):
             data[key] = value
         self._send_packet(data)
 
-    def submission_acknowledged_packet(self, sub_id: Union[str, int]):
+    def submission_acknowledged_packet(self, sub_id: int):
         self._send_packet({'name': 'submission-acknowledged',
                            'submission-id': sub_id})

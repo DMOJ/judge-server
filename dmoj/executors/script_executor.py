@@ -7,7 +7,7 @@ from dmoj.utils.unicode import utf8bytes
 
 
 class ScriptExecutor(BaseExecutor):
-    def __init__(self, problem_id: str, source_code: str, **kwargs):
+    def __init__(self, problem_id: str, source_code: bytes, **kwargs):
         super(ScriptExecutor, self).__init__(problem_id, source_code, **kwargs)
         self._code = self._file(
             self.source_filename_format.format(problem_id=problem_id, ext=self.ext))
@@ -28,7 +28,7 @@ class ScriptExecutor(BaseExecutor):
             fs.append(re.escape(home))
         return fs
 
-    def create_files(self, problem_id: str, source_code: str) -> None:
+    def create_files(self, problem_id: str, source_code: bytes) -> None:
         with open(self._code, 'wb') as fo:
             fo.write(utf8bytes(source_code))
 

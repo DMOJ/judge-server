@@ -21,7 +21,7 @@ version_cache = {}
 
 class BaseExecutor(PlatformExecutorMixin):
     nproc = 0
-    command = None
+    command: Optional[str] = None
     command_paths = []
     runtime_dict = env.runtime
     test_name = 'self_test'

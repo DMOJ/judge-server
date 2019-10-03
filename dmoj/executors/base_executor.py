@@ -148,7 +148,7 @@ class BaseExecutor(PlatformExecutorMixin):
                     error_callback('Got unexpected stderr output:\n' + utf8text(stderr))
                 else:
                     print(stderr, file=sys.stderr)
-            if hasattr(proc, 'protection_fault') and proc.protection_fault:
+            if proc.protection_fault:
                 print_protection_fault(proc.protection_fault)
             return res
         except Exception:

@@ -1,3 +1,4 @@
+import abc
 import os
 import re
 import shutil
@@ -35,7 +36,7 @@ else:
     BASE_FILESYSTEM += [r'/etc/ld\.so\.(?:nohwcap|preload|cache)$']
 
 
-class PlatformExecutorMixin(object):
+class PlatformExecutorMixin(metaclass=abc.ABCMeta):
     address_grace = 65536
     data_grace = 0
     fsize = 0

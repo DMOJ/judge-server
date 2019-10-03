@@ -4,7 +4,7 @@ import re
 import shutil
 import sys
 
-from dmoj.cptbox import CHROOTSecurity, SecurePopen, syscalls
+from dmoj.cptbox import IsolateTracer, TracedPopen, syscalls
 from dmoj.cptbox.handlers import ALLOW
 from dmoj.error import InternalError
 from dmoj.judgeenv import env
@@ -55,7 +55,7 @@ class PlatformExecutorMixin(metaclass=abc.ABCMeta):
         return sec
 
     def get_security(self, launch_kwargs=None):
-        sec = CHROOTSecurity(self.get_fs(), write_fs=self.get_write_fs())
+        sec = IsolateTracer(self.get_fs(), write_fs=self.get_write_fs())
         return self._add_syscalls(sec)
 
     def get_fs(self):
@@ -103,7 +103,7 @@ class PlatformExecutorMixin(metaclass=abc.ABCMeta):
         }
         env.update(self.get_env())
 
-        return SecurePopen([utf8bytes(a) for a in self.get_cmdline() + list(args)],
+        return TracedPopen([utf8bytes(a) for a in self.get_cmdline() + list(args)],
                            executable=utf8bytes(self.get_executable()),
                            security=self.get_security(launch_kwargs=kwargs),
                            address_grace=self.get_address_grace(),

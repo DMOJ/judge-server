@@ -83,7 +83,7 @@ class AdvancedDebugger(Debugger):
 # different parameters to __new__ and __init__, the latter of which is given the *original* arguments
 # as passed to type.__call__. Hence, we use a metaclass to pass the extra debugger argument to both
 # __new__ and __init__.
-class SecurePopenMeta(type):
+class TracedPopenMeta(type):
     def __call__(self, argv, executable=None, *args, **kwargs):
         executable = executable or find_exe_in_path(argv[0])
         arch = file_arch(executable)
@@ -93,7 +93,7 @@ class SecurePopenMeta(type):
         return super().__call__(debugger, self.debugger_type, argv, executable, *args, **kwargs)
 
 
-class SecurePopen(Process, metaclass=SecurePopenMeta):
+class TracedPopen(Process, metaclass=TracedPopenMeta):
     debugger_type = AdvancedDebugger
 
     def __init__(self, debugger, _, args, executable=None, security=None, time=0, memory=0, stdin=PIPE, stdout=PIPE,

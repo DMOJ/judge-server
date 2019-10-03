@@ -2,7 +2,7 @@ import os
 import re
 from collections import deque
 
-from dmoj.cptbox import SecurePopen
+from dmoj.cptbox import TracedPopen
 from dmoj.cptbox.handlers import ACCESS_EAGAIN
 from dmoj.executors.compiled_executor import CompiledExecutor
 from dmoj.result import Result
@@ -11,7 +11,7 @@ from dmoj.utils.unicode import utf8text
 reexception = re.compile(r'\bFATAL UNHANDLED EXCEPTION: (.*?):', re.U)
 
 
-class MonoSecurePopen(SecurePopen):
+class MonoTracedPopen(TracedPopen):
     def _cpu_time_exceeded(self):
         pass
 
@@ -31,7 +31,7 @@ class MonoExecutor(CompiledExecutor):
     # VmHWM >= X. Then, even if Mono exits poorly, the submission will still
     # get flagged as MLE.
     data_grace = 65536
-    cptbox_popen_class = MonoSecurePopen
+    cptbox_popen_class = MonoTracedPopen
     fs = ['/etc/mono/']
     # Mono sometimes forks during its crashdump procedure, but continues even if
     # the call to fork fails.

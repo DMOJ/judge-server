@@ -56,7 +56,7 @@ class JavaExecutor(CompiledExecutor):
 
     def __init__(self, problem_id, source_code, **kwargs):
         self._class_name = None
-        super(JavaExecutor, self).__init__(problem_id, source_code, **kwargs)
+        super().__init__(problem_id, source_code, **kwargs)
 
     @property
     @abc.abstractmethod
@@ -69,7 +69,7 @@ class JavaExecutor(CompiledExecutor):
         pass
 
     def create_files(self, problem_id, source_code, *args, **kwargs):
-        super(JavaExecutor, self).create_files(problem_id, source_code, *args, **kwargs)
+        super().create_files(problem_id, source_code, *args, **kwargs)
 
         self._agent_file = JAVA_SANDBOX
         self._policy_file = self._file('security.policy')
@@ -101,7 +101,7 @@ class JavaExecutor(CompiledExecutor):
     def launch(self, *args, **kwargs):
         self.__memory_limit = kwargs['memory']
         kwargs['memory'] = 0
-        return super(JavaExecutor, self).launch(*args, **kwargs)
+        return super().launch(*args, **kwargs)
 
     def launch_unsafe(self, *args, **kwargs):
         return Popen(['java', self.get_vm_mode(), self._class_name] + list(args),
@@ -205,7 +205,7 @@ class JavaExecutor(CompiledExecutor):
 
 class JavacExecutor(JavaExecutor):
     def create_files(self, problem_id, source_code, *args, **kwargs):
-        super(JavacExecutor, self).create_files(problem_id, source_code, *args, **kwargs)
+        super().create_files(problem_id, source_code, *args, **kwargs)
         # This step is necessary because of Unicode classnames
         try:
             source_code = utf8text(source_code)

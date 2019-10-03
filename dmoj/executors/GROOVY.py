@@ -21,11 +21,11 @@ println System.in.newReader().readLine()
 '''
 
     def create_files(self, problem_id, source_code, *args, **kwargs):
-        super(Executor, self).create_files(problem_id, source_code, *args, **kwargs)
+        super().create_files(problem_id, source_code, *args, **kwargs)
         self._class_name = problem_id
 
     def get_cmdline(self):
-        res = super(Executor, self).get_cmdline()
+        res = super().get_cmdline()
 
         res[-2:-1] = ['-Dsubmission.file=%s' % self._class_name] + self.runtime_dict['groovy_args']
         return res

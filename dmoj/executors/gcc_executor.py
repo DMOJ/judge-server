@@ -24,7 +24,7 @@ class GCCExecutor(CompiledExecutor):
     version_regex = re.compile(r'.*?(\d+(?:\.\d+)*)', re.DOTALL)
 
     def __init__(self, problem_id, main_source, **kwargs):
-        super(GCCExecutor, self).__init__(problem_id, main_source, **kwargs)
+        super().__init__(problem_id, main_source, **kwargs)
 
         self.source_dict = kwargs.get('aux_sources', {})
         if main_source:
@@ -64,7 +64,7 @@ class GCCExecutor(CompiledExecutor):
         return GCC_COMPILE
 
     def get_env(self):
-        env = super(GCCExecutor, self).get_env() or {}
+        env = super().get_env() or {}
         env.update(GCC_ENV)
         return env
 
@@ -111,11 +111,11 @@ class GCCExecutor(CompiledExecutor):
 
     @classmethod
     def autoconfig(cls):
-        return super(GCCExecutor, cls).autoconfig()
+        return super().autoconfig()
 
     @classmethod
     def initialize(cls, sandbox=True):
-        res = super(CompiledExecutor, cls).initialize(sandbox=sandbox)
+        res = super().initialize(sandbox=sandbox)
         if res:
             cls.has_color = cls.get_runtime_versions()[0][1] > (4, 9)
         return res

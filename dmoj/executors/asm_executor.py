@@ -25,7 +25,7 @@ class ASMExecutor(CompiledExecutor):
         self.use_qemu = self.qemu_path is not None and os.path.isfile(self.qemu_path)
         self.features = self.find_features(source_code)
 
-        super(ASMExecutor, self).__init__(problem_id, source_code + b'\n', *args, **kwargs)
+        super().__init__(problem_id, source_code + b'\n', *args, **kwargs)
 
     @property
     @abc.abstractmethod
@@ -110,21 +110,21 @@ class ASMExecutor(CompiledExecutor):
     def get_cmdline(self):
         if self.use_qemu:
             return [self.qemu_path, self._executable]
-        return super(ASMExecutor, self).get_cmdline()
+        return super().get_cmdline()
 
     def get_executable(self):
         if self.use_qemu:
             return self.qemu_path
-        return super(ASMExecutor, self).get_executable()
+        return super().get_executable()
 
     def get_fs(self):
-        fs = super(ASMExecutor, self).get_fs()
+        fs = super().get_fs()
         if self.use_qemu:
             fs += ['/proc/sys/vm/mmap_min_addr$', '/etc/qemu-binfmt/', self._executable]
         return fs
 
     def get_address_grace(self):
-        grace = super(ASMExecutor, self).get_address_grace()
+        grace = super().get_address_grace()
         if self.use_qemu:
             grace += 65536
         return grace
@@ -151,7 +151,7 @@ class ASMExecutor(CompiledExecutor):
     def autoconfig(cls):
         if not can_debug(cls.arch):
             return {}, False, 'Unable to natively debug'
-        return super(ASMExecutor, cls).autoconfig()
+        return super().autoconfig()
 
 
 class GASExecutor(ASMExecutor):
@@ -196,7 +196,7 @@ class NASMExecutor(ASMExecutor):
         pass
 
     def find_features(self, source_code):
-        features = super(NASMExecutor, self).find_features(source_code)
+        features = super().find_features(source_code)
         if source_code.startswith(b'; libc'):
             features.add('libc')
         return features
@@ -206,7 +206,7 @@ class NASMExecutor(ASMExecutor):
 
     @classmethod
     def get_version_flags(cls, command):
-        return ['-version'] if command == cls.as_name else super(NASMExecutor, cls).get_version_flags(command)
+        return ['-version'] if command == cls.as_name else super().get_version_flags(command)
 
     @classmethod
     def get_find_first_mapping(cls):

@@ -257,7 +257,7 @@ class BaseExecutor(PlatformExecutorMixin):
 
 class ScriptExecutor(BaseExecutor):
     def __init__(self, problem_id: str, source_code: bytes, **kwargs):
-        super(ScriptExecutor, self).__init__(problem_id, source_code, **kwargs)
+        super().__init__(problem_id, source_code, **kwargs)
         self._code = self._file(
             self.source_filename_format.format(problem_id=problem_id, ext=self.ext))
         self.create_files(problem_id, source_code)
@@ -272,7 +272,7 @@ class ScriptExecutor(BaseExecutor):
 
     def get_fs(self) -> List[str]:
         home = self.runtime_dict.get('%s_home' % self.get_executor_name().lower())
-        fs = super(ScriptExecutor, self).get_fs() + [self._code]
+        fs = super().get_fs() + [self._code]
         if home is not None:
             fs.append(re.escape(home))
         return fs
@@ -288,7 +288,7 @@ class ScriptExecutor(BaseExecutor):
         return self.get_command()
 
     def get_env(self) -> dict:
-        env = super(BaseExecutor, self).get_env()
+        env = super().get_env()
         env_key = self.get_executor_name().lower() + '_env'
         if env_key in self.runtime_dict:
             env = env or {}

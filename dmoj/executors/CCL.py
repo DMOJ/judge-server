@@ -28,7 +28,7 @@ class Executor(ScriptDirectoryMixin, CompiledExecutor):
 
     def launch(self, *args, **kwargs):
         self.__memory_limit = kwargs['memory']
-        return super(Executor, self).launch(*args, **kwargs)
+        return super().launch(*args, **kwargs)
 
     def get_compile_args(self):
         return [self.get_command(), '-b', '-n', '-e', self.compile_script, '--', self._code]
@@ -41,4 +41,4 @@ class Executor(ScriptDirectoryMixin, CompiledExecutor):
         return self.get_command()
 
     def get_fs(self):
-        return super(Executor, self).get_fs() + [self.get_command()]
+        return super().get_fs() + [self.get_command()]

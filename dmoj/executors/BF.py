@@ -44,13 +44,13 @@ class Executor(CExecutor):
         if source_code.count(b'[') != source_code.count(b']'):
             raise CompileError(b'Unmatched brackets\n')
         code = template.replace(b'{code}', b''.join(map(trans.get, source_code, itertools.repeat(b''))))
-        super(Executor, self).__init__(problem_id, code, **kwargs)
+        super().__init__(problem_id, code, **kwargs)
 
     def launch(self, *args, **kwargs):
         memory = kwargs['memory']
         # For some reason, RLIMIT_DATA is being applied to our mmap, so we have to increase the memory limit.
         kwargs['memory'] += 8192
-        return super(Executor, self).launch(str(memory * 1024), **kwargs)
+        return super().launch(str(memory * 1024), **kwargs)
 
     @classmethod
     def get_runtime_versions(cls):

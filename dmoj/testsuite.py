@@ -89,7 +89,7 @@ class TestManager:
 
 class TestJudge(Judge):
     def __init__(self, manager):
-        super(TestJudge, self).__init__()
+        super().__init__()
         self.packet_manager = manager
 
 

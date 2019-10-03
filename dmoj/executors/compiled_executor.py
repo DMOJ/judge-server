@@ -41,7 +41,7 @@ class _CompiledExecutorMeta(abc.ABCMeta):
             kwargs['dest_dir'] = env.compiled_binary_cache_dir
 
         # Finish running all constructors before compiling.
-        obj = super(_CompiledExecutorMeta, self).__call__(*args, **kwargs)
+        obj = super().__call__(*args, **kwargs)
         obj.is_cached = is_cached
 
         # Before writing sources to disk, check if we have this executor in our cache.
@@ -68,7 +68,7 @@ class _CompiledExecutorMeta(abc.ABCMeta):
 class TimedPopen(subprocess.Popen):
     def __init__(self, *args, **kwargs):
         self._time = kwargs.pop('time_limit', None)
-        super(TimedPopen, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.timed_out = False
         if self._time:
@@ -106,13 +106,13 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
     compile_output_index = 1
 
     def __init__(self, problem_id: str, source_code: bytes, *args, **kwargs):
-        super(CompiledExecutor, self).__init__(problem_id, source_code, **kwargs)
+        super().__init__(problem_id, source_code, **kwargs)
         self.warning = None
         self._executable = None
 
     def cleanup(self) -> None:
         if not self.is_cached:
-            super(CompiledExecutor, self).cleanup()
+            super().cleanup()
 
     def create_files(self, problem_id: str, source_code: bytes, *args, **kwargs) -> None:
         self._code = self._file(self.source_filename_format.format(problem_id=problem_id, ext=self.ext))

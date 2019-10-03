@@ -129,15 +129,15 @@ class NullStdoutMixin:
 
     def __init__(self, *args, **kwargs):
         self._devnull = open(os.devnull, 'w')
-        super(NullStdoutMixin, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def cleanup(self):
         if hasattr(self, '_devnull'):
             self._devnull.close()
-        super(NullStdoutMixin, self).cleanup()
+        super().cleanup()
 
     def get_compile_popen_kwargs(self):
-        result = super(NullStdoutMixin, self).get_compile_popen_kwargs()
+        result = super().get_compile_popen_kwargs()
         result['stdout'] = self._devnull
         return result
 
@@ -157,7 +157,7 @@ class EmulateTerminalMixin:
         import pty
 
         self._master, self._slave = pty.openpty()
-        proc = super(EmulateTerminalMixin, self).get_compile_process()
+        proc = super().get_compile_process()
 
         class io_error_wrapper:
             """
@@ -193,7 +193,7 @@ class EmulateTerminalMixin:
         """
         Some runtimes *cough cough* Swift *cough cough* actually check the environment variables too.
         """
-        env = super(EmulateTerminalMixin, self).get_compile_env() or os.environ.copy()
+        env = super().get_compile_env() or os.environ.copy()
         env['TERM'] = 'xterm'
         return env
 
@@ -205,4 +205,4 @@ class ScriptDirectoryMixin:
     """
 
     def get_fs(self):
-        return super(ScriptDirectoryMixin, self).get_fs() + [self._dir]
+        return super().get_fs() + [self._dir]

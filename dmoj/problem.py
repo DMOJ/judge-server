@@ -67,7 +67,7 @@ class Problem:
 
 class ProblemDataManager(dict):
     def __init__(self, problem_id, **kwargs):
-        super(ProblemDataManager, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.problem_id = problem_id
         self.archive = None
 

@@ -18,5 +18,5 @@ class Executor(PythonExecutor):
     @classmethod
     def get_runtime_versions(cls):
         # A little hack to report implemented Python version too
-        return tuple(list(super(Executor, cls).get_runtime_versions()) +
+        return tuple(list(super().get_runtime_versions()) +
                      [('implementing python', cls._pypy_versions[0])])

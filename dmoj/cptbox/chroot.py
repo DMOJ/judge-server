@@ -14,7 +14,7 @@ log = logging.getLogger('dmoj.security')
 
 class CHROOTSecurity(dict):
     def __init__(self, read_fs, write_fs=None, writable=(1, 2)):
-        super(CHROOTSecurity, self).__init__()
+        super().__init__()
         self.read_fs = read_fs
         self.write_fs = write_fs
         self.read_fs_jail = {}

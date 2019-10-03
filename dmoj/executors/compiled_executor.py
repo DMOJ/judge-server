@@ -9,9 +9,9 @@ from typing import List, Optional
 
 import pylru
 
-from dmoj.error import CompileError
+from dmoj.error import CompileError, OutputLimitExceeded
 from dmoj.judgeenv import env
-from dmoj.utils.communicate import OutputLimitExceeded, safe_communicate
+from dmoj.utils.communicate import safe_communicate
 from dmoj.utils.unicode import utf8bytes
 from .base_executor import BaseExecutor
 

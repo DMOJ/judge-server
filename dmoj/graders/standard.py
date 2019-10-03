@@ -3,10 +3,10 @@ import logging
 import platform
 import subprocess
 
+from dmoj.error import OutputLimitExceeded
 from dmoj.executors import executors
 from dmoj.graders.base import BaseGrader
 from dmoj.result import CheckerResult, Result
-from dmoj.utils.communicate import OutputLimitExceeded
 from dmoj.utils.error import print_protection_fault
 from dmoj.utils.nixutils import strsignal
 

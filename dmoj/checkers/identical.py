@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Union
 
 from dmoj.checkers._checker import standard
 from dmoj.result import CheckerResult

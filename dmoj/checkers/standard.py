@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Callable
 
 from ._checker import standard
 from ..utils.unicode import utf8bytes

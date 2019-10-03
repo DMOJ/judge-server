@@ -78,7 +78,7 @@ class MonoExecutor(CompiledExecutor):
         return exception
 
     @classmethod
-    def initialize(cls, sandbox=True):
+    def initialize(cls):
         if 'mono' not in cls.runtime_dict or not os.path.isfile(cls.runtime_dict['mono']):
             return False
-        return super().initialize(sandbox=sandbox)
+        return super().initialize()

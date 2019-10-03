@@ -36,7 +36,7 @@ int main (int argc, const char * argv[]) {
         return super().get_fs() + [r'/proc/\d+/cmdline$']
 
     @classmethod
-    def initialize(cls, sandbox=True):
+    def initialize(cls):
         if 'gnustep-config' not in env['runtime'] or not os.path.isfile(env['runtime']['gnustep-config']):
             return False
         try:
@@ -44,4 +44,4 @@ int main (int argc, const char * argv[]) {
             cls.objc_ldflags = check_output([env['runtime']['gnustep-config'], '--base-libs']).split()
         except CalledProcessError:
             return False
-        return super().initialize(sandbox=sandbox)
+        return super().initialize()

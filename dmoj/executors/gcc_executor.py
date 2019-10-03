@@ -114,8 +114,8 @@ class GCCExecutor(CompiledExecutor):
         return super().autoconfig()
 
     @classmethod
-    def initialize(cls, sandbox=True):
-        res = super().initialize(sandbox=sandbox)
+    def initialize(cls):
+        res = super().initialize()
         if res:
             cls.has_color = cls.get_runtime_versions()[0][1] > (4, 9)
         return res

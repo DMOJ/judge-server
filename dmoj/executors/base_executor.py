@@ -93,25 +93,20 @@ class BaseExecutor(PlatformExecutorMixin):
     def get_nproc(self) -> int:
         return self.nproc
 
-    def launch_unsafe(self, *args: str, **kwargs) -> subprocess.Popen:
-        return subprocess.Popen(self.get_cmdline() + list(args),
-                                env=self.get_env(), executable=self.get_executable(),
-                                cwd=self._dir, **kwargs)
-
     @classmethod
     def get_command(cls) -> Optional[str]:
         return cls.runtime_dict.get(cls.command)
 
     @classmethod
-    def initialize(cls, sandbox=True) -> bool:
+    def initialize(cls) -> bool:
         if cls.get_command() is None:
             return False
         if not os.path.isfile(cls.get_command()):
             return False
-        return cls.run_self_test(sandbox)
+        return cls.run_self_test()
 
     @classmethod
-    def run_self_test(cls, sandbox: bool = True, output: bool = True,
+    def run_self_test(cls, output: bool = True,
                       error_callback: Optional[Callable[[any], any]] = None) -> bool:
         if not cls.test_program:
             return True
@@ -120,11 +115,9 @@ class BaseExecutor(PlatformExecutorMixin):
             print_ansi("%-39s%s" % ('Self-testing #ansi[%s](|underline):' % cls.get_executor_name(), ''), end=' ')
         try:
             executor = cls(cls.test_name, utf8bytes(cls.test_program))
-            if sandbox:
-                proc = executor.launch(time=cls.test_time, memory=cls.test_memory,
-                                       stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-            else:
-                proc = executor.launch_unsafe()
+            proc = executor.launch(time=cls.test_time, memory=cls.test_memory,
+                                   stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+
             test_message = b'echo: Hello, World!'
             stdout, stderr = proc.communicate(test_message + b'\n')
 

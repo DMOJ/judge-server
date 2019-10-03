@@ -19,10 +19,10 @@ process.stdin.on 'readable', () ->
     address_grace = 1048576
 
     @classmethod
-    def initialize(cls, sandbox=True):
+    def initialize(cls):
         if 'coffee' not in cls.runtime_dict or not os.path.isfile(cls.runtime_dict['coffee']):
             return False
-        return super().initialize(sandbox=sandbox)
+        return super().initialize()
 
     def get_cmdline(self):
         return [self.get_command(), self.runtime_dict['coffee'], self._code]

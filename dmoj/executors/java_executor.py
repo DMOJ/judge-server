@@ -142,12 +142,12 @@ class JavaExecutor(CompiledExecutor):
         return cls.runtime_dict.get(cls.compiler)
 
     @classmethod
-    def initialize(cls, sandbox=True):
+    def initialize(cls):
         if cls.get_vm() is None or cls.get_compiler() is None:
             return False
         if not os.path.isfile(cls.get_vm()) or not os.path.isfile(cls.get_compiler()):
             return False
-        return cls.run_self_test(sandbox)
+        return cls.run_self_test()
 
     @classmethod
     def test_jvm(cls, name, path):

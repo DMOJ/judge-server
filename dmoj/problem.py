@@ -193,13 +193,14 @@ class TestCase(object):
         else:
             proc = executor.launch_unsafe(*args, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                           stderr=subprocess.PIPE)
+            proc.unsafe_communicate = proc.communicate
 
         try:
             input = self.problem.problem_data[self.config['in']] if self.config['in'] else None
         except KeyError:
             input = None
 
-        stdout, stderr = proc.communicate(input)
+        stdout, stderr = proc.unsafe_communicate(input)
         self._generated = list(map(self._normalize, (stdout, stderr)))
 
         if hasattr(proc, 'tle') and proc.tle:

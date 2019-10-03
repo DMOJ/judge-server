@@ -1,7 +1,7 @@
 from dmoj.utils.unicode import utf8text
 
 
-class Result(object):
+class Result:
     AC = 0
     WA = 1 << 0
     RTE = 1 << 1
@@ -67,7 +67,7 @@ class Result(object):
             self.result_flag |= Result.MLE
 
 
-class CheckerResult(object):
+class CheckerResult:
     def __init__(self, passed, points, feedback=None, extended_feedback=None):
         # Make sure we don't kill the site bridge
         assert isinstance(passed, bool)

@@ -26,7 +26,7 @@ class JudgeAuthenticationFailed(Exception):
     pass
 
 
-class PacketManager(object):
+class PacketManager:
     SIZE_PACK = struct.Struct('!I')
 
     def __init__(self, host: str, port: int, judge: object, name: str, key: str,

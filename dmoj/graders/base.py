@@ -3,7 +3,7 @@ from dmoj.problem import BatchedTestCase, TestCase
 from dmoj.utils.unicode import utf8bytes
 
 
-class BaseGrader(object):
+class BaseGrader:
     def __init__(self, judge, problem, language, source, meta):
         self.source = utf8bytes(source)
         self.language = language

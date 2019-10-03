@@ -16,7 +16,7 @@ from dmoj.result import Result
 from dmoj.utils.module import load_module_from_file
 
 
-class Problem(object):
+class Problem:
     def __init__(self, problem_id, time_limit, memory_limit):
         self.id = problem_id
         self.time_limit = time_limit
@@ -86,7 +86,7 @@ class ProblemDataManager(dict):
             self.archive.close()
 
 
-class BatchedTestCase(object):
+class BatchedTestCase:
     def __init__(self, batch_no, config, problem, cases):
         self.config = config
         self.batch_no = batch_no
@@ -100,7 +100,7 @@ class BatchedTestCase(object):
         return 'BatchedTestCase{cases=%s}' % str(self.batched_cases)
 
 
-class TestCase(object):
+class TestCase:
     def __init__(self, count, batch_no, config, problem):
         self.position = count
         self.batch = batch_no

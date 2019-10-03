@@ -4,7 +4,7 @@ import traceback
 from dmoj.error import InternalError
 
 
-class GeneratorManager(object):
+class GeneratorManager:
     def get_generator(self, filenames, flags, lang=None, compiler_time_limit=None):
         from dmoj.executors import executors
         from dmoj.executors.compiled_executor import CompiledExecutor

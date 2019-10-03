@@ -11,7 +11,7 @@ from dmoj.control import JudgeControlRequestHandler
 class ControlServerTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        class FakeJudge(object):
+        class FakeJudge:
             pass
 
         class Handler(JudgeControlRequestHandler):

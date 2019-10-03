@@ -6,7 +6,7 @@ from dmoj.judge import Judge
 from dmoj.utils.ansi import ansi_style, print_ansi
 
 
-class LocalPacketManager(object):
+class LocalPacketManager:
     def __init__(self, judge):
         self.judge = judge
 

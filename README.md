@@ -139,7 +139,7 @@ optional arguments:
                         file to load judge configurations from
   -l LOG_FILE, --log-file LOG_FILE
                         log file to use
-  --no-watchdog         disable use of watchdog on problem directories for nfs
+  --no-watchdog         disable use of watchdog on problem directories
   --use-polling-observer    use polling instead of inotify for problem updates
   -a API_PORT, --api-port API_PORT
                         port to listen for the judge API (do not expose to

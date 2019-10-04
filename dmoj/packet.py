@@ -8,6 +8,7 @@ import threading
 import time
 import traceback
 import zlib
+from typing import List, Optional, Tuple
 
 from dmoj import sysinfo
 from dmoj.judgeenv import get_runtime_versions, get_supported_problems
@@ -28,7 +29,9 @@ class JudgeAuthenticationFailed(Exception):
 class PacketManager(object):
     SIZE_PACK = struct.Struct('!I')
 
-    def __init__(self, host, port, judge, name, key, secure=False, no_cert_check=False, cert_store=None):
+    def __init__(self, host: str, port: int, judge: object, name: str, key: str,
+                 secure: bool = False, no_cert_check: bool = False,
+                 cert_store: Optional[str] = None):
         self.host = host
         self.port = port
         self.judge = judge
@@ -138,7 +141,7 @@ class PacketManager(object):
             traceback.print_exc()
             raise SystemExit(1)
 
-    def _read_single(self):
+    def _read_single(self) -> dict:
         try:
             data = self.input.read(PacketManager.SIZE_PACK.size)
         except socket.error:
@@ -167,7 +170,7 @@ class PacketManager(object):
     def run_async(self):
         threading.Thread(target=self._read_async).start()
 
-    def _send_packet(self, packet):
+    def _send_packet(self, packet: dict):
         for k, v in packet.items():
             if isinstance(v, bytes):
                 # Make sure we don't have any garbage utf-8 from e.g. weird compilers
@@ -179,7 +182,7 @@ class PacketManager(object):
         with self._lock:
             self.output.writelines((PacketManager.SIZE_PACK.pack(len(raw)), raw))
 
-    def _receive_packet(self, packet):
+    def _receive_packet(self, packet: dict):
         name = packet['name']
         if name == 'ping':
             self.ping_packet(packet['when'])
@@ -209,7 +212,7 @@ class PacketManager(object):
         else:
             log.error('Unknown packet %s, payload %s', name, packet)
 
-    def handshake(self, problems, runtimes, id, key):
+    def handshake(self, problems: str, runtimes, id: str, key: str):
         self._send_packet({'name': 'handshake',
                            'problems': problems,
                            'executors': runtimes,
@@ -229,12 +232,12 @@ class PacketManager(object):
                 log.error('Handshake failed.')
                 raise JudgeAuthenticationFailed()
 
-    def supported_problems_packet(self, problems):
+    def supported_problems_packet(self, problems: List[Tuple[str, int]]):
         log.info('Update problems')
         self._send_packet({'name': 'supported-problems',
                            'problems': problems})
 
-    def test_case_status_packet(self, position, result):
+    def test_case_status_packet(self, position: int, result):
         log.info('Test case on %d: #%d, %s [%.3fs | %.2f MB], %.1f/%.0f',
                  self.judge.current_submission_id, position,
                  ', '.join(result.readable_codes()),
@@ -252,26 +255,26 @@ class PacketManager(object):
                            'extended-feedback': result.extended_feedback,
                            'feedback': result.feedback})
 
-    def compile_error_packet(self, message):
+    def compile_error_packet(self, message: str):
         log.info('Compile error: %d', self.judge.current_submission_id)
         self.fallback = 4
         self._send_packet({'name': 'compile-error',
                            'submission-id': self.judge.current_submission_id,
                            'log': message})
 
-    def compile_message_packet(self, message):
+    def compile_message_packet(self, message: str):
         log.info('Compile message: %d', self.judge.current_submission_id)
         self._send_packet({'name': 'compile-message',
                            'submission-id': self.judge.current_submission_id,
                            'log': message})
 
-    def internal_error_packet(self, message):
+    def internal_error_packet(self, message: str):
         log.info('Internal error: %d', self.judge.current_submission_id)
         self._send_packet({'name': 'internal-error',
                            'submission-id': self.judge.current_submission_id,
                            'message': message})
 
-    def begin_grading_packet(self, is_pretested):
+    def begin_grading_packet(self, is_pretested: bool):
         log.info('Begin grading: %d', self.judge.current_submission_id)
         self._send_packet({'name': 'grading-begin',
                            'submission-id': self.judge.current_submission_id,
@@ -304,7 +307,7 @@ class PacketManager(object):
         self._send_packet({'name': 'submission-terminated',
                            'submission-id': self.judge.current_submission_id})
 
-    def ping_packet(self, when):
+    def ping_packet(self, when: float):
         data = {'name': 'ping-response',
                 'when': when,
                 'time': time.time()}
@@ -313,6 +316,6 @@ class PacketManager(object):
             data[key] = value
         self._send_packet(data)
 
-    def submission_acknowledged_packet(self, sub_id):
+    def submission_acknowledged_packet(self, sub_id: int):
         self._send_packet({'name': 'submission-acknowledged',
                            'submission-id': sub_id})

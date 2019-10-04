@@ -1,9 +1,12 @@
+from typing import Union
+
 from dmoj.checkers._checker import standard
 from dmoj.result import CheckerResult
 from dmoj.utils.unicode import utf8bytes
 
 
-def check(process_output, judge_output, pe_allowed=True, **kwargs):
+def check(process_output: bytes, judge_output: bytes,
+          pe_allowed: bool = True, **kwargs) -> Union[CheckerResult, bool]:
     if judge_output == process_output:
         return True
     feedback = None

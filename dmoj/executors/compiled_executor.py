@@ -5,6 +5,7 @@ import signal
 import subprocess
 import threading
 import time
+from typing import List, Optional
 
 import pylru
 
@@ -27,14 +28,14 @@ from .base_executor import BaseExecutor
 # from the cache.
 class _CompiledExecutorMeta(abc.ABCMeta):
     @staticmethod
-    def _cleanup_cache_entry(_key, executor):
+    def _cleanup_cache_entry(_key, executor: object) -> None:
         # Mark the executor as not-cached, so that if this is the very last reference
         # to it, __del__ will clean it up.
         executor.is_cached = False
 
     compiled_binary_cache = pylru.lrucache(env.compiled_binary_cache_size, _cleanup_cache_entry)
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args, **kwargs) -> object:
         is_cached = kwargs.get('cached')
         if is_cached:
             kwargs['dest_dir'] = env.compiled_binary_cache_dir
@@ -75,7 +76,7 @@ class TimedPopen(subprocess.Popen):
             self._shocker = threading.Thread(target=self._shocker_thread)
             self._shocker.start()
 
-    def _shocker_thread(self):
+    def _shocker_thread(self) -> None:
         # Though this shares a name with the shocker thread used for submissions, where the process shocker thread
         # is a fine scalpel that ends a TLE process with surgical precision, this is more like a rusty hatchet
         # that beheads a misbehaving compiler.
@@ -104,30 +105,30 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
     compiler_time_limit = env.compiler_time_limit
     compile_output_index = 1
 
-    def __init__(self, problem_id, source_code, *args, **kwargs):
+    def __init__(self, problem_id: str, source_code: bytes, *args, **kwargs):
         super(CompiledExecutor, self).__init__(problem_id, source_code, **kwargs)
         self.warning = None
         self._executable = None
 
-    def cleanup(self):
+    def cleanup(self) -> None:
         if not self.is_cached:
             super(CompiledExecutor, self).cleanup()
 
-    def create_files(self, problem_id, source_code, *args, **kwargs):
+    def create_files(self, problem_id: str, source_code: bytes, *args, **kwargs) -> None:
         self._code = self._file(self.source_filename_format.format(problem_id=problem_id, ext=self.ext))
         with open(self._code, 'wb') as fo:
             fo.write(utf8bytes(source_code))
 
-    def get_compile_args(self):
+    def get_compile_args(self) -> None:
         raise NotImplementedError()
 
-    def get_compile_env(self):
+    def get_compile_env(self) -> None:
         return None
 
-    def get_compile_popen_kwargs(self):
+    def get_compile_popen_kwargs(self) -> dict:
         return {}
 
-    def create_executable_limits(self):
+    def create_executable_limits(self) -> Optional[callable]:
         try:
             import resource
 
@@ -139,33 +140,33 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
         except ImportError:
             return None
 
-    def get_compile_process(self):
+    def get_compile_process(self) -> TimedPopen:
         kwargs = {'stderr': subprocess.PIPE, 'cwd': self._dir, 'env': self.get_compile_env(),
                   'preexec_fn': self.create_executable_limits(), 'time_limit': self.compiler_time_limit}
         kwargs.update(self.get_compile_popen_kwargs())
 
         return TimedPopen(self.get_compile_args(), **kwargs)
 
-    def get_compile_output(self, process):
+    def get_compile_output(self, process: TimedPopen) -> bytes:
         # Use safe_communicate because otherwise, malicious submissions can cause a compiler
         # to output hundreds of megabytes of data as output before being killed by the time limit,
         # which effectively murders the MySQL database waiting on the site server.
         limit = env.compiler_output_character_limit
         return safe_communicate(process, None, outlimit=limit, errlimit=limit)[self.compile_output_index]
 
-    def get_compiled_file(self):
+    def get_compiled_file(self) -> str:
         return self._file(self.problem)
 
-    def is_failed_compile(self, process):
+    def is_failed_compile(self, process: TimedPopen) -> bool:
         return process.returncode != 0
 
-    def handle_compile_error(self, output):
+    def handle_compile_error(self, output: str) -> bytes:
         raise CompileError(output)
 
-    def get_binary_cache_key(self):
+    def get_binary_cache_key(self) -> str:
         return self.problem + self.source
 
-    def compile(self):
+    def compile(self) -> str:
         process = self.get_compile_process()
         try:
             output = self.get_compile_output(process)
@@ -181,8 +182,8 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
         self._executable = self.get_compiled_file()
         return self._executable
 
-    def get_cmdline(self):
+    def get_cmdline(self) -> List[str]:
         return [self.problem]
 
-    def get_executable(self):
+    def get_executable(self) -> str:
         return self._executable

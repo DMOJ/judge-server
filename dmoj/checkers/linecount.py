@@ -1,4 +1,5 @@
 from re import split as resplit
+from typing import Callable, Union
 
 from dmoj.result import CheckerResult
 from dmoj.utils.unicode import utf8bytes
@@ -6,8 +7,9 @@ from dmoj.utils.unicode import utf8bytes
 verdict = u"\u2717\u2713"
 
 
-def check(process_output, judge_output, point_value, feedback=True,
-          match=lambda p, j: p.strip() == j.strip(), **kwargs):
+def check(process_output: bytes, judge_output: bytes, point_value: float, feedback: bool = True,
+          match: Callable[[bytes, bytes], bool] = lambda p, j: p.strip() == j.strip(),
+          **kwargs) -> Union[CheckerResult, bool]:
     process_lines = list(filter(None, resplit(b'[\r\n]', utf8bytes(process_output))))
     judge_lines = list(filter(None, resplit(b'[\r\n]', utf8bytes(judge_output))))
 

@@ -8,7 +8,7 @@ from dmoj.judgeenv import get_problem_watches, startup_warnings
 from dmoj.utils.ansi import print_ansi
 
 try:
-    from watchdog.observers import Observer
+    from watchdog.observers.polling import PollingObserver
     from watchdog.events import FileSystemEventHandler
 except ImportError:
     startup_warnings.append('watchdog module not found, install it to automatically update problems')
@@ -70,7 +70,7 @@ class Monitor(object):
                 self._refresher = None
 
             self._handler = SendProblemsHandler(self._refresher)
-            self._monitor = monitor = Observer()
+            self._monitor = monitor = PollingObserver()
             for dir in get_problem_watches():
                 monitor.schedule(self._handler, dir, recursive=True)
                 logger.info('Scheduled for monitoring: %s', dir)

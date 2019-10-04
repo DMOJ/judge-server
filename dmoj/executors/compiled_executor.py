@@ -1,4 +1,3 @@
-import abc
 import hashlib
 import os
 import signal
@@ -10,6 +9,7 @@ from typing import List, Optional
 import pylru
 
 from dmoj.error import CompileError, OutputLimitExceeded
+from dmoj.executors.metaclass import ExecutorMeta
 from dmoj.judgeenv import env
 from dmoj.utils.communicate import safe_communicate
 from dmoj.utils.unicode import utf8bytes
@@ -26,7 +26,7 @@ from .base_executor import BaseExecutor
 # Contract: if cached=True is specified and an entry exists in the cache,
 # `create_files` and `compile` will not be run, and `_executable` will be loaded
 # from the cache.
-class _CompiledExecutorMeta(abc.ABCMeta):
+class _CompiledExecutorMeta(ExecutorMeta):
     @staticmethod
     def _cleanup_cache_entry(_key, executor: object) -> None:
         # Mark the executor as not-cached, so that if this is the very last reference

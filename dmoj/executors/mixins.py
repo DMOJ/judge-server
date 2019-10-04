@@ -1,4 +1,3 @@
-import abc
 import os
 import re
 import shutil
@@ -7,6 +6,7 @@ import sys
 from dmoj.cptbox import IsolateTracer, TracedPopen, syscalls
 from dmoj.cptbox.handlers import ALLOW
 from dmoj.error import InternalError
+from dmoj.executors.metaclass import ExecutorMeta
 from dmoj.judgeenv import env
 from dmoj.utils import setbufsize_path
 from dmoj.utils.unicode import utf8bytes
@@ -36,7 +36,7 @@ else:
     BASE_FILESYSTEM += [r'/etc/ld\.so\.(?:nohwcap|preload|cache)$']
 
 
-class PlatformExecutorMixin(metaclass=abc.ABCMeta):
+class PlatformExecutorMixin(metaclass=ExecutorMeta):
     address_grace = 65536
     data_grace = 0
     fsize = 0

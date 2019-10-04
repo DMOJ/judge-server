@@ -1,3 +1,4 @@
+import abc
 import hashlib
 import os
 import signal
@@ -25,7 +26,7 @@ from .base_executor import BaseExecutor
 # Contract: if cached=True is specified and an entry exists in the cache,
 # `create_files` and `compile` will not be run, and `_executable` will be loaded
 # from the cache.
-class _CompiledExecutorMeta(type):
+class _CompiledExecutorMeta(abc.ABCMeta):
     @staticmethod
     def _cleanup_cache_entry(_key, executor: object) -> None:
         # Mark the executor as not-cached, so that if this is the very last reference

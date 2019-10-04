@@ -34,4 +34,4 @@ def check(process_output: bytes, judge_output: bytes, point_value: float, feedba
                          ''.join(cases) if feedback else "")
 
 
-check.run_on_error = True
+check.run_on_error = True  # type: ignore

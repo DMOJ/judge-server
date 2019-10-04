@@ -11,6 +11,7 @@ import zlib
 from typing import List, Optional, Tuple
 
 from dmoj import sysinfo
+from dmoj.judge import Judge
 from dmoj.judgeenv import get_runtime_versions, get_supported_problems
 from dmoj.utils.unicode import utf8bytes, utf8text
 
@@ -29,7 +30,7 @@ class JudgeAuthenticationFailed(Exception):
 class PacketManager(object):
     SIZE_PACK = struct.Struct('!I')
 
-    def __init__(self, host: str, port: int, judge: object, name: str, key: str,
+    def __init__(self, host: str, port: int, judge: Judge, name: str, key: str,
                  secure: bool = False, no_cert_check: bool = False,
                  cert_store: Optional[str] = None):
         self.host = host

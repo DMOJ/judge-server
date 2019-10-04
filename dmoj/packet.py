@@ -8,7 +8,7 @@ import threading
 import time
 import traceback
 import zlib
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from dmoj import sysinfo
 from dmoj.judgeenv import get_runtime_versions, get_supported_problems

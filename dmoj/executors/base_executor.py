@@ -8,7 +8,7 @@ import sys
 import tempfile
 import traceback
 from distutils.spawn import find_executable
-from typing import Callable, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Callable, Dict, Iterable, List, Optional, Tuple
 
 from dmoj.executors.mixins import PlatformExecutorMixin
 from dmoj.judgeenv import env

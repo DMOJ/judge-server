@@ -1,8 +1,7 @@
-import abc
 import os
 import re
 import subprocess
-from typing import List
+from typing import List, Optional
 
 from dmoj.cptbox.tracer import can_debug
 from dmoj.error import CompileError
@@ -16,8 +15,15 @@ feature_split = re.compile(r'[\s,]+').split
 
 
 class ASMExecutor(CompiledExecutor):
-    qemu_path = None
-    dynamic_linker = None
+    arch: str
+    ld_m: str
+    as_name: str
+    ld_name: str
+    qemu_path: Optional[str] = None
+    dynamic_linker: Optional[str] = None
+    crt_pre: List[str]
+    crt_post: List[str]
+    platform_prefixes: Optional[List[str]]
 
     name = 'ASM'
     ext = 'asm'
@@ -27,41 +33,6 @@ class ASMExecutor(CompiledExecutor):
         self.features = self.find_features(source_code)
 
         super().__init__(problem_id, source_code + b'\n', *args, **kwargs)
-
-    @property
-    @abc.abstractmethod
-    def as_name(self) -> str:
-        pass
-
-    @property
-    @abc.abstractmethod
-    def arch(self) -> str:
-        pass
-
-    @property
-    @abc.abstractmethod
-    def ld_m(self) -> str:
-        pass
-
-    @property
-    @abc.abstractmethod
-    def ld_name(self) -> str:
-        pass
-
-    @property
-    @abc.abstractmethod
-    def crt_pre(self) -> List[str]:
-        pass
-
-    @property
-    @abc.abstractmethod
-    def crt_post(self) -> List[str]:
-        pass
-
-    @property
-    @abc.abstractmethod
-    def platform_prefixes(self) -> List[str]:
-        pass
 
     def find_features(self, source_code):
         features = refeatures.search(utf8text(source_code))
@@ -157,11 +128,7 @@ class ASMExecutor(CompiledExecutor):
 
 class GASExecutor(ASMExecutor):
     name = 'GAS'
-
-    @property
-    @abc.abstractmethod
-    def as_platform_flag(self) -> str:
-        pass
+    as_platform_flag: str
 
     def get_as_args(self, object):
         as_args = [self.get_as_path(), '-o', object, self._code]
@@ -190,11 +157,7 @@ class GASExecutor(ASMExecutor):
 class NASMExecutor(ASMExecutor):
     name = 'NASM'
     as_name = 'nasm'
-
-    @property
-    @abc.abstractmethod
-    def nasm_format(self) -> str:
-        pass
+    nasm_format: str
 
     def find_features(self, source_code):
         features = super().find_features(source_code)

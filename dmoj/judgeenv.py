@@ -86,8 +86,8 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
                                  'security is left as an exercise for the reverse proxy)')
         parser.add_argument('-A', '--api-host', default='127.0.0.1',
                             help='IPv4 address to listen for judge API')
-        parser.add_argument('--polling-observer', action='store_true',
-                            help='use polling observer instead of observer')
+        parser.add_argument('--use-polling-observer', action='store_true',
+                            help='use polling instead of inotify for problem updates')
 
         if ssl:
             parser.add_argument('-s', '--secure', action='store_true',
@@ -120,7 +120,7 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
 
     no_ansi = args.no_ansi
     no_watchdog = True if cli else args.no_watchdog
-    polling_observer = False if cli else args.polling_observer
+    polling_observer = False if cli else args.use_polling_observer
     if not cli:
         api_listen = (args.api_host, args.api_port) if args.api_port else None
 

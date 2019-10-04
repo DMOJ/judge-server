@@ -72,10 +72,11 @@ class Monitor(object):
 
             self._handler = SendProblemsHandler(self._refresher)
             if judgeenv.polling_observer:
-                self._monitor = monitor = PollingObserver()
+                self._monitor = PollingObserver()
             else:
-                self._monitor = monitor = Observer()
+                self._monitor = Observer()
 
+            monitor = self._monitor
             for dir in get_problem_watches():
                 monitor.schedule(self._handler, dir, recursive=True)
                 logger.info('Scheduled for monitoring: %s', dir)

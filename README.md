@@ -140,7 +140,7 @@ optional arguments:
   -l LOG_FILE, --log-file LOG_FILE
                         log file to use
   --no-watchdog         disable use of watchdog on problem directories for nfs
-  --polling-observer    use polling observer instead of observer
+  --use-polling-observer    use polling instead of inotify for problem updates
   -a API_PORT, --api-port API_PORT
                         port to listen for the judge API (do not expose to
                         public, security is left as an exercise for the

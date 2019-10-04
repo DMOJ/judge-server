@@ -41,7 +41,7 @@ env = ConfigNode(defaults={
 }, dynamic=False)
 _root = os.path.dirname(__file__)
 
-log_file = server_host = server_port = no_ansi = no_watchdog = problem_regex = case_regex = None
+log_file = server_host = server_port = no_ansi = no_watchdog = polling_observer = problem_regex = case_regex = None
 secure = no_cert_check = False
 cert_store = api_listen = None
 
@@ -56,7 +56,7 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
     global problem_dirs, only_executors, exclude_executors, log_file, server_host, \
         server_port, no_ansi, no_ansi_emu, env, startup_warnings, no_watchdog, \
         problem_regex, case_regex, api_listen, secure, no_cert_check, cert_store, \
-        problem_watches, cli_command
+        problem_watches, cli_command, polling_observer
 
     if cli:
         description = 'Starts a shell for interfacing with a local judge instance.'
@@ -86,6 +86,8 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
                                  'security is left as an exercise for the reverse proxy)')
         parser.add_argument('-A', '--api-host', default='127.0.0.1',
                             help='IPv4 address to listen for judge API')
+        parser.add_argument('--polling-observer', action='store_true',
+                            help='use polling observer instead of observer')
 
         if ssl:
             parser.add_argument('-s', '--secure', action='store_true',
@@ -118,6 +120,7 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
 
     no_ansi = args.no_ansi
     no_watchdog = True if cli else args.no_watchdog
+    polling_observer = False if cli else args.polling_observer
     if not cli:
         api_listen = (args.api_host, args.api_port) if args.api_port else None
 

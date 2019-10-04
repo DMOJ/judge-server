@@ -1,4 +1,3 @@
-import abc
 import errno
 import os
 import re
@@ -20,10 +19,13 @@ version_cache = {}
 
 
 class BaseExecutor(PlatformExecutorMixin):
+    ext: str
     nproc = 0
     command: Optional[str] = None
     command_paths = []
     runtime_dict = env.runtime
+    name: str
+    test_program: str
     test_name = 'self_test'
     test_time = env.selftest_time_limit
     test_memory = env.selftest_memory_limit
@@ -38,21 +40,6 @@ class BaseExecutor(PlatformExecutorMixin):
         self.source = source_code
         self._hints = hints or []
         self.unbuffered = unbuffered
-
-    @property
-    @abc.abstractmethod
-    def ext(self) -> str:
-        pass
-
-    @property
-    @abc.abstractmethod
-    def name(self) -> str:
-        pass
-
-    @property
-    @abc.abstractmethod
-    def test_program(self) -> str:
-        pass
 
     def cleanup(self) -> None:
         if not hasattr(self, '_dir'):

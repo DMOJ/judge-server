@@ -1,4 +1,3 @@
-import abc
 import errno
 import os
 import re
@@ -47,6 +46,8 @@ def find_class(source):
 class JavaExecutor(CompiledExecutor):
     ext = 'java'
 
+    vm: str
+    compiler: str
     nproc = -1
     fsize = 64  # Allow 64 bytes for dumping state file.
     address_grace = 786432
@@ -57,16 +58,6 @@ class JavaExecutor(CompiledExecutor):
     def __init__(self, problem_id, source_code, **kwargs):
         self._class_name = None
         super().__init__(problem_id, source_code, **kwargs)
-
-    @property
-    @abc.abstractmethod
-    def compiler(self) -> str:
-        pass
-
-    @property
-    @abc.abstractmethod
-    def vm(self) -> str:
-        pass
 
     def create_files(self, problem_id, source_code, *args, **kwargs):
         super().create_files(problem_id, source_code, *args, **kwargs)

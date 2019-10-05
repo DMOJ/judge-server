@@ -63,9 +63,3 @@ class CheckerTest(unittest.TestCase):
         assert check(b'1 2\n3', b'3\n1 2')
         assert not check(b'1 2\n3', b'3\n2 1')
         assert check(b'1 2\n3', b'3\n2 1', split_on='whitespace')
-
-    def test_floats(self):
-        from dmoj.checkers.floats import check
-
-        assert not check(b'0.' + b'1' * 100, b'0.' + b'1' * 99, high_precision=True, error_mode='absolute')
-        assert check(b'0.' + b'1' * 100, b'0.' + b'1' * 99, error_mode='absolute')

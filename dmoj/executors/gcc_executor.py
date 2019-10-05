@@ -1,6 +1,7 @@
 import os
 import re
 from collections import deque
+from typing import Dict, List
 
 from dmoj.executors.compiled_executor import CompiledExecutor
 from dmoj.judgeenv import env
@@ -16,12 +17,14 @@ recppexc = re.compile(br"terminate called after throwing an instance of \'([A-Za
 
 
 class GCCExecutor(CompiledExecutor):
-    defines = []
-    flags = []
+    defines: List[str] = []
+    flags: List[str] = []
     name = 'GCC'
     arch = 'gcc_target_arch'
     has_color = False
     version_regex = re.compile(r'.*?(\d+(?:\.\d+)*)', re.DOTALL)
+
+    source_dict: Dict[str, bytes] = {}
 
     def __init__(self, problem_id, main_source, **kwargs):
         super().__init__(problem_id, main_source, **kwargs)
@@ -40,30 +43,33 @@ class GCCExecutor(CompiledExecutor):
                 fo.write(utf8bytes(source))
             self.source_paths.append(name)
 
-    def get_binary_cache_key(self):
-        key_components = ([self.problem, self.get_command(), self.get_march_flag()] +
-                          self.get_defines() + self.get_flags() + self.get_ldflags() +
-                          list(self.source_dict.values()))
-        return ''.join(key_components)
+    def get_binary_cache_key(self) -> bytes:
+        command = self.get_command()
+        assert command is not None
+        key_components = ([self.problem, command, self.get_march_flag()] +
+                          self.get_defines() + self.get_flags() + self.get_ldflags())
+        return utf8bytes(''.join(key_components)) + b''.join(self.source_dict.values())
 
-    def get_ldflags(self):
+    def get_ldflags(self) -> List[str]:
         return []
 
-    def get_flags(self):
+    def get_flags(self) -> List[str]:
         return self.flags + ['-fmax-errors=%d' % MAX_ERRORS]
 
-    def get_defines(self):
+    def get_defines(self) -> List[str]:
         return ['-DONLINE_JUDGE'] + self.defines
 
-    def get_compile_args(self):
-        return ([self.get_command(), '-Wall'] + (['-fdiagnostics-color=always'] if self.has_color else []) +
+    def get_compile_args(self) -> List[str]:
+        command = self.get_command()
+        assert command is not None
+        return ([command, '-Wall'] + (['-fdiagnostics-color=always'] if self.has_color else []) +
                 self.source_paths + self.get_defines() + ['-O2', '-lm', self.get_march_flag()] +
                 self.get_flags() + self.get_ldflags() + ['-s', '-o', self.get_compiled_file()])
 
-    def get_compile_env(self):
+    def get_compile_env(self) -> dict:
         return GCC_COMPILE
 
-    def get_env(self):
+    def get_env(self) -> dict:
         env = super().get_env() or {}
         env.update(GCC_ENV)
         return env
@@ -78,7 +84,7 @@ class GCCExecutor(CompiledExecutor):
         return '' if len(exception) > 40 else utf8text(exception, 'replace')
 
     @classmethod
-    def get_march_flag(cls):
+    def get_march_flag(cls) -> str:
         conf_arch = cls.runtime_dict.get(cls.arch, 'native')
         if conf_arch:
             return '-march=%s' % conf_arch
@@ -86,7 +92,7 @@ class GCCExecutor(CompiledExecutor):
         return ''
 
     @classmethod
-    def get_version_flags(cls, command):
+    def get_version_flags(cls, command: str) -> List[str]:
         return ['-dumpversion']
 
     @classmethod

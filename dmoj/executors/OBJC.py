@@ -1,5 +1,6 @@
 import os
 from subprocess import CalledProcessError, check_output
+from typing import List
 
 from dmoj.judgeenv import env
 from .gcc_executor import GCCExecutor
@@ -7,8 +8,8 @@ from .gcc_executor import GCCExecutor
 
 class Executor(GCCExecutor):
     ext = 'm'
-    objc_flags = []
-    objc_ldflags = []
+    objc_flags: List[str] = []
+    objc_ldflags: List[str] = []
     command = 'gobjc'
     name = 'OBJC'
     address_grace = 131072

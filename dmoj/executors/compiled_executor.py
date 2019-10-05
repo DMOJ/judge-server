@@ -5,7 +5,7 @@ import signal
 import subprocess
 import threading
 import time
-from typing import List, Optional
+from typing import Callable, Dict, List, Optional
 
 import pylru
 
@@ -28,28 +28,30 @@ from .base_executor import BaseExecutor
 # from the cache.
 class _CompiledExecutorMeta(abc.ABCMeta):
     @staticmethod
-    def _cleanup_cache_entry(_key, executor: object) -> None:
+    def _cleanup_cache_entry(_key, executor: 'CompiledExecutor') -> None:
         # Mark the executor as not-cached, so that if this is the very last reference
         # to it, __del__ will clean it up.
         executor.is_cached = False
 
-    compiled_binary_cache = pylru.lrucache(env.compiled_binary_cache_size, _cleanup_cache_entry)
+    compiled_binary_cache: Dict[str, 'CompiledExecutor'] = pylru.lrucache(env.compiled_binary_cache_size,
+                                                                          _cleanup_cache_entry)
 
-    def __call__(self, *args, **kwargs) -> object:
-        is_cached = kwargs.get('cached')
+    def __call__(self, *args, **kwargs) -> 'CompiledExecutor':
+        is_cached: bool = kwargs.get('cached', False)
         if is_cached:
             kwargs['dest_dir'] = env.compiled_binary_cache_dir
 
         # Finish running all constructors before compiling.
-        obj = super().__call__(*args, **kwargs)
+        obj: 'CompiledExecutor' = super().__call__(*args, **kwargs)
         obj.is_cached = is_cached
 
         # Before writing sources to disk, check if we have this executor in our cache.
         if is_cached:
-            cache_key = obj.__class__.__name__ + obj.__module__ + obj.get_binary_cache_key()
-            cache_key = hashlib.sha384(utf8bytes(cache_key)).hexdigest()
+            cache_key_material = utf8bytes(obj.__class__.__name__ + obj.__module__) + obj.get_binary_cache_key()
+            cache_key = hashlib.sha384(cache_key_material).hexdigest()
             if cache_key in self.compiled_binary_cache:
                 executor = self.compiled_binary_cache[cache_key]
+                assert executor._executable is not None
                 # Minimal sanity checking: is the file still there? If not, we'll just recompile.
                 if os.path.isfile(executor._executable):
                     obj._executable = executor._executable
@@ -105,6 +107,10 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
     compiler_time_limit = env.compiler_time_limit
     compile_output_index = 1
 
+    is_cached = False
+    warning: Optional[bytes] = None
+    _executable: Optional[str] = None
+
     def __init__(self, problem_id: str, source_code: bytes, *args, **kwargs):
         super().__init__(problem_id, source_code, **kwargs)
         self.warning = None
@@ -119,16 +125,16 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
         with open(self._code, 'wb') as fo:
             fo.write(utf8bytes(source_code))
 
-    def get_compile_args(self) -> None:
+    def get_compile_args(self) -> List[str]:
         raise NotImplementedError()
 
-    def get_compile_env(self) -> None:
+    def get_compile_env(self) -> Optional[dict]:
         return None
 
     def get_compile_popen_kwargs(self) -> dict:
         return {}
 
-    def create_executable_limits(self) -> Optional[callable]:
+    def create_executable_limits(self) -> Optional[Callable[[], None]]:
         try:
             import resource
 
@@ -160,11 +166,11 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
     def is_failed_compile(self, process: TimedPopen) -> bool:
         return process.returncode != 0
 
-    def handle_compile_error(self, output: str) -> bytes:
+    def handle_compile_error(self, output: bytes) -> None:
         raise CompileError(output)
 
-    def get_binary_cache_key(self) -> str:
-        return self.problem + self.source
+    def get_binary_cache_key(self) -> bytes:
+        return utf8bytes(self.problem) + self.source
 
     def compile(self) -> str:
         process = self.get_compile_process()
@@ -186,4 +192,5 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
         return [self.problem]
 
     def get_executable(self) -> str:
+        assert self._executable is not None
         return self._executable

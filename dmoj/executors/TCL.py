@@ -1,6 +1,6 @@
 import subprocess
 
-from dmoj.executors.base_executor import ScriptExecutor
+from dmoj.executors.script_executor import ScriptExecutor
 
 
 class Executor(ScriptExecutor):

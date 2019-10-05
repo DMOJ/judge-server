@@ -3,6 +3,7 @@ import os
 import re
 import shutil
 import sys
+from typing import Any, List, Tuple, Union
 
 from dmoj.cptbox import IsolateTracer, TracedPopen, syscalls
 from dmoj.cptbox.handlers import ALLOW
@@ -41,9 +42,9 @@ class PlatformExecutorMixin(metaclass=abc.ABCMeta):
     data_grace = 0
     fsize = 0
     personality = 0x0040000  # ADDR_NO_RANDOMIZE
-    fs = []
-    write_fs = []
-    syscalls = []
+    fs: List[str] = []
+    write_fs: List[str] = []
+    syscalls: List[Union[str, Tuple[str, Any]]] = []
 
     def _add_syscalls(self, sec):
         for name in self.get_allowed_syscalls():

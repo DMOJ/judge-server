@@ -1,9 +1,11 @@
 import os
+from typing import List
 
 order = ['linux-x86.tbl', 'linux-x64.tbl', 'linux-x32.tbl', 'linux-arm.tbl', 'freebsd.tbl', 'linux-generic.tbl']
 max_id = 0
 by_name = {}
-__all__ = by_id = []
+by_id: List[str] = []
+__all__: List[str] = by_id
 translator = None
 
 

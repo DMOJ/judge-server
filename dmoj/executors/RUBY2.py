@@ -12,7 +12,7 @@ class Executor(ScriptExecutor):
     nproc = -1
     command_paths = (['ruby2.%d' % i for i in reversed(range(0, 7))] +
                      ['ruby2%d' % i for i in reversed(range(0, 7))])
-    syscalls = ['poll', 'thr_set_name']
+    syscalls = ['poll', 'thr_set_name', 'eventfd2']
     fs = ['/proc/self/loginuid$']
 
     def get_fs(self):

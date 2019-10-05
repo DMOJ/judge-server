@@ -7,7 +7,7 @@ from dmoj.error import OutputLimitExceeded
 _PIPE_BUF = getattr(select, 'PIPE_BUF', 512)
 
 
-def safe_communicate(proc, input, outlimit=None, errlimit=None):
+def safe_communicate(proc, input=None, outlimit=None, errlimit=None):
     if outlimit is None:
         outlimit = 10485760
     if errlimit is None:

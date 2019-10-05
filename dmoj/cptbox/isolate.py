@@ -263,5 +263,6 @@ class IsolateTracer(dict):
         PR_GET_DUMPABLE = 3
         PR_SET_NAME = 15
         PR_GET_NAME = 16
+        PR_SET_THP_DISABLE = 41
         PR_SET_VMA = 0x53564d41  # Used on Android
-        return debugger.arg0 in (PR_GET_DUMPABLE, PR_SET_NAME, PR_GET_NAME, PR_SET_VMA)
+        return debugger.arg0 in (PR_GET_DUMPABLE, PR_SET_NAME, PR_GET_NAME, PR_SET_THP_DISABLE, PR_SET_VMA)

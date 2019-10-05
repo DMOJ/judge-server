@@ -1,7 +1,7 @@
 import os
-from multiprocessing import cpu_count
+from multiprocessing import cpu_count as _get_cpu_count
 
-_cpu_count = cpu_count()
+_cpu_count = _get_cpu_count()
 
 
 if hasattr(os, 'getloadavg'):

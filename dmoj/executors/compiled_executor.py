@@ -5,7 +5,7 @@ import signal
 import subprocess
 import threading
 import time
-from typing import Callable, List, Optional
+from typing import Callable, Dict, List, Optional
 
 import pylru
 
@@ -33,23 +33,25 @@ class _CompiledExecutorMeta(abc.ABCMeta):
         # to it, __del__ will clean it up.
         executor.is_cached = False
 
-    compiled_binary_cache = pylru.lrucache(env.compiled_binary_cache_size, _cleanup_cache_entry)
+    compiled_binary_cache: Dict[str, 'CompiledExecutor'] = pylru.lrucache(env.compiled_binary_cache_size,
+                                                                          _cleanup_cache_entry)
 
     def __call__(self, *args, **kwargs) -> 'CompiledExecutor':
-        is_cached = kwargs.get('cached')
+        is_cached: bool = kwargs.get('cached', False)
         if is_cached:
             kwargs['dest_dir'] = env.compiled_binary_cache_dir
 
         # Finish running all constructors before compiling.
-        obj = super().__call__(*args, **kwargs)
+        obj: 'CompiledExecutor' = super().__call__(*args, **kwargs)
         obj.is_cached = is_cached
 
         # Before writing sources to disk, check if we have this executor in our cache.
         if is_cached:
-            cache_key = obj.__class__.__name__ + obj.__module__ + obj.get_binary_cache_key()
-            cache_key = hashlib.sha384(utf8bytes(cache_key)).hexdigest()
+            cache_key_material = utf8bytes(obj.__class__.__name__ + obj.__module__) + obj.get_binary_cache_key()
+            cache_key = hashlib.sha384(cache_key_material).hexdigest()
             if cache_key in self.compiled_binary_cache:
                 executor = self.compiled_binary_cache[cache_key]
+                assert executor._executable is not None
                 # Minimal sanity checking: is the file still there? If not, we'll just recompile.
                 if os.path.isfile(executor._executable):
                     obj._executable = executor._executable

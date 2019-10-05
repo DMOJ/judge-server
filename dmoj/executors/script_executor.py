@@ -1,6 +1,6 @@
 import os
 import re
-from typing import List
+from typing import List, Optional
 
 from dmoj.executors.base_executor import BaseExecutor
 from dmoj.utils.unicode import utf8bytes
@@ -14,12 +14,14 @@ class ScriptExecutor(BaseExecutor):
         self.create_files(problem_id, source_code)
 
     @classmethod
-    def get_command(cls) -> str:
+    def get_command(cls) -> Optional[str]:
         if cls.command in cls.runtime_dict:
             return cls.runtime_dict[cls.command]
         name = cls.get_executor_name().lower()
         if '%s_home' % name in cls.runtime_dict:
+            assert cls.command is not None
             return os.path.join(cls.runtime_dict['%s_home' % name], 'bin', cls.command)
+        return None
 
     def get_fs(self) -> list:
         home = self.runtime_dict.get('%s_home' % self.get_executor_name().lower())
@@ -33,10 +35,14 @@ class ScriptExecutor(BaseExecutor):
             fo.write(utf8bytes(source_code))
 
     def get_cmdline(self) -> List[str]:
-        return [self.get_command(), self._code]
+        command = self.get_command()
+        assert command is not None
+        return [command, self._code]
 
     def get_executable(self) -> str:
-        return self.get_command()
+        command = self.get_command()
+        assert command is not None
+        return command
 
     def get_env(self) -> dict:
         env = super().get_env()

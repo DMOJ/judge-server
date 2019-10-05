@@ -1,9 +1,11 @@
+from typing import Optional
+
 from .gcc_executor import GCCExecutor
 
 
 class Executor(GCCExecutor):
     command = 'g++'
-    std = None
+    std: Optional[str] = None
     ext = 'cpp'
     name = 'CPP03'
     test_program = '''

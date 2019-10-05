@@ -7,7 +7,7 @@ import sys
 import tempfile
 import traceback
 from distutils.spawn import find_executable
-from typing import Callable, Dict, Iterable, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from dmoj.executors.mixins import PlatformExecutorMixin
 from dmoj.judgeenv import env
@@ -15,14 +15,14 @@ from dmoj.utils.ansi import print_ansi
 from dmoj.utils.error import print_protection_fault
 from dmoj.utils.unicode import utf8bytes, utf8text
 
-version_cache = {}
+version_cache: Dict[str, List[Tuple[str, Optional[Tuple[int, ...]]]]] = {}
 
 
 class BaseExecutor(PlatformExecutorMixin):
     ext: str
     nproc = 0
     command: Optional[str] = None
-    command_paths = []
+    command_paths: List[str] = []
     runtime_dict = env.runtime
     name: str
     test_program: str
@@ -31,6 +31,8 @@ class BaseExecutor(PlatformExecutorMixin):
     test_memory = env.selftest_memory_limit
     version_regex = re.compile(r'.*?(\d+(?:\.\d+)+)', re.DOTALL)
     source_filename_format = '{problem_id}.{ext}'
+
+    _dir: Optional[str] = None
 
     def __init__(self, problem_id: str, source_code: bytes, dest_dir: Optional[str] = None,
                  hints: Optional[List[str]] = None, unbuffered: bool = False, **kwargs):
@@ -86,15 +88,16 @@ class BaseExecutor(PlatformExecutorMixin):
 
     @classmethod
     def initialize(cls) -> bool:
-        if cls.get_command() is None:
+        command = cls.get_command()
+        if command is None:
             return False
-        if not os.path.isfile(cls.get_command()):
+        if not os.path.isfile(command):
             return False
         return cls.run_self_test()
 
     @classmethod
     def run_self_test(cls, output: bool = True,
-                      error_callback: Optional[Callable[[any], any]] = None) -> bool:
+                      error_callback: Optional[Callable[[Any], Any]] = None) -> bool:
         if not cls.test_program:
             return True
 
@@ -140,16 +143,19 @@ class BaseExecutor(PlatformExecutorMixin):
             return False
 
     @classmethod
-    def get_versionable_commands(cls) -> Tuple[Tuple[str, str], ...]:
-        return (cls.command, cls.get_command()),
+    def get_versionable_commands(cls) -> List[Tuple[str, str]]:
+        command = cls.get_command()
+        assert cls.command is not None
+        assert command is not None
+        return [(cls.command, command)]
 
     @classmethod
-    def get_runtime_versions(cls) -> Tuple[Tuple[str, Optional[Tuple[int, ...]]], ...]:
+    def get_runtime_versions(cls) -> List[Tuple[str, Optional[Tuple[int, ...]]]]:
         key = cls.get_executor_name()
         if key in version_cache:
             return version_cache[key]
 
-        vers = []
+        versions: List[Tuple[str, Optional[Tuple[int, ...]]]] = []
         for runtime, path in cls.get_versionable_commands():
             flags = cls.get_version_flags(runtime)
 
@@ -167,18 +173,17 @@ class BaseExecutor(PlatformExecutorMixin):
                 else:
                     version = cls.parse_version(runtime, output)
                     if version:
-                        version = tuple(version)
                         break
-            vers.append((runtime, version or ()))
+            versions.append((runtime, version or ()))
 
-        version_cache[key] = tuple(vers)
+        version_cache[key] = versions
         return version_cache[key]
 
     @classmethod
-    def parse_version(cls, command: str, output: str) -> Optional[Iterable[int]]:
+    def parse_version(cls, command: str, output: str) -> Optional[Tuple[int, ...]]:
         match = cls.version_regex.match(output)
         if match:
-            return map(int, match.group(1).split('.'))
+            return tuple(map(int, match.group(1).split('.')))
         return None
 
     @classmethod
@@ -198,23 +203,23 @@ class BaseExecutor(PlatformExecutorMixin):
         return None
 
     @classmethod
-    def autoconfig_find_first(cls, mapping) -> Tuple[dict, bool, str]:
+    def autoconfig_find_first(cls, mapping) -> Tuple[Optional[dict], bool, str, str]:
         if mapping is None:
-            return {}, False, 'Unimplemented'
+            return {}, False, 'Unimplemented', ''
         result = {}
 
         for key, files in mapping.items():
             file = cls.find_command_from_list(files)
             if file is None:
-                return None, False, 'Failed to find "%s"' % key
+                return None, False, 'Failed to find "%s"' % key, ''
             result[key] = file
         return cls.autoconfig_run_test(result)
 
     @classmethod
     def autoconfig_run_test(cls, result: dict) -> Tuple[dict, bool, str, str]:
-        executor = type('Executor', (cls,), {'runtime_dict': result})
+        executor: Any = type('Executor', (cls,), {'runtime_dict': result})
         executor.__module__ = cls.__module__
-        errors = []
+        errors: List[str] = []
         success = executor.run_self_test(output=False, error_callback=errors.append)
         if success:
             message = ''
@@ -231,46 +236,5 @@ class BaseExecutor(PlatformExecutorMixin):
         return {cls.command: cls.command_paths or [cls.command]}
 
     @classmethod
-    def autoconfig(cls) -> Tuple[dict, bool, str]:
+    def autoconfig(cls) -> Tuple[Optional[dict], bool, str, str]:
         return cls.autoconfig_find_first(cls.get_find_first_mapping())
-
-
-class ScriptExecutor(BaseExecutor):
-    def __init__(self, problem_id: str, source_code: bytes, **kwargs):
-        super().__init__(problem_id, source_code, **kwargs)
-        self._code = self._file(
-            self.source_filename_format.format(problem_id=problem_id, ext=self.ext))
-        self.create_files(problem_id, source_code)
-
-    @classmethod
-    def get_command(cls) -> str:
-        if cls.command in cls.runtime_dict:
-            return cls.runtime_dict[cls.command]
-        name = cls.get_executor_name().lower()
-        if '%s_home' % name in cls.runtime_dict:
-            return os.path.join(cls.runtime_dict['%s_home' % name], 'bin', cls.command)
-
-    def get_fs(self) -> List[str]:
-        home = self.runtime_dict.get('%s_home' % self.get_executor_name().lower())
-        fs = super().get_fs() + [self._code]
-        if home is not None:
-            fs.append(re.escape(home))
-        return fs
-
-    def create_files(self, problem_id: str, source_code: bytes) -> None:
-        with open(self._code, 'wb') as fo:
-            fo.write(utf8bytes(source_code))
-
-    def get_cmdline(self) -> List[str]:
-        return [self.get_command(), self._code]
-
-    def get_executable(self) -> str:
-        return self.get_command()
-
-    def get_env(self) -> dict:
-        env = super().get_env()
-        env_key = self.get_executor_name().lower() + '_env'
-        if env_key in self.runtime_dict:
-            env = env or {}
-            env.update(self.runtime_dict[env_key])
-        return env

@@ -1,6 +1,7 @@
 import os
 import re
 from collections import deque
+from typing import List
 
 from dmoj.executors.compiled_executor import CompiledExecutor
 from dmoj.judgeenv import env
@@ -16,8 +17,8 @@ recppexc = re.compile(br"terminate called after throwing an instance of \'([A-Za
 
 
 class GCCExecutor(CompiledExecutor):
-    defines = []
-    flags = []
+    defines: List[str] = []
+    flags: List[str] = []
     name = 'GCC'
     arch = 'gcc_target_arch'
     has_color = False

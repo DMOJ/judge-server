@@ -19,19 +19,19 @@ class ProblemTest(unittest.TestCase):
 
     def test_empty_init(self):
         self.problem_data = {'init.yml': ''}
-        with self.assertRaisesRegexp(InvalidInitException, 'lack of content'):
+        with self.assertRaisesRegex(InvalidInitException, 'lack of content'):
             Problem('test', 2, 16384)
 
     def test_bad_init(self):
         self.problem_data = {'init.yml': '"'}
-        with self.assertRaisesRegexp(InvalidInitException, 'while scanning a quoted scalar'):
+        with self.assertRaisesRegex(InvalidInitException, 'while scanning a quoted scalar'):
             Problem('test', 2, 16384)
 
     def test_blank_init(self):
         self.problem_data = {'init.yml': 'archive: does_not_exist.txt'}
         with mock.patch('dmoj.problem.get_problem_root') as gpr:
             gpr.return_value = '/proc'
-            with self.assertRaisesRegexp(InvalidInitException, 'archive file'):
+            with self.assertRaisesRegex(InvalidInitException, 'archive file'):
                 Problem('test', 2, 16384)
 
     @unittest.skipIf(os.devnull != '/dev/null', 'os.path.exists("nul") is False on Windows')
@@ -39,7 +39,7 @@ class ProblemTest(unittest.TestCase):
         self.problem_data = {'init.yml': 'archive: %s' % (os.devnull,)}
         with mock.patch('dmoj.problem.get_problem_root') as gpr:
             gpr.return_value = '/'
-            with self.assertRaisesRegexp(InvalidInitException, 'bad archive:'):
+            with self.assertRaisesRegex(InvalidInitException, 'bad archive:'):
                 Problem('test', 2, 16384)
 
     def tearDown(self):

@@ -12,5 +12,5 @@ public class malformed {
         S = "\xc1\xbf"; // This is malformed unicode
     }
 }'''
-        with self.assertRaisesRegexp(CompileError, 'Your UTF-8 is bad, and you should feel bad'):
+        with self.assertRaisesRegex(CompileError, 'Your UTF-8 is bad, and you should feel bad'):
             JAVA8Executor('malformed', source)

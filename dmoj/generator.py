@@ -14,7 +14,7 @@ class GeneratorManager:
 
         try:
             for filename in filenames:
-                with open(filename, 'r') as f:
+                with open(filename, 'rb') as f:
                     sources[os.path.basename(filename)] = f.read()
         except Exception:
             traceback.print_exc()

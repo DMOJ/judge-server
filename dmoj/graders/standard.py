@@ -117,9 +117,7 @@ class StandardGrader(BaseGrader):
         try:
             result.proc_output, error = process.communicate(input, outlimit=case.config.output_limit_length,
                                                             errlimit=1048576)
-        except OutputLimitExceeded as ole:
-            stream, result.proc_output, error = ole.args
-            log.warning('OLE on stream: %s', stream)
+        except OutputLimitExceeded:
             result.result_flag |= Result.OLE
             try:
                 process.kill()

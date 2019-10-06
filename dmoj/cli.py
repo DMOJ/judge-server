@@ -1,7 +1,9 @@
 import shlex
 import sys
 from collections import OrderedDict
+from typing import Dict
 
+from dmoj.commands import Command
 from dmoj.judge import Judge
 from dmoj.utils.ansi import ansi_style, print_ansi
 
@@ -69,7 +71,7 @@ class InvalidCommandException(Exception):
         self.message = message
 
 
-commands = OrderedDict()
+commands: Dict[str, Command] = OrderedDict()
 
 
 def register(command):

@@ -2,22 +2,21 @@ import errno
 import json
 import logging
 import socket
+import ssl
 import struct
 import sys
 import threading
 import time
 import traceback
 import zlib
-from typing import List, Optional, Tuple
+from typing import List, Optional, TYPE_CHECKING, Tuple
 
 from dmoj import sysinfo
 from dmoj.judgeenv import get_runtime_versions, get_supported_problems
 from dmoj.utils.unicode import utf8bytes, utf8text
 
-try:
-    import ssl
-except ImportError:
-    ssl = None
+if TYPE_CHECKING:
+    from dmoj.judge import Judge
 
 log = logging.getLogger(__name__)
 
@@ -29,7 +28,10 @@ class JudgeAuthenticationFailed(Exception):
 class PacketManager:
     SIZE_PACK = struct.Struct('!I')
 
-    def __init__(self, host: str, port: int, judge: object, name: str, key: str,
+    ssl_context: Optional[ssl.SSLContext]
+    judge: 'Judge'
+
+    def __init__(self, host: str, port: int, judge: 'Judge', name: str, key: str,
                  secure: bool = False, no_cert_check: bool = False,
                  cert_store: Optional[str] = None):
         self.host = host
@@ -40,7 +42,7 @@ class PacketManager:
         self._closed = False
 
         log.info('Preparing to connect to [%s]:%s as: %s', host, port, name)
-        if secure and ssl:
+        if secure:
             self.ssl_context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
             self.ssl_context.options |= ssl.OP_NO_SSLv2
             self.ssl_context.options |= ssl.OP_NO_SSLv3

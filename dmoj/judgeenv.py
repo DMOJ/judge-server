@@ -1,5 +1,7 @@
 import argparse
 import os
+import ssl
+from typing import List, Set
 
 import yaml
 
@@ -7,11 +9,6 @@ from dmoj.config import ConfigNode
 # noinspection PyUnresolvedReferences
 from dmoj.utils import pyyaml_patch  # noqa: F401, imported for side effect
 from dmoj.utils.unicode import utf8text
-
-try:
-    import ssl
-except ImportError:
-    ssl = None
 
 problem_dirs = ()
 problem_watches = ()
@@ -43,11 +40,11 @@ log_file = server_host = server_port = no_ansi = no_watchdog = problem_regex = c
 secure = no_cert_check = False
 cert_store = api_listen = None
 
-startup_warnings = []
-cli_command = []
+startup_warnings: List[str] = []
+cli_command: List[str] = []
 
-only_executors = set()
-exclude_executors = set()
+only_executors: Set[str] = set()
+exclude_executors: Set[str] = set()
 
 
 def load_env(cli=False, testsuite=False):  # pragma: no cover
@@ -85,15 +82,12 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
         parser.add_argument('-A', '--api-host', default='127.0.0.1',
                             help='IPv4 address to listen for judge API')
 
-        if ssl:
-            parser.add_argument('-s', '--secure', action='store_true',
-                                help='connect to server via TLS')
-            parser.add_argument('-k', '--no-certificate-check', action='store_true',
-                                help='do not check TLS certificate')
-            parser.add_argument('-T', '--trusted-certificates', default=None,
-                                help='use trusted certificate file instead of system')
-        else:
-            parser.set_defaults(secure=False, no_certificate_check=False, trusted_certificates=None)
+        parser.add_argument('-s', '--secure', action='store_true',
+                            help='connect to server via TLS')
+        parser.add_argument('-k', '--no-certificate-check', action='store_true',
+                            help='do not check TLS certificate')
+        parser.add_argument('-T', '--trusted-certificates', default=None,
+                            help='use trusted certificate file instead of system')
 
     _group = parser.add_mutually_exclusive_group()
     _group.add_argument('-e', '--only-executors',

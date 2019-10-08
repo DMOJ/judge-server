@@ -13,3 +13,8 @@ class InternalError(Exception):
 class OutputLimitExceeded(Exception):
     def __init__(self, stream, limit):
         super().__init__("exceeded %d-byte limit on %s stream" % (limit, stream))
+
+
+class InvalidCommandException(Exception):
+    def __init__(self, message=None):
+        self.message = message

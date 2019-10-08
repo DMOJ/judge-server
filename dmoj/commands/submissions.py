@@ -1,5 +1,5 @@
-from dmoj.cli import InvalidCommandException
 from dmoj.commands.base_command import Command
+from dmoj.error import InvalidCommandException
 from dmoj.utils.ansi import print_ansi
 
 

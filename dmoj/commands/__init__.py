@@ -1,6 +1,6 @@
 from typing import List, Type
 
-from dmoj.commands.base_command import Command
+from dmoj.commands.base_command import Command, commands, register_command
 from dmoj.commands.diff import DifferenceCommand
 from dmoj.commands.help import HelpCommand
 from dmoj.commands.problems import ListProblemsCommand

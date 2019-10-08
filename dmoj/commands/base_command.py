@@ -3,8 +3,10 @@ import os
 import subprocess
 import sys
 import tempfile
+from collections import OrderedDict
+from typing import Dict
 
-from dmoj.cli import InvalidCommandException
+from dmoj.error import InvalidCommandException
 from dmoj.executors import executors
 from dmoj.utils.ansi import print_ansi
 
@@ -76,3 +78,10 @@ class Command:
 
     def execute(self, line):
         raise NotImplementedError
+
+
+commands: Dict[str, Command] = OrderedDict()
+
+
+def register_command(command):
+    commands[command.name] = command

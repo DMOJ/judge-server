@@ -85,7 +85,7 @@ class Executor(CompiledExecutor):
 
     @classmethod
     def get_versionable_commands(cls):
-        return [('rustc', os.path.join(os.path.dirname(cls.get_command)_), 'rustc'))]
+        return [('rustc', os.path.join(os.path.dirname(cls.get_command()), 'rustc'))]
 
     def get_compile_args(self):
         return [self.get_command(), 'build', '--release']

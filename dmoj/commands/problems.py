@@ -3,8 +3,8 @@ from itertools import zip_longest
 from operator import itemgetter
 
 from dmoj import judgeenv
-from dmoj.cli import InvalidCommandException
 from dmoj.commands.base_command import Command
+from dmoj.error import InvalidCommandException
 
 
 class ListProblemsCommand(Command):

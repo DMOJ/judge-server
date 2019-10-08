@@ -1,9 +1,7 @@
 import shlex
 import sys
-from collections import OrderedDict
-from typing import Dict
 
-from dmoj.commands import Command
+from dmoj.errors import InvalidCommandException
 from dmoj.judge import Judge
 from dmoj.utils.ansi import ansi_style, print_ansi
 
@@ -66,24 +64,11 @@ class LocalJudge(Judge):
         self.graded_submissions = []
 
 
-class InvalidCommandException(Exception):
-    def __init__(self, message=None):
-        self.message = message
-
-
-commands: Dict[str, Command] = OrderedDict()
-
-
-def register(command):
-    commands[command.name] = command
-
-
 def main():
     sys.exit(cli_main())
 
 
 def cli_main():
-    global commands
     import logging
     from dmoj import judgeenv, executors
 
@@ -102,9 +87,9 @@ def cli_main():
     del judgeenv.startup_warnings
     print()
 
-    from dmoj.commands import all_commands
+    from dmoj.commands import all_commands, commands, register_command
     for command in all_commands:
-        register(command(judge))
+        register_command(command(judge))
 
     def run_command(line):
         if not line:

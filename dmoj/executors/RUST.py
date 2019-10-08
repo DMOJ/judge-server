@@ -83,6 +83,10 @@ class Executor(CompiledExecutor):
         with open(self._file('Cargo.lock'), 'wb') as f:
             f.write(CARGO_LOCK)
 
+    @classmethod
+    def get_versionable_commands(cls):
+        return [('rustc', os.path.join(os.path.dirname(cls.command), 'rustc'))]
+
     def get_compile_args(self):
         return [self.get_command(), 'build', '--release']
 

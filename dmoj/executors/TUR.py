@@ -27,7 +27,7 @@ put echo
     @classmethod
     def get_runtime_versions(cls):
         return ('tprologc', (1, 0, 0)),
-    
+
     @classmethod
     def initialize(cls):
         if 'tprolog' not in env['runtime'] or 'tprologc' not in env['runtime'] or 'turing_dir' not in env['runtime']:

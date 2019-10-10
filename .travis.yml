@@ -88,6 +88,7 @@ before_install:
     apt-get download chicken-bin &&
     dpkg-deb -R *.deb . && rm *.deb &&
     mv usr/bin/csc usr/bin/chicken-csc &&
+    mv usr/bin/csi usr/bin/chicken-csi &&
     dpkg-deb -b . fixed-chicken-bin.deb && sudo dpkg -i ./fixed-chicken-bin.deb && cd ..
   # Install Rust
   - curl https://sh.rustup.rs -sSf | sh -s -- -y

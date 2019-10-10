@@ -38,6 +38,7 @@ addons:
     - scala
     - racket
     - libchicken8
+    - libchicken-dev
 matrix:
   include:
   - name: flake8

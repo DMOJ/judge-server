@@ -1,7 +1,7 @@
 import shlex
 import sys
 
-from dmoj.errors import InvalidCommandException
+from dmoj.error import InvalidCommandException
 from dmoj.judge import Judge
 from dmoj.utils.ansi import ansi_style, print_ansi
 

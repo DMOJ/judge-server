@@ -37,8 +37,6 @@ addons:
     - dart/stable
     - scala
     - racket
-    - libchicken7
-    - libchicken-dev
 matrix:
   include:
   - name: flake8
@@ -89,7 +87,9 @@ before_install:
     dpkg-deb -R *.deb . && rm *.deb &&
     mv usr/bin/csc usr/bin/chicken-csc &&
     mv usr/bin/csi usr/bin/chicken-csi &&
-    dpkg-deb -b . fixed-chicken-bin.deb && sudo dpkg -i ./fixed-chicken-bin.deb && cd ..
+    dpkg-deb -b . fixed-chicken-bin.deb &&
+    sudo dpkg -i ./fixed-chicken-bin.deb &> /dev/null || sudo apt -f -y --no-install-recommends install &&
+    cd ..
   # Install Rust
   - curl https://sh.rustup.rs -sSf | sh -s -- -y
   # Add `cargo` to PATH

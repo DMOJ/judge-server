@@ -1,6 +1,7 @@
 import os
 
 from dmoj.executors.compiled_executor import CompiledExecutor
+from dmoj.executors.mixins import EmulateTerminalMixin
 
 CARGO_TOML = b'''\
 [package]
@@ -65,7 +66,7 @@ fn main() {
 '''
 
 
-class Executor(CompiledExecutor):
+class Executor(EmulateTerminalMixin, CompiledExecutor):
     ext = 'rs'
     name = 'RUST'
     command = 'cargo'

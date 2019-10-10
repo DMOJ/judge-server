@@ -2,7 +2,6 @@ import os
 import subprocess
 
 from dmoj.executors.java_executor import JavaExecutor
-from dmoj.executors.mixins import EmulateTerminalMixin
 from dmoj.utils.unicode import utf8text
 
 with open(os.path.join(os.path.dirname(__file__), 'scala-security.policy')) as policy_file:
@@ -10,7 +9,7 @@ with open(os.path.join(os.path.dirname(__file__), 'scala-security.policy')) as p
 
 
 # Must emulate terminal, otherwise `scalac` hangs on a call to `stty`
-class Executor(EmulateTerminalMixin, JavaExecutor):
+class Executor(JavaExecutor):
     name = 'SCALA'
     ext = 'scala'
 

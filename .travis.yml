@@ -37,6 +37,7 @@ addons:
     - dart/stable
     - scala
     - racket
+    - libchicken8
 matrix:
   include:
   - name: flake8

@@ -1,7 +1,8 @@
 from dmoj.executors.compiled_executor import CompiledExecutor
+from dmoj.executors.mixins import EmulateTerminalMixin
 
 
-class Executor(CompiledExecutor):
+class Executor(EmulateTerminalMixin, CompiledExecutor):
     ext = 'd'
     name = 'D'
     address_grace = 32768

@@ -14,6 +14,7 @@ from dmoj.judgeenv import env
 from dmoj.utils.communicate import safe_communicate
 from dmoj.utils.unicode import utf8bytes
 from .base_executor import BaseExecutor
+from .mixins import EmulateTerminalMixin
 
 
 # A lot of executors must do initialization during their constructors, which is
@@ -102,7 +103,7 @@ class TimedPopen(subprocess.Popen):
             time.sleep(0.25)
 
 
-class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
+class CompiledExecutor(EmulateTerminalMixin, BaseExecutor, metaclass=_CompiledExecutorMeta):
     executable_size = env.compiler_size_limit * 1024
     compiler_time_limit = env.compiler_time_limit
     compile_output_index = 1

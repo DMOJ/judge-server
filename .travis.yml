@@ -37,7 +37,7 @@ addons:
     - dart/stable
     - scala
     - racket
-    - libchicken8
+    - libchicken7
     - libchicken-dev
 matrix:
   include:

@@ -80,6 +80,13 @@ before_install:
     curl -L https://bitbucket.org/squeaky/portable-pypy/downloads/pypy3.5-5.8-1-beta-linux_x86_64-portable.tar.bz2 |
     tar xj -C pypy3 --strip-components=1 &&
     ./pypy3/bin/pypy -mcompileall
+  # Install Chicken Scheme
+  - >
+    mkdir chicken-csc &&
+    apt-get download chicken-bin
+    dpkg-deb -R *.deb . &&
+    sudo ln -s `pwd`/usr/bin/chicken /usr/bin/chicken &&
+    sudo ln -s `pwd`/var/lib/chicken /var/lib
   # Install Rust
   - curl https://sh.rustup.rs -sSf | sh -s -- -y
   # Add `cargo` to PATH

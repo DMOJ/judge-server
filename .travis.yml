@@ -72,12 +72,12 @@ before_install:
   # Install PyPy
   - >
     mkdir pypy2 &&
-    curl -L https://bitbucket.org/squeaky/portable-pypy/downloads/pypy-5.8-1-linux_x86_64-portable.tar.bz2 |
+    curl -L https://bitbucket.org/squeaky/portable-pypy/downloads/pypy-7.1.1-linux_x86_64-portable.tar.bz2 |
     tar xj -C pypy2 --strip-components=1 &&
     ./pypy2/bin/pypy -mcompileall
   - >
     mkdir pypy3 &&
-    curl -L https://bitbucket.org/squeaky/portable-pypy/downloads/pypy3.5-5.8-1-beta-linux_x86_64-portable.tar.bz2 |
+    curl -L https://bitbucket.org/squeaky/portable-pypy/downloads/pypy3.6-7.1.1-beta-linux_x86_64-portable.tar.bz2 |
     tar xj -C pypy3 --strip-components=1 &&
     ./pypy3/bin/pypy -mcompileall
   # Install Rust

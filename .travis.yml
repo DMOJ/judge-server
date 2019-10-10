@@ -83,10 +83,12 @@ before_install:
   # Install Chicken Scheme
   - >
     mkdir chicken-csc &&
+    cd chicken-csc &&
     apt-get download chicken-bin
     dpkg-deb -R *.deb . &&
     sudo ln -s `pwd`/usr/bin/chicken /usr/bin/chicken &&
-    sudo ln -s `pwd`/var/lib/chicken /var/lib
+    sudo ln -s `pwd`/var/lib/chicken /var/lib &&
+    cd ..
   # Install Rust
   - curl https://sh.rustup.rs -sSf | sh -s -- -y
   # Add `cargo` to PATH

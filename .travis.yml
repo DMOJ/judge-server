@@ -84,13 +84,11 @@ before_install:
     ./pypy3/bin/pypy -mcompileall
   # Install Chicken Scheme
   - >
-    mkdir chicken-csc &&
-    cd chicken-csc &&
-    apt-get download chicken-bin
-    dpkg-deb -R *.deb . &&
-    mv usr/bin/csc usr/bin/chicken-csc && rm &.deb
-    dpkg-deb -b . fixed-chicken-bin.deb && dpkg -i ./fixed-chicken-bin.deb
-    cd ..
+    mkdir chicken-csc && cd chicken-csc &&
+    apt-get download chicken-bin &&
+    dpkg-deb -R *.deb . && rm *.deb &&
+    mv usr/bin/csc usr/bin/chicken-csc &&
+    dpkg-deb -b . fixed-chicken-bin.deb && dpkg -i ./fixed-chicken-bin.deb && cd ..
   # Install Rust
   - curl https://sh.rustup.rs -sSf | sh -s -- -y
   # Add `cargo` to PATH

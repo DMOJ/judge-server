@@ -179,7 +179,7 @@ class EmulateTerminalMixin:
 
         # Since stderr and stdout are connected to the same slave pty, proc.stderr will contain the merged stdout
         # of the process as well.
-        proc.stderr = io_error_wrapper(os.fdopen(self._master, 'r'))
+        proc.stderr = io_error_wrapper(os.fdopen(self._master, 'rb'))
 
         os.close(self._slave)
         return proc

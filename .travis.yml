@@ -87,6 +87,7 @@ before_install:
     apt-get download chicken-bin
     dpkg-deb -R *.deb . &&
     sudo ln -s `pwd`/usr/bin/chicken /usr/bin/chicken &&
+    sudo ln -s `pwd`/usr/bin/csc /usr/bin/chicken-csc &&
     sudo ln -s `pwd`/var/lib/chicken /var/lib &&
     cd ..
   # Install Rust

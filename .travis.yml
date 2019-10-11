@@ -37,6 +37,7 @@ addons:
     - dart/stable
     - scala
     - racket
+    - sbcl
 matrix:
   include:
   - name: flake8

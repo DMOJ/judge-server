@@ -38,12 +38,13 @@ script:
     cd /code
     if [ "$PYTHON_VERSION" != 3.7 ]; then
       PATH=/code/python$PYTHON_VERSION/bin:$PATH
+      pip3 install cython
     fi
     pip3 install -e .
     dmoj-autoconf -V
     EOF
   - chmod a+x run
-  - docker run -e PYTHON_VERSION="$PYTHON_VERSION" -e DMOJ_USE_SECCOMP="$DMOJ_USE_SECCOMP" -v "$(pwd):/code" dmoj/runtimes-tier1
+  - docker run -e PYTHON_VERSION="$PYTHON_VERSION" -e DMOJ_USE_SECCOMP="$DMOJ_USE_SECCOMP" -v "$(pwd):/code" --cap-add=SYS_PTRACE dmoj/runtimes-tier1
 notifications:
   slack:
     secure: "cJMFsXwvAZxSR/p8WFYUAtJmPxnq+MZKhXQgaHZp7D0tveh6v0/O/GDfO+3B3Ep7/SBNiAj/wfH/ivDVjiSWVN/2DYSiHtzMZ9Jkq2CQzMzX5u3l7J04bO617K8+eRGOFQcYj+GPRntF4GebSgfMuhXwba2N/KjAA9QMKOTlJpU="

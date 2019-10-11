@@ -1,4 +1,5 @@
 import itertools
+from typing import List
 
 from dmoj.error import CompileError
 from dmoj.executors.C import Executor as CExecutor
@@ -39,13 +40,17 @@ trans = {ord('>'): b'++p;', ord('<'): b'--p;',
 class Executor(CExecutor):
     name = 'BF'
     test_program = ',+[-.,+]'
-    compiler_time_limit = 20
 
     def __init__(self, problem_id, source_code, **kwargs):
         if source_code.count(b'[') != source_code.count(b']'):
             raise CompileError(b'Unmatched brackets\n')
         code = template.replace(b'{code}', b''.join(map(trans.get, source_code, itertools.repeat(b''))))
         super().__init__(problem_id, code, **kwargs)
+
+    def get_compile_args(self) -> List[str]:
+        command = self.get_command()
+        assert command is not None
+        return [command, '-O0', *self.source_paths, '-o', self.get_compiled_file()]
 
     def launch(self, *args, **kwargs):
         memory = kwargs['memory']

@@ -1,4 +1,4 @@
-udo: required
+sudo: required
 dist: bionic
 services:
   - docker
@@ -20,31 +20,45 @@ matrix:
     script:
       - flake8 --version
       - flake8
+    after_script:
 stages:
   - lint
   - test
 install:
-  - time docker pull dmoj/runtimes-tier1
+  - time docker pull dmoj/runtimes-tier3
   - |
     if [ "$PYTHON_VERSION" != 3.7 ]; then
       curl -L "$(curl -s https://api.github.com/repos/DMOJ/runtimes-python/releases |
           jq -r '[.[].assets | flatten | .[] | select(.name | startswith("python'"$PYTHON_VERSION"'")) | .browser_download_url][0]')" |
         tar -xz
     fi
+  - >
+    git clone --depth 25 \
+              --single-branch \
+              --branch ${DMOJ_JUDGE_TESTSUITE_BRANCH:-master} \
+              https://github.com/${DMOJ_JUDGE_TESTSUITE_SLUG:-DMOJ/judge-testsuite} testsuite &&
+    git -C testsuite reset --hard ${DMOJ_JUDGE_TESTSUITE_COMMIT_SHA:-HEAD}
 script:
   - |
-    cat > run <<EOF
-    #!/bin/bash
+    cat > run <<'EOF'
+    #!/bin/bash -e
+    export PYTHONUNBUFFERED=1
     cd /code
     if [ "$PYTHON_VERSION" != 3.7 ]; then
-      PATH=/code/python$PYTHON_VERSION/bin:$PATH
-      pip3 install cython
+      PYTHON="/code/python$PYTHON_VERSION/bin/python$PYTHON_VERSION"
+      "$PYTHON" -m pip install cython coverage
+    else
+      PYTHON=/usr/bin/python3.7
+      pip3 install coverage
     fi
-    pip3 install -e .
-    dmoj-autoconf -V
+    "$PYTHON" -m pip install -e .[test]
+    "$PYTHON" -m coverage run --source=dmoj -m unittest discover dmoj/tests/
+    "$PYTHON" -m coverage run --append --source=dmoj .docker.test.py
     EOF
   - chmod a+x run
-  - docker run -e PYTHON_VERSION="$PYTHON_VERSION" -e DMOJ_USE_SECCOMP="$DMOJ_USE_SECCOMP" -v "$(pwd):/code" --cap-add=SYS_PTRACE dmoj/runtimes-tier1
+  - docker run -e PYTHON_VERSION="$PYTHON_VERSION" -e DMOJ_USE_SECCOMP="$DMOJ_USE_SECCOMP" -v "$(pwd):/code" --cap-add=SYS_PTRACE dmoj/runtimes-tier3
+after_script:
+  - sudo pip install codecov && codecov
 notifications:
   slack:
     secure: "cJMFsXwvAZxSR/p8WFYUAtJmPxnq+MZKhXQgaHZp7D0tveh6v0/O/GDfO+3B3Ep7/SBNiAj/wfH/ivDVjiSWVN/2DYSiHtzMZ9Jkq2CQzMzX5u3l7J04bO617K8+eRGOFQcYj+GPRntF4GebSgfMuhXwba2N/KjAA9QMKOTlJpU="

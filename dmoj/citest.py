@@ -34,9 +34,10 @@ def get_dirs(d):
         return []
 
 
-def ci_test(executors_to_test, overrides):
+def ci_test(executors_to_test, overrides, allow_fail=frozenset()):
     result = {}
     failed = False
+    failed_executors = []
 
     for name in executors_to_test:
         executor = import_module('dmoj.executors.' + name)
@@ -66,9 +67,11 @@ def ci_test(executors_to_test, overrides):
             feedback = data[2]
             errors = '' if len(data) < 4 else data[3]
         except Exception:
-            failed = True
             print_ansi('#ansi[Autoconfig broken](red|bold)')
             traceback.print_exc()
+            if name not in allow_fail:
+                failed = True
+                failed_executors.append(name)
         else:
             print_ansi(['#ansi[%s](red|bold)', '#ansi[%s](green|bold)'][success] %
                        (feedback or ['Failed', 'Success'][success]))
@@ -91,7 +94,9 @@ def ci_test(executors_to_test, overrides):
                 if errors:
                     print('  Errors:')
                     print('   ', errors.replace('\n', '\n' + ' ' * 4))
-                failed = True
+                if name not in allow_fail:
+                    failed = True
+                    failed_executors.append(name)
 
     print()
     print_ansi('#ansi[Configuration result](green|bold|underline):')
@@ -99,6 +104,7 @@ def ci_test(executors_to_test, overrides):
     print()
     if failed:
         print_ansi('#ansi[Executor configuration failed.](red|bold).')
+        print_ansi('#ansi[Failed executors:](|bold)', ', '.join(failed_executors))
     else:
         print_ansi('#ansi[Executor configuration succeeded.](green|bold).')
     print()

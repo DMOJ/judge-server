@@ -1,8 +1,8 @@
 import itertools
+from typing import List
 
 from dmoj.error import CompileError
 from dmoj.executors.C import Executor as CExecutor
-from typing import List
 
 template = b'''\
 #define _GNU_SOURCE

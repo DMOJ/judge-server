@@ -48,7 +48,9 @@ class Executor(CExecutor):
         super().__init__(problem_id, code, **kwargs)
 
     def get_compile_args(self) -> List[str]:
-        return [self.get_command(), '-O0', *self.source_paths, '-o', self.get_compiled_file()]
+        command = self.get_command()
+        assert command is not None
+        return [command, '-O0', *self.source_paths, '-o', self.get_compiled_file()]
 
     def launch(self, *args, **kwargs):
         memory = kwargs['memory']

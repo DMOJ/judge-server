@@ -15,7 +15,8 @@ class Executor(NullStdoutMixin, ScriptDirectoryMixin, CompiledExecutor):
     command = 'sbcl'
     syscalls = ['personality', 'poll']
     test_program = '(write-line (read-line))'
-    address_grace = 1048576 * 2  # *wipes brow*
+    address_grace = 262144
+    data_grace = 262144
 
     compile_script = '''(compile-file "{code}")'''
 
@@ -23,7 +24,13 @@ class Executor(NullStdoutMixin, ScriptDirectoryMixin, CompiledExecutor):
         return [self.get_command(), '--eval', self.compile_script.format(code=self._code), '--quit']
 
     def get_cmdline(self):
-        return [self.get_command(), '--noinform', '--load', self.problem + ".fasl", '--quit', '--end-toplevel-options']
+        return [self.get_command(), '--dynamic-space-size', str(int(self.__memory_limit / 1024.0 + 1)),
+                '--noinform', '--no-sysinit', '--no-userinit', '--load', self.problem + ".fasl",
+                '--quit', '--end-toplevel-options']
+
+    def launch(self, *args, **kwargs):
+        self.__memory_limit = kwargs['memory']
+        return super().launch(*args, **kwargs)
 
     def get_executable(self):
         return self.get_command()

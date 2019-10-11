@@ -36,3 +36,15 @@ fun main(args: Array<String>) {
     @classmethod
     def get_versionable_commands(cls):
         return [('kotlinc', cls.get_compiler()), ('java', cls.get_vm())]
+
+    @classmethod
+    def autoconfig(cls):
+        kotlinc = cls.find_command_from_list(['kotlinc'])
+        if kotlinc is None:
+            return None, False, 'Failed to find "kotlinc"'
+
+        java = cls.find_command_from_list(['java'])
+        if java is None:
+            return None, False, 'Failed to find "java"'
+
+        return cls.autoconfig_run_test({cls.compiler: kotlinc, cls.vm: cls.unravel_java(java)})

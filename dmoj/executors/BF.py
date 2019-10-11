@@ -39,6 +39,7 @@ trans = {ord('>'): b'++p;', ord('<'): b'--p;',
 class Executor(CExecutor):
     name = 'BF'
     test_program = ',+[-.,+]'
+    compiler_time_limit = 20
 
     def __init__(self, problem_id, source_code, **kwargs):
         if source_code.count(b'[') != source_code.count(b']'):

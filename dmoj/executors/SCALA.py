@@ -56,7 +56,7 @@ object self_test extends App {
 
         scala = result.pop('scala')
         with open(os.devnull, 'w') as devnull:
-            process = subprocess.Popen(['bash', '-x', scala, '-version'], stdout=devnull, stderr=subprocess.PIPE)
+            process = subprocess.Popen(['bash', '-x', scala, '-usebootcp', '-version'], stdout=devnull, stderr=subprocess.PIPE)
         output = utf8text(process.communicate()[1])
         log = [i for i in output.split('\n') if 'scala.tools.nsc.MainGenericRunner' in i]
 

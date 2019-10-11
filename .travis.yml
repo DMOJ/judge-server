@@ -54,10 +54,19 @@ script:
       pip3 install coverage
     fi
     "$PYTHON" -m pip install -e .[test]
+    chmod o+w .
+    useradd -M judge
+    export PYTHON
+    su -m judge -c /code/run-su
+    EOF
+  - |
+    cat > run-su <<'EOF'
+    #!/bin/bash -e
+    cd /code
     "$PYTHON" -m coverage run --source=dmoj -m unittest discover dmoj/tests/
     "$PYTHON" -m coverage run --append --source=dmoj .docker.test.py
     EOF
-  - chmod a+x run
+  - chmod a+x run run-su
   - docker run -e PYTHON_VERSION="$PYTHON_VERSION" -e DMOJ_USE_SECCOMP="$DMOJ_USE_SECCOMP" -v "$(pwd):/code" --cap-add=SYS_PTRACE dmoj/runtimes-tier3
 after_script:
   - sudo pip install codecov && codecov

@@ -69,6 +69,7 @@ script:
   - chmod a+x run run-su
   - docker run -e PYTHON_VERSION="$PYTHON_VERSION" -e DMOJ_USE_SECCOMP="$DMOJ_USE_SECCOMP" -v "$(pwd):/code" --cap-add=SYS_PTRACE dmoj/runtimes-tier3
 after_script:
+  - sed -i 's:"/code/:"'"$(pwd)"'/:g' .coverage
   - sudo pip install codecov && codecov
 notifications:
   slack:

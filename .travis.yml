@@ -67,7 +67,7 @@ script:
     "$PYTHON" -m coverage run --append --source=dmoj .docker.test.py
     EOF
   - chmod a+x run run-su
-  - docker run -e PYTHON_VERSION="$PYTHON_VERSION" -e DMOJ_USE_SECCOMP="$DMOJ_USE_SECCOMP" -v "$(pwd):/code" --cap-add=SYS_PTRACE --security-opt seccomp=unconfined dmoj/runtimes-tier3
+  - docker run -e PYTHON_VERSION="$PYTHON_VERSION" -e DMOJ_USE_SECCOMP="$DMOJ_USE_SECCOMP" -v "$(pwd):/code" --cap-add=SYS_PTRACE dmoj/runtimes-tier3
 after_script:
   - sudo pip install codecov && codecov
 notifications:

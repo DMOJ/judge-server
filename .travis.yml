@@ -1,120 +1,37 @@
 sudo: required
-dist: xenial
-language: python
-python:
-  - 3.6
-  - 3.7
+dist: bionic
+services:
+  - docker
+language: minimal
 env:
   matrix:
-  - DMOJ_USE_SECCOMP="yes"
-  - DMOJ_USE_SECCOMP="no"
-addons:
-  apt:
-    sources:
-    - mono
-    - sourceline: 'ppa:swi-prolog/stable'
-      key_url: 'http://keyserver.ubuntu.com/pks/lookup?op=get&fingerprint=on&search=0x51716619E084DAB9'
-    - sourceline: 'deb [arch=amd64] https://storage.googleapis.com/download.dartlang.org/linux/debian stable main'
-      key_url: 'https://dl-ssl.google.com/linux/linux_signing_key.pub'
-    packages:
-    - ghc
-    - gnat
-    - php7.0-cli
-    - mono-devel
-    - mono-vbnc
-    - fp-compiler
-    - coffeescript
-    - binutils-multiarch
-    - libc6-dev-i386
-    - libseccomp-dev
-    - nasm
-    - open-cobol
-    - ocaml
-    - lua5.2
-    - gfortran
-    - tcl
-    - swi-prolog
-    - dart/stable
-    - scala
-    - racket
-    - sbcl
+  - PYTHON_VERSION=3.6 DMOJ_USE_SECCOMP="yes"
+  - PYTHON_VERSION=3.7 DMOJ_USE_SECCOMP="yes"
+  - PYTHON_VERSION=3.6 DMOJ_USE_SECCOMP="no"
+  - PYTHON_VERSION=3.7 DMOJ_USE_SECCOMP="no"
 matrix:
   include:
   - name: flake8
     stage: lint
+    language: python
     python: 3.7
     env: LINTER="yes"
-    addons:
-      apt:
-        sources: []
-        packages: []
-    before_install: []
     install: pip install flake8 flake8-import-order flake8-future-import flake8-commas flake8-logging-format
     script:
       - flake8 --version
       - flake8
-    cache:
+    after_script:
 stages:
   - lint
   - test
-cache:
-  directories:
-    - $HOME/.cargo
-    - $HOME/.cache/pip
-before_cache:
-  - rm -f $HOME/.cache/pip/log/debug.log
-before_install:
-  # Install Swift
-  - >
-    mkdir swift &&
-    curl https://swift.org/builds/swift-4.2.1-release/ubuntu1604/swift-4.2.1-RELEASE/swift-4.2.1-RELEASE-ubuntu16.04.tar.gz |
-    tar xz -C swift --strip-components=1
-  - export PATH=${PWD}/swift/usr/bin:"${PATH}"
-  # Install PyPy
-  - >
-    mkdir pypy2 &&
-    curl -L https://bitbucket.org/squeaky/portable-pypy/downloads/pypy-5.8-1-linux_x86_64-portable.tar.bz2 |
-    tar xj -C pypy2 --strip-components=1 &&
-    ./pypy2/bin/pypy -mcompileall
-  - >
-    mkdir pypy3 &&
-    curl -L https://bitbucket.org/squeaky/portable-pypy/downloads/pypy3.5-5.8-1-beta-linux_x86_64-portable.tar.bz2 |
-    tar xj -C pypy3 --strip-components=1 &&
-    ./pypy3/bin/pypy -mcompileall
-  # Install Chicken Scheme
-  - >
-    mkdir chicken-csc && cd chicken-csc &&
-    apt-get download chicken-bin &&
-    dpkg-deb -R *.deb . && rm *.deb &&
-    mv usr/bin/csc usr/bin/chicken-csc &&
-    mv usr/bin/csi usr/bin/chicken-csi &&
-    dpkg-deb -b . fixed-chicken-bin.deb &&
-    sudo dpkg -i ./fixed-chicken-bin.deb &> /dev/null || sudo apt -f -y --no-install-recommends install &&
-    cd ..
-  # Install Rust
-  - curl https://sh.rustup.rs -sSf | sh -s -- -y
-  # Add `cargo` to PATH
-  - export PATH=${HOME}/.cargo/bin:"${PATH}"
-  # Install latest Scala
-  - wget http://downloads.lightbend.com/scala/2.12.4/scala-2.12.4.deb
-  - sudo dpkg -i scala-2.12.4.deb
-  # Install D
-  - wget http://downloads.dlang.org/releases/2.x/2.071.1/dmd_2.071.1-0_amd64.deb
-  - sudo dpkg -i dmd_2.071.1-0_amd64.deb
-  # Install Kotlin
-  # - >
-  #  wget -O kotlinc.zip https://github.com/JetBrains/kotlin/releases/download/v1.1.60/kotlin-compiler-1.1.60.zip &&
-  #  unzip kotlinc.zip &&
-  #  export PATH=${PWD}/kotlinc/bin:"${PATH}"
-  # Install Groovy
-  - >
-    wget -O groovy.zip https://bintray.com/artifact/download/groovy/maven/apache-groovy-binary-2.4.12.zip &&
-    unzip groovy.zip &&
-    export PATH=${PWD}/groovy-2.4.12/bin:"${PATH}"
 install:
-  - pip install codecov
-  - pip install Cython --install-option="--no-cython-compile"
-  - pip install -e '.[test]'
+  - time docker pull dmoj/runtimes-tier3
+  - |
+    if [ "$PYTHON_VERSION" != 3.7 ]; then
+      curl -L "$(curl -s https://api.github.com/repos/DMOJ/runtimes-python/releases |
+          jq -r '[.[].assets | flatten | .[] | select(.name | startswith("python'"$PYTHON_VERSION"'")) | .browser_download_url][0]')" |
+        tar -xz
+    fi
   - >
     git clone --depth 25 \
               --single-branch \
@@ -122,10 +39,37 @@ install:
               https://github.com/${DMOJ_JUDGE_TESTSUITE_SLUG:-DMOJ/judge-testsuite} testsuite &&
     git -C testsuite reset --hard ${DMOJ_JUDGE_TESTSUITE_COMMIT_SHA:-HEAD}
 script:
-  - coverage run --source=dmoj -m unittest discover dmoj/tests/
-  - coverage run --append --source=dmoj .travis.test.py
+  - |
+    cat > run <<'EOF'
+    #!/bin/bash -e
+    export PYTHONUNBUFFERED=1
+    export LANG=C.UTF-8
+    export PYTHONIOENCODING=utf8
+    cd /code
+    if [ "$PYTHON_VERSION" != 3.7 ]; then
+      PYTHON="/code/python$PYTHON_VERSION/bin/python$PYTHON_VERSION"
+      "$PYTHON" -m pip install cython coverage
+    else
+      PYTHON=/usr/bin/python3.7
+      pip3 install coverage
+    fi
+    "$PYTHON" -m pip install -e .[test]
+    chmod o+w .
+    useradd -M judge
+    export PYTHON
+    su -m judge -c /code/run-su
+    EOF
+  - |
+    cat > run-su <<'EOF'
+    #!/bin/bash -e
+    cd /code
+    "$PYTHON" -m coverage run --source=dmoj -m unittest discover dmoj/tests/
+    "$PYTHON" -m coverage run --append --source=dmoj .docker.test.py
+    EOF
+  - chmod a+x run run-su
+  - docker run -e PYTHON_VERSION="$PYTHON_VERSION" -e DMOJ_USE_SECCOMP="$DMOJ_USE_SECCOMP" -v "$(pwd):/code" --cap-add=SYS_PTRACE dmoj/runtimes-tier3
 after_script:
-  - codecov
+  - sudo pip install codecov && codecov
 notifications:
   slack:
     secure: "cJMFsXwvAZxSR/p8WFYUAtJmPxnq+MZKhXQgaHZp7D0tveh6v0/O/GDfO+3B3Ep7/SBNiAj/wfH/ivDVjiSWVN/2DYSiHtzMZ9Jkq2CQzMzX5u3l7J04bO617K8+eRGOFQcYj+GPRntF4GebSgfMuhXwba2N/KjAA9QMKOTlJpU="

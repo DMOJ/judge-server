@@ -122,6 +122,8 @@ class BaseExecutor(PlatformExecutorMixin):
             if output:
                 # Cache the versions now, so that the handshake packet doesn't take ages to generate
                 cls.get_runtime_versions()
+                print("%-20s" % (cls.get_runtime_versions()[0][0] + ' '
+                        + '.'.join(map(str, cls.get_runtime_versions()[0][1]))), end=' ')
                 usage = '[%.3fs, %d KB]' % (proc.execution_time, proc.max_memory)
                 print_ansi(['#ansi[Failed](red|bold)', '#ansi[Success](green|bold)'][res], usage)
             if stdout.strip() != test_message and error_callback:

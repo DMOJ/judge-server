@@ -103,6 +103,8 @@ class BaseExecutor(PlatformExecutorMixin):
 
         if output:
             print_ansi("%-39s%s" % ('Self-testing #ansi[%s](|underline):' % cls.get_executor_name(), ''), end=' ')
+            print("%-39s" % (' '.join([v[0] + ' ' + '.'.join(map(str, v[1]))
+                for v in cls.get_runtime_versions()])), end=' ')
         try:
             executor = cls(cls.test_name, utf8bytes(cls.test_program))
             proc = executor.launch(time=cls.test_time, memory=cls.test_memory,
@@ -122,8 +124,6 @@ class BaseExecutor(PlatformExecutorMixin):
             if output:
                 # Cache the versions now, so that the handshake packet doesn't take ages to generate
                 cls.get_runtime_versions()
-                print("%-20s" % (cls.get_runtime_versions()[0][0] + ' '
-                        + '.'.join(map(str, cls.get_runtime_versions()[0][1]))), end=' ')
                 usage = '[%.3fs, %d KB]' % (proc.execution_time, proc.max_memory)
                 print_ansi(['#ansi[Failed](red|bold)', '#ansi[Success](green|bold)'][res], usage)
             if stdout.strip() != test_message and error_callback:
@@ -137,6 +137,7 @@ class BaseExecutor(PlatformExecutorMixin):
                 print_protection_fault(proc.protection_fault)
             return res
         except Exception:
+            print(output, error_callback)
             if output:
                 print_ansi('#ansi[Failed](red|bold)')
                 traceback.print_exc()

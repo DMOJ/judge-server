@@ -1,11 +1,10 @@
-#include <unistd.h>
-#include <sys/reboot.h>
 #include <stdio.h>
-#include <linux/reboot.h>
+#include <unistd.h>
+#include <sys/ptrace.h>
 
 int main() {
-    if(reboot(LINUX_REBOOT_CMD_HALT) == -1) {
-        perror("reboot");
+    if (ptrace(PTRACE_TRACEME, 0, NULL, NULL) == -1) {
+        perror("ptrace");
     }
     return 0;
 }

@@ -17,7 +17,7 @@ grant {
     // A lot of files, too
     permission java.io.FilePermission ".", "read";
     permission java.io.FilePermission "${groovy.starter.conf}", "read";
-    permission java.io.FilePermission "${groovy.home}/lib/-", "read";
+    permission java.io.FilePermission "${groovy.home}/-", "read";
     permission java.io.FilePermission "${user.home}/.groovy/lib", "read";
     permission java.io.FilePermission "${tools.jar}", "read";
 

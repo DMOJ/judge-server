@@ -16,7 +16,9 @@ put echo
         return super().get_fs() + [self._code + 'bc']
 
     def get_compile_args(self):
-        return [self.get_command(), self._code, env['runtime']['turing_dir']]
+        command = self.get_command()
+        assert command is not None
+        return [command, self._code, os.path.dirname(command)]
 
     def get_cmdline(self):
         return [env['runtime']['tprolog'], self._code + 'bc']
@@ -26,7 +28,7 @@ put echo
 
     @classmethod
     def initialize(cls):
-        if 'tprolog' not in env['runtime'] or 'tprologc' not in env['runtime'] or 'turing_dir' not in env['runtime']:
+        if 'tprolog' not in env['runtime'] or 'tprologc' not in env['runtime']:
             return False
         return super().initialize()
 

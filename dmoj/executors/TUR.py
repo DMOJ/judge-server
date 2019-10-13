@@ -1,3 +1,5 @@
+import os
+
 from dmoj.executors.compiled_executor import CompiledExecutor
 from dmoj.judgeenv import env
 

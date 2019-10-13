@@ -4,7 +4,7 @@ from dmoj import judgeenv
 from dmoj.citest import ci_test
 from dmoj.executors import get_available
 
-ALLOW_FAIL = {'CCL', 'GASARM', 'GROOVY', 'JAVA9', 'JAVA10', 'OBJC', 'OCTAVE', 'RUBY18', 'RUBY19', 'RUST'}
+ALLOW_FAIL = {'CCL', 'GASARM', 'JAVA9', 'JAVA10', 'OBJC', 'OCTAVE', 'RUBY18', 'RUBY19', 'RUST'}
 OVERRIDES = {}
 
 

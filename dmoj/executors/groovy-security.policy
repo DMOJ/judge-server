@@ -71,6 +71,7 @@ grant {
     permission java.io.FilePermission "${groovy.home}/lib/servlet-api.jar", "read";
     permission java.io.FilePermission "${groovy.home}/lib/testng.jar", "read";
     permission java.io.FilePermission "${groovy.home}/lib/xstream.jar", "read";
+    permission java.io.FilePermission "${groovy.home}/lib/extras-jaxb/jaxb-impl-2.3.0.1.jar", "read";
     permission java.io.FilePermission "${user.home}/.groovy/lib", "read";
     permission java.io.FilePermission "${tools.jar}", "read";
 

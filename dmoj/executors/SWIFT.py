@@ -1,8 +1,7 @@
 from dmoj.executors.compiled_executor import CompiledExecutor
-from dmoj.executors.mixins import EmulateTerminalMixin
 
 
-class Executor(EmulateTerminalMixin, CompiledExecutor):
+class Executor(CompiledExecutor):
     ext = 'swift'
     name = 'SWIFT'
     command = 'swiftc'

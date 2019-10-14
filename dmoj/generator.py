@@ -28,7 +28,7 @@ class GeneratorManager:
 
         use_cpp = any(map(lambda name: os.path.splitext(name)[1] == '.cpp', filenames))
         if lang is None:
-            best_choices = ('CPP17', 'CPP14', 'CPP11', 'CPP0X', 'CPP03') if use_cpp else ('C11', 'C')
+            best_choices = ('CPP17', 'CPP14', 'CPP11', 'CPP03') if use_cpp else ('C11', 'C')
             lang = find_runtime(best_choices)
 
         clazz = executors.get(lang)

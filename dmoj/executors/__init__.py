@@ -10,7 +10,7 @@ _reexecutor = re.compile(r'([A-Z0-9]+)\.py$')
 # List of executors that exist for historical purposes, but which shouldn't ever be run on a normal system
 # We keep them for compatibility purposes, but they are not important enough to have a commandline flag for enabling
 # them; instead, removing them from this list suffices.
-_unsupported_executors = {'CPP0X', 'JAVA7', 'BASH', 'NIM'}
+_unsupported_executors = {'BASH'}
 
 executors = {}
 

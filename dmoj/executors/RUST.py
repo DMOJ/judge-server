@@ -88,7 +88,7 @@ class Executor(CompiledExecutor):
         return [('rustc', os.path.join(os.path.dirname(cls.get_command()), 'rustc'))]
 
     def get_compile_args(self):
-        return [self.get_command(), 'build', '--release']
+        return [self.get_command(), 'build', '--release', '--offline']
 
     def get_compiled_file(self):
         return self._file('target', 'release', 'user_submission')

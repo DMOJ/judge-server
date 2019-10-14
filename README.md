@@ -33,9 +33,9 @@ Versions up to and including [v1.4.0](https://github.com/DMOJ/judge/releases/tag
 The DMOJ judge does **not** need a root user to run on Linux machines: it will run just fine under a normal user.
 
 Supported languages include:
-* C++ 0x/11/14/17 (GCC and Clang)
+* C++ 11/14/17 (GCC and Clang)
 * C 99/11
-* Java 7/8/9/10/11
+* Java 8/9/10/11
 * Python 2/3
 * PyPy 2/3
 * Pascal
@@ -45,7 +45,6 @@ Supported languages include:
 The judge can also grade in the languages listed below. These languages are less tested and more likely to be buggy.
 * Ada
 * AWK
-* Clozure Common Lisp
 * COBOL
 * D
 * Dart
@@ -58,15 +57,14 @@ The judge can also grade in the languages listed below. These languages are less
 * Kotlin
 * Lua
 * NASM
-* Nim
 * Objective-C
 * Octave
 * OCaml
-* PHP 5/7
+* PHP
 * Pike
 * Prolog
 * Racket
-* Ruby 2.1
+* Ruby
 * Rust
 * Scala
 * Chicken Scheme

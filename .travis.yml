@@ -55,9 +55,8 @@ script:
     fi
     "$PYTHON" -m pip install -e .[test]
     chmod o+w .
-    useradd -M judge
     export PYTHON
-    su -m judge -c /code/run-su
+    runuser -u judge -w PATH /code/run-su
     EOF
   - |
     cat > run-su <<'EOF'

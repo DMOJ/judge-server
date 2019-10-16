@@ -1,6 +1,7 @@
 import os
 
 from dmoj.executors.compiled_executor import CompiledExecutor
+from dmoj.utils.os_ext import bool_env
 
 CARGO_TOML = b'''\
 [package]
@@ -88,7 +89,10 @@ class Executor(CompiledExecutor):
         return [('rustc', os.path.join(os.path.dirname(cls.get_command()), 'rustc'))]
 
     def get_compile_args(self):
-        return [self.get_command(), 'build', '--release', '--offline']
+        args = [self.get_command(), 'build', '--release']
+        if bool_env('DMOJ_CARGO_OFFLINE'):
+            args += ['--offline']
+        return args
 
     def get_compiled_file(self):
         return self._file('target', 'release', 'user_submission')

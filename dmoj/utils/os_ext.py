@@ -66,3 +66,8 @@ def file_arch(path):
 
 
 INTERPRETER_ARCH = file_arch(sys.executable)
+
+
+def bool_env(name):
+    value = os.environ.get(name, '')
+    return value.lower() in ('true', 'yes', '1', 'y', 't')

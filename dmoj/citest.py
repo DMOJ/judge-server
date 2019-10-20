@@ -103,10 +103,10 @@ def ci_test(executors_to_test, overrides, allow_fail=frozenset()):
     print(yaml.safe_dump({'runtime': result}, default_flow_style=False).rstrip())
     print()
     if failed:
-        print_ansi('#ansi[Executor configuration failed.](red|bold).')
+        print_ansi('#ansi[Executor configuration failed.](red|bold)')
         print_ansi('#ansi[Failed executors:](|bold)', ', '.join(failed_executors))
     else:
-        print_ansi('#ansi[Executor configuration succeeded.](green|bold).')
+        print_ansi('#ansi[Executor configuration succeeded.](green|bold)')
     print()
     print()
     print('Running test cases...')

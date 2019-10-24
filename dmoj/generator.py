@@ -2,7 +2,6 @@ import os
 import traceback
 
 from dmoj.error import InternalError
-from dmoj.judgeenv import env
 
 
 class GeneratorManager:
@@ -39,7 +38,6 @@ class GeneratorManager:
         clazz = clazz.Executor
 
         if issubclass(clazz, CompiledExecutor):
-            compiler_time_limit = compiler_time_limit or env.generator_compiler_time_limit
             clazz = type('Executor', (clazz,), {'compiler_time_limit': compiler_time_limit})
 
         # Optimize the common case.

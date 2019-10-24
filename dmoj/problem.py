@@ -140,7 +140,7 @@ class TestCase:
         # resource limits on how to run the generator
         time_limit = env.generator_time_limit
         memory_limit = env.generator_memory_limit
-        compiler_time_limit = env.compiler_time_limit
+        compiler_time_limit = env.generator_compiler_time_limit
         lang = None  # Default to C/C++
 
         base = get_problem_root(self.problem.id)

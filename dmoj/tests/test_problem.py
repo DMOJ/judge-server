@@ -3,7 +3,7 @@ import unittest
 from unittest import mock
 
 from dmoj.config import InvalidInitException
-from dmoj.problem import Problem
+from dmoj.problem import Problem, ProblemDataManager
 
 
 class ProblemTest(unittest.TestCase):
@@ -11,6 +11,37 @@ class ProblemTest(unittest.TestCase):
         self.data_patch = mock.patch('dmoj.problem.ProblemDataManager')
         data_mock = self.data_patch.start()
         data_mock.side_effect = lambda problem: self.problem_data
+
+    def test_test_case_matching(self):
+        class MockProblem(Problem):
+            def _resolve_archive_files(self):
+                return None
+
+            def _problem_file_list(self):
+                return [
+                    's2.1-1.in', 's2.1-1.out',
+                    's2.1.2.in', 's2.1.2.out',
+                    's3.4.in', 's3.4.out',
+                    '5.in', '5.OUT',
+                    '6-1.in', '6-1.OUT',
+                    '6.2.in', '6.2.OUT',
+                    'foo/a.b.c.6.3.in', 'foo/a.b.c.6.3.OUT',
+                    'bar.in.7', 'bar.out.7',
+                    'INPUT8.txt', 'OUTPUT8.txt',
+                    '.DS_Store',
+                ]
+
+        self.problem_data = ProblemDataManager('foo')
+        self.problem_data.update({'init.yml': 'archive: foo.zip'})
+        self.assertEqual(MockProblem('test', 2, 16384).config.test_cases.unwrap(),
+                         [{'batched': [{'in': 's2.1-1.in', 'out': 's2.1-1.out'},
+                                       {'in': 's2.1.2.in', 'out': 's2.1.2.out'}], 'points': 1},
+                          {'in': 's3.4.in', 'out': 's3.4.out', 'points': 1},
+                          {'in': '5.in', 'out': '5.OUT', 'points': 1}, {
+                              'batched': [{'in': '6-1.in', 'out': '6-1.OUT'}, {'in': '6.2.in', 'out': '6.2.OUT'},
+                                          {'in': 'foo/a.b.c.6.3.in', 'out': 'foo/a.b.c.6.3.OUT'}], 'points': 1},
+                          {'in': 'bar.in.7', 'out': 'bar.out.7', 'points': 1},
+                          {'in': 'INPUT8.txt', 'out': 'OUTPUT8.txt', 'points': 1}])
 
     def test_no_init(self):
         self.problem_data = {}

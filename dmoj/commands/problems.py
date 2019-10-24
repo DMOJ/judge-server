@@ -25,7 +25,7 @@ class ListProblemsCommand(Command):
 
         if _args.filter:
             r = re.compile(_args.filter)
-            all_problems = filter(lambda x: r.match(x[0]) is not None, all_problems)
+            all_problems = list(filter(lambda x: r.match(x[0]) is not None, all_problems))
 
         if _args.limit:
             all_problems = all_problems[:_args.limit]

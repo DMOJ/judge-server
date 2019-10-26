@@ -80,7 +80,7 @@ Installing the DMOJ judge creates two executables in your Python's script direct
 `dmoj` is used to connect a judge to a DMOJ site instance, while `dmoj-cli` provides a command-line interface to a
 local judge, useful for testing problems.
 
-For more detailed steps, read the [installation instructions](https://docs.dmoj.ca/en/latest/judge/linux_installation/).
+For more detailed steps, read the [installation instructions](https://docs.dmoj.ca/#/judge/linux_installation).
 
 Note that **the only officially-supported Linux distribution is the latest Debian**, with the default `apt` versions of all runtimes. This is [what we run on dmoj.ca](https://dmoj.ca/runtimes/matrix/), and it should "just work". While the judge will likely still work with other distributions and runtime versions, some runtimes might fail to initialize. In these cases, please [file an issue](https://github.com/DMOJ/judge/issues).
 

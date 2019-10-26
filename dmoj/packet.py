@@ -13,6 +13,7 @@ from typing import List, Optional, TYPE_CHECKING, Tuple
 
 from dmoj import sysinfo
 from dmoj.judgeenv import get_runtime_versions, get_supported_problems
+from dmoj.result import Result
 from dmoj.utils.unicode import utf8bytes, utf8text
 
 if TYPE_CHECKING:
@@ -66,6 +67,9 @@ class PacketManager:
 
         self._lock = threading.RLock()
         self._batch = 0
+        self._testcase_queue_lock = threading.Lock()
+        self._testcase_queue: List[Tuple[int, Result]] = []
+
         # Exponential backoff: starting at 4 seconds.
         # Certainly hope it won't stack overflow, since it will take days if not years.
         self.fallback = 4
@@ -133,7 +137,7 @@ class PacketManager:
             self.conn.shutdown(socket.SHUT_RDWR)
         self._closed = True
 
-    def _read_async(self):
+    def _read_forever(self):
         try:
             while True:
                 self._receive_packet(self._read_single())
@@ -162,15 +166,49 @@ class PacketManager:
             return json.loads(utf8text(packet))
 
     def run(self):
-        self._read_async()
+        threading.Thread(target=self._periodically_flush_testcase_queue).start()
+        self._read_forever()
 
     def disconnect(self):
         self.close()
         self.judge.terminate_grading()
         sys.exit(0)
 
-    def run_async(self):
-        threading.Thread(target=self._read_async).start()
+    def _flush_testcase_queue(self):
+        with self._testcase_queue_lock:
+            if not self._testcase_queue:
+                return
+
+            self._send_packet({'name': 'test-case-status',
+                               'submission-id': self.judge.current_submission_id,
+                               'cases': [
+                                   {
+                                       'position': position,
+                                       'status': result.result_flag,
+                                       'time': result.execution_time,
+                                       'points': result.points,
+                                       'total-points': result.total_points,
+                                       'memory': result.max_memory,
+                                       'output': result.output,
+                                       'extended-feedback': result.extended_feedback,
+                                       'feedback': result.feedback,
+                                   } for position, result in self._testcase_queue
+                               ]})
+
+            self._testcase_queue.clear()
+
+    def _periodically_flush_testcase_queue(self):
+        try:
+            while True:
+                time.sleep(0.25)
+                # It is okay if we flush the testcase queue even while the connection is not open or there's nothing
+                # grading, since the only thing that can queue testcases is a currently-grading submission.
+                self._flush_testcase_queue()
+        except KeyboardInterrupt:
+            pass
+        except Exception:
+            traceback.print_exc()
+            raise SystemExit(1)
 
     def _send_packet(self, packet: dict):
         for k, v in packet.items():
@@ -239,32 +277,14 @@ class PacketManager:
         self._send_packet({'name': 'supported-problems',
                            'problems': problems})
 
-    def multi_test_case_status_packet(self, updates):
-        for result, position in updates:
-            log.info('Test case on %d: #%d, %s [%.3fs | %.2f MB], %.1f/%.0f',
-                     self.judge.current_submission_id, position,
-                     ', '.join(result.readable_codes()),
-                     result.execution_time, result.max_memory / 1024.0,
-                     result.points, result.total_points)
-
-        self._send_packet({'name': 'test-case-status',
-                           'submission-id': self.judge.current_submission_id,
-                           'cases': [
-                               {
-                                   'position': position,
-                                   'status': result.result_flag,
-                                   'time': result.execution_time,
-                                   'points': result.points,
-                                   'total-points': result.total_points,
-                                   'memory': result.max_memory,
-                                   'output': result.output,
-                                   'extended-feedback': result.extended_feedback,
-                                   'feedback': result.feedback,
-                               } for position, result in updates
-                           ]})
-
-    def test_case_status_packet(self, position: int, result):
-        self.multi_test_case_status_packet([(position, result)])
+    def test_case_status_packet(self, position: int, result: Result):
+        log.info('Test case on %d: #%d, %s [%.3fs | %.2f MB], %.1f/%.0f',
+                 self.judge.current_submission_id, position,
+                 ', '.join(result.readable_codes()),
+                 result.execution_time, result.max_memory / 1024.0,
+                 result.points, result.total_points)
+        with self._testcase_queue_lock:
+            self._testcase_queue.append((position, result))
 
     def compile_error_packet(self, message: str):
         log.info('Compile error: %d', self.judge.current_submission_id)
@@ -281,6 +301,7 @@ class PacketManager:
 
     def internal_error_packet(self, message: str):
         log.info('Internal error: %d', self.judge.current_submission_id)
+        self._flush_testcase_queue()
         self._send_packet({'name': 'internal-error',
                            'submission-id': self.judge.current_submission_id,
                            'message': message})
@@ -294,17 +315,20 @@ class PacketManager:
     def grading_end_packet(self):
         log.info('End grading: %d', self.judge.current_submission_id)
         self.fallback = 4
+        self._flush_testcase_queue()
         self._send_packet({'name': 'grading-end',
                            'submission-id': self.judge.current_submission_id})
 
     def batch_begin_packet(self):
         self._batch += 1
         log.info('Enter batch number %d: %d', self._batch, self.judge.current_submission_id)
+        self._flush_testcase_queue()
         self._send_packet({'name': 'batch-begin',
                            'submission-id': self.judge.current_submission_id})
 
     def batch_end_packet(self):
         log.info('Exit batch number %d: %d', self._batch, self.judge.current_submission_id)
+        self._flush_testcase_queue()
         self._send_packet({'name': 'batch-end',
                            'submission-id': self.judge.current_submission_id})
 
@@ -315,6 +339,7 @@ class PacketManager:
 
     def submission_terminated_packet(self):
         log.info('Submission aborted: %d', self.judge.current_submission_id)
+        self._flush_testcase_queue()
         self._send_packet({'name': 'submission-terminated',
                            'submission-id': self.judge.current_submission_id})
 

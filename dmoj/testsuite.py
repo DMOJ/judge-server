@@ -51,10 +51,6 @@ class TestManager:
             self.fail('Unexpected feedback: "%s", expected: "%s"' %
                       (result.feedback, '", "'.join(feedback)))
 
-    def multi_test_case_status_packet(self, updates):
-        for position, result in updates:
-            self.test_case_status_packet(position, result)
-
     def compile_error_packet(self, log):
         if 'CE' not in self.codes_all:
             self.fail('Unexpected compile error')

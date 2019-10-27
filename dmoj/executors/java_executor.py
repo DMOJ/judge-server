@@ -3,6 +3,7 @@ import os
 import re
 import subprocess
 import sys
+from collections import deque
 from subprocess import Popen
 from typing import Optional
 
@@ -17,18 +18,11 @@ reinline_comment = re.compile(r'//.*?(?=[\r\n])', re.U)
 reclass = re.compile(r'\bpublic\s+(?:strictfp\s+)?(?:(?:abstract|final)\s+)?(?:strictfp\s+)?class\s+([\w\$][\w\$]*?)\b',
                      re.U)
 repackage = re.compile(r'\bpackage\s+([^.;]+(?:\.[^.;]+)*?);', re.U)
-
+reexception = re.compile(r'7257b50d-e37a-4664-b1a5-b1340b4206c0: (.*?)$', re.U | re.M)
 
 JAVA_SANDBOX = os.path.abspath(os.path.join(os.path.dirname(__file__), 'java_sandbox.jar'))
 
-POLICY_PREFIX = '''\
-grant codeBase "file:///{agent}" {{
-    permission java.io.FilePermission "state", "write";
-}};
-
-'''
-
-with open(os.path.join(os.path.dirname(__file__), 'java-security.policy')) as policy_file:
+with open(os.path.join(os.path.dirname(__file__), 'java-security.policy'), 'r') as policy_file:
     policy = policy_file.read()
 
 
@@ -65,7 +59,7 @@ class JavaExecutor(CompiledExecutor):
         self._agent_file = JAVA_SANDBOX
         self._policy_file = self._file('security.policy')
         with open(self._policy_file, 'w') as file:
-            file.write(POLICY_PREFIX.format(agent=self._agent_file) + self.security_policy)
+            file.write(self.security_policy)
 
     def get_compile_popen_kwargs(self):
         return {'executable': self.get_compiler()}
@@ -112,11 +106,11 @@ class JavaExecutor(CompiledExecutor):
         if b'Error: Main method not found in class' in stderr:
             exception = "public static void main(String[] args) not found"
         else:
-            try:
-                with open(os.path.join(self._dir, 'state'), 'r') as state:
-                    exception = state.read().strip()
-            except IOError:
+            match = deque(reexception.finditer(utf8text(stderr, 'replace')), maxlen=1)
+            if not match:
                 exception = "abnormal termination"  # Probably exited without calling shutdown hooks
+            else:
+                exception = match[0].group(1)
 
         return exception
 

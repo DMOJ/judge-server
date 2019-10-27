@@ -74,23 +74,27 @@ class Problem:
             # Still attempt to process them as integers first, though, since most problems will use this format.
             return try_match_int(match, 'batch'), try_match_int(match, 'case')
 
-        # Match all cases with the same (batch, position) mapping.
-        groups = defaultdict(list)
-        batch_ids = set()
-        for a in filenames:
-            a_parse = parse_position(input_case_pattern, a)
-            if a_parse is None:
-                continue
+        class _TestCase:
+            input_file = None
+            output_file = None
 
-            for b in filenames:
-                b_parse = parse_position(output_case_pattern, b)
-                if a_parse == b_parse:
-                    batch, case = a_parse
-                    if case is None:
-                        raise InvalidInitException('test case format yielded no case number')
-                    if batch is not None:
-                        batch_ids.add(batch)
-                    groups[batch or case].append((case, a, b))
+        # Match all cases with the same (batch, position) mapping.
+        groups = defaultdict(lambda: defaultdict(_TestCase))
+        batch_ids = set()
+
+        for filetype, pattern in (('input_file', input_case_pattern), ('output_file', output_case_pattern)):
+            for testcase_file in filenames:
+                testcase_parse = parse_position(pattern, testcase_file)
+                if testcase_parse is None:
+                    continue
+
+                batch, case = testcase_parse
+                if case is None:
+                    raise InvalidInitException('test case format yielded no case number')
+                if batch is not None:
+                    batch_ids.add(batch)
+
+                setattr(groups[batch or case][case], filetype, testcase_file)
 
         test_cases = []
         for batch_or_case_id in sorted(groups.keys()):
@@ -98,18 +102,18 @@ class Problem:
             if batch_or_case_id in batch_ids:
                 test_cases.append({
                     'batched': [{
-                        'in': input_file,
-                        'out': output_file,
-                    } for _, input_file, output_file in sorted(group_cases)],
+                        'in': testcase.input_file,
+                        'out': testcase.output_file,
+                    } for _, testcase in sorted(group_cases.items())],
                     'points': next(case_points),
                 })
             else:
                 if len(group_cases) > 1:
                     raise InvalidInitException('problem has conflicting test cases: %s' % group_cases)
-                _, input_file, output_file = group_cases[0]
+                test_case = next(iter(group_cases.values()))
                 test_cases.append({
-                    'in': input_file,
-                    'out': output_file,
+                    'in': test_case.input_file,
+                    'out': test_case.output_file,
                     'points': next(case_points),
                 })
 

@@ -24,6 +24,7 @@ JAVA_SANDBOX = os.path.abspath(os.path.join(os.path.dirname(__file__), 'java_san
 POLICY_PREFIX = '''\
 grant codeBase "file:///{agent}" {{
     permission java.io.FilePermission "state", "write";
+    permission java.lang.RuntimePermission "exitVM.1";
 }};
 
 '''

@@ -128,7 +128,7 @@ with io.open(os.path.join(os.path.dirname(__file__), 'README.md'), encoding='utf
 
 setup(
     name='dmoj',
-    version='1.4.0',
+    version='2.0.0',
     packages=find_packages(),
     package_data={
         'dmoj.cptbox': ['syscalls/aliases.list', 'syscalls/*.tbl'],
@@ -166,6 +166,7 @@ setup(
         'Programming Language :: Python',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
         'Topic :: Education',
         'Topic :: Software Development',
     ],

@@ -160,7 +160,7 @@ class TracedPopen(Process, metaclass=TracedPopenMeta):
             elif self.returncode == 204:
                 raise RuntimeError('failed to ptrace child, check Yama config '
                                    '(https://www.kernel.org/doc/Documentation/security/Yama.txt, should be '
-                                   'at most 1); if running in Docker, must run container with `--privileged`')
+                                   'at most 1); if running in Docker, must run container with `--cap-add=SYS_PTRACE`')
         return self.returncode
 
     def poll(self):

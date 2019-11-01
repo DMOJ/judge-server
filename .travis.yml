@@ -3,12 +3,14 @@ dist: bionic
 services:
   - docker
 language: minimal
-env:
-  matrix:
-  - DMOJ_USE_SECCOMP="yes" PYTHON_VERSION=3.6
-  - DMOJ_USE_SECCOMP="yes" PYTHON_VERSION=3.7
-  - DMOJ_USE_SECCOMP="yes" PYTHON_VERSION=3.8
-  - DMOJ_USE_SECCOMP="no"  PYTHON_VERSION=3.7
+jobs:
+  include:
+    - env: DMOJ_USE_SECCOMP="yes" PYTHON_VERSION=3.6 ARCH=amd64 DOCKER_IMAGE=dmoj/runtimes-tier3:amd64-latest
+    - env: DMOJ_USE_SECCOMP="yes" PYTHON_VERSION=3.7 ARCH=amd64 DOCKER_IMAGE=dmoj/runtimes-tier3:amd64-latest
+    - env: DMOJ_USE_SECCOMP="yes" PYTHON_VERSION=3.8 ARCH=amd64 DOCKER_IMAGE=dmoj/runtimes-tier3-amd64-latest
+    - env: DMOJ_USE_SECCOMP="yes" PYTHON_VERSION=3.8 ARCH=aarch64 DOCKER_IMAGE=dmoj/runtimes-tier1:aarch64-latest
+      arch: arm64
+    - env: DMOJ_USE_SECCOMP="no"  PYTHON_VERSION=3.7 ARCH=amd64 DOCKER_IMAGE=dmoj/runtimes-tier3:amd64-latest
 matrix:
   include:
   - name: flake8
@@ -25,11 +27,11 @@ stages:
   - lint
   - test
 install:
-  - time docker pull dmoj/runtimes-tier3
+  - docker pull "$DOCKER_IMAGE"
   - |
     if [ "$PYTHON_VERSION" != 3.7 ]; then
       curl -L "$(curl -s https://api.github.com/repos/DMOJ/runtimes-python/releases |
-          jq -r '[.[].assets | flatten | .[] | select(.name | startswith("python'"$PYTHON_VERSION"'")) | .browser_download_url][0]')" |
+          jq -r '[.[].assets | flatten | .[] | select(.name | startswith("python'"$PYTHON_VERSION-$ARCH"'")) | .browser_download_url][0]')" |
         tar -xz
     fi
   - >

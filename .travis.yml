@@ -3,6 +3,10 @@ dist: bionic
 services:
   - docker
 language: minimal
+addons:
+  apt:
+    packages:
+      - jq
 jobs:
   include:
     - env: DMOJ_USE_SECCOMP="yes" PYTHON_VERSION=3.6 ARCH=amd64 DOCKER_IMAGE=dmoj/runtimes-tier3

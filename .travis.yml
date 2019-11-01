@@ -5,12 +5,12 @@ services:
 language: minimal
 jobs:
   include:
-    - env: DMOJ_USE_SECCOMP="yes" PYTHON_VERSION=3.6 ARCH=amd64 DOCKER_IMAGE=dmoj/runtimes-tier3:amd64-latest
-    - env: DMOJ_USE_SECCOMP="yes" PYTHON_VERSION=3.7 ARCH=amd64 DOCKER_IMAGE=dmoj/runtimes-tier3:amd64-latest
-    - env: DMOJ_USE_SECCOMP="yes" PYTHON_VERSION=3.8 ARCH=amd64 DOCKER_IMAGE=dmoj/runtimes-tier3-amd64-latest
-    - env: DMOJ_USE_SECCOMP="yes" PYTHON_VERSION=3.8 ARCH=aarch64 DOCKER_IMAGE=dmoj/runtimes-tier1:aarch64-latest
+    - env: DMOJ_USE_SECCOMP="yes" PYTHON_VERSION=3.6 ARCH=amd64 DOCKER_IMAGE=dmoj/runtimes-tier3
+    - env: DMOJ_USE_SECCOMP="yes" PYTHON_VERSION=3.7 ARCH=amd64 DOCKER_IMAGE=dmoj/runtimes-tier3
+    - env: DMOJ_USE_SECCOMP="yes" PYTHON_VERSION=3.8 ARCH=amd64 DOCKER_IMAGE=dmoj/runtimes-tier3
+    - env: DMOJ_USE_SECCOMP="yes" PYTHON_VERSION=3.8 ARCH=aarch64 DOCKER_IMAGE=dmoj/runtimes-tier1
       arch: arm64
-    - env: DMOJ_USE_SECCOMP="no"  PYTHON_VERSION=3.7 ARCH=amd64 DOCKER_IMAGE=dmoj/runtimes-tier3:amd64-latest
+    - env: DMOJ_USE_SECCOMP="no"  PYTHON_VERSION=3.7 ARCH=amd64 DOCKER_IMAGE=dmoj/runtimes-tier3
 matrix:
   include:
   - name: flake8
@@ -27,7 +27,7 @@ stages:
   - lint
   - test
 install:
-  - docker pull "$DOCKER_IMAGE"
+  - docker pull "$DOCKER_IMAGE:$ARCH-latest"
   - |
     if [ "$PYTHON_VERSION" != 3.7 ]; then
       curl -L "$(curl -s https://api.github.com/repos/DMOJ/runtimes-python/releases |
@@ -68,7 +68,7 @@ script:
     "$PYTHON" -m coverage run --append --source=dmoj .docker.test.py
     EOF
   - chmod a+x run run-su
-  - docker run -e PYTHON_VERSION="$PYTHON_VERSION" -e DMOJ_USE_SECCOMP="$DMOJ_USE_SECCOMP" -v "$(pwd):/code" --cap-add=SYS_PTRACE dmoj/runtimes-tier3
+  - docker run -e ARCH="$ARCH" -e PYTHON_VERSION="$PYTHON_VERSION" -e DMOJ_USE_SECCOMP="$DMOJ_USE_SECCOMP" -v "$(pwd):/code" --cap-add=SYS_PTRACE "$DOCKER_IMAGE:$ARCH-latest"
 after_script:
   - sed -i 's:"/code/:"'"$(pwd)"'/:g' .coverage
   - sudo pip install codecov && codecov

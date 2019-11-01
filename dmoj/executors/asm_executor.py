@@ -132,7 +132,7 @@ class GASExecutor(ASMExecutor):
 
     def get_as_args(self, object):
         as_args = [self.get_as_path(), '-o', object, self._code]
-        if os.path.basename(self.get_as_path()) == 'as' and self.as_platform_flag:
+        if os.path.basename(self.get_as_path()) == 'as' and getattr(self, 'as_platform_flag', None):
             as_args += [self.as_platform_flag]
         return as_args
 

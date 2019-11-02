@@ -72,7 +72,7 @@ script:
     "$PYTHON" -m coverage run --append --source=dmoj .docker.test.py
     EOF
   - chmod a+x run run-su
-  - docker run -e ARCH="$ARCH" -e PYTHON_VERSION="$PYTHON_VERSION" -e DMOJ_USE_SECCOMP="$DMOJ_USE_SECCOMP" -v "$(pwd):/code" --cap-add=SYS_PTRACE "$DOCKER_IMAGE:$ARCH-latest"
+  - docker run -e PYTHON_VERSION="$PYTHON_VERSION" -e DMOJ_USE_SECCOMP="$DMOJ_USE_SECCOMP" -v "$(pwd):/code" --cap-add=SYS_PTRACE "$DOCKER_IMAGE:$ARCH-latest"
 after_script:
   - sed -i 's:"/code/:"'"$(pwd)"'/:g' .coverage
   - sudo pip install codecov && codecov

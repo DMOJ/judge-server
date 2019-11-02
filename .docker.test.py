@@ -1,12 +1,13 @@
 import logging
 import os
+import platform
 
 from dmoj import judgeenv
 from dmoj.citest import ci_test
 from dmoj.executors import get_available
 
-arch = os.getenv('ARCH', 'amd64')
-if arch == 'amd64':
+arch = platform.machine()
+if arch == 'x86_64':
     ALLOW_FAIL = {'GASARM', 'JAVA9', 'JAVA10', 'OBJC'}
     EXECUTORS = get_available()
 elif arch == 'aarch64':

@@ -14,7 +14,7 @@ elif arch == 'aarch64':
                  'JAVA8', 'JAVA11', 'PAS', 'PERL', 'PY2', 'PY3', 'SED', 'TEXT'}
     ALLOW_FAIL = set()
 else:
-    raise
+    raise AssertionError('invalid architecture')
 
 OVERRIDES = {}
 

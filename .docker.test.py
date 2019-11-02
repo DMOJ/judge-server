@@ -12,7 +12,7 @@ if arch == 'x86_64':
     EXECUTORS = get_available()
 elif arch == 'aarch64':
     EXECUTORS = {'AWK', 'BF', 'C', 'C11', 'CPP03', 'CPP11', 'CPP14', 'CPP17',
-                 'JAVA8', 'JAVA11', 'PAS', 'PERL', 'PY2', 'PY3', 'SED', 'TEXT'}
+                 'JAVA8', 'PAS', 'PERL', 'PY2', 'PY3', 'SED', 'TEXT'}
     ALLOW_FAIL = set()
 else:
     raise AssertionError('invalid architecture')

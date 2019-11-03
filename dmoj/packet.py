@@ -198,17 +198,16 @@ class PacketManager:
             self._testcase_queue.clear()
 
     def _periodically_flush_testcase_queue(self):
-        try:
-            while True:
+        while not self._closed:
+            try:
                 time.sleep(0.25)
                 # It is okay if we flush the testcase queue even while the connection is not open or there's nothing
                 # grading, since the only thing that can queue testcases is a currently-grading submission.
                 self._flush_testcase_queue()
-        except KeyboardInterrupt:
-            pass
-        except Exception:
-            traceback.print_exc()
-            raise SystemExit(1)
+            except KeyboardInterrupt:
+                break
+            except Exception:
+                traceback.print_exc()
 
     def _send_packet(self, packet: dict):
         for k, v in packet.items():

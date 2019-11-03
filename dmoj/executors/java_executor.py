@@ -110,7 +110,7 @@ class JavaExecutor(CompiledExecutor):
             if not match:
                 exception = "abnormal termination"  # Probably exited without calling shutdown hooks
             else:
-                exception = match[0].group(1)
+                exception = match[0].group(1).split(':')[0]
 
         return exception
 

@@ -13,7 +13,7 @@ if [ "$1" == "run" ]; then
 elif [ "$1" == "cli" ]; then
     command=dmoj-cli
 else
-    echo "Invalid command, must be one of [run, cli]" >> /dev/stderr
+    echo "Invalid command, must be one of [run, cli]" 1>&2
     exit 1
 fi
 

@@ -1,6 +1,8 @@
 GIT_TAG ?= master
 TAG ?= latest
 
+.PHONY: all image-tier1 image-tier2 image-tier3
+
 all: image-tier1 image-tier2 image-tier3
 
 image-tier1:

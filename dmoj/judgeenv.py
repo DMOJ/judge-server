@@ -123,8 +123,11 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
     only_executors |= args.only_executors and set(args.only_executors.split(',')) or set()
     exclude_executors |= args.exclude_executors and set(args.exclude_executors.split(',')) or set()
 
-    model_file = os.path.expanduser(args.config)
+    if os.getenv('DMOJ_IN_DOCKER'):
+        with open('/judge-runtime-paths.yml', 'rb') as runtimes_file:
+            env.update(yaml.safe_load(runtimes_file))
 
+    model_file = os.path.expanduser(args.config)
     with open(model_file) as init_file:
         env.update(yaml.safe_load(init_file))
 

@@ -124,6 +124,9 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
     exclude_executors |= args.exclude_executors and set(args.exclude_executors.split(',')) or set()
 
     if os.getenv('DMOJ_IN_DOCKER'):
+        if not cli:
+            api_listen = api_listen or ('0.0.0.0', 9998)
+
         with open('/judge-runtime-paths.yml', 'rb') as runtimes_file:
             env.update(yaml.safe_load(runtimes_file))
 

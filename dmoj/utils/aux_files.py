@@ -2,8 +2,6 @@ import os
 import tempfile
 
 from dmoj.error import InternalError
-from dmoj.executors import executors
-from dmoj.executors.compiled_executor import CompiledExecutor
 
 
 def mktemp(data):
@@ -14,6 +12,9 @@ def mktemp(data):
 
 
 def compile_with_auxiliary_files(filenames, lang=None, compiler_time_limit=None):
+    from dmoj.executors import executors
+    from dmoj.executors.compiled_executor import CompiledExecutor
+
     sources = {}
 
     for filename in filenames:

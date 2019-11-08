@@ -9,7 +9,7 @@ from dmoj.utils.unicode import utf8bytes, utf8text
 retraceback = re.compile(r'Traceback \(most recent call last\):\n.*?\n([a-zA-Z_]\w*)(?::[^\n]*?)?$', re.S | re.M)
 
 
-class PythonExecutor(ScriptDirectoryMixin, ScriptExecutor):
+class PythonExecutor(ScriptDirectoryMixin, CompiledExecutor):
     loader_script = '''\
 import runpy, sys, os
 del sys.argv[0]
@@ -25,6 +25,9 @@ runpy.run_path(sys.argv[0], run_name='__main__')
 '''
     address_grace = 131072
     ext = 'py'
+
+    def get_compile_args(self):
+        return [self.get_command(), '-O', '-m', 'compileall', '-q', self._dir]
 
     def get_cmdline(self):
         # -B: Don't write .pyc/.pyo, since sandbox will kill those writes

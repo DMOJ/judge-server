@@ -49,7 +49,7 @@ class Command:
         raise InvalidCommandException("invalid submission '%d'" % submission_id)
 
     def open_editor(self, lang, src=b''):
-        file_suffix = executors[lang].Executor.ext
+        file_suffix = '.' + executors[lang].Executor.ext
         editor = os.environ.get('EDITOR')
         if editor:
             with tempfile.NamedTemporaryFile(suffix=file_suffix) as temp:

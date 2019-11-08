@@ -1,8 +1,8 @@
 import re
 from collections import deque
 
+from dmoj.executors.compiled_executor import CompiledExecutor
 from dmoj.executors.mixins import ScriptDirectoryMixin
-from dmoj.executors.script_executor import ScriptExecutor
 from dmoj.result import Result
 from dmoj.utils.unicode import utf8bytes, utf8text
 
@@ -34,7 +34,11 @@ runpy.run_path(sys.argv[0], run_name='__main__')
         # -S: Disable site module for speed (no loading dist-packages nor site-packages)
         return [self.get_command(), '-BS' + ('u' if self.unbuffered else ''), self._loader, self._code]
 
-    def create_files(self, problem_id, source_code):
+    def get_executable(self):
+        return self.get_command()
+
+    def create_files(self, problem_id, source_code, **kwargs):
+        super().create_files(problem_id, source_code, **kwargs)
         self._loader = self._file('-loader.py')
         with open(self._code, 'wb') as fo, open(self._loader, 'w') as loader:
             # We want source code to be UTF-8, but the normal (Python 2) way of having

@@ -32,7 +32,7 @@ runpy.run_path(sys.argv[0], run_name='__main__')
     def get_cmdline(self):
         # -B: Don't write .pyc/.pyo, since sandbox will kill those writes
         # -S: Disable site module for speed (no loading dist-packages nor site-packages)
-        return [self.get_command(), '-BS' + ('u' if self.unbuffered else ''), self._loader, self._code]
+        return [self.get_command(), '-S' + ('u' if self.unbuffered else ''), self._loader, self._code]
 
     def get_executable(self):
         return self.get_command()

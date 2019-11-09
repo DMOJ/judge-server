@@ -34,7 +34,7 @@ install:
   - docker pull "$DOCKER_IMAGE"
   - |
     if [ "$PYTHON_VERSION" != 3.7 ]; then
-      curl -L "$(curl -s https://api.github.com/repos/DMOJ/runtimes-python/releases |
+      curl -L "$(curl -H "Authorization: token ${GITHUB_API_TOKEN}" -s https://api.github.com/repos/DMOJ/runtimes-python/releases |
           jq -r '[.[].assets | flatten | .[] | select(.name | startswith("python'"$PYTHON_VERSION-$ARCH"'")) | .browser_download_url][0]')" |
         tar -xz
     fi

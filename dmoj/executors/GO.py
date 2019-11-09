@@ -5,6 +5,7 @@ from dmoj.executors.compiled_executor import CompiledExecutor
 
 reinline_comment = re.compile(br'//.*?(?=[\r\n])')
 recomment = re.compile(br'/\*.*?\*/', re.DOTALL)
+repackage = re.compile(br'\s*package\s+main\b')
 
 
 def decomment(x):
@@ -51,6 +52,6 @@ func main() {
 
     def create_files(self, problem_id, source_code, *args, **kwargs):
         source_lines = decomment(source_code).strip().split(b'\n')
-        if source_lines[0].strip().split() != [b'package', b'main']:
+        if not repackage.match(source_lines[0]):
             raise CompileError(b'Your code must be defined in package main.\n')
         super().create_files(problem_id, source_code, *args, **kwargs)

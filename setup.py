@@ -80,7 +80,9 @@ class build_ext_dmoj(build_ext, object):
                 print('*' * 79)
         else:
             extra_compile_args += ['-march=%s' % (target_arch or 'native'), '-O3']
-        self.distribution.ext_modules[0].extra_compile_args = extra_compile_args
+
+        for module in self.distribution.ext_modules:
+            module.extra_compile_args = extra_compile_args
 
         super(build_ext_dmoj, self).build_extensions()
 

@@ -430,10 +430,8 @@ cdef class Process:
             if not self.debugger.is_exit(i):
                 config.syscall_whitelist[i] = self._syscall_whitelist[i]
 
-        with nogil:
-            if self.process.spawn(pt_child, &config):
-                with gil:
-                    raise RuntimeError('failed to spawn child')
+        if self.process.spawn(pt_child, &config):
+            raise RuntimeError('failed to spawn child')
         free(config.argv)
         free(config.envp)
 

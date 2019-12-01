@@ -179,7 +179,8 @@ class ProblemDataManager(dict):
         except IOError:
             if self.archive:
                 zipinfo = self.archive.getinfo(key)
-                return self.archive.open(zipinfo).read()
+                with self.archive.open(zipinfo) as f:
+                    return f.read()
             raise KeyError('file "%s" could not be found in "%s"' % (key, base))
 
     def __del__(self):

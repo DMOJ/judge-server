@@ -8,7 +8,6 @@ verdict = u"\u2717\u2713"
 
 
 def check(process_output: bytes, judge_output: bytes, point_value: float, feedback: bool = True,
-          match: Callable[[bytes, bytes], bool] = lambda p, j: p.strip() == j.strip(),
           **kwargs) -> Union[CheckerResult, bool]:
     process_lines = list(filter(None, resplit(b'[\r\n]', utf8bytes(process_output))))
     judge_lines = list(filter(None, resplit(b'[\r\n]', utf8bytes(judge_output))))
@@ -19,14 +18,11 @@ def check(process_output: bytes, judge_output: bytes, point_value: float, feedba
     if not judge_lines:
         return True
 
-    if isinstance(match, str):
-        match = eval(match)
-
     cases = [verdict[0]] * len(judge_lines)
     count = 0
 
     for i, (process_line, judge_line) in enumerate(zip(process_lines, judge_lines)):
-        if match(process_line, judge_line):
+        if process_line.strip() == judge_line.strip():
             cases[i] = verdict[1]
             count += 1
 

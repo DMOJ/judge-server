@@ -14,6 +14,8 @@ rand = "0.3"
 '''
 
 CARGO_LOCK = b'''\
+cargo-features = ["strip"]
+
 [root]
 name = "user_submission"
 version = "1.0.0"
@@ -21,6 +23,9 @@ dependencies = [
  "dmoj 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.3.15 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
+
+[profile.release]
+strip = "symbols"
 
 [[package]]
 name = "dmoj"

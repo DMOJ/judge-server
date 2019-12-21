@@ -84,6 +84,8 @@ class Judge:
     def _block_and_grade(self, problem, language, source, short_circuit, meta, report=print):
         if 'signature_grader' in problem.config:
             grader_class = graders.SignatureGrader
+        elif 'interactive' in problem.config:
+            grader_class = graders.BridgedInteractiveGrader
         elif 'custom_judge' in problem.config:
             grader_class = graders.CustomGrader
         else:

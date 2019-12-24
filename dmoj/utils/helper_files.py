@@ -2,6 +2,8 @@ import os
 import tempfile
 
 from dmoj.error import InternalError
+from dmoj.result import Result
+from dmoj.utils.os_ext import strsignal
 
 
 def mktemp(data):
@@ -55,3 +57,25 @@ def compile_with_auxiliary_files(filenames, lang=None, compiler_time_limit=None)
         executor = executor('_aux_file', list(sources.values())[0])
 
     return executor
+
+
+def parse_helper_file_error(proc, executor, name, stderr, time_limit, memory_limit):
+    if proc.tle:
+        error = '%s timed out (> %d seconds)' % (name, time_limit)
+    elif proc.mle:
+        error = '%s ran out of memory (> %s Kb)' % (name, memory_limit)
+    elif proc.protection_fault:
+        syscall, callname, args = proc.protection_fault
+        error = '%s invoked disallowed syscall %s (%s)' % (name, syscall, callname)
+    elif proc.returncode:
+        if proc.returncode > 0:
+            error = '%s exited with nonzero code %d' % (name, proc.returncode)
+        else:
+            error = '%s exited with %s' % (name, strsignal(proc.signal))
+        feedback = Result.get_feedback_str(stderr, proc, executor)
+        if feedback:
+            error += ' with feedback %s' % feedback
+    else:
+        return
+
+    raise InternalError(error)

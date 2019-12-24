@@ -1,10 +1,9 @@
 import os
 import subprocess
 
-from dmoj.error import InternalError
 from dmoj.judgeenv import env, get_problem_root
 from dmoj.result import CheckerResult
-from dmoj.utils.aux_files import compile_with_auxiliary_files, mktemp
+from dmoj.utils.helper_files import compile_with_auxiliary_files, mktemp, parse_helper_file_error
 from dmoj.utils.unicode import utf8text
 
 executor = None
@@ -54,5 +53,5 @@ def check(process_output, judge_output, judge_input, problem_id,
             if process.returncode == IE:
                 error = 'checker failed assertion with message %s' % proc_output
             else:
-                error = 'checker returned unexpected return code %d with stderr %s' % (process.returncode, error)
-            raise InternalError(error)
+                parse_helper_file_error(process, executor, name='checker', stderr=error, time_limit=time_limit,
+                                        memory_limit=memory_limit)

@@ -17,13 +17,7 @@ class StandardGrader(BaseGrader):
 
         input = case.input_data()  # cache generator data
 
-        self._current_proc = self.binary.launch(time=self.problem.time_limit,
-                                                memory=self.problem.memory_limit,
-                                                symlinks=case.config.symlinks,
-                                                stdin=subprocess.PIPE,
-                                                stdout=subprocess.PIPE,
-                                                stderr=subprocess.PIPE,
-                                                wall_time=case.config.wall_time_factor * self.problem.time_limit)
+        self._launch_process(case)
 
         error = self._interact_with_process(case, result, input)
 
@@ -95,6 +89,13 @@ class StandardGrader(BaseGrader):
             check = False
 
         return check
+
+    def _launch_process(self, case):
+        self._current_proc = self.binary.launch(
+            time=self.problem.time_limit, memory=self.problem.memory_limit, symlinks=case.config.symlinks,
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            wall_time=case.config.wall_time_factor * self.problem.time_limit,
+        )
 
     def _interact_with_process(self, case, result, input):
         process = self._current_proc

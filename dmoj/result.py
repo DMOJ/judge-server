@@ -1,3 +1,5 @@
+from dmoj.utils.error import print_protection_fault
+from dmoj.utils.os_ext import strsignal
 from dmoj.utils.unicode import utf8text
 
 
@@ -65,6 +67,32 @@ class Result:
             self.result_flag |= Result.TLE
         if process.mle:
             self.result_flag |= Result.MLE
+
+    @classmethod
+    def get_feedback_str(cls, error, process, binary):
+        feedback = (process.feedback if hasattr(process, 'feedback') else
+                    getattr(binary, 'get_feedback', lambda x, y, z: '')(error, cls, process))
+
+        # Check that main code is an RTE
+        if not feedback and proc.rte and not (proc.tle or proc.mle):
+            if not process.was_initialized:
+                # Process may failed to initialize, resulting in a SIGKILL without any prior signals.
+                # See <https://github.com/DMOJ/judge/issues/179> for more details.
+                feedback = 'failed initializing'
+            else:
+                feedback = strsignal(process.signal).lower()
+
+        if process.protection_fault:
+            syscall, callname, args = process.protection_fault
+            print_protection_fault(process.protection_fault)
+            callname = callname.replace('sys_', '', 1)
+            message = '%s syscall disallowed' % callname
+            feedback = message
+
+        return feedback
+
+    def update_feedback(self, error, process, binary, feedback=None):
+        self.feedback = feedback or self.get_feedback_str(error, process, binary)
 
 
 class CheckerResult:

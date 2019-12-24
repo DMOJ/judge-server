@@ -7,8 +7,6 @@ from dmoj.error import OutputLimitExceeded
 from dmoj.executors import executors
 from dmoj.graders.base import BaseGrader
 from dmoj.result import CheckerResult, Result
-from dmoj.utils.error import print_protection_fault
-from dmoj.utils.os_ext import strsignal
 
 log = logging.getLogger('dmoj.graders')
 
@@ -65,22 +63,7 @@ class StandardGrader(BaseGrader):
         return result
 
     def update_feedback(self, check, error, process, result):
-        result.feedback = (check.feedback or (process.feedback if hasattr(process, 'feedback') else
-                           getattr(self.binary, 'get_feedback', lambda x, y, z: '')(error, result, process)))
-        if not result.feedback and result.get_main_code() == Result.RTE:
-            if not process.was_initialized:
-                # Process may failed to initialize, resulting in a SIGKILL without any prior signals.
-                # See <https://github.com/DMOJ/judge/issues/179> for more details.
-                result.feedback = 'failed initializing'
-            else:
-                result.feedback = strsignal(process.signal).lower()
-
-        if process.protection_fault:
-            syscall, callname, args = process.protection_fault
-            print_protection_fault(process.protection_fault)
-            callname = callname.replace('sys_', '', 1)
-            message = '%s syscall disallowed' % callname
-            result.feedback = message
+        result.update_feedback(error, process, self.binary, check.feedback)
 
     def check_result(self, case, result):
         # If the submission didn't crash and didn't time out, there's a chance it might be AC

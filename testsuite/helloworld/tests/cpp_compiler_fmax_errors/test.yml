@@ -3,4 +3,4 @@ time: 1
 memory: 1024
 source: hello.cpp
 expect: CE
-feedback: compiler output too long
+feedback: compilation terminated due to -fmax-errors=

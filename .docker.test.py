@@ -1,5 +1,4 @@
 import logging
-import os
 import platform
 
 from dmoj import judgeenv

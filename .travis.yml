@@ -15,21 +15,6 @@ jobs:
     - env: DMOJ_USE_SECCOMP="yes" PYTHON_VERSION=3.8 ARCH=aarch64 DOCKER_IMAGE=dmoj/runtimes-tier1
       arch: arm64
     - env: DMOJ_USE_SECCOMP="no"  PYTHON_VERSION=3.7 ARCH=amd64 DOCKER_IMAGE=dmoj/runtimes-tier3
-matrix:
-  include:
-  - name: flake8
-    stage: lint
-    language: python
-    python: 3.7
-    env: LINTER="yes"
-    install: pip install flake8 flake8-import-order flake8-future-import flake8-commas flake8-logging-format
-    script:
-      - flake8 --version
-      - flake8
-    after_script:
-stages:
-  - lint
-  - test
 install:
   - docker pull "$DOCKER_IMAGE"
   - |

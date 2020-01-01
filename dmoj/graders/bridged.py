@@ -1,9 +1,11 @@
 import os
 import subprocess
 
+from dmoj.contrib import contrib_modules
+from dmoj.error import InternalError
 from dmoj.graders.standard import StandardGrader
 from dmoj.judgeenv import env, get_problem_root
-from dmoj.utils.helper_files import compile_with_auxiliary_files, mktemp, parse_helper_file_error
+from dmoj.utils.helper_files import compile_with_auxiliary_files, mktemp
 from dmoj.utils.unicode import utf8text
 
 
@@ -21,29 +23,16 @@ class BridgedInteractiveGrader(StandardGrader):
             return False
 
         stderr = self._interactor.stderr.read()
-        # We use the testlib.h return codes
-        AC = 0
-        WA = 1
-        PE = 2
-        IE = 3
+        return_code = self.handler_data.get('type', 'default')
+        if return_code not in contrib_modules:
+            raise InternalError('%s is not a valid return code parser' % return_code)
 
-        if process.returncode == AC:
-            if feedback:
-                return CheckerResult(True, point_value, feedback=proc_output)
-            else:
-                return CheckerResult(True, point_value)
-        elif process.returncode in (WA, PE):
-            if feedback:
-                return CheckerResult(False, 0, feedback=proc_output)
-            else:
-                return CheckerResult(False, 0, feedback='Presentation Error' if process.returncode == PE else '')
-        else:
-            if process.returncode == IE:
-                error = 'checker failed assertion with message %s' % proc_output
-            else:
-                parse_helper_file_error(self._interactor, self._interactor_binary, name='interactor', stderr=stderr,
-                                        time_limit=self._interactor_time_limit,
-                                        memory_limit=self._interactor_memory_limit)
+        return contrib_modules[return_code].ContribModule.parse_return_code(self._interactor, self.interactor_binary,
+                                                                            case.points, self._interactor_time_limit,
+                                                                            self._interactor_memory_limit,
+                                                                            feedback=utf8text(stderr)
+                                                                            if self.handler_data.feedback else None,
+                                                                            name='interactor', stderr=stderr)
 
     def _launch_process(self, case):
         submission_stdin, self._stdout_pipe = os.pipe()

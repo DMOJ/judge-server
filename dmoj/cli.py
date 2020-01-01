@@ -70,10 +70,12 @@ def main():
 
 def cli_main():
     import logging
-    from dmoj import judgeenv, executors
+    from dmoj import judgeenv, contrib, executors
 
     judgeenv.load_env(cli=True)
+
     executors.load_executors()
+    contrib.load_contrib_modules()
 
     print('Running local judge...')
 

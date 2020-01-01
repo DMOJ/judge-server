@@ -5,7 +5,7 @@ import traceback
 
 import yaml
 
-from dmoj import executors, judgeenv
+from dmoj import contrib, executors, judgeenv
 from dmoj.judge import Judge
 from dmoj.judgeenv import get_problem_root, get_supported_problems
 from dmoj.utils.ansi import ansi_style, print_ansi
@@ -254,6 +254,7 @@ def main():
                         format='%(levelname)s %(asctime)s %(module)s %(message)s')
 
     executors.load_executors()
+    contrib.load_contrib_modules()
 
     tester = Tester(judgeenv.problem_regex, judgeenv.case_regex)
     fails = tester.test_all()

@@ -2,6 +2,7 @@ from dmoj.graders.standard import StandardGrader
 from dmoj.result import CheckerResult
 from dmoj.utils.unicode import utf8text
 
+
 class ECOOGrader(StandardGrader):
     def check_result(self, case, result):
         check = super().check_result(case, result)

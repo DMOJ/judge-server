@@ -68,8 +68,7 @@ class StandardGrader(BaseGrader):
         # checker is a `partial` object, NOT a `function` object
         if not result.result_flag or getattr(checker.func, 'run_on_error', False):
             try:
-                # Checkers might crash if any data is None, so force at least empty string
-                check = checker(result.proc_output or b'',
+                check = checker(result.proc_output,
                                 case.output_data(),
                                 submission_source=self.source,
                                 judge_input=case.input_data(),

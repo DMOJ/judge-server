@@ -70,9 +70,9 @@ class StandardGrader(BaseGrader):
             try:
                 # Checkers might crash if any data is None, so force at least empty string
                 check = checker(result.proc_output or b'',
-                                case.output_data() or b'',
+                                case.output_data(),
                                 submission_source=self.source,
-                                judge_input=case.input_data() or b'',
+                                judge_input=case.input_data(),
                                 point_value=case.points,
                                 case_position=case.position,
                                 batch=case.batch,

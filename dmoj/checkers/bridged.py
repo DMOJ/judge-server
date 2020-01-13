@@ -8,17 +8,15 @@ from dmoj.result import CheckerResult
 from dmoj.utils.helper_files import compile_with_auxiliary_files, mktemp
 from dmoj.utils.unicode import utf8text
 
-executor = None
 
+def get_executor(problem_id, files, flags, lang, compiler_time_limit, should_cache):
+    if isinstance(files, str):
+        filenames = [files]
+    elif isinstance(files.unwrap(), list):
+        filenames = list(files.unwrap())
 
-def get_executor(files, lang, compiler_time_limit, problem_id):
-    global executor
-
-    if executor is None:
-        if not isinstance(files, list):
-            files = [files]
-        filenames = [os.path.join(get_problem_root(problem_id), f) for f in files]
-        executor = compile_with_auxiliary_files(filenames, lang, compiler_time_limit)
+    filenames = [os.path.join(get_problem_root(problem_id), f) for f in filenames]
+    executor = compile_with_auxiliary_files(filenames, flags, lang, compiler_time_limit, should_cache)
 
     return executor
 
@@ -34,11 +32,13 @@ def check(
     memory_limit=env['generator_memory_limit'],
     compiler_time_limit=env['generator_compiler_limit'],
     feedback=True,
+    flags=[],
+    cached=True,
     type='default',
     point_value=None,
     **kwargs
 ) -> CheckerResult:
-    executor = get_executor(files, lang, compiler_time_limit, problem_id)
+    executor = get_executor(problem_id, files, flags, lang, compiler_time_limit, cached)
 
     if type not in contrib_modules:
         raise InternalError('%s is not a valid return code parser' % type)

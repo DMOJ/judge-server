@@ -13,7 +13,7 @@ def mktemp(data):
     return tmp
 
 
-def compile_with_auxiliary_files(filenames, lang=None, compiler_time_limit=None):
+def compile_with_auxiliary_files(filenames, flags=[], lang=None, compiler_time_limit=None, should_cache=True):
     from dmoj.executors import executors
     from dmoj.executors.compiled_executor import CompiledExecutor
 
@@ -47,10 +47,15 @@ def compile_with_auxiliary_files(filenames, lang=None, compiler_time_limit=None)
     if issubclass(executor, CompiledExecutor):
         executor = type('Executor', (executor,), {'compiler_time_limit': compiler_time_limit})
 
+    if hasattr(executor, 'flags'):
+        # We shouldn't be mutating the base class flags.
+        # See <https://github.com/DMOJ/judge-server/issues/174>.
+        executor = type('FlaggedExecutor', (executor,), {'flags': flags + list(executor.flags)})
+
     # Optimize the common case.
     if use_cpp or use_c:
-        # Some auxilary files (like those using testlib.h) take an extremely long time to compile, so we cache them.
-        executor = executor('_aux_file', None, aux_sources=sources, cached=True)
+        # Some auxiliary files (like those using testlib.h) take an extremely long time to compile, so we cache them.
+        executor = executor('_aux_file', None, aux_sources=sources, cached=should_cache)
     else:
         if len(sources) > 1:
             raise InternalError('non-C/C++ auxilary programs cannot be multi-file')

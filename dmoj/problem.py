@@ -1,6 +1,4 @@
-import itertools
 import os
-import re
 import subprocess
 import zipfile
 from collections import defaultdict
@@ -50,7 +48,6 @@ class Problem:
             raise InvalidInitException(str(e))
 
         self.problem_data.archive = self._resolve_archive_files()
-        self._resolve_test_cases()
 
     def _match_test_cases(self, filenames, input_case_pattern, output_case_pattern, case_points):
         def try_match_int(match, group):
@@ -118,32 +115,12 @@ class Problem:
 
         return test_cases
 
-    def _problem_file_list(self):
+    def problem_file_list(self):
         # We *could* support testcase format specifiers without an archive, but it's harder and most problems should be
         # using archives in the first place.
         if not self.problem_data.archive:
             raise InvalidInitException('can only use test case format specifiers if `archive` is set')
         return self.problem_data.archive.namelist()
-
-    def _resolve_test_cases(self):
-        test_cases = self.config.test_cases
-
-        # We support several ways for specifying cases. The first is a list of cases, and requires no extra work.
-        if test_cases is not None and isinstance(test_cases.unwrap(), list):
-            return
-
-        def get_with_default(name, default):
-            if not test_cases:
-                return default
-            return test_cases[name] or default
-
-        # If the `test_cases` node is None, we try to guess the testcase name format.
-        self.config['test_cases'] = self._match_test_cases(
-            self._problem_file_list(),
-            re.compile(get_with_default('input_format', DEFAULT_TEST_CASE_INPUT_PATTERN), re.IGNORECASE),
-            re.compile(get_with_default('output_format', DEFAULT_TEST_CASE_OUTPUT_PATTERN), re.IGNORECASE),
-            iter(get_with_default('case_points', itertools.repeat(1))),
-        )
 
     def load_checker(self, name):
         if name in self._checkers:

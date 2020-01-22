@@ -59,10 +59,10 @@ class Result:
         return utf8text(self.proc_output[:self.case.output_prefix_length], 'replace')
 
     def set_result_flag(self, process):
-        if process.returncode > 0:
+        if process.ir:
             self.result_flag |= Result.IR
-        if process.returncode is None or process.returncode < 0:
-            self.result_flag |= Result.RTE  # Killed by signal
+        if process.rte:
+            self.result_flag |= Result.RTE
         if process.tle:
             self.result_flag |= Result.TLE
         if process.mle:
@@ -74,7 +74,7 @@ class Result:
                     getattr(binary, 'get_feedback', lambda x, y, z: '')(error, cls, process))
 
         # Check that main code is an RTE
-        if not feedback and proc.rte and not (proc.tle or proc.mle):
+        if not feedback and process.rte and not (process.tle or process.mle):
             if not process.was_initialized:
                 # Process may failed to initialize, resulting in a SIGKILL without any prior signals.
                 # See <https://github.com/DMOJ/judge/issues/179> for more details.

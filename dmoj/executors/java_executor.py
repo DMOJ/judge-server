@@ -9,7 +9,6 @@ from typing import Optional
 
 from dmoj.error import CompileError, InternalError
 from dmoj.executors.compiled_executor import CompiledExecutor
-from dmoj.result import Result
 from dmoj.utils.unicode import utf8bytes, utf8text
 
 recomment = re.compile(r'/\*.*?\*/', re.DOTALL | re.U)
@@ -100,7 +99,7 @@ class JavaExecutor(CompiledExecutor):
             except IOError:
                 pass
 
-        if not result.result_flag & Result.IR:
+        if not process.ir:
             return ''
 
         if b'Error: Main method not found in class' in stderr:

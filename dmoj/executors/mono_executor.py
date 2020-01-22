@@ -63,11 +63,13 @@ class MonoExecutor(CompiledExecutor):
         return res
 
     def get_feedback(self, stderr, result, process):
-        if not result.result_flag & Result.IR:
+        if not process.ir:
             return ''
 
         if b'Garbage collector could not allocate' in stderr:
-            result.result_flag |= Result.MLE
+            # This check is needed because result can either be a Result object, or the Result type
+            if hasattr(result, 'result_flag'):
+                result.result_flag |= Result.MLE
             return ''
 
         match = deque(reexception.finditer(utf8text(stderr, 'replace')), maxlen=1)

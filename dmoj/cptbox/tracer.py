@@ -167,8 +167,16 @@ class TracedPopen(Process, metaclass=TracedPopenMeta):
         return self.returncode
 
     @property
+    def ir(self):
+        return self.returncode > 0
+
+    @property
     def mle(self):
         return self._memory and self.max_memory > self._memory
+
+    @property
+    def rte(self):
+        return self.returncode is None or self.returncode < 0  # Killed by signal
 
     @property
     def tle(self):

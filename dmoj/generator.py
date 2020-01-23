@@ -1,6 +1,6 @@
 import os
 
-from dmoj.utils.aux_files import compile_with_auxiliary_files
+from dmoj.utils.helper_files import compile_with_auxiliary_files
 
 
 class GeneratorManager:

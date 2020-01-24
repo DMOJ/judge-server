@@ -60,9 +60,9 @@ def compile_with_auxiliary_files(filenames, lang=None, compiler_time_limit=None)
 
 
 def parse_helper_file_error(proc, executor, name, stderr, time_limit, memory_limit):
-    if proc.tle:
+    if proc.is_tle:
         error = '%s timed out (> %d seconds)' % (name, time_limit)
-    elif proc.mle:
+    elif proc.is_mle:
         error = '%s ran out of memory (> %s Kb)' % (name, memory_limit)
     elif proc.protection_fault:
         syscall, callname, args = proc.protection_fault

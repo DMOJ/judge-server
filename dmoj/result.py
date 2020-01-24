@@ -58,23 +58,18 @@ class Result:
     def output(self):
         return utf8text(self.proc_output[:self.case.output_prefix_length], 'replace')
 
-    def set_result_flag(self, process):
-        if process.ir:
-            self.result_flag |= Result.IR
-        if process.rte:
-            self.result_flag |= Result.RTE
-        if process.tle:
-            self.result_flag |= Result.TLE
-        if process.mle:
-            self.result_flag |= Result.MLE
-
     @classmethod
     def get_feedback_str(cls, error, process, binary):
-        feedback = (process.feedback if hasattr(process, 'feedback') else
-                    getattr(binary, 'get_feedback', lambda x, y, z: '')(error, cls, process))
+        if hasattr(process, 'feedback'):
+            feedback = process.feedback
+        elif process.is_ir or process.is_rte:
+            feedback = binary.parse_feedback_from_stderr(error, process)
+        else:
+            feedback = ''
 
         # Check that main code is an RTE
-        if not feedback and process.rte and not (process.tle or process.mle):
+        # The MLE, TLE, and OLE flags take precedence
+        if not feedback and process.is_rte and not (process.is_tle or process.is_mle or process.is_ole):
             if not process.was_initialized:
                 # Process may failed to initialize, resulting in a SIGKILL without any prior signals.
                 # See <https://github.com/DMOJ/judge/issues/179> for more details.

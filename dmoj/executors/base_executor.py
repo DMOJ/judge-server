@@ -11,6 +11,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from dmoj.executors.mixins import PlatformExecutorMixin
 from dmoj.judgeenv import env
+from dmoj.result import Result
 from dmoj.utils.ansi import print_ansi
 from dmoj.utils.error import print_protection_fault
 from dmoj.utils.unicode import utf8bytes, utf8text
@@ -82,6 +83,28 @@ class BaseExecutor(PlatformExecutorMixin):
     def get_nproc(self) -> int:
         return self.nproc
 
+    def populate_result(self, stderr, result, process):
+        # Translate status codes/process results into Result object for status codes
+        result.max_memory = process.max_memory or 0.0
+        result.execution_time = process.execution_time or 0.0
+        result.wall_clock_time = process.wall_clock_time or 0.0
+
+        if process.is_ir:
+            result.result_flag |= Result.IR
+        if process.is_rte:
+            result.result_flag |= Result.RTE
+        if process.is_ole:
+            result.result_flag |= Result.OLE
+        if process.is_tle:
+            result.result_flag |= Result.TLE
+        if process.is_mle:
+            result.result_flag |= Result.MLE
+
+        result.update_feedback(stderr, process, self)
+
+    def parse_feedback_from_stderr(stderr, process):
+        pass
+
     @classmethod
     def get_command(cls) -> Optional[str]:
         return cls.runtime_dict.get(cls.command)
@@ -111,10 +134,10 @@ class BaseExecutor(PlatformExecutorMixin):
             test_message = b'echo: Hello, World!'
             stdout, stderr = proc.communicate(test_message + b'\n')
 
-            if proc.tle:
+            if proc.is_tle:
                 print_ansi('#ansi[Time Limit Exceeded](red|bold)')
                 return False
-            if proc.mle:
+            if proc.is_mle:
                 print_ansi('#ansi[Memory Limit Exceeded](red|bold)')
                 return False
 

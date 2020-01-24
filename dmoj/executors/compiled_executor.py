@@ -73,11 +73,19 @@ class TimedPopen(subprocess.Popen):
         self._time = kwargs.pop('time_limit', None)
         super().__init__(*args, **kwargs)
 
+        self._is_ole = False
         self.timed_out = False
         if self._time:
             # Spawn thread to kill process after it times out
             self._shocker = threading.Thread(target=self._shocker_thread)
             self._shocker.start()
+
+    def mark_ole(self):
+        self._is_ole = True
+
+    @property
+    def is_ole(self):
+        return self._is_ole
 
     def _shocker_thread(self) -> None:
         # Though this shares a name with the shocker thread used for submissions, where the process shocker thread

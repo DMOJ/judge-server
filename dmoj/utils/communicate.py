@@ -81,6 +81,7 @@ def safe_communicate(proc, input=None, outlimit=None, errlimit=None):
                 fd2output[fd].append(data)
                 fd2length[fd] += len(data)
                 if fd2length[fd] > fd2limit[fd]:
+                    proc.mark_ole()
                     raise OutputLimitExceeded(
                         'stdout' if proc.stdout is not None and proc.stdout.fileno() == fd else 'stderr',
                         fd2limit[fd])

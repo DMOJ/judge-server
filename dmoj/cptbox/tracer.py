@@ -115,7 +115,8 @@ class TracedPopen(Process, metaclass=TracedPopenMeta):
         self._child_address = memory * 1024 + address_grace * 1024 if memory else 0
         self._nproc = nproc
         self._fsize = fsize
-        self._tle = False
+        self._is_tle = False
+        self._is_ole = False
         self._fds = fds
         self.__init_streams(stdin, stdout, stderr)
         self.protection_fault = None
@@ -166,21 +167,28 @@ class TracedPopen(Process, metaclass=TracedPopenMeta):
     def poll(self):
         return self.returncode
 
+    def mark_ole(self):
+        self._is_ole = True
+
     @property
-    def ir(self):
+    def is_ir(self):
         return self.returncode > 0
 
     @property
-    def mle(self):
+    def is_mle(self):
         return self._memory and self.max_memory > self._memory
 
     @property
-    def rte(self):
+    def is_ole(self):
+        return self._is_ole
+
+    @property
+    def is_rte(self):
         return self.returncode is None or self.returncode < 0  # Killed by signal
 
     @property
-    def tle(self):
-        return self._tle
+    def is_tle(self):
+        return self._is_tle
 
     def kill(self):
         log.warning('Request the killing of process: %s', self.pid)
@@ -221,7 +229,7 @@ class TracedPopen(Process, metaclass=TracedPopenMeta):
 
     def _cpu_time_exceeded(self):
         log.warning('SIGXCPU in process %d', self.pid)
-        self._tle = True
+        self._is_tle = True
 
     def _run_process(self):
         self._spawn(self._executable,
@@ -240,7 +248,7 @@ class TracedPopen(Process, metaclass=TracedPopenMeta):
         code = self._monitor()
 
         if self._time and self.execution_time > self._time:
-            self._tle = True
+            self._is_tle = True
         self._died.set()
 
         return code
@@ -259,7 +267,7 @@ class TracedPopen(Process, metaclass=TracedPopenMeta):
             if self.execution_time > self._time or self.wall_clock_time > self._wall_time:
                 log.warning('Shocker activated and killed %d', self.pid)
                 os.killpg(self.pid, signal.SIGKILL)
-                self._tle = True
+                self._is_tle = True
                 break
             time.sleep(1)
             try:

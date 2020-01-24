@@ -91,16 +91,13 @@ class JavaExecutor(CompiledExecutor):
         return Popen(['java', self.get_vm_mode(), self._class_name] + list(args),
                      executable=self.get_vm(), cwd=self._dir, **kwargs)
 
-    def get_feedback(self, stderr, result, process):
+    def parse_feedback_from_stderr(self, stderr, process):
         if process.returncode:
             try:
                 with open(os.path.join(self._dir, 'submission_jvm_crash.log'), 'r') as err:
                     raise InternalError('\n\n' + err.read())
             except IOError:
                 pass
-
-        if not process.ir:
-            return ''
 
         if b'Error: Main method not found in class' in stderr:
             exception = "public static void main(String[] args) not found"

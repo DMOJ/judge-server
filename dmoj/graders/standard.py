@@ -23,12 +23,7 @@ class StandardGrader(BaseGrader):
 
         process = self._current_proc
 
-        result.max_memory = process.max_memory or 0.0
-        result.execution_time = process.execution_time or 0.0
-        result.wall_clock_time = process.wall_clock_time or 0.0
-
-        # Translate status codes/process results into Result object for status codes
-        result.set_result_flag(process)
+        self.populate_result(error, result, process)
 
         check = self.check_result(case, result)
 
@@ -39,9 +34,9 @@ class StandardGrader(BaseGrader):
 
         result.result_flag |= [Result.WA, Result.AC][check.passed]
         result.points = check.points
-        result.extended_feedback = check.extended_feedback
+        result.feedback = check.feedback or result.feedback
+        result.extended_feedback = check.extended_feedback or result.extended_feedback
 
-        self.update_feedback(check, error, process, result)
         case.free_data()
 
         # Where CPython has reference counting and a GC, PyPy only has a GC. This means that while CPython
@@ -56,8 +51,8 @@ class StandardGrader(BaseGrader):
 
         return result
 
-    def update_feedback(self, check, error, process, result):
-        result.update_feedback(error, process, self.binary, check.feedback)
+    def populate_result(self, error, result, process):
+        self.binary.populate_result(error, result, process)
 
     def check_result(self, case, result):
         # If the submission didn't crash and didn't time out, there's a chance it might be AC
@@ -103,7 +98,6 @@ class StandardGrader(BaseGrader):
                                                             errlimit=1048576)
         except OutputLimitExceeded:
             error = None
-            result.result_flag |= Result.OLE
             try:
                 process.kill()
             except RuntimeError as e:

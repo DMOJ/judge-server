@@ -73,8 +73,8 @@ class GCCExecutor(CompiledExecutor):
         env.update(GCC_ENV)
         return env
 
-    def get_feedback(self, stderr, result, process):
-        if not process.rte or not stderr or len(stderr) > 2048:
+    def parse_feedback_from_stderr(self, stderr, process):
+        if not stderr or len(stderr) > 2048:
             return ''
         match = deque(recppexc.finditer(stderr), maxlen=1)
         if not match:

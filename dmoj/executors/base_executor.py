@@ -102,7 +102,7 @@ class BaseExecutor(PlatformExecutorMixin):
 
         result.update_feedback(stderr, process, self)
 
-    def parse_feedback_from_stderr(stderr, process):
+    def parse_feedback_from_stderr(self, stderr, process):
         pass
 
     @classmethod

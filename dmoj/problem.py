@@ -22,10 +22,11 @@ DEFAULT_TEST_CASE_OUTPUT_PATTERN = r'^(?=.*?\.out|out).*?(?:(?:^|\W)(?P<batch>\d
 
 
 class Problem:
-    def __init__(self, problem_id, time_limit, memory_limit):
+    def __init__(self, problem_id, time_limit, memory_limit, meta):
         self.id = problem_id
         self.time_limit = time_limit
         self.memory_limit = memory_limit
+        self.meta = meta
         self.generator_manager = GeneratorManager()
 
         self.problem_data = ProblemDataManager(problem_id)
@@ -45,6 +46,7 @@ class Problem:
                 'binary_data': False,
                 'short_circuit': True,
                 'symlinks': {},
+                'meta': meta,
             })
         except (IOError, KeyError, ParserError, ScannerError) as e:
             raise InvalidInitException(str(e))

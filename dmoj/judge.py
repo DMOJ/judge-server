@@ -628,11 +628,12 @@ def main():  # pragma: no cover
     if not sanity_check():
         return 1
 
-    from dmoj import judgeenv, executors
+    from dmoj import judgeenv, contrib, executors
 
     judgeenv.load_env()
 
     executors.load_executors()
+    contrib.load_contrib_modules()
 
     if hasattr(signal, 'SIGUSR2'):
         signal.signal(signal.SIGUSR2, signal.SIG_IGN)

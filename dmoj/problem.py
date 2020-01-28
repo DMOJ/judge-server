@@ -26,7 +26,7 @@ class Problem:
         self.id = problem_id
         self.time_limit = time_limit
         self.memory_limit = memory_limit
-        self.meta = meta
+        self.meta = ConfigNode(meta)
         self.generator_manager = GeneratorManager()
 
         self.problem_data = ProblemDataManager(problem_id)
@@ -46,7 +46,7 @@ class Problem:
                 'binary_data': False,
                 'short_circuit': True,
                 'symlinks': {},
-                'meta': ConfigNode(meta),
+                'meta': meta,
             })
         except (IOError, KeyError, ParserError, ScannerError) as e:
             raise InvalidInitException(str(e))

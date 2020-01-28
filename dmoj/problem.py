@@ -46,7 +46,7 @@ class Problem:
                 'binary_data': False,
                 'short_circuit': True,
                 'symlinks': {},
-                'meta': meta,
+                'meta': ConfigNode(meta),
             })
         except (IOError, KeyError, ParserError, ScannerError) as e:
             raise InvalidInitException(str(e))

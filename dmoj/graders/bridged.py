@@ -10,8 +10,8 @@ from dmoj.utils.unicode import utf8text
 
 
 class BridgedInteractiveGrader(StandardGrader):
-    def __init__(self, judge, problem, language, source, meta):
-        super().__init__(judge, problem, language, source, meta)
+    def __init__(self, judge, problem, language, source):
+        super().__init__(judge, problem, language, source)
         self.handler_data = self.problem.config.interactive
         self.interactor_binary = self._generate_interactor_binary()
 

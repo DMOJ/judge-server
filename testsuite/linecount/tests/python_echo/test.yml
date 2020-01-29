@@ -3,4 +3,13 @@ time: 2
 memory: 65536
 source: echo.py
 cases: [AC, WA, WA]
-feedback_cases: ['✓✓✓✓✓✓✓✓✓✓','✓✓✓✓✓✓✓✓✓✗','✗✗✗✗✗✗✗✗✗✗']
+extended_feedback_cases:
+- |-
+  Case Feedback:
+  ✓✓✓✓✓✓✓✓✓✓
+- |-
+  Case Feedback:
+  ✓✓✓✓✓✓✓✓✓✗
+- |-
+  Case Feedback:
+  ✗✗✗✗✗✗✗✗✗✗

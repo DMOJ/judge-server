@@ -23,7 +23,8 @@ class TestManager:
         self.output('\t\t' + message.replace('\r\n', '\n').replace('\n', '\r\n\t\t'))
         self.failed = True
 
-    def set_expected(self, codes_all, codes_cases, score_all, score_cases, feedback_all, feedback_cases):
+    def set_expected(self, codes_all, codes_cases, score_all, score_cases,
+                     feedback_all, feedback_cases, extended_feedback_all, extended_feedback_cases):
         self.failed = False
         self.codes_all = codes_all
         self.codes_cases = codes_cases
@@ -31,6 +32,8 @@ class TestManager:
         self.score_cases = score_cases
         self.feedback_all = feedback_all
         self.feedback_cases = feedback_cases
+        self.extended_feedback_all = extended_feedback_all
+        self.extended_feedback_cases = extended_feedback_cases
 
     def _receive_packet(self, packet):
         pass
@@ -64,6 +67,13 @@ class TestManager:
             feedback = self.feedback_cases[position]
         if feedback is not None and result.feedback not in feedback:
             self.fail('Unexpected feedback: "%s", expected: "%s"' % (result.feedback, '", "'.join(feedback)))
+
+        extended_feedback = self.extended_feedback_all
+        if position in self.extended_feedback_cases:
+            extended_feedback = self.extended_feedback_cases[position]
+        if extended_feedback is not None and result.extended_feedback not in extended_feedback:
+            self.fail('Unexpected extended feedback: "%s", expected: "%s"' %
+                      (result.extended_feedback, '", "'.join(extended_feedback)))
 
     def compile_error_packet(self, log):
         if 'CE' not in self.codes_all:
@@ -224,6 +234,9 @@ class Tester:
         feedback_all, feedback_cases = self.parse_expect(
             config.get('feedback'), config.get('feedback_cases', {}), self.parse_feedback
         )
+        extended_feedback_all, extended_feedback_cases = self.parse_expect(
+            config.get('extended_feedback'), config.get('extended_feedback_cases', {}), self.parse_feedback
+        )
 
         def output_case(data):
             self.output('\t\t' + data.strip())
@@ -231,7 +244,10 @@ class Tester:
         fails = 0
         for source in sources:
             self.sub_id += 1
-            self.manager.set_expected(codes_all, codes_cases, score_all, score_cases, feedback_all, feedback_cases)
+            self.manager.set_expected(
+                codes_all, codes_cases, score_all, score_cases, feedback_all,
+                feedback_cases, extended_feedback_all, extended_feedback_cases
+            )
             self.judge.begin_grading(
                 Submission(self.sub_id, problem, language, source, time, memory, False, {}),
                 blocking=True,

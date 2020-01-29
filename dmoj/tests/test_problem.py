@@ -33,7 +33,7 @@ class ProblemTest(unittest.TestCase):
 
         self.problem_data = ProblemDataManager('foo')
         self.problem_data.update({'init.yml': 'archive: foo.zip'})
-        self.assertEqual(MockProblem('test', 2, 16384).config.test_cases.unwrap(),
+        self.assertEqual(MockProblem('test', 2, 16384, {}).config.test_cases.unwrap(),
                          [{'batched': [{'in': 's2.1-1.in', 'out': 's2.1-1.out'},
                                        {'in': 's2.1.2.in', 'out': 's2.1.2.out'}], 'points': 1},
                           {'in': 's3.4.in', 'out': 's3.4.out', 'points': 1},
@@ -46,24 +46,24 @@ class ProblemTest(unittest.TestCase):
     def test_no_init(self):
         self.problem_data = {}
         with self.assertRaises(InvalidInitException):
-            Problem('test', 2, 16384)
+            Problem('test', 2, 16384, {})
 
     def test_empty_init(self):
         self.problem_data = {'init.yml': ''}
         with self.assertRaisesRegex(InvalidInitException, 'lack of content'):
-            Problem('test', 2, 16384)
+            Problem('test', 2, 16384, {})
 
     def test_bad_init(self):
         self.problem_data = {'init.yml': '"'}
         with self.assertRaisesRegex(InvalidInitException, 'while scanning a quoted scalar'):
-            Problem('test', 2, 16384)
+            Problem('test', 2, 16384, {})
 
     def test_blank_init(self):
         self.problem_data = {'init.yml': 'archive: does_not_exist.txt'}
         with mock.patch('dmoj.problem.get_problem_root') as gpr:
             gpr.return_value = '/proc'
             with self.assertRaisesRegex(InvalidInitException, 'archive file'):
-                Problem('test', 2, 16384)
+                Problem('test', 2, 16384, {})
 
     @unittest.skipIf(os.devnull != '/dev/null', 'os.path.exists("nul") is False on Windows')
     def test_bad_archive(self):
@@ -71,7 +71,7 @@ class ProblemTest(unittest.TestCase):
         with mock.patch('dmoj.problem.get_problem_root') as gpr:
             gpr.return_value = '/'
             with self.assertRaisesRegex(InvalidInitException, 'bad archive:'):
-                Problem('test', 2, 16384)
+                Problem('test', 2, 16384, {})
 
     def tearDown(self):
         self.data_patch.stop()

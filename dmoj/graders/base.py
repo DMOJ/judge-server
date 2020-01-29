@@ -1,17 +1,15 @@
-from dmoj.config import ConfigNode
 from dmoj.problem import BatchedTestCase, TestCase
 from dmoj.utils.unicode import utf8bytes
 
 
 class BaseGrader:
-    def __init__(self, judge, problem, language, source, meta):
+    def __init__(self, judge, problem, language, source):
         self.source = utf8bytes(source)
         self.language = language
         self.problem = problem
         self.judge = judge
-        self.meta = ConfigNode(meta)
         self.binary = self._generate_binary()
-        self.is_pretested = self.meta.pretests_only and 'pretest_test_cases' in self.problem.config
+        self.is_pretested = self.problem.meta.pretests_only and 'pretest_test_cases' in self.problem.config
         self._terminate_grading = False
         self._current_proc = None
         self._batch_counter = 0

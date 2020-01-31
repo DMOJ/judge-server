@@ -426,3 +426,5 @@
 433	fspick
 434	pidfd_open
 435	clone3
+437	openat2
+438	pidfd_getfd

@@ -32,6 +32,7 @@ class IsolateTracer(dict):
         self.update({
             # Deny with report
             sys_openat: self.check_file_access_at('openat', is_open=True),
+            sys_openat2: self.check_file_access_at('openat2', is_open=True),
             sys_open: self.check_file_access('open', 0, is_open=True),
             sys_faccessat: self.check_file_access_at('faccessat'),
             sys_access: self.check_file_access('access', 0),

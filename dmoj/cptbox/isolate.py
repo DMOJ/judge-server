@@ -49,6 +49,7 @@ class IsolateTracer(dict):
             sys_prctl: self.do_prctl,
 
             sys_read: ALLOW,
+            sys_pread64: ALLOW,
             sys_write: ALLOW,
             sys_writev: ALLOW,
             sys_statfs: ALLOW,

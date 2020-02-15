@@ -60,16 +60,15 @@ class Result:
 
     @classmethod
     def get_feedback_str(cls, error, process, binary):
+        is_ir_or_rte = (process.is_ir or process.is_rte) and not (process.is_tle or process.is_mle or process.is_ole)
         if hasattr(process, 'feedback'):
             feedback = process.feedback
-        elif process.is_ir or process.is_rte:
+        elif is_ir_or_rte:
             feedback = binary.parse_feedback_from_stderr(error, process)
         else:
             feedback = ''
 
-        # Check that main code is an RTE
-        # The MLE, TLE, and OLE flags take precedence
-        if not feedback and process.is_rte and not (process.is_tle or process.is_mle or process.is_ole):
+        if not feedback and is_ir_or_rte:
             if not process.was_initialized:
                 # Process may failed to initialize, resulting in a SIGKILL without any prior signals.
                 # See <https://github.com/DMOJ/judge/issues/179> for more details.

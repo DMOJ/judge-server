@@ -6,7 +6,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: Set up Python 3.7
       uses: actions/setup-python@v1
       with:
@@ -16,13 +16,13 @@ jobs:
         cd dmoj/cptbox/syscalls
         python generate_linux.py
     - name: Create pull request
-      uses: peter-evans/create-pull-request@v1.4.1-multi
+      uses: peter-evans/create-pull-request@v2
       env:
-        GITHUB_TOKEN: ${{ secrets.REPO_SCOPED_TOKEN }}
-        COMMIT_MESSAGE: 'cptbox: update Linux syscall list'
-        PULL_REQUEST_TITLE: 'Update Linux syscall list'
-        PULL_REQUEST_BODY: This PR has been auto-generated to update the syscall definitions in `cptbox`.
-        PULL_REQUEST_LABELS: cptbox, security, enhancement
-        PULL_REQUEST_REVIEWERS: Xyene, quantum5
-        PULL_REQUEST_BRANCH: update-syscalls
-        BRANCH_SUFFIX: none
+        token: ${{ secrets.REPO_SCOPED_TOKEN }}
+        commit-message: 'cptbox: update Linux syscall list'
+        title: 'Update Linux syscall list'
+        body: This PR has been auto-generated to update the syscall definitions in `cptbox`.
+        labels: cptbox, security, enhancement
+        assignees: Xyene, quantum5
+        branch: update-syscalls
+ 

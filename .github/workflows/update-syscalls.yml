@@ -17,7 +17,7 @@ jobs:
         python generate_linux.py
     - name: Create pull request
       uses: peter-evans/create-pull-request@v2
-      env:
+      with:
         token: ${{ secrets.REPO_SCOPED_TOKEN }}
         commit-message: 'cptbox: update Linux syscall list'
         title: 'Update Linux syscall list'

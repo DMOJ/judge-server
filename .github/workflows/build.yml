@@ -1,0 +1,52 @@
+name: build
+on: [push, pull_request]
+jobs:
+  flake8:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+    - name: Install flake8
+      run: |
+        pip install flake8 flake8-import-order flake8-future-import flake8-commas flake8-logging-format
+    - name: Run flake8
+      run: |
+        flake8 --version
+        flake8
+  mypy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+    - name: Install dependencies and mypy
+      run: |
+        pip install cython mypy
+        pip install -r requirements.txt
+    - name: Verify mypy types
+      run: |
+        mypy --version
+        mypy .
+  test-sdist:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+    - name: Install build dependencies
+      run: pip install cython
+    - name: Create sdist
+      run: python setup.py sdist
+    - name: Install test dependencies
+      run: sudo apt-get install -y libseccomp-dev
+    - name: Test sdist
+      run: |
+        pip install dist/*.tar.gz
+        dmoj-autoconf

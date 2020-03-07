@@ -14,7 +14,7 @@ from dmoj.control import JudgeControlRequestHandler
 from dmoj.error import CompileError
 from dmoj.judgeenv import clear_problem_dirs_cache, env, get_supported_problems, startup_warnings
 from dmoj.monitor import DummyMonitor, Monitor
-from dmoj.problem import BatchedTestCase, Problem
+from dmoj.problem import BatchedTestCase, Problem, TestCase
 from dmoj.result import Result
 from dmoj.utils.ansi import ansi_style, print_ansi, strip_ansi
 from dmoj.utils.unicode import unicode_stdout_stderr, utf8bytes, utf8text
@@ -194,7 +194,8 @@ class Judge:
                     # There are two cases where this means that we should completely short-circuit:
                     # 1. If the batch was worth 0 points, to emulate the property of 0-point cases.
                     # 2. If the short_circuit flag is true, see <https://github.com/DMOJ/judge/issues/341>.
-                    if (batched_case.result_flag & Result.WA) and (not case.points or short_circuit):
+                    if (batched_case.result_flag & Result.WA) and \
+                            (short_circuit or case.kind in (TestCase.KIND_SAMPLE, TestCase.KIND_PRETEST)):
                         is_short_circuiting = True
                     yield batched_case
                 yield BatchEnd()
@@ -216,7 +217,8 @@ class Judge:
             # If the WA bit of result_flag is set and we are set to short-circuit (e.g., in a batch),
             # short circuit the rest of the cases.
             # Do the same if the case is a pretest (i.e. has 0 points)
-            if (result.result_flag & Result.WA) > 0 and (short_circuit or not case.points):
+            if (result.result_flag & Result.WA) > 0 and \
+                    (short_circuit or case.kind in (TestCase.KIND_SAMPLE, TestCase.KIND_PRETEST)):
                 is_short_circuiting = True
 
             yield result

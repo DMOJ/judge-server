@@ -29,18 +29,28 @@ class BaseGrader:
             except OSError:
                 pass
 
-    def _resolve_testcases(self, cfg, batch_no=0):
+    def _resolve_testcases(self, cfg, batch_no=0, kind=TestCase.KIND_NORMAL):
         cases = []
         for case_config in cfg:
+            # Hack for backwards-compatibility: if points are set to 0, this is a
+            # pretest regardless of whatever [kind] was specified to be.
+            real_kind = kind if case_config.points else TestCase.KIND_PRETEST
             if 'batched' in case_config.raw_config:
                 self._batch_counter += 1
-                cases.append(BatchedTestCase(self._batch_counter, case_config, self.problem,
-                                             self._resolve_testcases(case_config['batched'], self._batch_counter)))
+                cases.append(BatchedTestCase(self._batch_counter, real_kind, case_config, self.problem,
+                                             self._resolve_testcases(case_config['batched'], self._batch_counter,
+                                                                     kind=real_kind)))
             else:
-                cases.append(TestCase(self._testcase_counter, batch_no, case_config, self.problem))
+                cases.append(TestCase(self._testcase_counter, batch_no, real_kind, case_config, self.problem))
                 self._testcase_counter += 1
         return cases
 
     def cases(self):
+        if 'sample_test_cases' in self.problem.config:
+            samples = self._resolve_testcases(self.problem.config.sample_test_cases, kind=TestCase.KIND_SAMPLE)
+        else:
+            samples = []
+
         key = 'pretest_test_cases' if self.is_pretested else 'test_cases'
-        return self._resolve_testcases(self.problem.config[key])
+        kind = TestCase.KIND_PRETEST if self.is_pretested else TestCase.KIND_NORMAL
+        return samples + self._resolve_testcases(self.problem.config[key], kind=kind)

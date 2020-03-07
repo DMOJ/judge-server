@@ -190,9 +190,10 @@ class ProblemDataManager(dict):
 
 
 class BatchedTestCase:
-    def __init__(self, batch_no, config, problem, cases):
+    def __init__(self, batch_no, kind, config, problem, cases):
         self.config = config
         self.batch_no = batch_no
+        self.kind = kind
         self.points = config.points
         self.batched_cases = cases
         if any(isinstance(case, BatchedTestCase) for case in self.batched_cases):
@@ -204,9 +205,14 @@ class BatchedTestCase:
 
 
 class TestCase:
-    def __init__(self, count, batch_no, config, problem):
+    KIND_NORMAL = 'normal'
+    KIND_PRETEST = 'pretest'
+    KIND_SAMPLE = 'sample'
+
+    def __init__(self, count, batch_no, kind, config, problem):
         self.position = count
         self.batch = batch_no
+        self.kind = kind
         self.config = config
         self.problem = problem
         self.points = config.points
@@ -344,4 +350,5 @@ class TestCase:
         self._generated = None
 
     def __str__(self):
-        return 'TestCase{in=%s,out=%s,points=%s}' % (self.config['in'], self.config['out'], self.config['points'])
+        return 'TestCase{in=%s,out=%s,points=%s,kind=%s}' % (self.config['in'], self.config['out'],
+                                                             self.config['points'], self.kind)

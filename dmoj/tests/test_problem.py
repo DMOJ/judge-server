@@ -47,7 +47,7 @@ class ProblemTest(unittest.TestCase):
                               {'in': 'INPUT8.txt', 'out': 'OUTPUT8.txt', 'points': 1}])
 
     def test_no_init(self):
-        self.problem_data = {}        
+        self.problem_data = {}
         with mock.patch('dmoj.problem.get_problem_root') as gpr:
             gpr.return_value = '/proc'
             with self.assertRaises(InvalidInitException):

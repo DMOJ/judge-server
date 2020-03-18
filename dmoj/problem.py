@@ -169,7 +169,7 @@ class Problem:
 
 
 class ProblemDataManager(dict):
-    def __init__(self, problem **kwargs):
+    def __init__(self, problem, **kwargs):
         super().__init__(**kwargs)
         self.problem = problem
         self.archive = None

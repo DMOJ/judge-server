@@ -3,7 +3,7 @@ import unittest
 from unittest import mock
 
 from dmoj.config import InvalidInitException
-from dmoj.problem import Problem
+from dmoj.problem import Problem, ProblemDataManager
 
 
 class ProblemTest(unittest.TestCase):

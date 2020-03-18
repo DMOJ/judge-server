@@ -1,11 +1,12 @@
-from dmoj.executors.base_executor import CompiledExecutor
+from dmoj.executors.compiled_executor import CompiledExecutor
 from dmoj.executors.mixins import NullStdoutMixin
 
 
 class Executor(NullStdoutMixin, CompiledExecutor):
-    ext = '.hs'
+    ext = 'hs'
     name = 'HASK'
     command = 'ghc'
+    syscalls = ['poll']
     test_program = '''\
 main = do
     a <- getContents

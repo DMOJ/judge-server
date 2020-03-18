@@ -1,8 +1,8 @@
-from dmoj.executors.base_executor import CompiledExecutor
+from dmoj.executors.compiled_executor import CompiledExecutor
 
 
 class Executor(CompiledExecutor):
-    ext = '.ml'
+    ext = 'ml'
     name = 'OCAML'
     command = 'ocaml'
     command_paths = ['ocamlopt']

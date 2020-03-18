@@ -1,11 +1,11 @@
-from .base_executor import CompiledExecutor
-from dmoj.executors.mixins import EmulateTerminalMixin
+from dmoj.executors.compiled_executor import CompiledExecutor
 
 
-class Executor(EmulateTerminalMixin, CompiledExecutor):
-    ext = '.swift'
+class Executor(CompiledExecutor):
+    ext = 'swift'
     name = 'SWIFT'
     command = 'swiftc'
+    fs = ['/lib']
     test_program = 'print(readLine()!)'
 
     def get_compile_args(self):

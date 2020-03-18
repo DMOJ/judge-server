@@ -114,11 +114,27 @@ int cptbox_child_run(const struct child_config *config) {
     if (config->nproc >= 0)
         setrlimit2(RLIMIT_NPROC, config->nproc);
 
+    if (config->fsize >= 0)
+        setrlimit2(RLIMIT_FSIZE, config->fsize);
+
     if (config->dir && *config->dir)
         chdir(config->dir);
 
     setrlimit2(RLIMIT_STACK, RLIM_INFINITY);
     setrlimit2(RLIMIT_CORE, 0);
+
+#ifdef PR_SET_NO_NEW_PRIVS  // Since Linux 3.5
+    if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0))
+        return 202;
+#endif
+
+#ifdef PR_SET_SPECULATION_CTRL  // Since Linux 4.17
+    // Turn off Spectre Variant 4 protection in case it is turned on; we don't
+    // care if submissions shoot themselves in the foot. Let this be a
+    // best-effort attempt, and don't stop the submission from running if the
+    // prctl fails.
+    prctl(PR_SET_SPECULATION_CTRL, PR_SPEC_STORE_BYPASS, PR_SPEC_ENABLE, 0, 0);
+#endif
 
     if (config->stdin_ >= 0)  dup2(config->stdin_, 0);
     if (config->stdout_ >= 0) dup2(config->stdout_, 1);

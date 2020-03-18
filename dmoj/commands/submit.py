@@ -1,9 +1,8 @@
-from __future__ import print_function
 from operator import itemgetter
 
 from dmoj import judgeenv
-from dmoj.cli import InvalidCommandException
 from dmoj.commands.base_command import Command
+from dmoj.error import InvalidCommandException
 from dmoj.executors import executors
 
 
@@ -48,7 +47,7 @@ class SubmitCommand(Command):
                     language_id = {
                         'PY': 'PY2',
                         'CPP': 'CPP11',
-                        'JAVA': 'JAVA8'
+                        'JAVA': 'JAVA8',
                     }.get(ext, ext)
             else:
                 raise InvalidCommandException("no language is selected")
@@ -64,4 +63,4 @@ class SubmitCommand(Command):
         self.judge.submission_id_counter += 1
         self.judge.graded_submissions.append((problem_id, language_id, src, time_limit, memory_limit))
         self.judge.begin_grading(self.judge.submission_id_counter, problem_id, language_id, src, time_limit,
-                                 memory_limit, False, False, blocking=True)
+                                 memory_limit, False, {}, blocking=True)

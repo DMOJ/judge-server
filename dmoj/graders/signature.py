@@ -1,15 +1,14 @@
 import uuid
 
-from dmoj.error import CompileError
+from dmoj.error import CompileError, InternalError
 from dmoj.executors import executors
-from dmoj.graders import StandardGrader
-from dmoj.utils import ansi
+from dmoj.graders.standard import StandardGrader
 from dmoj.utils.unicode import utf8bytes
 
 
 class SignatureGrader(StandardGrader):
     def _generate_binary(self):
-        siggraders = ('C', 'CPP03', 'CPP0X', 'CPP11', 'CPP14', 'CPP17')
+        siggraders = ('C', 'C11', 'CPP03', 'CPP11', 'CPP14', 'CPP17')
 
         for i in reversed(siggraders):
             if i in executors:
@@ -17,6 +16,7 @@ class SignatureGrader(StandardGrader):
                 break
         else:
             raise CompileError(b"can't signature grade, why did I get this submission?")
+
         if self.language in siggraders:
             aux_sources = {}
             handler_data = self.problem.config['signature_grader']
@@ -34,16 +34,8 @@ class SignatureGrader(StandardGrader):
             aux_sources[handler_data['header']] = header
             entry = entry_point
             # Compile as CPP regardless of what the submission language is
-            try:
-                return executors[siggrader].Executor(self.problem.id, entry, aux_sources=aux_sources,
-                                                     writable=handler_data['writable'] or (1, 2),
-                                                     fds=handler_data['fds'], defines=['-DSIGNATURE_GRADER'])
-            except CompileError as compilation_error:
-                self.judge.packet_manager.compile_error_packet(ansi.format_ansi(
-                    compilation_error.args[0] or 'compiler exited abnormally'
-                ))
-
-                # Compile error is fatal
-                raise
-
-        self.judge.packet_manager.compile_error_packet('no valid handler compiler exists')
+            return executors[siggrader].Executor(self.problem.id, entry, aux_sources=aux_sources,
+                                                 writable=handler_data['writable'] or (1, 2),
+                                                 fds=handler_data['fds'], defines=['-DSIGNATURE_GRADER'])
+        else:
+            raise InternalError('no valid runtime for signature grading %s found' % self.language)

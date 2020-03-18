@@ -21,6 +21,7 @@ develop-eggs
 lib
 lib64
 __pycache__
+.mypy_cache
 
 # Installer logs
 pip-log.txt
@@ -49,11 +50,13 @@ nosetests.xml
 *.pdb
 
 # Vim
-*.swp
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
 
 # DMOJ
-dmoj/wbox/_wbox.cpp
-dmoj/wbox/_wbox.html
 dmoj/cptbox/_cptbox.cpp
 
 java_sandbox/objs/

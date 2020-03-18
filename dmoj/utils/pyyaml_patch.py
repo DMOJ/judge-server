@@ -1,7 +1,7 @@
-import yaml.reader
 import re
 import sys
 
+import yaml.reader
 
 if yaml.reader.Reader.NON_PRINTABLE.pattern == u'[^\t\n\r -~\x85\xa0-\ud7ff\ue000-\ufffd]' and sys.maxunicode > 65535:
     yaml.reader.Reader.NON_PRINTABLE = re.compile(

@@ -1,14 +1,14 @@
 import argparse
 import os
 import subprocess
-import tempfile
 import sys
+import tempfile
+from collections import OrderedDict
+from typing import Dict
 
-from six.moves import input
-
-from dmoj.cli import InvalidCommandException
+from dmoj.error import InvalidCommandException
 from dmoj.executors import executors
-from dmoj.utils.ansi import ansi_style
+from dmoj.utils.ansi import print_ansi
 
 
 class CommandArgumentParser(argparse.ArgumentParser):
@@ -22,7 +22,7 @@ class CommandArgumentParser(argparse.ArgumentParser):
         raise InvalidCommandException
 
 
-class Command(object):
+class Command:
     name = 'command'
     help = ''
 
@@ -49,7 +49,7 @@ class Command(object):
         raise InvalidCommandException("invalid submission '%d'" % submission_id)
 
     def open_editor(self, lang, src=b''):
-        file_suffix = executors[lang].Executor.ext
+        file_suffix = '.' + executors[lang].Executor.ext
         editor = os.environ.get('EDITOR')
         if editor:
             with tempfile.NamedTemporaryFile(suffix=file_suffix) as temp:
@@ -59,7 +59,7 @@ class Command(object):
                 temp.seek(0)
                 src = temp.read()
         else:
-            print(ansi_style('#ansi[$EDITOR not set, falling back to stdin](yellow)\n'))
+            print_ansi('#ansi[$EDITOR not set, falling back to stdin](yellow)\n')
             src = []
             try:
                 while True:
@@ -78,3 +78,10 @@ class Command(object):
 
     def execute(self, line):
         raise NotImplementedError
+
+
+commands: Dict[str, Command] = OrderedDict()
+
+
+def register_command(command):
+    commands[command.name] = command

@@ -1,8 +1,8 @@
-from .base_executor import ShellExecutor
+from dmoj.executors.shell_executor import ShellExecutor
 
 
 class Executor(ShellExecutor):
-    ext = '.sh'
+    ext = 'sh'
     name = 'BASH'
     command = 'bash'
     test_program = 'exec cat'

@@ -1,8 +1,8 @@
 from operator import itemgetter
 
 from dmoj import judgeenv
-from dmoj.cli import InvalidCommandException
 from dmoj.commands.base_command import Command
+from dmoj.error import InvalidCommandException
 from dmoj.executors import executors
 
 
@@ -43,4 +43,4 @@ class ResubmitCommand(Command):
 
         self.judge.submission_id_counter += 1
         self.judge.graded_submissions.append((id, lang, src, tl, ml))
-        self.judge.begin_grading(self.judge.submission_id_counter, id, lang, src, tl, ml, False, False, blocking=True)
+        self.judge.begin_grading(self.judge.submission_id_counter, id, lang, src, tl, ml, False, {}, blocking=True)

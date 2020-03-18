@@ -1,0 +1,21 @@
+#!/bin/bash
+
+export DMOJ_IN_DOCKER=1
+export PYTHONUNBUFFERED=1
+export LANG=C.UTF-8
+export PYTHONIOENCODING=utf8
+
+cd /judge
+pip3 install -q -e .
+
+if [ "$1" == "run" ]; then
+    command=dmoj
+elif [ "$1" == "cli" ]; then
+    command=dmoj-cli
+else
+    echo "Invalid command, must be one of [run, cli]" 1>&2
+    exit 1
+fi
+
+shift
+runuser -u judge "${command}" -- $@

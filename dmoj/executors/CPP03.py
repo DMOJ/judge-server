@@ -1,10 +1,12 @@
+from typing import Optional
+
 from .gcc_executor import GCCExecutor
 
 
 class Executor(GCCExecutor):
     command = 'g++'
-    std = None
-    ext = '.cpp'
+    std: Optional[str] = None
+    ext = 'cpp'
     name = 'CPP03'
     test_program = '''
 #include <iostream>
@@ -16,4 +18,4 @@ int main() {
 '''
 
     def get_flags(self):
-        return (['-std=%s' % self.std] if self.std else []) + super(Executor, self).get_flags()
+        return (['-std=%s' % self.std] if self.std else []) + super().get_flags()

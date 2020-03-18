@@ -1,9 +1,9 @@
-import six
-
+from dmoj.utils.error import print_protection_fault
+from dmoj.utils.os_ext import strsignal
 from dmoj.utils.unicode import utf8text
 
 
-class Result(object):
+class Result:
     AC = 0
     WA = 1 << 0
     RTE = 1 << 1
@@ -22,13 +22,13 @@ class Result(object):
         'IR': 'yellow',
         'SC': 'magenta',
         'OLE': 'yellow',
-        'IE': 'red'
+        'IE': 'red',
     }
 
     def __init__(self, case):
         self.result_flag = 0
         self.execution_time = 0
-        self.r_execution_time = 0
+        self.wall_clock_time = 0
         self.max_memory = 0
         self.proc_output = ''
         self.feedback = ''
@@ -58,14 +58,44 @@ class Result(object):
     def output(self):
         return utf8text(self.proc_output[:self.case.output_prefix_length], 'replace')
 
+    @classmethod
+    def get_feedback_str(cls, error, process, binary):
+        is_ir_or_rte = (process.is_ir or process.is_rte) and not (process.is_tle or process.is_mle or process.is_ole)
+        if hasattr(process, 'feedback'):
+            feedback = process.feedback
+        elif is_ir_or_rte:
+            feedback = binary.parse_feedback_from_stderr(error, process)
+        else:
+            feedback = ''
 
-class CheckerResult(object):
+        if not feedback and is_ir_or_rte:
+            if not process.was_initialized:
+                # Process may failed to initialize, resulting in a SIGKILL without any prior signals.
+                # See <https://github.com/DMOJ/judge/issues/179> for more details.
+                feedback = 'failed initializing'
+            else:
+                feedback = strsignal(process.signal).lower()
+
+        if process.protection_fault:
+            syscall, callname, args = process.protection_fault
+            print_protection_fault(process.protection_fault)
+            callname = callname.replace('sys_', '', 1)
+            message = '%s syscall disallowed' % callname
+            feedback = message
+
+        return feedback
+
+    def update_feedback(self, error, process, binary, feedback=None):
+        self.feedback = feedback or self.get_feedback_str(error, process, binary)
+
+
+class CheckerResult:
     def __init__(self, passed, points, feedback=None, extended_feedback=None):
         # Make sure we don't kill the site bridge
         assert isinstance(passed, bool)
         assert isinstance(points, int) or isinstance(points, float)
-        assert feedback is None or isinstance(feedback, six.string_types)
-        assert extended_feedback is None or isinstance(extended_feedback, six.string_types)
+        assert feedback is None or isinstance(feedback, str)
+        assert extended_feedback is None or isinstance(extended_feedback, str)
 
         self.passed = passed
         self.points = points

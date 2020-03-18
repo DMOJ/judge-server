@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import argparse
 import logging
 import os
@@ -12,7 +10,7 @@ import yaml.representer
 from dmoj import judgeenv
 from dmoj.executors import get_available, load_executor
 from dmoj.executors.mixins import NullStdoutMixin
-from dmoj.utils.ansi import ansi_style
+from dmoj.utils.ansi import print_ansi
 
 
 def main():
@@ -26,16 +24,6 @@ def main():
         logging.basicConfig(level=logging.DEBUG if args.verbose else logging.WARNING, format='%(message)s')
 
     result = {}
-
-    if os.name == 'nt':
-        judgeenv.load_env(cli=True)
-        if not judgeenv.no_ansi_emu:
-            try:
-                from colorama import init
-                init()
-            except ImportError:
-                pass
-
     judgeenv.env['runtime'] = {}
 
     if args.silent:
@@ -55,8 +43,7 @@ def main():
 
         if hasattr(Executor, 'autoconfig'):
             if not args.silent:
-                print(ansi_style('%-43s%s' % ('Auto-configuring #ansi[%s](|underline):' % name, '')),
-                      end=' ', file=sys.stderr)
+                print_ansi('%-43s%s' % ('Auto-configuring #ansi[%s](|underline):' % name, ''), end=' ', file=sys.stderr)
                 sys.stdout.flush()
 
             try:
@@ -67,12 +54,12 @@ def main():
                 errors = '' if len(data) < 4 else data[3]
             except Exception:
                 if not args.silent:
-                    print(ansi_style('#ansi[Not supported](red|bold)'), file=sys.stderr)
+                    print_ansi('#ansi[Not supported](red|bold)', file=sys.stderr)
                     traceback.print_exc()
             else:
                 if not args.silent:
-                    print(ansi_style(['#ansi[%s](red|bold)', '#ansi[%s](green|bold)'][success] %
-                                     (feedback or ['Failed', 'Success'][success])), file=sys.stderr)
+                    print_ansi(['#ansi[%s](red|bold)', '#ansi[%s](green|bold)'][success] %
+                               (feedback or ['Failed', 'Success'][success]), file=sys.stderr)
 
                 if not success and args.verbose:
                     if config:
@@ -92,12 +79,12 @@ def main():
 
     if result:
         if not args.silent and sys.stdout.isatty():
-            print(ansi_style('#ansi[Configuration result](green|bold|underline):'), file=sys.stderr)
+            print_ansi('#ansi[Configuration result](green|bold|underline):', file=sys.stderr)
     else:
-        print(ansi_style('#ansi[No runtimes configured.](red|bold)'), file=sys.__stderr__)
+        print_ansi('#ansi[No runtimes configured.](red|bold)', file=sys.__stderr__)
         if not args.verbose:
-            print(ansi_style('Run #ansi[%s -V](|underline) to see why this is the case.') % (parser.prog,),
-                  file=sys.__stderr__)
+            print_ansi('Run #ansi[%s -V](|underline) to see why this is the case.' % (parser.prog,),
+                       file=sys.__stderr__)
 
     print(yaml.safe_dump({'runtime': result}, default_flow_style=False).rstrip())
 

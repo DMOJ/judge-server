@@ -4,7 +4,7 @@ from dmoj.executors.mono_executor import MonoExecutor
 
 
 class Executor(MonoExecutor):
-    ext = '.vb'
+    ext = 'vb'
     name = 'MONOVB'
     command = 'mono-vbnc'
     compile_output_index = 0
@@ -31,10 +31,10 @@ End Module
 
     @classmethod
     def get_version_flags(cls, command):
-        return ['/help'] if command == 'vbnc' else super(Executor, cls).get_version_flags(command)
+        return ['/help'] if command == 'vbnc' else super().get_version_flags(command)
 
     @classmethod
     def get_find_first_mapping(cls):
-        res = super(Executor, cls).get_find_first_mapping()
+        res = super().get_find_first_mapping()
         res['mono-vbnc'] = ['mono-vbnc', 'vbnc']
         return res

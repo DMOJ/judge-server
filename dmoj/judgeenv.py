@@ -1,25 +1,21 @@
 import argparse
 import os
+import ssl
+from typing import List, Set
 
-import six
 import yaml
 
 from dmoj.config import ConfigNode
+# noinspection PyUnresolvedReferences
+from dmoj.utils import pyyaml_patch  # noqa: F401, imported for side effect
 from dmoj.utils.unicode import utf8text
-from dmoj.utils import pyyaml_patch
-
-try:
-    import ssl
-except ImportError:
-    ssl = None
 
 problem_dirs = ()
 problem_watches = ()
 env = ConfigNode(defaults={
-    'selftest_sandboxing': True,
     'selftest_time_limit': 10,  # 10 seconds
     'selftest_memory_limit': 131072,  # 128mb of RAM
-    'generator_sandboxing': True,
+    'generator_compiler_time_limit': 30,  # 30 seconds
     'generator_time_limit': 20,  # 20 seconds
     'generator_memory_limit': 524288,  # 512mb of RAM
     'compiler_time_limit': 10,  # Kill compiler after 10 seconds
@@ -36,25 +32,20 @@ env = ConfigNode(defaults={
     # to host judges running with --api-host and --api-port)
     'update_pings': [],
     # Directory to use as temporary submission storage, system default
-    # (e.g. /tmp) if left blank. MANDATORY on Windows.
+    # (e.g. /tmp) if left blank.
     'tempdir': None,
-
-    # Windows-only settings
-    'inject32': None,  # Path to wbox's dmsec32.dll
-    'inject64': None,  # Path to wbox's dmsec64.dll
-    'inject_func': None,  # Name of injected DLL's entry point (e.g. InjectMain)
 }, dynamic=False)
 _root = os.path.dirname(__file__)
 
-log_file = server_host = server_port = no_ansi = no_ansi_emu = no_watchdog = problem_regex = case_regex = None
+log_file = server_host = server_port = no_ansi = no_watchdog = problem_regex = case_regex = None
 secure = no_cert_check = False
 cert_store = api_listen = None
 
-startup_warnings = []
-cli_command = []
+startup_warnings: List[str] = []
+cli_command: List[str] = []
 
-only_executors = set()
-exclude_executors = set()
+only_executors: Set[str] = set()
+exclude_executors: Set[str] = set()
 
 
 def load_env(cli=False, testsuite=False):  # pragma: no cover
@@ -92,15 +83,12 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
         parser.add_argument('-A', '--api-host', default='127.0.0.1',
                             help='IPv4 address to listen for judge API')
 
-        if ssl:
-            parser.add_argument('-s', '--secure', action='store_true',
-                                help='connect to server via TLS')
-            parser.add_argument('-k', '--no-certificate-check', action='store_true',
-                                help='do not check TLS certificate')
-            parser.add_argument('-T', '--trusted-certificates', default=None,
-                                help='use trusted certificate file instead of system')
-        else:
-            parser.set_defaults(secure=False, no_certificate_check=False, trusted_certificates=None)
+        parser.add_argument('-s', '--secure', action='store_true',
+                            help='connect to server via TLS')
+        parser.add_argument('-k', '--no-certificate-check', action='store_true',
+                            help='do not check TLS certificate')
+        parser.add_argument('-T', '--trusted-certificates', default=None,
+                            help='use trusted certificate file instead of system')
 
     _group = parser.add_mutually_exclusive_group()
     _group.add_argument('-e', '--only-executors',
@@ -109,8 +97,6 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
                         help='prevent listed executors from loading (comma-separated)')
 
     parser.add_argument('--no-ansi', action='store_true', help='disable ANSI output')
-    if os.name == 'nt':
-        parser.add_argument('--no-ansi-emu', action='store_true', help='disable ANSI emulation on Windows')
 
     if testsuite:
         parser.add_argument('tests_dir', help='directory where tests are stored')
@@ -123,7 +109,6 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
     server_port = getattr(args, 'server_port', None)
     cli_command = getattr(args, 'command', [])
 
-    no_ansi_emu = args.no_ansi_emu if os.name == 'nt' else True
     no_ansi = args.no_ansi
     no_watchdog = True if cli else args.no_watchdog
     if not cli:
@@ -138,8 +123,14 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
     only_executors |= args.only_executors and set(args.only_executors.split(',')) or set()
     exclude_executors |= args.exclude_executors and set(args.exclude_executors.split(',')) or set()
 
-    model_file = os.path.expanduser(args.config)
+    if os.getenv('DMOJ_IN_DOCKER'):
+        if not cli:
+            api_listen = api_listen or ('0.0.0.0', 9998)
 
+        with open('/judge-runtime-paths.yml', 'rb') as runtimes_file:
+            env.update(yaml.safe_load(runtimes_file))
+
+    model_file = os.path.expanduser(args.config)
     with open(model_file) as init_file:
         env.update(yaml.safe_load(init_file))
 
@@ -158,8 +149,10 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
             # Populate cache and send warnings
             get_problem_roots(warnings=True)
 
+            def get_path(x, y):
+                return utf8text(os.path.normpath(os.path.join(x, y)))
+
             problem_watches = []
-            get_path = lambda x, y: utf8text(os.path.normpath(os.path.join(x, y)))
             for dir in problem_dirs:
                 if isinstance(dir, ConfigNode):
                     for _, recursive_root in dir.iteritems():
@@ -203,7 +196,9 @@ def get_problem_roots(warnings=False):
     if _problem_dirs_cache is not None:
         return _problem_dirs_cache
 
-    get_path = lambda x, y: utf8text(os.path.normpath(os.path.join(x, y)))
+    def get_path(x, y):
+        return utf8text(os.path.normpath(os.path.join(x, y)))
+
     if isinstance(problem_dirs, list):
         _problem_dirs_cache = problem_dirs
         return problem_dirs
@@ -277,4 +272,4 @@ def get_supported_problems():
 
 def get_runtime_versions():
     from dmoj.executors import executors
-    return {name: clazz.Executor.get_runtime_versions() for name, clazz in six.iteritems(executors)}
+    return {name: clazz.Executor.get_runtime_versions() for name, clazz in executors.items()}

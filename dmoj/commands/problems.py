@@ -1,13 +1,10 @@
-from __future__ import print_function
-
-from operator import itemgetter
 import re
-
-from six.moves import zip_longest
+from itertools import zip_longest
+from operator import itemgetter
 
 from dmoj import judgeenv
-from dmoj.cli import InvalidCommandException
 from dmoj.commands.base_command import Command
+from dmoj.error import InvalidCommandException
 
 
 class ListProblemsCommand(Command):
@@ -28,7 +25,7 @@ class ListProblemsCommand(Command):
 
         if _args.filter:
             r = re.compile(_args.filter)
-            all_problems = filter(lambda x: r.match(x[0]) is not None, all_problems)
+            all_problems = list(filter(lambda x: r.match(x[0]) is not None, all_problems))
 
         if _args.limit:
             all_problems = all_problems[:_args.limit]

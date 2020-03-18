@@ -1,40 +1,40 @@
-from __future__ import print_function
-
 import errno
 import json
 import logging
-import os
 import socket
+import ssl
 import struct
 import sys
 import threading
 import time
 import traceback
 import zlib
-
-import six
+from typing import List, Optional, TYPE_CHECKING, Tuple
 
 from dmoj import sysinfo
-from dmoj.judgeenv import get_supported_problems, get_runtime_versions
-from dmoj.utils.unicode import utf8text, utf8bytes
+from dmoj.judgeenv import get_runtime_versions, get_supported_problems
+from dmoj.result import Result
+from dmoj.utils.unicode import utf8bytes, utf8text
 
-try:
-    import ssl
-except ImportError:
-    ssl = None
+if TYPE_CHECKING:
+    from dmoj.judge import Judge
 
 log = logging.getLogger(__name__)
-timer = time.clock if os.name == 'nt' else time.time
 
 
 class JudgeAuthenticationFailed(Exception):
     pass
 
 
-class PacketManager(object):
+class PacketManager:
     SIZE_PACK = struct.Struct('!I')
 
-    def __init__(self, host, port, judge, name, key, secure=False, no_cert_check=False, cert_store=None):
+    ssl_context: Optional[ssl.SSLContext]
+    judge: 'Judge'
+
+    def __init__(self, host: str, port: int, judge: 'Judge', name: str, key: str,
+                 secure: bool = False, no_cert_check: bool = False,
+                 cert_store: Optional[str] = None):
         self.host = host
         self.port = port
         self.judge = judge
@@ -43,7 +43,7 @@ class PacketManager(object):
         self._closed = False
 
         log.info('Preparing to connect to [%s]:%s as: %s', host, port, name)
-        if secure and ssl:
+        if secure:
             self.ssl_context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
             self.ssl_context.options |= ssl.OP_NO_SSLv2
             self.ssl_context.options |= ssl.OP_NO_SSLv3
@@ -67,6 +67,9 @@ class PacketManager(object):
 
         self._lock = threading.RLock()
         self._batch = 0
+        self._testcase_queue_lock = threading.Lock()
+        self._testcase_queue: List[Tuple[int, Result]] = []
+
         # Exponential backoff: starting at 4 seconds.
         # Certainly hope it won't stack overflow, since it will take days if not years.
         self.fallback = 4
@@ -134,7 +137,7 @@ class PacketManager(object):
             self.conn.shutdown(socket.SHUT_RDWR)
         self._closed = True
 
-    def _read_async(self):
+    def _read_forever(self):
         try:
             while True:
                 self._receive_packet(self._read_single())
@@ -144,7 +147,7 @@ class PacketManager(object):
             traceback.print_exc()
             raise SystemExit(1)
 
-    def _read_single(self):
+    def _read_single(self) -> dict:
         try:
             data = self.input.read(PacketManager.SIZE_PACK.size)
         except socket.error:
@@ -163,23 +166,52 @@ class PacketManager(object):
             return json.loads(utf8text(packet))
 
     def run(self):
-        self._read_async()
+        threading.Thread(target=self._periodically_flush_testcase_queue).start()
+        self._read_forever()
 
     def disconnect(self):
         self.close()
         self.judge.terminate_grading()
         sys.exit(0)
 
-    def run_async(self):
-        threading.Thread(target=self._read_async).start()
+    def _flush_testcase_queue(self):
+        with self._testcase_queue_lock:
+            if not self._testcase_queue:
+                return
 
-    def _send_packet(self, packet, rewrite=True):
-        if rewrite and 'submission-id' in packet and self.judge.get_process_type() != 'submission':
-            packet['%s-id' % self.judge.get_process_type()] = packet['submission-id']
-            del packet['submission-id']
+            self._send_packet({'name': 'test-case-status',
+                               'submission-id': self.judge.current_submission_id,
+                               'cases': [
+                                   {
+                                       'position': position,
+                                       'status': result.result_flag,
+                                       'time': result.execution_time,
+                                       'points': result.points,
+                                       'total-points': result.total_points,
+                                       'memory': result.max_memory,
+                                       'output': result.output,
+                                       'extended-feedback': result.extended_feedback,
+                                       'feedback': result.feedback,
+                                   } for position, result in self._testcase_queue
+                               ]})
 
+            self._testcase_queue.clear()
+
+    def _periodically_flush_testcase_queue(self):
+        while not self._closed:
+            try:
+                time.sleep(0.25)
+                # It is okay if we flush the testcase queue even while the connection is not open or there's nothing
+                # grading, since the only thing that can queue testcases is a currently-grading submission.
+                self._flush_testcase_queue()
+            except KeyboardInterrupt:
+                break
+            except Exception:
+                traceback.print_exc()
+
+    def _send_packet(self, packet: dict):
         for k, v in packet.items():
-            if isinstance(v, six.binary_type):
+            if isinstance(v, bytes):
                 # Make sure we don't have any garbage utf-8 from e.g. weird compilers
                 # *cough* fpc *cough* that could cause this routine to crash
                 # We cannot use utf8text because it may not be text.
@@ -189,7 +221,7 @@ class PacketManager(object):
         with self._lock:
             self.output.writelines((PacketManager.SIZE_PACK.pack(len(raw)), raw))
 
-    def _receive_packet(self, packet):
+    def _receive_packet(self, packet: dict):
         name = packet['name']
         if name == 'ping':
             self.ping_packet(packet['when'])
@@ -205,24 +237,13 @@ class PacketManager(object):
                 float(packet['time-limit']),
                 int(packet['memory-limit']),
                 packet['short-circuit'],
-                packet['pretests-only']
+                packet['meta'],
             )
             self._batch = 0
             log.info('Accept submission: %d: executor: %s, code: %s',
                      packet['submission-id'], packet['language'], packet['problem-id'])
-        elif name == 'invocation-request':
-            self.invocation_acknowledged_packet(packet['invocation-id'])
-            self.judge.custom_invocation(
-                packet['invocation-id'],
-                packet['language'],
-                packet['source'],
-                float(packet['time-limit']),
-                int(packet['memory-limit']),
-                packet['input-data']
-            )
-            log.info('Accept invocation: %d: executor: %s', packet['invocation-id'], packet['language'])
         elif name == 'terminate-submission':
-            log.info('Received abortion request for %s', self.judge.current_submission)
+            log.info('Received abortion request for %s', self.judge.current_submission_id)
             self.judge.terminate_grading()
         elif name == 'disconnect':
             log.info('Received disconnect request, shutting down...')
@@ -230,7 +251,7 @@ class PacketManager(object):
         else:
             log.error('Unknown packet %s, payload %s', name, packet)
 
-    def handshake(self, problems, runtimes, id, key):
+    def handshake(self, problems: str, runtimes, id: str, key: str):
         self._send_packet({'name': 'handshake',
                            'problems': problems,
                            'executors': runtimes,
@@ -250,98 +271,78 @@ class PacketManager(object):
                 log.error('Handshake failed.')
                 raise JudgeAuthenticationFailed()
 
-    def invocation_begin_packet(self):
-        log.info('Begin invoking: %d', self.judge.current_submission)
-        self._send_packet({'name': 'invocation-begin',
-                           'invocation-id': self.judge.current_submission})
-
-    def invocation_end_packet(self, result):
-        log.info('End invoking: %d', self.judge.current_submission)
-        self.fallback = 4
-        self._send_packet({'name': 'invocation-end',
-                           'output': result.proc_output,
-                           'status': result.status_flag,
-                           'time': result.execution_time,
-                           'memory': result.max_memory,
-                           'feedback': result.feedback,
-                           'invocation-id': self.judge.current_submission})
-
-    def supported_problems_packet(self, problems):
+    def supported_problems_packet(self, problems: List[Tuple[str, int]]):
         log.info('Update problems')
         self._send_packet({'name': 'supported-problems',
                            'problems': problems})
 
-    def test_case_status_packet(self, position, result):
+    def test_case_status_packet(self, position: int, result: Result):
         log.info('Test case on %d: #%d, %s [%.3fs | %.2f MB], %.1f/%.0f',
-                 self.judge.current_submission, position,
+                 self.judge.current_submission_id, position,
                  ', '.join(result.readable_codes()),
                  result.execution_time, result.max_memory / 1024.0,
                  result.points, result.total_points)
-        self._send_packet({'name': 'test-case-status',
-                           'submission-id': self.judge.current_submission,
-                           'position': position,
-                           'status': result.result_flag,
-                           'time': result.execution_time,
-                           'points': result.points,
-                           'total-points': result.total_points,
-                           'memory': result.max_memory,
-                           'output': result.output,
-                           'extended-feedback': result.extended_feedback,
-                           'feedback': result.feedback})
+        with self._testcase_queue_lock:
+            self._testcase_queue.append((position, result))
 
-    def compile_error_packet(self, message):
-        log.info('Compile error: %d', self.judge.current_submission)
+    def compile_error_packet(self, message: str):
+        log.info('Compile error: %d', self.judge.current_submission_id)
         self.fallback = 4
         self._send_packet({'name': 'compile-error',
-                           'submission-id': self.judge.current_submission,
+                           'submission-id': self.judge.current_submission_id,
                            'log': message})
 
-    def compile_message_packet(self, message):
-        log.info('Compile message: %d', self.judge.current_submission)
+    def compile_message_packet(self, message: str):
+        log.info('Compile message: %d', self.judge.current_submission_id)
         self._send_packet({'name': 'compile-message',
-                           'submission-id': self.judge.current_submission,
+                           'submission-id': self.judge.current_submission_id,
                            'log': message})
 
-    def internal_error_packet(self, message):
-        log.info('Internal error: %d', self.judge.current_submission)
+    def internal_error_packet(self, message: str):
+        log.info('Internal error: %d', self.judge.current_submission_id)
+        self._flush_testcase_queue()
         self._send_packet({'name': 'internal-error',
-                           'submission-id': self.judge.current_submission,
+                           'submission-id': self.judge.current_submission_id,
                            'message': message})
 
-    def begin_grading_packet(self, is_pretested):
-        log.info('Begin grading: %d', self.judge.current_submission)
+    def begin_grading_packet(self, is_pretested: bool):
+        log.info('Begin grading: %d', self.judge.current_submission_id)
         self._send_packet({'name': 'grading-begin',
-                           'submission-id': self.judge.current_submission,
+                           'submission-id': self.judge.current_submission_id,
                            'pretested': is_pretested})
 
     def grading_end_packet(self):
-        log.info('End grading: %d', self.judge.current_submission)
+        log.info('End grading: %d', self.judge.current_submission_id)
         self.fallback = 4
+        self._flush_testcase_queue()
         self._send_packet({'name': 'grading-end',
-                           'submission-id': self.judge.current_submission})
+                           'submission-id': self.judge.current_submission_id})
 
     def batch_begin_packet(self):
         self._batch += 1
-        log.info('Enter batch number %d: %d', self._batch, self.judge.current_submission)
+        log.info('Enter batch number %d: %d', self._batch, self.judge.current_submission_id)
+        self._flush_testcase_queue()
         self._send_packet({'name': 'batch-begin',
-                           'submission-id': self.judge.current_submission})
+                           'submission-id': self.judge.current_submission_id})
 
     def batch_end_packet(self):
-        log.info('Exit batch number %d: %d', self._batch, self.judge.current_submission)
+        log.info('Exit batch number %d: %d', self._batch, self.judge.current_submission_id)
+        self._flush_testcase_queue()
         self._send_packet({'name': 'batch-end',
-                           'submission-id': self.judge.current_submission})
+                           'submission-id': self.judge.current_submission_id})
 
     def current_submission_packet(self):
-        log.info('Current submission query: %d', self.judge.current_submission)
+        log.info('Current submission query: %d', self.judge.current_submission_id)
         self._send_packet({'name': 'current-submission-id',
-                           'submission-id': self.judge.current_submission})
+                           'submission-id': self.judge.current_submission_id})
 
     def submission_terminated_packet(self):
-        log.info('Submission aborted: %d', self.judge.current_submission)
+        log.info('Submission aborted: %d', self.judge.current_submission_id)
+        self._flush_testcase_queue()
         self._send_packet({'name': 'submission-terminated',
-                           'submission-id': self.judge.current_submission})
+                           'submission-id': self.judge.current_submission_id})
 
-    def ping_packet(self, when):
+    def ping_packet(self, when: float):
         data = {'name': 'ping-response',
                 'when': when,
                 'time': time.time()}
@@ -350,10 +351,6 @@ class PacketManager(object):
             data[key] = value
         self._send_packet(data)
 
-    def submission_acknowledged_packet(self, sub_id):
+    def submission_acknowledged_packet(self, sub_id: int):
         self._send_packet({'name': 'submission-acknowledged',
-                           'submission-id': sub_id}, rewrite=False)
-
-    def invocation_acknowledged_packet(self, sub_id):
-        self._send_packet({'name': 'submission-acknowledged',
-                           'invocation-id': sub_id}, rewrite=False)
+                           'submission-id': sub_id})

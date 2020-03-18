@@ -1,36 +1,38 @@
 import os
 import re
 import subprocess
+from typing import List, Optional
 
-from dmoj.cptbox.sandbox import X86, X64, can_debug
+from dmoj.cptbox.tracer import can_debug
 from dmoj.error import CompileError
-from dmoj.executors.base_executor import CompiledExecutor
+from dmoj.executors.compiled_executor import CompiledExecutor, TimedPopen
 from dmoj.judgeenv import env
+from dmoj.utils.os_ext import ARCH_X64, ARCH_X86
 from dmoj.utils.unicode import utf8text
 
-refeatures = re.compile('^[#;@|!]\s*features:\s*([\w\s,]+)', re.M)
-feature_split = re.compile('[\s,]+').split
+refeatures = re.compile(r'^[#;@|!]\s*features:\s*([\w\s,]+)', re.M)
+feature_split = re.compile(r'[\s,]+').split
 
 
 class ASMExecutor(CompiledExecutor):
-    arch = None
-    ld_m = None
-    as_name = None
-    ld_name = None
-    qemu_path = None
-    dynamic_linker = None
-    crt_pre = None
-    crt_post = None
-    platform_prefixes = None
+    arch: str
+    ld_m: str
+    as_name: str
+    ld_name: str
+    qemu_path: Optional[str] = None
+    dynamic_linker: Optional[str] = None
+    crt_pre: List[str]
+    crt_post: List[str]
+    platform_prefixes: Optional[List[str]]
 
     name = 'ASM'
-    ext = '.asm'
+    ext = 'asm'
 
     def __init__(self, problem_id, source_code, *args, **kwargs):
         self.use_qemu = self.qemu_path is not None and os.path.isfile(self.qemu_path)
         self.features = self.find_features(source_code)
 
-        super(ASMExecutor, self).__init__(problem_id, source_code + b'\n', *args, **kwargs)
+        super().__init__(problem_id, source_code + b'\n', *args, **kwargs)
 
     def find_features(self, source_code):
         features = refeatures.search(utf8text(source_code))
@@ -65,41 +67,42 @@ class ASMExecutor(CompiledExecutor):
             to_link = ['-dynamic-linker', self.dynamic_linker] + self.crt_pre + ['-lc'] + to_link + self.crt_post
 
         executable = self._file(self.problem)
-        process = self.TimedPopen([self.get_ld_path(), '-s', '-o', executable, '-m', self.ld_m] + to_link,
-                                  cwd=self._dir, stderr=subprocess.PIPE, preexec_fn=self.create_executable_limits(),
-                                  time_limit=self.compiler_time_limit)
+        process = TimedPopen([self.get_ld_path(), '-s', '-o', executable, '-m', self.ld_m] + to_link,
+                             cwd=self._dir, stderr=subprocess.PIPE, preexec_fn=self.create_executable_limits(),
+                             time_limit=self.compiler_time_limit)
         ld_output = process.communicate()[1]
-        if process.returncode != 0 or (hasattr(process, '_killed') and process._killed):
+        if process.returncode != 0:
             raise CompileError(ld_output)
 
-        self.warning = ('%s\n%s' % (utf8text(as_output), utf8text(ld_output))).strip()
+        if as_output or ld_output:
+            self.warning = ('%s\n%s' % (utf8text(as_output), utf8text(ld_output))).strip()
         self._executable = executable
         return executable
 
     def get_cmdline(self):
         if self.use_qemu:
             return [self.qemu_path, self._executable]
-        return super(ASMExecutor, self).get_cmdline()
+        return super().get_cmdline()
 
     def get_executable(self):
         if self.use_qemu:
             return self.qemu_path
-        return super(ASMExecutor, self).get_executable()
+        return super().get_executable()
 
     def get_fs(self):
-        fs = super(ASMExecutor, self).get_fs()
+        fs = super().get_fs()
         if self.use_qemu:
             fs += ['/proc/sys/vm/mmap_min_addr$', '/etc/qemu-binfmt/', self._executable]
         return fs
 
     def get_address_grace(self):
-        grace = super(ASMExecutor, self).get_address_grace()
+        grace = super().get_address_grace()
         if self.use_qemu:
             grace += 65536
         return grace
 
     @classmethod
-    def initialize(cls, sandbox=True):
+    def initialize(cls):
         if cls.qemu_path is None and not can_debug(cls.arch):
             return False
         if any(i is None for i in
@@ -109,7 +112,7 @@ class ASMExecutor(CompiledExecutor):
             return False
         if any(not os.path.isfile(i) for i in cls.crt_pre) or any(not os.path.isfile(i) for i in cls.crt_post):
             return False
-        return cls.run_self_test(sandbox)
+        return cls.run_self_test()
 
     @classmethod
     def get_versionable_commands(cls):
@@ -120,16 +123,16 @@ class ASMExecutor(CompiledExecutor):
     def autoconfig(cls):
         if not can_debug(cls.arch):
             return {}, False, 'Unable to natively debug'
-        return super(ASMExecutor, cls).autoconfig()
+        return super().autoconfig()
 
 
 class GASExecutor(ASMExecutor):
     name = 'GAS'
-    as_platform_flag = None
+    as_platform_flag: str
 
     def get_as_args(self, object):
         as_args = [self.get_as_path(), '-o', object, self._code]
-        if os.path.basename(self.get_as_path()) == 'as' and self.as_platform_flag:
+        if os.path.basename(self.get_as_path()) == 'as' and getattr(self, 'as_platform_flag', None):
             as_args += [self.as_platform_flag]
         return as_args
 
@@ -154,10 +157,10 @@ class GASExecutor(ASMExecutor):
 class NASMExecutor(ASMExecutor):
     name = 'NASM'
     as_name = 'nasm'
-    nasm_format = None
+    nasm_format: str
 
     def find_features(self, source_code):
-        features = super(NASMExecutor, self).find_features(source_code)
+        features = super().find_features(source_code)
         if source_code.startswith(b'; libc'):
             features.add('libc')
         return features
@@ -167,7 +170,7 @@ class NASMExecutor(ASMExecutor):
 
     @classmethod
     def get_version_flags(cls, command):
-        return ['-version'] if command == cls.as_name else super(NASMExecutor, cls).get_version_flags(command)
+        return ['-version'] if command == cls.as_name else super().get_version_flags(command)
 
     @classmethod
     def get_find_first_mapping(cls):
@@ -176,8 +179,8 @@ class NASMExecutor(ASMExecutor):
         return {cls.ld_name: ['%s-ld' % i for i in cls.platform_prefixes] + ['ld'], 'nasm': ['nasm']}
 
 
-class PlatformX86Mixin(object):
-    arch = X86
+class PlatformX86Mixin(ASMExecutor):
+    arch = ARCH_X86
     ld_name = 'ld_x86'
     ld_m = 'elf_i386'
     platform_prefixes = ['i586-linux-gnu']
@@ -194,8 +197,8 @@ class PlatformX86Mixin(object):
         crt_post = env.runtime.crt_post_x86 or ['/usr/lib/i386-linux-gnu/crtn.o']
 
 
-class PlatformX64Mixin(object):
-    arch = X64
+class PlatformX64Mixin(ASMExecutor):
+    arch = ARCH_X64
     ld_name = 'ld_x64'
     ld_m = 'elf_x86_64'
     platform_prefixes = ['x86_64-linux-gnu']

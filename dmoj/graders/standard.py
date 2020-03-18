@@ -1,27 +1,12 @@
-from __future__ import print_function
-
 import gc
 import logging
-import os
 import platform
-import signal
+import subprocess
 
-import six
-
-from dmoj.error import CompileError
+from dmoj.error import OutputLimitExceeded
 from dmoj.executors import executors
 from dmoj.graders.base import BaseGrader
-from dmoj.result import Result, CheckerResult
-from dmoj.utils.communicate import OutputLimitExceeded
-from dmoj.utils.error import print_protection_fault
-
-try:
-    from dmoj.utils.nixutils import strsignal
-except ImportError:
-    try:
-        from dmoj.utils.winutils import strsignal
-    except ImportError:
-        strsignal = lambda x: 'signal %s' % x
+from dmoj.result import CheckerResult, Result
 
 log = logging.getLogger('dmoj.graders')
 
@@ -32,22 +17,13 @@ class StandardGrader(BaseGrader):
 
         input = case.input_data()  # cache generator data
 
-        self._current_proc = self.binary.launch(time=self.problem.time_limit,
-                                                memory=self.problem.memory_limit,
-                                                symlinks=case.config.symlinks,
-                                                pipe_stderr=True,
-                                                wall_time=case.config.wall_time_factor * self.problem.time_limit)
+        self._launch_process(case)
 
         error = self._interact_with_process(case, result, input)
 
         process = self._current_proc
 
-        result.max_memory = process.max_memory or 0.0
-        result.execution_time = process.execution_time or 0.0
-        result.r_execution_time = process.r_execution_time or 0.0
-
-        # Translate status codes/process results into Result object for status codes
-        self.set_result_flag(process, result)
+        self.populate_result(error, result, process)
 
         check = self.check_result(case, result)
 
@@ -58,9 +34,9 @@ class StandardGrader(BaseGrader):
 
         result.result_flag |= [Result.WA, Result.AC][check.passed]
         result.points = check.points
-        result.extended_feedback = check.extended_feedback
+        result.feedback = check.feedback or result.feedback
+        result.extended_feedback = check.extended_feedback or result.extended_feedback
 
-        self.update_feedback(check, error, process, result)
         case.free_data()
 
         # Where CPython has reference counting and a GC, PyPy only has a GC. This means that while CPython
@@ -75,27 +51,8 @@ class StandardGrader(BaseGrader):
 
         return result
 
-    def update_feedback(self, check, error, process, result):
-        result.feedback = (check.feedback or (process.feedback if hasattr(process, 'feedback') else
-                            getattr(self.binary, 'get_feedback', lambda x, y, z: '')(error, result, process)))
-        if not result.feedback and result.get_main_code() == Result.RTE:
-            if hasattr(process, 'was_initialized') and not process.was_initialized:
-                # Process may failed to initialize, resulting in a SIGKILL without any prior signals.
-                # See <https://github.com/DMOJ/judge/issues/179> for more details.
-                result.feedback = 'failed initializing'
-            elif hasattr(process, 'signal'):
-                # I suppose generate a SIGKILL message is better when we don't know the signal that caused it.
-                result.feedback = strsignal(process.signal).lower() if process.signal else 'killed'
-
-        # On Linux we can provide better help messages
-        if hasattr(process, 'protection_fault') and process.protection_fault:
-            syscall, callname, args = process.protection_fault
-            print_protection_fault(process.protection_fault)
-            callname = callname.replace('sys_', '', 1)
-            message = {
-                'open': 'opening files is not allowed',
-            }.get(callname, '%s syscall disallowed' % callname)
-            result.feedback = message
+    def populate_result(self, error, result, process):
+        self.binary.populate_result(error, result, process)
 
     def check_result(self, case, result):
         # If the submission didn't crash and didn't time out, there's a chance it might be AC
@@ -106,17 +63,17 @@ class StandardGrader(BaseGrader):
         # checker is a `partial` object, NOT a `function` object
         if not result.result_flag or getattr(checker.func, 'run_on_error', False):
             try:
-                # Checkers might crash if any data is None, so force at least empty string
-                check = checker(result.proc_output or b'',
-                                case.output_data() or b'',
+                check = checker(result.proc_output,
+                                case.output_data(),
                                 submission_source=self.source,
-                                judge_input=case.input_data() or b'',
+                                judge_input=case.input_data(),
                                 point_value=case.points,
                                 case_position=case.position,
                                 batch=case.batch,
                                 submission_language=self.language,
                                 binary_data=case.has_binary_data,
-                                execution_time=result.execution_time)
+                                execution_time=result.execution_time,
+                                problem_id=self.problem.id)
             except UnicodeDecodeError:
                 # Don't rely on problemsetters to do sane things when it comes to Unicode handling, so
                 # just proactively swallow all Unicode-related checker errors.
@@ -127,38 +84,20 @@ class StandardGrader(BaseGrader):
 
         return check
 
-    def set_result_flag(self, process, result):
-        if process.returncode > 0:
-            if os.name == 'nt' and process.returncode == 3:
-                # On Windows, abort() causes return value 3, instead of SIGABRT.
-                result.result_flag |= Result.RTE
-                process.signal = signal.SIGABRT
-            elif os.name == 'nt' and process.returncode == 0xC0000005:
-                # On Windows, 0xC0000005 is access violation (SIGSEGV).
-                result.result_flag |= Result.RTE
-                process.signal = signal.SIGSEGV
-            else:
-                # print>> sys.stderr, 'Exited with error: %d' % process.returncode
-                result.result_flag |= Result.IR
-        if process.returncode < 0:
-            # None < 0 == True
-            # if process.returncode is not None:
-            # print('Killed by signal %d' % -process.returncode, file=sys.stderr)
-            result.result_flag |= Result.RTE  # Killed by signal
-        if process.tle:
-            result.result_flag |= Result.TLE
-        if process.mle:
-            result.result_flag |= Result.MLE
+    def _launch_process(self, case):
+        self._current_proc = self.binary.launch(
+            time=self.problem.time_limit, memory=self.problem.memory_limit, symlinks=case.config.symlinks,
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            wall_time=case.config.wall_time_factor * self.problem.time_limit,
+        )
 
     def _interact_with_process(self, case, result, input):
         process = self._current_proc
         try:
-            result.proc_output, error = process.safe_communicate(input, outlimit=case.config.output_limit_length,
-                                                                 errlimit=1048576)
-        except OutputLimitExceeded as ole:
-            stream, result.proc_output, error = ole.args
-            log.warning('OLE on stream: %s', stream)
-            result.result_flag |= Result.OLE
+            result.proc_output, error = process.communicate(input, outlimit=case.config.output_limit_length,
+                                                            errlimit=1048576)
+        except OutputLimitExceeded:
+            error = b''
             try:
                 process.kill()
             except RuntimeError as e:
@@ -170,23 +109,6 @@ class StandardGrader(BaseGrader):
         return error
 
     def _generate_binary(self):
-        from dmoj.utils import ansi
-
-        # If the executor requires compilation, compile and send any errors/warnings to the site
-        try:
-            # Fetch an appropriate executor for the language
-            binary = executors[self.language].Executor(self.problem.id, self.source,
-                                                       hints=self.problem.config.hints or [],
-                                                       unbuffered=self.problem.config.unbuffered)
-        except CompileError as compilation_error:
-            error = compilation_error.args[0]
-            error = error.decode('mbcs') if os.name == 'nt' and isinstance(error, six.binary_type) else error
-            self.judge.packet_manager.compile_error_packet(ansi.format_ansi(error or 'compiler exited abnormally'))
-
-            # Compile error is fatal
-            raise
-
-        # Carry on grading in case of compile warning
-        if hasattr(binary, 'warning') and binary.warning:
-            self.judge.packet_manager.compile_message_packet(ansi.format_ansi(binary.warning or ''))
-        return binary
+        return executors[self.language].Executor(self.problem.id, self.source,
+                                                 hints=self.problem.config.hints or [],
+                                                 unbuffered=self.problem.config.unbuffered)

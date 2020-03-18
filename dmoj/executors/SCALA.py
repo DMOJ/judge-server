@@ -1,10 +1,7 @@
 import os
 import subprocess
 
-from six import iteritems
-
 from dmoj.executors.java_executor import JavaExecutor
-from dmoj.executors.mixins import EmulateTerminalMixin
 from dmoj.utils.unicode import utf8text
 
 with open(os.path.join(os.path.dirname(__file__), 'scala-security.policy')) as policy_file:
@@ -12,9 +9,9 @@ with open(os.path.join(os.path.dirname(__file__), 'scala-security.policy')) as p
 
 
 # Must emulate terminal, otherwise `scalac` hangs on a call to `stty`
-class Executor(EmulateTerminalMixin, JavaExecutor):
+class Executor(JavaExecutor):
     name = 'SCALA'
-    ext = '.scala'
+    ext = 'scala'
 
     compiler = 'scalac'
     compiler_time_limit = 20
@@ -28,11 +25,11 @@ object self_test extends App {
 '''
 
     def create_files(self, problem_id, source_code, *args, **kwargs):
-        super(Executor, self).create_files(problem_id, source_code, *args, **kwargs)
+        super().create_files(problem_id, source_code, *args, **kwargs)
         self._class_name = problem_id
 
     def get_cmdline(self):
-        res = super(Executor, self).get_cmdline()
+        res = super().get_cmdline()
 
         # Simply run bash -x $(which scala) and copy all arguments after -Xmx and -Xms
         # and add it as a list in the configuration.
@@ -50,7 +47,7 @@ object self_test extends App {
     def autoconfig(cls):
         result = {}
 
-        for key, files in iteritems({'scalac': ['scalac'], 'scala': ['scala']}):
+        for key, files in {'scalac': ['scalac'], 'scala': ['scala']}.items():
             file = cls.find_command_from_list(files)
             if file is None:
                 return result, False, 'Failed to find "%s"' % key
@@ -58,7 +55,8 @@ object self_test extends App {
 
         scala = result.pop('scala')
         with open(os.devnull, 'w') as devnull:
-            process = subprocess.Popen(['bash', '-x', scala, '-version'], stdout=devnull, stderr=subprocess.PIPE)
+            process = subprocess.Popen(['bash', '-x', scala, '-usebootcp', '-version'],
+                                       stdout=devnull, stderr=subprocess.PIPE)
         output = utf8text(process.communicate()[1])
         log = [i for i in output.split('\n') if 'scala.tools.nsc.MainGenericRunner' in i]
 

@@ -1,0 +1,28 @@
+name: update-syscalls
+on:
+  schedule:
+    - cron: '0 0 * * *'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+    - name: Update Linux syscalls
+      run: |
+        cd dmoj/cptbox/syscalls
+        python generate_linux.py
+    - name: Create pull request
+      uses: peter-evans/create-pull-request@v2
+      with:
+        token: ${{ secrets.REPO_SCOPED_TOKEN }}
+        commit-message: 'cptbox: update Linux syscall list'
+        title: 'Update Linux syscall list'
+        body: This PR has been auto-generated to update the syscall definitions in `cptbox`.
+        labels: cptbox, security, enhancement
+        assignees: Xyene, quantum5
+        branch: update-syscalls
+ 

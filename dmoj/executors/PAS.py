@@ -1,9 +1,9 @@
-from dmoj.executors.base_executor import CompiledExecutor
+from dmoj.executors.compiled_executor import CompiledExecutor
 from dmoj.executors.mixins import NullStdoutMixin
 
 
 class Executor(NullStdoutMixin, CompiledExecutor):
-    ext = '.pas'
+    ext = 'pas'
     name = 'PAS'
     command = 'fpc'
     test_program = '''\
@@ -18,7 +18,7 @@ end.
         return [self.get_command(), '-Fe/dev/stderr', '-So', '-O2', self._code]
 
     def get_compile_output(self, process):
-        output = super(Executor, self).get_compile_output(process)
+        output = super().get_compile_output(process)
         return output if b'Fatal:' in output or b'Warning:' in output or b'Note:' in output else ''
 
     @classmethod

@@ -1,8 +1,8 @@
-from .base_executor import ScriptExecutor
+from dmoj.executors.script_executor import ScriptExecutor
 
 
 class Executor(ScriptExecutor):
-    ext = '.awk'
+    ext = 'awk'
     name = 'AWK'
     command = 'awk'
     command_paths = ['mawk', 'gawk', 'awk']

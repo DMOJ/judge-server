@@ -1,11 +1,11 @@
 from dmoj.executors.mixins import ScriptDirectoryMixin
-from .base_executor import ScriptExecutor
+from dmoj.executors.script_executor import ScriptExecutor
 
 
 class Executor(ScriptDirectoryMixin, ScriptExecutor):
     name = 'FORTH'
     command = 'gforth'
-    ext = '.fs'
+    ext = 'fs'
     test_program = '''\
 : HELLO  ( -- ) ." echo: Hello, World!" CR ;
 

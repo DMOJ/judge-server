@@ -1,17 +1,20 @@
 import os
 
-from dmoj.executors.base_executor import CompiledExecutor
+from dmoj.executors.compiled_executor import CompiledExecutor
 from dmoj.executors.mixins import ScriptDirectoryMixin
 
 
 class Executor(ScriptDirectoryMixin, CompiledExecutor):
-    ext = '.rkt'
+    ext = 'rkt'
     name = 'RKT'
-    fs = [os.path.expanduser('~/\.racket/.*?'), '/etc/racket/.*?']
+    fs = [os.path.expanduser(r'~/\.racket/.*?'), '/etc/racket/.*?']
 
     command = 'racket'
 
     syscalls = ['epoll_create', 'epoll_wait', 'poll']
+    # Racket SIGABRTs under low-memory conditions before actually crossing the memory limit,
+    # so give it a bit of headroom to be properly marked as MLE.
+    data_grace = 4096
     address_grace = 131072
 
     test_program = '''\
@@ -29,10 +32,10 @@ class Executor(ScriptDirectoryMixin, CompiledExecutor):
         return self.get_command()
 
     @classmethod
-    def initialize(cls, sandbox=True):
+    def initialize(cls):
         if 'raco' not in cls.runtime_dict:
             return False
-        return super(Executor, cls).initialize(sandbox)
+        return super().initialize()
 
     @classmethod
     def get_versionable_commands(cls):
@@ -42,5 +45,5 @@ class Executor(ScriptDirectoryMixin, CompiledExecutor):
     def get_find_first_mapping(cls):
         return {
             'racket': ['racket'],
-            'raco': ['raco']
+            'raco': ['raco'],
         }

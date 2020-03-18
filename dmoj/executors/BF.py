@@ -1,22 +1,15 @@
 import itertools
+from typing import List
 
-import six
-from six.moves import map
-
-from dmoj.executors.C import Executor as CExecutor
 from dmoj.error import CompileError
+from dmoj.executors.C import Executor as CExecutor
 
 template = b'''\
 #define _GNU_SOURCE
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-#ifdef WIN32
-#   define WIN32_LEAN_AND_MEAN
-#   include <windows.h>
-#else
-#   include <sys/mman.h>
-#endif
+#include <sys/mman.h>
 
 int main(int argc, char **argv) {
     char *p;
@@ -28,31 +21,20 @@ int main(int argc, char **argv) {
         return 2;
     }
 
-#ifdef WIN32
-    p = VirtualAlloc(NULL, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-    if (!p) {
-        fprintf(stderr, "Failed to VirtualAlloc with %u\\n", (unsigned) GetLastError());
-        return 2;
-    }
-#else
     p = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     if (p == MAP_FAILED) {
         perror("mmap");
         return 2;
     }
-#endif
 
     {code}
 }
 '''
 
-trans = {b'>': b'++p;', b'<': b'--p;',
-         b'+': b'++*p;', b'-': b'--*p;',
-         b'.': b'putchar(*p);', b',': b'*p=getchar();',
-         b'[': b'while(*p){', b']': b'}'}
-
-if six.PY3:
-    trans = {k[0]: v for k, v in trans.items()}
+trans = {ord('>'): b'++p;', ord('<'): b'--p;',
+         ord('+'): b'++*p;', ord('-'): b'--*p;',
+         ord('.'): b'putchar(*p);', ord(','): b'*p=getchar();',
+         ord('['): b'while(*p){', ord(']'): b'}'}
 
 
 class Executor(CExecutor):
@@ -60,16 +42,33 @@ class Executor(CExecutor):
     test_program = ',+[-.,+]'
 
     def __init__(self, problem_id, source_code, **kwargs):
-        if source_code.count(b'[') != source_code.count(b']'):
+        if self._has_invalid_brackets(source_code):
             raise CompileError(b'Unmatched brackets\n')
         code = template.replace(b'{code}', b''.join(map(trans.get, source_code, itertools.repeat(b''))))
-        super(Executor, self).__init__(problem_id, code, **kwargs)
+        super().__init__(problem_id, code, **kwargs)
+
+    def get_compile_args(self) -> List[str]:
+        command = self.get_command()
+        assert command is not None
+        return [command, '-O0', *self.source_paths, '-o', self.get_compiled_file()]
 
     def launch(self, *args, **kwargs):
         memory = kwargs['memory']
         # For some reason, RLIMIT_DATA is being applied to our mmap, so we have to increase the memory limit.
         kwargs['memory'] += 8192
-        return super(Executor, self).launch(str(memory * 1024), **kwargs)
+        return super().launch(str(memory * 1024), **kwargs)
+
+    def _has_invalid_brackets(self, source_code) -> bool:
+        open_brackets = 0
+        for c in source_code:
+            if c == b'['[0]:
+                open_brackets += 1
+            elif c == b']'[0]:
+                if open_brackets == 0:
+                    return True
+                else:
+                    open_brackets -= 1
+        return open_brackets != 0
 
     @classmethod
     def get_runtime_versions(cls):

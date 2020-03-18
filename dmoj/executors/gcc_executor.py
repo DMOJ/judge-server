@@ -1,34 +1,32 @@
 import os
 import re
 from collections import deque
+from typing import Dict, List
 
+from dmoj.executors.compiled_executor import CompiledExecutor
 from dmoj.judgeenv import env
-from dmoj.result import Result
 from dmoj.utils.unicode import utf8bytes, utf8text
-from .base_executor import CompiledExecutor
 
 GCC_ENV = env.runtime.gcc_env or {}
 GCC_COMPILE = os.environ.copy()
-
-if os.name == 'nt':
-    GCC_COMPILE.update((k.encode('mbcs'), v.encode('mbcs')) for k, v in
-                       (env.runtime.gcc_compile or GCC_ENV).iteritems())
-    GCC_ENV = dict((k.encode('mbcs'), v.encode('mbcs')) for k, v in GCC_ENV.iteritems())
-else:
-    GCC_COMPILE.update(env.runtime.gcc_compile or {})
+GCC_COMPILE.update(env.runtime.gcc_compile or {})
+MAX_ERRORS = 5
 
 recppexc = re.compile(br"terminate called after throwing an instance of \'([A-Za-z0-9_:]+)\'\r?$", re.M)
 
 
 class GCCExecutor(CompiledExecutor):
-    defines = []
-    flags = []
+    defines: List[str] = []
+    flags: List[str] = []
     name = 'GCC'
     arch = 'gcc_target_arch'
     has_color = False
+    version_regex = re.compile(r'.*?(\d+(?:\.\d+)*)', re.DOTALL)
+
+    source_dict: Dict[str, bytes] = {}
 
     def __init__(self, problem_id, main_source, **kwargs):
-        super(GCCExecutor, self).__init__(problem_id, main_source, **kwargs)
+        super().__init__(problem_id, main_source, **kwargs)
 
         self.source_dict = kwargs.get('aux_sources', {})
         if main_source:
@@ -39,46 +37,44 @@ class GCCExecutor(CompiledExecutor):
         self.source_paths = []
         for name, source in self.source_dict.items():
             if '.' not in name:
-                name += self.ext
+                name += '.' + self.ext
             with open(self._file(name), 'wb') as fo:
                 fo.write(utf8bytes(source))
             self.source_paths.append(name)
 
-    def get_binary_cache_key(self):
-        key_components = ([self.problem, self.get_command(), self.get_march_flag()] +
-                          self.get_defines() + self.get_flags() + self.get_ldflags() +
-                          list(self.source_dict.values()))
-        return ''.join(key_components)
+    def get_binary_cache_key(self) -> bytes:
+        command = self.get_command()
+        assert command is not None
+        key_components = ([self.problem, command, self.get_march_flag()] +
+                          self.get_defines() + self.get_flags() + self.get_ldflags())
+        return utf8bytes(''.join(key_components)) + b''.join(self.source_dict.values())
 
-    def get_ldflags(self):
-        if os.name == 'nt':
-            return ['-Wl,--stack,67108864']
+    def get_ldflags(self) -> List[str]:
         return []
 
-    def get_flags(self):
-        return self.flags
+    def get_flags(self) -> List[str]:
+        return self.flags + ['-fmax-errors=%d' % MAX_ERRORS]
 
-    def get_defines(self):
-        defines = ['-DONLINE_JUDGE'] + self.defines
-        if os.name == 'nt':
-            defines.append('-DWIN32')
-        return defines
+    def get_defines(self) -> List[str]:
+        return ['-DONLINE_JUDGE'] + self.defines
 
-    def get_compile_args(self):
-        return ([self.get_command(), '-Wall'] + (['-fdiagnostics-color=always'] if self.has_color else []) +
+    def get_compile_args(self) -> List[str]:
+        command = self.get_command()
+        assert command is not None
+        return ([command, '-Wall'] + (['-fdiagnostics-color=always'] if self.has_color else []) +
                 self.source_paths + self.get_defines() + ['-O2', '-lm', self.get_march_flag()] +
                 self.get_flags() + self.get_ldflags() + ['-s', '-o', self.get_compiled_file()])
 
-    def get_compile_env(self):
+    def get_compile_env(self) -> dict:
         return GCC_COMPILE
 
-    def get_env(self):
-        env = super(GCCExecutor, self).get_env() or {}
+    def get_env(self) -> dict:
+        env = super().get_env() or {}
         env.update(GCC_ENV)
         return env
 
-    def get_feedback(self, stderr, result, process):
-        if not result.result_flag & Result.RTE or not stderr or len(stderr) > 2048:
+    def parse_feedback_from_stderr(self, stderr, process):
+        if not stderr or len(stderr) > 2048:
             return ''
         match = deque(recppexc.finditer(stderr), maxlen=1)
         if not match:
@@ -87,7 +83,7 @@ class GCCExecutor(CompiledExecutor):
         return '' if len(exception) > 40 else utf8text(exception, 'replace')
 
     @classmethod
-    def get_march_flag(cls):
+    def get_march_flag(cls) -> str:
         conf_arch = cls.runtime_dict.get(cls.arch, 'native')
         if conf_arch:
             return '-march=%s' % conf_arch
@@ -95,7 +91,7 @@ class GCCExecutor(CompiledExecutor):
         return ''
 
     @classmethod
-    def get_version_flags(cls, command):
+    def get_version_flags(cls, command: str) -> List[str]:
         return ['-dumpversion']
 
     @classmethod
@@ -120,11 +116,11 @@ class GCCExecutor(CompiledExecutor):
 
     @classmethod
     def autoconfig(cls):
-        return super(GCCExecutor, cls).autoconfig()
+        return super().autoconfig()
 
     @classmethod
-    def initialize(cls, sandbox=True):
-        res = super(CompiledExecutor, cls).initialize(sandbox=sandbox)
+    def initialize(cls):
+        res = super().initialize()
         if res:
             cls.has_color = cls.get_runtime_versions()[0][1] > (4, 9)
         return res

@@ -3,8 +3,18 @@ from dmoj.utils.unicode import utf8text
 
 class CompileError(Exception):
     def __init__(self, message):
-        super(CompileError, self).__init__(utf8text(message, 'replace'))
+        super().__init__(utf8text(message, 'replace'))
 
 
 class InternalError(Exception):
     pass
+
+
+class OutputLimitExceeded(Exception):
+    def __init__(self, stream, limit):
+        super().__init__("exceeded %d-byte limit on %s stream" % (limit, stream))
+
+
+class InvalidCommandException(Exception):
+    def __init__(self, message=None):
+        self.message = message

@@ -1,6 +1,4 @@
 #!/usr/bin/python
-from __future__ import print_function
-
 import errno
 import logging
 import os
@@ -8,46 +6,36 @@ import signal
 import sys
 import threading
 import traceback
-
-import six
-
-from functools import partial
+from http.server import HTTPServer
 from itertools import chain
 
-from dmoj import packet, graders
-from dmoj.config import ConfigNode
+from dmoj import graders, packet
 from dmoj.control import JudgeControlRequestHandler
 from dmoj.error import CompileError
-from dmoj.judgeenv import env, get_supported_problems, startup_warnings, clear_problem_dirs_cache
-from dmoj.monitor import Monitor, DummyMonitor
-from dmoj.problem import Problem, BatchedTestCase
+from dmoj.judgeenv import clear_problem_dirs_cache, env, get_supported_problems, startup_warnings
+from dmoj.monitor import DummyMonitor, Monitor
+from dmoj.problem import BatchedTestCase, Problem
 from dmoj.result import Result
-from dmoj.utils.ansi import ansi_style, strip_ansi
-from dmoj.utils.unicode import utf8bytes, utf8text, unicode_stdout_stderr
+from dmoj.utils.ansi import ansi_style, print_ansi, strip_ansi
+from dmoj.utils.unicode import unicode_stdout_stderr, utf8bytes, utf8text
 
 try:
-    from http.server import HTTPServer
+    import readline  # noqa: F401, imported for the side-effect of making `input()` have readline.
 except ImportError:
-    from BaseHTTPServer import HTTPServer
-
-if os.name == 'posix':
-    try:
-        import readline
-    except ImportError:
-        pass
-
+    pass
 
 try:
     from setproctitle import setproctitle
 except ImportError:
-    setproctitle = lambda x: None
+    def setproctitle(title):
+        pass
 
 
-class BatchBegin(object):
+class BatchBegin:
     pass
 
 
-class BatchEnd(object):
+class BatchEnd:
     pass
 
 
@@ -55,21 +43,12 @@ class TerminateGrading(Exception):
     pass
 
 
-TYPE_SUBMISSION = 1
-TYPE_INVOCATION = 2
-
-
-class Judge(object):
+class Judge:
     def __init__(self):
-        self.current_submission = None
         self.current_grader = None
+        self.current_submission_id = None
         self.current_submission_thread = None
         self._terminate_grading = False
-        self.process_type = 0
-
-        self.begin_grading = partial(self.process_submission, TYPE_SUBMISSION, self._begin_grading)
-        self.custom_invocation = partial(self.process_submission, TYPE_INVOCATION, self._custom_invocation)
-
         self.packet_manager = None
 
         self.updater_exit = False
@@ -102,135 +81,105 @@ class Judge(object):
         """
         self.updater_signal.set()
 
-    def process_submission(self, type, target, id, *args, **kwargs):
-        try:
-            self.current_submission_thread.join()
-        except AttributeError:
-            pass
-        self.process_type = type
-        self.current_submission = id
-
-        is_blocking = kwargs.pop('blocking', False)
-        self.current_submission_thread = threading.Thread(target=target, args=args, kwargs=kwargs)
-        self.current_submission_thread.daemon = True
-        self.current_submission_thread.start()
-
-        if is_blocking:
-            self.current_submission_thread.join()
-
-    def _custom_invocation(self, language, source, memory_limit, time_limit, input_data):
-        class InvocationGrader(graders.StandardGrader):
-            def check_result(self, case, result):
-                return not result.result_flag
-
-        class InvocationProblem(object):
-            id = 'CustomInvocation'
-            time_limit = time_limit
-            memory_limit = memory_limit
-
-        class InvocationCase(object):
-            config = ConfigNode({'unbuffered': False})
-            input_data = lambda: input_data
-
-        grader = self.get_grader_from_source(InvocationGrader, InvocationProblem(), language, source)
-        binary = grader.binary if grader else None
-
-        if binary:
-            self.packet_manager.invocation_begin_packet()
-            try:
-                result = grader.grade(InvocationCase())
-            except TerminateGrading:
-                self.packet_manager.submission_terminated_packet()
-                print(ansi_style('#ansi[Forcefully terminating invocation.](red|bold)'))
-                pass
-            except:
-                self.internal_error()
-            else:
-                self.packet_manager.invocation_end_packet(result)
-
-        print(ansi_style('Done invoking #ansi[%s](green|bold).\n' % (id,)))
-        self._terminate_grading = False
-        self.current_submission_thread = None
-        self.current_submission = None
-
-    def _begin_grading(self, problem_id, language, source, time_limit, memory_limit, short_circuit, pretests_only,
-                       report=print):
-        submission_id = self.current_submission
-        report(ansi_style('Start grading #ansi[%s](yellow)/#ansi[%s](green|bold) in %s...'
-                          % (problem_id, submission_id, language)))
-
-        try:
-            problem = Problem(problem_id, time_limit, memory_limit, load_pretests_only=pretests_only)
-        except Exception:
-            return self.internal_error()
-
+    def _block_and_grade(self, problem, language, source, short_circuit, report=print):
         if 'signature_grader' in problem.config:
             grader_class = graders.SignatureGrader
+        elif 'interactive' in problem.config:
+            grader_class = graders.BridgedInteractiveGrader
         elif 'custom_judge' in problem.config:
             grader_class = graders.CustomGrader
         else:
             grader_class = graders.StandardGrader
 
-        grader = self.get_grader_from_source(grader_class, problem, language, source, report=report)
-        binary = grader.binary if grader else None
+        try:
+            self.current_grader = grader_class(self, problem, language, utf8bytes(source))
+        except CompileError as compilation_error:
+            error = compilation_error.args[0] or b'compiler exited abnormally'
 
-        # the compiler may have failed, or an error could have happened while initializing a custom judge
-        # either way, we can't continue
-        if binary:
-            self.packet_manager.begin_grading_packet(problem.is_pretested)
+            report(ansi_style('#ansi[Failed compiling submission!](red|bold)'))
+            report(error.rstrip())  # don't print extra newline
 
-            batch_counter = 1
-            in_batch = False
+            self.packet_manager.compile_error_packet(error)
+            return
+        else:
+            binary = self.current_grader.binary
+            if hasattr(binary, 'warning') and binary.warning is not None:
+                self.packet_manager.compile_message_packet(binary.warning)
 
-            # cases are indexed at 1
-            case_number = 1
+        self.packet_manager.begin_grading_packet(self.current_grader.is_pretested)
+
+        batch_counter = 1
+        in_batch = False
+
+        # cases are indexed at 1
+        case_number = 1
+        try:
+            for result in self.grade_cases(self.current_grader, self.current_grader.cases(),
+                                           short_circuit=short_circuit):
+                if isinstance(result, BatchBegin):
+                    self.packet_manager.batch_begin_packet()
+                    report(ansi_style("#ansi[Batch #%d](yellow|bold)" % batch_counter))
+                    in_batch = True
+                elif isinstance(result, BatchEnd):
+                    self.packet_manager.batch_end_packet()
+                    batch_counter += 1
+                    in_batch = False
+                else:
+                    codes = result.readable_codes()
+
+                    # here be cancer
+                    is_sc = (result.result_flag & Result.SC)
+                    colored_codes = list(map(lambda x: '#ansi[%s](%s|bold)' % ('--' if x == 'SC' else x,
+                                                                               Result.COLORS_BYID[x]), codes))
+                    colored_aux_codes = '{%s}' % ', '.join(colored_codes[1:]) if len(codes) > 1 else ''
+                    colored_feedback = '(#ansi[%s](|underline)) ' % utf8text(result.feedback) if result.feedback else ''
+                    case_info = '[%.3fs (%.3fs) | %dkb] %s%s' % (result.execution_time,
+                                                                 result.wall_clock_time,
+                                                                 result.max_memory,
+                                                                 colored_feedback,
+                                                                 colored_aux_codes) if not is_sc else ''
+                    case_padding = '  ' * in_batch
+                    report(ansi_style('%sTest case %2d %-3s %s' % (case_padding, case_number,
+                                                                   colored_codes[0], case_info)))
+
+                    self.packet_manager.test_case_status_packet(case_number, result)
+
+                    case_number += 1
+        except TerminateGrading:
+            self.packet_manager.submission_terminated_packet()
+            report(ansi_style('#ansi[Forcefully terminating grading. '
+                              'Temporary files may not be deleted.](red|bold)'))
+            pass
+        else:
+            self.packet_manager.grading_end_packet()
+
+    def begin_grading(self, id, problem_id, language, source, time_limit, memory_limit, short_circuit, meta,
+                      report=print, blocking=False):
+        self.current_submission_id = id
+
+        def grading_cleanup_wrapper():
+            report(ansi_style('Start grading #ansi[%s](yellow)/#ansi[%s](green|bold) in %s...'
+                              % (problem_id, id, language)))
+
             try:
-                for result in self.grade_cases(grader, problem.cases, short_circuit=short_circuit):
-                    if isinstance(result, BatchBegin):
-                        self.packet_manager.batch_begin_packet()
-                        report(ansi_style("#ansi[Batch #%d](yellow|bold)" % batch_counter))
-                        in_batch = True
-                    elif isinstance(result, BatchEnd):
-                        self.packet_manager.batch_end_packet()
-                        batch_counter += 1
-                        in_batch = False
-                    else:
-                        codes = result.readable_codes()
+                problem = Problem(problem_id, time_limit, memory_limit, meta)
+                self._block_and_grade(problem, language, source, short_circuit, report=report)
+            except Exception:
+                self.log_internal_error()
 
-                        # here be cancer
-                        is_sc = (result.result_flag & Result.SC)
-                        colored_codes = list(map(lambda x: '#ansi[%s](%s|bold)' % ('--' if x == 'SC' else x,
-                                                                                   Result.COLORS_BYID[x]), codes))
-                        colored_aux_codes = '{%s}' % ', '.join(colored_codes[1:]) if len(codes) > 1 else ''
-                        colored_feedback = '(#ansi[%s](|underline)) ' % utf8text(result.feedback) if result.feedback else u''
-                        case_info = '[%.3fs (%.3fs) | %dkb] %s%s' % (result.execution_time,
-                                                                     result.r_execution_time,
-                                                                     result.max_memory,
-                                                                     colored_feedback,
-                                                                     colored_aux_codes) if not is_sc else ''
-                        case_padding = '  ' * in_batch
-                        report(ansi_style('%sTest case %2d %-3s %s' % (case_padding, case_number,
-                                                                       colored_codes[0], case_info)))
+            self._terminate_grading = False
+            self.current_submission_id = None
+            self.current_submission_thread = None
+            self.current_grader = None
+            report(ansi_style('Done grading #ansi[%s](yellow)/#ansi[%s](green|bold).\n' % (problem_id, id)))
 
-                        self.packet_manager.test_case_status_packet(case_number, result)
+        self.current_submission_thread = threading.Thread(target=grading_cleanup_wrapper)
+        self.current_submission_thread.daemon = True
+        self.current_submission_thread.start()
 
-                        case_number += 1
-            except TerminateGrading:
-                self.packet_manager.submission_terminated_packet()
-                report(ansi_style('#ansi[Forcefully terminating grading. '
-                                  'Temporary files may not be deleted.](red|bold)'))
-                pass
-            except:
-                self.internal_error()
-            else:
-                self.packet_manager.grading_end_packet()
-
-        report(ansi_style('Done grading #ansi[%s](yellow)/#ansi[%s](green|bold).\n' % (problem_id, submission_id)))
-
-        self._terminate_grading = False
-        self.current_submission_thread = None
-        self.current_submission = None
-        self.current_grader = None
+        # Submission may have been killed already, but block if it hasn't been.
+        if blocking and self.current_submission_thread is not None:
+            self.current_submission_thread.join()
 
     def grade_cases(self, grader, cases, short_circuit=False, is_short_circuiting=False):
         for case in cases:
@@ -258,13 +207,11 @@ class Judge(object):
                 yield result
                 continue
 
-            # Must check here because we might be interrupted mid-execution
-            # If we don't bail out, we get an IR.
-            # In Java's case, all the code after this will crash.
+            result = grader.grade(case)
+
+            # If the submission was killed due to an user-initiated abort, any result is meaningless.
             if self._terminate_grading:
                 raise TerminateGrading()
-
-            result = grader.grade(case)
 
             # If the WA bit of result_flag is set and we are set to short-circuit (e.g., in a batch),
             # short circuit the rest of the cases.
@@ -274,31 +221,12 @@ class Judge(object):
 
             yield result
 
-    def get_grader_from_source(self, grader_class, problem, language, source, report=print):
-        try:
-            grader = grader_class(self, problem, language, utf8bytes(source))
-        except CompileError as ce:
-            report(ansi_style('#ansi[Failed compiling submission!](red|bold)'))
-            report(ce.args[0].rstrip())  # don't print extra newline
-            grader = None
-        except:  # if custom grader failed to initialize, report it to the site
-            return self.internal_error()
-
-        return grader
-
-    def get_process_type(self):
-        return {0: None,
-                TYPE_SUBMISSION: 'submission',
-                TYPE_INVOCATION: 'invocation',
-                #   TYPE_HACK:       'hack',
-                }[self.process_type]
-
-    def internal_error(self, exc=None):
+    def log_internal_error(self, exc=None):
         # If exc is exists, raise it so that sys.exc_info() is populated with its data
         if exc:
             try:
                 raise exc
-            except:
+            except:  # noqa: E722, we want to catch everything
                 pass
         exc = sys.exc_info()
 
@@ -320,7 +248,7 @@ class Judge(object):
         if self.current_submission_thread:
             self._terminate_grading = True
             if self.current_grader:
-                self.current_grader.terminate()
+                self.current_grader.terminate_grading()
             self.current_submission_thread.join()
             self.current_submission_thread = None
 
@@ -350,34 +278,18 @@ class Judge(object):
 
 class ClassicJudge(Judge):
     def __init__(self, host, port, **kwargs):
-        super(ClassicJudge, self).__init__()
+        super().__init__()
         self.packet_manager = packet.PacketManager(host, port, self, env['id'], env['key'], **kwargs)
 
 
 def sanity_check():
-    # Don't allow starting up without wbox/cptbox, saves cryptic errors later on
     if os.name == 'nt':
-        from judgeenv import env
-
-        # Nasty crashes will happen if tempdir isn't specified.
-        if not env.tempdir:
-            print('must specify `tempdir` in judge config to a directory readable by all users')
-            return False
-
-        try:
-            from .wbox import _wbox
-        except ImportError:
-            print('wbox must be compiled to grade!', file=sys.stderr)
-            return False
-
-        # DMOJ needs to be run as admin on Windows
-        import ctypes
-        if ctypes.windll.shell32.IsUserAnAdmin() == 0:
-            print("can't start, the DMOJ judge must be ran as admin", file=sys.stderr)
-            return False
+        print('cannot run judge on Windows', file=sys.stderr)
+        return False
     else:
+        # Don't allow starting up without cptbox, saves cryptic errors later on
         try:
-            from .cptbox import _cptbox
+            from .cptbox import _cptbox  # noqa: F401, we want to see if this imports
         except ImportError:
             print('cptbox must be compiled to grade!', file=sys.stderr)
             return False
@@ -400,7 +312,7 @@ def sanity_check():
     # _checker implements standard checker functions in C
     # we fall back to a Python implementation if it's not compiled, but it's slower
     try:
-        from .checkers import _checker
+        from .checkers import _checker  # noqa: F401, we want to see if this imports
     except ImportError:
         startup_warnings.append('native checker module not found, compile _checker for optimal performance')
     return True
@@ -426,11 +338,7 @@ def judge_proc(need_monitor):
     logging.basicConfig(filename=logfile, level=logging.INFO,
                         format='%(levelname)s %(asctime)s %(process)d %(module)s %(message)s')
 
-    proctitle = 'DMOJ Judge: %s on %s' % (env['id'], make_host_port(judgeenv))
-    if six.PY2:
-        setproctitle(utf8bytes(proctitle))
-    else:
-        setproctitle(proctitle)
+    setproctitle('DMOJ Judge: %s on %s' % (env['id'], make_host_port(judgeenv)))
 
     judge = ClassicJudge(judgeenv.server_host, judgeenv.server_port,
                          secure=judgeenv.secure, no_cert_check=judgeenv.no_cert_check,
@@ -477,7 +385,7 @@ PR_SET_PDEATHSIG = 1
 logpm = logging.getLogger('dmoj.judgepm')
 
 
-class JudgeManager(object):
+class JudgeManager:
     signal_map = {k: v for v, k in sorted(signal.__dict__.items(), reverse=True)
                   if v.startswith('SIG') and not v.startswith('SIG_')}
 
@@ -720,19 +628,12 @@ def main():  # pragma: no cover
     if not sanity_check():
         return 1
 
-    from dmoj import judgeenv, executors
+    from dmoj import judgeenv, contrib, executors
 
     judgeenv.load_env()
 
-    # Emulate ANSI colors with colorama
-    if os.name == 'nt' and not judgeenv.no_ansi_emu:
-        try:
-            from colorama import init
-            init()
-        except ImportError:
-            pass
-
     executors.load_executors()
+    contrib.load_contrib_modules()
 
     if hasattr(signal, 'SIGUSR2'):
         signal.signal(signal.SIGUSR2, signal.SIG_IGN)
@@ -740,10 +641,10 @@ def main():  # pragma: no cover
     print('Running live judge...')
 
     for warning in judgeenv.startup_warnings:
-        print(ansi_style('#ansi[Warning: %s](yellow)' % warning))
+        print_ansi('#ansi[Warning: %s](yellow)' % warning)
     del judgeenv.startup_warnings
 
-    if os.name == 'posix' and 'judges' in env:
+    if 'judges' in env:
         logfile = judgeenv.log_file
         try:
             logfile = logfile % 'master'

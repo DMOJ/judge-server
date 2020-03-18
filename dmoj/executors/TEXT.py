@@ -1,8 +1,8 @@
-from .base_executor import ScriptExecutor
+from dmoj.executors.script_executor import ScriptExecutor
 
 
 class Executor(ScriptExecutor):
-    ext = '.txt'
+    ext = 'txt'
     name = 'TEXT'
     command = 'cat'
     test_program = 'echo: Hello, World!\n'

@@ -1,20 +1,21 @@
 from re import split as resplit
-
-import six
-from six.moves import map, zip, filter
+from typing import Any, List
 
 from dmoj.error import InternalError
 from dmoj.utils.unicode import utf8bytes
 
 
-def check(process_output, judge_output, split_on='lines', **kwargs):
+def check(process_output: bytes, judge_output: bytes, split_on: str = 'lines', **kwargs) -> bool:
     split_pattern = {
         'lines': b'[\r\n]',
-        'whitespace': b'[\s]',
+        'whitespace': br'[\s]',
     }.get(split_on)
 
     if not split_pattern:
         raise InternalError('invalid `split_on` mode')
+
+    process_lines: List[Any]
+    judge_lines: List[Any]
 
     process_lines = list(filter(None, resplit(split_pattern, utf8bytes(process_output))))
     judge_lines = list(filter(None, resplit(split_pattern, utf8bytes(judge_output))))
@@ -23,8 +24,8 @@ def check(process_output, judge_output, split_on='lines', **kwargs):
         return False
 
     if split_on == 'lines':
-        process_lines = list(map(six.binary_type.split, process_lines))
-        judge_lines = list(map(six.binary_type.split, judge_lines))
+        process_lines = list(map(bytes.split, process_lines))
+        judge_lines = list(map(bytes.split, judge_lines))
 
     process_lines.sort()
     judge_lines.sort()

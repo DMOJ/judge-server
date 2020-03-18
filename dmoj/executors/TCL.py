@@ -1,10 +1,10 @@
 import subprocess
 
-from dmoj.executors.base_executor import ScriptExecutor
-import os
+from dmoj.executors.script_executor import ScriptExecutor
+
 
 class Executor(ScriptExecutor):
-    ext = '.tcl'
+    ext = 'tcl'
     name = 'TCL'
     nproc = -1  # TCL uses a bunch of threads internally
     address_grace = 131072

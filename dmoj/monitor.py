@@ -1,14 +1,11 @@
-from __future__ import print_function
-
 import logging
 from contextlib import closing
-from threading import Thread, Event
-
-from six.moves.urllib.request import urlopen
+from threading import Event, Thread
+from urllib.request import urlopen
 
 from dmoj import judgeenv
-from dmoj.judgeenv import startup_warnings, get_problem_watches
-from dmoj.utils.ansi import ansi_style
+from dmoj.judgeenv import get_problem_watches, startup_warnings
+from dmoj.utils.ansi import print_ansi
 
 try:
     from watchdog.observers import Observer
@@ -22,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 class RefreshWorker(Thread):
     def __init__(self, urls):
-        super(RefreshWorker, self).__init__()
+        super().__init__()
         self.urls = urls
         self.daemon = True
         self._trigger = Event()
@@ -63,7 +60,7 @@ class SendProblemsHandler(FileSystemEventHandler):
             self.refresher.refresh()
 
 
-class Monitor(object):
+class Monitor:
     def __init__(self):
         if Observer is not None and not judgeenv.no_watchdog:
             if judgeenv.env.update_pings:
@@ -100,7 +97,7 @@ class Monitor(object):
                 self._monitor.start()
             except OSError:
                 logger.exception('Failed to start problem monitor.')
-                print(ansi_style('#ansi[Warning: failed to start problem monitor!](yellow)'))
+                print_ansi('#ansi[Warning: failed to start problem monitor!](yellow)')
         if self._refresher is not None:
             self._refresher.start()
 
@@ -125,7 +122,7 @@ class Monitor(object):
         self.stop()
 
 
-class DummyMonitor(object):
+class DummyMonitor:
     def __enter__(self):
         return self
 

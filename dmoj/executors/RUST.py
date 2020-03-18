@@ -1,6 +1,7 @@
 import os
 
-from .base_executor import CompiledExecutor
+from dmoj.executors.compiled_executor import CompiledExecutor
+from dmoj.utils.os_ext import bool_env
 
 CARGO_TOML = b'''\
 [package]
@@ -53,7 +54,7 @@ dependencies = [
 "checksum lazy_static 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "6abe0ee2e758cd6bc8a2cd56726359007748fbf4128da998b65d0b70f881e19b"
 "checksum libc 0.2.18 (registry+https://github.com/rust-lang/crates.io-index)" = "a51822fc847e7a8101514d1d44e354ba2ffa7d4c194dcab48870740e327cac70"
 "checksum rand 0.3.15 (registry+https://github.com/rust-lang/crates.io-index)" = "022e0636ec2519ddae48154b028864bdce4eaf7d35226ab8e65c611be97b189d"
-'''
+'''  # noqa: E501
 
 HELLO_WORLD_PROGRAM = '''\
 #[macro_use] extern crate dmoj;
@@ -66,6 +67,7 @@ fn main() {
 
 
 class Executor(CompiledExecutor):
+    ext = 'rs'
     name = 'RUST'
     command = 'cargo'
     test_program = HELLO_WORLD_PROGRAM
@@ -82,8 +84,15 @@ class Executor(CompiledExecutor):
         with open(self._file('Cargo.lock'), 'wb') as f:
             f.write(CARGO_LOCK)
 
+    @classmethod
+    def get_versionable_commands(cls):
+        return [('rustc', os.path.join(os.path.dirname(cls.get_command()), 'rustc'))]
+
     def get_compile_args(self):
-        return [self.get_command(), 'build', '--release']
+        args = [self.get_command(), 'build', '--release']
+        if bool_env('DMOJ_CARGO_OFFLINE'):
+            args += ['--offline']
+        return args
 
     def get_compiled_file(self):
         return self._file('target', 'release', 'user_submission')

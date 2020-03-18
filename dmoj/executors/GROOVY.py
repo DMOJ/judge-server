@@ -1,8 +1,6 @@
 import os
 import subprocess
 
-from six import iteritems
-
 from dmoj.executors.java_executor import JavaExecutor
 from dmoj.utils.unicode import utf8text
 
@@ -12,7 +10,7 @@ with open(os.path.join(os.path.dirname(__file__), 'groovy-security.policy')) as 
 
 class Executor(JavaExecutor):
     name = 'GROOVY'
-    ext = '.groovy'
+    ext = 'groovy'
 
     compiler = 'groovyc'
     vm = 'groovy_vm'
@@ -23,11 +21,11 @@ println System.in.newReader().readLine()
 '''
 
     def create_files(self, problem_id, source_code, *args, **kwargs):
-        super(Executor, self).create_files(problem_id, source_code, *args, **kwargs)
+        super().create_files(problem_id, source_code, *args, **kwargs)
         self._class_name = problem_id
 
     def get_cmdline(self):
-        res = super(Executor, self).get_cmdline()
+        res = super().get_cmdline()
 
         res[-2:-1] = ['-Dsubmission.file=%s' % self._class_name] + self.runtime_dict['groovy_args']
         return res
@@ -43,7 +41,7 @@ println System.in.newReader().readLine()
     def autoconfig(cls):
         result = {}
 
-        for key, files in iteritems({'groovyc': ['groovyc'], 'groovy': ['groovy']}):
+        for key, files in {'groovyc': ['groovyc'], 'groovy': ['groovy']}.items():
             file = cls.find_command_from_list(files)
             if file is None:
                 return result, False, 'Failed to find "%s"' % key

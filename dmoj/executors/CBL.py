@@ -1,10 +1,10 @@
 import subprocess
 
-from .base_executor import CompiledExecutor
+from dmoj.executors.compiled_executor import CompiledExecutor
 
 
 class Executor(CompiledExecutor):
-    ext = '.cbl'
+    ext = 'cbl'
     name = 'CBL'
     command = 'cobc'
     address_grace = 131072
@@ -15,7 +15,7 @@ class Executor(CompiledExecutor):
 	PROCEDURE DIVISION.
 		DISPLAY 'echo: Hello, World!'.
 		STOP RUN.
-'''
+'''  # noqa: W191
 
     def get_compile_args(self):
         return [self.get_command(), '-x', '-free', self._code]
@@ -24,5 +24,5 @@ class Executor(CompiledExecutor):
         return {'stdout': subprocess.PIPE, 'stderr': subprocess.STDOUT}
 
     def get_compile_output(self, process):
-        output = super(Executor, self).get_compile_output(process)
+        output = super().get_compile_output(process)
         return output if b'Error:' in output or b'Note:' in output or b'Warning:' in output else ''

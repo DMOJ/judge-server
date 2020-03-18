@@ -3,33 +3,25 @@ import os
 import re
 import subprocess
 import sys
-from shutil import copyfile
+from collections import deque
 from subprocess import Popen
-
-import six
+from typing import Optional
 
 from dmoj.error import CompileError, InternalError
-from dmoj.result import Result
+from dmoj.executors.compiled_executor import CompiledExecutor
 from dmoj.utils.unicode import utf8bytes, utf8text
-from .base_executor import CompiledExecutor
 
 recomment = re.compile(r'/\*.*?\*/', re.DOTALL | re.U)
 restring = re.compile(r''''(?:\\.|[^'\\])'|"(?:\\.|[^"\\])*"''', re.DOTALL | re.U)
 reinline_comment = re.compile(r'//.*?(?=[\r\n])', re.U)
-reclass = re.compile(r'\bpublic\s+(?:strictfp\s+)?(?:(?:abstract|final)\s+)?(?:strictfp\s+)?class\s+([\w\$][\w\$]*?)\b', re.U)
+reclass = re.compile(r'\bpublic\s+(?:strictfp\s+)?(?:(?:abstract|final)\s+)?(?:strictfp\s+)?class\s+([\w\$][\w\$]*?)\b',
+                     re.U)
 repackage = re.compile(r'\bpackage\s+([^.;]+(?:\.[^.;]+)*?);', re.U)
-
+reexception = re.compile(r'7257b50d-e37a-4664-b1a5-b1340b4206c0: (.*?)$', re.U | re.M)
 
 JAVA_SANDBOX = os.path.abspath(os.path.join(os.path.dirname(__file__), 'java_sandbox.jar'))
 
-POLICY_PREFIX = '''\
-grant codeBase "file:///{agent}" {{
-    permission java.io.FilePermission "state", "write";
-}};
-
-'''
-
-with open(os.path.join(os.path.dirname(__file__), 'java-security.policy')) as policy_file:
+with open(os.path.join(os.path.dirname(__file__), 'java-security.policy'), 'r') as policy_file:
     policy = policy_file.read()
 
 
@@ -45,35 +37,28 @@ def find_class(source):
 
 
 class JavaExecutor(CompiledExecutor):
-    ext = '.java'
+    ext = 'java'
 
-    vm = None
-    compiler = None
+    vm: str
+    compiler: str
     nproc = -1
+    fsize = 64  # Allow 64 bytes for dumping state file.
     address_grace = 786432
 
-    jvm_regex = None
+    jvm_regex: Optional[str] = None
     security_policy = policy
 
     def __init__(self, problem_id, source_code, **kwargs):
         self._class_name = None
-        super(JavaExecutor, self).__init__(problem_id, source_code, **kwargs)
+        super().__init__(problem_id, source_code, **kwargs)
 
     def create_files(self, problem_id, source_code, *args, **kwargs):
-        super(JavaExecutor, self).create_files(problem_id, source_code, *args, **kwargs)
+        super().create_files(problem_id, source_code, *args, **kwargs)
 
-        if os.name == 'nt':
-            self._agent_file = self._file('java-sandbox.jar')
-            copyfile(JAVA_SANDBOX, self._agent_file)
-        else:
-            self._agent_file = JAVA_SANDBOX
-
+        self._agent_file = JAVA_SANDBOX
         self._policy_file = self._file('security.policy')
         with open(self._policy_file, 'w') as file:
-            # Normalize path separators because the security policy is processed by a StringTokenizer which treats
-            # escapes sequences as... escape sequences.
-            path = self._agent_file.replace('\\', '/') if os.name == 'nt' else self._agent_file
-            file.write(POLICY_PREFIX.format(agent=path) + self.security_policy)
+            file.write(self.security_policy)
 
     def get_compile_popen_kwargs(self):
         return {'executable': self.get_compiler()}
@@ -100,27 +85,35 @@ class JavaExecutor(CompiledExecutor):
     def launch(self, *args, **kwargs):
         self.__memory_limit = kwargs['memory']
         kwargs['memory'] = 0
-        return super(JavaExecutor, self).launch(*args, **kwargs)
+        return super().launch(*args, **kwargs)
 
     def launch_unsafe(self, *args, **kwargs):
         return Popen(['java', self.get_vm_mode(), self._class_name] + list(args),
                      executable=self.get_vm(), cwd=self._dir, **kwargs)
 
-    def get_feedback(self, stderr, result, process):
+    def parse_feedback_from_stderr(self, stderr, process):
         if process.returncode:
             try:
                 with open(os.path.join(self._dir, 'submission_jvm_crash.log'), 'r') as err:
-                    raise InternalError('\n\n' + err.read())
+                    log = err.read()
+                    # "Newer" (post-Java 8) JVMs regressed a bit in terms of handling out-of-memory situations during
+                    # initialization, whereby they now dump a crash log rather than exiting with
+                    # java.lang.OutOfMemoryError. Handle this case so that we don't erroneously emit internal errors.
+                    if 'There is insufficient memory for the Java Runtime Environment' in log:
+                        return 'insufficient memory to initialize JVM'
+                    else:
+                        raise InternalError('\n\n' + log)
             except IOError:
                 pass
-        if not result.result_flag & Result.IR:
-            return ''
 
-        try:
-            with open(os.path.join(self._dir, 'state'), 'r') as state:
-                exception = state.read().strip()
-        except IOError:
-            exception = "abnormal termination"  # Probably exited without calling shutdown hooks
+        if b'Error: Main method not found in class' in stderr:
+            exception = "public static void main(String[] args) not found"
+        else:
+            match = deque(reexception.finditer(utf8text(stderr, 'replace')), maxlen=1)
+            if not match:
+                exception = "abnormal termination"  # Probably exited without calling shutdown hooks
+            else:
+                exception = match[0].group(1).split(':')[0]
 
         return exception
 
@@ -137,12 +130,12 @@ class JavaExecutor(CompiledExecutor):
         return cls.runtime_dict.get(cls.compiler)
 
     @classmethod
-    def initialize(cls, sandbox=True):
+    def initialize(cls):
         if cls.get_vm() is None or cls.get_compiler() is None:
             return False
         if not os.path.isfile(cls.get_vm()) or not os.path.isfile(cls.get_compiler()):
             return False
-        return cls.run_self_test(sandbox)
+        return cls.run_self_test()
 
     @classmethod
     def test_jvm(cls, name, path):
@@ -200,7 +193,7 @@ class JavaExecutor(CompiledExecutor):
 
 class JavacExecutor(JavaExecutor):
     def create_files(self, problem_id, source_code, *args, **kwargs):
-        super(JavacExecutor, self).create_files(problem_id, source_code, *args, **kwargs)
+        super().create_files(problem_id, source_code, *args, **kwargs)
         # This step is necessary because of Unicode classnames
         try:
             source_code = utf8text(source_code)

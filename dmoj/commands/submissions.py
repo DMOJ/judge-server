@@ -1,8 +1,6 @@
-from __future__ import print_function
-
-from dmoj.cli import InvalidCommandException
 from dmoj.commands.base_command import Command
-from dmoj.utils.ansi import ansi_style
+from dmoj.error import InvalidCommandException
+from dmoj.utils.ansi import print_ansi
 
 
 class ListSubmissionsCommand(Command):
@@ -22,5 +20,5 @@ class ListSubmissionsCommand(Command):
         submissions = self.judge.graded_submissions if not args.limit else self.judge.graded_submissions[:args.limit]
 
         for i, (problem, lang, src, tl, ml) in enumerate(submissions):
-            print(ansi_style('#ansi[%s](yellow)/#ansi[%s](green) in %s' % (problem, i + 1, lang)))
+            print_ansi('#ansi[%s](yellow)/#ansi[%s](green) in %s' % (problem, i + 1, lang))
         print()

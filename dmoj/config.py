@@ -4,10 +4,10 @@ class InvalidInitException(Exception):
     """
 
     def __init__(self, message):
-        super(InvalidInitException, self).__init__(message)
+        super().__init__(message)
 
 
-class ConfigNode(object):
+class ConfigNode:
     """
     A wrapper around a YAML configuration object for easier use.
 
@@ -81,7 +81,7 @@ class ConfigNode(object):
                 if isinstance(value, list) or isinstance(value, dict) else value
 
     def __getattr__(self, item):
-        return self[item]
+        return self[item.replace('_', '-')] if self[item] is None else self[item]
 
     def __getitem__(self, item):
         try:

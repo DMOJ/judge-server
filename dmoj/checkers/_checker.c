@@ -10,16 +10,6 @@
 #	define inline
 #endif
 
-#if PY_MAJOR_VERSION >= 3
-#define PyStr_Check PyBytes_Check
-#define PyStr_Size PyBytes_Size
-#define PyStr_AsString PyBytes_AsString
-#else
-#define PyStr_Check PyString_Check
-#define PyStr_Size PyString_GET_SIZE
-#define PyStr_AsString PyString_AS_STRING
-#endif
-
 static inline int isline(char ch) {
 	switch (ch) {
 	case '\n':
@@ -42,18 +32,31 @@ static inline int iswhite(char ch) {
 	return 0;
 }
 
+/* Increment *pos to the next non-whitespace character, and returns
+ * 2 if a new line was seen, 1 if only spaces were seen, and 0 if no whitespace was seen */
+static inline int skip_spaces(const char *str, size_t *pos, size_t length) {
+	int saw_line = 0, saw_space = 0;
+	while (*pos < length) {
+		saw_line |= isline(str[*pos]);
+		if (!iswhite(str[*pos])) {
+			break;
+		}
+		++*pos;
+		saw_space = 1;
+	}
+	return saw_line ? 2 : saw_space;
+}
+
 static int check_standard(const char *judge, size_t jlen, const char *process, size_t plen) {
 	size_t j = 0, p = 0;
-	int nj, np;
 
 	while (j < jlen && iswhite(judge[j])) ++j;
 	while (p < plen && iswhite(process[p])) ++p;
 	for (;;) {
-		nj = np = 0;
-		while (j < jlen && ((nj |= isline(judge[j])), iswhite(judge[j]))) ++j;
-		while (p < plen && ((np |= isline(process[p])), iswhite(process[p]))) ++p;
+		int js = skip_spaces(judge, &j, jlen);
+		int ps = skip_spaces(process, &p, plen);
 		if (j == jlen || p == plen) return j == jlen && p == plen;
-		if (nj != np) return 0;
+		if (js != ps) return 0;
 
 		while (j < jlen && !iswhite(judge[j])) {
 			if (p >= plen) return 0;
@@ -69,7 +72,7 @@ static PyObject *checker_standard(PyObject *self, PyObject *args) {
 	if (!PyArg_ParseTuple(args, "OO:standard", &expected, &actual))
 		return NULL;
 
-	if (!PyStr_Check(expected) || !PyStr_Check(actual)) {
+	if (!PyBytes_Check(expected) || !PyBytes_Check(actual)) {
 		PyErr_SetString(PyExc_ValueError, "expected strings");
 		return NULL;
 	}
@@ -77,8 +80,8 @@ static PyObject *checker_standard(PyObject *self, PyObject *args) {
 	Py_INCREF(expected);
 	Py_INCREF(actual);
 	Py_BEGIN_ALLOW_THREADS
-	result = check_standard(PyStr_AsString(expected), PyStr_Size(expected),
-							PyStr_AsString(actual), PyStr_Size(actual)) ?
+	result = check_standard(PyBytes_AsString(expected), PyBytes_Size(expected),
+							PyBytes_AsString(actual), PyBytes_Size(actual)) ?
 			Py_True : Py_False;
 	Py_END_ALLOW_THREADS
 	Py_DECREF(expected);
@@ -93,7 +96,6 @@ static PyMethodDef checker_methods[] = {
 	{NULL, NULL, 0, NULL}
 };
 
-#if PY_MAJOR_VERSION >= 3
 static struct PyModuleDef moduledef = {
         PyModuleDef_HEAD_INIT,
         "_checker",
@@ -106,7 +108,6 @@ static struct PyModuleDef moduledef = {
         NULL
 };
 
-PyMODINIT_FUNC PyInit__checker(void) { (void) PyModule_Create(&moduledef); }
-#else
-PyMODINIT_FUNC init_checker(void) { (void) Py_InitModule("_checker", checker_methods); }
-#endif
+PyMODINIT_FUNC PyInit__checker(void) {
+	return PyModule_Create(&moduledef);
+}

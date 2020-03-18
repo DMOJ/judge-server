@@ -1,7 +1,4 @@
-from __future__ import print_function
-
-from dmoj.cli import commands
-from dmoj.commands.base_command import Command
+from dmoj.commands.base_command import Command, commands
 
 
 class HelpCommand(Command):

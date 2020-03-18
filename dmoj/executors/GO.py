@@ -1,19 +1,25 @@
-import os
 import re
 
 from dmoj.error import CompileError
-from .base_executor import CompiledExecutor
+from dmoj.executors.compiled_executor import CompiledExecutor
 
-recomment = re.compile(br'//.*?(?=[\r\n])')
-decomment = lambda x: recomment.sub('', x)
+reinline_comment = re.compile(br'//.*?(?=[\r\n])')
+recomment = re.compile(br'/\*.*?\*/', re.DOTALL)
+repackage = re.compile(br'\s*package\s+main\b')
+
+
+def decomment(x):
+    return reinline_comment.sub(b'', recomment.sub(b'', x))
 
 
 class Executor(CompiledExecutor):
-    ext = '.go'
+    ext = 'go'
     name = 'GO'
+    nproc = -1
     data_grace = 65536  # Go uses data segment for heap arena map
     address_grace = 786432
     command = 'go'
+    syscalls = ['mincore', 'epoll_create1', 'epoll_ctl', 'epoll_pwait', 'pselect6']
     test_name = 'echo'
     test_program = '''\
 package main
@@ -28,6 +34,15 @@ func main() {
     fmt.Print(text)
 }'''
 
+    def get_compile_env(self):
+        return {
+            # Disable cgo, as it may be used for nefarious things, like linking
+            # against arbitrary libraries.
+            'CGO_ENABLED': '0',
+            # We need GOCACHE to compile on Debian 10.0+.
+            'GOCACHE': self._dir,
+        }
+
     def get_compile_args(self):
         return [self.get_command(), 'build', self._code]
 
@@ -35,11 +50,8 @@ func main() {
     def get_version_flags(cls, command):
         return ['version']
 
-    def get_nproc(self):
-        return [-1, 1][os.name == 'nt']
-
     def create_files(self, problem_id, source_code, *args, **kwargs):
-        source_code = decomment(source_code).strip()
-        if source_code.split(b'\n')[0].strip().split() != [b'package', b'main']:
+        source_lines = decomment(source_code).strip().split(b'\n')
+        if not repackage.match(source_lines[0]):
             raise CompileError(b'Your code must be defined in package main.\n')
-        super(Executor, self).create_files(problem_id, source_code, *args, **kwargs)
+        super().create_files(problem_id, source_code, *args, **kwargs)

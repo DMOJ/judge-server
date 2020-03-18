@@ -1,8 +1,8 @@
-from .base_executor import ScriptExecutor
+from dmoj.executors.script_executor import ScriptExecutor
 
 
 class Executor(ScriptExecutor):
-    ext = '.sed'
+    ext = 'sed'
     name = 'SED'
     command = 'sed'
     test_program = 's/^//'

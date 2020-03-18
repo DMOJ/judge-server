@@ -1,23 +1,19 @@
-from __future__ import print_function
-
 import logging
 import os
 import sys
 import traceback
 
-import six
 import yaml
-from six import iteritems
 
-from dmoj import judgeenv, executors
+from dmoj import contrib, executors, judgeenv
 from dmoj.judge import Judge
-from dmoj.judgeenv import get_supported_problems, get_problem_root
-from dmoj.utils.ansi import ansi_style
+from dmoj.judgeenv import get_problem_root, get_supported_problems
+from dmoj.utils.ansi import ansi_style, print_ansi
 
 all_executors = executors.executors
 
 
-class TestManager(object):
+class TestManager:
     def output(self, message):
         print(message)
 
@@ -93,11 +89,11 @@ class TestManager(object):
 
 class TestJudge(Judge):
     def __init__(self, manager):
-        super(TestJudge, self).__init__()
+        super().__init__()
         self.packet_manager = manager
 
 
-class Tester(object):
+class Tester:
     all_codes = {'AC', 'IE', 'TLE', 'MLE', 'OLE', 'RTE', 'IR', 'WA', 'CE', 'SC'}
 
     def __init__(self, problem_regex=None, case_regex=None):
@@ -109,22 +105,20 @@ class Tester(object):
         self.case_regex = case_regex
 
         self.case_files = ['test.yml']
-        if os.name == 'nt':
-            self.case_files += ['test.windows.yml']
-        elif os.name == 'posix':
-            self.case_files += ['test.posix.yml']
-            if 'freebsd' in sys.platform:
-                self.case_files += ['test.freebsd.yml']
-                if not sys.platform.startswith('freebsd'):
-                    self.case_files += ['test.kfreebsd.yml']
-            elif sys.platform.startswith('linux'):
-                self.case_files += ['test.linux.yml']
+
+        self.case_files += ['test.posix.yml']
+        if 'freebsd' in sys.platform:
+            self.case_files += ['test.freebsd.yml']
+            if not sys.platform.startswith('freebsd'):
+                self.case_files += ['test.kfreebsd.yml']
+        elif sys.platform.startswith('linux'):
+            self.case_files += ['test.linux.yml']
 
     def output(self, message=''):
         print(message)
 
     def error_output(self, message):
-        print(ansi_style('#ansi[%s](red)') % message)
+        print_ansi('#ansi[%s](red)' % message)
 
     def test_all(self):
         total_fails = 0
@@ -197,7 +191,7 @@ class Tester(object):
             return 0
         time = config['time']
         memory = config['memory']
-        if isinstance(config['source'], six.string_types):
+        if isinstance(config['source'], str):
             with open(os.path.join(case_dir, config['source'])) as f:
                 sources = [f.read()]
         else:
@@ -219,7 +213,8 @@ class Tester(object):
         for source in sources:
             self.sub_id += 1
             self.manager.set_expected(codes_all, codes_cases, feedback_all, feedback_cases)
-            self.judge.begin_grading(self.sub_id, problem, language, source, time, memory, False, False, blocking=True, report=output_case)
+            self.judge.begin_grading(self.sub_id, problem, language, source, time, memory, False, {}, blocking=True,
+                                     report=output_case)
             fails += self.manager.failed
         return fails
 
@@ -228,14 +223,14 @@ class Tester(object):
         if isinstance(cases, list):
             cases = enumerate(cases, 1)
         else:
-            cases = iteritems(cases)
+            cases = cases.items()
         case_expect = {id: func(codes) for id, codes in cases}
         return expect, case_expect
 
     def parse_expected_codes(self, codes):
         if codes == '*':
             return self.all_codes
-        elif isinstance(codes, six.string_types):
+        elif isinstance(codes, str):
             assert codes in self.all_codes
             return {codes}
         else:
@@ -246,7 +241,7 @@ class Tester(object):
     def parse_feedback(self, feedback):
         if feedback is None or feedback == '*':
             return None
-        elif isinstance(feedback, six.string_types):
+        elif isinstance(feedback, str):
             return {feedback}
         else:
             return set(feedback)
@@ -255,28 +250,22 @@ class Tester(object):
 def main():
     judgeenv.load_env(cli=True, testsuite=True)
 
-    # Emulate ANSI colors with colorama
-    if os.name == 'nt' and not judgeenv.no_ansi_emu:
-        try:
-            from colorama import init
-            init()
-        except ImportError:
-            pass
-
     logging.basicConfig(filename=judgeenv.log_file, level=logging.INFO,
                         format='%(levelname)s %(asctime)s %(module)s %(message)s')
 
     executors.load_executors()
+    contrib.load_contrib_modules()
 
     tester = Tester(judgeenv.problem_regex, judgeenv.case_regex)
     fails = tester.test_all()
     print()
     print('Test complete')
     if fails:
-        print(ansi_style('#ansi[A total of %d case(s) failed](red|bold).') % fails)
+        print_ansi('#ansi[A total of %d case(s) failed](red|bold).' % fails)
     else:
-        print(ansi_style('#ansi[All cases passed.](green|bold)'))
+        print_ansi('#ansi[All cases passed.](green|bold)')
     raise SystemExit(int(fails != 0))
+
 
 if __name__ == '__main__':
     main()

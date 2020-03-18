@@ -1,9 +1,7 @@
-from __future__ import print_function
-
 import difflib
 
-import pygments.lexers
 import pygments.formatters
+import pygments.lexers
 
 from dmoj.commands.base_command import Command
 
@@ -38,4 +36,5 @@ class DifferenceCommand(Command):
             print('no difference\n')
         else:
             file_diff = '\n'.join(difference)
-            print(pygments.highlight(file_diff, pygments.lexers.DiffLexer(), pygments.formatters.Terminal256Formatter()))
+            print(pygments.highlight(file_diff, pygments.lexers.DiffLexer(),
+                                     pygments.formatters.Terminal256Formatter()))

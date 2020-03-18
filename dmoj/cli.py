@@ -1,17 +1,12 @@
-from __future__ import print_function
-
-from collections import OrderedDict
-import os
 import shlex
 import sys
 
-from six.moves import input
-
+from dmoj.error import InvalidCommandException
 from dmoj.judge import Judge
-from dmoj.utils.ansi import ansi_style
+from dmoj.utils.ansi import ansi_style, print_ansi
 
 
-class LocalPacketManager(object):
+class LocalPacketManager:
     def __init__(self, judge):
         self.judge = judge
 
@@ -63,22 +58,10 @@ class LocalPacketManager(object):
 
 class LocalJudge(Judge):
     def __init__(self):
-        super(LocalJudge, self).__init__()
+        super().__init__()
         self.packet_manager = LocalPacketManager(self)
         self.submission_id_counter = 0
         self.graded_submissions = []
-
-
-class InvalidCommandException(Exception):
-    def __init__(self, message=None):
-        self.message = message
-
-
-commands = OrderedDict()
-
-
-def register(command):
-    commands[command.name] = command
 
 
 def main():
@@ -86,21 +69,13 @@ def main():
 
 
 def cli_main():
-    global commands
     import logging
-    from dmoj import judgeenv, executors
+    from dmoj import judgeenv, contrib, executors
 
     judgeenv.load_env(cli=True)
 
-    # Emulate ANSI colors with colorama
-    if os.name == 'nt' and not judgeenv.no_ansi_emu:
-        try:
-            from colorama import init
-            init()
-        except ImportError:
-            pass
-
     executors.load_executors()
+    contrib.load_contrib_modules()
 
     print('Running local judge...')
 
@@ -110,26 +85,29 @@ def cli_main():
     judge = LocalJudge()
 
     for warning in judgeenv.startup_warnings:
-        print(ansi_style('#ansi[Warning: %s](yellow)' % warning))
+        print_ansi('#ansi[Warning: %s](yellow)' % warning)
     del judgeenv.startup_warnings
     print()
 
-    from dmoj.commands import all_commands
+    from dmoj.commands import all_commands, commands, register_command
     for command in all_commands:
-        register(command(judge))
+        register_command(command(judge))
 
     def run_command(line):
+        if not line:
+            return 127
+
         if line[0] in commands:
             cmd = commands[line[0]]
             try:
                 return cmd.execute(line[1:])
             except InvalidCommandException as e:
                 if e.message:
-                    print(ansi_style("#ansi[%s](red|bold)\n" % e.message))
+                    print_ansi("#ansi[%s](red|bold)\n" % e.message)
                 print()
                 return 1
         else:
-            print(ansi_style('#ansi[Unrecognized command %s](red|bold)' % line[0]))
+            print_ansi('#ansi[Unrecognized command %s](red|bold)' % line[0])
             print()
             return 127
 

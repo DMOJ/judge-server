@@ -4,7 +4,7 @@ from .gcc_executor import GCCExecutor
 class Executor(GCCExecutor):
     name = 'ADA'
     command = 'gnatmake'
-    ext = '.adb'
+    ext = 'adb'
     test_program = '''\
 with Ada.Text_IO; use Ada.Text_IO;
 procedure Hello is

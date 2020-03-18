@@ -33,7 +33,8 @@ class ProblemTest(unittest.TestCase):
 
         with mock.patch('dmoj.problem.get_problem_root') as gpr:
             gpr.return_value = '/proc'
-            self.problem_data = {'init.yml': 'archive: foo.zip'}
+            self.problem_data = ProblemDataManager(None)
+            self.problem_data.update({'init.yml': 'archive: foo.zip'})
             problem = MockProblem('test', 2, 16384, {})
             self.assertEqual(problem.config.test_cases.unwrap(),
                              [{'batched': [{'in': 's2.1-1.in', 'out': 's2.1-1.out'},

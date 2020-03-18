@@ -152,7 +152,7 @@ class Problem:
     def load_checker(self, name):
         if name in self._checkers:
             return self._checkers[name]
-        self._checkers[name] = checker = load_module_from_file(os.path.join(gself.root_dir, name))
+        self._checkers[name] = checker = load_module_from_file(os.path.join(self.root_dir, name))
         return checker
 
     def _resolve_archive_files(self):

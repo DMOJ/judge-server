@@ -29,7 +29,9 @@ class Problem:
         self.meta = ConfigNode(meta)
         self.generator_manager = GeneratorManager()
 
-        self.problem_data = ProblemDataManager(problem_id)
+        # Cache root dir so that we don't need to scan all roots (potentially very slow on networked mount).
+        self.root_dir = get_problem_root(problem_id)
+        self.problem_data = ProblemDataManager(self)
 
         # Checkers modules must be stored in a dict, for the duration of execution,
         # lest globals be deleted with the module.
@@ -150,12 +152,12 @@ class Problem:
     def load_checker(self, name):
         if name in self._checkers:
             return self._checkers[name]
-        self._checkers[name] = checker = load_module_from_file(os.path.join(get_problem_root(self.id), name))
+        self._checkers[name] = checker = load_module_from_file(os.path.join(self.root_dir, name))
         return checker
 
     def _resolve_archive_files(self):
         if self.config.archive:
-            archive_path = os.path.join(get_problem_root(self.id), self.config.archive)
+            archive_path = os.path.join(self.root_dir, self.config.archive)
             if not os.path.exists(archive_path):
                 raise InvalidInitException('archive file "%s" does not exist' % archive_path)
             try:
@@ -167,22 +169,21 @@ class Problem:
 
 
 class ProblemDataManager(dict):
-    def __init__(self, problem_id, **kwargs):
+    def __init__(self, problem, **kwargs):
         super().__init__(**kwargs)
-        self.problem_id = problem_id
+        self.problem = problem
         self.archive = None
 
     def __missing__(self, key):
-        base = get_problem_root(self.problem_id)
         try:
-            with open(os.path.join(base, key), 'rb') as f:
+            with open(os.path.join(self.problem.root_dir, key), 'rb') as f:
                 return f.read()
         except IOError:
             if self.archive:
                 zipinfo = self.archive.getinfo(key)
                 with self.archive.open(zipinfo) as f:
                     return f.read()
-            raise KeyError('file "%s" could not be found in "%s"' % (key, base))
+            raise KeyError('file "%s" could not be found in "%s"' % (key, self.problem.root_dir))
 
     def __del__(self):
         if self.archive:

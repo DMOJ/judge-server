@@ -31,32 +31,41 @@ class ProblemTest(unittest.TestCase):
                     '.DS_Store',
                 ]
 
-        self.problem_data = ProblemDataManager('foo')
-        self.problem_data.update({'init.yml': 'archive: foo.zip'})
-        self.assertEqual(MockProblem('test', 2, 16384, {}).config.test_cases.unwrap(),
-                         [{'batched': [{'in': 's2.1-1.in', 'out': 's2.1-1.out'},
-                                       {'in': 's2.1.2.in', 'out': 's2.1.2.out'}], 'points': 1},
-                          {'in': 's3.4.in', 'out': 's3.4.out', 'points': 1},
-                          {'in': '5.in', 'out': '5.OUT', 'points': 1}, {
-                              'batched': [{'in': '6-1.in', 'out': '6-1.OUT'}, {'in': '6.2.in', 'out': '6.2.OUT'},
-                                          {'in': 'foo/a.b.c.6.3.in', 'out': 'foo/a.b.c.6.3.OUT'}], 'points': 1},
-                          {'in': 'bar.in.7', 'out': 'bar.out.7', 'points': 1},
-                          {'in': 'INPUT8.txt', 'out': 'OUTPUT8.txt', 'points': 1}])
+        with mock.patch('dmoj.problem.get_problem_root') as gpr:
+            gpr.return_value = '/proc'
+            self.problem_data = ProblemDataManager(None)
+            self.problem_data.update({'init.yml': 'archive: foo.zip'})
+            problem = MockProblem('test', 2, 16384, {})
+            self.assertEqual(problem.config.test_cases.unwrap(),
+                             [{'batched': [{'in': 's2.1-1.in', 'out': 's2.1-1.out'},
+                                           {'in': 's2.1.2.in', 'out': 's2.1.2.out'}], 'points': 1},
+                              {'in': 's3.4.in', 'out': 's3.4.out', 'points': 1},
+                              {'in': '5.in', 'out': '5.OUT', 'points': 1}, {
+                                  'batched': [{'in': '6-1.in', 'out': '6-1.OUT'}, {'in': '6.2.in', 'out': '6.2.OUT'},
+                                              {'in': 'foo/a.b.c.6.3.in', 'out': 'foo/a.b.c.6.3.OUT'}], 'points': 1},
+                              {'in': 'bar.in.7', 'out': 'bar.out.7', 'points': 1},
+                              {'in': 'INPUT8.txt', 'out': 'OUTPUT8.txt', 'points': 1}])
 
     def test_no_init(self):
         self.problem_data = {}
-        with self.assertRaises(InvalidInitException):
-            Problem('test', 2, 16384, {})
+        with mock.patch('dmoj.problem.get_problem_root') as gpr:
+            gpr.return_value = '/proc'
+            with self.assertRaises(InvalidInitException):
+                Problem('test', 2, 16384, {})
 
     def test_empty_init(self):
         self.problem_data = {'init.yml': ''}
-        with self.assertRaisesRegex(InvalidInitException, 'lack of content'):
-            Problem('test', 2, 16384, {})
+        with mock.patch('dmoj.problem.get_problem_root') as gpr:
+            gpr.return_value = '/proc'
+            with self.assertRaisesRegex(InvalidInitException, 'lack of content'):
+                Problem('test', 2, 16384, {})
 
     def test_bad_init(self):
         self.problem_data = {'init.yml': '"'}
-        with self.assertRaisesRegex(InvalidInitException, 'while scanning a quoted scalar'):
-            Problem('test', 2, 16384, {})
+        with mock.patch('dmoj.problem.get_problem_root') as gpr:
+            gpr.return_value = '/proc'
+            with self.assertRaisesRegex(InvalidInitException, 'while scanning a quoted scalar'):
+                Problem('test', 2, 16384, {})
 
     def test_blank_init(self):
         self.problem_data = {'init.yml': 'archive: does_not_exist.txt'}

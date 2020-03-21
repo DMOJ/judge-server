@@ -1,7 +1,7 @@
 import argparse
 import os
 import ssl
-from typing import List, Set
+from typing import Dict, List, Set
 
 import yaml
 
@@ -179,12 +179,18 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
                 raise SystemExit('Invalid case regex')
 
 
-def get_problem_root(pid):
-    for dir in get_problem_roots():
-        path = os.path.join(dir, pid)
-        if os.path.exists(path):
-            return path
-    return None
+_problem_root_cache: Dict[str, str] = {}
+
+
+def get_problem_root(problem_id):
+    if problem_id not in _problem_root_cache or not os.path.isdir(_problem_root_cache[problem_id]):
+        for root_dir in get_problem_roots():
+            problem_root_dir = os.path.join(root_dir, problem_id)
+            if os.path.isdir(problem_root_dir):
+                _problem_root_cache[problem_id] = problem_root_dir
+                break
+
+    return _problem_root_cache[problem_id]
 
 
 _problem_dirs_cache = None
@@ -236,7 +242,7 @@ def get_problem_roots(warnings=False):
     if warnings:
         cleaned_dirs = []
         for dir in dirs:
-            if not os.path.exists(dir) or not os.path.isdir(dir):
+            if not os.path.isdir(dir):
                 startup_warnings.append('cannot access problem directory %s (does it exist?)' % dir)
                 continue
             cleaned_dirs.append(dir)

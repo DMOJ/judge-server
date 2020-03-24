@@ -99,9 +99,8 @@ $ pip install dmoj
 This is the version of the codebase we run live on [dmoj.ca](https://dmoj.ca).
 
 ```
-$ git clone https://github.com/DMOJ/judge.git
+$ git clone --recursive https://github.com/DMOJ/judge.git
 $ cd judge
-$ git submodule update --init --recursive
 $ pip install -e .
 ```
 
@@ -111,6 +110,36 @@ Several environment variables can be specified to control the compilation of the
    This flag has no effect when building outside of Linux.
 * `DMOJ_TARGET_ARCH`; use it to override the default architecture specified for compiling the sandbox (via `-march`).
    Usually this is `native`, but will not be specified on ARM unless `DMOJ_TARGET_ARCH` is set (a generic, slow build will be compiled instead).
+
+### With Docker
+We maintain Docker images with all runtimes we support in the [runtimes-docker](https://github.com/DMOJ/runtimes-docker) project.
+
+Runtimes are split into three tiers of decreasing support. Tier 1 includes
+Python 2/3, C/C++ (GCC only), Java 8, and Pascal. Tier 3 contains all the
+runtimes we run on [dmoj.ca](https://dmoj.ca). Tier 2 contains some in-between
+mix; read the `Dockerfile` for each tier for details. These images are rebuilt
+and tested every week to contain the latest runtime versions.
+
+The script below spawns a tier 1 judge image. It expects the relevant
+environment variables to be set, the network device to be `enp1s0`, problems
+to be placed under `/mnt/problems`, and judge-specific configuration to be in
+`/mnt/problems/judge.yml`.
+
+```
+$ git clone --recursive https://github.com/DMOJ/judge.git
+$ cd judge/.docker
+$ make judge-tier1
+$ exec docker run \
+    --name judge \
+    -p "$(ip addr show dev enp1s0 | perl -ne 'm@inet (.*)/.*@ and print$1 and exit')":9998:9998 \
+    -v /mnt/problems:/problems \
+    --cap-add=SYS_PTRACE \
+    -d \
+    --restart=always \
+    dmoj/judge-tier1:latest \
+    run -p15001 -s -c /problems/judge.yml \
+    "$BRIDGE_ADDRESS" "$JUDGE_NAME" "$JUDGE_KEY"
+```
 
 ## Usage
 ### Running a Judge Server

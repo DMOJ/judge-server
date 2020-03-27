@@ -14,6 +14,7 @@ def errno_handler(code):
         debugger.syscall = -1
         debugger.on_return(on_return)
         return True
+
     return handler
 
 

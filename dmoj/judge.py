@@ -27,6 +27,7 @@ except ImportError:
 try:
     from setproctitle import setproctitle
 except ImportError:
+
     def setproctitle(title):
         pass
 
@@ -114,8 +115,9 @@ class Judge:
         # cases are indexed at 1
         case_number = 1
         try:
-            for result in self.grade_cases(self.current_grader, self.current_grader.cases(),
-                                           short_circuit=short_circuit):
+            for result in self.grade_cases(
+                self.current_grader, self.current_grader.cases(), short_circuit=short_circuit
+            ):
                 if isinstance(result, BatchBegin):
                     self.packet_manager.batch_begin_packet()
                     report(ansi_style("#ansi[Batch #%d](yellow|bold)" % batch_counter))
@@ -128,38 +130,60 @@ class Judge:
                     codes = result.readable_codes()
 
                     # here be cancer
-                    is_sc = (result.result_flag & Result.SC)
-                    colored_codes = list(map(lambda x: '#ansi[%s](%s|bold)' % ('--' if x == 'SC' else x,
-                                                                               Result.COLORS_BYID[x]), codes))
+                    is_sc = result.result_flag & Result.SC
+                    colored_codes = list(
+                        map(lambda x: '#ansi[%s](%s|bold)' % ('--' if x == 'SC' else x, Result.COLORS_BYID[x]), codes)
+                    )
                     colored_aux_codes = '{%s}' % ', '.join(colored_codes[1:]) if len(codes) > 1 else ''
                     colored_feedback = '(#ansi[%s](|underline)) ' % utf8text(result.feedback) if result.feedback else ''
-                    case_info = '[%.3fs (%.3fs) | %dkb] %s%s' % (result.execution_time,
-                                                                 result.wall_clock_time,
-                                                                 result.max_memory,
-                                                                 colored_feedback,
-                                                                 colored_aux_codes) if not is_sc else ''
+                    case_info = (
+                        '[%.3fs (%.3fs) | %dkb] %s%s'
+                        % (
+                            result.execution_time,
+                            result.wall_clock_time,
+                            result.max_memory,
+                            colored_feedback,
+                            colored_aux_codes,
+                        )
+                        if not is_sc
+                        else ''
+                    )
                     case_padding = '  ' * in_batch
-                    report(ansi_style('%sTest case %2d %-3s %s' % (case_padding, case_number,
-                                                                   colored_codes[0], case_info)))
+                    report(
+                        ansi_style('%sTest case %2d %-3s %s' % (case_padding, case_number, colored_codes[0], case_info))
+                    )
 
                     self.packet_manager.test_case_status_packet(case_number, result)
 
                     case_number += 1
         except TerminateGrading:
             self.packet_manager.submission_terminated_packet()
-            report(ansi_style('#ansi[Forcefully terminating grading. '
-                              'Temporary files may not be deleted.](red|bold)'))
+            report(ansi_style('#ansi[Forcefully terminating grading. Temporary files may not be deleted.](red|bold)'))
             pass
         else:
             self.packet_manager.grading_end_packet()
 
-    def begin_grading(self, id, problem_id, language, source, time_limit, memory_limit, short_circuit, meta,
-                      report=print, blocking=False):
+    def begin_grading(
+        self,
+        id,
+        problem_id,
+        language,
+        source,
+        time_limit,
+        memory_limit,
+        short_circuit,
+        meta,
+        report=print,
+        blocking=False,
+    ):
         self.current_submission_id = id
 
         def grading_cleanup_wrapper():
-            report(ansi_style('Start grading #ansi[%s](yellow)/#ansi[%s](green|bold) in %s...'
-                              % (problem_id, id, language)))
+            report(
+                ansi_style(
+                    'Start grading #ansi[%s](yellow)/#ansi[%s](green|bold) in %s...' % (problem_id, id, language)
+                )
+            )
 
             try:
                 problem = Problem(problem_id, time_limit, memory_limit, meta)
@@ -187,9 +211,12 @@ class Judge:
             if isinstance(case, BatchedTestCase):
                 yield BatchBegin()
 
-                for batched_case in self.grade_cases(grader, case.batched_cases,
-                                                     short_circuit=case.config['short_circuit'],
-                                                     is_short_circuiting=is_short_circuiting):
+                for batched_case in self.grade_cases(
+                    grader,
+                    case.batched_cases,
+                    short_circuit=case.config['short_circuit'],
+                    is_short_circuiting=is_short_circuiting,
+                ):
                     # A batched case just failed.
                     # There are two cases where this means that we should completely short-circuit:
                     # 1. If the batch was worth 0 points, to emulate the property of 0-point cases.
@@ -296,8 +323,9 @@ def sanity_check():
 
         # However running as root on Linux is a Bad Idea
         if os.getuid() == 0:
-            startup_warnings.append('running the judge as root can be potentially unsafe, '
-                                    'consider using an unprivileged user instead')
+            startup_warnings.append(
+                'running the judge as root can be potentially unsafe, consider using an unprivileged user instead'
+            )
 
         # Our sandbox filter is long but simple, so we can see large improvements
         # in overhead by enabling the BPF JIT for seccomp.
@@ -305,9 +333,10 @@ def sanity_check():
         if os.path.exists(bpf_jit_path):
             with open(bpf_jit_path, 'r') as f:
                 if f.read().strip() != '1':
-                    startup_warnings.append('running without BPF JIT enabled, consider running '
-                                            '`echo 1 > /proc/sys/net/core/bpf_jit_enable` '
-                                            'to reduce sandbox overhead')
+                    startup_warnings.append(
+                        'running without BPF JIT enabled, consider running '
+                        '`echo 1 > /proc/sys/net/core/bpf_jit_enable` to reduce sandbox overhead'
+                    )
 
     # _checker implements standard checker functions in C
     # we fall back to a Python implementation if it's not compiled, but it's slower
@@ -335,14 +364,19 @@ def judge_proc(need_monitor):
     except TypeError:
         pass
 
-    logging.basicConfig(filename=logfile, level=logging.INFO,
-                        format='%(levelname)s %(asctime)s %(process)d %(module)s %(message)s')
+    logging.basicConfig(
+        filename=logfile, level=logging.INFO, format='%(levelname)s %(asctime)s %(process)d %(module)s %(message)s'
+    )
 
     setproctitle('DMOJ Judge: %s on %s' % (env['id'], make_host_port(judgeenv)))
 
-    judge = ClassicJudge(judgeenv.server_host, judgeenv.server_port,
-                         secure=judgeenv.secure, no_cert_check=judgeenv.no_cert_check,
-                         cert_store=judgeenv.cert_store)
+    judge = ClassicJudge(
+        judgeenv.server_host,
+        judgeenv.server_port,
+        secure=judgeenv.secure,
+        no_cert_check=judgeenv.no_cert_check,
+        cert_store=judgeenv.cert_store,
+    )
     if need_monitor:
         monitor = Monitor()
         monitor.callback = judge.update_problems
@@ -350,6 +384,7 @@ def judge_proc(need_monitor):
         monitor = DummyMonitor()
 
     if hasattr(signal, 'SIGUSR2'):
+
         def update_problem_signal(signum, frame):
             judge.update_problems()
 
@@ -386,8 +421,11 @@ logpm = logging.getLogger('dmoj.judgepm')
 
 
 class JudgeManager:
-    signal_map = {k: v for v, k in sorted(signal.__dict__.items(), reverse=True)
-                  if v.startswith('SIG') and not v.startswith('SIG_')}
+    signal_map = {
+        k: v
+        for v, k in sorted(signal.__dict__.items(), reverse=True)
+        if v.startswith('SIG') and not v.startswith('SIG_')
+    }
 
     def __init__(self, judges):
         self.libc = self.__get_libc()
@@ -407,6 +445,7 @@ class JudgeManager:
     def __get_libc(self):
         from ctypes.util import find_library
         from ctypes import CDLL
+
         return CDLL(find_library('c'))
 
     def _forward_signal(self, sig, respawn=False):
@@ -592,6 +631,7 @@ class JudgeManager:
         logpm.info('Starting process manager: %d.', os.getpid())
 
         from dmoj import judgeenv
+
         setproctitle('DMOJ Judge: Process manager on %s' % (make_host_port(judgeenv),))
 
         self._forward_signal(signal.SIGUSR2, respawn=True)
@@ -650,8 +690,9 @@ def main():  # pragma: no cover
             logfile = logfile % 'master'
         except TypeError:
             pass
-        logging.basicConfig(filename=logfile, level=logging.INFO,
-                            format='%(levelname)s %(asctime)s %(process)d %(name)s %(message)s')
+        logging.basicConfig(
+            filename=logfile, level=logging.INFO, format='%(levelname)s %(asctime)s %(process)d %(name)s %(message)s'
+        )
         if env.pidfile:
             with open(env.pidfile) as f:
                 f.write(str(os.getpid()))

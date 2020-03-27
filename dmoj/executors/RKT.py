@@ -43,7 +43,4 @@ class Executor(ScriptDirectoryMixin, CompiledExecutor):
 
     @classmethod
     def get_find_first_mapping(cls):
-        return {
-            'racket': ['racket'],
-            'raco': ['raco'],
-        }
+        return {'racket': ['racket'], 'raco': ['raco']}

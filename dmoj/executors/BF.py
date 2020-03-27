@@ -31,10 +31,16 @@ int main(int argc, char **argv) {
 }
 '''
 
-trans = {ord('>'): b'++p;', ord('<'): b'--p;',
-         ord('+'): b'++*p;', ord('-'): b'--*p;',
-         ord('.'): b'putchar(*p);', ord(','): b'*p=getchar();',
-         ord('['): b'while(*p){', ord(']'): b'}'}
+trans = {
+    ord('>'): b'++p;',
+    ord('<'): b'--p;',
+    ord('+'): b'++*p;',
+    ord('-'): b'--*p;',
+    ord('.'): b'putchar(*p);',
+    ord(','): b'*p=getchar();',
+    ord('['): b'while(*p){',
+    ord(']'): b'}',
+}
 
 
 class Executor(CExecutor):
@@ -72,4 +78,4 @@ class Executor(CExecutor):
 
     @classmethod
     def get_runtime_versions(cls):
-        return ('bf', (1, 33, 7)),
+        return (('bf', (1, 33, 7)),)

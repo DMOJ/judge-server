@@ -34,8 +34,9 @@ class _CompiledExecutorMeta(abc.ABCMeta):
         # to it, __del__ will clean it up.
         executor.is_cached = False
 
-    compiled_binary_cache: Dict[str, 'CompiledExecutor'] = pylru.lrucache(env.compiled_binary_cache_size,
-                                                                          _cleanup_cache_entry)
+    compiled_binary_cache: Dict[str, 'CompiledExecutor'] = pylru.lrucache(
+        env.compiled_binary_cache_size, _cleanup_cache_entry
+    )
 
     def __call__(self, *args, **kwargs) -> 'CompiledExecutor':
         is_cached: bool = kwargs.get('cached', False)
@@ -166,16 +167,19 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
         env = self.get_compile_env() or os.environ.copy()
         env['TERM'] = 'xterm'
 
-        proc = TimedPopen(self.get_compile_args(), **{
-            'stderr': self._slave,
-            'stdout': self._slave,
-            'stdin': self._slave,
-            'cwd': self._dir,
-            'env': env,
-            'preexec_fn': self.create_executable_limits(),
-            'time_limit': self.compiler_time_limit,
-            **self.get_compile_popen_kwargs(),
-        })
+        proc = TimedPopen(
+            self.get_compile_args(),
+            **{
+                'stderr': self._slave,
+                'stdout': self._slave,
+                'stdin': self._slave,
+                'cwd': self._dir,
+                'env': env,
+                'preexec_fn': self.create_executable_limits(),
+                'time_limit': self.compiler_time_limit,
+                **self.get_compile_popen_kwargs(),
+            }
+        )
 
         class io_error_wrapper:
             """

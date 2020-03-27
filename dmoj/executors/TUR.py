@@ -35,7 +35,4 @@ put echo
 
     @classmethod
     def get_find_first_mapping(cls):
-        return {
-            'tprolog': ['tprolog'],
-            'tprologc': ['tprologc'],
-        }
+        return {'tprolog': ['tprolog'], 'tprologc': ['tprologc']}

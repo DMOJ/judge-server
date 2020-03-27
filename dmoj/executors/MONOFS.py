@@ -17,8 +17,14 @@ let main argv =
 '''
 
     def get_compile_args(self):
-        return [self.get_command(), '--nologo', '--optimize', '--tailcalls', '--out:%s' % self.get_compiled_file(),
-                self._code]
+        return [
+            self.get_command(),
+            '--nologo',
+            '--optimize',
+            '--tailcalls',
+            '--out:%s' % self.get_compiled_file(),
+            self._code,
+        ]
 
     @classmethod
     def get_version_flags(cls, command):

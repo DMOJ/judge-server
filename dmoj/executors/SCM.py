@@ -13,7 +13,7 @@ class Executor(CompiledExecutor):
 
     @classmethod
     def get_versionable_commands(cls):
-        return ('csc', cls.get_command()),
+        return (('csc', cls.get_command()),)
 
     @classmethod
     def get_version_flags(cls, command):

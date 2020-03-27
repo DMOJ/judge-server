@@ -22,13 +22,16 @@ def verify_relative(process_float: float, judge_float: float, epsilon: float) ->
 def verify_default(process_float: float, judge_float: float, epsilon: float) -> bool:
     # process_float can be NaN
     # in this case, we reject NaN as a possible answer, even if judge_float is NaN
-    return (abs(process_float - judge_float) <= epsilon or
-            abs(judge_float) >= epsilon and
-            abs(1.0 - process_float / judge_float) <= epsilon)
+    return (
+        abs(process_float - judge_float) <= epsilon
+        or abs(judge_float) >= epsilon
+        and abs(1.0 - process_float / judge_float) <= epsilon
+    )
 
 
-def check(process_output: bytes, judge_output: bytes, precision: int = 6,
-          error_mode: str = 'default', **kwargs) -> bool:
+def check(
+    process_output: bytes, judge_output: bytes, precision: int = 6, error_mode: str = 'default', **kwargs
+) -> bool:
     # Discount empty lines
     process_lines = list(filter(None, resplit(b'[\r\n]', utf8bytes(process_output))))
     judge_lines = list(filter(None, resplit(b'[\r\n]', utf8bytes(judge_output))))
@@ -36,11 +39,7 @@ def check(process_output: bytes, judge_output: bytes, precision: int = 6,
     if len(process_lines) != len(judge_lines):
         return False
 
-    verify_float = {
-        'absolute': verify_absolute,
-        'relative': verify_relative,
-        'default': verify_default,
-    }.get(error_mode)
+    verify_float = {'absolute': verify_absolute, 'relative': verify_relative, 'default': verify_default}.get(error_mode)
 
     if not verify_float:
         raise InternalError('invalid `error_mode` value')

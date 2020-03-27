@@ -16,8 +16,9 @@ executors: Dict[str, Any] = {}
 
 
 def get_available():
-    return get_available_modules(_reexecutor, os.path.dirname(__file__), only_executors,
-                                 exclude_executors | _unsupported_executors)
+    return get_available_modules(
+        _reexecutor, os.path.dirname(__file__), only_executors, exclude_executors | _unsupported_executors
+    )
 
 
 def load_executor(name):
@@ -26,5 +27,12 @@ def load_executor(name):
 
 def load_executors():
     from dmoj.judgeenv import skip_self_test
-    load_modules(get_available(), load_executor, 'Executor', executors, _unsupported_executors,
-                 loading_message='Skipped self-tests' if skip_self_test else 'Self-testing executors')
+
+    load_modules(
+        get_available(),
+        load_executor,
+        'Executor',
+        executors,
+        _unsupported_executors,
+        loading_message='Skipped self-tests' if skip_self_test else 'Self-testing executors',
+    )

@@ -12,26 +12,35 @@ from dmoj.judgeenv import env
 from dmoj.utils import setbufsize_path
 from dmoj.utils.unicode import utf8bytes
 
-BASE_FILESYSTEM = ['/dev/(?:null|tty|zero|u?random)$',
-                   '/usr/(?!home)', '/lib(?:32|64)?/', '/opt/', '/etc$',
-                   '/etc/(?:localtime|timezone|nsswitch.conf|resolv.conf|passwd|malloc.conf)$',
-                   '/usr$', '/tmp$', '/$']
+BASE_FILESYSTEM = [
+    '/dev/(?:null|tty|zero|u?random)$',
+    '/usr/(?!home)',
+    '/lib(?:32|64)?/',
+    '/opt/',
+    '/etc$',
+    '/etc/(?:localtime|timezone|nsswitch.conf|resolv.conf|passwd|malloc.conf)$',
+    '/usr$',
+    '/tmp$',
+    '/$',
+]
 BASE_WRITE_FILESYSTEM = ['/dev/stdout$', '/dev/stderr$', '/dev/null$']
 
 if 'freebsd' in sys.platform:
     BASE_FILESYSTEM += [r'/etc/s?pwd\.db$', '/dev/hv_tsc$']
 else:
-    BASE_FILESYSTEM += ['/sys/devices/system/cpu(?:$|/online)',
-                        '/etc/selinux/config$']
+    BASE_FILESYSTEM += ['/sys/devices/system/cpu(?:$|/online)', '/etc/selinux/config$']
 
 if sys.platform.startswith('freebsd'):
     BASE_FILESYSTEM += [r'/etc/libmap\.conf$', r'/var/run/ld-elf\.so\.hints$']
 else:
     # Linux and kFreeBSD mounts linux-style procfs.
-    BASE_FILESYSTEM += ['/proc$', '/proc/(?:self|{pid})/(?:maps|exe|auxv)$',
-                        '/proc/(?:self|{pid})$',
-                        '/proc/(?:meminfo|stat|cpuinfo|filesystems|xen|uptime)$',
-                        '/proc/sys/vm/overcommit_memory$']
+    BASE_FILESYSTEM += [
+        '/proc$',
+        '/proc/(?:self|{pid})/(?:maps|exe|auxv)$',
+        '/proc/(?:self|{pid})$',
+        '/proc/(?:meminfo|stat|cpuinfo|filesystems|xen|uptime)$',
+        '/proc/sys/vm/overcommit_memory$',
+    ]
 
     # Linux-style ld.
     BASE_FILESYSTEM += [r'/etc/ld\.so\.(?:nohwcap|preload|cache)$']
@@ -104,22 +113,25 @@ class PlatformExecutorMixin(metaclass=abc.ABCMeta):
         }
         env.update(self.get_env())
 
-        return TracedPopen([utf8bytes(a) for a in self.get_cmdline() + list(args)],
-                           executable=utf8bytes(self.get_executable()),
-                           security=self.get_security(launch_kwargs=kwargs),
-                           address_grace=self.get_address_grace(),
-                           data_grace=self.data_grace,
-                           personality=self.personality,
-                           fds=kwargs.get('fds'),
-                           time=kwargs.get('time'),
-                           memory=kwargs.get('memory'),
-                           wall_time=kwargs.get('wall_time'),
-                           stdin=kwargs.get('stdin'),
-                           stdout=kwargs.get('stdout'),
-                           stderr=kwargs.get('stderr'),
-                           env=env, cwd=utf8bytes(self._dir),
-                           nproc=self.get_nproc(),
-                           fsize=self.fsize)
+        return TracedPopen(
+            [utf8bytes(a) for a in self.get_cmdline() + list(args)],
+            executable=utf8bytes(self.get_executable()),
+            security=self.get_security(launch_kwargs=kwargs),
+            address_grace=self.get_address_grace(),
+            data_grace=self.data_grace,
+            personality=self.personality,
+            fds=kwargs.get('fds'),
+            time=kwargs.get('time'),
+            memory=kwargs.get('memory'),
+            wall_time=kwargs.get('wall_time'),
+            stdin=kwargs.get('stdin'),
+            stdout=kwargs.get('stdout'),
+            stderr=kwargs.get('stderr'),
+            env=env,
+            cwd=utf8bytes(self._dir),
+            nproc=self.get_nproc(),
+            fsize=self.fsize,
+        )
 
 
 class NullStdoutMixin:

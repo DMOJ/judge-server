@@ -63,7 +63,7 @@ def safe_communicate(proc, input=None, outlimit=None, errlimit=None):
 
         for fd, mode in ready:
             if mode & select.POLLOUT:
-                chunk = input[input_offset:input_offset + _PIPE_BUF]
+                chunk = input[input_offset : input_offset + _PIPE_BUF]
                 try:
                     input_offset += os.write(fd, chunk)
                 except OSError as e:
@@ -83,8 +83,8 @@ def safe_communicate(proc, input=None, outlimit=None, errlimit=None):
                 if fd2length[fd] > fd2limit[fd]:
                     proc.mark_ole()
                     raise OutputLimitExceeded(
-                        'stdout' if proc.stdout is not None and proc.stdout.fileno() == fd else 'stderr',
-                        fd2limit[fd])
+                        'stdout' if proc.stdout is not None and proc.stdout.fileno() == fd else 'stderr', fd2limit[fd]
+                    )
             else:
                 # Ignore hang up or errors.
                 close_unregister_and_remove(fd)

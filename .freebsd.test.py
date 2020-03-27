@@ -3,18 +3,32 @@ import logging
 from dmoj import judgeenv
 from dmoj.citest import ci_test
 
-EXECUTORS = ['AWK', 'BF', 'C', 'CPP03', 'CPP11', 'CLANG', 'CLANGX',
-             'JAVA8', 'MONOCS', 'MONOFS', 'MONOVB', 'PAS', 'PERL',
-             'PY2', 'PY3', 'RUBY2', 'SED', 'TEXT']
+EXECUTORS = [
+    'AWK',
+    'BF',
+    'C',
+    'CPP03',
+    'CPP11',
+    'CLANG',
+    'CLANGX',
+    'JAVA8',
+    'MONOCS',
+    'MONOFS',
+    'MONOVB',
+    'PAS',
+    'PERL',
+    'PY2',
+    'PY3',
+    'RUBY2',
+    'SED',
+    'TEXT',
+]
 OVERRIDES = {}
 
 
 def main():
     judgeenv.env['runtime'] = {}
-    judgeenv.env['extra_fs'] = {
-        'PERL': ['/dev/dtrace/helper$'],
-        'RUBY2': ['/dev/dtrace/helper$'],
-    }
+    judgeenv.env['extra_fs'] = {'PERL': ['/dev/dtrace/helper$'], 'RUBY2': ['/dev/dtrace/helper$']}
 
     logging.basicConfig(level=logging.INFO)
 

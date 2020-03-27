@@ -34,8 +34,14 @@ class BaseGrader:
         for case_config in cfg:
             if 'batched' in case_config.raw_config:
                 self._batch_counter += 1
-                cases.append(BatchedTestCase(self._batch_counter, case_config, self.problem,
-                                             self._resolve_testcases(case_config['batched'], self._batch_counter)))
+                cases.append(
+                    BatchedTestCase(
+                        self._batch_counter,
+                        case_config,
+                        self.problem,
+                        self._resolve_testcases(case_config['batched'], self._batch_counter),
+                    )
+                )
             else:
                 cases.append(TestCase(self._testcase_counter, batch_no, case_config, self.problem))
                 self._testcase_counter += 1

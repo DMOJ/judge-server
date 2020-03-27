@@ -14,8 +14,9 @@ from dmoj.utils.unicode import utf8bytes, utf8text
 recomment = re.compile(r'/\*.*?\*/', re.DOTALL | re.U)
 restring = re.compile(r''''(?:\\.|[^'\\])'|"(?:\\.|[^"\\])*"''', re.DOTALL | re.U)
 reinline_comment = re.compile(r'//.*?(?=[\r\n])', re.U)
-reclass = re.compile(r'\bpublic\s+(?:strictfp\s+)?(?:(?:abstract|final)\s+)?(?:strictfp\s+)?class\s+([\w\$][\w\$]*?)\b',
-                     re.U)
+reclass = re.compile(
+    r'\bpublic\s+(?:strictfp\s+)?(?:(?:abstract|final)\s+)?(?:strictfp\s+)?class\s+([\w\$][\w\$]*?)\b', re.U
+)
 repackage = re.compile(r'\bpackage\s+([^.;]+(?:\.[^.;]+)*?);', re.U)
 reexception = re.compile(r'7257b50d-e37a-4664-b1a5-b1340b4206c0: (.*?)$', re.U | re.M)
 
@@ -79,8 +80,16 @@ class JavaExecutor(CompiledExecutor):
         if self.unbuffered:
             agent_flags += ',nobuf'
         # 128m is equivalent to 1<<27 in Thread constructor
-        return ['java', self.get_vm_mode(), agent_flags, '-Xss128m', '-Xmx%dK' % self.__memory_limit,
-                '-XX:+UseSerialGC', '-XX:ErrorFile=submission_jvm_crash.log', self._class_name]
+        return [
+            'java',
+            self.get_vm_mode(),
+            agent_flags,
+            '-Xss128m',
+            '-Xmx%dK' % self.__memory_limit,
+            '-XX:+UseSerialGC',
+            '-XX:ErrorFile=submission_jvm_crash.log',
+            self._class_name,
+        ]
 
     def launch(self, *args, **kwargs):
         self.__memory_limit = kwargs['memory']
@@ -88,8 +97,12 @@ class JavaExecutor(CompiledExecutor):
         return super().launch(*args, **kwargs)
 
     def launch_unsafe(self, *args, **kwargs):
-        return Popen(['java', self.get_vm_mode(), self._class_name] + list(args),
-                     executable=self.get_vm(), cwd=self._dir, **kwargs)
+        return Popen(
+            ['java', self.get_vm_mode(), self._class_name] + list(args),
+            executable=self.get_vm(),
+            cwd=self._dir,
+            **kwargs
+        )
 
     def parse_feedback_from_stderr(self, stderr, process):
         if process.returncode:
@@ -206,8 +219,7 @@ class JavacExecutor(JavaExecutor):
                 fo.write(utf8bytes(source_code))
         except IOError as e:
             if e.errno in (errno.ENAMETOOLONG, errno.ENOENT, errno.EINVAL):
-                raise CompileError('Why do you need a class name so long? '
-                                   'As a judge, I sentence your code to death.\n')
+                raise CompileError('Why do you need a class name so long? As a judge, I sentence your code to death.\n')
             raise
         self._class_name = class_name.group(1)
 
@@ -216,8 +228,7 @@ class JavacExecutor(JavaExecutor):
 
     def handle_compile_error(self, output):
         if b'is public, should be declared in a file named' in utf8bytes(output):
-            raise CompileError('You are a troll. Trolls are not welcome. '
-                               'As a judge, I sentence your code to death.\n')
+            raise CompileError('You are a troll. Trolls are not welcome. As a judge, I sentence your code to death.\n')
         raise CompileError(output)
 
     @classmethod

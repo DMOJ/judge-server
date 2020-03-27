@@ -32,9 +32,17 @@ class PacketManager:
     ssl_context: Optional[ssl.SSLContext]
     judge: 'Judge'
 
-    def __init__(self, host: str, port: int, judge: 'Judge', name: str, key: str,
-                 secure: bool = False, no_cert_check: bool = False,
-                 cert_store: Optional[str] = None):
+    def __init__(
+        self,
+        host: str,
+        port: int,
+        judge: 'Judge',
+        name: str,
+        key: str,
+        secure: bool = False,
+        no_cert_check: bool = False,
+        cert_store: Optional[str] = None,
+    ):
         self.host = host
         self.port = port
         self.judge = judge
@@ -179,21 +187,26 @@ class PacketManager:
             if not self._testcase_queue:
                 return
 
-            self._send_packet({'name': 'test-case-status',
-                               'submission-id': self.judge.current_submission_id,
-                               'cases': [
-                                   {
-                                       'position': position,
-                                       'status': result.result_flag,
-                                       'time': result.execution_time,
-                                       'points': result.points,
-                                       'total-points': result.total_points,
-                                       'memory': result.max_memory,
-                                       'output': result.output,
-                                       'extended-feedback': result.extended_feedback,
-                                       'feedback': result.feedback,
-                                   } for position, result in self._testcase_queue
-                               ]})
+            self._send_packet(
+                {
+                    'name': 'test-case-status',
+                    'submission-id': self.judge.current_submission_id,
+                    'cases': [
+                        {
+                            'position': position,
+                            'status': result.result_flag,
+                            'time': result.execution_time,
+                            'points': result.points,
+                            'total-points': result.total_points,
+                            'memory': result.max_memory,
+                            'output': result.output,
+                            'extended-feedback': result.extended_feedback,
+                            'feedback': result.feedback,
+                        }
+                        for position, result in self._testcase_queue
+                    ],
+                }
+            )
 
             self._testcase_queue.clear()
 
@@ -240,8 +253,12 @@ class PacketManager:
                 packet['meta'],
             )
             self._batch = 0
-            log.info('Accept submission: %d: executor: %s, code: %s',
-                     packet['submission-id'], packet['language'], packet['problem-id'])
+            log.info(
+                'Accept submission: %d: executor: %s, code: %s',
+                packet['submission-id'],
+                packet['language'],
+                packet['problem-id'],
+            )
         elif name == 'terminate-submission':
             log.info('Received abortion request for %s', self.judge.current_submission_id)
             self.judge.terminate_grading()
@@ -252,11 +269,7 @@ class PacketManager:
             log.error('Unknown packet %s, payload %s', name, packet)
 
     def handshake(self, problems: str, runtimes, id: str, key: str):
-        self._send_packet({'name': 'handshake',
-                           'problems': problems,
-                           'executors': runtimes,
-                           'id': id,
-                           'key': key})
+        self._send_packet({'name': 'handshake', 'problems': problems, 'executors': runtimes, 'id': id, 'key': key})
         log.info('Awaiting handshake response: [%s]:%s', self.host, self.port)
         try:
             data = self.input.read(PacketManager.SIZE_PACK.size)
@@ -273,84 +286,78 @@ class PacketManager:
 
     def supported_problems_packet(self, problems: List[Tuple[str, int]]):
         log.info('Update problems')
-        self._send_packet({'name': 'supported-problems',
-                           'problems': problems})
+        self._send_packet({'name': 'supported-problems', 'problems': problems})
 
     def test_case_status_packet(self, position: int, result: Result):
-        log.info('Test case on %d: #%d, %s [%.3fs | %.2f MB], %.1f/%.0f',
-                 self.judge.current_submission_id, position,
-                 ', '.join(result.readable_codes()),
-                 result.execution_time, result.max_memory / 1024.0,
-                 result.points, result.total_points)
+        log.info(
+            'Test case on %d: #%d, %s [%.3fs | %.2f MB], %.1f/%.0f',
+            self.judge.current_submission_id,
+            position,
+            ', '.join(result.readable_codes()),
+            result.execution_time,
+            result.max_memory / 1024.0,
+            result.points,
+            result.total_points,
+        )
         with self._testcase_queue_lock:
             self._testcase_queue.append((position, result))
 
     def compile_error_packet(self, message: str):
         log.info('Compile error: %d', self.judge.current_submission_id)
         self.fallback = 4
-        self._send_packet({'name': 'compile-error',
-                           'submission-id': self.judge.current_submission_id,
-                           'log': message})
+        self._send_packet({'name': 'compile-error', 'submission-id': self.judge.current_submission_id, 'log': message})
 
     def compile_message_packet(self, message: str):
         log.info('Compile message: %d', self.judge.current_submission_id)
-        self._send_packet({'name': 'compile-message',
-                           'submission-id': self.judge.current_submission_id,
-                           'log': message})
+        self._send_packet(
+            {'name': 'compile-message', 'submission-id': self.judge.current_submission_id, 'log': message}
+        )
 
     def internal_error_packet(self, message: str):
         log.info('Internal error: %d', self.judge.current_submission_id)
         self._flush_testcase_queue()
-        self._send_packet({'name': 'internal-error',
-                           'submission-id': self.judge.current_submission_id,
-                           'message': message})
+        self._send_packet(
+            {'name': 'internal-error', 'submission-id': self.judge.current_submission_id, 'message': message}
+        )
 
     def begin_grading_packet(self, is_pretested: bool):
         log.info('Begin grading: %d', self.judge.current_submission_id)
-        self._send_packet({'name': 'grading-begin',
-                           'submission-id': self.judge.current_submission_id,
-                           'pretested': is_pretested})
+        self._send_packet(
+            {'name': 'grading-begin', 'submission-id': self.judge.current_submission_id, 'pretested': is_pretested}
+        )
 
     def grading_end_packet(self):
         log.info('End grading: %d', self.judge.current_submission_id)
         self.fallback = 4
         self._flush_testcase_queue()
-        self._send_packet({'name': 'grading-end',
-                           'submission-id': self.judge.current_submission_id})
+        self._send_packet({'name': 'grading-end', 'submission-id': self.judge.current_submission_id})
 
     def batch_begin_packet(self):
         self._batch += 1
         log.info('Enter batch number %d: %d', self._batch, self.judge.current_submission_id)
         self._flush_testcase_queue()
-        self._send_packet({'name': 'batch-begin',
-                           'submission-id': self.judge.current_submission_id})
+        self._send_packet({'name': 'batch-begin', 'submission-id': self.judge.current_submission_id})
 
     def batch_end_packet(self):
         log.info('Exit batch number %d: %d', self._batch, self.judge.current_submission_id)
         self._flush_testcase_queue()
-        self._send_packet({'name': 'batch-end',
-                           'submission-id': self.judge.current_submission_id})
+        self._send_packet({'name': 'batch-end', 'submission-id': self.judge.current_submission_id})
 
     def current_submission_packet(self):
         log.info('Current submission query: %d', self.judge.current_submission_id)
-        self._send_packet({'name': 'current-submission-id',
-                           'submission-id': self.judge.current_submission_id})
+        self._send_packet({'name': 'current-submission-id', 'submission-id': self.judge.current_submission_id})
 
     def submission_terminated_packet(self):
         log.info('Submission aborted: %d', self.judge.current_submission_id)
         self._flush_testcase_queue()
-        self._send_packet({'name': 'submission-terminated',
-                           'submission-id': self.judge.current_submission_id})
+        self._send_packet({'name': 'submission-terminated', 'submission-id': self.judge.current_submission_id})
 
     def ping_packet(self, when: float):
-        data = {'name': 'ping-response',
-                'when': when,
-                'time': time.time()}
+        data = {'name': 'ping-response', 'when': when, 'time': time.time()}
         for fn in sysinfo.report_callbacks:
             key, value = fn()
             data[key] = value
         self._send_packet(data)
 
     def submission_acknowledged_packet(self, sub_id: int):
-        self._send_packet({'name': 'submission-acknowledged',
-                           'submission-id': sub_id})
+        self._send_packet({'name': 'submission-acknowledged', 'submission-id': sub_id})

@@ -45,8 +45,9 @@ class GCCExecutor(CompiledExecutor):
     def get_binary_cache_key(self) -> bytes:
         command = self.get_command()
         assert command is not None
-        key_components = ([self.problem, command, self.get_march_flag()] +
-                          self.get_defines() + self.get_flags() + self.get_ldflags())
+        key_components = (
+            [self.problem, command, self.get_march_flag()] + self.get_defines() + self.get_flags() + self.get_ldflags()
+        )
         return utf8bytes(''.join(key_components)) + b''.join(self.source_dict.values())
 
     def get_ldflags(self) -> List[str]:
@@ -61,9 +62,16 @@ class GCCExecutor(CompiledExecutor):
     def get_compile_args(self) -> List[str]:
         command = self.get_command()
         assert command is not None
-        return ([command, '-Wall'] + (['-fdiagnostics-color=always'] if self.has_color else []) +
-                self.source_paths + self.get_defines() + ['-O2', '-lm', self.get_march_flag()] +
-                self.get_flags() + self.get_ldflags() + ['-s', '-o', self.get_compiled_file()])
+        return (
+            [command, '-Wall']
+            + (['-fdiagnostics-color=always'] if self.has_color else [])
+            + self.source_paths
+            + self.get_defines()
+            + ['-O2', '-lm', self.get_march_flag()]
+            + self.get_flags()
+            + self.get_ldflags()
+            + ['-s', '-o', self.get_compiled_file()]
+        )
 
     def get_compile_env(self) -> dict:
         return GCC_COMPILE

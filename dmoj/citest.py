@@ -74,8 +74,9 @@ def ci_test(executors_to_test, overrides, allow_fail=frozenset()):
                 failed = True
                 failed_executors.append(name)
         else:
-            print_ansi(['#ansi[%s](red|bold)', '#ansi[%s](green|bold)'][success] %
-                       (feedback or ['Failed', 'Success'][success]))
+            print_ansi(
+                ['#ansi[%s](red|bold)', '#ansi[%s](green|bold)'][success] % (feedback or ['Failed', 'Success'][success])
+            )
 
             if success:
                 result.update(config)
@@ -89,8 +90,9 @@ def ci_test(executors_to_test, overrides, allow_fail=frozenset()):
 
                 if config:
                     print('  Attempted:')
-                    print('   ',
-                          yaml.safe_dump(config, default_flow_style=False).rstrip().replace('\n', '\n' + ' ' * 4))
+                    print(
+                        '   ', yaml.safe_dump(config, default_flow_style=False).rstrip().replace('\n', '\n' + ' ' * 4)
+                    )
 
                 if errors:
                     print('  Errors:')

@@ -58,14 +58,20 @@ def main():
                     traceback.print_exc()
             else:
                 if not args.silent:
-                    print_ansi(['#ansi[%s](red|bold)', '#ansi[%s](green|bold)'][success] %
-                               (feedback or ['Failed', 'Success'][success]), file=sys.stderr)
+                    print_ansi(
+                        ['#ansi[%s](red|bold)', '#ansi[%s](green|bold)'][success]
+                        % (feedback or ['Failed', 'Success'][success]),
+                        file=sys.stderr,
+                    )
 
                 if not success and args.verbose:
                     if config:
                         print('  Attempted:', file=sys.stderr)
-                        print('   ', yaml.safe_dump(config, default_flow_style=False).rstrip()
-                              .replace('\n', '\n' + ' ' * 4), file=sys.stderr)
+                        print(
+                            '   ',
+                            yaml.safe_dump(config, default_flow_style=False).rstrip().replace('\n', '\n' + ' ' * 4),
+                            file=sys.stderr,
+                        )
 
                     if errors:
                         print('  Errors:', file=sys.stderr)
@@ -83,8 +89,9 @@ def main():
     else:
         print_ansi('#ansi[No runtimes configured.](red|bold)', file=sys.__stderr__)
         if not args.verbose:
-            print_ansi('Run #ansi[%s -V](|underline) to see why this is the case.' % (parser.prog,),
-                       file=sys.__stderr__)
+            print_ansi(
+                'Run #ansi[%s -V](|underline) to see why this is the case.' % (parser.prog,), file=sys.__stderr__
+            )
 
     print(yaml.safe_dump({'runtime': result}, default_flow_style=False).rstrip())
 

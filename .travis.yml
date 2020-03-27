@@ -38,6 +38,7 @@ script:
     cd /code
     if [ "$PYTHON_VERSION" != 3.7 ]; then
       PYTHON="/code/python$PYTHON_VERSION/bin/python$PYTHON_VERSION"
+      "$PYTHON" -m pip install --upgrade pip
       "$PYTHON" -m pip install cython coverage
     else
       PYTHON=/usr/bin/python3.7

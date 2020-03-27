@@ -18,6 +18,7 @@ class ProblemTest(unittest.TestCase):
                 return None
 
             def _problem_file_list(self):
+                # fmt: off
                 return [
                     's2.1-1.in', 's2.1-1.out',
                     's2.1.2.in', 's2.1.2.out',
@@ -30,21 +31,34 @@ class ProblemTest(unittest.TestCase):
                     'INPUT8.txt', 'OUTPUT8.txt',
                     '.DS_Store',
                 ]
+                # fmt: on
 
         with mock.patch('dmoj.problem.get_problem_root') as gpr:
             gpr.return_value = '/proc'
             self.problem_data = ProblemDataManager(None)
             self.problem_data.update({'init.yml': 'archive: foo.zip'})
             problem = MockProblem('test', 2, 16384, {})
-            self.assertEqual(problem.config.test_cases.unwrap(),
-                             [{'batched': [{'in': 's2.1-1.in', 'out': 's2.1-1.out'},
-                                           {'in': 's2.1.2.in', 'out': 's2.1.2.out'}], 'points': 1},
-                              {'in': 's3.4.in', 'out': 's3.4.out', 'points': 1},
-                              {'in': '5.in', 'out': '5.OUT', 'points': 1}, {
-                                  'batched': [{'in': '6-1.in', 'out': '6-1.OUT'}, {'in': '6.2.in', 'out': '6.2.OUT'},
-                                              {'in': 'foo/a.b.c.6.3.in', 'out': 'foo/a.b.c.6.3.OUT'}], 'points': 1},
-                              {'in': 'bar.in.7', 'out': 'bar.out.7', 'points': 1},
-                              {'in': 'INPUT8.txt', 'out': 'OUTPUT8.txt', 'points': 1}])
+            self.assertEqual(
+                problem.config.test_cases.unwrap(),
+                [
+                    {
+                        'batched': [{'in': 's2.1-1.in', 'out': 's2.1-1.out'}, {'in': 's2.1.2.in', 'out': 's2.1.2.out'}],
+                        'points': 1,
+                    },
+                    {'in': 's3.4.in', 'out': 's3.4.out', 'points': 1},
+                    {'in': '5.in', 'out': '5.OUT', 'points': 1},
+                    {
+                        'batched': [
+                            {'in': '6-1.in', 'out': '6-1.OUT'},
+                            {'in': '6.2.in', 'out': '6.2.OUT'},
+                            {'in': 'foo/a.b.c.6.3.in', 'out': 'foo/a.b.c.6.3.OUT'},
+                        ],
+                        'points': 1,
+                    },
+                    {'in': 'bar.in.7', 'out': 'bar.out.7', 'points': 1},
+                    {'in': 'INPUT8.txt', 'out': 'OUTPUT8.txt', 'points': 1},
+                ],
+            )
 
     def test_no_init(self):
         self.problem_data = {}

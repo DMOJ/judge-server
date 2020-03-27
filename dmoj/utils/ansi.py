@@ -19,8 +19,9 @@ def ansi_style(text):
         attrs = data[1].split(',') if len(data) > 1 else []
         return colored(text, *colors, attrs=attrs)
 
-    return re.sub(r'#ansi\[(.*?)\]\((.*?)\)',
-                  lambda x: format_inline(x.group(1), x.group(2)) if not no_ansi else x.group(1), text)
+    return re.sub(
+        r'#ansi\[(.*?)\]\((.*?)\)', lambda x: format_inline(x.group(1), x.group(2)) if not no_ansi else x.group(1), text
+    )
 
 
 def print_ansi(*args, **kwargs):

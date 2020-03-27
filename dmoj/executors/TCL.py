@@ -26,4 +26,4 @@ puts $input
         process.stdin.write(b'puts $tcl_version\n')
         process.stdin.close()
         retcode = process.poll()
-        return ('tclsh', tuple(map(int, process.stdout.read().split(b'.'))) if not retcode else ()),
+        return (('tclsh', tuple(map(int, process.stdout.read().split(b'.'))) if not retcode else ()),)

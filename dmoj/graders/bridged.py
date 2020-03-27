@@ -27,19 +27,27 @@ class BridgedInteractiveGrader(StandardGrader):
         if return_code not in contrib_modules:
             raise InternalError('%s is not a valid return code parser' % return_code)
 
-        return contrib_modules[return_code].ContribModule.parse_return_code(self._interactor, self.interactor_binary,
-                                                                            case.points, self._interactor_time_limit,
-                                                                            self._interactor_memory_limit,
-                                                                            feedback=utf8text(stderr)
-                                                                            if self.handler_data.feedback else None,
-                                                                            name='interactor', stderr=stderr)
+        return contrib_modules[return_code].ContribModule.parse_return_code(
+            self._interactor,
+            self.interactor_binary,
+            case.points,
+            self._interactor_time_limit,
+            self._interactor_memory_limit,
+            feedback=utf8text(stderr) if self.handler_data.feedback else None,
+            name='interactor',
+            stderr=stderr,
+        )
 
     def _launch_process(self, case):
         submission_stdin, self._stdout_pipe = os.pipe()
         self._stdin_pipe, submission_stdout = os.pipe()
         self._current_proc = self.binary.launch(
-            time=self.problem.time_limit, memory=self.problem.memory_limit, symlinks=case.config.symlinks,
-            stdin=submission_stdin, stdout=submission_stdout, stderr=subprocess.PIPE,
+            time=self.problem.time_limit,
+            memory=self.problem.memory_limit,
+            symlinks=case.config.symlinks,
+            stdin=submission_stdin,
+            stdout=submission_stdout,
+            stderr=subprocess.PIPE,
             wall_time=case.config.wall_time_factor * self.problem.time_limit,
         )
         os.close(submission_stdin)
@@ -52,8 +60,12 @@ class BridgedInteractiveGrader(StandardGrader):
 
         with mktemp(input) as input_file, mktemp(output) as output_file:
             self._interactor = self.interactor_binary.launch(
-                input_file.name, output_file.name, time=self._interactor_time_limit,
-                memory=self._interactor_memory_limit, stdin=self._stdin_pipe, stdout=self._stdout_pipe,
+                input_file.name,
+                output_file.name,
+                time=self._interactor_time_limit,
+                memory=self._interactor_memory_limit,
+                stdin=self._stdin_pipe,
+                stdout=self._stdout_pipe,
                 stderr=subprocess.PIPE,
             )
 

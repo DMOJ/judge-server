@@ -67,9 +67,13 @@ class ASMExecutor(CompiledExecutor):
             to_link = ['-dynamic-linker', self.dynamic_linker] + self.crt_pre + ['-lc'] + to_link + self.crt_post
 
         executable = self._file(self.problem)
-        process = TimedPopen([self.get_ld_path(), '-s', '-o', executable, '-m', self.ld_m] + to_link,
-                             cwd=self._dir, stderr=subprocess.PIPE, preexec_fn=self.create_executable_limits(),
-                             time_limit=self.compiler_time_limit)
+        process = TimedPopen(
+            [self.get_ld_path(), '-s', '-o', executable, '-m', self.ld_m] + to_link,
+            cwd=self._dir,
+            stderr=subprocess.PIPE,
+            preexec_fn=self.create_executable_limits(),
+            time_limit=self.compiler_time_limit,
+        )
         ld_output = process.communicate()[1]
         if process.returncode != 0:
             raise CompileError(ld_output)
@@ -105,8 +109,9 @@ class ASMExecutor(CompiledExecutor):
     def initialize(cls):
         if cls.qemu_path is None and not can_debug(cls.arch):
             return False
-        if any(i is None for i in
-               (cls.get_as_path(), cls.get_ld_path(), cls.dynamic_linker, cls.crt_pre, cls.crt_post)):
+        if any(
+            i is None for i in (cls.get_as_path(), cls.get_ld_path(), cls.dynamic_linker, cls.crt_pre, cls.crt_post)
+        ):
             return False
         if any(not os.path.isfile(i) for i in (cls.get_as_path(), cls.get_ld_path(), cls.dynamic_linker)):
             return False
@@ -138,8 +143,7 @@ class GASExecutor(ASMExecutor):
 
     def assemble(self):
         object = self._file('%s.o' % self.problem)
-        process = subprocess.Popen(self.get_as_args(object),
-                                   cwd=self._dir, stderr=subprocess.PIPE)
+        process = subprocess.Popen(self.get_as_args(object), cwd=self._dir, stderr=subprocess.PIPE)
         as_output = process.communicate()[1]
         if process.returncode != 0:
             raise CompileError(as_output)
@@ -150,8 +154,10 @@ class GASExecutor(ASMExecutor):
     def get_find_first_mapping(cls):
         if cls.platform_prefixes is None:
             return None
-        return {cls.as_name: ['%s-as' % i for i in cls.platform_prefixes] + ['as'],
-                cls.ld_name: ['%s-ld' % i for i in cls.platform_prefixes] + ['ld']}
+        return {
+            cls.as_name: ['%s-as' % i for i in cls.platform_prefixes] + ['as'],
+            cls.ld_name: ['%s-ld' % i for i in cls.platform_prefixes] + ['ld'],
+        }
 
 
 class NASMExecutor(ASMExecutor):

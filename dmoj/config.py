@@ -77,8 +77,8 @@ class ConfigNode:
         if not hasattr(self.raw_config, 'items'):
             raise InvalidInitException('config node is not a dict')
         for key, value in self.raw_config.items():
-            yield key, ConfigNode(value, self, dynamic=self.dynamic) \
-                if isinstance(value, list) or isinstance(value, dict) else value
+            should_wrap = isinstance(value, list) or isinstance(value, dict)
+            yield key, ConfigNode(value, self, dynamic=self.dynamic) if should_wrap else value
 
     def __getattr__(self, item):
         return self[item.replace('_', '-')] if self[item] is None else self[item]
@@ -86,6 +86,7 @@ class ConfigNode:
     def __getitem__(self, item):
         try:
             if self.dynamic and isinstance(self.raw_config, dict):
+
                 def run_dynamic_key(dynamic_key, run_func):
                     # Wrap in a ConfigNode so dynamic keys can benefit from the nice features of ConfigNode
                     local = {'node': ConfigNode(self.raw_config.get(item, {}), self)}
@@ -95,12 +96,14 @@ class ConfigNode:
                         import traceback
 
                         traceback.print_exc()
-                        raise InvalidInitException('exception executing dynamic key ' +
-                                                   str(dynamic_key) + ': ' + str(e))
+                        raise InvalidInitException(
+                            'exception executing dynamic key ' + str(dynamic_key) + ': ' + str(e)
+                        )
                     del self.raw_config[dynamic_key]
                     self.raw_config[item] = cfg
 
                 if item + '++' in self.raw_config:
+
                     def full(code, local):
                         exec(code, local)
                         return local['node']

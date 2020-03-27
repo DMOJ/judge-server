@@ -63,17 +63,19 @@ class StandardGrader(BaseGrader):
         # checker is a `partial` object, NOT a `function` object
         if not result.result_flag or getattr(checker.func, 'run_on_error', False):
             try:
-                check = checker(result.proc_output,
-                                case.output_data(),
-                                submission_source=self.source,
-                                judge_input=case.input_data(),
-                                point_value=case.points,
-                                case_position=case.position,
-                                batch=case.batch,
-                                submission_language=self.language,
-                                binary_data=case.has_binary_data,
-                                execution_time=result.execution_time,
-                                problem_id=self.problem.id)
+                check = checker(
+                    result.proc_output,
+                    case.output_data(),
+                    submission_source=self.source,
+                    judge_input=case.input_data(),
+                    point_value=case.points,
+                    case_position=case.position,
+                    batch=case.batch,
+                    submission_language=self.language,
+                    binary_data=case.has_binary_data,
+                    execution_time=result.execution_time,
+                    problem_id=self.problem.id,
+                )
             except UnicodeDecodeError:
                 # Don't rely on problemsetters to do sane things when it comes to Unicode handling, so
                 # just proactively swallow all Unicode-related checker errors.
@@ -86,16 +88,21 @@ class StandardGrader(BaseGrader):
 
     def _launch_process(self, case):
         self._current_proc = self.binary.launch(
-            time=self.problem.time_limit, memory=self.problem.memory_limit, symlinks=case.config.symlinks,
-            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            time=self.problem.time_limit,
+            memory=self.problem.memory_limit,
+            symlinks=case.config.symlinks,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             wall_time=case.config.wall_time_factor * self.problem.time_limit,
         )
 
     def _interact_with_process(self, case, result, input):
         process = self._current_proc
         try:
-            result.proc_output, error = process.communicate(input, outlimit=case.config.output_limit_length,
-                                                            errlimit=1048576)
+            result.proc_output, error = process.communicate(
+                input, outlimit=case.config.output_limit_length, errlimit=1048576
+            )
         except OutputLimitExceeded:
             error = b''
             try:
@@ -109,6 +116,9 @@ class StandardGrader(BaseGrader):
         return error
 
     def _generate_binary(self):
-        return executors[self.language].Executor(self.problem.id, self.source,
-                                                 hints=self.problem.config.hints or [],
-                                                 unbuffered=self.problem.config.unbuffered)
+        return executors[self.language].Executor(
+            self.problem.id,
+            self.source,
+            hints=self.problem.config.hints or [],
+            unbuffered=self.problem.config.unbuffered,
+        )

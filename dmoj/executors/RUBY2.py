@@ -10,8 +10,7 @@ class Executor(ScriptExecutor):
     address_grace = 65536
     test_program = 'puts gets'
     nproc = -1
-    command_paths = (['ruby2.%d' % i for i in reversed(range(0, 7))] +
-                     ['ruby2%d' % i for i in reversed(range(0, 7))])
+    command_paths = ['ruby2.%d' % i for i in reversed(range(0, 7))] + ['ruby2%d' % i for i in reversed(range(0, 7))]
     syscalls = ['poll', 'thr_set_name', 'eventfd2']
     fs = ['/proc/self/loginuid$']
 
@@ -44,7 +43,7 @@ class Executor(ScriptExecutor):
 
     @classmethod
     def get_versionable_commands(cls):
-        return ('ruby', cls.get_command()),
+        return (('ruby', cls.get_command()),)
 
     @classmethod
     def get_find_first_mapping(cls):

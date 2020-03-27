@@ -5,12 +5,15 @@ _cpu_count = _get_cpu_count()
 
 
 if hasattr(os, 'getloadavg'):
+
     def load_fair():
         try:
             load = os.getloadavg()[0] / _cpu_count
         except OSError:  # as of May 2016, Windows' Linux subsystem throws OSError on getloadavg
             load = -1
         return 'load', load
+
+
 else:
     # There exist some Unix platforms (like Android) which don't
     # have `getloadavg` implemented, but aren't Windows

@@ -35,8 +35,15 @@ class MonoExecutor(CompiledExecutor):
     fs = ['/etc/mono/']
     # Mono sometimes forks during its crashdump procedure, but continues even if
     # the call to fork fails.
-    syscalls = ['sched_setscheduler', 'wait4', 'rt_sigsuspend', 'msync',
-                'fadvise64', 'clock_nanosleep', ('fork', ACCESS_EAGAIN)]
+    syscalls = [
+        'sched_setscheduler',
+        'wait4',
+        'rt_sigsuspend',
+        'msync',
+        'fadvise64',
+        'clock_nanosleep',
+        ('fork', ACCESS_EAGAIN),
+    ]
 
     def get_env(self):
         env = super().get_env()

@@ -79,8 +79,9 @@ def cli_main():
 
     print('Running local judge...')
 
-    logging.basicConfig(filename=judgeenv.log_file, level=logging.INFO,
-                        format='%(levelname)s %(asctime)s %(module)s %(message)s')
+    logging.basicConfig(
+        filename=judgeenv.log_file, level=logging.INFO, format='%(levelname)s %(asctime)s %(module)s %(message)s'
+    )
 
     judge = LocalJudge()
 
@@ -90,6 +91,7 @@ def cli_main():
     print()
 
     from dmoj.commands import all_commands, commands, register_command
+
     for command in all_commands:
         register_command(command(judge))
 

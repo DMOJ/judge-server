@@ -19,9 +19,7 @@ class ShellExecutor(ScriptExecutor):
         return super().get_fs() + self.get_allowed_exec()
 
     def get_allowed_syscalls(self):
-        return super().get_allowed_syscalls() + [
-            'fork', 'waitpid', 'wait4',
-        ]
+        return super().get_allowed_syscalls() + ['fork', 'waitpid', 'wait4']
 
     def get_security(self, launch_kwargs=None):
         from dmoj.cptbox.syscalls import sys_execve, sys_access, sys_eaccess

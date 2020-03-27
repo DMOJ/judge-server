@@ -12,5 +12,4 @@ class RejudgeCommand(Command):
         args = self.arg_parser.parse_args(line)
         problem, lang, src, tl, ml = self.get_submission_data(args.submission_id)
 
-        self.judge.begin_grading(self.judge.submission_id_counter, problem, lang, src, tl, ml, False, {},
-                                 blocking=True)
+        self.judge.begin_grading(self.judge.submission_id_counter, problem, lang, src, tl, ml, False, {}, blocking=True)

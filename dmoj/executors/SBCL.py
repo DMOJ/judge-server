@@ -24,9 +24,18 @@ class Executor(NullStdoutMixin, ScriptDirectoryMixin, CompiledExecutor):
         return [self.get_command(), '--eval', self.compile_script.format(code=self._code), '--quit']
 
     def get_cmdline(self):
-        return [self.get_command(), '--dynamic-space-size', str(int(self.__memory_limit / 1024.0 + 1)),
-                '--noinform', '--no-sysinit', '--no-userinit', '--load', self.problem + ".fasl",
-                '--quit', '--end-toplevel-options']
+        return [
+            self.get_command(),
+            '--dynamic-space-size',
+            str(int(self.__memory_limit / 1024.0 + 1)),
+            '--noinform',
+            '--no-sysinit',
+            '--no-userinit',
+            '--load',
+            self.problem + ".fasl",
+            '--quit',
+            '--end-toplevel-options',
+        ]
 
     def launch(self, *args, **kwargs):
         self.__memory_limit = kwargs['memory']

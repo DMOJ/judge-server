@@ -28,7 +28,7 @@ class ListProblemsCommand(Command):
             all_problems = list(filter(lambda x: r.match(x[0]) is not None, all_problems))
 
         if _args.limit:
-            all_problems = all_problems[:_args.limit]
+            all_problems = all_problems[: _args.limit]
 
         if len(all_problems):
             problems = iter(map(itemgetter(0), all_problems))

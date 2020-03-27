@@ -27,6 +27,7 @@ try:
     from Cython.Build import cythonize
 except ImportError:
     if has_pyx:
+        traceback.print_exc()
         print('You need to install cython first before installing DMOJ.', file=sys.stderr)
         print('Run: pip install cython', file=sys.stderr)
         print('Or if you do not have pip: easy_install cython', file=sys.stderr)

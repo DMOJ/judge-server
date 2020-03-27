@@ -41,15 +41,18 @@ class Problem:
             doc = yaml.safe_load(self.problem_data['init.yml'])
             if not doc:
                 raise InvalidInitException('I find your lack of content disturbing.')
-            self.config = ConfigNode(doc, defaults={
-                'wall_time_factor': 3,
-                'output_prefix_length': 64,
-                'output_limit_length': 25165824,
-                'binary_data': False,
-                'short_circuit': True,
-                'symlinks': {},
-                'meta': meta,
-            })
+            self.config = ConfigNode(
+                doc,
+                defaults={
+                    'wall_time_factor': 3,
+                    'output_prefix_length': 64,
+                    'output_limit_length': 25165824,
+                    'binary_data': False,
+                    'short_circuit': True,
+                    'symlinks': {},
+                    'meta': meta,
+                },
+            )
         except (IOError, KeyError, ParserError, ScannerError) as e:
             raise InvalidInitException(str(e))
 
@@ -103,22 +106,22 @@ class Problem:
         for batch_or_case_id in sorted(groups.keys()):
             group_cases = groups[batch_or_case_id]
             if batch_or_case_id in batch_ids:
-                test_cases.append({
-                    'batched': [{
-                        'in': testcase.input_file,
-                        'out': testcase.output_file,
-                    } for _, testcase in sorted(group_cases.items())],
-                    'points': next(case_points),
-                })
+                test_cases.append(
+                    {
+                        'batched': [
+                            {'in': testcase.input_file, 'out': testcase.output_file}
+                            for _, testcase in sorted(group_cases.items())
+                        ],
+                        'points': next(case_points),
+                    }
+                )
             else:
                 if len(group_cases) > 1:
                     raise InvalidInitException('problem has conflicting test cases: %s' % group_cases)
                 test_case = next(iter(group_cases.values()))
-                test_cases.append({
-                    'in': test_case.input_file,
-                    'out': test_case.output_file,
-                    'points': next(case_points),
-                })
+                test_cases.append(
+                    {'in': test_case.input_file, 'out': test_case.output_file, 'points': next(case_points)}
+                )
 
         return test_cases
 
@@ -274,17 +277,25 @@ class TestCase:
             filenames = [filenames]
 
         filenames = [os.path.join(base, name) for name in filenames]
-        executor = self.problem.generator_manager.get_generator(filenames, flags, lang=lang,
-                                                                compiler_time_limit=compiler_time_limit)
+        executor = self.problem.generator_manager.get_generator(
+            filenames, flags, lang=lang, compiler_time_limit=compiler_time_limit
+        )
 
         # convert all args to str before launching; allows for smoother int passing
         args = map(str, args)
 
         # setting large buffers is really important, because otherwise stderr is unbuffered
         # and the generator begins calling into cptbox Python code really frequently
-        proc = executor.launch(*args, time=time_limit, memory=memory_limit,
-                               stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                               stderr_buffer_size=65536, stdout_buffer_size=65536)
+        proc = executor.launch(
+            *args,
+            time=time_limit,
+            memory=memory_limit,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            stderr_buffer_size=65536,
+            stdout_buffer_size=65536
+        )
 
         try:
             input = self.problem.problem_data[self.config['in']] if self.config['in'] else None

@@ -56,7 +56,7 @@ class Result:
 
     @property
     def output(self):
-        return utf8text(self.proc_output[:self.case.output_prefix_length], 'replace')
+        return utf8text(self.proc_output[: self.case.output_prefix_length], 'replace')
 
     @classmethod
     def get_feedback_str(cls, error, process, binary):

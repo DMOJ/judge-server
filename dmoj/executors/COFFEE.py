@@ -8,8 +8,19 @@ class Executor(ScriptExecutor):
     name = 'COFFEE'
     nproc = -1
     command = 'node'
-    syscalls = ['newselect', 'select', 'poll', 'epoll_create1', 'epoll_ctl',
-                'epoll_wait', 'epoll_pwait', 'sched_yield', 'setrlimit', 'eventfd2', 'statx']
+    syscalls = [
+        'newselect',
+        'select',
+        'poll',
+        'epoll_create1',
+        'epoll_ctl',
+        'epoll_wait',
+        'epoll_pwait',
+        'sched_yield',
+        'setrlimit',
+        'eventfd2',
+        'statx',
+    ]
     test_program = '''\
 process.stdin.on 'readable', () ->
   chunk = process.stdin.read()
@@ -36,7 +47,4 @@ process.stdin.on 'readable', () ->
 
     @classmethod
     def get_find_first_mapping(cls):
-        return {
-            'node': ['nodejs', 'node'],
-            'coffee': ['coffee'],
-        }
+        return {'node': ['nodejs', 'node'], 'coffee': ['coffee']}

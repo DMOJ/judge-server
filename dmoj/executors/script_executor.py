@@ -9,8 +9,7 @@ from dmoj.utils.unicode import utf8bytes
 class ScriptExecutor(BaseExecutor):
     def __init__(self, problem_id: str, source_code: bytes, **kwargs):
         super().__init__(problem_id, source_code, **kwargs)
-        self._code = self._file(
-            self.source_filename_format.format(problem_id=problem_id, ext=self.ext))
+        self._code = self._file(self.source_filename_format.format(problem_id=problem_id, ext=self.ext))
         self.create_files(problem_id, source_code)
 
     @classmethod

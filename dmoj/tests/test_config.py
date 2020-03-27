@@ -5,17 +5,17 @@ from dmoj.config import ConfigNode
 
 class ConfigNodeTest(unittest.TestCase):
     def setUp(self):
-        self.c = ConfigNode(defaults={
-            'bool': True,
-            'int': 1,
-            'list': [0, 1, 2],
-            'str': 'foo',
-            'dict': {
-                'foo': 'bar',
-            },
-            'dynamic1+': '5 * 2',
-            'dynamic2++': 'node = {"foo": 1, "bar+": "list(range(2))"}',
-        })
+        self.c = ConfigNode(
+            defaults={
+                'bool': True,
+                'int': 1,
+                'list': [0, 1, 2],
+                'str': 'foo',
+                'dict': {'foo': 'bar'},
+                'dynamic1+': '5 * 2',
+                'dynamic2++': 'node = {"foo": 1, "bar+": "list(range(2))"}',
+            }
+        )
 
     def test_primitives(self):
         self.assertIs(self.c.bool, True)

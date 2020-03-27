@@ -6,10 +6,7 @@ from dmoj.utils.unicode import utf8bytes
 
 
 def check(process_output: bytes, judge_output: bytes, split_on: str = 'lines', **kwargs) -> bool:
-    split_pattern = {
-        'lines': b'[\r\n]',
-        'whitespace': br'[\s]',
-    }.get(split_on)
+    split_pattern = {'lines': b'[\r\n]', 'whitespace': br'[\s]'}.get(split_on)
 
     if not split_pattern:
         raise InternalError('invalid `split_on` mode')

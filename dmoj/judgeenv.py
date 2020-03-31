@@ -37,7 +37,7 @@ env = ConfigNode(defaults={
 }, dynamic=False)
 _root = os.path.dirname(__file__)
 
-log_file = server_host = server_port = no_ansi = no_watchdog = problem_regex = case_regex = None
+log_file = server_host = server_port = no_ansi = skip_self_test = no_watchdog = problem_regex = case_regex = None
 secure = no_cert_check = False
 cert_store = api_listen = None
 
@@ -50,7 +50,7 @@ exclude_executors: Set[str] = set()
 
 def load_env(cli=False, testsuite=False):  # pragma: no cover
     global problem_dirs, only_executors, exclude_executors, log_file, server_host, \
-        server_port, no_ansi, no_ansi_emu, env, startup_warnings, no_watchdog, \
+        server_port, no_ansi, no_ansi_emu, skip_self_test, env, startup_warnings, no_watchdog, \
         problem_regex, case_regex, api_listen, secure, no_cert_check, cert_store, \
         problem_watches, cli_command
 
@@ -98,6 +98,8 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
 
     parser.add_argument('--no-ansi', action='store_true', help='disable ANSI output')
 
+    parser.add_argument('--skip-self-test', action='store_true', help='skip executor self-tests')
+
     if testsuite:
         parser.add_argument('tests_dir', help='directory where tests are stored')
         parser.add_argument('problem_regex', help='when specified, only matched problems will be tested', nargs='?')
@@ -110,6 +112,7 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
     cli_command = getattr(args, 'command', [])
 
     no_ansi = args.no_ansi
+    skip_self_test = args.skip_self_test
     no_watchdog = True if cli else args.no_watchdog
     if not cli:
         api_listen = (args.api_host, args.api_port) if args.api_port else None

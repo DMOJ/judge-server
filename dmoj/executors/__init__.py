@@ -25,5 +25,6 @@ def load_executor(name):
 
 
 def load_executors():
+    from dmoj.judgeenv import skip_self_test
     load_modules(get_available(), load_executor, 'Executor', executors, _unsupported_executors,
-                 loading_message='Self-testing executors')
+                 loading_message='Skipped self-tests' if skip_self_test else 'Self-testing executors')

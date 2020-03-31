@@ -10,7 +10,7 @@ from distutils.spawn import find_executable
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from dmoj.executors.mixins import PlatformExecutorMixin
-from dmoj.judgeenv import env
+from dmoj.judgeenv import env, skip_self_test
 from dmoj.result import Result
 from dmoj.utils.ansi import print_ansi
 from dmoj.utils.error import print_protection_fault
@@ -116,7 +116,7 @@ class BaseExecutor(PlatformExecutorMixin):
             return False
         if not os.path.isfile(command):
             return False
-        return cls.run_self_test()
+        return skip_self_test or cls.run_self_test()
 
     @classmethod
     def run_self_test(cls, output: bool = True,

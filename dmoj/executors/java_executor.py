@@ -9,6 +9,7 @@ from typing import Optional
 
 from dmoj.error import CompileError, InternalError
 from dmoj.executors.compiled_executor import CompiledExecutor
+from dmoj.judgeenv import skip_self_test
 from dmoj.utils.unicode import utf8bytes, utf8text
 
 recomment = re.compile(r'/\*.*?\*/', re.DOTALL | re.U)
@@ -135,7 +136,7 @@ class JavaExecutor(CompiledExecutor):
             return False
         if not os.path.isfile(cls.get_vm()) or not os.path.isfile(cls.get_compiler()):
             return False
-        return cls.run_self_test()
+        return skip_self_test or cls.run_self_test()
 
     @classmethod
     def test_jvm(cls, name, path):

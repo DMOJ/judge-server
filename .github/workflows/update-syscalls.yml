@@ -4,6 +4,7 @@ on:
     - cron: '0 0 * * *'
 jobs:
   build:
+    if: github.repository == 'DMOJ/judge-server'
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -25,4 +26,4 @@ jobs:
         labels: cptbox, security, enhancement
         assignees: Xyene, quantum5
         branch: update-syscalls
- 
+

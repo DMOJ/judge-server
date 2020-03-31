@@ -183,6 +183,7 @@ optional arguments:
                         prevent listed executors from loading (comma-
                         separated)
   --no-ansi             disable ANSI output
+  --skip-self-test      skip executor self-tests
 ```
 
 ### Running a CLI Judge
@@ -204,6 +205,7 @@ optional arguments:
                         prevent listed executors from loading (comma-
                         separated)
   --no-ansi             disable ANSI output
+  --skip-self-test      skip executor self-tests
 ```
 
 ## Documentation

@@ -9,12 +9,12 @@ import traceback
 from http.server import HTTPServer
 from itertools import chain
 
-from dmoj import graders, packet
+from dmoj import packet
 from dmoj.control import JudgeControlRequestHandler
 from dmoj.error import CompileError
 from dmoj.judgeenv import clear_problem_dirs_cache, env, get_supported_problems, startup_warnings
 from dmoj.monitor import DummyMonitor, Monitor
-from dmoj.problem import BatchedTestCase, Problem
+from dmoj.problem import BatchedTestCase, Problem, TestCase
 from dmoj.result import Result
 from dmoj.utils.ansi import ansi_style, print_ansi, strip_ansi
 from dmoj.utils.unicode import unicode_stdout_stderr, utf8bytes, utf8text
@@ -82,17 +82,8 @@ class Judge:
         self.updater_signal.set()
 
     def _block_and_grade(self, problem, language, source, short_circuit, report=print):
-        if 'signature_grader' in problem.config:
-            grader_class = graders.SignatureGrader
-        elif 'interactive' in problem.config:
-            grader_class = graders.BridgedInteractiveGrader
-        elif 'custom_judge' in problem.config:
-            grader_class = graders.CustomGrader
-        else:
-            grader_class = graders.StandardGrader
-
         try:
-            self.current_grader = grader_class(self, problem, language, utf8bytes(source))
+            self.current_grader = problem.grader_class(self, problem, language, utf8bytes(source))
         except CompileError as compilation_error:
             error = compilation_error.args[0] or b'compiler exited abnormally'
 
@@ -187,24 +178,23 @@ class Judge:
             if isinstance(case, BatchedTestCase):
                 yield BatchBegin()
 
-                for batched_case in self.grade_cases(grader, case.batched_cases,
-                                                     short_circuit=case.config['short_circuit'],
-                                                     is_short_circuiting=is_short_circuiting):
+                for batched_result in self.grade_cases(grader, case.batched_cases,
+                                                       short_circuit=case.config['short_circuit'],
+                                                       is_short_circuiting=is_short_circuiting):
                     # A batched case just failed.
                     # There are two cases where this means that we should completely short-circuit:
                     # 1. If the batch was worth 0 points, to emulate the property of 0-point cases.
                     # 2. If the short_circuit flag is true, see <https://github.com/DMOJ/judge/issues/341>.
-                    if (batched_case.result_flag & Result.WA) and (not case.points or short_circuit):
+                    if (batched_result.result_flag & Result.WA) and \
+                            (short_circuit or case.kind in (TestCase.KIND_SAMPLE, TestCase.KIND_PRETEST)):
                         is_short_circuiting = True
-                    yield batched_case
+                    yield batched_result
                 yield BatchEnd()
                 continue
 
             # Stop grading if we're short circuiting
             if is_short_circuiting:
-                result = Result(case)
-                result.result_flag = Result.SC
-                yield result
+                yield Result(case, Result.SC)
                 continue
 
             result = grader.grade(case)
@@ -216,7 +206,8 @@ class Judge:
             # If the WA bit of result_flag is set and we are set to short-circuit (e.g., in a batch),
             # short circuit the rest of the cases.
             # Do the same if the case is a pretest (i.e. has 0 points)
-            if (result.result_flag & Result.WA) > 0 and (short_circuit or not case.points):
+            if (result.result_flag & Result.WA) > 0 and \
+                    (short_circuit or case.kind in (TestCase.KIND_SAMPLE, TestCase.KIND_PRETEST)):
                 is_short_circuiting = True
 
             yield result

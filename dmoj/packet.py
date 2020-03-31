@@ -184,6 +184,7 @@ class PacketManager:
                                'cases': [
                                    {
                                        'position': position,
+                                       'kind': result.case.kind,
                                        'status': result.result_flag,
                                        'time': result.execution_time,
                                        'points': result.points,

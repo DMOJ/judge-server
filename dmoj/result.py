@@ -25,8 +25,8 @@ class Result:
         'IE': 'red',
     }
 
-    def __init__(self, case):
-        self.result_flag = 0
+    def __init__(self, case, result_flag=0):
+        self.result_flag = result_flag
         self.execution_time = 0
         self.wall_clock_time = 0
         self.max_memory = 0

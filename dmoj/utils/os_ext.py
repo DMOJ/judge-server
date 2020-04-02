@@ -9,6 +9,21 @@ import sys
 from dmoj.utils.unicode import utf8bytes, utf8text
 
 
+OOM_SCORE_ADJ_MAX = 1000
+OOM_SCORE_ADJ_MIN = -1000
+
+
+def oom_score_adj(score, to=None):
+    if not (OOM_SCORE_ADJ_MIN <= score <= OOM_SCORE_ADJ_MAX):
+        raise OSError()
+
+    if to is None:
+        to = 'self'
+
+    with open('/proc/%s/oom_score_adj' % to, 'wb') as f:
+        f.write(utf8bytes(str(score)))
+
+
 def strsignal(signo):
     # in large part from http://code.activestate.com/recipes/578899-strsignal/
     libc = ctypes.CDLL(ctypes.util.find_library("c"))

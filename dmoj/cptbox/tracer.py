@@ -173,14 +173,20 @@ class TracedPopen(Process, metaclass=TracedPopenMeta):
                         handler = _CALLBACK
                     self._handler(call, handler)
 
-        self._started = threading.Event()
         self._died = threading.Event()
+        self._spawned_or_errored = threading.Event()
+        self._spawn_error = None
+
         if time:
             # Spawn thread to kill process after it times out
             self._shocker = threading.Thread(target=self._shocker_thread)
             self._shocker.start()
         self._worker = threading.Thread(target=self._run_process)
         self._worker.start()
+
+        self._spawned_or_errored.wait()
+        if self._spawn_error:
+            raise self._spawn_error
 
     def wait(self):
         self._died.wait()
@@ -273,15 +279,23 @@ class TracedPopen(Process, metaclass=TracedPopenMeta):
         self._is_tle = True
 
     def _run_process(self):
-        self._spawn(self._executable, self._args, self._env, self._chdir, self._fds)
+        try:
+            self._spawn(self._executable, self._args, self._env, self._chdir, self._fds)
+        except:  # noqa: E722, need to catch absolutely everything
+            self._spawn_error = sys.exc_info()[0]
+            self._exited = True
+            return
+        finally:
+            if self.stdin_needs_close:
+                os.close(self._child_stdin)
+            if self.stdout_needs_close:
+                os.close(self._child_stdout)
+            if self.stderr_needs_close:
+                os.close(self._child_stderr)
 
-        if self.stdin_needs_close:
-            os.close(self._child_stdin)
-        if self.stdout_needs_close:
-            os.close(self._child_stdout)
-        if self.stderr_needs_close:
-            os.close(self._child_stderr)
-        self._started.set()
+            self._spawned_or_errored.set()
+
+        # TODO(tbrindus): this code should be the same as [self.returncode], so it shouldn't be duplicated
         code = self._monitor()
 
         if self._time and self.execution_time > self._time:
@@ -298,7 +312,7 @@ class TracedPopen(Process, metaclass=TracedPopenMeta):
         # Hence, we swallow SIGSTOP, which should never be used anyway, and use it
         # force an update.
         wake_signal = signal.SIGSTOP if 'freebsd' in sys.platform else signal.SIGWINCH
-        self._started.wait()
+        self._spawned_or_errored.wait()
 
         while not self._exited:
             if self.execution_time > self._time or self.wall_clock_time > self._wall_time:

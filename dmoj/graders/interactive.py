@@ -8,6 +8,7 @@ class WrongAnswer(BaseException):
 
 
 EOF = b''
+MAX_NUMBER_DIGITS = 10000
 
 
 class Interactor:
@@ -47,22 +48,34 @@ class Interactor:
 
     def readint(self, lo=float('-inf'), hi=float('inf'), delim=None):
         token = self.readtoken(delim)
+
+        if len(token) > MAX_NUMBER_DIGITS:
+            raise WrongAnswer('integer is too long')
+
         try:
             ret = int(token)
         except ValueError:
             raise WrongAnswer('expected int, got "%s"' % (self._abbreviate(token)))
+
         if not lo <= ret <= hi:
             raise WrongAnswer('expected int in range [%.0f, %.0f], got %d' % (lo, hi, ret))
+
         return ret
 
     def readfloat(self, lo=float('-inf'), hi=float('inf'), delim=None):
         token = self.readtoken(delim)
+
+        if len(token) > MAX_NUMBER_DIGITS:
+            raise WrongAnswer('float is too long')
+
         try:
             ret = float(token)
         except ValueError:
             raise WrongAnswer('expected float, got "%s"' % (self._abbreviate(token)))
+
         if not lo <= ret <= hi:
             raise WrongAnswer('expected float in range [%.2f %.2f], got %.2f' % (lo, hi, ret))
+
         return ret
 
     def write(self, val):

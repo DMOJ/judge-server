@@ -179,8 +179,7 @@ class TracedPopen(Process, metaclass=TracedPopenMeta):
             # Spawn thread to kill process after it times out
             self._shocker = threading.Thread(target=self._shocker_thread)
             self._shocker.start()
-        self._worker = threading.Thread(target=self._run_process)
-        self._worker.start()
+        self._run_process()
 
     def wait(self):
         self._died.wait()

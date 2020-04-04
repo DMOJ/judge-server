@@ -174,7 +174,6 @@ class TracedPopen(Process, metaclass=TracedPopenMeta):
                     self._handler(call, handler)
 
         self._started = threading.Event()
-        self._died = threading.Event()
         if time:
             # Spawn thread to kill process after it times out
             self._shocker = threading.Thread(target=self._shocker_thread)
@@ -182,7 +181,11 @@ class TracedPopen(Process, metaclass=TracedPopenMeta):
         self._run_process()
 
     def wait(self):
-        self._died.wait()
+        code = self._monitor()
+
+        if self._time and self.execution_time > self._time:
+            self._is_tle = True
+
         if not self.was_initialized:
             if self.returncode == 203:
                 raise RuntimeError('failed to set up seccomp policy')
@@ -192,7 +195,8 @@ class TracedPopen(Process, metaclass=TracedPopenMeta):
                     '(https://www.kernel.org/doc/Documentation/security/Yama.txt, should be '
                     'at most 1); if running in Docker, must run container with `--cap-add=SYS_PTRACE`'
                 )
-        return self.returncode
+        # TODO(tbrindus): consolidate with self.returncode
+        return code
 
     def poll(self):
         return self.returncode
@@ -281,13 +285,6 @@ class TracedPopen(Process, metaclass=TracedPopenMeta):
         if self.stderr_needs_close:
             os.close(self._child_stderr)
         self._started.set()
-        code = self._monitor()
-
-        if self._time and self.execution_time > self._time:
-            self._is_tle = True
-        self._died.set()
-
-        return code
 
     def _shocker_thread(self):
         # On Linux, ignored signals still cause a notification under ptrace.

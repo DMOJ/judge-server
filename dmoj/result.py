@@ -69,11 +69,11 @@ class Result:
             feedback = ''
 
         if not feedback and is_ir_or_rte:
-            if not process.was_initialized:
+            if not process.was_initialized or b'failed to map segment from shared object' in error:
                 # Process may failed to initialize, resulting in a SIGKILL without any prior signals.
                 # See <https://github.com/DMOJ/judge/issues/179> for more details.
                 feedback = 'failed initializing'
-            else:
+            elif process.signal:
                 feedback = strsignal(process.signal).lower()
 
         if process.protection_fault:

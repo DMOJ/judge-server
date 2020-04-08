@@ -18,4 +18,4 @@ else
 fi
 
 shift
-runuser -u judge "${command}" -- $@
+runuser -u judge -- bash --login -c "${command} $@"

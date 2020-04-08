@@ -6,7 +6,7 @@ class Executor(CompiledExecutor):
     name = 'SCM'
     command = 'chicken-csc'
     command_paths = ['chicken-csc', 'csc']
-    test_program = '(declare (uses extras)) (map print (read-lines))'
+    test_program = '(import chicken.io) (map print (read-lines))'
 
     def get_compile_args(self):
         return [self.get_command(), self._code]

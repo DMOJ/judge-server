@@ -18,5 +18,5 @@ else
 fi
 
 shift
-. ~judge/profile
+. ~judge/.profile
 runuser -u judge "${command}" -- $@

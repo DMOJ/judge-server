@@ -36,7 +36,7 @@ let () = (In_channel.iter_lines Stdio.stdin ~f:print_endline)
 
     @classmethod
     def get_version_flags(cls, command):
-        return ['opt', '-version']
+        return [('opt', '-version')]
 
     @classmethod
     def get_versionable_commands(cls):

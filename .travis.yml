@@ -52,6 +52,7 @@ script:
   - |
     cat > run-su <<'EOF'
     #!/bin/bash -e
+    . ~/.profile
     cd /code
     "$PYTHON" -m coverage run --source=dmoj -m unittest discover dmoj/tests/
     "$PYTHON" -m coverage run --append --source=dmoj .docker.test.py

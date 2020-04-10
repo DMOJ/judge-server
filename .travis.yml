@@ -14,11 +14,11 @@ jobs:
     - env: DMOJ_USE_SECCOMP="yes" PYTHON_VERSION=3.8 ARCH=amd64 DOCKER_IMAGE=dmoj/runtimes-tier3
     - env: DMOJ_USE_SECCOMP="yes" PYTHON_VERSION=3.8 ARCH=aarch64 DOCKER_IMAGE=dmoj/runtimes-tier1
       arch: arm64
-    - env: DMOJ_USE_SECCOMP="no"  PYTHON_VERSION=3.7 ARCH=amd64 DOCKER_IMAGE=dmoj/runtimes-tier3
+    - env: DMOJ_USE_SECCOMP="no"  PYTHON_VERSION=3.8 ARCH=amd64 DOCKER_IMAGE=dmoj/runtimes-tier3
 install:
   - docker pull "$DOCKER_IMAGE"
   - |
-    if [ "$PYTHON_VERSION" != 3.7 ]; then
+    if [ "$PYTHON_VERSION" != 3.8 ]; then
       curl -L "https://github.com/DMOJ/runtimes-python/releases/latest/download/python$PYTHON_VERSION-$ARCH.tar.gz" |
         tar -xz
     fi
@@ -36,12 +36,12 @@ script:
     export LANG=C.UTF-8
     export PYTHONIOENCODING=utf8
     cd /code
-    if [ "$PYTHON_VERSION" != 3.7 ]; then
+    if [ "$PYTHON_VERSION" != 3.8 ]; then
       PYTHON="/code/python$PYTHON_VERSION/bin/python$PYTHON_VERSION"
       "$PYTHON" -m pip install --upgrade pip
       "$PYTHON" -m pip install cython coverage
     else
-      PYTHON=/usr/bin/python3.7
+      PYTHON=/usr/bin/python3.8
       pip3 install coverage
     fi
     "$PYTHON" -m pip install -e .[test]

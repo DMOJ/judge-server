@@ -112,7 +112,7 @@ class JavaExecutor(CompiledExecutor):
                     # "Newer" (post-Java 8) JVMs regressed a bit in terms of handling out-of-memory situations during
                     # initialization, whereby they now dump a crash log rather than exiting with
                     # java.lang.OutOfMemoryError. Handle this case so that we don't erroneously emit internal errors.
-                    if 'There is insufficient memory for the Java Runtime Environment' in log:
+                    if 'There is insufficient memory for the Java Runtime' in log:
                         return 'insufficient memory to initialize JVM'
                     else:
                         raise InternalError('\n\n' + log)

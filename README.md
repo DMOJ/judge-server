@@ -123,7 +123,8 @@ and tested every week to contain the latest runtime versions.
 The script below spawns a tier 1 judge image. It expects the relevant
 environment variables to be set, the network device to be `enp1s0`, problems
 to be placed under `/mnt/problems`, and judge-specific configuration to be in
-`/mnt/problems/judge.yml`.
+`/mnt/problems/judge.yml`. Note that runtime configuration is already done for you,
+and will be merged automatically into the `judge.yml` provided.
 
 ```
 $ git clone --recursive https://github.com/DMOJ/judge.git

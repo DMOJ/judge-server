@@ -22,7 +22,7 @@ from dmoj.utils.os_ext import (
     INTERPRETER_ARCH,
     file_arch,
     find_exe_in_path,
-)
+    oom_score_adj, OOM_SCORE_ADJ_MAX)
 from dmoj.utils.unicode import utf8bytes, utf8text
 
 PIPE = subprocess.PIPE
@@ -294,6 +294,14 @@ class TracedPopen(Process, metaclass=TracedPopenMeta):
                 os.close(self._child_stderr)
 
             self._spawned_or_errored.set()
+
+        # Adjust OOM score on the child process, sacrificing it before the judge process.
+        try:
+            oom_score_adj(OOM_SCORE_ADJ_MAX, self.pid)
+        except Exception:
+            import traceback
+
+            traceback.print_exc()
 
         # TODO(tbrindus): this code should be the same as [self.returncode], so it shouldn't be duplicated
         code = self._monitor()

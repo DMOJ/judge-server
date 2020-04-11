@@ -112,6 +112,8 @@ class ASMExecutor(CompiledExecutor):
             return False
         if any(not os.path.isfile(i) for i in cls.crt_pre) or any(not os.path.isfile(i) for i in cls.crt_post):
             return False
+        # TODO(kirito): this code is also copied in java_executor.py, but judge should be refactored to call
+        # `run_self_test` outside of `initialize`.
         return skip_self_test or cls.run_self_test()
 
     @classmethod

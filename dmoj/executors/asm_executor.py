@@ -6,7 +6,7 @@ from typing import List, Optional
 from dmoj.cptbox.tracer import can_debug
 from dmoj.error import CompileError
 from dmoj.executors.compiled_executor import CompiledExecutor, TimedPopen
-from dmoj.judgeenv import env
+from dmoj.judgeenv import env, skip_self_test
 from dmoj.utils.os_ext import ARCH_X64, ARCH_X86
 from dmoj.utils.unicode import utf8text
 
@@ -117,7 +117,9 @@ class ASMExecutor(CompiledExecutor):
             return False
         if any(not os.path.isfile(i) for i in cls.crt_pre) or any(not os.path.isfile(i) for i in cls.crt_post):
             return False
-        return cls.run_self_test()
+        # TODO(kirito): this code is also copied in java_executor.py, but judge should be refactored to call
+        # `run_self_test` outside of `initialize`.
+        return skip_self_test or cls.run_self_test()
 
     @classmethod
     def get_versionable_commands(cls):

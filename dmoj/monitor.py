@@ -70,9 +70,9 @@ class Monitor:
                 self._refresher = None
 
             self._handler = SendProblemsHandler(self._refresher)
-            self._monitor = monitor = Observer()
+            self._monitor = Observer()
             for dir in get_problem_watches():
-                monitor.schedule(self._handler, dir, recursive=True)
+                self._monitor.schedule(self._handler, dir, recursive=True)
                 logger.info('Scheduled for monitoring: %s', dir)
         else:
             self._monitor = None
@@ -120,11 +120,3 @@ class Monitor:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.stop()
-
-
-class DummyMonitor:
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        pass

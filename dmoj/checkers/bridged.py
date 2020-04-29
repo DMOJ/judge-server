@@ -54,7 +54,8 @@ def check(
             time=time_limit,
         )
 
-        proc_output, error = map(utf8text, process.communicate())
+        proc_output, error = process.communicate()
+        proc_output = utf8text(proc_output)
 
         return contrib_modules[type].ContribModule.parse_return_code(
             process,

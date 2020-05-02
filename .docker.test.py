@@ -26,7 +26,7 @@ elif arch == 'aarch64':
         'PY3',
         'SED',
         'TEXT',
-        'ZIG'
+        'ZIG',
     }
     ALLOW_FAIL = set()
 else:

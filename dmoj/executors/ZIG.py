@@ -1,7 +1,4 @@
-import os
-
 from dmoj.executors.compiled_executor import CompiledExecutor
-from dmoj.judgeenv import env
 
 
 class Executor(CompiledExecutor):
@@ -18,7 +15,7 @@ pub fn main() !void {
 
     def get_compile_args(self):
         return [
-            self.get_command(), 
+            self.get_command(),
             'build-exe',
             self._code,
             '--name',

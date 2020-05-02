@@ -9,8 +9,15 @@ class Executor(CompiledExecutor):
 const std = @import("std");
 
 pub fn main() !void {
+    const io = std.io;
+    const stdin = std.io.getStdIn().inStream();
     const stdout = std.io.getStdOut().outStream();
-    try stdout.print("echo: Hello, {}!\\n", .{"World"});
+
+    var line_buf: [50]u8 = undefined;
+    while (try stdin.readUntilDelimiterOrEof(&line_buf, '\n')) |line| {
+        if (line.len == 0) break;
+        try stdout.print("{}", .{line});
+    }
 }'''
 
     def get_compile_args(self):

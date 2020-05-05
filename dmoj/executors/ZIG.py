@@ -25,6 +25,7 @@ pub fn main() !void {
             self.get_command(),
             'build-exe',
             self._code,
+            '--release-safe',
             '--name',
             self.problem,
         ]

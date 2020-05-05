@@ -20,11 +20,11 @@ pub fn main() !void {
     }
 }'''
 
-    def __init__(self, problem_id, source_code, **kwargs):
-        # this clean needs to happen because zig refuses to compile carriage returns
-        # https://github.com/ziglang/zig/issues/544
-        code = source_code.replace(b'\r\n', b'\r').replace(b'\r', b'\n')
-        super().__init__(problem_id, code, **kwargs)
+    def create_files(self, problem_id, source_code, *args, **kwargs):
+        # This cleanup needs to happen because Zig refuses to compile carriage returns.
+        # See <https://github.com/ziglang/zig/issues/544>.
+        source_code = source_code.replace(b'\r\n', b'\r').replace(b'\r', b'\n')
+        super().create_files(problem_id, source_code, *args, **kwargs)
 
     def get_compile_args(self):
         return [

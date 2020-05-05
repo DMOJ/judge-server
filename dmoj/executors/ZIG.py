@@ -20,6 +20,12 @@ pub fn main() !void {
     }
 }'''
 
+    def __init__(self, problem_id, source_code, **kwargs):
+        # this clean needs to happen because zig refuses to compile carriage returns
+        # https://github.com/ziglang/zig/issues/544
+        code = source_code.replace(b'\r\n', b'\r').replace(b'\r', b'\n')
+        super().__init__(problem_id, code, **kwargs)
+
     def get_compile_args(self):
         return [
             self.get_command(),

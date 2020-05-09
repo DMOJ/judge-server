@@ -49,6 +49,7 @@ class Problem:
                     'output_limit_length': 25165824,
                     'binary_data': False,
                     'short_circuit': True,
+                    'points': 1,
                     'symlinks': {},
                     'meta': meta,
                 },

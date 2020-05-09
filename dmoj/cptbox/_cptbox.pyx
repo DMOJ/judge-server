@@ -306,7 +306,7 @@ cdef class Debugger:
 
     def readstr(self, unsigned long address, size_t max_size=4096):
         cdef char* str = self.thisptr.readstr(address, max_size)
-        pystr = <object>str
+        pystr = <object>str if str != NULL else None
         self.thisptr.freestr(str)
         return pystr
 

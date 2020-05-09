@@ -75,7 +75,8 @@ class AdvancedDebugger(Debugger):
         if self.address_bits == 32:
             address &= 0xFFFFFFFF
         try:
-            return utf8text(super().readstr(address, max_size))
+            read = super().readstr(address, max_size)
+            return utf8text(read) if read else None
         except UnicodeDecodeError:
             # It's possible for the text to crash utf8text, but this would mean a
             # deliberate attack, so we kill the process here instead

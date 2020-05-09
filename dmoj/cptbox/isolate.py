@@ -232,6 +232,14 @@ class IsolateTracer(dict):
         return fs
 
     def _file_access_check(self, rel_file, debugger, is_open, flag_reg=1, dirfd=AT_FDCWD):
+        # Either process called open(NULL, ...), or we failed to read the path
+        # in cptbox.  Either way this call should not be allowed; if the path
+        # was indeed NULL we can end the request before it gets to the kernel
+        # without any downside, and if it was *not* NULL and we failed to read
+        # it, then we should *definitely* stop the call here.
+        if rel_file is None:
+            return '(nil)', False
+
         try:
             file = self.get_full_path(debugger, rel_file, dirfd)
         except UnicodeDecodeError:

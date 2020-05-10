@@ -84,6 +84,13 @@ with open('aliases.list') as aliases:
         names.add(line.split()[1])
 
 with open('../syscalls.pyi', 'w') as interface:
-    print('from typing import Any\n', file=interface)
+    print('''\
+from typing import List, Dict
+
+translator: List[List[int]]
+by_name: Dict[str, int]
+by_id: List[str]
+SYSCALL_COUNT: int
+''', file=interface)
     for name in sorted(names):
-        print('sys_%s: Any' % (name,), file=interface)
+        print('sys_%s: int' % (name,), file=interface)

@@ -78,18 +78,12 @@ class AdvancedDebugger(Debugger):
     def readstr(self, address, max_size=4096):
         if self.address_bits == 32:
             address &= 0xFFFFFFFF
-        try:
-            read = super().readstr(address, max_size + 1)
-            if read is None:
-                return None
-            if len(read) > max_size:
-                raise MaxLengthExceeded()
-            return utf8text(read)
-        except UnicodeDecodeError:
-            # It's possible for the text to crash utf8text, but this would mean a
-            # deliberate attack, so we kill the process here instead
-            os.kill(self.pid, signal.SIGKILL)
-            return ''
+        read = super().readstr(address, max_size + 1)
+        if read is None:
+            return None
+        if len(read) > max_size:
+            raise MaxLengthExceeded(read)
+        return utf8text(read)
 
 
 # SecurePopen is a subclass of a cython class, _cptbox.Process. Since it is exceedingly unwise

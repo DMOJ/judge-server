@@ -192,7 +192,11 @@ class IsolateTracer(dict):
             file_ptr = getattr(debugger, 'uarg%d' % argument)
             try:
                 file = debugger.readstr(file_ptr)
-            except MaxLengthExceeded:
+            except MaxLengthExceeded as e:
+                log.info('Denied access via syscall %s to overly long path: %r', syscall, e.args[0])
+                return ACCESS_ENOENT(debugger)
+            except UnicodeDecodeError as e:
+                log.info('Denied access via syscall %s to path with invalid unicode: %r', syscall, e.object)
                 return ACCESS_ENOENT(debugger)
 
             file, accessible = self._file_access_check(file, debugger, is_open)
@@ -208,7 +212,11 @@ class IsolateTracer(dict):
         def check(debugger):
             try:
                 file = debugger.readstr(debugger.uarg1)
-            except MaxLengthExceeded:
+            except MaxLengthExceeded as e:
+                log.info('Denied access via syscall %s to overly long path: %r', syscall, e.args[0])
+                return ACCESS_ENOENT(debugger)
+            except UnicodeDecodeError as e:
+                log.info('Denied access via syscall %s to path with invalid unicode: %r', syscall, e.object)
                 return ACCESS_ENOENT(debugger)
 
             file, accessible = self._file_access_check(file, debugger, is_open, dirfd=debugger.arg0, flag_reg=2)

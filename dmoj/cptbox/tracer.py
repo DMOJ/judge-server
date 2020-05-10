@@ -55,6 +55,10 @@ _arch_map = {
 }
 
 
+class MaxLengthExceeded(ValueError):
+    pass
+
+
 class AdvancedDebugger(Debugger):
     # Implements additional debugging functionality for convenience.
 
@@ -75,8 +79,12 @@ class AdvancedDebugger(Debugger):
         if self.address_bits == 32:
             address &= 0xFFFFFFFF
         try:
-            read = super().readstr(address, max_size)
-            return utf8text(read) if read else None
+            read = super().readstr(address, max_size + 1)
+            if read is None:
+                return None
+            if len(read) > max_size:
+                raise MaxLengthExceeded()
+            return utf8text(read)
         except UnicodeDecodeError:
             # It's possible for the text to crash utf8text, but this would mean a
             # deliberate attack, so we kill the process here instead

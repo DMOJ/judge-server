@@ -4,6 +4,7 @@ import re
 import sys
 
 from dmoj.cptbox._cptbox import AT_FDCWD, bsd_get_proc_cwd, bsd_get_proc_fdno
+from dmoj.cptbox.tracer import MaxLengthExceeded
 from dmoj.cptbox.handlers import ACCESS_EACCES, ACCESS_ENOENT, ACCESS_EPERM, ALLOW
 
 # noinspection PyUnresolvedReferences
@@ -189,7 +190,11 @@ class IsolateTracer(dict):
     def check_file_access(self, syscall, argument, is_open=False):
         def check(debugger):
             file_ptr = getattr(debugger, 'uarg%d' % argument)
-            file = debugger.readstr(file_ptr)
+            try:
+                file = debugger.readstr(file_ptr)
+            except MaxLengthExceeded:
+                return ACCESS_ENOENT(debugger)
+
             file, accessible = self._file_access_check(file, debugger, is_open)
             if accessible:
                 return True
@@ -201,7 +206,11 @@ class IsolateTracer(dict):
 
     def check_file_access_at(self, syscall, is_open=False):
         def check(debugger):
-            file = debugger.readstr(debugger.uarg1)
+            try:
+                file = debugger.readstr(debugger.uarg1)
+            except MaxLengthExceeded:
+                return ACCESS_ENOENT(debugger)
+
             file, accessible = self._file_access_check(file, debugger, is_open, dirfd=debugger.arg0, flag_reg=2)
             if accessible:
                 return True

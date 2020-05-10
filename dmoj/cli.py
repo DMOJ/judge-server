@@ -74,14 +74,14 @@ def cli_main():
 
     judgeenv.load_env(cli=True)
 
+    logging.basicConfig(
+        filename=judgeenv.log_file, level=logging.INFO, format='%(levelname)s %(asctime)s %(module)s %(message)s'
+    )
+
     executors.load_executors()
     contrib.load_contrib_modules()
 
     print('Running local judge...')
-
-    logging.basicConfig(
-        filename=judgeenv.log_file, level=logging.INFO, format='%(levelname)s %(asctime)s %(module)s %(message)s'
-    )
 
     judge = LocalJudge()
 

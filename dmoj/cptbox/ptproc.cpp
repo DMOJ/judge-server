@@ -246,6 +246,12 @@ int pt_process::monitor() {
                     }
                     // Fall through to in_syscall branch below, which will kill the process
                     // if `execve` was invoked more than once without being whitelisted.
+                } else if (execve_allowed) {
+                    // Allow any syscalls before the first execve. This allows us to do things
+                    // like provide debug messages when ptrace or seccomp initialization fails,
+                    // without being hampered by the sandbox.
+                    goto resume_process;
+                }
 
 #if PTBOX_SECCOMP
                 if (syscall != debugger->execve_syscall() /* always true */) {

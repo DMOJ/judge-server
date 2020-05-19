@@ -246,7 +246,6 @@ int pt_process::monitor() {
                     }
                     // Fall through to in_syscall branch below, which will kill the process
                     // if `execve` was invoked more than once without being whitelisted.
-                }
 
 #if PTBOX_SECCOMP
                 if (syscall != debugger->execve_syscall() /* always true */) {

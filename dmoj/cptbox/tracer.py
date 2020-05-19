@@ -202,6 +202,8 @@ class TracedPopen(Process, metaclass=TracedPopenMeta):
                     '(https://www.kernel.org/doc/Documentation/security/Yama.txt, should be '
                     'at most 1); if running in Docker, must run container with `--cap-add=SYS_PTRACE`'
                 )
+            elif self.returncode == 205:
+                raise RuntimeError('failed to spawn child')
         return self.returncode
 
     def poll(self):

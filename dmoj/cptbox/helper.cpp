@@ -145,20 +145,26 @@ int cptbox_child_run(const struct child_config *config) {
 
     cptbox_closefrom(config->max_fd + 1);
 
-    if (ptrace_traceme())
+    if (ptrace_traceme()) {
+        perror("ptrace");
         return 204;
+    }
 
     kill(getpid(), SIGSTOP);
 
 #if PTBOX_SECCOMP
     if (config->trace_syscalls) {
         scmp_filter_ctx ctx = seccomp_init(SCMP_ACT_TRACE(0));
-        if (!ctx) return 203;
+        if (!ctx) {
+          perror("seccomp_init");
+          return 203;
+        }
 
         unsigned int child_arch = get_seccomp_arch(config->debugger_type);
 
         if (seccomp_arch_exist(ctx, child_arch) == -EEXIST &&
             seccomp_arch_add(ctx, child_arch) != 0) {
+            perror("seccomp_arch_add");
             return 203;
         }
 
@@ -168,12 +174,17 @@ int cptbox_child_run(const struct child_config *config) {
             }
         }
 
-        if (seccomp_load(ctx)) return 203;
+        if (seccomp_load(ctx)) {
+          perror("seccomp_load");
+          return 203;
+        }
+
         seccomp_release(ctx);
     }
 #endif
 
     execve(config->file, config->argv, config->envp);
+    perror("execve");
     return 205;
 }
 

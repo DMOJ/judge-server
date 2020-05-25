@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import logging
 import os
+import queue
 import signal
 import sys
 import multiprocessing
@@ -78,48 +79,50 @@ class Judge:
         self.current_submission: Any = None
         self.current_judge_worker: Optional[JudgeWorker] = None
 
-        self.updater_exit = False
-        self.updater_signal = threading.Event()
-        self.updater = threading.Thread(target=self._updater_thread)
+        self.action_queue: queue.Queue = queue.Queue()
 
-    def _updater_thread(self) -> None:
-        log = logging.getLogger('dmoj.updater')
-        while True:
-            self.updater_signal.wait()
-            self.updater_signal.clear()
-            if self.updater_exit:
-                return
+        def _action_thread_main():
+            while True:
+                action = self.action_queue.get()
+                if not action:
+                    # Treat a None action as the signal that the judge is exiting.
+                    return
 
-            # Prevent problem updates while grading.
-            # Capture the value so it can't change.
-            # FIXME(tbrindus): this is broken.
-            # thread = sub_judge_thread
-            # if thread:
-            #    thread.join()
+                action()
 
+        self.action_thread = threading.Thread(target=_action_thread_main)
+
+    def update_problems(self):
+        """
+        Pushes current problem set to server.
+        """
+
+        def _action_update_problems():
+            log = logging.getLogger('dmoj.updater')
             try:
                 clear_problem_dirs_cache()
                 self.packet_manager.supported_problems_packet(get_supported_problems())
             except Exception:
                 log.exception('Failed to update problems.')
 
-    def update_problems(self) -> None:
-        """
-        Pushes current problem set to server.
-        """
-        self.updater_signal.set()
+        self.action_queue.put(_action_update_problems)
 
     def begin_grading(self, submission: Submission, report=logger.info, blocking=False) -> None:
-        self.current_submission = submission
         ipc_ready_signal = threading.Event()
         grading_thread = threading.Thread(
             target=self._grading_thread_main, args=(ipc_ready_signal, submission, report), daemon=True
         )
-        grading_thread.start()
 
-        ipc_ready_signal.wait()
+        def _action_begin_grading():
+            self.current_submission = submission
+            grading_thread.start()
+            ipc_ready_signal.wait()
+
         if blocking:
+            _action_begin_grading()
             grading_thread.join()
+        else:
+            self.action_queue.put(_action_begin_grading)
 
     def _grading_thread_main(self, ipc_ready_signal: threading.Event, submission: Submission, report) -> None:
         try:
@@ -232,7 +235,6 @@ class Judge:
         """
         Attempts to connect to the handler server specified in command line.
         """
-        self.updater.start()
         self.packet_manager.run()
 
     def murder(self) -> None:
@@ -240,8 +242,7 @@ class Judge:
         End any submission currently executing, and exit the judge.
         """
         self.abort_grading()
-        self.updater_exit = True
-        self.updater_signal.set()
+        self.action_queue.put(None)
         if self.packet_manager:
             self.packet_manager.close()
 

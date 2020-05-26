@@ -230,9 +230,7 @@ class Judge:
 
             # Stop grading if we're short circuiting
             if is_short_circuiting:
-                result = Result(case)
-                result.result_flag = Result.SC
-                yield result
+                yield Result(case, result_flag=Result.SC)
                 continue
 
             result = grader.grade(case)

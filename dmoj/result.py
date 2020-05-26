@@ -24,20 +24,32 @@ class Result:
         'OLE': 'yellow',
         'IE': 'red',
     }
+    CODE_DISPLAY_ORDER = ('IE', 'TLE', 'MLE', 'OLE', 'RTE', 'IR', 'WA', 'SC')
 
-    def __init__(self, case):
-        self.result_flag = 0
-        self.execution_time = 0
-        self.wall_clock_time = 0
-        self.max_memory = 0
-        self.proc_output = ''
-        self.feedback = ''
-        self.extended_feedback = ''
+    def __init__(
+        self,
+        case,
+        result_flag=0,
+        execution_time=0,
+        wall_clock_time=0,
+        max_memory=0,
+        proc_output='',
+        feedback='',
+        extended_feedback='',
+        points=0,
+    ):
         self.case = case
-        self.points = 0
+        self.result_flag = result_flag
+        self.execution_time = execution_time
+        self.wall_clock_time = wall_clock_time
+        self.max_memory = max_memory
+        self.proc_output = proc_output
+        self.feedback = feedback
+        self.extended_feedback = extended_feedback
+        self.points = points
 
     def get_main_code(self):
-        for flag in ['IE', 'TLE', 'MLE', 'OLE', 'RTE', 'IR', 'WA', 'SC']:
+        for flag in Result.CODE_DISPLAY_ORDER:
             code = getattr(Result, flag)
             if self.result_flag & code:
                 return code
@@ -45,7 +57,7 @@ class Result:
 
     def readable_codes(self):
         execution_verdict = []
-        for flag in ['IE', 'TLE', 'MLE', 'OLE', 'RTE', 'IR', 'WA', 'SC']:
+        for flag in Result.CODE_DISPLAY_ORDER:
             if self.result_flag & getattr(Result, flag):
                 execution_verdict.append(flag)
         return execution_verdict or ['AC']

@@ -42,6 +42,9 @@ class TerminateGrading(Exception):
     pass
 
 
+logger = logging.getLogger(__name__)
+
+
 class Judge:
     def __init__(self):
         self.current_grader = None
@@ -80,7 +83,7 @@ class Judge:
         """
         self.updater_signal.set()
 
-    def _block_and_grade(self, problem, language, source, short_circuit, report=print):
+    def _block_and_grade(self, problem, language, source, short_circuit, report=logger.info):
         if 'signature_grader' in problem.config:
             grader_class = graders.SignatureGrader
         elif 'interactive' in problem.config:

@@ -82,4 +82,5 @@ class SubmitCommand(Command):
             False,
             {},
             blocking=True,
+            report=print,
         )

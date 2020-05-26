@@ -287,12 +287,6 @@ class Judge:
         self.updater.start()
         self.packet_manager.run()
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exception_type, exception_value, traceback):
-        pass
-
     def murder(self):
         """
         End any submission currently executing, and exit the judge.
@@ -418,7 +412,7 @@ def main():  # pragma: no cover
         api_server = None
 
     print()
-    with monitor, judge:
+    with monitor:
         try:
             judge.listen()
         except KeyboardInterrupt:

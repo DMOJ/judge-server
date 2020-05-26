@@ -113,20 +113,19 @@ def cli_main():
             print()
             return 127
 
-    with judge:
-        try:
-            judge.listen()
+    try:
+        judge.listen()
 
-            if judgeenv.cli_command:
-                return run_command(judgeenv.cli_command)
-            else:
-                while True:
-                    command = input(ansi_style("#ansi[dmoj](magenta)#ansi[>](green) ")).strip()
-                    run_command(shlex.split(command))
-        except (EOFError, KeyboardInterrupt):
-            print()
-        finally:
-            judge.murder()
+        if judgeenv.cli_command:
+            return run_command(judgeenv.cli_command)
+        else:
+            while True:
+                command = input(ansi_style("#ansi[dmoj](magenta)#ansi[>](green) ")).strip()
+                run_command(shlex.split(command))
+    except (EOFError, KeyboardInterrupt):
+        print()
+    finally:
+        judge.murder()
 
 
 if __name__ == '__main__':

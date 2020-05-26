@@ -285,11 +285,11 @@ class PacketManager:
                 raise JudgeAuthenticationFailed()
 
     def supported_problems_packet(self, problems: List[Tuple[str, int]]):
-        log.info('Update problems')
+        log.debug('Update problems')
         self._send_packet({'name': 'supported-problems', 'problems': problems})
 
     def test_case_status_packet(self, position: int, result: Result):
-        log.info(
+        log.debug(
             'Test case on %d: #%d, %s [%.3fs | %.2f MB], %.1f/%.0f',
             self.judge.current_submission_id,
             position,
@@ -308,47 +308,47 @@ class PacketManager:
         self._send_packet({'name': 'compile-error', 'submission-id': self.judge.current_submission_id, 'log': message})
 
     def compile_message_packet(self, message: str):
-        log.info('Compile message: %d', self.judge.current_submission_id)
+        log.debug('Compile message: %d', self.judge.current_submission_id)
         self._send_packet(
             {'name': 'compile-message', 'submission-id': self.judge.current_submission_id, 'log': message}
         )
 
     def internal_error_packet(self, message: str):
-        log.info('Internal error: %d', self.judge.current_submission_id)
+        log.debug('Internal error: %d', self.judge.current_submission_id)
         self._flush_testcase_queue()
         self._send_packet(
             {'name': 'internal-error', 'submission-id': self.judge.current_submission_id, 'message': message}
         )
 
     def begin_grading_packet(self, is_pretested: bool):
-        log.info('Begin grading: %d', self.judge.current_submission_id)
+        log.debug('Begin grading: %d', self.judge.current_submission_id)
         self._send_packet(
             {'name': 'grading-begin', 'submission-id': self.judge.current_submission_id, 'pretested': is_pretested}
         )
 
     def grading_end_packet(self):
-        log.info('End grading: %d', self.judge.current_submission_id)
+        log.debug('End grading: %d', self.judge.current_submission_id)
         self.fallback = 4
         self._flush_testcase_queue()
         self._send_packet({'name': 'grading-end', 'submission-id': self.judge.current_submission_id})
 
     def batch_begin_packet(self):
         self._batch += 1
-        log.info('Enter batch number %d: %d', self._batch, self.judge.current_submission_id)
+        log.debug('Enter batch number %d: %d', self._batch, self.judge.current_submission_id)
         self._flush_testcase_queue()
         self._send_packet({'name': 'batch-begin', 'submission-id': self.judge.current_submission_id})
 
     def batch_end_packet(self):
-        log.info('Exit batch number %d: %d', self._batch, self.judge.current_submission_id)
+        log.debug('Exit batch number %d: %d', self._batch, self.judge.current_submission_id)
         self._flush_testcase_queue()
         self._send_packet({'name': 'batch-end', 'submission-id': self.judge.current_submission_id})
 
     def current_submission_packet(self):
-        log.info('Current submission query: %d', self.judge.current_submission_id)
+        log.debug('Current submission query: %d', self.judge.current_submission_id)
         self._send_packet({'name': 'current-submission-id', 'submission-id': self.judge.current_submission_id})
 
     def submission_terminated_packet(self):
-        log.info('Submission aborted: %d', self.judge.current_submission_id)
+        log.debug('Submission aborted: %d', self.judge.current_submission_id)
         self._flush_testcase_queue()
         self._send_packet({'name': 'submission-terminated', 'submission-id': self.judge.current_submission_id})
 

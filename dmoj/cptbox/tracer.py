@@ -22,7 +22,9 @@ from dmoj.utils.os_ext import (
     INTERPRETER_ARCH,
     file_arch,
     find_exe_in_path,
-    oom_score_adj, OOM_SCORE_ADJ_MAX)
+    oom_score_adj,
+    OOM_SCORE_ADJ_MAX,
+)
 from dmoj.utils.unicode import utf8bytes, utf8text
 
 PIPE = subprocess.PIPE

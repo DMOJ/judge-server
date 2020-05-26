@@ -27,14 +27,7 @@ pub fn main() !void {
         super().create_files(problem_id, source_code, *args, **kwargs)
 
     def get_compile_args(self):
-        return [
-            self.get_command(),
-            'build-exe',
-            self._code,
-            '--release-safe',
-            '--name',
-            self.problem,
-        ]
+        return [self.get_command(), 'build-exe', self._code, '--release-safe', '--name', self.problem]
 
     @classmethod
     def get_version_flags(cls, command):

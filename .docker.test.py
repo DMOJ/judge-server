@@ -7,7 +7,7 @@ from dmoj.executors import get_available
 
 arch = platform.machine()
 if arch == 'x86_64':
-    ALLOW_FAIL = {'GASARM', 'JAVA9', 'JAVA10', 'OBJC'}
+    ALLOW_FAIL = {'GASARM', 'JAVA9', 'JAVA10', 'OBJC', 'GROOVY'}
     EXECUTORS = get_available()
 elif arch == 'aarch64':
     EXECUTORS = {

@@ -429,6 +429,8 @@ cdef class Process:
             # a simple assembly program could terminate without ever trapping.
             if not self.debugger.is_exit(i):
                 config.syscall_whitelist[i] = self._syscall_whitelist[i]
+            else:
+                config.syscall_whitelist[i] = False
 
         if self.process.spawn(pt_child, &config):
             raise RuntimeError('failed to spawn child')

@@ -1,4 +1,5 @@
 from dmoj.commands.base_command import Command
+from dmoj.judge import Submission
 
 
 class RejudgeCommand(Command):
@@ -10,8 +11,10 @@ class RejudgeCommand(Command):
 
     def execute(self, line):
         args = self.arg_parser.parse_args(line)
-        problem, lang, src, tl, ml = self.get_submission_data(args.submission_id)
+        problem_id, lang, src, tl, ml = self.get_submission_data(args.submission_id)
 
         self.judge.begin_grading(
-            self.judge.submission_id_counter, problem, lang, src, tl, ml, False, {}, blocking=True, report=print
+            Submission(self.judge.submission_id_counter, problem_id, lang, src, tl, ml, False, {}),
+            blocking=True,
+            report=print,
         )

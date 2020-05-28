@@ -2,12 +2,14 @@ import logging
 import os
 import sys
 import traceback
+from typing import cast
 
 import yaml
 
 from dmoj import contrib, executors, judgeenv
-from dmoj.judge import Judge
+from dmoj.judge import Judge, Submission
 from dmoj.judgeenv import get_problem_root, get_supported_problems
+from dmoj.packet import PacketManager
 from dmoj.utils.ansi import ansi_style, print_ansi
 
 all_executors = executors.executors
@@ -79,17 +81,11 @@ class TestManager:
     def current_submission_packet(self):
         pass
 
-    def submission_terminated_packet(self):
+    def submission_aborted_packet(self):
         pass
 
     def submission_acknowledged_packet(self, sub_id):
         pass
-
-
-class TestJudge(Judge):
-    def __init__(self, manager):
-        super().__init__()
-        self.packet_manager = manager
 
 
 class Tester:
@@ -98,7 +94,7 @@ class Tester:
     def __init__(self, problem_regex=None, case_regex=None):
         self.manager = TestManager()
         self.manager.output = self.error_output
-        self.judge = TestJudge(self.manager)
+        self.judge = Judge(cast(PacketManager, self.manager))
         self.sub_id = 0
         self.problem_regex = problem_regex
         self.case_regex = case_regex
@@ -219,7 +215,9 @@ class Tester:
             self.sub_id += 1
             self.manager.set_expected(codes_all, codes_cases, feedback_all, feedback_cases)
             self.judge.begin_grading(
-                self.sub_id, problem, language, source, time, memory, False, {}, blocking=True, report=output_case
+                Submission(self.sub_id, problem, language, source, time, memory, False, {}),
+                blocking=True,
+                report=output_case,
             )
             fails += self.manager.failed
         return fails

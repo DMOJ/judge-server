@@ -179,7 +179,7 @@ class PacketManager:
 
     def disconnect(self):
         self.close()
-        self.judge.terminate_grading()
+        self.judge.abort_grading()
         sys.exit(0)
 
     def _flush_testcase_queue(self):
@@ -190,7 +190,7 @@ class PacketManager:
             self._send_packet(
                 {
                     'name': 'test-case-status',
-                    'submission-id': self.judge.current_submission_id,
+                    'submission-id': self.judge.current_submission.id,
                     'cases': [
                         {
                             'position': position,
@@ -242,15 +242,19 @@ class PacketManager:
             self.current_submission_packet()
         elif name == 'submission-request':
             self.submission_acknowledged_packet(packet['submission-id'])
+            from dmoj.judge import Submission
+
             self.judge.begin_grading(
-                packet['submission-id'],
-                packet['problem-id'],
-                packet['language'],
-                packet['source'],
-                float(packet['time-limit']),
-                int(packet['memory-limit']),
-                packet['short-circuit'],
-                packet['meta'],
+                Submission(
+                    id=packet['submission-id'],
+                    problem_id=packet['problem-id'],
+                    language=packet['language'],
+                    source=packet['source'],
+                    time_limit=float(packet['time-limit']),
+                    memory_limit=int(packet['memory-limit']),
+                    short_circuit=packet['short-circuit'],
+                    meta=packet['meta'],
+                )
             )
             self._batch = 0
             log.info(
@@ -260,8 +264,8 @@ class PacketManager:
                 packet['problem-id'],
             )
         elif name == 'terminate-submission':
-            log.info('Received abortion request for %s', self.judge.current_submission_id)
-            self.judge.terminate_grading()
+            log.info('Received abortion request for %s', self.judge.current_submission.id)
+            self.judge.abort_grading()
         elif name == 'disconnect':
             log.info('Received disconnect request, shutting down...')
             self.disconnect()
@@ -291,7 +295,7 @@ class PacketManager:
     def test_case_status_packet(self, position: int, result: Result):
         log.debug(
             'Test case on %d: #%d, %s [%.3fs | %.2f MB], %.1f/%.0f',
-            self.judge.current_submission_id,
+            self.judge.current_submission.id,
             position,
             ', '.join(result.readable_codes()),
             result.execution_time,
@@ -303,54 +307,54 @@ class PacketManager:
             self._testcase_queue.append((position, result))
 
     def compile_error_packet(self, message: str):
-        log.info('Compile error: %d', self.judge.current_submission_id)
+        log.debug('Compile error: %d', self.judge.current_submission.id)
         self.fallback = 4
-        self._send_packet({'name': 'compile-error', 'submission-id': self.judge.current_submission_id, 'log': message})
+        self._send_packet({'name': 'compile-error', 'submission-id': self.judge.current_submission.id, 'log': message})
 
     def compile_message_packet(self, message: str):
-        log.debug('Compile message: %d', self.judge.current_submission_id)
+        log.debug('Compile message: %d', self.judge.current_submission.id)
         self._send_packet(
-            {'name': 'compile-message', 'submission-id': self.judge.current_submission_id, 'log': message}
+            {'name': 'compile-message', 'submission-id': self.judge.current_submission.id, 'log': message}
         )
 
     def internal_error_packet(self, message: str):
-        log.debug('Internal error: %d', self.judge.current_submission_id)
+        log.debug('Internal error: %d', self.judge.current_submission.id)
         self._flush_testcase_queue()
         self._send_packet(
-            {'name': 'internal-error', 'submission-id': self.judge.current_submission_id, 'message': message}
+            {'name': 'internal-error', 'submission-id': self.judge.current_submission.id, 'message': message}
         )
 
     def begin_grading_packet(self, is_pretested: bool):
-        log.debug('Begin grading: %d', self.judge.current_submission_id)
+        log.debug('Begin grading: %d', self.judge.current_submission.id)
         self._send_packet(
-            {'name': 'grading-begin', 'submission-id': self.judge.current_submission_id, 'pretested': is_pretested}
+            {'name': 'grading-begin', 'submission-id': self.judge.current_submission.id, 'pretested': is_pretested}
         )
 
     def grading_end_packet(self):
-        log.debug('End grading: %d', self.judge.current_submission_id)
+        log.debug('End grading: %d', self.judge.current_submission.id)
         self.fallback = 4
         self._flush_testcase_queue()
-        self._send_packet({'name': 'grading-end', 'submission-id': self.judge.current_submission_id})
+        self._send_packet({'name': 'grading-end', 'submission-id': self.judge.current_submission.id})
 
     def batch_begin_packet(self):
         self._batch += 1
-        log.debug('Enter batch number %d: %d', self._batch, self.judge.current_submission_id)
+        log.debug('Enter batch number %d: %d', self._batch, self.judge.current_submission.id)
         self._flush_testcase_queue()
-        self._send_packet({'name': 'batch-begin', 'submission-id': self.judge.current_submission_id})
+        self._send_packet({'name': 'batch-begin', 'submission-id': self.judge.current_submission.id})
 
     def batch_end_packet(self):
-        log.debug('Exit batch number %d: %d', self._batch, self.judge.current_submission_id)
+        log.debug('Exit batch number %d: %d', self._batch, self.judge.current_submission.id)
         self._flush_testcase_queue()
-        self._send_packet({'name': 'batch-end', 'submission-id': self.judge.current_submission_id})
+        self._send_packet({'name': 'batch-end', 'submission-id': self.judge.current_submission.id})
 
     def current_submission_packet(self):
-        log.debug('Current submission query: %d', self.judge.current_submission_id)
-        self._send_packet({'name': 'current-submission-id', 'submission-id': self.judge.current_submission_id})
+        log.debug('Current submission query: %d', self.judge.current_submission.id)
+        self._send_packet({'name': 'current-submission-id', 'submission-id': self.judge.current_submission.id})
 
-    def submission_terminated_packet(self):
-        log.debug('Submission aborted: %d', self.judge.current_submission_id)
+    def submission_aborted_packet(self):
+        log.debug('Submission aborted: %d', self.judge.current_submission.id)
         self._flush_testcase_queue()
-        self._send_packet({'name': 'submission-terminated', 'submission-id': self.judge.current_submission_id})
+        self._send_packet({'name': 'submission-terminated', 'submission-id': self.judge.current_submission.id})
 
     def ping_packet(self, when: float):
         data = {'name': 'ping-response', 'when': when, 'time': time.time()}

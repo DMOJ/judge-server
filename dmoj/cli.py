@@ -1,8 +1,10 @@
 import shlex
 import sys
+from typing import cast
 
 from dmoj.error import InvalidCommandException
 from dmoj.judge import Judge
+from dmoj.packet import PacketManager
 from dmoj.utils.ansi import ansi_style, print_ansi
 
 
@@ -43,7 +45,7 @@ class LocalPacketManager:
     def current_submission_packet(self):
         pass
 
-    def submission_terminated_packet(self):
+    def submission_aborted_packet(self):
         pass
 
     def submission_acknowledged_packet(self, sub_id):
@@ -58,8 +60,7 @@ class LocalPacketManager:
 
 class LocalJudge(Judge):
     def __init__(self):
-        super().__init__()
-        self.packet_manager = LocalPacketManager(self)
+        super().__init__(cast(PacketManager, LocalPacketManager(self)))
         self.submission_id_counter = 0
         self.graded_submissions = []
 

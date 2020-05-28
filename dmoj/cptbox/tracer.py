@@ -60,6 +60,10 @@ class MaxLengthExceeded(ValueError):
     pass
 
 
+class DebuggerError(RuntimeError):
+    pass
+
+
 class AdvancedDebugger(Debugger):
     # Implements additional debugging functionality for convenience.
 
@@ -196,15 +200,15 @@ class TracedPopen(Process, metaclass=TracedPopenMeta):
         self._died.wait()
         if not self.was_initialized:
             if self.returncode == 203:
-                raise RuntimeError('failed to set up seccomp policy')
+                raise DebuggerError('failed to set up seccomp policy')
             elif self.returncode == 204:
-                raise RuntimeError(
+                raise DebuggerError(
                     'failed to ptrace child, check Yama config '
                     '(https://www.kernel.org/doc/Documentation/security/Yama.txt, should be '
                     'at most 1); if running in Docker, must run container with `--cap-add=SYS_PTRACE`'
                 )
             elif self.returncode == 205:
-                raise RuntimeError('failed to spawn child')
+                raise DebuggerError('failed to spawn child')
         return self.returncode
 
     def poll(self):

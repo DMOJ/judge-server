@@ -457,9 +457,14 @@ class JudgeWorker:
         yield IPC.GRADING_END, ()
 
     def _do_abort(self) -> None:
+        logger.info('Worker executing submission abort')
         self._abort_requested = True
         if self.grader:
-            self.grader.abort_grading()
+            try:
+                self.grader.abort_grading()
+            except Exception:
+                logger.exception('Failed to abort submission?')
+                raise
 
 
 class ClassicJudge(Judge):

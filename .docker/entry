@@ -20,4 +20,4 @@ fi
 
 shift
 . ~judge/.profile
-runuser -u judge "${command}" -- $@
+runuser -u judge "${command}" -- $@ --skip-self-test

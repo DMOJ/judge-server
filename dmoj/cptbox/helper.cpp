@@ -172,15 +172,35 @@ int cptbox_child_run(const struct child_config *config) {
 
         for (int syscall = 0; syscall < MAX_SYSCALL; syscall++) {
             if (config->syscall_whitelist[syscall]) {
-                if (rc = seccomp_rule_add(ctx, SCMP_ACT_ALLOW, syscall, 0)) {
+                if ((rc = seccomp_rule_add(ctx, SCMP_ACT_ALLOW, syscall, 0))) {
                     fprintf(stderr, "seccomp_rule_add(..., %d): %s\n", syscall, strerror(-rc));
+                    fflush(stderr);
                     // This failure is not fatal, it'll just cause the syscall to trap anyway.
                 }
             }
         }
 
-        if (rc = seccomp_load(ctx)) {
+        if ((rc = seccomp_load(ctx))) {
             fprintf(stderr, "seccomp_load: %s\n", strerror(-rc));
+            fflush(stderr);
+            fprintf(stderr, "child_arch=%u\n", child_arch);
+            fflush(stderr);
+            fprintf(stderr, "syscall list:\n");
+            fflush(stderr);
+
+            for (int syscall = 0; syscall < MAX_SYSCALL; syscall++) {
+                if (config->syscall_whitelist[syscall]) {
+                    fprintf(stderr, "\t%d\n", syscall);
+                    fflush(stderr);
+                }
+            }
+
+            fprintf(stderr, "\n\nBPF:\n");
+            fflush(stderr);
+            seccomp_export_bpf(ctx, 2);
+            fprintf(stderr, "\n\nPFC:\n");
+            fflush(stderr);
+            seccomp_export_pfc(ctx, 2);
             return 203;
         }
 

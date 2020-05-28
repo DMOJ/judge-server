@@ -93,5 +93,16 @@ def safe_communicate(proc, input=None, outlimit=None, errlimit=None):
     stdout = b''.join(stdout) if stdout is not None else b''
     stderr = b''.join(stderr) if stderr is not None else b''
 
-    proc.wait()
+    from dmoj.cptbox.tracer import DebuggerError
+
+    try:
+        proc.wait()
+    except DebuggerError as e:
+        import traceback
+
+        traceback.print_exc()
+        raise DebuggerError('stdout=%s, stderr=%s' % (stdout, stderr), e)
+    else:
+        if hasattr(proc, 'was_initialized') and not proc.was_initialized and stderr and b'seccomp_load' in stderr:
+            raise DebuggerError('stdout=%s, stderr=%s' % (stdout, stderr))
     return stdout, stderr

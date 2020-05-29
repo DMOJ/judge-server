@@ -235,13 +235,19 @@ class TracedPopen(Process, metaclass=TracedPopenMeta):
         return self._is_tle
 
     def kill(self):
-        log.warning('Request the killing of process: %s', self.pid)
-        try:
-            os.killpg(self.pid, signal.SIGKILL)
-        except OSError:
-            import traceback
+        # FIXME(quantum): this is actually a race. The process may exit before we kill it.
+        # Under very unlikely circumstances, the pid could be reused and we will end up
+        # killing the wrong process.
+        if self.returncode is None:
+            log.warning('Request the killing of process: %s', self.pid)
+            try:
+                os.killpg(self.pid, signal.SIGKILL)
+            except OSError:
+                import traceback
 
-            traceback.print_exc()
+                traceback.print_exc()
+        else:
+            log.warning('Skipping the killing of process because it already exited: %s', self.pid)
 
     def _callback(self, syscall):
         try:

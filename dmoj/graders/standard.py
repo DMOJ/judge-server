@@ -105,13 +105,8 @@ class StandardGrader(BaseGrader):
             )
         except OutputLimitExceeded:
             error = b''
-            try:
-                process.kill()
-            except RuntimeError as e:
-                if e.args[0] != 'TerminateProcess: 5':
-                    raise
-            # Otherwise it's a race between this kill and the shocker,
-            # and failed kill means nothing.
+            process.kill()
+        finally:
             process.wait()
         return error
 

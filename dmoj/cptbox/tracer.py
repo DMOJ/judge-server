@@ -5,7 +5,6 @@ import signal
 import subprocess
 import sys
 import threading
-import time
 from typing import List, Optional
 
 from dmoj.cptbox._cptbox import *
@@ -296,7 +295,7 @@ class TracedPopen(Process, metaclass=TracedPopenMeta):
             self._spawn(self._executable, self._args, self._env, self._chdir, self._fds)
         except:  # noqa: E722, need to catch absolutely everything
             self._spawn_error = sys.exc_info()[0]
-            self._exited = True
+            self._died.set()
             return
         finally:
             if self.stdin_needs_close:
@@ -335,19 +334,16 @@ class TracedPopen(Process, metaclass=TracedPopenMeta):
         wake_signal = signal.SIGSTOP if 'freebsd' in sys.platform else signal.SIGWINCH
         self._spawned_or_errored.wait()
 
-        while not self._exited:
+        while not self._died.wait(1):
             if self.execution_time > self._time or self.wall_clock_time > self._wall_time:
                 log.warning('Shocker activated and killed %d', self.pid)
-                os.killpg(self.pid, signal.SIGKILL)
+                self.kill()
                 self._is_tle = True
                 break
-            time.sleep(1)
             try:
                 os.killpg(self.pid, wake_signal)
             except OSError:
                 pass
-            else:
-                time.sleep(0.01)
 
     def __init_streams(self, stdin, stdout, stderr):
         self.stdin = self.stdout = self.stderr = None

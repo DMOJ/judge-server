@@ -142,7 +142,12 @@ class PacketManager:
 
     def close(self):
         if self.conn and not self._closed:
-            self.conn.shutdown(socket.SHUT_RDWR)
+            try:
+                # May already be closed despite self._closed == False if a network error occurred and `close` is being
+                # called as part of cleanup.
+                self.conn.shutdown(socket.SHUT_RDWR)
+            except socket.error:
+                pass
         self._closed = True
 
     def _read_forever(self):
@@ -152,7 +157,7 @@ class PacketManager:
         except KeyboardInterrupt:
             pass
         except Exception:  # connection reset by peer
-            traceback.print_exc()
+            log.exception('Exception while reading packet from site, will not attempt to reconnect! Quitting judge.')
             raise SystemExit(1)
 
     def _read_single(self) -> dict:
@@ -232,7 +237,11 @@ class PacketManager:
 
         raw = zlib.compress(utf8bytes(json.dumps(packet)))
         with self._lock:
-            self.output.writelines((PacketManager.SIZE_PACK.pack(len(raw)), raw))
+            try:
+                self.output.writelines((PacketManager.SIZE_PACK.pack(len(raw)), raw))
+            except Exception:  # connection reset by peer
+                log.exception('Exception while sending packet to site, will not attempt to reconnect! Quitting judge.')
+                raise SystemExit(1)
 
     def _receive_packet(self, packet: dict):
         name = packet['name']

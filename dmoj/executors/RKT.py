@@ -25,7 +25,7 @@ class Executor(ScriptDirectoryMixin, CompiledExecutor):
     def get_compile_args(self):
         return [self.runtime_dict['raco'], 'make', self._code]
 
-    def get_cmdline(self):
+    def get_cmdline(self, **kwargs):
         return [self.get_command(), self._code]
 
     def get_executable(self):

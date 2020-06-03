@@ -13,5 +13,5 @@ HELLO
 '''
     fs = [r'/\.gforth-history$']
 
-    def get_cmdline(self):
+    def get_cmdline(self, **kwargs):
         return [self.get_command(), self._code, '-e', 'bye']

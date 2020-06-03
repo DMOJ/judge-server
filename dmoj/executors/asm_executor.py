@@ -83,7 +83,7 @@ class ASMExecutor(CompiledExecutor):
         self._executable = executable
         return executable
 
-    def get_cmdline(self):
+    def get_cmdline(self, **kwargs):
         if self.use_qemu:
             return [self.qemu_path, self._executable]
         return super().get_cmdline()

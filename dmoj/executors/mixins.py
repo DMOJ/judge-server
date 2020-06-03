@@ -114,7 +114,7 @@ class PlatformExecutorMixin(metaclass=abc.ABCMeta):
         env.update(self.get_env())
 
         return TracedPopen(
-            [utf8bytes(a) for a in self.get_cmdline() + list(args)],
+            [utf8bytes(a) for a in self.get_cmdline(**kwargs) + list(args)],
             executable=utf8bytes(self.get_executable()),
             security=self.get_security(launch_kwargs=kwargs),
             address_grace=self.get_address_grace(),

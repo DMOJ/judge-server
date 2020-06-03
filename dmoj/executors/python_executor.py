@@ -28,7 +28,7 @@ runpy.run_path(sys.argv[0], run_name='__main__')
     def get_compile_args(self):
         return [self.get_command(), '-m', 'compileall', '-q', self._dir]
 
-    def get_cmdline(self):
+    def get_cmdline(self, **kwargs):
         # -B: Don't write .pyc/.pyo, since sandbox will kill those writes
         # -S: Disable site module for speed (no loading dist-packages nor site-packages)
         return [self.get_command(), '-BS' + ('u' if self.unbuffered else ''), self._loader, self._code]

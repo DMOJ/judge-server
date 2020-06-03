@@ -23,11 +23,11 @@ class Executor(NullStdoutMixin, ScriptDirectoryMixin, CompiledExecutor):
     def get_compile_args(self):
         return [self.get_command(), '--eval', self.compile_script.format(code=self._code), '--quit']
 
-    def get_cmdline(self):
+    def get_cmdline(self, **kwargs):
         return [
             self.get_command(),
             '--dynamic-space-size',
-            str(int(self.__memory_limit / 1024.0 + 1)),
+            str(int(kwargs['memory'] / 1024.0 + 1)),
             '--noinform',
             '--no-sysinit',
             '--no-userinit',
@@ -36,10 +36,6 @@ class Executor(NullStdoutMixin, ScriptDirectoryMixin, CompiledExecutor):
             '--quit',
             '--end-toplevel-options',
         ]
-
-    def launch(self, *args, **kwargs):
-        self.__memory_limit = kwargs['memory']
-        return super().launch(*args, **kwargs)
 
     def get_executable(self):
         return self.get_command()

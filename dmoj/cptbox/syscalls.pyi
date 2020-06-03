@@ -64,6 +64,7 @@ sys_execveat: int
 sys_exit: int
 sys_exit_group: int
 sys_faccessat: int
+sys_faccessat2: int
 sys_fadvise64: int
 sys_fadvise64_64: int
 sys_fallocate: int

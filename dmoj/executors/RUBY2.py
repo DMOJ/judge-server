@@ -26,7 +26,7 @@ class Executor(ScriptExecutor):
                 components.pop()
         return fs
 
-    def get_cmdline(self):
+    def get_cmdline(self, **kwargs):
         return [self.get_command(), '--disable-gems', self._code]
 
     @classmethod

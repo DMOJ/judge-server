@@ -251,7 +251,7 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
         self._executable = self.get_compiled_file()
         return self._executable
 
-    def get_cmdline(self) -> List[str]:
+    def get_cmdline(self, **kwargs) -> List[str]:
         return [self.problem]
 
     def get_executable(self) -> str:

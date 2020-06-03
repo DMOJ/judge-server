@@ -84,7 +84,7 @@ class BaseExecutor(PlatformExecutorMixin):
     def get_executable(self) -> Optional[str]:
         return None
 
-    def get_cmdline(self):
+    def get_cmdline(self, **kwargs):
         raise NotImplementedError()
 
     def get_nproc(self) -> int:

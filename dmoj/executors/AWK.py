@@ -9,7 +9,7 @@ class Executor(ScriptExecutor):
     syscalls = ['getgroups']  # gawk is annoying.
     test_program = '{ print $0 }'
 
-    def get_cmdline(self):
+    def get_cmdline(self, **kwargs):
         return [self.get_command(), '-f', self._code]
 
     @classmethod

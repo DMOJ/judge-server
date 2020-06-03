@@ -66,7 +66,7 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
         parser.add_argument('judge_name', nargs='?', help='judge name (overrides configuration)')
         parser.add_argument('judge_key', nargs='?', help='judge key (overrides configuration)')
         parser.add_argument('-p', '--server-port', type=int, default=9999, help='port to connect for the server')
-    else:
+    elif not testsuite:
         parser.add_argument('command', nargs='*', help='invoke CLI command without spawning shell')
 
     parser.add_argument(

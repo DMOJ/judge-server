@@ -120,6 +120,7 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
     is_cached = False
     warning: Optional[bytes] = None
     _executable: Optional[str] = None
+    _code: Optional[str] = None
 
     def __init__(self, problem_id: str, source_code: bytes, *args, **kwargs):
         super().__init__(problem_id, source_code, **kwargs)
@@ -173,7 +174,7 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
         # aims to provide a convincing-enough lie to the runtime so that it starts singing in color.
         #
         # Emulate the streams of a process connected to a terminal: stdin, stdout, and stderr are all ptys.
-        self._master, self._slave = pty.openpty()
+        _master, _slave = pty.openpty()
         # Some runtimes *cough cough* Swift *cough cough* actually check the environment variables too.
         env = self.get_compile_env() or os.environ.copy()
         env['TERM'] = 'xterm'
@@ -181,9 +182,9 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
         proc = TimedPopen(
             self.get_compile_args(),
             **{
-                'stderr': self._slave,
-                'stdout': self._slave,
-                'stdin': self._slave,
+                'stderr': _slave,
+                'stdout': _slave,
+                'stdin': _slave,
                 'cwd': self._dir,
                 'env': env,
                 'preexec_fn': self.create_executable_limits(),
@@ -211,9 +212,9 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
 
         # Since stderr and stdout are connected to the same slave pty, proc.stderr will contain the merged stdout
         # of the process as well.
-        proc.stderr = io_error_wrapper(os.fdopen(self._master, 'rb'))  # type: ignore
+        proc.stderr = io_error_wrapper(os.fdopen(_master, 'rb'))  # type: ignore
 
-        os.close(self._slave)
+        os.close(_slave)
         return proc
 
     def get_compile_output(self, process: TimedPopen) -> bytes:

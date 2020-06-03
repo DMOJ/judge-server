@@ -27,6 +27,9 @@ install:
               --branch ${DMOJ_JUDGE_TESTSUITE_BRANCH:-master} \
               https://github.com/${DMOJ_JUDGE_TESTSUITE_SLUG:-DMOJ/judge-testsuite} testsuite &&
     git -C testsuite reset --hard ${DMOJ_JUDGE_TESTSUITE_COMMIT_SHA:-HEAD}
+cache:
+  directories:
+    - /home/travis/.cache/pip
 script:
   - |
     cat > run <<'EOF'
@@ -37,7 +40,7 @@ script:
     cd /code
     if [ "$PYTHON_VERSION" != 3.8 ]; then
       PYTHON="/code/python$PYTHON_VERSION/bin/python$PYTHON_VERSION"
-      "$PYTHON" -m pip install --upgrade pip
+      "$PYTHON" -m pip install --upgrade pip wheel
       "$PYTHON" -m pip install cython coverage
     else
       PYTHON=/usr/bin/python3.8
@@ -59,7 +62,9 @@ script:
     "$PYTHON" -m coverage xml
     EOF
   - chmod a+x run run-su
-  - docker run -e PYTHON_VERSION="$PYTHON_VERSION" -e DMOJ_USE_SECCOMP="$DMOJ_USE_SECCOMP" -v "$(pwd):/code" --cap-add=SYS_PTRACE "$DOCKER_IMAGE"
+  - mkdir -p /home/travis/.cache/pip && sudo chown root:root -R /home/travis/.cache/pip
+  - docker run -e PYTHON_VERSION="$PYTHON_VERSION" -e DMOJ_USE_SECCOMP="$DMOJ_USE_SECCOMP" -v "$(pwd):/code" -v /home/travis/.cache:/root/.cache --cap-add=SYS_PTRACE "$DOCKER_IMAGE"
+  - sudo chown -R travis:travis /home/travis/.cache/pip
 after_script:
   - bash <(curl -s https://codecov.io/bash)
 notifications:

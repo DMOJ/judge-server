@@ -143,15 +143,6 @@ class GASExecutor(ASMExecutor):
             as_args += [self.as_platform_flag]
         return as_args
 
-    def assemble(self):
-        object = self._file('%s.o' % self.problem)
-        process = subprocess.Popen(self.get_as_args(object), cwd=self._dir, stderr=subprocess.PIPE)
-        as_output = process.communicate()[1]
-        if process.returncode != 0:
-            raise CompileError(as_output)
-
-        return as_output, [object]
-
     @classmethod
     def get_find_first_mapping(cls):
         if cls.platform_prefixes is None:

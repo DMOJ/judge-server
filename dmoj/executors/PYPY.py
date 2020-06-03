@@ -1,3 +1,5 @@
+from typing import List, Tuple
+
 from dmoj.executors.python_executor import PythonExecutor
 
 
@@ -5,6 +7,7 @@ class Executor(PythonExecutor):
     name = 'PYPY'
     command = 'pypy'
     test_program = "print __import__('sys').stdin.read()"
+    _pypy_versions: List[Tuple[int, ...]]
 
     @classmethod
     def parse_version(cls, command, output):

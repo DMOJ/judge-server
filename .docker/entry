@@ -4,6 +4,7 @@ export DMOJ_IN_DOCKER=1
 export PYTHONUNBUFFERED=1
 export LANG=C.UTF-8
 export PYTHONIOENCODING=utf8
+export LD_PRELOAD="$(jemalloc-config --libdir)/libjemalloc.so.$(jemalloc-config --revision)"
 
 cd /judge
 pip3 install -q -e .

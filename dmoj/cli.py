@@ -1,8 +1,10 @@
 import shlex
 import sys
+from typing import cast
 
 from dmoj.error import InvalidCommandException
 from dmoj.judge import Judge
+from dmoj.packet import PacketManager
 from dmoj.utils.ansi import ansi_style, print_ansi
 
 
@@ -43,7 +45,7 @@ class LocalPacketManager:
     def current_submission_packet(self):
         pass
 
-    def submission_terminated_packet(self):
+    def submission_aborted_packet(self):
         pass
 
     def submission_acknowledged_packet(self, sub_id):
@@ -58,8 +60,7 @@ class LocalPacketManager:
 
 class LocalJudge(Judge):
     def __init__(self):
-        super().__init__()
-        self.packet_manager = LocalPacketManager(self)
+        super().__init__(cast(PacketManager, LocalPacketManager(self)))
         self.submission_id_counter = 0
         self.graded_submissions = []
 
@@ -74,14 +75,14 @@ def cli_main():
 
     judgeenv.load_env(cli=True)
 
+    logging.basicConfig(
+        filename=judgeenv.log_file, level=logging.INFO, format='%(levelname)s %(asctime)s %(module)s %(message)s'
+    )
+
     executors.load_executors()
     contrib.load_contrib_modules()
 
     print('Running local judge...')
-
-    logging.basicConfig(
-        filename=judgeenv.log_file, level=logging.INFO, format='%(levelname)s %(asctime)s %(module)s %(message)s'
-    )
 
     judge = LocalJudge()
 
@@ -113,20 +114,19 @@ def cli_main():
             print()
             return 127
 
-    with judge:
-        try:
-            judge.listen()
+    try:
+        judge.listen()
 
-            if judgeenv.cli_command:
-                return run_command(judgeenv.cli_command)
-            else:
-                while True:
-                    command = input(ansi_style("#ansi[dmoj](magenta)#ansi[>](green) ")).strip()
-                    run_command(shlex.split(command))
-        except (EOFError, KeyboardInterrupt):
-            print()
-        finally:
-            judge.murder()
+        if judgeenv.cli_command:
+            return run_command(judgeenv.cli_command)
+        else:
+            while True:
+                command = input(ansi_style("#ansi[dmoj](magenta)#ansi[>](green) ")).strip()
+                run_command(shlex.split(command))
+    except (EOFError, KeyboardInterrupt):
+        print()
+    finally:
+        judge.murder()
 
 
 if __name__ == '__main__':

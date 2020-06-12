@@ -16,7 +16,7 @@ recomment = re.compile(r'/\*.*?\*/', re.DOTALL | re.U)
 restring = re.compile(r''''(?:\\.|[^'\\])'|"(?:\\.|[^"\\])*"''', re.DOTALL | re.U)
 reinline_comment = re.compile(r'//.*?(?=[\r\n])', re.U)
 reclass = re.compile(
-    r'\bpublic\s+(?:strictfp\s+)?(?:(?:abstract|final)\s+)?(?:strictfp\s+)?class\s+([\w\$][\w\$]*?)\b', re.U
+    r'\bpublic\s+(?:strictfp\s+)?(?:(?:abstract|final)\s+)?(?:strictfp\s+)?class\s+([\w$][\w$]*?)\b', re.U
 )
 repackage = re.compile(r'\bpackage\s+([^.;]+(?:\.[^.;]+)*?);', re.U)
 reexception = re.compile(r'7257b50d-e37a-4664-b1a5-b1340b4206c0: (.*?)$', re.U | re.M)
@@ -74,7 +74,7 @@ class JavaExecutor(CompiledExecutor):
     def get_executable(self):
         return self.get_vm()
 
-    def get_cmdline(self):
+    def get_cmdline(self, **kwargs):
         agent_flags = '-javaagent:%s=policy:%s' % (self._agent_file, self._policy_file)
         for hint in self._hints:
             agent_flags += ',%s' % hint
@@ -86,15 +86,14 @@ class JavaExecutor(CompiledExecutor):
             self.get_vm_mode(),
             agent_flags,
             '-Xss128m',
-            '-Xmx%dK' % self.__memory_limit,
+            '-Xmx%dK' % kwargs['orig_memory'],
             '-XX:+UseSerialGC',
             '-XX:ErrorFile=submission_jvm_crash.log',
             self._class_name,
         ]
 
     def launch(self, *args, **kwargs):
-        self.__memory_limit = kwargs['memory']
-        kwargs['memory'] = 0
+        kwargs['orig_memory'], kwargs['memory'] = kwargs['memory'], 0
         return super().launch(*args, **kwargs)
 
     def launch_unsafe(self, *args, **kwargs):

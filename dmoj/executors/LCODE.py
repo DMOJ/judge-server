@@ -16,5 +16,5 @@ HAI 1.2
 KTHXBYE
 '''
 
-    def get_cmdline(self):
+    def get_cmdline(self, **kwargs):
         return ['lci', self._code]

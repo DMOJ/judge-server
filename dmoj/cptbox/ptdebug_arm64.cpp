@@ -98,10 +98,14 @@ int pt_debugger_arm64::getpid_syscall() {
 }
 
 pt_debugger_arm64::pt_debugger_arm64() {
+#if PTBOX_SECCOMP
+    execve_id = 221;
+#else
     // execve is actually 221, but...
     // There is no orig_x8 on ARM64, and execve clears all registers.
     // Therefore, 0 is the register value when coming out of a system call.
     // We will pretend 0 is execve.
     execve_id = 0;
+#endif
 }
 #endif /* HAS_DEBUGGER_ARM64 */

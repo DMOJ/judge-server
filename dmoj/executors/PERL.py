@@ -9,5 +9,5 @@ class Executor(ScriptExecutor):
     test_program = 'print<>'
     syscalls = ['umtx_op']
 
-    def get_cmdline(self):
+    def get_cmdline(self, **kwargs):
         return ['perl', '-Mre=eval', self._code]

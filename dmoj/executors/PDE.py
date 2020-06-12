@@ -47,10 +47,10 @@ void setup() {
         code = template.replace(b'{code}', source_code)
         super(Executor, self).create_files(problem_id, code, *args, **kwargs)
 
-    def get_cmdline(self):
+    def get_cmdline(self, **kwargs):
         # must inject the class path before the class name,
         # otherwise it gets treated as an command line argument
-        cmdline = super(Executor, self).get_cmdline()
+        cmdline = super(Executor, self).get_cmdline(**kwargs)
         return cmdline[:-1] + ['-cp', self._papplet_file] + cmdline[-1:]
 
     def get_compile_args(self):

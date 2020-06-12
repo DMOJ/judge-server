@@ -1,20 +1,23 @@
 #!/usr/bin/python
-import errno
 import logging
 import os
 import signal
 import sys
+import multiprocessing
 import threading
 import traceback
+from enum import Enum
 from http.server import HTTPServer
-from itertools import chain
+from itertools import groupby
+from operator import itemgetter
+from typing import Any, Callable, Dict, Generator, List, NamedTuple, Optional, Tuple, Union
 
-from dmoj import graders, packet
+from dmoj import packet
 from dmoj.control import JudgeControlRequestHandler
 from dmoj.error import CompileError
 from dmoj.judgeenv import clear_problem_dirs_cache, env, get_supported_problems, startup_warnings
-from dmoj.monitor import DummyMonitor, Monitor
-from dmoj.problem import BatchedTestCase, Problem
+from dmoj.monitor import Monitor
+from dmoj.problem import BatchedTestCase, Problem, TestCase
 from dmoj.result import Result
 from dmoj.utils.ansi import ansi_style, print_ansi, strip_ansi
 from dmoj.utils.unicode import unicode_stdout_stderr, utf8bytes, utf8text
@@ -32,31 +35,54 @@ except ImportError:
         pass
 
 
-class BatchBegin:
-    pass
+class IPC(Enum):
+    HELLO = 'HELLO'
+    BYE = 'BYE'
+    COMPILE_ERROR = 'COMPILE-ERROR'
+    COMPILE_MESSAGE = 'COMPILE-MESSAGE'
+    RESULT = 'RESULT'
+    BATCH_BEGIN = 'BATCH-BEGIN'
+    BATCH_END = 'BATCH-END'
+    GRADING_BEGIN = 'GRADING-BEGIN'
+    GRADING_END = 'GRADING-END'
+    GRADING_ABORTED = 'GRADING-ABORTED'
+    UNHANDLED_EXCEPTION = 'UNHANDLED-EXCEPTION'
+    REQUEST_ABORT = 'REQUEST-ABORT'
 
 
-class BatchEnd:
-    pass
+IPC_TEARDOWN_TIMEOUT = 5  # seconds
 
 
-class TerminateGrading(Exception):
-    pass
+logger = logging.getLogger(__name__)
+
+
+Submission = NamedTuple(
+    'Submission',
+    [
+        ('id', int),
+        ('problem_id', str),
+        ('language', str),
+        ('source', str),
+        ('time_limit', float),
+        ('memory_limit', int),
+        ('short_circuit', bool),
+        ('meta', Dict),
+    ],
+)
 
 
 class Judge:
-    def __init__(self):
-        self.current_grader = None
-        self.current_submission_id = None
-        self.current_submission_thread = None
-        self._terminate_grading = False
-        self.packet_manager = None
+    def __init__(self, packet_manager: packet.PacketManager) -> None:
+        self.packet_manager = packet_manager
+        # FIXME(tbrindus): marked as Any since PacketManager likes querying current_submission.id directly.
+        self.current_submission: Any = None
+        self.current_judge_worker: Optional[JudgeWorker] = None
 
         self.updater_exit = False
         self.updater_signal = threading.Event()
         self.updater = threading.Thread(target=self._updater_thread)
 
-    def _updater_thread(self):
+    def _updater_thread(self) -> None:
         log = logging.getLogger('dmoj.updater')
         while True:
             self.updater_signal.wait()
@@ -66,9 +92,10 @@ class Judge:
 
             # Prevent problem updates while grading.
             # Capture the value so it can't change.
-            thread = self.current_submission_thread
-            if thread:
-                thread.join()
+            # FIXME(tbrindus): this is broken.
+            # thread = sub_judge_thread
+            # if thread:
+            #    thread.join()
 
             try:
                 clear_problem_dirs_cache()
@@ -76,237 +103,368 @@ class Judge:
             except Exception:
                 log.exception('Failed to update problems.')
 
-    def update_problems(self):
+    def update_problems(self) -> None:
         """
         Pushes current problem set to server.
         """
         self.updater_signal.set()
 
-    def _block_and_grade(self, problem, language, source, short_circuit, report=print):
-        if 'signature_grader' in problem.config:
-            grader_class = graders.SignatureGrader
-        elif 'interactive' in problem.config:
-            grader_class = graders.BridgedInteractiveGrader
-        elif 'custom_judge' in problem.config:
-            grader_class = graders.CustomGrader
-        else:
-            grader_class = graders.StandardGrader
+    def begin_grading(self, submission: Submission, report=logger.info, blocking=False) -> None:
+        self.current_submission = submission
+        ipc_ready_signal = threading.Event()
+        grading_thread = threading.Thread(
+            target=self._grading_thread_main, args=(ipc_ready_signal, submission, report), daemon=True
+        )
+        grading_thread.start()
 
+        ipc_ready_signal.wait()
+        if blocking:
+            grading_thread.join()
+
+    def _grading_thread_main(self, ipc_ready_signal: threading.Event, submission: Submission, report) -> None:
         try:
-            self.current_grader = grader_class(self, problem, language, utf8bytes(source))
-        except CompileError as compilation_error:
-            error = compilation_error.args[0] or b'compiler exited abnormally'
-
-            report(ansi_style('#ansi[Failed compiling submission!](red|bold)'))
-            report(error.rstrip())  # don't print extra newline
-
-            self.packet_manager.compile_error_packet(error)
-            return
-        else:
-            binary = self.current_grader.binary
-            if hasattr(binary, 'warning') and binary.warning is not None:
-                self.packet_manager.compile_message_packet(binary.warning)
-
-        self.packet_manager.begin_grading_packet(self.current_grader.is_pretested)
-
-        batch_counter = 1
-        in_batch = False
-
-        # cases are indexed at 1
-        case_number = 1
-        try:
-            for result in self.grade_cases(
-                self.current_grader, self.current_grader.cases(), short_circuit=short_circuit
-            ):
-                if isinstance(result, BatchBegin):
-                    self.packet_manager.batch_begin_packet()
-                    report(ansi_style("#ansi[Batch #%d](yellow|bold)" % batch_counter))
-                    in_batch = True
-                elif isinstance(result, BatchEnd):
-                    self.packet_manager.batch_end_packet()
-                    batch_counter += 1
-                    in_batch = False
-                else:
-                    codes = result.readable_codes()
-
-                    # here be cancer
-                    is_sc = result.result_flag & Result.SC
-                    colored_codes = list(
-                        map(lambda x: '#ansi[%s](%s|bold)' % ('--' if x == 'SC' else x, Result.COLORS_BYID[x]), codes)
-                    )
-                    colored_aux_codes = '{%s}' % ', '.join(colored_codes[1:]) if len(codes) > 1 else ''
-                    colored_feedback = '(#ansi[%s](|underline)) ' % utf8text(result.feedback) if result.feedback else ''
-                    case_info = (
-                        '[%.3fs (%.3fs) | %dkb] %s%s'
-                        % (
-                            result.execution_time,
-                            result.wall_clock_time,
-                            result.max_memory,
-                            colored_feedback,
-                            colored_aux_codes,
-                        )
-                        if not is_sc
-                        else ''
-                    )
-                    case_padding = '  ' * in_batch
-                    report(
-                        ansi_style('%sTest case %2d %-3s %s' % (case_padding, case_number, colored_codes[0], case_info))
-                    )
-
-                    self.packet_manager.test_case_status_packet(case_number, result)
-
-                    case_number += 1
-        except TerminateGrading:
-            self.packet_manager.submission_terminated_packet()
-            report(ansi_style('#ansi[Forcefully terminating grading. Temporary files may not be deleted.](red|bold)'))
-            pass
-        else:
-            self.packet_manager.grading_end_packet()
-
-    def begin_grading(
-        self,
-        id,
-        problem_id,
-        language,
-        source,
-        time_limit,
-        memory_limit,
-        short_circuit,
-        meta,
-        report=print,
-        blocking=False,
-    ):
-        self.current_submission_id = id
-
-        def grading_cleanup_wrapper():
             report(
                 ansi_style(
-                    'Start grading #ansi[%s](yellow)/#ansi[%s](green|bold) in %s...' % (problem_id, id, language)
+                    'Start grading #ansi[%s](yellow)/#ansi[%s](green|bold) in %s...'
+                    % (submission.problem_id, submission.id, submission.language)
                 )
             )
 
-            try:
-                problem = Problem(problem_id, time_limit, memory_limit, meta)
-                self._block_and_grade(problem, language, source, short_circuit, report=report)
-            except Exception:
-                self.log_internal_error()
+            self.current_judge_worker = JudgeWorker(submission)
 
-            self._terminate_grading = False
-            self.current_submission_id = None
-            self.current_submission_thread = None
-            self.current_grader = None
-            report(ansi_style('Done grading #ansi[%s](yellow)/#ansi[%s](green|bold).\n' % (problem_id, id)))
+            ipc_handler_dispatch: Dict[IPC, Callable] = {
+                IPC.HELLO: lambda _report: ipc_ready_signal.set(),
+                IPC.COMPILE_ERROR: self._ipc_compile_error,
+                IPC.COMPILE_MESSAGE: self._ipc_compile_message,
+                IPC.GRADING_BEGIN: self._ipc_grading_begin,
+                IPC.GRADING_END: self._ipc_grading_end,
+                IPC.GRADING_ABORTED: self._ipc_grading_aborted,
+                IPC.BATCH_BEGIN: self._ipc_batch_begin,
+                IPC.BATCH_END: self._ipc_batch_end,
+                IPC.RESULT: self._ipc_result,
+                IPC.UNHANDLED_EXCEPTION: self._ipc_unhandled_exception,
+            }
 
-        self.current_submission_thread = threading.Thread(target=grading_cleanup_wrapper)
-        self.current_submission_thread.daemon = True
-        self.current_submission_thread.start()
+            for ipc_type, data in self.current_judge_worker.communicate():
+                try:
+                    handler_func = ipc_handler_dispatch[ipc_type]
+                except KeyError:
+                    raise RuntimeError(
+                        "judge got unexpected IPC message from worker: %s" % ((ipc_type, data),)
+                    ) from None
 
-        # Submission may have been killed already, but block if it hasn't been.
-        if blocking and self.current_submission_thread is not None:
-            self.current_submission_thread.join()
+                handler_func(report, *data)
 
-    def grade_cases(self, grader, cases, short_circuit=False, is_short_circuiting=False):
-        for case in cases:
-            # Yield notifying objects for batch begin/end, and unwrap all cases inside the batches
-            if isinstance(case, BatchedTestCase):
-                yield BatchBegin()
+            report(
+                ansi_style(
+                    'Done grading #ansi[%s](yellow)/#ansi[%s](green|bold).\n' % (submission.problem_id, submission.id)
+                )
+            )
+        except:  # noqa: E722, we want to catch everything
+            self.log_internal_error()
+        finally:
+            if self.current_judge_worker is not None:
+                self.current_judge_worker.stop()
 
-                for batched_case in self.grade_cases(
-                    grader,
-                    case.batched_cases,
-                    short_circuit=case.config['short_circuit'],
-                    is_short_circuiting=is_short_circuiting,
-                ):
-                    # A batched case just failed.
-                    # There are two cases where this means that we should completely short-circuit:
-                    # 1. If the batch was worth 0 points, to emulate the property of 0-point cases.
-                    # 2. If the short_circuit flag is true, see <https://github.com/DMOJ/judge/issues/341>.
-                    if (batched_case.result_flag & Result.WA) and (not case.points or short_circuit):
-                        is_short_circuiting = True
-                    yield batched_case
-                yield BatchEnd()
-                continue
+            self.current_submission = None
+            self.current_judge_worker = None
 
-            # Stop grading if we're short circuiting
-            if is_short_circuiting:
-                result = Result(case)
-                result.result_flag = Result.SC
-                yield result
-                continue
+    def _ipc_compile_error(self, report, error_message: str) -> None:
+        report(ansi_style('#ansi[Failed compiling submission!](red|bold)'))
+        report(error_message.rstrip())  # don't print extra newline
+        self.packet_manager.compile_error_packet(error_message)
 
-            result = grader.grade(case)
+    def _ipc_compile_message(self, _report, compile_message: str) -> None:
+        self.packet_manager.compile_message_packet(compile_message)
 
-            # If the submission was killed due to an user-initiated abort, any result is meaningless.
-            if self._terminate_grading:
-                raise TerminateGrading()
+    def _ipc_grading_begin(self, _report, is_pretested: bool) -> None:
+        self.packet_manager.begin_grading_packet(is_pretested)
 
-            # If the WA bit of result_flag is set and we are set to short-circuit (e.g., in a batch),
-            # short circuit the rest of the cases.
-            # Do the same if the case is a pretest (i.e. has 0 points)
-            if (result.result_flag & Result.WA) > 0 and (short_circuit or not case.points):
-                is_short_circuiting = True
+    def _ipc_grading_end(self, _report) -> None:
+        self.packet_manager.grading_end_packet()
 
-            yield result
+    def _ipc_result(self, report, batch_number: Optional[int], case_number: int, result: Result) -> None:
+        codes = result.readable_codes()
 
-    def log_internal_error(self, exc=None):
-        # If exc is exists, raise it so that sys.exc_info() is populated with its data
-        if exc:
-            try:
-                raise exc
-            except:  # noqa: E722, we want to catch everything
-                pass
-        exc = sys.exc_info()
+        is_sc = result.result_flag & Result.SC
+        colored_codes = ['#ansi[%s](%s|bold)' % ('--' if x == 'SC' else x, Result.COLORS_BYID[x]) for x in codes]
+        colored_aux_codes = '{%s}' % ', '.join(colored_codes[1:]) if len(codes) > 1 else ''
+        colored_feedback = '(#ansi[%s](|underline)) ' % utf8text(result.feedback) if result.feedback else ''
+        if is_sc:
+            case_info = ''
+        else:
+            case_info = '[%.3fs (%.3fs) | %dkb] %s%s' % (
+                result.execution_time,
+                result.wall_clock_time,
+                result.max_memory,
+                colored_feedback,
+                colored_aux_codes,
+            )
+        case_padding = '  ' if batch_number is not None else ''
+        report(ansi_style('%sTest case %2d %-3s %s' % (case_padding, case_number, colored_codes[0], case_info)))
+        self.packet_manager.test_case_status_packet(case_number, result)
 
-        message = ''.join(traceback.format_exception(*exc))
+    def _ipc_batch_begin(self, report, batch_number: int) -> None:
+        self.packet_manager.batch_begin_packet()
+        report(ansi_style("#ansi[Batch #%d](yellow|bold)" % batch_number))
 
-        # Strip ANSI from the message, since this might be a checker's CompileError
-        # ...we don't want to see the raw ANSI codes from GCC/Clang on the site.
-        # We could use format_ansi and send HTML to the site, but the site doesn't presently support HTML
-        # internal error formatting.
-        self.packet_manager.internal_error_packet(strip_ansi(message))
+    def _ipc_batch_end(self, _report, _batch_number: int) -> None:
+        self.packet_manager.batch_end_packet()
 
-        # Logs can contain ANSI, and it'll display fine
-        print(message, file=sys.stderr)
+    def _ipc_grading_aborted(self, report) -> None:
+        self.packet_manager.submission_aborted_packet()
+        report(ansi_style('#ansi[Forcefully terminating grading. Temporary files may not be deleted.](red|bold)'))
 
-    def terminate_grading(self):
+    def _ipc_unhandled_exception(self, _report, message: str) -> None:
+        logger.error("Unhandled exception in worker process")
+        self.log_internal_error(message=message)
+
+    def abort_grading(self) -> None:
         """
         Forcefully terminates the current submission. Not necessarily safe.
         """
-        if self.current_submission_thread:
-            self._terminate_grading = True
-            if self.current_grader:
-                self.current_grader.terminate_grading()
-            self.current_submission_thread.join()
-            self.current_submission_thread = None
+        # Grab a local copy since it might get set to None after we do our None check.
+        worker = self.current_judge_worker
+        if worker:
+            worker.abort_grading()
 
-    def listen(self):
+    def listen(self) -> None:
         """
         Attempts to connect to the handler server specified in command line.
         """
         self.updater.start()
         self.packet_manager.run()
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exception_type, exception_value, traceback):
-        pass
-
-    def murder(self):
+    def murder(self) -> None:
         """
         End any submission currently executing, and exit the judge.
         """
-        self.terminate_grading()
+        self.abort_grading()
         self.updater_exit = True
         self.updater_signal.set()
         if self.packet_manager:
             self.packet_manager.close()
 
+    def log_internal_error(self, exc: BaseException = None, message: str = None) -> None:
+        if not message:
+            # If exc exists, raise it so that sys.exc_info() is populated with its data.
+            if exc:
+                try:
+                    raise exc
+                except KeyboardInterrupt:
+                    # Let KeyboardInterrupt bubble up.
+                    raise
+                except:  # noqa: E722, we want to catch everything
+                    pass
+
+            message = ''.join(traceback.format_exception(*sys.exc_info()))
+
+        logger.error(message)
+
+        try:
+            # Strip ANSI from the message, since this might be a checker's CompileError ...we don't want to see the raw
+            # ANSI codes from GCC/Clang on the site. We could use format_ansi and send HTML to the site, but the site
+            # doesn't presently support HTML internal error formatting.
+            self.packet_manager.internal_error_packet(strip_ansi(message))
+        except Exception:  # noqa E722: don't want `log_internal_error` to trigger `log_internal_error`, ever
+            logger.exception('Error encountered while reporting error to site!')
+
+
+class JudgeWorker:
+    def __init__(self, submission: Submission) -> None:
+        self.submission = submission
+        self._abort_requested = False
+        # FIXME(tbrindus): marked Any pending grader cleanups.
+        self.grader: Any = None
+
+        self.worker_process_conn, child_conn = multiprocessing.Pipe()
+        self.worker_process = multiprocessing.Process(
+            name="DMOJ Judge Handler for %s/%d" % (self.submission.problem_id, self.submission.id),
+            target=self._worker_process_main,
+            args=(child_conn, self.worker_process_conn),
+        )
+        self.worker_process.start()
+        child_conn.close()
+
+    def communicate(self) -> Generator[Tuple[IPC, tuple], None, None]:
+        while True:
+            try:
+                ipc_type, data = self.worker_process_conn.recv()
+            except Exception:
+                logger.error("Failed to read IPC message from worker!")
+                raise
+
+            if ipc_type == IPC.BYE:
+                self.worker_process_conn.send((IPC.BYE, ()))
+                return
+            else:
+                yield ipc_type, data
+
+    def stop(self) -> None:
+        if self.worker_process and self.worker_process.is_alive():
+            # Might be None if run was never called, or failed.
+            try:
+                self.worker_process.join(timeout=IPC_TEARDOWN_TIMEOUT)
+            except OSError:
+                logger.exception('Exception while waiting for worker to shut down, ignoring...')
+            finally:
+                if self.worker_process.is_alive():
+                    logger.error("Worker is still alive, sending SIGKILL!")
+                    self.worker_process.kill()
+
+    def abort_grading(self) -> None:
+        assert self.worker_process_conn
+
+        try:
+            self.worker_process_conn.send((IPC.REQUEST_ABORT, ()))
+        except Exception:
+            logger.exception("Failed to send abort request to worker, did it race?")
+
+        self.stop()
+
+    def _worker_process_main(
+        self,
+        judge_process_conn: 'multiprocessing.connection.Connection',
+        worker_process_conn: 'multiprocessing.connection.Connection',
+    ) -> None:
+        """
+        Main body of judge worker process, which handles grading and sends grading results to the judge controller via
+        IPC.
+        """
+        worker_process_conn.close()
+        setproctitle(multiprocessing.current_process().name)
+
+        def _ipc_recv_thread_main() -> None:
+            """
+            Worker thread that listens for incoming IPC messages from the judge controller.
+            """
+            while True:
+                try:
+                    ipc_type, data = judge_process_conn.recv()
+                except:  # noqa: E722, whatever happened, we have to abort now.
+                    logger.exception("Judge unexpectedly hung up!")
+                    self._do_abort()
+                    return
+
+                if ipc_type == IPC.BYE:
+                    return
+                elif ipc_type == IPC.REQUEST_ABORT:
+                    self._do_abort()
+                else:
+                    raise RuntimeError("worker got unexpected IPC message from judge: %s" % ((ipc_type, data),))
+
+        ipc_recv_thread = None
+        try:
+            judge_process_conn.send((IPC.HELLO, ()))
+
+            ipc_recv_thread = threading.Thread(target=_ipc_recv_thread_main, daemon=True)
+            ipc_recv_thread.start()
+
+            for ipc_msg in self._grade_cases():
+                judge_process_conn.send(ipc_msg)
+
+            judge_process_conn.send((IPC.BYE, ()))
+        except BrokenPipeError:
+            # There's nothing we can do about this... the general except branch would just fail again. Just re-raise and
+            # hope for the best.
+            raise
+        except:  # noqa: E722, we explicitly want to notify the parent of everything
+            # We can't pickle the whole traceback object, so just send the formatted exception.
+            message = ''.join(traceback.format_exception(*sys.exc_info()))
+            judge_process_conn.send((IPC.UNHANDLED_EXCEPTION, (message,)))
+            judge_process_conn.send((IPC.BYE, ()))
+        finally:
+            if ipc_recv_thread is not None:
+                # We may have failed before sending the IPC.BYE down the connection, in which case the judge will never
+                # close its side of the connection -- so `ipc_recv_thread` will never exit. But we can't wait forever in
+                # this case, since we're blocking the main judge from proceeding.
+                ipc_recv_thread.join(timeout=IPC_TEARDOWN_TIMEOUT)
+                if ipc_recv_thread.is_alive():
+                    logger.error("Judge IPC recv thread is still alive after timeout, shutting worker down anyway!")
+
+            # FIXME(tbrindus): we need to do this because cleaning up temporary directories happens on __del__, which
+            # won't get called if we exit the process right now (so we'd leak all files created by the grader). This
+            # should be refactored to have an explicit `cleanup()` or similar, rather than relying on refcounting
+            # working out.
+            self.grader = None
+
+    def _grade_cases(self) -> Generator[Tuple[IPC, tuple], None, None]:
+        problem = Problem(
+            self.submission.problem_id, self.submission.time_limit, self.submission.memory_limit, self.submission.meta
+        )
+
+        try:
+            self.grader = problem.grader_class(
+                self, problem, self.submission.language, utf8bytes(self.submission.source)
+            )
+        except CompileError as compilation_error:
+            error = compilation_error.args[0] or b'compiler exited abnormally'
+            yield IPC.COMPILE_ERROR, (error,)
+            return
+        else:
+            binary = self.grader.binary
+            if hasattr(binary, 'warning') and binary.warning is not None:
+                yield IPC.COMPILE_MESSAGE, (binary.warning,)
+
+        yield IPC.GRADING_BEGIN, (self.grader.is_pretested,)
+
+        flattened_cases: List[Tuple[Optional[int], Union[TestCase, BatchedTestCase]]] = []
+        batch_number = 0
+        for case in self.grader.cases():
+            if isinstance(case, BatchedTestCase):
+                batch_number += 1
+                for batched_case in case.batched_cases:
+                    flattened_cases.append((batch_number, batched_case))
+            else:
+                flattened_cases.append((None, case))
+
+        case_number = 0
+        is_short_circuiting = False
+        is_short_circuiting_enabled = self.submission.short_circuit
+        for batch_number, cases in groupby(flattened_cases, key=itemgetter(0)):
+            if batch_number:
+                yield IPC.BATCH_BEGIN, (batch_number,)
+
+            for _, case in cases:
+                case_number += 1
+
+                # Stop grading if we're short circuiting
+                if is_short_circuiting:
+                    result = Result(case, result_flag=Result.SC)
+                else:
+                    result = self.grader.grade(case)
+
+                    # If the submission was killed due to a user-initiated abort, any result is meaningless.
+                    if self._abort_requested:
+                        yield IPC.GRADING_ABORTED, ()
+                        return
+
+                    if result.result_flag & Result.WA:
+                        # If we failed a 0-point case, we will short-circuit every case after this.
+                        is_short_circuiting_enabled |= not case.points
+
+                        # Short-circuit if we just failed a case in a batch, or if short-circuiting is currently enabled
+                        # for all test cases (either this was requested by the site, or we failed a 0-point case in the
+                        # past).
+                        is_short_circuiting |= batch_number is not None or is_short_circuiting_enabled
+
+                yield IPC.RESULT, (batch_number, case_number, result)
+
+            if batch_number:
+                yield IPC.BATCH_END, (batch_number,)
+                is_short_circuiting &= is_short_circuiting_enabled
+
+        yield IPC.GRADING_END, ()
+
+    def _do_abort(self) -> None:
+        self._abort_requested = True
+        if self.grader:
+            self.grader.abort_grading()
+
 
 class ClassicJudge(Judge):
-    def __init__(self, host, port, **kwargs):
-        super().__init__()
-        self.packet_manager = packet.PacketManager(host, port, self, env['id'], env['key'], **kwargs)
+    def __init__(self, host, port, **kwargs) -> None:
+        super().__init__(packet.PacketManager(host, port, self, env['id'], env['key'], **kwargs))
 
 
 def sanity_check():
@@ -354,314 +512,6 @@ def make_host_port(judgeenv):
     return '%s:%s%s' % (host, judgeenv.server_port, 's' if judgeenv.secure else '')
 
 
-def judge_proc(need_monitor):
-    from dmoj import judgeenv
-
-    logfile = judgeenv.log_file
-
-    try:
-        logfile = logfile % env['id']
-    except TypeError:
-        pass
-
-    logging.basicConfig(
-        filename=logfile, level=logging.INFO, format='%(levelname)s %(asctime)s %(process)d %(module)s %(message)s'
-    )
-
-    setproctitle('DMOJ Judge: %s on %s' % (env['id'], make_host_port(judgeenv)))
-
-    judge = ClassicJudge(
-        judgeenv.server_host,
-        judgeenv.server_port,
-        secure=judgeenv.secure,
-        no_cert_check=judgeenv.no_cert_check,
-        cert_store=judgeenv.cert_store,
-    )
-    if need_monitor:
-        monitor = Monitor()
-        monitor.callback = judge.update_problems
-    else:
-        monitor = DummyMonitor()
-
-    if hasattr(signal, 'SIGUSR2'):
-
-        def update_problem_signal(signum, frame):
-            judge.update_problems()
-
-        signal.signal(signal.SIGUSR2, update_problem_signal)
-
-    if need_monitor and judgeenv.api_listen:
-        judge_instance = judge
-
-        class Handler(JudgeControlRequestHandler):
-            judge = judge_instance
-
-        api_server = HTTPServer(judgeenv.api_listen, Handler)
-        thread = threading.Thread(target=api_server.serve_forever)
-        thread.daemon = True
-        thread.start()
-    else:
-        api_server = None
-
-    print()
-    with monitor, judge:
-        try:
-            judge.listen()
-        except Exception:
-            traceback.print_exc()
-        finally:
-            judge.murder()
-            if api_server:
-                api_server.shutdown()
-
-
-PR_SET_PDEATHSIG = 1
-
-logpm = logging.getLogger('dmoj.judgepm')
-
-
-class JudgeManager:
-    signal_map = {
-        k: v
-        for v, k in sorted(signal.__dict__.items(), reverse=True)
-        if v.startswith('SIG') and not v.startswith('SIG_')
-    }
-
-    def __init__(self, judges):
-        self.libc = self.__get_libc()
-        self.prctl = self.libc.prctl
-
-        self._try_respawn = True
-        self.auth = {entry.id: entry.key for entry in judges}
-        self.orig_signal = {}
-
-        self.master_pid = os.getpid()
-        self.pids = {}
-        self.monitor_pid = None
-        self.api_pid = None
-
-        self.monitor = Monitor()
-
-    def __get_libc(self):
-        from ctypes.util import find_library
-        from ctypes import CDLL
-
-        return CDLL(find_library('c'))
-
-    def _forward_signal(self, sig, respawn=False):
-        def handler(signum, frame):
-            # SIGUSR2, the signal for file updates, may be triggered very quickly.
-            # Due to processing delays, it may cause reentrancy issues when logging.
-            # Band-aid fix is to avoid logging SIGUSR2.
-            if signum not in (signal.SIGUSR2,):
-                logpm.info('Received signal (%s), forwarding...', self.signal_map.get(signum, signum))
-                if not respawn:
-                    logpm.info('Will no longer respawn judges.')
-                    self._try_respawn = False
-            self.signal_all(signum)
-
-        self.orig_signal[sig] = signal.signal(sig, handler)
-
-    def _spawn_child(self, func, *args, **kwargs):
-        sys.stdout.flush()
-        sys.stderr.flush()
-        ppid = os.getpid()
-
-        # Pipe to signal signal handler initialization.
-        pr, pw = os.pipe()
-        try:
-            pid = os.fork()
-        except OSError:
-            logpm.exception('Failed to spawn child process.')
-            return
-        if pid == 0:
-            # In child. Scary business.
-            self.prctl(PR_SET_PDEATHSIG, signal.SIGTERM)
-            if ppid != os.getppid():
-                os.kill(os.getpid(), signal.SIGTERM)
-                os._exit(2)
-            sys.stdin.close()
-            os.close(pr)
-
-            for sig, handler in self.orig_signal.items():
-                signal.signal(sig, handler)
-            os.close(pw)
-
-            # How could we possibly return to top level?
-            try:
-                os._exit(func(*args, **kwargs) or 0)
-            finally:
-                os._exit(1)  # If that os._exit fails because ret is a truthy non-int, then this will ensure death.
-
-        # In parent.
-        os.close(pw)
-
-        # Block until child initializes signals before we register this child to receive signals.
-        while True:
-            try:
-                os.read(pr, 1)
-            except OSError as e:
-                if e.errno != errno.EINTR:
-                    raise
-            else:
-                break
-        os.close(pr)
-        return pid
-
-    def _judge_proc(self, id):
-        env['id'] = id
-        env['key'] = self.auth[id]
-        try:
-            return judge_proc(False)
-        except BaseException:
-            return 1
-        finally:
-            sys.stdout.flush()
-            sys.stderr.flush()
-            logging.shutdown()
-
-    def _spawn_judge(self, id):
-        pid = self._spawn_child(self._judge_proc, id)
-        self.pids[pid] = id
-        logpm.info('Judge %s is pid %d', id, pid)
-
-    def _spawn_monitor(self):
-        def monitor_proc():
-            setproctitle('DMOJ Judge: File monitor')
-            signal.signal(signal.SIGUSR2, signal.SIG_IGN)
-
-            event = threading.Event()
-            stop = False
-
-            def worker():
-                while True:
-                    event.wait()
-                    event.clear()
-                    if stop:
-                        return
-                    event.wait(1)
-                    if event.is_set():
-                        continue
-                    os.kill(self.master_pid, signal.SIGUSR2)
-
-            threading.Thread(target=worker).start()
-            self.monitor.callback = event.set
-            self.monitor.start()
-            try:
-                self.monitor.join()
-            except KeyboardInterrupt:
-                self.monitor.stop()
-                stop = True
-                event.set()
-
-        self.monitor_pid = self._spawn_child(monitor_proc)
-        logpm.info('Monitor is pid %d', self.monitor_pid)
-
-    def _spawn_api(self):
-        from dmoj import judgeenv
-
-        master_pid = self.master_pid
-
-        class Handler(JudgeControlRequestHandler):
-            def update_problems(self):
-                os.kill(master_pid, signal.SIGUSR2)
-
-        server = HTTPServer(judgeenv.api_listen, Handler)
-
-        def api_proc():
-            setproctitle('DMOJ Judge: API server')
-            signal.signal(signal.SIGUSR2, signal.SIG_IGN)
-            server.serve_forever()
-
-        self.api_pid = self._spawn_child(api_proc)
-        logpm.info('API server is pid %d', self.api_pid)
-
-    def _spawn_all(self):
-        from dmoj import judgeenv
-
-        for id in self.auth:
-            logpm.info('Spawning judge: %s', id)
-            self._spawn_judge(id)
-        if self.monitor.is_real:
-            logpm.info('Spawning monitor')
-            self._spawn_monitor()
-        if judgeenv.api_listen is not None:
-            logpm.info('Spawning API server')
-            self._spawn_api()
-
-    def _monitor(self):
-        while self._try_respawn or self.pids:
-            try:
-                pid, status = os.wait()
-            except (OSError, IOError) as e:
-                if e.errno == errno.EINTR:
-                    continue
-                raise
-            if not os.WIFSIGNALED(status) and not os.WIFEXITED(status):
-                continue
-            if pid in self.pids:
-                # A child just died.
-                judge = self.pids[pid]
-                del self.pids[pid]
-                if self._try_respawn:
-                    logpm.warning('Judge died, respawning: %s (pid %d, 0x%08X)', judge, pid, status)
-                    self._spawn_judge(judge)
-                else:
-                    logpm.info('Judge exited: %s (pid %d, 0x%08X)', judge, pid, status)
-            elif pid == self.monitor_pid:
-                if self._try_respawn:
-                    logpm.warning('Monitor died, respawning (0x%08X)', status)
-                    self._spawn_monitor()
-                else:
-                    logpm.info('Monitor exited: (0x%08X)', status)
-            elif pid == self.api_pid:
-                if self._try_respawn:
-                    logpm.warning('API server died, respawning (0x%08X)', status)
-                    self._spawn_api()
-                else:
-                    logpm.info('API server exited: (0x%08X)', status)
-            else:
-                logpm.error('I am not your father, %d (0x%08X)!', pid, status)
-
-    def _respawn_judges(self, signum, frame):
-        logpm.info('Received signal (%s), murderizing all children.', self.signal_map.get(signum, signum))
-        self.signal_all(signal.SIGTERM)
-
-    def run(self):
-        logpm.info('Starting process manager: %d.', os.getpid())
-
-        from dmoj import judgeenv
-
-        setproctitle('DMOJ Judge: Process manager on %s' % (make_host_port(judgeenv),))
-
-        self._forward_signal(signal.SIGUSR2, respawn=True)
-        self._forward_signal(signal.SIGINT)
-        self._forward_signal(signal.SIGQUIT)
-        self._forward_signal(signal.SIGTERM)
-        signal.signal(signal.SIGHUP, self._respawn_judges)
-
-        self._spawn_all()
-        try:
-            self._monitor()
-        except KeyboardInterrupt:
-            self._try_respawn = False
-            self.signal_all(signal.SIGINT)
-            self._monitor()
-
-        logpm.info('Exited gracefully: %d.', os.getpid())
-
-    def signal_all(self, signum):
-        for pid in chain(self.pids, [self.monitor_pid, self.api_pid]):
-            if pid is None:
-                continue
-            try:
-                os.kill(pid, signum)
-            except OSError as e:
-                if e.errno != errno.ESRCH:
-                    raise
-                    # Well the monitor will catch on eventually if the process vanishes.
-
-
 def main():  # pragma: no cover
     unicode_stdout_stderr()
 
@@ -675,31 +525,67 @@ def main():  # pragma: no cover
     executors.load_executors()
     contrib.load_contrib_modules()
 
-    if hasattr(signal, 'SIGUSR2'):
-        signal.signal(signal.SIGUSR2, signal.SIG_IGN)
-
     print('Running live judge...')
 
     for warning in judgeenv.startup_warnings:
         print_ansi('#ansi[Warning: %s](yellow)' % warning)
     del judgeenv.startup_warnings
 
-    if 'judges' in env:
-        logfile = judgeenv.log_file
-        try:
-            logfile = logfile % 'master'
-        except TypeError:
-            pass
-        logging.basicConfig(
-            filename=logfile, level=logging.INFO, format='%(levelname)s %(asctime)s %(process)d %(name)s %(message)s'
-        )
-        if env.pidfile:
-            with open(env.pidfile) as f:
-                f.write(str(os.getpid()))
-        manager = JudgeManager(env.judges)
-        manager.run()
+    logfile = judgeenv.log_file
+
+    try:
+        logfile = logfile % env['id']
+    except TypeError:
+        pass
+
+    logging.basicConfig(
+        filename=logfile, level=logging.INFO, format='%(levelname)s %(asctime)s %(process)d %(module)s %(message)s'
+    )
+
+    setproctitle('DMOJ Judge %s on %s' % (env['id'], make_host_port(judgeenv)))
+
+    judge = ClassicJudge(
+        judgeenv.server_host,
+        judgeenv.server_port,
+        secure=judgeenv.secure,
+        no_cert_check=judgeenv.no_cert_check,
+        cert_store=judgeenv.cert_store,
+    )
+    monitor = Monitor()
+    monitor.callback = judge.update_problems
+
+    if hasattr(signal, 'SIGUSR2'):
+
+        def update_problem_signal(signum, frame):
+            judge.update_problems()
+
+        signal.signal(signal.SIGUSR2, update_problem_signal)
+
+    if judgeenv.api_listen:
+        judge_instance = judge
+
+        class Handler(JudgeControlRequestHandler):
+            judge = judge_instance
+
+        api_server = HTTPServer(judgeenv.api_listen, Handler)
+        thread = threading.Thread(target=api_server.serve_forever)
+        thread.daemon = True
+        thread.start()
     else:
-        return judge_proc(need_monitor=True)
+        api_server = None
+
+    print()
+    with monitor:
+        try:
+            judge.listen()
+        except KeyboardInterrupt:
+            pass
+        except Exception:
+            traceback.print_exc()
+        finally:
+            judge.murder()
+            if api_server:
+                api_server.shutdown()
 
 
 if __name__ == '__main__':

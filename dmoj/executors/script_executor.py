@@ -33,7 +33,7 @@ class ScriptExecutor(BaseExecutor):
         with open(self._code, 'wb') as fo:
             fo.write(utf8bytes(source_code))
 
-    def get_cmdline(self) -> List[str]:
+    def get_cmdline(self, **kwargs) -> List[str]:
         command = self.get_command()
         assert command is not None
         return [command, self._code]

@@ -49,6 +49,7 @@ class Problem:
                     'output_limit_length': 25165824,
                     'binary_data': False,
                     'short_circuit': True,
+                    'points': 1,
                     'symlinks': {},
                     'meta': meta,
                 },
@@ -158,6 +159,19 @@ class Problem:
         self._checkers[name] = checker = load_module_from_file(os.path.join(self.root_dir, name))
         return checker
 
+    @property
+    def grader_class(self):
+        from dmoj import graders
+
+        if 'signature_grader' in self.config:
+            return graders.SignatureGrader
+        elif 'interactive' in self.config:
+            return graders.BridgedInteractiveGrader
+        elif 'custom_judge' in self.config:
+            return graders.CustomGrader
+        else:
+            return graders.StandardGrader
+
     def _resolve_archive_files(self):
         if self.config.archive:
             archive_path = os.path.join(self.root_dir, self.config.archive)
@@ -248,6 +262,7 @@ class TestCase:
         time_limit = env.generator_time_limit
         memory_limit = env.generator_memory_limit
         compiler_time_limit = env.generator_compiler_time_limit
+        should_cache = True
         lang = None  # Default to C/C++
 
         base = get_problem_root(self.problem.id)
@@ -271,6 +286,7 @@ class TestCase:
             time_limit = gen.time_limit or time_limit
             memory_limit = gen.memory_limit or memory_limit
             compiler_time_limit = gen.compiler_time_limit or compiler_time_limit
+            should_cache = gen.get('cached', True)
             lang = gen.language
 
         if not isinstance(filenames, list):
@@ -278,7 +294,7 @@ class TestCase:
 
         filenames = [os.path.join(base, name) for name in filenames]
         executor = self.problem.generator_manager.get_generator(
-            filenames, flags, lang=lang, compiler_time_limit=compiler_time_limit
+            filenames, flags, lang=lang, compiler_time_limit=compiler_time_limit, should_cache=should_cache
         )
 
         # convert all args to str before launching; allows for smoother int passing
@@ -357,3 +373,14 @@ class TestCase:
 
     def __str__(self):
         return 'TestCase{in=%s,out=%s,points=%s}' % (self.config['in'], self.config['out'], self.config['points'])
+
+    # FIXME(tbrindus): this is a hack working around the fact we can't pickle these fields, but we do need parts of
+    # TestCase itself on the other end of the IPC.
+    _pickle_blacklist = ('_generated', 'config', 'problem')
+
+    def __getstate__(self):
+        k = {k: v for k, v in self.__dict__.items() if k not in self._pickle_blacklist}
+        return k
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)

@@ -25,8 +25,8 @@ fun main(args: Array<String>) {
         super().create_files(problem_id, source_code, *args, **kwargs)
         self._jar_name = '%s.jar' % problem_id
 
-    def get_cmdline(self):
-        res = super().get_cmdline()
+    def get_cmdline(self, **kwargs):
+        res = super().get_cmdline(**kwargs)
         res[-2:] = ['-jar', self._jar_name]
         return res
 

@@ -1,3 +1,5 @@
+import re
+
 from dmoj.contrib.default import ContribModule as DefaultContribModule
 from dmoj.error import InternalError
 from dmoj.result import CheckerResult
@@ -9,13 +11,23 @@ class ContribModule(DefaultContribModule):
     WA = 1
     PE = 2
     IE = 3
+    PARTIAL = 7
 
     name = 'testlib'
+    repartial = re.compile(br'^points (\d+)\n$')
 
     @classmethod
     def parse_return_code(cls, proc, executor, point_value, time_limit, memory_limit, feedback, name, stderr):
         if proc.returncode == cls.AC:
             return CheckerResult(True, point_value, feedback=feedback)
+        elif proc.returncode == cls.PARTIAL:
+            match = cls.repartial.match(stderr)
+            if not match:
+                raise InternalError('Invalid stderr for partial points: %r' % stderr)
+            points = int(match.group(1))
+            if not 0 <= points <= point_value:
+                raise InternalError('Invalid partial points: %d' % points)
+            return CheckerResult(True, points, feedback=feedback)
         elif proc.returncode == cls.WA:
             return CheckerResult(False, 0, feedback=feedback)
         elif proc.returncode == cls.PE:

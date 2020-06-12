@@ -7,5 +7,5 @@ class Executor(ShellExecutor):
     command = 'bash'
     test_program = 'exec cat'
 
-    def get_cmdline(self):
+    def get_cmdline(self, **kwargs):
         return ['bash', self._code]

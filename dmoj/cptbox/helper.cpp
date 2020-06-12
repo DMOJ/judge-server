@@ -4,6 +4,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <signal.h>
+#include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/resource.h>
@@ -145,35 +146,50 @@ int cptbox_child_run(const struct child_config *config) {
 
     cptbox_closefrom(config->max_fd + 1);
 
-    if (ptrace_traceme())
+    if (ptrace_traceme()) {
+        perror("ptrace");
         return 204;
+    }
 
     kill(getpid(), SIGSTOP);
 
 #if PTBOX_SECCOMP
     if (config->trace_syscalls) {
         scmp_filter_ctx ctx = seccomp_init(SCMP_ACT_TRACE(0));
-        if (!ctx) return 203;
+        if (!ctx) {
+            fprintf(stderr, "Failed to initialize seccomp context!");
+            return 203;
+        }
 
         unsigned int child_arch = get_seccomp_arch(config->debugger_type);
 
+        int rc;
         if (seccomp_arch_exist(ctx, child_arch) == -EEXIST &&
-            seccomp_arch_add(ctx, child_arch) != 0) {
+            (rc = seccomp_arch_add(ctx, child_arch)) != 0) {
+            fprintf(stderr, "seccomp_arch_add: %s\n", strerror(-rc));
             return 203;
         }
 
         for (int syscall = 0; syscall < MAX_SYSCALL; syscall++) {
             if (config->syscall_whitelist[syscall]) {
-                seccomp_rule_add(ctx, SCMP_ACT_ALLOW, syscall, 0);
+                if (rc = seccomp_rule_add(ctx, SCMP_ACT_ALLOW, syscall, 0)) {
+                    fprintf(stderr, "seccomp_rule_add(..., %d): %s\n", syscall, strerror(-rc));
+                    // This failure is not fatal, it'll just cause the syscall to trap anyway.
+                }
             }
         }
 
-        if (seccomp_load(ctx)) return 203;
+        if (rc = seccomp_load(ctx)) {
+            fprintf(stderr, "seccomp_load: %s\n", strerror(-rc));
+            return 203;
+        }
+
         seccomp_release(ctx);
     }
 #endif
 
     execve(config->file, config->argv, config->envp);
+    perror("execve");
     return 205;
 }
 

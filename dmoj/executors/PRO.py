@@ -21,5 +21,5 @@ class Executor(ScriptExecutor):
     :- main.
 '''
 
-    def get_cmdline(self):
+    def get_cmdline(self, **kwargs):
         return [self.get_command(), '--goal=main', '-c', self._code]

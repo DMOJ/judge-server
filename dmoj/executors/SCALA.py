@@ -28,8 +28,8 @@ object self_test extends App {
         super().create_files(problem_id, source_code, *args, **kwargs)
         self._class_name = problem_id
 
-    def get_cmdline(self):
-        res = super().get_cmdline()
+    def get_cmdline(self, **kwargs):
+        res = super().get_cmdline(**kwargs)
 
         # Simply run bash -x $(which scala) and copy all arguments after -Xmx and -Xms
         # and add it as a list in the configuration.

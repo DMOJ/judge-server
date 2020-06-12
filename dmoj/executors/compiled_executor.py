@@ -168,7 +168,7 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
         except ImportError:
             return None
 
-    def get_compile_process(self) -> TimedPopen:
+    def create_compile_process(self, args: List[str]) -> TimedPopen:
         # Some languages may insist on providing certain functionality (e.g. colored highlighting of errors) if they
         # feel they are connected to a terminal. Some are more persistent than others in enforcing this, so this hack
         # aims to provide a convincing-enough lie to the runtime so that it starts singing in color.
@@ -180,7 +180,7 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
         env['TERM'] = 'xterm'
 
         proc = TimedPopen(
-            self.get_compile_args(),
+            args,
             **{
                 'stderr': _slave,
                 'stdout': _slave,
@@ -222,7 +222,17 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
         # to output hundreds of megabytes of data as output before being killed by the time limit,
         # which effectively murders the MySQL database waiting on the site server.
         limit = env.compiler_output_character_limit
-        return safe_communicate(process, None, outlimit=limit, errlimit=limit)[self.compile_output_index]
+        try:
+            output = safe_communicate(process, None, outlimit=limit, errlimit=limit)[self.compile_output_index]
+        except OutputLimitExceeded:
+            output = b'compiler output too long (> 64kb)'
+
+        if self.is_failed_compile(process):
+            if process.timed_out:
+                output = b'compiler timed out (> %d seconds)' % self.compiler_time_limit
+            self.handle_compile_error(output)
+
+        return output
 
     def get_compiled_file(self) -> str:
         return self._file(self.problem)
@@ -237,18 +247,8 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
         return utf8bytes(self.problem) + self.source
 
     def compile(self) -> str:
-        process = self.get_compile_process()
-        try:
-            output = self.get_compile_output(process)
-        except OutputLimitExceeded:
-            output = b'compiler output too long (> 64kb)'
-
-        if self.is_failed_compile(process):
-            if process.timed_out:
-                output = b'compiler timed out (> %d seconds)' % self.compiler_time_limit
-            self.handle_compile_error(output)
-        self.warning = output
-
+        process = self.create_compile_process(self.get_compile_args())
+        self.warning = self.get_compile_output(process)
         self._executable = self.get_compiled_file()
         return self._executable
 

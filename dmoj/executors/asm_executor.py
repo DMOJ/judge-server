@@ -1,11 +1,9 @@
 import os
 import re
-import subprocess
 from typing import List, Optional
 
 from dmoj.cptbox.tracer import can_debug
-from dmoj.error import CompileError
-from dmoj.executors.compiled_executor import CompiledExecutor, TimedPopen
+from dmoj.executors.compiled_executor import CompiledExecutor
 from dmoj.judgeenv import env, skip_self_test
 from dmoj.utils.os_ext import ARCH_X64, ARCH_X86
 from dmoj.utils.unicode import utf8text
@@ -53,11 +51,8 @@ class ASMExecutor(CompiledExecutor):
 
     def assemble(self):
         object = self._file('%s.o' % self.problem)
-        process = subprocess.Popen(self.get_as_args(object), cwd=self._dir, stderr=subprocess.PIPE)
-        as_output = process.communicate()[1]
-        if process.returncode != 0:
-            raise CompileError(as_output)
-
+        process = self.create_compile_process(self.get_as_args(object))
+        as_output = self.get_compile_output(process)
         return as_output, [object]
 
     def compile(self):
@@ -67,16 +62,8 @@ class ASMExecutor(CompiledExecutor):
             to_link = ['-dynamic-linker', self.dynamic_linker] + self.crt_pre + ['-lc'] + to_link + self.crt_post
 
         executable = self._file(self.problem)
-        process = TimedPopen(
-            [self.get_ld_path(), '-s', '-o', executable, '-m', self.ld_m] + to_link,
-            cwd=self._dir,
-            stderr=subprocess.PIPE,
-            preexec_fn=self.create_executable_limits(),
-            time_limit=self.compiler_time_limit,
-        )
-        ld_output = process.communicate()[1]
-        if process.returncode != 0:
-            raise CompileError(ld_output)
+        process = self.create_compile_process([self.get_ld_path(), '-s', '-o', executable, '-m', self.ld_m] + to_link)
+        ld_output = self.get_compile_output(process)
 
         if as_output or ld_output:
             self.warning = ('%s\n%s' % (utf8text(as_output), utf8text(ld_output))).strip()

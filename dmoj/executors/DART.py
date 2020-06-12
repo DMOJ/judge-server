@@ -22,7 +22,7 @@ void main() {
     def get_compile_args(self):
         return [self.get_command(), '--snapshot=%s' % self.get_compiled_file(), self._code]
 
-    def get_cmdline(self):
+    def get_cmdline(self, **kwargs):
         return [self.get_command(), self.get_compiled_file()]
 
     def get_executable(self):

@@ -10,6 +10,8 @@ exclude_lines =
 ignore_errors = True
 
 [run]
+concurrency = multiprocessing
+source = dmoj
 omit =
     dmoj/cli.py
     dmoj/citest.py

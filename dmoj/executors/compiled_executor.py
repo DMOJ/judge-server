@@ -120,6 +120,7 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
     is_cached = False
     warning: Optional[bytes] = None
     _executable: Optional[str] = None
+    _code: Optional[str] = None
 
     def __init__(self, problem_id: str, source_code: bytes, *args, **kwargs):
         super().__init__(problem_id, source_code, **kwargs)
@@ -167,23 +168,23 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
         except ImportError:
             return None
 
-    def get_compile_process(self) -> TimedPopen:
+    def create_compile_process(self, args: List[str]) -> TimedPopen:
         # Some languages may insist on providing certain functionality (e.g. colored highlighting of errors) if they
         # feel they are connected to a terminal. Some are more persistent than others in enforcing this, so this hack
         # aims to provide a convincing-enough lie to the runtime so that it starts singing in color.
         #
         # Emulate the streams of a process connected to a terminal: stdin, stdout, and stderr are all ptys.
-        self._master, self._slave = pty.openpty()
+        _master, _slave = pty.openpty()
         # Some runtimes *cough cough* Swift *cough cough* actually check the environment variables too.
         env = self.get_compile_env() or os.environ.copy()
         env['TERM'] = 'xterm'
 
         proc = TimedPopen(
-            self.get_compile_args(),
+            args,
             **{
-                'stderr': self._slave,
-                'stdout': self._slave,
-                'stdin': self._slave,
+                'stderr': _slave,
+                'stdout': _slave,
+                'stdin': _slave,
                 'cwd': self._dir,
                 'env': env,
                 'preexec_fn': self.create_executable_limits(),
@@ -211,9 +212,9 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
 
         # Since stderr and stdout are connected to the same slave pty, proc.stderr will contain the merged stdout
         # of the process as well.
-        proc.stderr = io_error_wrapper(os.fdopen(self._master, 'rb'))  # type: ignore
+        proc.stderr = io_error_wrapper(os.fdopen(_master, 'rb'))  # type: ignore
 
-        os.close(self._slave)
+        os.close(_slave)
         return proc
 
     def get_compile_output(self, process: TimedPopen) -> bytes:
@@ -221,7 +222,17 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
         # to output hundreds of megabytes of data as output before being killed by the time limit,
         # which effectively murders the MySQL database waiting on the site server.
         limit = env.compiler_output_character_limit
-        return safe_communicate(process, None, outlimit=limit, errlimit=limit)[self.compile_output_index]
+        try:
+            output = safe_communicate(process, None, outlimit=limit, errlimit=limit)[self.compile_output_index]
+        except OutputLimitExceeded:
+            output = b'compiler output too long (> 64kb)'
+
+        if self.is_failed_compile(process):
+            if process.timed_out:
+                output = b'compiler timed out (> %d seconds)' % self.compiler_time_limit
+            self.handle_compile_error(output)
+
+        return output
 
     def get_compiled_file(self) -> str:
         return self._file(self.problem)
@@ -236,22 +247,12 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
         return utf8bytes(self.problem) + self.source
 
     def compile(self) -> str:
-        process = self.get_compile_process()
-        try:
-            output = self.get_compile_output(process)
-        except OutputLimitExceeded:
-            output = b'compiler output too long (> 64kb)'
-
-        if self.is_failed_compile(process):
-            if process.timed_out:
-                output = b'compiler timed out (> %d seconds)' % self.compiler_time_limit
-            self.handle_compile_error(output)
-        self.warning = output
-
+        process = self.create_compile_process(self.get_compile_args())
+        self.warning = self.get_compile_output(process)
         self._executable = self.get_compiled_file()
         return self._executable
 
-    def get_cmdline(self) -> List[str]:
+    def get_cmdline(self, **kwargs) -> List[str]:
         return [self.problem]
 
     def get_executable(self) -> str:

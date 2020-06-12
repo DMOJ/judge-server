@@ -4,6 +4,7 @@ from dmoj import judgeenv
 from dmoj.commands.base_command import Command
 from dmoj.error import InvalidCommandException
 from dmoj.executors import executors
+from dmoj.judge import Submission
 
 
 class ResubmitCommand(Command):
@@ -26,15 +27,15 @@ class ResubmitCommand(Command):
     def execute(self, line):
         args = self.arg_parser.parse_args(line)
 
-        id, lang, src, tl, ml = self.get_submission_data(args.submission_id)
+        problem_id, lang, src, tl, ml = self.get_submission_data(args.submission_id)
 
-        id = args.problem or id
+        problem_id = args.problem or problem_id
         lang = args.language or lang
         tl = args.time_limit or tl
         ml = args.memory_limit or ml
 
         if id not in map(itemgetter(0), judgeenv.get_supported_problems()):
-            raise InvalidCommandException("unknown problem '%s'" % id)
+            raise InvalidCommandException("unknown problem '%s'" % problem_id)
         elif lang not in executors:
             raise InvalidCommandException("unknown language '%s'" % lang)
         elif tl <= 0:
@@ -45,5 +46,9 @@ class ResubmitCommand(Command):
         src = self.open_editor(lang, src)
 
         self.judge.submission_id_counter += 1
-        self.judge.graded_submissions.append((id, lang, src, tl, ml))
-        self.judge.begin_grading(self.judge.submission_id_counter, id, lang, src, tl, ml, False, {}, blocking=True)
+        self.judge.graded_submissions.append((problem_id, lang, src, tl, ml))
+        self.judge.begin_grading(
+            Submission(self.judge.submission_id_counter, problem_id, lang, src, tl, ml, False, {}),
+            blocking=True,
+            report=print,
+        )

@@ -12,12 +12,6 @@
 
 pt_debugger::pt_debugger() : on_return_callback(NULL) {}
 
-#if PTBOX_FREEBSD
-    bool pt_debugger::use_peekdata = true;
-#else
-    bool pt_debugger::use_peekdata = false;
-#endif
-
 bool has_null(char *buf, unsigned long size) {
     for (unsigned long i = 0; i < size; ++i) {
         if (buf[i] == '\0')
@@ -103,6 +97,7 @@ typedef int ptrace_read_t;
 #else
 typedef long ptrace_read_t;
 
+#if __BIONIC__
 #ifndef SYS_process_vm_readv
 #define SYS_process_vm_readv 270
 #endif
@@ -115,9 +110,15 @@ ssize_t __attribute__((weak)) process_vm_readv(
 ) {
     return syscall(SYS_process_vm_readv, (long) pid, lvec, liovcnt, rvec, riovcnt, flags);
 }
+#endif  // __BIONIC__
+
 #endif
 
 char *pt_debugger::readstr(unsigned long addr, size_t max_size) {
+    if (!addr) {
+        return nullptr;
+    }
+
 #if PTBOX_FREEBSD
     return readstr_peekdata(addr, max_size);
 #else
@@ -128,11 +129,16 @@ char *pt_debugger::readstr(unsigned long addr, size_t max_size) {
     unsigned long remain, read = 0;
     struct iovec local, remote;
 
-    if (use_peekdata)
+    if (use_peekdata) {
         return readstr_peekdata(addr, max_size);
+    }
 
-    remain = addr - (addr & page_mask);
+    remain = ((addr + page_size) & page_mask) - addr;
     buf = (char *) malloc(max_size + 1);
+
+    if (!buf) {
+        return nullptr;
+    }
 
     while (read < max_size) {
         local.iov_base = (void *) (buf + read);
@@ -140,34 +146,31 @@ char *pt_debugger::readstr(unsigned long addr, size_t max_size) {
         remote.iov_base = (void *) (addr + read);
         remote.iov_len = remain;
 
-        errno = 0;
+        // The man page guarantees that a partial read cannot happen at
+        // sub-iovec granularity, so we don't need to retry here.
         if (process_vm_readv(tid, &local, 1, &remote, 1, 0) > 0) {
-            if (memchr(buf + read, '\0', remain))
+            if (memchr(buf + read, '\0', remain)) {
                 return buf;
+            }
+
             read += remain;
-        } else if (errno == ENOSYS || errno == EPERM) {
-            perror("process_vm_readv");
-            use_peekdata = true;
-            free(buf);
-            return readstr_peekdata(addr, max_size);
-        } else if (!errno) {
-            buf[read] = 0;
-            return buf;
         } else {
-            if (errno != EFAULT && errno != EIO && errno != EBADF)
-                perror("process_vm_readv");
+            perror("process_vm_readv");
             free(buf);
 
             char *result = readstr_peekdata(addr, max_size);
             // This means process_vm_readv failed but peekdata succeeded.
             // We should just give up on process_vm_readv.
-            if (!read && result && *result)
+            if (!read && result) {
                 use_peekdata = true;
+            }
             return result;
         }
+
         remain = page_size < max_size - read ? page_size : max_size - read;
     }
-    buf[max_size] = 0;
+
+    buf[max_size] = '\0';
     return buf;
 #endif
 }
@@ -175,43 +178,62 @@ char *pt_debugger::readstr(unsigned long addr, size_t max_size) {
 char *pt_debugger::readstr_peekdata(unsigned long addr, size_t max_size) {
     size_t size = 4096, read = 0;
     char *buf = (char *) malloc(size);
+
+    if (!buf || !addr) {
+        return nullptr;
+    }
+
     union {
         ptrace_read_t val;
         char byte[sizeof(ptrace_read_t)];
     } data;
 
     while (true) {
+        // Re-alloc buffer in case next read would overflow the buffer.
         if (read + sizeof(ptrace_read_t) > size) {
-            if (max_size && size >= max_size) {
-                buf[max_size-1] = 0;
+            if (size > max_size) {
+                buf[max_size] = '\0';
                 break;
             }
 
             size += 4096;
-            if (max_size && size > max_size)
-                size = max_size;
+            if (size > max_size) {
+                size = max_size + 1;
+            }
 
             void *nbuf = realloc(buf, size);
             if (!nbuf) {
-                buf[size-4097] = 0;
-                break;
+                perror("realloc");
+                free(buf);
+                return nullptr;
             }
+
             buf = (char *) nbuf;
         }
+
+        errno = 0;
 #if PTBOX_FREEBSD
-        // TODO: we could use PT_IO to speed up this entire function by reading chunks rather than byte
+        // TODO: we could use PT_IO to speed up this entire function by reading
+        // chunks rather than bytes
         data.val = ptrace(PT_READ_D, tid, (caddr_t) (addr + read), 0);
 #else
-        errno = 0;
         data.val = ptrace(PTRACE_PEEKDATA, tid, addr + read, NULL);
-        if (data.val == -1 && errno)
-            perror("ptrace(PTRACE_PEEKDATA)");
 #endif
+        if (data.val == -1 && errno) {
+            // It would be unsafe to continue, so bail out.
+            perror("ptrace(PTRACE_PEEKDATA)");
+            free(buf);
+            return nullptr;
+        }
+
         memcpy(buf + read, data.byte, sizeof(ptrace_read_t));
-        if (has_null(data.byte, sizeof(ptrace_read_t)))
+        if (has_null(data.byte, sizeof(ptrace_read_t))) {
             break;
+        }
+
         read += sizeof(ptrace_read_t);
     }
+
     return buf;
 }
 

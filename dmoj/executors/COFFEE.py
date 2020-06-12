@@ -35,7 +35,7 @@ process.stdin.on 'readable', () ->
             return False
         return super().initialize()
 
-    def get_cmdline(self):
+    def get_cmdline(self, **kwargs):
         return [self.get_command(), self.runtime_dict['coffee'], self._code]
 
     def get_fs(self):

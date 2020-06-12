@@ -21,7 +21,7 @@ put echo
         tprologc = self.runtime_dict['tprologc']
         return [tprologc, self._code, os.path.dirname(tprologc)]
 
-    def get_cmdline(self):
+    def get_cmdline(self, **kwargs):
         return [self.runtime_dict['tprolog'], self._code + 'bc']
 
     def get_executable(self):

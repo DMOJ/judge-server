@@ -131,7 +131,7 @@ with io.open(os.path.join(os.path.dirname(__file__), 'README.md'), encoding='utf
 
 setup(
     name='dmoj',
-    version='2.0.0',
+    version='2.1.0',
     packages=find_packages(),
     package_data={
         'dmoj.cptbox': ['syscalls/aliases.list', 'syscalls/*.tbl'],

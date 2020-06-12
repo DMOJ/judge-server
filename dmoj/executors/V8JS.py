@@ -13,5 +13,5 @@ class Executor(ScriptExecutor):
     def get_version_flags(cls, command):
         return [('-e', 'print(version())')]
 
-    def get_cmdline(self):
+    def get_cmdline(self, **kwargs):
         return [self.get_command(), '--stack-size=131072', self._code]  # 128MB Stack Limit

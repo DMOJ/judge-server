@@ -10,6 +10,7 @@ LINUX_SYSCALLS_ARM = 'https://raw.githubusercontent.com/torvalds/linux/master/ar
 LINUX_SYSCALLS_GENERIC = 'https://raw.githubusercontent.com/torvalds/linux/master/include/uapi/asm-generic/unistd.h'
 
 func_to_name = {}
+names = set()
 
 with open('linux-x86.tbl', 'w') as x86, utf8reader(urlopen(LINUX_SYSCALLS_32)) as data:
     for line in data:
@@ -22,6 +23,7 @@ with open('linux-x86.tbl', 'w') as x86, utf8reader(urlopen(LINUX_SYSCALLS_32)) a
             func_to_name[func] = name
         if name == 'fstatat64':
             name = 'fstatat'
+        names.add(name)
         print('%d\t%s' % (int(syscall[0]), name), file=x86)
 
 with open('linux-x64.tbl', 'w') as x64, open('linux-x32.tbl', 'w') as x32, utf8reader(
@@ -36,6 +38,7 @@ with open('linux-x64.tbl', 'w') as x64, open('linux-x32.tbl', 'w') as x32, utf8r
         name = syscall[2].strip('_')
         if name == 'newfstatat':
             name = 'fstatat'
+        names.add(name)
         if arch in ('common', '64'):
             print('%d\t%s' % (id, name), file=x64)
         if arch in ('common', 'x32'):
@@ -60,6 +63,7 @@ with open('linux-arm.tbl', 'w') as arm, utf8reader(urlopen(LINUX_SYSCALLS_ARM)) 
                 name = func.replace('sys_', '').replace('_wrapper', '')
         if name == 'fstatat64':
             name = 'fstatat'
+        names.add(name)
         print('%d\t%s' % (int(id), name), file=arm)
 
 renr = re.compile(r'#define\s+__NR(?:3264)?_([a-z0-9_]+)\s+(\d+)')
@@ -72,4 +76,24 @@ with open('linux-generic.tbl', 'w') as generic, utf8reader(urlopen(LINUX_SYSCALL
             name, id = match.groups()
             if name in ('arch_specific_syscall', 'sync_file_range2'):
                 continue
+            names.add(name)
             print('%d\t%s' % (int(id), name), file=generic)
+
+with open('aliases.list') as aliases:
+    for line in aliases:
+        names.add(line.split()[1])
+
+with open('../syscalls.pyi', 'w') as interface:
+    print(
+        '''\
+from typing import List, Dict
+
+translator: List[List[int]]
+by_name: Dict[str, int]
+by_id: List[str]
+SYSCALL_COUNT: int
+''',
+        file=interface,
+    )
+    for name in sorted(names):
+        print('sys_%s: int' % (name,), file=interface)

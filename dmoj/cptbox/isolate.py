@@ -4,9 +4,9 @@ import re
 import sys
 
 from dmoj.cptbox._cptbox import AT_FDCWD, bsd_get_proc_cwd, bsd_get_proc_fdno
+from dmoj.cptbox.tracer import MaxLengthExceeded
 from dmoj.cptbox.handlers import ACCESS_EACCES, ACCESS_ENOENT, ACCESS_EPERM, ALLOW
 
-# noinspection PyUnresolvedReferences
 from dmoj.cptbox.syscalls import *
 from dmoj.utils.unicode import utf8text
 
@@ -189,7 +189,15 @@ class IsolateTracer(dict):
     def check_file_access(self, syscall, argument, is_open=False):
         def check(debugger):
             file_ptr = getattr(debugger, 'uarg%d' % argument)
-            file = debugger.readstr(file_ptr)
+            try:
+                file = debugger.readstr(file_ptr)
+            except MaxLengthExceeded as e:
+                log.info('Denied access via syscall %s to overly long path: %r', syscall, e.args[0])
+                return ACCESS_ENOENT(debugger)
+            except UnicodeDecodeError as e:
+                log.info('Denied access via syscall %s to path with invalid unicode: %r', syscall, e.object)
+                return ACCESS_ENOENT(debugger)
+
             file, accessible = self._file_access_check(file, debugger, is_open)
             if accessible:
                 return True
@@ -201,7 +209,15 @@ class IsolateTracer(dict):
 
     def check_file_access_at(self, syscall, is_open=False):
         def check(debugger):
-            file = debugger.readstr(debugger.uarg1)
+            try:
+                file = debugger.readstr(debugger.uarg1)
+            except MaxLengthExceeded as e:
+                log.info('Denied access via syscall %s to overly long path: %r', syscall, e.args[0])
+                return ACCESS_ENOENT(debugger)
+            except UnicodeDecodeError as e:
+                log.info('Denied access via syscall %s to path with invalid unicode: %r', syscall, e.object)
+                return ACCESS_ENOENT(debugger)
+
             file, accessible = self._file_access_check(file, debugger, is_open, dirfd=debugger.arg0, flag_reg=2)
             if accessible:
                 return True
@@ -232,6 +248,14 @@ class IsolateTracer(dict):
         return fs
 
     def _file_access_check(self, rel_file, debugger, is_open, flag_reg=1, dirfd=AT_FDCWD):
+        # Either process called open(NULL, ...), or we failed to read the path
+        # in cptbox.  Either way this call should not be allowed; if the path
+        # was indeed NULL we can end the request before it gets to the kernel
+        # without any downside, and if it was *not* NULL and we failed to read
+        # it, then we should *definitely* stop the call here.
+        if rel_file is None:
+            return '(nil)', False
+
         try:
             file = self.get_full_path(debugger, rel_file, dirfd)
         except UnicodeDecodeError:

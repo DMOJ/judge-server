@@ -10,7 +10,7 @@ class BaseGrader:
         self.judge = judge
         self.binary = self._generate_binary()
         self.is_pretested = self.problem.meta.pretests_only and 'pretest_test_cases' in self.problem.config
-        self._terminate_grading = False
+        self._abort_requested = False
         self._current_proc = None
         self._batch_counter = 0
         self._testcase_counter = 0
@@ -21,8 +21,8 @@ class BaseGrader:
     def _generate_binary(self):
         raise NotImplementedError
 
-    def terminate_grading(self):
-        self._terminate_grading = True
+    def abort_grading(self):
+        self._abort_requested = True
         if self._current_proc:
             try:
                 self._current_proc.kill()

@@ -11,5 +11,5 @@ class Executor(ScriptExecutor):
 
     test_program = '<?php while($f = fgets(STDIN)) echo $f;'
 
-    def get_cmdline(self):
+    def get_cmdline(self, **kwargs):
         return ['php', self._code]

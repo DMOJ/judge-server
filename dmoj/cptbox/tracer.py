@@ -5,7 +5,6 @@ import signal
 import subprocess
 import sys
 import threading
-import time
 from typing import List, Optional
 
 from dmoj.cptbox._cptbox import *
@@ -22,6 +21,8 @@ from dmoj.utils.os_ext import (
     INTERPRETER_ARCH,
     file_arch,
     find_exe_in_path,
+    oom_score_adj,
+    OOM_SCORE_ADJ_MAX,
 )
 from dmoj.utils.unicode import utf8bytes, utf8text
 
@@ -55,6 +56,10 @@ _arch_map = {
 }
 
 
+class MaxLengthExceeded(ValueError):
+    pass
+
+
 class AdvancedDebugger(Debugger):
     # Implements additional debugging functionality for convenience.
 
@@ -74,13 +79,12 @@ class AdvancedDebugger(Debugger):
     def readstr(self, address, max_size=4096):
         if self.address_bits == 32:
             address &= 0xFFFFFFFF
-        try:
-            return utf8text(super().readstr(address, max_size))
-        except UnicodeDecodeError:
-            # It's possible for the text to crash utf8text, but this would mean a
-            # deliberate attack, so we kill the process here instead
-            os.kill(self.pid, signal.SIGKILL)
-            return ''
+        read = super().readstr(address, max_size + 1)
+        if read is None:
+            return None
+        if len(read) > max_size:
+            raise MaxLengthExceeded(read)
+        return utf8text(read)
 
 
 # SecurePopen is a subclass of a cython class, _cptbox.Process. Since it is exceedingly unwise
@@ -199,6 +203,8 @@ class TracedPopen(Process, metaclass=TracedPopenMeta):
                     '(https://www.kernel.org/doc/Documentation/security/Yama.txt, should be '
                     'at most 1); if running in Docker, must run container with `--cap-add=SYS_PTRACE`'
                 )
+            elif self.returncode == 205:
+                raise RuntimeError('failed to spawn child')
         return self.returncode
 
     def poll(self):
@@ -228,13 +234,19 @@ class TracedPopen(Process, metaclass=TracedPopenMeta):
         return self._is_tle
 
     def kill(self):
-        log.warning('Request the killing of process: %s', self.pid)
-        try:
-            os.killpg(self.pid, signal.SIGKILL)
-        except OSError:
-            import traceback
+        # FIXME(quantum): this is actually a race. The process may exit before we kill it.
+        # Under very unlikely circumstances, the pid could be reused and we will end up
+        # killing the wrong process.
+        if self.returncode is None:
+            log.warning('Request the killing of process: %s', self.pid)
+            try:
+                os.killpg(self.pid, signal.SIGKILL)
+            except OSError:
+                import traceback
 
-            traceback.print_exc()
+                traceback.print_exc()
+        else:
+            log.warning('Skipping the killing of process because it already exited: %s', self.pid)
 
     def _callback(self, syscall):
         try:
@@ -283,7 +295,7 @@ class TracedPopen(Process, metaclass=TracedPopenMeta):
             self._spawn(self._executable, self._args, self._env, self._chdir, self._fds)
         except:  # noqa: E722, need to catch absolutely everything
             self._spawn_error = sys.exc_info()[0]
-            self._exited = True
+            self._died.set()
             return
         finally:
             if self.stdin_needs_close:
@@ -294,6 +306,14 @@ class TracedPopen(Process, metaclass=TracedPopenMeta):
                 os.close(self._child_stderr)
 
             self._spawned_or_errored.set()
+
+        # Adjust OOM score on the child process, sacrificing it before the judge process.
+        try:
+            oom_score_adj(OOM_SCORE_ADJ_MAX, self.pid)
+        except Exception:
+            import traceback
+
+            traceback.print_exc()
 
         # TODO(tbrindus): this code should be the same as [self.returncode], so it shouldn't be duplicated
         code = self._monitor()
@@ -314,19 +334,16 @@ class TracedPopen(Process, metaclass=TracedPopenMeta):
         wake_signal = signal.SIGSTOP if 'freebsd' in sys.platform else signal.SIGWINCH
         self._spawned_or_errored.wait()
 
-        while not self._exited:
+        while not self._died.wait(1):
             if self.execution_time > self._time or self.wall_clock_time > self._wall_time:
                 log.warning('Shocker activated and killed %d', self.pid)
-                os.killpg(self.pid, signal.SIGKILL)
+                self.kill()
                 self._is_tle = True
                 break
-            time.sleep(1)
             try:
                 os.killpg(self.pid, wake_signal)
             except OSError:
                 pass
-            else:
-                time.sleep(0.01)
 
     def __init_streams(self, stdin, stdout, stderr):
         self.stdin = self.stdout = self.stderr = None

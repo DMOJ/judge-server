@@ -25,4 +25,9 @@ class Executor(CompiledExecutor):
 
     def get_compile_output(self, process):
         output = super().get_compile_output(process)
-        return output if b'Error:' in output or b'Note:' in output or b'Warning:' in output else ''
+        # Some versions of the compiler have the first letter capitalized, and
+        # others don't.
+        for prefix in (b'Error:', b'Note:', b'Warning:'):
+            if prefix in output or prefix.lower() in output:
+                return output
+        return ''

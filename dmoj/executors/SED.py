@@ -7,7 +7,7 @@ class Executor(ScriptExecutor):
     command = 'sed'
     test_program = 's/^//'
 
-    def get_cmdline(self):
+    def get_cmdline(self, **kwargs):
         return [self.get_command(), '-f', self._code]
 
     @classmethod

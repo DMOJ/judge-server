@@ -66,7 +66,7 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
         parser.add_argument('judge_name', nargs='?', help='judge name (overrides configuration)')
         parser.add_argument('judge_key', nargs='?', help='judge key (overrides configuration)')
         parser.add_argument('-p', '--server-port', type=int, default=9999, help='port to connect for the server')
-    else:
+    elif not testsuite:
         parser.add_argument('command', nargs='*', help='invoke CLI command without spawning shell')
 
     parser.add_argument(
@@ -192,10 +192,12 @@ _problem_root_cache: Dict[str, str] = {}
 
 
 def get_problem_root(problem_id):
-    if problem_id not in _problem_root_cache or not os.path.isdir(_problem_root_cache[problem_id]):
+    cached_root = _problem_root_cache.get(problem_id)
+    if cached_root is None or not os.path.isfile(os.path.join(cached_root, 'init.yml')):
         for root_dir in get_problem_roots():
             problem_root_dir = os.path.join(root_dir, problem_id)
-            if os.path.isdir(problem_root_dir):
+            problem_init = os.path.join(problem_root_dir, 'init.yml')
+            if os.path.isfile(problem_init):
                 _problem_root_cache[problem_id] = problem_root_dir
                 break
 

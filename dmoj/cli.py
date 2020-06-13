@@ -1,3 +1,5 @@
+import atexit
+import readline
 import shlex
 import sys
 from typing import cast
@@ -81,6 +83,12 @@ def cli_main():
 
     executors.load_executors()
     contrib.load_contrib_modules()
+
+    try:
+        readline.read_history_file(judgeenv.cli_history_file)
+    except FileNotFoundError:
+        pass
+    atexit.register(readline.write_history_file, judgeenv.cli_history_file)
 
     print('Running local judge...')
 

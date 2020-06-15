@@ -155,7 +155,7 @@ class Judge:
                     'Done grading #ansi[%s](yellow)/#ansi[%s](green|bold).\n' % (submission.problem_id, submission.id)
                 )
             )
-        except:  # noqa: E722, we want to catch everything
+        except Exception:  # noqa: E722, we want to catch everything
             self.log_internal_error()
         finally:
             if self.current_judge_worker is not None:

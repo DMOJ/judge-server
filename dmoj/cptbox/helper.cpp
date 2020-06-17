@@ -103,27 +103,6 @@ int cptbox_child_run(const struct child_config *config) {
         personality(config->personality);
 #endif
 
-    if (config->address_space)
-        setrlimit2(RLIMIT_AS, config->address_space);
-
-    if (config->memory)
-        setrlimit2(RLIMIT_DATA, config->memory);
-
-    if (config->cpu_time)
-        setrlimit2(RLIMIT_CPU, config->cpu_time, config->cpu_time + 1);
-
-    if (config->nproc >= 0)
-        setrlimit2(RLIMIT_NPROC, config->nproc);
-
-    if (config->fsize >= 0)
-        setrlimit2(RLIMIT_FSIZE, config->fsize);
-
-    if (config->dir && *config->dir)
-        chdir(config->dir);
-
-    setrlimit2(RLIMIT_STACK, RLIM_INFINITY);
-    setrlimit2(RLIMIT_CORE, 0);
-
 #ifdef PR_SET_NO_NEW_PRIVS  // Since Linux 3.5
     if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0))
         return 202;
@@ -187,6 +166,30 @@ int cptbox_child_run(const struct child_config *config) {
         seccomp_release(ctx);
     }
 #endif
+
+    // All these limits should be dropped after initializing seccomp, since seccomp allocates
+    // memory, and if an arena isn't sufficiently free it could force seccomp into an OOM
+    // situation where we'd fail to initialize.
+    if (config->address_space)
+        setrlimit2(RLIMIT_AS, config->address_space);
+
+    if (config->memory)
+        setrlimit2(RLIMIT_DATA, config->memory);
+
+    if (config->cpu_time)
+        setrlimit2(RLIMIT_CPU, config->cpu_time, config->cpu_time + 1);
+
+    if (config->nproc >= 0)
+        setrlimit2(RLIMIT_NPROC, config->nproc);
+
+    if (config->fsize >= 0)
+        setrlimit2(RLIMIT_FSIZE, config->fsize);
+
+    if (config->dir && *config->dir)
+        chdir(config->dir);
+
+    setrlimit2(RLIMIT_STACK, RLIM_INFINITY);
+    setrlimit2(RLIMIT_CORE, 0);
 
     execve(config->file, config->argv, config->envp);
     perror("execve");

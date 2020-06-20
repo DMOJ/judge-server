@@ -4,7 +4,10 @@ export DMOJ_IN_DOCKER=1
 export PYTHONUNBUFFERED=1
 export LANG=C.UTF-8
 export PYTHONIOENCODING=utf8
-export LD_PRELOAD="$(jemalloc-config --libdir)/libjemalloc.so.$(jemalloc-config --revision)"
+
+mkdir -p /opt/jail/tmp && mount --bind /tmp /opt/jail/tmp
+mkdir -p /opt/jail/dev && mount --bind /dev /opt/jail/dev
+mkdir -p /opt/jail/proc && mount --bind /proc /opt/jail/proc
 
 cd /judge
 pip3 install -q -e .

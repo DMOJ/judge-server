@@ -10,7 +10,7 @@ _reexecutor = re.compile(r'([A-Z0-9]+)\.py$')
 # List of executors that exist for historical purposes, but which shouldn't ever be run on a normal system
 # We keep them for compatibility purposes, but they are not important enough to have a commandline flag for enabling
 # them; instead, removing them from this list suffices.
-_unsupported_executors = {'BASH'}
+_unsupported_executors = {'BASH', 'CPP03', 'CPP11', 'CPP14', 'CPP17', 'C', 'C11'}
 
 executors: Dict[str, Any] = {}
 

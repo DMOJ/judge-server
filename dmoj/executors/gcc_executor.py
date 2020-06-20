@@ -54,7 +54,7 @@ class GCCExecutor(CompiledExecutor):
         return []
 
     def get_flags(self) -> List[str]:
-        return self.flags + ['-fmax-errors=%d' % MAX_ERRORS]
+        return self.flags# + ['-fmax-errors=%d' % MAX_ERRORS]
 
     def get_defines(self) -> List[str]:
         return ['-DONLINE_JUDGE'] + self.defines
@@ -62,12 +62,14 @@ class GCCExecutor(CompiledExecutor):
     def get_compile_args(self) -> List[str]:
         command = self.get_command()
         assert command is not None
+        march = self.get_march_flag()
         return (
             [command, '-Wall']
             + (['-fdiagnostics-color=always'] if self.has_color else [])
             + self.source_paths
             + self.get_defines()
-            + ['-O2', '-lm', self.get_march_flag()]
+            + ['-O2', '-lm']
+            #+ ([march] if march.strip() else [])
             + self.get_flags()
             + self.get_ldflags()
             + ['-s', '-o', self.get_compiled_file()]

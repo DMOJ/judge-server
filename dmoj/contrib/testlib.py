@@ -21,7 +21,7 @@ class ContribModule(DefaultContribModule):
         if proc.returncode == cls.AC:
             return CheckerResult(True, point_value, feedback=feedback)
         elif proc.returncode == cls.PARTIAL:
-            match = cls.repartial.match(stderr)
+            match = cls.repartial.search(stderr)
             if not match:
                 raise InternalError('Invalid stderr for partial points: %r' % stderr)
             points = int(match.group(1))

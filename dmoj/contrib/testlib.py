@@ -14,7 +14,7 @@ class ContribModule(DefaultContribModule):
     PARTIAL = 7
 
     name = 'testlib'
-    repartial = re.compile(br'^points (\d+)\n$')
+    repartial = re.compile(br'^points (\d+)$', re.M)
 
     @classmethod
     def parse_return_code(cls, proc, executor, point_value, time_limit, memory_limit, feedback, name, stderr):

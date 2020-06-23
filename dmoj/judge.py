@@ -208,7 +208,7 @@ class Judge:
 
     def _ipc_grading_aborted(self, report) -> None:
         self.packet_manager.submission_aborted_packet()
-        report(ansi_style('#ansi[Forcefully terminating grading. Temporary files may not be deleted.](red|bold)'))
+        report(ansi_style('#ansi[Forcefully terminating grading.]red|bold)'))
 
     def _ipc_unhandled_exception(self, _report, message: str) -> None:
         logger.error("Unhandled exception in worker process")

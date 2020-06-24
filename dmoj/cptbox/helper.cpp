@@ -27,7 +27,7 @@
 #   define FD_DIR "/proc/self/fd"
 #endif
 
-inline unsigned int get_seccomp_arch(int type) {
+static uint32_t get_seccomp_arch(int type) {
     switch (type) {
 #ifdef SCMP_ARCH_X86
         case DEBUGGER_X86:
@@ -137,30 +137,37 @@ int cptbox_child_run(const struct child_config *config) {
         scmp_filter_ctx ctx = seccomp_init(SCMP_ACT_TRACE(0));
         if (!ctx) {
             fprintf(stderr, "Failed to initialize seccomp context!");
-            return 203;
+            goto seccomp_fail;
         }
 
-        unsigned int child_arch = get_seccomp_arch(config->debugger_type);
+        uint32_t child_arch = get_seccomp_arch(config->debugger_type);
 
         int rc;
-        if (seccomp_arch_exist(ctx, child_arch) == -EEXIST &&
-            (rc = seccomp_arch_add(ctx, child_arch)) != 0) {
-            fprintf(stderr, "seccomp_arch_add: %s\n", strerror(-rc));
-            return 203;
+        if (seccomp_arch_exist(ctx, child_arch) == -EEXIST) {
+            if ((rc = seccomp_arch_add(ctx, child_arch))) {
+                fprintf(stderr, "seccomp_arch_add: %s\n", strerror(-rc));
+                goto seccomp_fail;
+
+            }
+
+            if ((rc = seccomp_arch_remove(ctx, SCMP_ARCH_NATIVE)) {
+                fprintf(stderr, "seccomp_arch_remove: %s\n", strerror(-rc));
+                goto seccomp_fail;
+            }
         }
 
         for (int syscall = 0; syscall < MAX_SYSCALL; syscall++) {
             if (config->syscall_whitelist[syscall]) {
-                if (rc = seccomp_rule_add(ctx, SCMP_ACT_ALLOW, syscall, 0)) {
+                if ((rc = seccomp_rule_add(ctx, SCMP_ACT_ALLOW, syscall, 0))) {
                     fprintf(stderr, "seccomp_rule_add(..., %d): %s\n", syscall, strerror(-rc));
                     // This failure is not fatal, it'll just cause the syscall to trap anyway.
                 }
             }
         }
 
-        if (rc = seccomp_load(ctx)) {
+        if ((rc = seccomp_load(ctx))) {
             fprintf(stderr, "seccomp_load: %s\n", strerror(-rc));
-            return 203;
+            goto seccomp_fail;
         }
 
         seccomp_release(ctx);
@@ -194,6 +201,9 @@ int cptbox_child_run(const struct child_config *config) {
     execve(config->file, config->argv, config->envp);
     perror("execve");
     return 205;
+
+seccomp_fail:
+    return 203;
 }
 
 // From python's _posixsubprocess

@@ -147,10 +147,9 @@ int cptbox_child_run(const struct child_config *config) {
             if ((rc = seccomp_arch_add(ctx, child_arch))) {
                 fprintf(stderr, "seccomp_arch_add: %s\n", strerror(-rc));
                 goto seccomp_fail;
-
             }
 
-            if ((rc = seccomp_arch_remove(ctx, SCMP_ARCH_NATIVE)) {
+            if ((rc = seccomp_arch_remove(ctx, SCMP_ARCH_NATIVE))) {
                 fprintf(stderr, "seccomp_arch_remove: %s\n", strerror(-rc));
                 goto seccomp_fail;
             }

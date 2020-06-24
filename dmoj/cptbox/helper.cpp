@@ -143,7 +143,6 @@ int cptbox_child_run(const struct child_config *config) {
         uint32_t child_arch = get_seccomp_arch(config->debugger_type);
 
         int rc;
-        fprintf(stderr, "native arch is %d, child arch is %d\n", SCMP_ARCH_NATIVE, child_arch);
         if ((rc = seccomp_arch_exist(ctx, child_arch)) == -EEXIST) {
             if ((rc = seccomp_arch_add(ctx, child_arch))) {
                 fprintf(stderr, "seccomp_arch_add: %s\n", strerror(-rc));
@@ -154,9 +153,6 @@ int cptbox_child_run(const struct child_config *config) {
                 fprintf(stderr, "seccomp_arch_remove: %s\n", strerror(-rc));
                 goto seccomp_fail;
             }
-        } else {
-            fprintf(stderr, "seccomp_arch_exist: %s\n", strerror(-rc));
-            goto seccomp_fail;
         }
 
         for (int syscall = 0; syscall < MAX_SYSCALL; syscall++) {
@@ -166,6 +162,11 @@ int cptbox_child_run(const struct child_config *config) {
                     // This failure is not fatal, it'll just cause the syscall to trap anyway.
                 }
             }
+        }
+
+        if ((rc = seccomp_arch_add(ctx, SCMP_ARCH_NATIVE))) {
+            fprintf(stderr, "seccomp_arch_add: %s\n", strerror(-rc));
+            goto seccomp_fail;
         }
 
         seccomp_export_pfc(ctx, 2);

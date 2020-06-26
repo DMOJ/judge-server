@@ -164,7 +164,7 @@ class Judge:
             self.current_submission = None
             self.current_judge_worker = None
 
-            # Might not have been set if exception was encountered before HELLO message, so signal here to keep the
+            # Might not have been set if an exception was encountered before HELLO message, so signal here to keep the
             # other side from waiting forever.
             ipc_ready_signal.set()
 
@@ -286,9 +286,17 @@ class JudgeWorker:
         child_conn.close()
 
     def communicate(self) -> Generator[Tuple[IPC, tuple], None, None]:
+        recv_timeout = max(60, int(2 * self.submission.time_limit))
         while True:
             try:
+                if not self.worker_process_conn.poll(timeout=recv_timeout):
+                    raise TimeoutError('worker did not send a message in %d seconds' % recv_timeout)
+
                 ipc_type, data = self.worker_process_conn.recv()
+            except TimeoutError:
+                logger.error('Worker has not sent a message in %d seconds, assuming dead and killing.', recv_timeout)
+                self.worker_process.kill()
+                raise
             except Exception:
                 logger.error("Failed to read IPC message from worker!")
                 raise

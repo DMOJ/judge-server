@@ -73,10 +73,13 @@ class SubmitCommand(Command):
 
         self.judge.submission_id_counter += 1
         self.judge.graded_submissions.append((problem_id, language_id, src, time_limit, memory_limit))
-        self.judge.begin_grading(
-            Submission(
-                self.judge.submission_id_counter, problem_id, language_id, src, time_limit, memory_limit, False, {}
-            ),
-            blocking=True,
-            report=print,
-        )
+        try:
+            self.judge.begin_grading(
+                Submission(
+                    self.judge.submission_id_counter, problem_id, language_id, src, time_limit, memory_limit, False, {}
+                ),
+                blocking=True,
+                report=print,
+            )
+        except KeyboardInterrupt:
+            self.judge.abort_grading()

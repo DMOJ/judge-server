@@ -103,27 +103,6 @@ int cptbox_child_run(const struct child_config *config) {
         personality(config->personality);
 #endif
 
-    if (config->address_space)
-        setrlimit2(RLIMIT_AS, config->address_space);
-
-    if (config->memory)
-        setrlimit2(RLIMIT_DATA, config->memory);
-
-    if (config->cpu_time)
-        setrlimit2(RLIMIT_CPU, config->cpu_time, config->cpu_time + 1);
-
-    if (config->nproc >= 0)
-        setrlimit2(RLIMIT_NPROC, config->nproc);
-
-    if (config->fsize >= 0)
-        setrlimit2(RLIMIT_FSIZE, config->fsize);
-
-    if (config->dir && *config->dir)
-        chdir(config->dir);
-
-    setrlimit2(RLIMIT_STACK, RLIM_INFINITY);
-    setrlimit2(RLIMIT_CORE, 0);
-
 #ifdef PR_SET_NO_NEW_PRIVS  // Since Linux 3.5
     if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0))
         return 202;
@@ -158,39 +137,70 @@ int cptbox_child_run(const struct child_config *config) {
         scmp_filter_ctx ctx = seccomp_init(SCMP_ACT_TRACE(0));
         if (!ctx) {
             fprintf(stderr, "Failed to initialize seccomp context!");
-            return 203;
+            goto seccomp_fail;
         }
-
-        unsigned int child_arch = get_seccomp_arch(config->debugger_type);
 
         int rc;
-        if (seccomp_arch_exist(ctx, child_arch) == -EEXIST &&
-            (rc = seccomp_arch_add(ctx, child_arch)) != 0) {
-            fprintf(stderr, "seccomp_arch_add: %s\n", strerror(-rc));
-            return 203;
-        }
-
-        for (int syscall = 0; syscall < MAX_SYSCALL; syscall++) {
-            if (config->syscall_whitelist[syscall]) {
-                if (rc = seccomp_rule_add(ctx, SCMP_ACT_ALLOW, syscall, 0)) {
-                    fprintf(stderr, "seccomp_rule_add(..., %d): %s\n", syscall, strerror(-rc));
-                    // This failure is not fatal, it'll just cause the syscall to trap anyway.
+        unsigned int child_arch = get_seccomp_arch(config->debugger_type);
+        if (child_arch != seccomp_arch_native()) {
+            if ((rc = seccomp_arch_add(ctx, child_arch))) {
+                fprintf(stderr, "seccomp_arch_add: %s\n", strerror(-rc));
+                goto seccomp_fail;
+            }
+            // FIXME(tbrindus): do nothing else for now. The seccomp filter will
+            // be empty and trap on every syscall. Pending
+            //   https://github.com/seccomp/libseccomp/issues/259
+            // or plumbing libseccomp pseudosyscall mapping up to here.
+        } else {
+            for (int syscall = 0; syscall < MAX_SYSCALL; syscall++) {
+                if (config->syscall_whitelist[syscall]) {
+                    if ((rc = seccomp_rule_add(ctx, SCMP_ACT_ALLOW, syscall, 0))) {
+                        fprintf(stderr, "seccomp_rule_add(..., %d): %s\n", syscall, strerror(-rc));
+                        // This failure is not fatal, it'll just cause the syscall to trap anyway.
+                    }
                 }
             }
         }
 
-        if (rc = seccomp_load(ctx)) {
+        if ((rc = seccomp_load(ctx))) {
             fprintf(stderr, "seccomp_load: %s\n", strerror(-rc));
-            return 203;
+            goto seccomp_fail;
         }
 
         seccomp_release(ctx);
     }
 #endif
 
+    // All these limits should be dropped after initializing seccomp, since seccomp allocates
+    // memory, and if an arena isn't sufficiently free it could force seccomp into an OOM
+    // situation where we'd fail to initialize.
+    if (config->address_space)
+        setrlimit2(RLIMIT_AS, config->address_space);
+
+    if (config->memory)
+        setrlimit2(RLIMIT_DATA, config->memory);
+
+    if (config->cpu_time)
+        setrlimit2(RLIMIT_CPU, config->cpu_time, config->cpu_time + 1);
+
+    if (config->nproc >= 0)
+        setrlimit2(RLIMIT_NPROC, config->nproc);
+
+    if (config->fsize >= 0)
+        setrlimit2(RLIMIT_FSIZE, config->fsize);
+
+    if (config->dir && *config->dir)
+        chdir(config->dir);
+
+    setrlimit2(RLIMIT_STACK, RLIM_INFINITY);
+    setrlimit2(RLIMIT_CORE, 0);
+
     execve(config->file, config->argv, config->envp);
     perror("execve");
     return 205;
+
+seccomp_fail:
+    return 203;
 }
 
 // From python's _posixsubprocess

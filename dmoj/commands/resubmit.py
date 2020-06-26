@@ -47,8 +47,11 @@ class ResubmitCommand(Command):
 
         self.judge.submission_id_counter += 1
         self.judge.graded_submissions.append((problem_id, lang, src, tl, ml))
-        self.judge.begin_grading(
-            Submission(self.judge.submission_id_counter, problem_id, lang, src, tl, ml, False, {}),
-            blocking=True,
-            report=print,
-        )
+        try:
+            self.judge.begin_grading(
+                Submission(self.judge.submission_id_counter, problem_id, lang, src, tl, ml, False, {}),
+                blocking=True,
+                report=print,
+            )
+        except KeyboardInterrupt:
+            self.judge.abort_grading()

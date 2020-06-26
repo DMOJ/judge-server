@@ -23,11 +23,6 @@ from dmoj.utils.ansi import ansi_style, print_ansi, strip_ansi
 from dmoj.utils.unicode import unicode_stdout_stderr, utf8bytes, utf8text
 
 try:
-    import readline  # noqa: F401, imported for the side-effect of making `input()` have readline.
-except ImportError:
-    pass
-
-try:
     from setproctitle import setproctitle
 except ImportError:
 
@@ -160,7 +155,7 @@ class Judge:
                     'Done grading #ansi[%s](yellow)/#ansi[%s](green|bold).\n' % (submission.problem_id, submission.id)
                 )
             )
-        except:  # noqa: E722, we want to catch everything
+        except Exception:  # noqa: E722, we want to catch everything
             self.log_internal_error()
         finally:
             if self.current_judge_worker is not None:
@@ -448,6 +443,10 @@ class JudgeWorker:
                         # past).
                         is_short_circuiting |= batch_number is not None or is_short_circuiting_enabled
 
+                # Legacy hack: we need to allow graders to read and write `proc_output` on the `Result` object, but the
+                # judge controller only cares about the trimmed output, and shouldn't waste memory buffering the full
+                # output. So, we trim it here so we don't run out of memory in the controller.
+                result.proc_output = result.output
                 yield IPC.RESULT, (batch_number, case_number, result)
 
             if batch_number:

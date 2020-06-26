@@ -1,3 +1,7 @@
 # PR 630 - Autoformat all code with Black
 # https://github.com/DMOJ/judge-server/pull/630
-4b463cbed4cba12739e7cabca20d72041f8dded8
+ece768dfd3d2915e011706cf12a37017b3f1f328
+
+# PR 703 - Strip files of carriage returns
+# https://github.com/DMOJ/judge-server/pull/703
+4bba186a57aeb7113e6d81144300a14dc0e4e36b

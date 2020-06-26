@@ -164,6 +164,10 @@ class Judge:
             self.current_submission = None
             self.current_judge_worker = None
 
+            # Might not have been set if exception was encountered before HELLO message, so signal here to keep the
+            # other side from waiting forever.
+            ipc_ready_signal.set()
+
     def _ipc_compile_error(self, report, error_message: str) -> None:
         report(ansi_style('#ansi[Failed compiling submission!](red|bold)'))
         report(error_message.rstrip())  # don't print extra newline

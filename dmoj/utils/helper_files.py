@@ -41,8 +41,7 @@ def compile_with_auxiliary_files(filenames, flags=[], lang=None, compiler_time_l
 
     executor = executor.Executor
 
-    fs = executor.fs + [tempfile.gettempdir()]
-    kwargs = {'fs': fs}
+    kwargs = {'fs': executor.fs + [tempfile.gettempdir()]}
 
     if issubclass(executor, CompiledExecutor):
         kwargs['compiler_time_limit'] = compiler_time_limit

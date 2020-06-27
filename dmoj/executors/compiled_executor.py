@@ -39,7 +39,7 @@ class _CompiledExecutorMeta(abc.ABCMeta):
     )
 
     def __call__(self, *args, **kwargs) -> 'CompiledExecutor':
-        is_cached: bool = kwargs.get('cached', False)
+        is_cached: bool = kwargs.pop('cached', False)
         if is_cached:
             kwargs['dest_dir'] = env.compiled_binary_cache_dir
 

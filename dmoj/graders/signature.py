@@ -40,7 +40,6 @@ class SignatureGrader(StandardGrader):
                 self.problem.id,
                 entry,
                 aux_sources=aux_sources,
-                fds=handler_data['fds'],
                 defines=['-DSIGNATURE_GRADER'],
             )
         else:

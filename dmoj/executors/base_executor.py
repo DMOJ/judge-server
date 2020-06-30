@@ -51,6 +51,11 @@ class BaseExecutor(PlatformExecutorMixin):
         self._hints = hints or []
         self.unbuffered = unbuffered
 
+        for arg, value in kwargs.items():
+            if not hasattr(self, arg):
+                raise TypeError('Unexpected keyword argument: %s' % arg)
+            setattr(self, arg, value)
+
     def cleanup(self) -> None:
         if not hasattr(self, '_dir'):
             # We are really toasted, as constructor failed.

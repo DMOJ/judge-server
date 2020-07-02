@@ -41,10 +41,10 @@ script:
     if [ "$PYTHON_VERSION" != 3.8 ]; then
       PYTHON="/code/python$PYTHON_VERSION/bin/python$PYTHON_VERSION"
       "$PYTHON" -m pip install --upgrade pip wheel
-      "$PYTHON" -m pip install cython coverage
+      "$PYTHON" -m pip install cython coverage typeguard
     else
       PYTHON=/usr/bin/python3.8
-      pip3 install coverage
+      pip3 install coverage typeguard
     fi
     "$PYTHON" -m pip install -e .[test]
     chmod o+w .

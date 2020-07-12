@@ -105,6 +105,8 @@ class Judge:
         self.updater_signal.set()
 
     def begin_grading(self, submission: Submission, report=logger.info, blocking=False) -> None:
+        assert self.current_submission is None
+
         self.current_submission = submission
         ipc_ready_signal = threading.Event()
         grading_thread = threading.Thread(

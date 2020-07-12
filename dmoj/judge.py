@@ -72,6 +72,7 @@ class Judge:
         # FIXME(tbrindus): marked as Any since PacketManager likes querying current_submission.id directly.
         self.current_submission: Any = None
         self.current_judge_worker: Optional[JudgeWorker] = None
+        self._grading_lock = threading.Lock()
 
         self.updater_exit = False
         self.updater_signal = threading.Event()
@@ -105,6 +106,12 @@ class Judge:
         self.updater_signal.set()
 
     def begin_grading(self, submission: Submission, report=logger.info, blocking=False) -> None:
+        # Ensure only one submission is running at a time; this lock is released at the end of submission grading.
+        # This is necessary because `begin_grading` is "re-entrant"; after e.g. grading-end is sent, the network
+        # thread may receive a new submission before the grading thread and worker from the *previous* submission
+        # have finished tearing down. Trashing global state (e.g. `self.current_submission`) before then would be
+        # an error.
+        self._grading_lock.acquire()
         assert self.current_submission is None
 
         self.current_submission = submission
@@ -169,6 +176,8 @@ class Judge:
             # Might not have been set if an exception was encountered before HELLO message, so signal here to keep the
             # other side from waiting forever.
             ipc_ready_signal.set()
+
+            self._grading_lock.release()
 
     def _ipc_compile_error(self, report, error_message: str) -> None:
         report(ansi_style('#ansi[Failed compiling submission!](red|bold)'))

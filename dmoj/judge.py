@@ -69,14 +69,20 @@ Submission = NamedTuple(
 class Judge:
     def __init__(self, packet_manager: packet.PacketManager) -> None:
         self.packet_manager = packet_manager
-        # FIXME(tbrindus): marked as Any since PacketManager likes querying current_submission.id directly.
-        self.current_submission: Any = None
         self.current_judge_worker: Optional[JudgeWorker] = None
+        # Locks current_judge_worker assignments. RLock so that self.current_submission can be used while already
+        # behing held.
+        self._current_submission_lock = threading.RLock()
         self._grading_lock = threading.Lock()
 
         self.updater_exit = False
         self.updater_signal = threading.Event()
         self.updater = threading.Thread(target=self._updater_thread)
+
+    @property
+    def current_submission(self):
+        with self._current_submission_lock:
+            return self.current_judge_worker.submission if self.current_judge_worker else None
 
     def _updater_thread(self) -> None:
         log = logging.getLogger('dmoj.updater')
@@ -109,24 +115,12 @@ class Judge:
         # Ensure only one submission is running at a time; this lock is released at the end of submission grading.
         # This is necessary because `begin_grading` is "re-entrant"; after e.g. grading-end is sent, the network
         # thread may receive a new submission before the grading thread and worker from the *previous* submission
-        # have finished tearing down. Trashing global state (e.g. `self.current_submission`) before then would be
+        # have finished tearing down. Trashing global state (e.g. `self.current_judge_worker`) before then would be
         # an error.
         self._grading_lock.acquire()
-        assert self.current_submission is None
+        with self._current_submission_lock:
+            assert self.current_judge_worker is None
 
-        self.current_submission = submission
-        ipc_ready_signal = threading.Event()
-        grading_thread = threading.Thread(
-            target=self._grading_thread_main, args=(ipc_ready_signal, submission, report), daemon=True
-        )
-        grading_thread.start()
-
-        ipc_ready_signal.wait()
-        if blocking:
-            grading_thread.join()
-
-    def _grading_thread_main(self, ipc_ready_signal: threading.Event, submission: Submission, report) -> None:
-        try:
             report(
                 ansi_style(
                     'Start grading #ansi[%s](yellow)/#ansi[%s](green|bold) in %s...'
@@ -136,6 +130,21 @@ class Judge:
 
             self.current_judge_worker = JudgeWorker(submission)
 
+            ipc_ready_signal = threading.Event()
+            grading_thread = threading.Thread(
+                target=self._grading_thread_main, args=(ipc_ready_signal, report), daemon=True
+            )
+            grading_thread.start()
+
+        ipc_ready_signal.wait()
+
+        if blocking:
+            grading_thread.join()
+
+    def _grading_thread_main(self, ipc_ready_signal: threading.Event, report) -> None:
+        assert self.current_judge_worker is not None
+
+        try:
             ipc_handler_dispatch: Dict[IPC, Callable] = {
                 IPC.HELLO: lambda _report: ipc_ready_signal.set(),
                 IPC.COMPILE_ERROR: self._ipc_compile_error,
@@ -161,17 +170,17 @@ class Judge:
 
             report(
                 ansi_style(
-                    'Done grading #ansi[%s](yellow)/#ansi[%s](green|bold).\n' % (submission.problem_id, submission.id)
+                    'Done grading #ansi[%s](yellow)/#ansi[%s](green|bold).\n'
+                    % (self.current_submission.problem_id, self.current_submission.id)
                 )
             )
         except Exception:  # noqa: E722, we want to catch everything
             self.log_internal_error()
         finally:
-            if self.current_judge_worker is not None:
-                self.current_judge_worker.stop()
+            self.current_judge_worker.stop()
 
-            self.current_submission = None
-            self.current_judge_worker = None
+            with self._current_submission_lock:
+                self.current_judge_worker = None
 
             # Might not have been set if an exception was encountered before HELLO message, so signal here to keep the
             # other side from waiting forever.
@@ -233,10 +242,14 @@ class Judge:
         """
         Forcefully terminates the current submission. Not necessarily safe.
         """
-        # Grab a local copy since it might get set to None after we do our None check.
-        worker = self.current_judge_worker
-        if worker:
-            worker.abort_grading()
+        with self._current_submission_lock:
+            if self.current_judge_worker:
+                logger.info('Received abortion request for %d', self.current_submission.id)
+                self.current_judge_worker.abort_grading()
+            else:
+                # This can happen because message delivery is async; the user may have pressed "Abort" before we
+                # finished grading, but by the time the message reached us we may have finished grading already.
+                logger.info('Received abortion request, but nothing is running')
 
     def listen(self) -> None:
         """

@@ -273,7 +273,6 @@ class PacketManager:
                 packet['problem-id'],
             )
         elif name == 'terminate-submission':
-            log.info('Received abortion request for %s', self.judge.current_submission.id)
             self.judge.abort_grading()
         elif name == 'disconnect':
             log.info('Received disconnect request, shutting down...')

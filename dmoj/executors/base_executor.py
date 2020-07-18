@@ -40,11 +40,13 @@ class BaseExecutor(PlatformExecutorMixin):
         problem_id: str,
         source_code: bytes,
         dest_dir: Optional[str] = None,
+        tempdir_tag: Optional[str] = None,
         hints: Optional[List[str]] = None,
         unbuffered: bool = False,
         **kwargs
     ):
         self._tempdir = dest_dir or env.tempdir
+        self._tempdir_tag = tempdir_tag
         self._dir = None
         self.problem = problem_id
         self.source = source_code
@@ -79,7 +81,9 @@ class BaseExecutor(PlatformExecutorMixin):
         # Defer creation of temporary submission directory until first file is created,
         # because we may not need one (e.g. for cached executors).
         if self._dir is None:
-            self._dir = tempfile.mkdtemp(dir=self._tempdir)
+            self._dir = tempfile.mkdtemp(
+                dir=self._tempdir, suffix='-%s' % self._tempdir_tag if self._tempdir_tag else None
+            )
         return os.path.join(self._dir, *paths)
 
     @classmethod

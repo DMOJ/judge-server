@@ -114,6 +114,7 @@ class StandardGrader(BaseGrader):
         return executors[self.language].Executor(
             self.problem.id,
             self.source,
+            tempdir_tag=str(self.judge.submission.id),
             hints=self.problem.config.hints or [],
             unbuffered=self.problem.config.unbuffered,
         )

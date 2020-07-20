@@ -163,12 +163,12 @@ class Problem:
     def grader_class(self):
         from dmoj import graders
 
-        if 'signature_grader' in self.config:
+        if 'custom_judge' in self.config:
+            return graders.CustomGrader
+        elif 'signature_grader' in self.config:
             return graders.SignatureGrader
         elif 'interactive' in self.config:
             return graders.BridgedInteractiveGrader
-        elif 'custom_judge' in self.config:
-            return graders.CustomGrader
         else:
             return graders.StandardGrader
 

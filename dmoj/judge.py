@@ -70,9 +70,6 @@ class Judge:
     def __init__(self, packet_manager: packet.PacketManager) -> None:
         self.packet_manager = packet_manager
         self.current_judge_worker: Optional[JudgeWorker] = None
-        # Locks current_judge_worker assignments. RLock so that self.current_submission can be used while already
-        # behing held.
-        self._current_submission_lock = threading.RLock()
         self._grading_lock = threading.Lock()
 
         self.updater_exit = False
@@ -81,8 +78,8 @@ class Judge:
 
     @property
     def current_submission(self):
-        with self._current_submission_lock:
-            return self.current_judge_worker.submission if self.current_judge_worker else None
+        worker = self.current_judge_worker
+        return worker.submission if worker else None
 
     def _updater_thread(self) -> None:
         log = logging.getLogger('dmoj.updater')
@@ -118,23 +115,24 @@ class Judge:
         # have finished tearing down. Trashing global state (e.g. `self.current_judge_worker`) before then would be
         # an error.
         self._grading_lock.acquire()
-        with self._current_submission_lock:
-            assert self.current_judge_worker is None
+        assert self.current_judge_worker is None
 
-            report(
-                ansi_style(
-                    'Start grading #ansi[%s](yellow)/#ansi[%s](green|bold) in %s...'
-                    % (submission.problem_id, submission.id, submission.language)
-                )
+        report(
+            ansi_style(
+                'Start grading #ansi[%s](yellow)/#ansi[%s](green|bold) in %s...'
+                % (submission.problem_id, submission.id, submission.language)
             )
+        )
 
-            self.current_judge_worker = JudgeWorker(submission)
+        # FIXME(tbrindus): what if we receive an abort from the judge before IPC handshake completes? We'll send
+        # an abort request down the pipe, possibly messing up the handshake.
+        self.current_judge_worker = JudgeWorker(submission)
 
-            ipc_ready_signal = threading.Event()
-            grading_thread = threading.Thread(
-                target=self._grading_thread_main, args=(ipc_ready_signal, report), daemon=True
-            )
-            grading_thread.start()
+        ipc_ready_signal = threading.Event()
+        grading_thread = threading.Thread(
+            target=self._grading_thread_main, args=(ipc_ready_signal, report), daemon=True
+        )
+        grading_thread.start()
 
         ipc_ready_signal.wait()
 
@@ -177,10 +175,8 @@ class Judge:
         except Exception:  # noqa: E722, we want to catch everything
             self.log_internal_error()
         finally:
-            self.current_judge_worker.stop()
-
-            with self._current_submission_lock:
-                self.current_judge_worker = None
+            self.current_judge_worker.wait_with_timeout()
+            self.current_judge_worker = None
 
             # Might not have been set if an exception was encountered before HELLO message, so signal here to keep the
             # other side from waiting forever.
@@ -238,18 +234,24 @@ class Judge:
         logger.error("Unhandled exception in worker process")
         self.log_internal_error(message=message)
 
-    def abort_grading(self) -> None:
-        """
-        Forcefully terminates the current submission. Not necessarily safe.
-        """
-        with self._current_submission_lock:
-            if self.current_judge_worker:
-                logger.info('Received abortion request for %d', self.current_submission.id)
-                self.current_judge_worker.abort_grading()
-            else:
+    def abort_grading(self, submission_id: Optional[int] = None) -> None:
+        # Capture locally so we don't end up with a TOCTOU NoneType error. This function is typically called
+        # from the network thread, but `current_judge_worker` is updated from the grading thread.
+        worker = self.current_judge_worker
+        if not worker:
+            if submission_id is not None:
                 # This can happen because message delivery is async; the user may have pressed "Abort" before we
                 # finished grading, but by the time the message reached us we may have finished grading already.
                 logger.info('Received abortion request, but nothing is running')
+        elif submission_id is not None and worker.submission.id != submission_id:
+            logger.warning(
+                'Received abortion request for %d, but %d is currently running', submission_id, worker.submission.id
+            )
+        else:
+            logger.info('Received abortion request for %d', worker.submission.id)
+            # These calls are idempotent, so it doesn't matter if we raced and the worker has exited already.
+            worker.request_abort_grading()
+            worker.wait_with_timeout()
 
     def listen(self) -> None:
         """
@@ -331,11 +333,11 @@ class JudgeWorker:
             else:
                 yield ipc_type, data
 
-    def stop(self) -> None:
+    def wait_with_timeout(self, timeout=IPC_TEARDOWN_TIMEOUT) -> None:
         if self.worker_process and self.worker_process.is_alive():
             # Might be None if run was never called, or failed.
             try:
-                self.worker_process.join(timeout=IPC_TEARDOWN_TIMEOUT)
+                self.worker_process.join(timeout=timeout)
             except OSError:
                 logger.exception('Exception while waiting for worker to shut down, ignoring...')
             finally:
@@ -343,15 +345,13 @@ class JudgeWorker:
                     logger.error("Worker is still alive, sending SIGKILL!")
                     self.worker_process.kill()
 
-    def abort_grading(self) -> None:
+    def request_abort_grading(self) -> None:
         assert self.worker_process_conn
 
         try:
             self.worker_process_conn.send((IPC.REQUEST_ABORT, ()))
         except Exception:
             logger.exception("Failed to send abort request to worker, did it race?")
-
-        self.stop()
 
     def _worker_process_main(
         self,

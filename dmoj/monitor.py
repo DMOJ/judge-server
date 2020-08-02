@@ -1,5 +1,7 @@
+import glob
 import logging
 from contextlib import closing
+from pathlib import Path
 from threading import Event, Thread
 from urllib.request import urlopen
 
@@ -73,7 +75,17 @@ class Monitor:
 
             self._handler = SendProblemsHandler(self._refresher)
             self._monitor = Observer()
-            for dir in get_problem_watches():
+
+            def find_glob_root(g):
+                """
+                Given a glob, find a directory that contains all its possible patterns
+                """
+                dir = Path(g)
+                while str(dir) != glob.escape(str(dir)):
+                    dir = dir.parent
+                return dir
+
+            for dir in set(map(find_glob_root, get_problem_watches())):
                 self._monitor.schedule(self._handler, dir, recursive=True)
                 logger.info('Scheduled for monitoring: %s', dir)
         else:

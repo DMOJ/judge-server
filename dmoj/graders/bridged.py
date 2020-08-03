@@ -1,7 +1,6 @@
 import os
 import shlex
 import subprocess
-import tempfile
 
 from dmoj.contrib import contrib_modules
 from dmoj.error import InternalError
@@ -21,9 +20,6 @@ class BridgedInteractiveGrader(StandardGrader):
             raise InternalError('%s is not a valid contrib module' % self.contrib_type)
 
     def check_result(self, case, result):
-        if self.handler_data.use_checker:
-            return super().check_result(case, result)
-
         if result.result_flag:
             # This is usually because of a TLE verdict raised after the interactor
             # has issued the AC verdict
@@ -62,18 +58,25 @@ class BridgedInteractiveGrader(StandardGrader):
         judge_output = case.output_data()
         self._interactor_time_limit = (self.handler_data.preprocessing_time or 0) + self.problem.time_limit
         self._interactor_memory_limit = self.handler_data.memory_limit or env['generator_memory_limit']
-        args = self.handler_data.args or contrib_modules[self.contrib_type].ContribModule.get_interactor_args_string()
+        args_format_string = (
+            self.handler_data.args_format_string
+            or contrib_modules[self.contrib_type].ContribModule.get_interactor_args_format_string()
+        )
 
-        with mktemp(input) as input_file, \
-                tempfile.NamedTemporaryFile() as output_file, \
-                mktemp(judge_output) as judge_file:
-            args = shlex.split(args.format(
-                input=shlex.quote(input_file.name),
-                output=shlex.quote(output_file.name),
-                answer=shlex.quote(judge_file.name),
-            ))
+        with mktemp(input) as input_file, mktemp(judge_output) as answer_file:
+            # TODO(@kirito): testlib.h expects a file they can write to,
+            # but we currently don't have a sane way to allow this.
+            # Thus we pass /dev/null for now so testlib interactors will still
+            # work, albeit with diminished capabilities
+            interactor_args = shlex.split(
+                args_format_string.format(
+                    input_file=shlex.quote(input_file.name),
+                    output_file=shlex.quote(os.devnull),
+                    answer_file=shlex.quote(answer_file.name),
+                )
+            )
             self._interactor = self.interactor_binary.launch(
-                *args,
+                *interactor_args,
                 time=self._interactor_time_limit,
                 memory=self._interactor_memory_limit,
                 stdin=self._interactor_stdin_pipe,
@@ -87,7 +90,6 @@ class BridgedInteractiveGrader(StandardGrader):
             self._current_proc.wait()
             self._interactor.wait()
 
-            result.proc_output = output_file.read()
             return self._current_proc.stderr.read()
 
     def _generate_interactor_binary(self):

@@ -10,8 +10,8 @@ class ContribModule(DefaultContribModule):
     repartial = re.compile(r'^(\d+)\n(\d+)$', re.M)
 
     @classmethod
-    def get_checker_args_string(cls):
-        return '{output} {answer} {input}'
+    def get_checker_args_format_string(cls):
+        return '{output_file} {answer_file} {input_file}'
 
     @classmethod
     def parse_return_code(cls, proc, executor, point_value, time_limit, memory_limit, feedback, name, stderr):

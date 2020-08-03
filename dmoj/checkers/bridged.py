@@ -36,7 +36,7 @@ def check(
     flags=[],
     cached=True,
     type='default',
-    args=None,
+    args_format_string=None,
     point_value=None,
     **kwargs,
 ) -> CheckerResult:
@@ -45,16 +45,18 @@ def check(
     if type not in contrib_modules:
         raise InternalError('%s is not a valid contrib module' % type)
 
-    args = args or contrib_modules[type].ContribModule.get_checker_args_string()
+    args_format_string = args_format_string or contrib_modules[type].ContribModule.get_checker_args_format_string()
 
-    with mktemp(judge_input) as input_file, mktemp(process_output) as output_file, mktemp(judge_output) as judge_file:
-        args = shlex.split(args.format(
-            input=shlex.quote(input_file.name),
-            output=shlex.quote(output_file.name),
-            answer=shlex.quote(judge_file.name),
-        ))
+    with mktemp(judge_input) as input_file, mktemp(process_output) as output_file, mktemp(judge_output) as answer_file:
+        checker_args = shlex.split(
+            args_format_string.format(
+                input_file=shlex.quote(input_file.name),
+                output_file=shlex.quote(output_file.name),
+                answer_file=shlex.quote(answer_file.name),
+            )
+        )
         process = executor.launch(
-            *args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, memory=memory_limit, time=time_limit,
+            *checker_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, memory=memory_limit, time=time_limit,
         )
 
         proc_output, error = process.communicate()

@@ -9,12 +9,12 @@ class ContribModule:
     name = 'default'
 
     @classmethod
-    def get_checker_args_string(cls):
-        return '{input} {output} {answer}'
+    def get_checker_args_format_string(cls):
+        return '{input_file} {output_file} {answer_file}'
 
     @classmethod
-    def get_interactor_args_string(cls):
-        return '{input} {answer}'
+    def get_interactor_args_format_string(cls):
+        return '{input_file} {answer_file}'
 
     @classmethod
     def parse_return_code(cls, proc, executor, point_value, time_limit, memory_limit, feedback, name, stderr):

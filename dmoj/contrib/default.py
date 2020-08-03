@@ -9,6 +9,14 @@ class ContribModule:
     name = 'default'
 
     @classmethod
+    def get_checker_args_string(cls):
+        return '{input} {output} {answer}'
+
+    @classmethod
+    def get_interactor_args_string(cls):
+        return '{input} {answer}'
+
+    @classmethod
     def parse_return_code(cls, proc, executor, point_value, time_limit, memory_limit, feedback, name, stderr):
         if proc.returncode == cls.AC:
             return CheckerResult(True, point_value, feedback=feedback)

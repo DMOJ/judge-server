@@ -1,4 +1,5 @@
 import os
+import shlex
 import subprocess
 
 from dmoj.contrib import contrib_modules
@@ -35,23 +36,25 @@ def check(
     flags=[],
     cached=True,
     type='default',
+    args=None,
     point_value=None,
-    **kwargs
+    **kwargs,
 ) -> CheckerResult:
     executor = get_executor(problem_id, files, flags, lang, compiler_time_limit, cached)
 
     if type not in contrib_modules:
-        raise InternalError('%s is not a valid return code parser' % type)
+        raise InternalError('%s is not a valid contrib module' % type)
+
+    args = args or contrib_modules[type].ContribModule.get_checker_args_string()
 
     with mktemp(judge_input) as input_file, mktemp(process_output) as output_file, mktemp(judge_output) as judge_file:
+        args = shlex.split(args.format(
+            input=shlex.quote(input_file.name),
+            output=shlex.quote(output_file.name),
+            answer=shlex.quote(judge_file.name),
+        ))
         process = executor.launch(
-            input_file.name,
-            output_file.name,
-            judge_file.name,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            memory=memory_limit,
-            time=time_limit,
+            *args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, memory=memory_limit, time=time_limit,
         )
 
         proc_output, error = process.communicate()

@@ -17,6 +17,10 @@ class ContribModule(DefaultContribModule):
     repartial = re.compile(br'^points (\d+)$', re.M)
 
     @classmethod
+    def get_interactor_args_string(cls):
+        return '{input} {output} {answer}'
+
+    @classmethod
     def parse_return_code(cls, proc, executor, point_value, time_limit, memory_limit, feedback, name, stderr):
         if proc.returncode == cls.AC:
             return CheckerResult(True, point_value, feedback=feedback)

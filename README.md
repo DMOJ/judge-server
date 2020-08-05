@@ -1,7 +1,7 @@
 DMOJ Judge [![Linux Build Status](https://img.shields.io/travis/DMOJ/judge-server.svg?logo=linux)](https://travis-ci.org/DMOJ/judge-server) [![FreeBSD Build Status](https://img.shields.io/jenkins/s/https/ci.dmoj.ca/job/dmoj-judge-freebsd.svg?logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB3aWR0aD0iMTQiIGhlaWdodD0iMTQiIHZpZXdCb3g9IjAgMCAyNTYgMjUyIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIj48ZyBmaWxsPSJ3aGl0ZSI%2BPHBhdGggZD0iTTI1Mi43MjMgNS4xMWMxMy41MDggMTMuNS0yMy45MzkgNzIuODQ4LTMwLjI3IDc5LjE4Mi02LjMzIDYuMzIxLTIyLjQwOS41MDUtMzUuOTEtMTMtMTMuNTA4LTEzLjUtMTkuMzI3LTI5LjU4My0xMi45OTYtMzUuOTE0IDYuMzI3LTYuMzMzIDY1LjY3MS00My43NzcgNzkuMTc2LTMwLjI2OU02My4zMDUgMTkuMzk0Yy0yMC42MjItMTEuNy00OS45NjYtMjQuNzE2LTU5LjMtMTUuMzgtOS40NTggOS40NTQgNC4wMzQgMzkuNDU4IDE1Ljg1OCA2MC4xMTdhMTI2LjgxMiAxMjYuODEyIDAgMCAxIDQzLjQ0Mi00NC43MzciLz48cGF0aCBkPSJNMjMyLjEyMyA3OS42MzZjMS44OTkgNi40NCAxLjU1OCAxMS43Ni0xLjUyMiAxNC44MzQtNy4xOTMgNy4xOTYtMjYuNjI0LS40NjQtNDQuMTQtMTcuMTM0YTg5LjM4MyA4OS4zODMgMCAwIDEtMy42MjctMy40MjhjLTYuMzM0LTYuMzM2LTExLjI2Mi0xMy4wOC0xNC40MTQtMTkuMjkxLTYuMTM1LTExLjAwNi03LjY3LTIwLjcyNi0zLjAzMy0yNS4zNjQgMi41MjctMi41MjQgNi41Ny0zLjIxMiAxMS41MDItMi4zMjUgMy4yMTYtMi4wMzQgNy4wMTMtNC4zIDExLjE3Ni02LjYyMS0xNi45MjktOC44My0zNi4xNzYtMTMuODE3LTU2LjU5My0xMy44MTdDNjMuNzUzIDYuNDkgOC44NTQgNjEuMzggOC44NTQgMTI5LjEwNWMwIDY3LjcxMyA1NC45IDEyMi42MSAxMjIuNjE4IDEyMi42MSA2Ny43MiAwIDEyMi42MTYtNTQuODk3IDEyMi42MTYtMTIyLjYxIDAtMjEuODctNS43NC00Mi4zNzctMTUuNzY3LTYwLjE1Ni0yLjE2NyAzLjk1NS00LjI3NCA3LjU3OC02LjE5OCAxMC42ODciLz48L2c%2BPC9zdmc%2B)](https://ci.dmoj.ca/job/dmoj-judge-freebsd/lastBuild/consoleFull) [![Coverage](https://img.shields.io/codecov/c/github/DMOJ/judge-server.svg)](https://codecov.io/gh/DMOJ/judge-server) [![Slack](https://slack.dmoj.ca/badge.svg)](https://slack.dmoj.ca)
 =====
 
-Python [AGPLv3](https://github.com/DMOJ/judge/blob/master/LICENSE) contest judge backend for the [DMOJ site](http://github.com/DMOJ/site) interface. See it in action at [dmoj.ca](https://dmoj.ca/)!
+Python [AGPLv3](LICENSE) contest judge backend for the [DMOJ site](http://github.com/DMOJ/online-judge) interface. See it in action at [dmoj.ca](https://dmoj.ca/)!
 
 <table>
 <tr>
@@ -28,7 +28,7 @@ The judge implements secure grading on Linux and FreeBSD machines.
 | x32 	| ✔     	|      &mdash;   	|
 | ARM  	| ✔     	|      ❌   	|
 
-Versions up to and including [v1.4.0](https://github.com/DMOJ/judge/releases/tag/v1.4.0) also supported grading on Windows machines.
+Versions up to and including [v1.4.0](https://github.com/DMOJ/judge-server/releases/tag/v1.4.0) also supported grading on Windows machines.
 
 The DMOJ judge does **not** need a root user to run on Linux machines: it will run just fine under a normal user.
 
@@ -83,7 +83,7 @@ local judge, useful for testing problems.
 
 For more detailed steps, read the [installation instructions](https://docs.dmoj.ca/#/judge/setting_up_a_judge).
 
-Note that **the only officially-supported Linux distribution is the latest Debian**, with the default `apt` versions of all runtimes. This is [what we run on dmoj.ca](https://dmoj.ca/runtimes/matrix/), and it should "just work". While the judge will likely still work with other distributions and runtime versions, some runtimes might fail to initialize. In these cases, please [file an issue](https://github.com/DMOJ/judge/issues).
+Note that **the only officially-supported Linux distribution is the latest Debian**, with the default `apt` versions of all runtimes. This is [what we run on dmoj.ca](https://dmoj.ca/runtimes/matrix/), and it should "just work". While the judge will likely still work with other distributions and runtime versions, some runtimes might fail to initialize. In these cases, please [file an issue](https://github.com/DMOJ/judge-server/issues).
 
 ### Stable Build
 [![PyPI version](https://badge.fury.io/py/dmoj.svg)](https://pypi.python.org/pypi/dmoj)
@@ -100,7 +100,7 @@ $ pip install dmoj
 This is the version of the codebase we run live on [dmoj.ca](https://dmoj.ca).
 
 ```
-$ git clone --recursive https://github.com/DMOJ/judge.git
+$ git clone --recursive https://github.com/DMOJ/judge-server.git
 $ cd judge
 $ pip install -e .
 ```
@@ -128,7 +128,7 @@ to be placed under `/mnt/problems`, and judge-specific configuration to be in
 and will be merged automatically into the `judge.yml` provided.
 
 ```
-$ git clone --recursive https://github.com/DMOJ/judge.git
+$ git clone --recursive https://github.com/DMOJ/judge-server.git
 $ cd judge/.docker
 $ make judge-tier1
 $ exec docker run \

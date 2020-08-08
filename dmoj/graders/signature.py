@@ -26,7 +26,7 @@ class SignatureGrader(StandardGrader):
 
             submission_prefix = '#include "%s"\n' % handler_data['header']
             if not handler_data.get('allow_main', False):
-                submission_prefix += '#define main main_%s\n' % str(uuid.uuid4()).replace('-', '')
+                submission_prefix += '#define main main_%s\n' % uuid.uuid4().hex
 
             aux_sources[self.problem.id + '_submission'] = utf8bytes(submission_prefix) + self.source
 

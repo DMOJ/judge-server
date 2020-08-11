@@ -34,7 +34,7 @@ class BridgedInteractiveGrader(StandardGrader):
             case.points,
             self._interactor_time_limit,
             self._interactor_memory_limit,
-            feedback=utf8text(stderr) if self.handler_data.feedback else None,
+            feedback=utf8text(stderr) if self.handler_data.feedback else '',
             name='interactor',
             stderr=stderr,
         )

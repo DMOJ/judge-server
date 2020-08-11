@@ -31,8 +31,8 @@ def compile_with_auxiliary_files(filenames, flags=[], lang=None, compiler_time_l
 
     use_cpp = any(map(lambda name: os.path.splitext(name)[1] in ['.cpp', '.cc'], filenames))
     use_c = any(map(lambda name: os.path.splitext(name)[1] in ['.c'], filenames))
-    if lang is None:
-        best_choices = ('CPP17', 'CPP14', 'CPP11', 'CPP03') if use_cpp else ('C11', 'C')
+    if lang is None or use_cpp or use_c:
+        best_choices = ('CPP17', 'CPP14', 'CPP11', 'CPP03', 'PCPP11', 'PCPP03') if use_cpp else ('C11', 'C', 'PC')
         lang = find_runtime(best_choices)
 
     executor = executors.get(lang)

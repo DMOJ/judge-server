@@ -101,7 +101,7 @@ This is the version of the codebase we run live on [dmoj.ca](https://dmoj.ca).
 
 ```
 $ git clone --recursive https://github.com/DMOJ/judge-server.git
-$ cd judge
+$ cd judge-server
 $ pip install -e .
 ```
 
@@ -129,7 +129,7 @@ and will be merged automatically into the `judge.yml` provided.
 
 ```
 $ git clone --recursive https://github.com/DMOJ/judge-server.git
-$ cd judge/.docker
+$ cd judge-server/.docker
 $ make judge-tier1
 $ exec docker run \
     --name judge \

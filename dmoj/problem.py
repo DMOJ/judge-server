@@ -150,7 +150,7 @@ class Problem:
             self._problem_file_list(),
             re.compile(get_with_default('input_format', DEFAULT_TEST_CASE_INPUT_PATTERN), re.IGNORECASE),
             re.compile(get_with_default('output_format', DEFAULT_TEST_CASE_OUTPUT_PATTERN), re.IGNORECASE),
-            iter(get_with_default('case_points', itertools.repeat(1))),
+            iter(get_with_default('case_points', itertools.repeat(test_cases.points))),
         )
 
     def load_checker(self, name):

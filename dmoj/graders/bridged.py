@@ -20,15 +20,11 @@ class BridgedInteractiveGrader(StandardGrader):
             raise InternalError('%s is not a valid contrib module' % self.contrib_type)
 
     def check_result(self, case, result):
-        if result.result_flag:
-            # This is usually because of a TLE verdict raised after the interactor
-            # has issued the AC verdict
-            # This results in a TLE verdict getting full points, which should not be the case
-            return False
-
+        # We parse the return code first in case the grader crashed, so it can raise the IE.
+        # Usually a grader crash will result in IR/RTE/TLE,
+        # so checking submission return code first will cover up the grader fail.
         stderr = self._interactor.stderr.read()
-
-        return contrib_modules[self.contrib_type].ContribModule.parse_return_code(
+        parsed_result = contrib_modules[self.contrib_type].ContribModule.parse_return_code(
             self._interactor,
             self.interactor_binary,
             case.points,
@@ -38,6 +34,8 @@ class BridgedInteractiveGrader(StandardGrader):
             name='interactor',
             stderr=stderr,
         )
+
+        return (not result.result_flag) and parsed_result
 
     def _launch_process(self, case):
         self._interactor_stdin_pipe, submission_stdout_pipe = os.pipe()

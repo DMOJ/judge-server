@@ -1,6 +1,6 @@
 import uuid
 
-from dmoj.error import CompileError, InternalError
+from dmoj.error import InternalError
 from dmoj.executors import executors
 from dmoj.graders.standard import StandardGrader
 from dmoj.utils.unicode import utf8bytes
@@ -8,14 +8,7 @@ from dmoj.utils.unicode import utf8bytes
 
 class SignatureGrader(StandardGrader):
     def _generate_binary(self):
-        siggraders = ('C', 'C11', 'CPP03', 'CPP11', 'CPP14', 'CPP17')
-
-        for i in reversed(siggraders):
-            if i in executors:
-                siggrader = i
-                break
-        else:
-            raise CompileError(b"can't signature grade, why did I get this submission?")
+        siggraders = ('C', 'C11', 'CPP03', 'CPP11', 'CPP14', 'CPP17', 'CLANG', 'CLANGX')
 
         if self.language in siggraders:
             aux_sources = {}
@@ -32,12 +25,8 @@ class SignatureGrader(StandardGrader):
 
             aux_sources[handler_data['header']] = header
             entry = entry_point
-            # Compile as CPP regardless of what the submission language is
-            return executors[siggrader].Executor(
-                self.problem.id,
-                entry,
-                aux_sources=aux_sources,
-                defines=['-DSIGNATURE_GRADER'],
+            return executors[self.language].Executor(
+                self.problem.id, entry, aux_sources=aux_sources, defines=['-DSIGNATURE_GRADER'],
             )
         else:
             raise InternalError('no valid runtime for signature grading %s found' % self.language)

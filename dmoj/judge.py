@@ -14,7 +14,7 @@ from typing import Any, Callable, Dict, Generator, List, NamedTuple, Optional, T
 
 from dmoj import packet
 from dmoj.control import JudgeControlRequestHandler
-from dmoj.error import CompileError
+from dmoj.error import CompileError, InternalError
 from dmoj.judgeenv import clear_problem_dirs_cache, env, get_supported_problems, startup_warnings
 from dmoj.monitor import Monitor
 from dmoj.problem import BatchedTestCase, Problem, TestCase
@@ -391,7 +391,18 @@ class JudgeWorker:
             ipc_recv_thread = threading.Thread(target=_ipc_recv_thread_main, daemon=True)
             ipc_recv_thread.start()
 
-            for ipc_msg in self._grade_cases():
+            case_gen = self._grade_cases()
+            while True:
+                try:
+                    ipc_msg = next(case_gen)
+                except StopIteration:
+                    break
+                except Exception as exc:
+                    # We need to wrap all exceptions raised by a grader, since a grader can raise a `BrokenPipeError`
+                    # that's indistinguishable from one caused by `judge_process_conn.send`, but should be handled
+                    # differently (i.e. not quit the judge).
+                    raise InternalError('grader raised exception while grading') from exc
+
                 judge_process_conn.send(ipc_msg)
 
             judge_process_conn.send((IPC.BYE, ()))

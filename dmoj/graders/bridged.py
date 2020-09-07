@@ -54,7 +54,8 @@ class BridgedInteractiveGrader(StandardGrader):
 
     def _interact_with_process(self, case, result, input):
         judge_output = case.output_data()
-        self._interactor_time_limit = (self.handler_data.preprocessing_time or 0) + self.problem.time_limit
+        # Give TL + 1s by default, so we do not race (and incorrectly throw IE) if submission gets TLE
+        self._interactor_time_limit = (self.handler_data.preprocessing_time or 1) + self.problem.time_limit
         self._interactor_memory_limit = self.handler_data.memory_limit or env['generator_memory_limit']
         args_format_string = (
             self.handler_data.args_format_string

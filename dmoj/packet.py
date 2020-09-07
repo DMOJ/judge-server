@@ -1,6 +1,7 @@
 import errno
 import json
 import logging
+import os
 import socket
 import ssl
 import struct
@@ -158,7 +159,10 @@ class PacketManager:
             pass
         except Exception:  # connection reset by peer
             log.exception('Exception while reading packet from site, will not attempt to reconnect! Quitting judge.')
-            raise SystemExit(1)
+            # TODO(tbrindus): this is really sad. This isn't equivalent to `raise SystemExit(1)` since we're not on the
+            # main thread, and doing the latter would only exit the network thread. We should fix mid-grading reconnects
+            # so that we don't need this sledgehammer approach that relies on Docker restarting the judge for us.
+            os._exit(1)
 
     def _read_single(self) -> dict:
         try:
@@ -241,7 +245,7 @@ class PacketManager:
                 self.output.writelines((PacketManager.SIZE_PACK.pack(len(raw)), raw))
             except Exception:  # connection reset by peer
                 log.exception('Exception while sending packet to site, will not attempt to reconnect! Quitting judge.')
-                raise SystemExit(1)
+                os._exit(1)
 
     def _receive_packet(self, packet: dict):
         name = packet['name']

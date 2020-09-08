@@ -23,7 +23,7 @@ The judge implements secure grading on Linux and FreeBSD machines.
 
 |           | Linux 	| FreeBSD 	|
 |------	|-------	|---------	|
-| x64  	| [✔](https://travis-ci.org/DMOJ/judge)     	| [✔](https://ci.dmoj.ca/job/dmoj-judge-freebsd/)       	|
+| x64  	| [✔](https://travis-ci.org/DMOJ/judge-server)     	| [✔](https://ci.dmoj.ca/job/dmoj-judge-freebsd/)       	|
 | x86  	| ✔     	|       ¯\\\_(ツ)\_/¯   |
 | x32 	| ✔     	|      &mdash;   	|
 | ARM  	| ✔     	|      ❌   	|

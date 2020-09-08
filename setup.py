@@ -154,7 +154,7 @@ setup(
 
     author='DMOJ Team',
     author_email='contact@dmoj.ca',
-    url='https://github.com/DMOJ/judge',
+    url='https://github.com/DMOJ/judge-server',
     description='The judge component of the DMOJ: Modern Online Judge platform',
     long_description=readme,
     long_description_content_type='text/markdown',

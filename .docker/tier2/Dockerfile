@@ -2,7 +2,7 @@ FROM dmoj/runtimes-tier2
 
 ARG TAG=master
 RUN mkdir /judge && cd /judge && \
-	curl -L https://github.com/DMOJ/judge/archive/"${TAG}".tar.gz | tar -xz --strip-components=1 && \
+	curl -L https://github.com/DMOJ/judge-server/archive/"${TAG}".tar.gz | tar -xz --strip-components=1 && \
 	pip3 install -e . && \
 	. ~judge/.profile && \
 	runuser -u judge -w PATH -- dmoj-autoconf -V > /judge-runtime-paths.yml && \

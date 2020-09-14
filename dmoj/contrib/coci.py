@@ -7,7 +7,11 @@ from dmoj.result import CheckerResult
 
 class ContribModule(TestlibContribModule):
     name = 'coci'
-    repartial = re.compile(br'^partial ((\d+)\/(\d*[1-9]\d*))\n$')
+    repartial = re.compile(br'^partial ((\d+)\/(\d*[1-9]\d*))$', re.M)
+
+    @classmethod
+    def get_interactor_args_format_string(cls):
+        return '{input_file} {answer_file}'
 
     @classmethod
     def parse_return_code(cls, proc, executor, point_value, time_limit, memory_limit, feedback, name, stderr):
@@ -22,5 +26,5 @@ class ContribModule(TestlibContribModule):
             return CheckerResult(True, points, feedback=feedback)
         else:
             return super().parse_return_code(
-                proc, executor, point_value, time_limit, memory_limit, feedback, name, stderr
+                proc, executor, point_value, time_limit, memory_limit, feedback, name, stderr,
             )

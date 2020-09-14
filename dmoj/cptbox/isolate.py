@@ -111,6 +111,7 @@ class IsolateTracer(dict):
                 sys_pipe: ALLOW,
                 sys_pipe2: ALLOW,
                 sys_clock_gettime: ALLOW,
+                sys_clock_gettime64: ALLOW,
                 sys_clock_getres: ALLOW,
                 sys_gettimeofday: ALLOW,
                 sys_getpid: ALLOW,
@@ -177,8 +178,7 @@ class IsolateTracer(dict):
             )
 
     def is_write_flags(self, open_flags):
-        O_TMPFILE = 0x410000  # os.O_TMPFILE not defined in Python 2
-        for flag in [os.O_WRONLY, os.O_RDWR, os.O_TRUNC, os.O_CREAT, os.O_EXCL, O_TMPFILE]:
+        for flag in [os.O_WRONLY, os.O_RDWR, os.O_TRUNC, os.O_CREAT, os.O_EXCL, os.O_TMPFILE]:
             # Strict equality is necessary here, since e.g. O_TMPFILE has multiple bits set,
             # and O_DIRECTORY & O_TMPFILE > 0.
             if open_flags & flag == flag:
@@ -192,17 +192,17 @@ class IsolateTracer(dict):
             try:
                 file = debugger.readstr(file_ptr)
             except MaxLengthExceeded as e:
-                log.info('Denied access via syscall %s to overly long path: %r', syscall, e.args[0])
+                log.warning('Denied access via syscall %s to overly long path: %r', syscall, e.args[0])
                 return ACCESS_ENOENT(debugger)
             except UnicodeDecodeError as e:
-                log.info('Denied access via syscall %s to path with invalid unicode: %r', syscall, e.object)
+                log.warning('Denied access via syscall %s to path with invalid unicode: %r', syscall, e.object)
                 return ACCESS_ENOENT(debugger)
 
             file, accessible = self._file_access_check(file, debugger, is_open)
             if accessible:
                 return True
 
-            log.info('Denied access via syscall %s: %s', syscall, file)
+            log.debug('Denied access via syscall %s: %s', syscall, file)
             return ACCESS_ENOENT(debugger)
 
         return check
@@ -212,17 +212,17 @@ class IsolateTracer(dict):
             try:
                 file = debugger.readstr(debugger.uarg1)
             except MaxLengthExceeded as e:
-                log.info('Denied access via syscall %s to overly long path: %r', syscall, e.args[0])
+                log.warning('Denied access via syscall %s to overly long path: %r', syscall, e.args[0])
                 return ACCESS_ENOENT(debugger)
             except UnicodeDecodeError as e:
-                log.info('Denied access via syscall %s to path with invalid unicode: %r', syscall, e.object)
+                log.warning('Denied access via syscall %s to path with invalid unicode: %r', syscall, e.object)
                 return ACCESS_ENOENT(debugger)
 
             file, accessible = self._file_access_check(file, debugger, is_open, dirfd=debugger.arg0, flag_reg=2)
             if accessible:
                 return True
 
-            log.info('Denied access via syscall %s: %s', syscall, file)
+            log.debug('Denied access via syscall %s: %s', syscall, file)
             return ACCESS_ENOENT(debugger)
 
         return check

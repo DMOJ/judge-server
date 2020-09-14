@@ -14,7 +14,7 @@ from typing import Any, Callable, Dict, Generator, List, NamedTuple, Optional, T
 
 from dmoj import packet
 from dmoj.control import JudgeControlRequestHandler
-from dmoj.error import CompileError
+from dmoj.error import CompileError, InternalError
 from dmoj.judgeenv import clear_problem_dirs_cache, env, get_supported_problems, startup_warnings
 from dmoj.monitor import Monitor
 from dmoj.problem import BatchedTestCase, Problem, TestCase
@@ -69,13 +69,17 @@ Submission = NamedTuple(
 class Judge:
     def __init__(self, packet_manager: packet.PacketManager) -> None:
         self.packet_manager = packet_manager
-        # FIXME(tbrindus): marked as Any since PacketManager likes querying current_submission.id directly.
-        self.current_submission: Any = None
         self.current_judge_worker: Optional[JudgeWorker] = None
+        self._grading_lock = threading.Lock()
 
         self.updater_exit = False
         self.updater_signal = threading.Event()
         self.updater = threading.Thread(target=self._updater_thread)
+
+    @property
+    def current_submission(self):
+        worker = self.current_judge_worker
+        return worker.submission if worker else None
 
     def _updater_thread(self) -> None:
         log = logging.getLogger('dmoj.updater')
@@ -105,28 +109,40 @@ class Judge:
         self.updater_signal.set()
 
     def begin_grading(self, submission: Submission, report=logger.info, blocking=False) -> None:
-        self.current_submission = submission
+        # Ensure only one submission is running at a time; this lock is released at the end of submission grading.
+        # This is necessary because `begin_grading` is "re-entrant"; after e.g. grading-end is sent, the network
+        # thread may receive a new submission before the grading thread and worker from the *previous* submission
+        # have finished tearing down. Trashing global state (e.g. `self.current_judge_worker`) before then would be
+        # an error.
+        self._grading_lock.acquire()
+        assert self.current_judge_worker is None
+
+        report(
+            ansi_style(
+                'Start grading #ansi[%s](yellow)/#ansi[%s](green|bold) in %s...'
+                % (submission.problem_id, submission.id, submission.language)
+            )
+        )
+
+        # FIXME(tbrindus): what if we receive an abort from the judge before IPC handshake completes? We'll send
+        # an abort request down the pipe, possibly messing up the handshake.
+        self.current_judge_worker = JudgeWorker(submission)
+
         ipc_ready_signal = threading.Event()
         grading_thread = threading.Thread(
-            target=self._grading_thread_main, args=(ipc_ready_signal, submission, report), daemon=True
+            target=self._grading_thread_main, args=(ipc_ready_signal, report), daemon=True
         )
         grading_thread.start()
 
         ipc_ready_signal.wait()
+
         if blocking:
             grading_thread.join()
 
-    def _grading_thread_main(self, ipc_ready_signal: threading.Event, submission: Submission, report) -> None:
+    def _grading_thread_main(self, ipc_ready_signal: threading.Event, report) -> None:
+        assert self.current_judge_worker is not None
+
         try:
-            report(
-                ansi_style(
-                    'Start grading #ansi[%s](yellow)/#ansi[%s](green|bold) in %s...'
-                    % (submission.problem_id, submission.id, submission.language)
-                )
-            )
-
-            self.current_judge_worker = JudgeWorker(submission)
-
             ipc_handler_dispatch: Dict[IPC, Callable] = {
                 IPC.HELLO: lambda _report: ipc_ready_signal.set(),
                 IPC.COMPILE_ERROR: self._ipc_compile_error,
@@ -152,17 +168,21 @@ class Judge:
 
             report(
                 ansi_style(
-                    'Done grading #ansi[%s](yellow)/#ansi[%s](green|bold).\n' % (submission.problem_id, submission.id)
+                    'Done grading #ansi[%s](yellow)/#ansi[%s](green|bold).\n'
+                    % (self.current_submission.problem_id, self.current_submission.id)
                 )
             )
         except Exception:  # noqa: E722, we want to catch everything
             self.log_internal_error()
         finally:
-            if self.current_judge_worker is not None:
-                self.current_judge_worker.stop()
-
-            self.current_submission = None
+            self.current_judge_worker.wait_with_timeout()
             self.current_judge_worker = None
+
+            # Might not have been set if an exception was encountered before HELLO message, so signal here to keep the
+            # other side from waiting forever.
+            ipc_ready_signal.set()
+
+            self._grading_lock.release()
 
     def _ipc_compile_error(self, report, error_message: str) -> None:
         report(ansi_style('#ansi[Failed compiling submission!](red|bold)'))
@@ -214,14 +234,24 @@ class Judge:
         logger.error("Unhandled exception in worker process")
         self.log_internal_error(message=message)
 
-    def abort_grading(self) -> None:
-        """
-        Forcefully terminates the current submission. Not necessarily safe.
-        """
-        # Grab a local copy since it might get set to None after we do our None check.
+    def abort_grading(self, submission_id: Optional[int] = None) -> None:
+        # Capture locally so we don't end up with a TOCTOU NoneType error. This function is typically called
+        # from the network thread, but `current_judge_worker` is updated from the grading thread.
         worker = self.current_judge_worker
-        if worker:
-            worker.abort_grading()
+        if not worker:
+            if submission_id is not None:
+                # This can happen because message delivery is async; the user may have pressed "Abort" before we
+                # finished grading, but by the time the message reached us we may have finished grading already.
+                logger.info('Received abortion request, but nothing is running')
+        elif submission_id is not None and worker.submission.id != submission_id:
+            logger.warning(
+                'Received abortion request for %d, but %d is currently running', submission_id, worker.submission.id
+            )
+        else:
+            logger.info('Received abortion request for %d', worker.submission.id)
+            # These calls are idempotent, so it doesn't matter if we raced and the worker has exited already.
+            worker.request_abort_grading()
+            worker.wait_with_timeout()
 
     def listen(self) -> None:
         """
@@ -282,9 +312,17 @@ class JudgeWorker:
         child_conn.close()
 
     def communicate(self) -> Generator[Tuple[IPC, tuple], None, None]:
+        recv_timeout = max(60, int(2 * self.submission.time_limit))
         while True:
             try:
+                if not self.worker_process_conn.poll(timeout=recv_timeout):
+                    raise TimeoutError('worker did not send a message in %d seconds' % recv_timeout)
+
                 ipc_type, data = self.worker_process_conn.recv()
+            except TimeoutError:
+                logger.error('Worker has not sent a message in %d seconds, assuming dead and killing.', recv_timeout)
+                self.worker_process.kill()
+                raise
             except Exception:
                 logger.error("Failed to read IPC message from worker!")
                 raise
@@ -295,11 +333,11 @@ class JudgeWorker:
             else:
                 yield ipc_type, data
 
-    def stop(self) -> None:
+    def wait_with_timeout(self, timeout=IPC_TEARDOWN_TIMEOUT) -> None:
         if self.worker_process and self.worker_process.is_alive():
             # Might be None if run was never called, or failed.
             try:
-                self.worker_process.join(timeout=IPC_TEARDOWN_TIMEOUT)
+                self.worker_process.join(timeout=timeout)
             except OSError:
                 logger.exception('Exception while waiting for worker to shut down, ignoring...')
             finally:
@@ -307,15 +345,13 @@ class JudgeWorker:
                     logger.error("Worker is still alive, sending SIGKILL!")
                     self.worker_process.kill()
 
-    def abort_grading(self) -> None:
+    def request_abort_grading(self) -> None:
         assert self.worker_process_conn
 
         try:
             self.worker_process_conn.send((IPC.REQUEST_ABORT, ()))
         except Exception:
             logger.exception("Failed to send abort request to worker, did it race?")
-
-        self.stop()
 
     def _worker_process_main(
         self,
@@ -355,7 +391,18 @@ class JudgeWorker:
             ipc_recv_thread = threading.Thread(target=_ipc_recv_thread_main, daemon=True)
             ipc_recv_thread.start()
 
-            for ipc_msg in self._grade_cases():
+            case_gen = self._grade_cases()
+            while True:
+                try:
+                    ipc_msg = next(case_gen)
+                except StopIteration:
+                    break
+                except Exception as exc:
+                    # We need to wrap all exceptions raised by a grader, since a grader can raise a `BrokenPipeError`
+                    # that's indistinguishable from one caused by `judge_process_conn.send`, but should be handled
+                    # differently (i.e. not quit the judge).
+                    raise InternalError('grader raised exception while grading') from exc
+
                 judge_process_conn.send(ipc_msg)
 
             judge_process_conn.send((IPC.BYE, ()))

@@ -18,7 +18,7 @@ BASE_FILESYSTEM = [
     '/lib(?:32|64)?/',
     '/opt/',
     '/etc$',
-    '/etc/(?:localtime|timezone|nsswitch.conf|resolv.conf|passwd|malloc.conf)$',
+    '/etc/(?:localtime|timezone)$',
     '/usr$',
     '/tmp$',
     '/$',

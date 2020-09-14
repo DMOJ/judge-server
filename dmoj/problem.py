@@ -150,7 +150,7 @@ class Problem:
             self._problem_file_list(),
             re.compile(get_with_default('input_format', DEFAULT_TEST_CASE_INPUT_PATTERN), re.IGNORECASE),
             re.compile(get_with_default('output_format', DEFAULT_TEST_CASE_OUTPUT_PATTERN), re.IGNORECASE),
-            iter(get_with_default('case_points', itertools.repeat(1))),
+            iter(get_with_default('case_points', itertools.repeat(self.config.points))),
         )
 
     def load_checker(self, name):
@@ -163,12 +163,12 @@ class Problem:
     def grader_class(self):
         from dmoj import graders
 
-        if 'signature_grader' in self.config:
+        if 'custom_judge' in self.config:
+            return graders.CustomGrader
+        elif 'signature_grader' in self.config:
             return graders.SignatureGrader
         elif 'interactive' in self.config:
             return graders.BridgedInteractiveGrader
-        elif 'custom_judge' in self.config:
-            return graders.CustomGrader
         else:
             return graders.StandardGrader
 

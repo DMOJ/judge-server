@@ -42,6 +42,7 @@ sys_clock_settime64: int
 sys_clone: int
 sys_clone3: int
 sys_close: int
+sys_close_range: int
 sys_connect: int
 sys_copy_file_range: int
 sys_creat: int

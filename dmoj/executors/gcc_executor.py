@@ -25,12 +25,12 @@ class GCCExecutor(CompiledExecutor):
     source_dict: Dict[str, bytes] = {}
 
     def __init__(self, problem_id, main_source, **kwargs):
-        super().__init__(problem_id, main_source, **kwargs)
-
-        self.source_dict = kwargs.get('aux_sources', {})
+        self.source_dict = kwargs.pop('aux_sources', {})
         if main_source:
             self.source_dict[problem_id + self.ext] = main_source
-        self.defines = kwargs.get('defines', [])
+        self.defines = kwargs.pop('defines', [])
+
+        super().__init__(problem_id, main_source, **kwargs)
 
     def create_files(self, problem_id, main_source, **kwargs):
         self.source_paths = []

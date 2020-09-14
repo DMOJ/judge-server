@@ -1,4 +1,5 @@
 import os
+import shlex
 import subprocess
 
 from dmoj.contrib import contrib_modules
@@ -14,29 +15,27 @@ class BridgedInteractiveGrader(StandardGrader):
         super().__init__(judge, problem, language, source)
         self.handler_data = self.problem.config.interactive
         self.interactor_binary = self._generate_interactor_binary()
+        self.contrib_type = self.handler_data.get('type', 'default')
+        if self.contrib_type not in contrib_modules:
+            raise InternalError('%s is not a valid contrib module' % self.contrib_type)
 
     def check_result(self, case, result):
-        if result.result_flag:
-            # This is usually because of a TLE verdict raised after the interactor
-            # has issued the AC verdict
-            # This results in a TLE verdict getting full points, which should not be the case
-            return False
-
+        # We parse the return code first in case the grader crashed, so it can raise the IE.
+        # Usually a grader crash will result in IR/RTE/TLE,
+        # so checking submission return code first will cover up the grader fail.
         stderr = self._interactor.stderr.read()
-        return_code = self.handler_data.get('type', 'default')
-        if return_code not in contrib_modules:
-            raise InternalError('%s is not a valid return code parser' % return_code)
-
-        return contrib_modules[return_code].ContribModule.parse_return_code(
+        parsed_result = contrib_modules[self.contrib_type].ContribModule.parse_return_code(
             self._interactor,
             self.interactor_binary,
             case.points,
             self._interactor_time_limit,
             self._interactor_memory_limit,
-            feedback=utf8text(stderr) if self.handler_data.feedback else None,
+            feedback=utf8text(stderr) if self.handler_data.feedback else '',
             name='interactor',
             stderr=stderr,
         )
+
+        return (not result.result_flag) and parsed_result
 
     def _launch_process(self, case):
         self._interactor_stdin_pipe, submission_stdout_pipe = os.pipe()
@@ -54,14 +53,29 @@ class BridgedInteractiveGrader(StandardGrader):
         os.close(submission_stdout_pipe)
 
     def _interact_with_process(self, case, result, input):
-        output = case.output_data()
-        self._interactor_time_limit = (self.handler_data.preprocessing_time or 0) + self.problem.time_limit
+        judge_output = case.output_data()
+        # Give TL + 1s by default, so we do not race (and incorrectly throw IE) if submission gets TLE
+        self._interactor_time_limit = (self.handler_data.preprocessing_time or 1) + self.problem.time_limit
         self._interactor_memory_limit = self.handler_data.memory_limit or env['generator_memory_limit']
+        args_format_string = (
+            self.handler_data.args_format_string
+            or contrib_modules[self.contrib_type].ContribModule.get_interactor_args_format_string()
+        )
 
-        with mktemp(input) as input_file, mktemp(output) as output_file:
+        with mktemp(input) as input_file, mktemp(judge_output) as answer_file:
+            # TODO(@kirito): testlib.h expects a file they can write to,
+            # but we currently don't have a sane way to allow this.
+            # Thus we pass /dev/null for now so testlib interactors will still
+            # work, albeit with diminished capabilities
+            interactor_args = shlex.split(
+                args_format_string.format(
+                    input_file=shlex.quote(input_file.name),
+                    output_file=shlex.quote(os.devnull),
+                    answer_file=shlex.quote(answer_file.name),
+                )
+            )
             self._interactor = self.interactor_binary.launch(
-                input_file.name,
-                output_file.name,
+                *interactor_args,
                 time=self._interactor_time_limit,
                 memory=self._interactor_memory_limit,
                 stdin=self._interactor_stdin_pipe,
@@ -87,5 +101,5 @@ class BridgedInteractiveGrader(StandardGrader):
         flags = self.handler_data.get('flags', [])
         should_cache = self.handler_data.get('cached', True)
         return compile_with_auxiliary_files(
-            filenames, flags, self.handler_data.lang, self.handler_data.compiler_time_limit, should_cache
+            filenames, flags, self.handler_data.lang, self.handler_data.compiler_time_limit, should_cache,
         )

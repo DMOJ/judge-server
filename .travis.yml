@@ -56,8 +56,8 @@ script:
     #!/bin/bash -e
     . ~/.profile
     cd /code
-    "$PYTHON" -Werror -m coverage run -m unittest discover dmoj/tests/
-    "$PYTHON" -Werror -m coverage run --append .docker.test.py
+    "$PYTHON" -Wdefault -m coverage run -m unittest discover dmoj/tests/
+    "$PYTHON" -Wdefauit -m coverage run --append .docker.test.py
     "$PYTHON" -m coverage combine
     "$PYTHON" -m coverage xml
     EOF

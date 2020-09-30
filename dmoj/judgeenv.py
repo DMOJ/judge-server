@@ -169,6 +169,9 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
             def get_path(x, y):
                 return utf8text(os.path.normpath(os.path.join(x, y)))
 
+            if isinstance(problem_dirs, str):
+                problem_dirs = [problem_dirs]
+
             problem_watches = []
             for dir in problem_dirs:
                 if isinstance(dir, ConfigNode):

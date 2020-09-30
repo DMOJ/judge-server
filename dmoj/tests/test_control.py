@@ -45,3 +45,4 @@ class ControlServerTest(unittest.TestCase):
     def tearDownClass(cls):
         cls.server.shutdown()
         cls.server_thread.join()
+        cls.server.server_close()

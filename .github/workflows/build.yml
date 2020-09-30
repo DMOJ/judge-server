@@ -56,6 +56,10 @@ jobs:
     strategy:
       matrix:
         python-version: [ 3.6, 3.7, 3.8 ]
+        seccomp: [ yes ]
+        include:
+          - python-version: 3.8
+            seccomp: no
     steps:
       - uses: actions/checkout@v2
       - name: Download docker image
@@ -107,5 +111,6 @@ jobs:
 
           chmod a+x run run-su
       - name: Execute tests in docker
-        run: docker run -e PYTHON_VERSION="${{ matrix.python-version }}" -e DMOJ_USE_SECCOMP="yes" -v "$(pwd):/code" --cap-add=SYS_PTRACE dmoj/runtimes-tier3
-      - uses: codecov/codecov-action@v1
+        run: docker run -e PYTHON_VERSION="${{ matrix.python-version }}" -e DMOJ_USE_SECCOMP="${{ matrix.seccomp }}" -v "$(pwd):/code" --cap-add=SYS_PTRACE dmoj/runtimes-tier3
+      - name: Upload coverage data
+        uses: codecov/codecov-action@v1

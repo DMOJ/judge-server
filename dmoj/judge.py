@@ -530,9 +530,11 @@ def sanity_check():
 
         # However running as root on Linux is a Bad Idea
         if os.getuid() == 0:
-            startup_warnings.append(
-                'running the judge as root can be potentially unsafe, consider using an unprivileged user instead'
+            print(
+                'running the judge as root is unsafe, please use an unprivileged user instead',
+                file=sys.stderr
             )
+            return False
 
         # Our sandbox filter is long but simple, so we can see large improvements
         # in overhead by enabling the BPF JIT for seccomp.

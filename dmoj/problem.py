@@ -45,7 +45,7 @@ class Problem:
                 doc,
                 defaults={
                     'wall_time_factor': 3,
-                    'output_prefix_length': 64,
+                    'output_prefix_length': 0 if 'signature_grader' in doc else 64,
                     'output_limit_length': 25165824,
                     'binary_data': False,
                     'short_circuit': True,

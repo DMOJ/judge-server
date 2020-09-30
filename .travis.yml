@@ -56,8 +56,8 @@ script:
     #!/bin/bash -e
     . ~/.profile
     cd /code
-    "$PYTHON" -Wdefault -m coverage run -m unittest discover dmoj/tests/
-    "$PYTHON" -Wdefault -m coverage run --append .docker.test.py
+    "$PYTHON" -W 'ignore::ResourceWarning,error' -m coverage run -m unittest discover dmoj/tests/
+    "$PYTHON" -W 'ignore::ResourceWarning,error' -m coverage run --append .docker.test.py
     "$PYTHON" -m coverage combine
     "$PYTHON" -m coverage xml
     EOF

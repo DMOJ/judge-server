@@ -17,7 +17,7 @@ class Executor(CompiledExecutor):
     ext = 'go'
     name = 'GO'
     nproc = -1
-    data_grace = 65536  # Go uses data segment for heap arena map
+    data_grace = 98304  # Go uses data segment for heap arena map
     address_grace = 786432
     command = 'go'
     syscalls = ['mincore', 'epoll_create1', 'epoll_ctl', 'epoll_pwait', 'pselect6', 'mlock']

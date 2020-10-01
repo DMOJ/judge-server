@@ -20,9 +20,8 @@ class ControlServerTest(unittest.TestCase):
         cls.judge = Handler.judge
         cls.server = HTTPServer(('127.0.0.1', 0), Handler)
 
-        thread = threading.Thread(target=cls.server.serve_forever)
-        thread.daemon = True
-        thread.start()
+        cls.server_thread = threading.Thread(target=cls.server.serve_forever)
+        cls.server_thread.start()
 
         cls.connect = 'http://%s:%s/' % cls.server.server_address
 
@@ -45,3 +44,5 @@ class ControlServerTest(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.server.shutdown()
+        cls.server_thread.join()
+        cls.server.server_close()

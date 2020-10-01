@@ -21,7 +21,7 @@ jobs:
       if: failure()
       env:
         SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-      uses: DMOJ/github-action-slack-notify-build@dmoj-v1
+      uses: DMOJ/github-action-slack-notify-build@dmoj-v2
       with:
         message_id: ${{ steps.slack.outputs.message_id }}
         channel_id: C1NAFUZ6Z
@@ -47,7 +47,7 @@ jobs:
       if: failure()
       env:
         SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-      uses: DMOJ/github-action-slack-notify-build@dmoj-v1
+      uses: DMOJ/github-action-slack-notify-build@dmoj-v2
       with:
         message_id: ${{ steps.slack.outputs.message_id }}
         channel_id: C1NAFUZ6Z
@@ -75,7 +75,7 @@ jobs:
       if: failure()
       env:
         SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-      uses: DMOJ/github-action-slack-notify-build@dmoj-v1
+      uses: DMOJ/github-action-slack-notify-build@dmoj-v2
       with:
         message_id: ${{ steps.slack.outputs.message_id }}
         channel_id: C1NAFUZ6Z
@@ -91,11 +91,11 @@ jobs:
           - python-version: 3.8
             seccomp: no
     steps:
-      - name: Notify slack success
+      - name: Notify slack of build start
         id: slack
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-        uses: DMOJ/github-action-slack-notify-build@dmoj-v1
+        uses: DMOJ/github-action-slack-notify-build@dmoj-v2
         with:
           channel_id: C1NAFUZ6Z
           status: STARTING
@@ -167,7 +167,7 @@ jobs:
         if: success()
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-        uses: DMOJ/github-action-slack-notify-build@dmoj-v1
+        uses: DMOJ/github-action-slack-notify-build@dmoj-v2
         with:
           message_id: ${{ steps.slack.outputs.message_id }}
           channel_id: C1NAFUZ6Z
@@ -177,7 +177,7 @@ jobs:
         if: failure()
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-        uses: DMOJ/github-action-slack-notify-build@dmoj-v1
+        uses: DMOJ/github-action-slack-notify-build@dmoj-v2
         with:
           message_id: ${{ steps.slack.outputs.message_id }}
           channel_id: C1NAFUZ6Z

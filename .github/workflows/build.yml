@@ -17,16 +17,6 @@ jobs:
         black --version
         flake8 --version
         flake8
-    - name: Notify slack fail
-      if: failure()
-      env:
-        SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-      uses: DMOJ/github-action-slack-notify-build@dmoj-v3
-      with:
-        message_id: ${{ steps.slack.outputs.message_id }}
-        channel_id: C1NAFUZ6Z
-        status: FAILED
-        color: danger
   mypy:
     runs-on: ubuntu-latest
     steps:
@@ -43,16 +33,6 @@ jobs:
       run: |
         mypy --version
         mypy .
-    - name: Notify slack fail
-      if: failure()
-      env:
-        SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-      uses: DMOJ/github-action-slack-notify-build@dmoj-v3
-      with:
-        message_id: ${{ steps.slack.outputs.message_id }}
-        channel_id: C1NAFUZ6Z
-        status: FAILED
-        color: danger
   test-sdist:
     runs-on: ubuntu-latest
     steps:
@@ -71,16 +51,6 @@ jobs:
       run: |
         pip install dist/*.tar.gz
         dmoj-autoconf
-    - name: Notify slack fail
-      if: failure()
-      env:
-        SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-      uses: DMOJ/github-action-slack-notify-build@dmoj-v3
-      with:
-        message_id: ${{ steps.slack.outputs.message_id }}
-        channel_id: C1NAFUZ6Z
-        status: FAILED
-        color: danger
   build:
     runs-on: ubuntu-latest
     strategy:
@@ -91,15 +61,6 @@ jobs:
           - python-version: 3.8
             seccomp: no
     steps:
-      - name: Notify slack of build start
-        id: slack
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-        uses: DMOJ/github-action-slack-notify-build@dmoj-v3
-        with:
-          channel_id: C1NAFUZ6Z
-          status: STARTING
-          color: warning
       - uses: actions/checkout@v2
       - name: Download docker image
         run: docker pull dmoj/runtimes-tier3
@@ -163,25 +124,5 @@ jobs:
         run: docker run -e PYTHON_VERSION="${{ matrix.python-version }}" -e DMOJ_USE_SECCOMP="${{ matrix.seccomp }}" -v "$(pwd):/code" -v "$HOME/docker-cache:/root/.cache" --cap-add=SYS_PTRACE dmoj/runtimes-tier3
       - name: Upload coverage data
         uses: codecov/codecov-action@v1
-      - name: Notify slack success
-        if: success()
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-        uses: DMOJ/github-action-slack-notify-build@dmoj-v3
-        with:
-          message_id: ${{ steps.slack.outputs.message_id }}
-          channel_id: C1NAFUZ6Z
-          status: SUCCESS
-          color: good
-      - name: Notify slack fail
-        if: failure()
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-        uses: DMOJ/github-action-slack-notify-build@dmoj-v3
-        with:
-          message_id: ${{ steps.slack.outputs.message_id }}
-          channel_id: C1NAFUZ6Z
-          status: FAILED
-          color: danger
       - name: Prepare cache for storage
         run: sudo chown -R "$USER:$USER" "$HOME/docker-cache"

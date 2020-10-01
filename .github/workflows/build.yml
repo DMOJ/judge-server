@@ -110,7 +110,17 @@ jobs:
           EOF
 
           chmod a+x run run-su
+      - uses: actions/cache@v2
+        with:
+          path: ~/docker-cache
+          key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-${{ matrix.python-version }}
+      - name: Create cache
+        run: |
+          mkdir -p "$HOME/docker-cache/pip"
+          sudo chown root:root -R "$HOME/docker-cache"
       - name: Execute tests in docker
-        run: docker run -e PYTHON_VERSION="${{ matrix.python-version }}" -e DMOJ_USE_SECCOMP="${{ matrix.seccomp }}" -v "$(pwd):/code" --cap-add=SYS_PTRACE dmoj/runtimes-tier3
+        run: docker run -e PYTHON_VERSION="${{ matrix.python-version }}" -e DMOJ_USE_SECCOMP="${{ matrix.seccomp }}" -v "$(pwd):/code" -v "$HOME/docker-cache:/root/.cache" --cap-add=SYS_PTRACE dmoj/runtimes-tier3
       - name: Upload coverage data
         uses: codecov/codecov-action@v1

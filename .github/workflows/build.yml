@@ -152,7 +152,7 @@ jobs:
       - uses: actions/cache@v2
         with:
           path: ~/docker-cache
-          key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt') }}
+          key: ${{ runner.os }}-python-${{ matrix.python-version }}-pip-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-${{ matrix.python-version }}
       - name: Create cache
@@ -183,3 +183,5 @@ jobs:
           channel_id: C1NAFUZ6Z
           status: FAILED
           color: danger
+      - name: Prepare cache for storage
+        run: sudo chown -R "$USER:$USER" "$HOME/docker-cache"

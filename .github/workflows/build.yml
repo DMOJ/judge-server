@@ -21,7 +21,7 @@ jobs:
       if: failure()
       env:
         SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-      uses: DMOJ/github-action-slack-notify-build@dmoj-v2
+      uses: DMOJ/github-action-slack-notify-build@dmoj-v3
       with:
         message_id: ${{ steps.slack.outputs.message_id }}
         channel_id: C1NAFUZ6Z
@@ -47,7 +47,7 @@ jobs:
       if: failure()
       env:
         SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-      uses: DMOJ/github-action-slack-notify-build@dmoj-v2
+      uses: DMOJ/github-action-slack-notify-build@dmoj-v3
       with:
         message_id: ${{ steps.slack.outputs.message_id }}
         channel_id: C1NAFUZ6Z
@@ -75,7 +75,7 @@ jobs:
       if: failure()
       env:
         SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-      uses: DMOJ/github-action-slack-notify-build@dmoj-v2
+      uses: DMOJ/github-action-slack-notify-build@dmoj-v3
       with:
         message_id: ${{ steps.slack.outputs.message_id }}
         channel_id: C1NAFUZ6Z
@@ -95,7 +95,7 @@ jobs:
         id: slack
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-        uses: DMOJ/github-action-slack-notify-build@dmoj-v2
+        uses: DMOJ/github-action-slack-notify-build@dmoj-v3
         with:
           channel_id: C1NAFUZ6Z
           status: STARTING
@@ -167,7 +167,7 @@ jobs:
         if: success()
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-        uses: DMOJ/github-action-slack-notify-build@dmoj-v2
+        uses: DMOJ/github-action-slack-notify-build@dmoj-v3
         with:
           message_id: ${{ steps.slack.outputs.message_id }}
           channel_id: C1NAFUZ6Z
@@ -177,7 +177,7 @@ jobs:
         if: failure()
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-        uses: DMOJ/github-action-slack-notify-build@dmoj-v2
+        uses: DMOJ/github-action-slack-notify-build@dmoj-v3
         with:
           message_id: ${{ steps.slack.outputs.message_id }}
           channel_id: C1NAFUZ6Z

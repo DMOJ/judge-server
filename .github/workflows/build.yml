@@ -56,10 +56,10 @@ jobs:
     strategy:
       matrix:
         python-version: [ 3.6, 3.7, 3.8 ]
-        seccomp: [ yes ]
+        sandbox: [ seccomp ]
         include:
           - python-version: 3.8
-            seccomp: no
+            sandbox: ptrace
     steps:
       - uses: actions/checkout@v2
       - name: Download docker image
@@ -121,7 +121,7 @@ jobs:
           mkdir -p "$HOME/docker-cache/pip"
           sudo chown root:root -R "$HOME/docker-cache"
       - name: Execute tests in docker
-        run: docker run -e PYTHON_VERSION="${{ matrix.python-version }}" -e DMOJ_USE_SECCOMP="${{ matrix.seccomp }}" -v "$(pwd):/code" -v "$HOME/docker-cache:/root/.cache" --cap-add=SYS_PTRACE dmoj/runtimes-tier3
+        run: docker run -e PYTHON_VERSION="${{ matrix.python-version }}" -e DMOJ_USE_SECCOMP="$([ ${{ matrix.sandbox }} = seccomp ] && echo yes || echo no)" -v "$(pwd):/code" -v "$HOME/docker-cache:/root/.cache" --cap-add=SYS_PTRACE dmoj/runtimes-tier3
       - name: Upload coverage data
         uses: codecov/codecov-action@v1
       - name: Prepare cache for storage

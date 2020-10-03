@@ -4,7 +4,6 @@ import re
 import subprocess
 import sys
 from collections import deque
-from subprocess import Popen
 from typing import Optional
 
 from dmoj.error import CompileError, InternalError
@@ -95,14 +94,6 @@ class JavaExecutor(CompiledExecutor):
     def launch(self, *args, **kwargs):
         kwargs['orig_memory'], kwargs['memory'] = kwargs['memory'], 0
         return super().launch(*args, **kwargs)
-
-    def launch_unsafe(self, *args, **kwargs):
-        return Popen(
-            ['java', self.get_vm_mode(), self._class_name] + list(args),
-            executable=self.get_vm(),
-            cwd=self._dir,
-            **kwargs
-        )
 
     def parse_feedback_from_stderr(self, stderr, process):
         if process.returncode:

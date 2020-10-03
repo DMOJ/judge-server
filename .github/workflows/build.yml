@@ -51,3 +51,78 @@ jobs:
       run: |
         pip install dist/*.tar.gz
         dmoj-autoconf
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ 3.6, 3.7, 3.8 ]
+        seccomp: [ yes ]
+        include:
+          - python-version: 3.8
+            seccomp: no
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download docker image
+        run: docker pull dmoj/runtimes-tier3
+      - name: Install python
+        run: |
+          if [ "${{ matrix.python-version }}" != 3.8 ]; then
+            curl -L "https://github.com/DMOJ/runtimes-python/releases/latest/download/python${{ matrix.python-version }}-amd64.tar.gz" |
+            tar -xz
+          fi
+      - name: Download testsuite
+        run: |
+          git clone --depth 25 \
+                        --single-branch \
+                        --branch ${DMOJ_JUDGE_TESTSUITE_BRANCH:-master} \
+                        https://github.com/${DMOJ_JUDGE_TESTSUITE_SLUG:-DMOJ/judge-testsuite} testsuite &&
+              git -C testsuite reset --hard ${DMOJ_JUDGE_TESTSUITE_COMMIT_SHA:-HEAD}
+      - name: Create docker scripts
+        run: |
+          cat > run <<'EOF'
+          #!/bin/bash -e
+          export PYTHONUNBUFFERED=1
+          export LANG=C.UTF-8
+          export PYTHONIOENCODING=utf8
+          cd /code
+          if [ "${{ matrix.python-version }}" != 3.8 ]; then
+            PYTHON="/code/python${{ matrix.python-version }}/bin/python${{ matrix.python-version }}"
+            "$PYTHON" -m pip install --upgrade pip wheel
+            "$PYTHON" -m pip install cython coverage
+          else
+            PYTHON=/usr/bin/python3.8
+            pip3 install coverage
+          fi
+          "$PYTHON" -m pip install -e .[test]
+          chmod o+w .
+          export PYTHON
+          runuser -u judge -w PATH /code/run-su
+          EOF
+
+          cat > run-su <<'EOF'
+          #!/bin/bash -e
+          . ~/.profile
+          cd /code
+          "$PYTHON" -m coverage run -m unittest discover dmoj/tests/
+          "$PYTHON" -m coverage run --append .docker.test.py
+          "$PYTHON" -m coverage combine
+          "$PYTHON" -m coverage xml
+          EOF
+
+          chmod a+x run run-su
+      - uses: actions/cache@v2
+        with:
+          path: ~/docker-cache
+          key: ${{ runner.os }}-python-${{ matrix.python-version }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-${{ matrix.python-version }}
+      - name: Create cache
+        run: |
+          mkdir -p "$HOME/docker-cache/pip"
+          sudo chown root:root -R "$HOME/docker-cache"
+      - name: Execute tests in docker
+        run: docker run -e PYTHON_VERSION="${{ matrix.python-version }}" -e DMOJ_USE_SECCOMP="${{ matrix.seccomp }}" -v "$(pwd):/code" -v "$HOME/docker-cache:/root/.cache" --cap-add=SYS_PTRACE dmoj/runtimes-tier3
+      - name: Upload coverage data
+        uses: codecov/codecov-action@v1
+      - name: Prepare cache for storage
+        run: sudo chown -R "$USER:$USER" "$HOME/docker-cache"

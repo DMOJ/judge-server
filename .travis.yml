@@ -8,13 +8,12 @@ addons:
       - jq
 jobs:
   include:
-    - env: DMOJ_USE_SECCOMP="yes" PYTHON_VERSION=3.8 ARCH=amd64 DOCKER_IMAGE=dmoj/runtimes-tier3
     - env: DMOJ_USE_SECCOMP="yes" PYTHON_VERSION=3.8 ARCH=aarch64 DOCKER_IMAGE=dmoj/runtimes-tier1
       arch: arm64
-    - env: DMOJ_USE_SECCOMP="yes" PYTHON_VERSION=3.9 ARCH=amd64 DOCKER_IMAGE=dmoj/runtimes-tier3
     - env: DMOJ_USE_SECCOMP="yes" PYTHON_VERSION=3.9 ARCH=aarch64 DOCKER_IMAGE=dmoj/runtimes-tier1
       arch: arm64
-    - env: DMOJ_USE_SECCOMP="no"  PYTHON_VERSION=3.9 ARCH=amd64 DOCKER_IMAGE=dmoj/runtimes-tier3
+    - env: DMOJ_USE_SECCOMP="no"  PYTHON_VERSION=3.9 ARCH=aarch64 DOCKER_IMAGE=dmoj/runtimes-tier1
+      arch: arm64
 install:
   - docker pull "$DOCKER_IMAGE"
   - |

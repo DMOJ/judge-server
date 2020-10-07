@@ -1,9 +1,9 @@
-import imp
 import os
+import types
 
 
 def load_module(name, code, filename=None):
-    mod = imp.new_module(name)
+    mod = types.ModuleType(name)
     if filename is not None:
         mod.__file__ = filename
     exec(compile(code, filename or '<string>', 'exec'), mod.__dict__)

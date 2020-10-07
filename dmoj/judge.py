@@ -14,7 +14,7 @@ from typing import Any, Callable, Dict, Generator, List, NamedTuple, Optional, T
 
 from dmoj import packet
 from dmoj.control import JudgeControlRequestHandler
-from dmoj.error import CompileError, InternalError
+from dmoj.error import CompileError
 from dmoj.judgeenv import clear_problem_dirs_cache, env, get_supported_problems, startup_warnings
 from dmoj.monitor import Monitor
 from dmoj.problem import BatchedTestCase, Problem, TestCase
@@ -384,6 +384,12 @@ class JudgeWorker:
                 else:
                     raise RuntimeError("worker got unexpected IPC message from judge: %s" % ((ipc_type, data),))
 
+        def _report_unhandled_exception() -> None:
+            # We can't pickle the whole traceback object, so just send the formatted exception.
+            message = ''.join(traceback.format_exception(*sys.exc_info()))
+            judge_process_conn.send((IPC.UNHANDLED_EXCEPTION, (message,)))
+            judge_process_conn.send((IPC.BYE, ()))
+
         ipc_recv_thread = None
         try:
             judge_process_conn.send((IPC.HELLO, ()))
@@ -397,11 +403,11 @@ class JudgeWorker:
                     ipc_msg = next(case_gen)
                 except StopIteration:
                     break
-                except Exception as exc:
-                    # We need to wrap all exceptions raised by a grader, since a grader can raise a `BrokenPipeError`
-                    # that's indistinguishable from one caused by `judge_process_conn.send`, but should be handled
-                    # differently (i.e. not quit the judge).
-                    raise InternalError('grader raised exception while grading') from exc
+                except BrokenPipeError:
+                    # A grader can raise a `BrokenPipeError` that's indistinguishable from one caused by
+                    # `judge_process_conn.send`, but should be handled differently (i.e. not quit the judge).
+                    _report_unhandled_exception()
+                    return
 
                 judge_process_conn.send(ipc_msg)
 
@@ -411,10 +417,7 @@ class JudgeWorker:
             # hope for the best.
             raise
         except:  # noqa: E722, we explicitly want to notify the parent of everything
-            # We can't pickle the whole traceback object, so just send the formatted exception.
-            message = ''.join(traceback.format_exception(*sys.exc_info()))
-            judge_process_conn.send((IPC.UNHANDLED_EXCEPTION, (message,)))
-            judge_process_conn.send((IPC.BYE, ()))
+            _report_unhandled_exception()
         finally:
             if ipc_recv_thread is not None:
                 # We may have failed before sending the IPC.BYE down the connection, in which case the judge will never

@@ -1,3 +1,4 @@
+import os
 import re
 
 from dmoj.error import CompileError
@@ -40,7 +41,7 @@ func main() {
             # against arbitrary libraries.
             'CGO_ENABLED': '0',
             # We need GOCACHE to compile on Debian 10.0+.
-            'GOCACHE': self._dir,
+            'GOCACHE': os.path.join(self._dir, '.cache'),
         }
 
     def get_compile_args(self):

@@ -262,6 +262,7 @@ sys_pread64: int
 sys_preadv: int
 sys_preadv2: int
 sys_prlimit64: int
+sys_process_madvise: int
 sys_process_vm_readv: int
 sys_process_vm_writev: int
 sys_prof: int

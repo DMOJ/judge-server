@@ -8,6 +8,7 @@ from typing import Optional
 
 from dmoj.error import CompileError, InternalError
 from dmoj.executors.compiled_executor import CompiledExecutor
+from dmoj.executors.mixins import SingleDigitVersionMixin
 from dmoj.judgeenv import skip_self_test
 from dmoj.utils.unicode import utf8bytes, utf8text
 
@@ -37,7 +38,7 @@ def find_class(source):
     return class_name
 
 
-class JavaExecutor(CompiledExecutor):
+class JavaExecutor(SingleDigitVersionMixin, CompiledExecutor):
     ext = 'java'
 
     vm: str

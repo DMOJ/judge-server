@@ -153,3 +153,7 @@ class NullStdoutMixin:
         result = super().get_compile_popen_kwargs()
         result['stdout'] = self._devnull
         return result
+
+
+class SingleDigitVersionMixin:
+    version_regex = re.compile(r'.*?(\d+(?:\.\d+)*)', re.DOTALL)

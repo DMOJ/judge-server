@@ -44,8 +44,9 @@ class JavaExecutor(SingleDigitVersionMixin, CompiledExecutor):
     vm: str
     compiler: str
     nproc = -1
-    fsize = 64  # Allow 64 bytes for dumping state file.
+    fsize = 1048576  # Allow 1 MB for writing crash log.
     address_grace = 786432
+    syscalls = ['pread64', 'clock_nanosleep', 'socketpair']
 
     jvm_regex: Optional[str] = None
     security_policy = policy
@@ -68,11 +69,14 @@ class JavaExecutor(SingleDigitVersionMixin, CompiledExecutor):
     def get_compiled_file(self):
         return None
 
-    def get_security(self, launch_kwargs=None):
-        return None
-
     def get_executable(self):
         return self.get_vm()
+
+    def get_fs(self):
+        return super().get_fs() + [self._agent_file]
+
+    def get_write_fs(self):
+        return super().get_write_fs() + [os.path.join(self._dir, 'submission_jvm_crash.log')]
 
     def get_cmdline(self, **kwargs):
         agent_flags = '-javaagent:%s=policy:%s' % (self._agent_file, self._policy_file)

@@ -153,13 +153,3 @@ class NullStdoutMixin:
         result = super().get_compile_popen_kwargs()
         result['stdout'] = self._devnull
         return result
-
-
-class ScriptDirectoryMixin:
-    """
-    Certain script executors need access to the entire directory of the script,
-    usually for some searching purposes.
-    """
-
-    def get_fs(self):
-        return super().get_fs() + [self._dir]

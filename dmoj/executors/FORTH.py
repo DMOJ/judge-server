@@ -1,8 +1,7 @@
-from dmoj.executors.mixins import ScriptDirectoryMixin
 from dmoj.executors.script_executor import ScriptExecutor
 
 
-class Executor(ScriptDirectoryMixin, ScriptExecutor):
+class Executor(ScriptExecutor):
     name = 'FORTH'
     command = 'gforth'
     ext = 'fs'

@@ -1,10 +1,9 @@
 import os
 
 from dmoj.executors.compiled_executor import CompiledExecutor
-from dmoj.executors.mixins import ScriptDirectoryMixin
 
 
-class Executor(ScriptDirectoryMixin, CompiledExecutor):
+class Executor(CompiledExecutor):
     ext = 'rkt'
     name = 'RKT'
     fs = [os.path.expanduser(r'~/\.racket/.*?'), '/etc/racket/.*?']

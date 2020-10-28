@@ -1,5 +1,5 @@
 from dmoj.executors.compiled_executor import CompiledExecutor
-from dmoj.executors.mixins import NullStdoutMixin, ScriptDirectoryMixin
+from dmoj.executors.mixins import NullStdoutMixin
 
 
 # SBCL implements its own heap management, and relies on ASLR being disabled. So, on startup,
@@ -9,7 +9,7 @@ from dmoj.executors.mixins import NullStdoutMixin, ScriptDirectoryMixin
 # As of https://github.com/DMOJ/judge/issues/277 we set personality ourselves to disable ASLR,
 # so allowing (or blocking) the execve hack is not necessary: SBCL detects that ASLR is disabled,
 # and proceeds to run.
-class Executor(NullStdoutMixin, ScriptDirectoryMixin, CompiledExecutor):
+class Executor(NullStdoutMixin, CompiledExecutor):
     ext = 'cl'
     name = 'SBCL'
     command = 'sbcl'

@@ -8,7 +8,7 @@ import yaml
 from dmoj.config import ConfigNode
 
 # noinspection PyUnresolvedReferences
-from dmoj.utils import pyyaml_patch  # noqa: F401, imported for side effect
+from dmoj.utils import builtin_int_patch, pyyaml_patch  # noqa: F401, imported for side effect
 from dmoj.utils.unicode import utf8text
 
 problem_dirs = ()

@@ -13,6 +13,7 @@ from operator import itemgetter
 from typing import Any, Callable, Dict, Generator, List, NamedTuple, Optional, Tuple, Union
 
 from dmoj import packet
+from dmoj.remote_problem import RemoteProblem
 from dmoj.control import JudgeControlRequestHandler
 from dmoj.error import CompileError
 from dmoj.judgeenv import clear_problem_dirs_cache, env, get_supported_problems, startup_warnings
@@ -47,15 +48,14 @@ class IPC(Enum):
 
 IPC_TEARDOWN_TIMEOUT = 5  # seconds
 
-
 logger = logging.getLogger(__name__)
-
 
 Submission = NamedTuple(
     'Submission',
     [
         ('id', int),
         ('problem_id', str),
+        ('problem_config', str),
         ('language', str),
         ('source', str),
         ('time_limit', float),
@@ -354,9 +354,9 @@ class JudgeWorker:
             logger.exception("Failed to send abort request to worker, did it race?")
 
     def _worker_process_main(
-        self,
-        judge_process_conn: 'multiprocessing.connection.Connection',
-        worker_process_conn: 'multiprocessing.connection.Connection',
+            self,
+            judge_process_conn: 'multiprocessing.connection.Connection',
+            worker_process_conn: 'multiprocessing.connection.Connection',
     ) -> None:
         """
         Main body of judge worker process, which handles grading and sends grading results to the judge controller via
@@ -434,9 +434,14 @@ class JudgeWorker:
             self.grader = None
 
     def _grade_cases(self) -> Generator[Tuple[IPC, tuple], None, None]:
-        problem = Problem(
-            self.submission.problem_id, self.submission.time_limit, self.submission.memory_limit, self.submission.meta
-        )
+        if self.submission.problem_config:
+            problem = RemoteProblem(self.submission.problem_config, self.submission.time_limit,
+                                    self.submission.memory_limit, self.submission.meta)
+        else:
+            problem = Problem(
+                self.submission.problem_id, self.submission.time_limit, self.submission.memory_limit,
+                self.submission.meta
+            )
 
         try:
             self.grader = problem.grader_class(
@@ -606,7 +611,6 @@ def main():  # pragma: no cover
     monitor.callback = judge.update_problems
 
     if hasattr(signal, 'SIGUSR2'):
-
         def update_problem_signal(signum, frame):
             judge.update_problems()
 

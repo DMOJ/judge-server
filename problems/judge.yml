@@ -1,0 +1,24 @@
+problem_storage_root:
+  - /opt/problems
+runtime:
+  as_x64: /usr/bin/x86_64-linux-gnu-as
+  as_x86: /usr/bin/as
+  awk: /usr/bin/mawk
+  cat: /bin/cat
+  fpc: /usr/bin/fpc
+  g++: /usr/bin/g++
+  g++11: /usr/bin/g++
+  g++14: /usr/bin/g++
+  g++17: /usr/bin/g++
+  gcc: /usr/bin/gcc
+  gcc11: /usr/bin/gcc
+  java11: /usr/lib/jvm/java-11-openjdk-amd64/bin/java
+  java8: /usr/lib/jvm/java-8-openjdk-amd64/bin/java
+  javac11: /usr/lib/jvm/java-11-openjdk-amd64/bin/javac
+  javac8: /usr/lib/jvm/java-8-openjdk-amd64/bin/javac
+  ld_x64: /usr/bin/x86_64-linux-gnu-ld
+  ld_x86: /usr/bin/ld
+  perl: /usr/bin/perl
+  python: /usr/bin/python2.7
+  python3: /usr/bin/python3
+  sed: /bin/sed

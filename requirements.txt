@@ -5,3 +5,7 @@ cython
 pygments
 setproctitle
 pylru
+requests
+aioredis
+fastapi
+uvicorn

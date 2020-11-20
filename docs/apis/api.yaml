@@ -1,0 +1,135 @@
+openapi: 3.0.0
+
+info:
+  title: 判题系统api
+  version: 1.0.0
+
+servers:
+  - url: https://localhost:8080/api
+    description: Sample API Server
+
+paths:
+  /gen-judge-config:
+    post:
+      description: 生成判题配置
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenJudgeConfigInput"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenJudgeConfigOutput"
+  /submission:
+    post:
+      description: 提交并运行判题接口
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmissionInput"
+      responses:
+        '202':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubmissionOutput"
+  /submission/{submission_id}:
+    parameters:
+      - name: submission_id
+        in: path
+        schema:
+          type: string
+        required: true
+        description: 提交 id
+    get:
+      description: 获取判题结果
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetSubmissionOutput"
+components:
+  schemas:
+    SubmissionInput:
+      type: object
+      properties:
+        id:
+          type: interger
+          description: 提交id，调用方生成，需要保证唯一
+        language_id:
+          type: integer
+          enum: []
+          description: 语言id
+        judge_config:
+          type: string
+          description: 判题配置 判题系统会尝试从优先 judge_config 获取判题配置，不存在 judge_config 或 为空字符串或 NULL 时会从 judge_config_url 获取配置
+        judge_config_url:
+          type: string
+          description: 判题配置 URL
+        source_code:
+          type: string
+          description: 需要进行判题的代码
+        time_limit:
+          type: integer
+          description: 限制运行时间 单位 ms
+        memory_limit:
+          type: integer
+          description: 限制运行内存 单位 kb
+    SubmissionOutput:
+      type: object
+      properties:
+        id:
+          type: integer
+    GenJudgeConfigInput:
+      type: object
+      properties:
+        test_cases:
+          type: array
+          items:
+            $ref: "#/components/schemas/TestCase"
+    GenJudgeConfigOutput:
+      type: object
+      properties:
+        judge_config:
+          type: string
+          description: 判题配置
+    TestCase:
+      type: object
+      properties:
+        in:
+          type: string
+          description: 输入文件
+        out:
+          type: string
+          description: 输出文件
+        points:
+          type: integer
+          description: 分数
+    GetSubmissionOutput:
+      type: object
+      properties:
+        points:
+          type: integer
+          description: 得分
+        result:
+          type: string
+          enum: [AC, WA, RTE, TLE, MLE, IR, OLE, IE]
+          description: 判题结果 ->
+            AC 通过
+            WA 答案错误
+            RTE 运行错误
+            TLE 超过时间限制
+            MLE 超过内存限制
+            IR 无效的返回
+            IE 内部错误
+            OLE 输出超过限制

@@ -1,0 +1,18 @@
+version: "3"
+
+services:
+  judge-server:
+    build: .
+    restart: always
+    working_dir: /app/judge-server
+    volumes:
+      - ./:/app/judge-server
+    command: bash
+    ports:
+      - 8080:8080
+    depends_on:
+      - redis
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"

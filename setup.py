@@ -146,9 +146,9 @@ setup(
     },
     ext_modules=cythonize(extensions),
     install_requires=['watchdog', 'pyyaml', 'termcolor', 'pygments', 'setproctitle', 'pylru'],
-    tests_require=['requests'],
+    tests_require=['requests', 'parameterized'],
     extras_require={
-        'test': ['requests'],
+        'test': ['requests', 'parameterized'],
     },
     cmdclass={'build_ext': build_ext_dmoj},
 

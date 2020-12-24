@@ -11,7 +11,6 @@ class Executor(ScriptExecutor):
     syscalls = [
         'newselect',
         'select',
-        'poll',
         'epoll_create1',
         'epoll_ctl',
         'epoll_wait',

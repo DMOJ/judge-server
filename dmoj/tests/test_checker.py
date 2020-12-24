@@ -7,10 +7,8 @@ class CheckerTest(unittest.TestCase):
             message = 'expecting %r to equal %r'
         else:
             message = 'expecting %r to not equal %r'
-        if bool(check(str1, str2)) != expect:
-            self.fail(message % (str1, str2))
-        if bool(check(str2, str1)) != expect:
-            self.fail(message % (str2, str1))
+        self.assertEqual(bool(check(str1, str2)), expect, message % (str1, str2))
+        self.assertEqual(bool(check(str2, str1)), expect, message % (str2, str1))
 
     def assert_fail(self, check, str1, str2):
         self.assert_pass(check, str1, str2, expect=False)

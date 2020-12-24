@@ -85,12 +85,11 @@ jobs:
           export LANG=C.UTF-8
           export PYTHONIOENCODING=utf8
           cd /code
-          PYTHON="/code/python${{ matrix.python-version }}/bin/python${{ matrix.python-version }}"
+          export PYTHON="/code/python${{ matrix.python-version }}/bin/python${{ matrix.python-version }}"
           "$PYTHON" -m pip install --upgrade pip wheel
           "$PYTHON" -m pip install cython coverage
           "$PYTHON" -m pip install -e .[test]
           chmod o+w .
-          export PYTHON
           runuser -u judge -w PATH /code/run-su
           EOF
 

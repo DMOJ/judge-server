@@ -6,7 +6,8 @@ from dmoj.executors.compiled_executor import CompiledExecutor
 class Executor(CompiledExecutor):
     ext = 'rkt'
     name = 'RKT'
-    fs = [os.path.expanduser(r'~/\.racket/.*?'), '/etc/racket/.*?']
+    fs = [os.path.expanduser(r'~/\.racket/'), os.path.expanduser(r'~/\.local/share/racket/'),
+          '/etc/racket/.*?', '/etc/passwd$']
 
     command = 'racket'
 

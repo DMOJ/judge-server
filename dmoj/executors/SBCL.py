@@ -13,7 +13,7 @@ class Executor(NullStdoutMixin, CompiledExecutor):
     ext = 'cl'
     name = 'SBCL'
     command = 'sbcl'
-    syscalls = ['personality', 'poll']
+    syscalls = ['personality']
     test_program = '(write-line (read-line))'
     address_grace = 262144
     data_grace = 262144

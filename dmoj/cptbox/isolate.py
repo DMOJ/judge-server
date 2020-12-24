@@ -60,6 +60,7 @@ class IsolateTracer(dict):
                 sys_select: ALLOW,
                 sys_newselect: ALLOW,
                 sys_modify_ldt: ALLOW,
+                sys_poll: ALLOW,
                 sys_ppoll: ALLOW,
                 sys_getgroups32: ALLOW,
                 sys_sched_getaffinity: ALLOW,

@@ -56,6 +56,7 @@ sys_epoll_create1: int
 sys_epoll_ctl: int
 sys_epoll_ctl_old: int
 sys_epoll_pwait: int
+sys_epoll_pwait2: int
 sys_epoll_wait: int
 sys_epoll_wait_old: int
 sys_eventfd: int

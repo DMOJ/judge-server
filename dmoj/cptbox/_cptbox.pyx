@@ -106,7 +106,6 @@ cdef extern from 'helper.h' nogil:
         int stderr_
         int max_fd
         int *fds
-        int debugger_type
         bint avoid_seccomp
         int abi_for_seccomp
         bint *seccomp_whitelist
@@ -189,7 +188,6 @@ def bsd_get_proc_fdno(pid_t pid, int fd):
 cdef class Debugger:
     cdef pt_debugger *thisptr
     cdef object on_return_callback
-    cdef int _debugger_type
 
     def __cinit__(self):
         self.thisptr = new pt_debugger()
@@ -197,10 +195,6 @@ cdef class Debugger:
     property skip_syscall_id:
         def __get__(self):
             raise NotImplementedError()
-
-    property type:
-        def __get__(self):
-            return self._debugger_type
 
     property syscall:
         def __get__(self):
@@ -357,7 +351,7 @@ cdef class Process:
     def create_debugger(cls) -> Debugger:
         return Debugger()
 
-    def __cinit__(self, debugger_type, *args, **kwargs):
+    def __cinit__(self, *args, **kwargs):
         self._child_memory = self._child_address = 0
         self._child_stdin = self._child_stdout = self._child_stderr = -1
         self._cpu_time = 0

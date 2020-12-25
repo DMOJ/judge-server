@@ -21,7 +21,7 @@ struct child_config {
     int debugger_type;
     int avoid_seccomp;
     int abi_for_seccomp;
-    int *syscall_whitelist;
+    int *seccomp_whitelist;
 };
 
 void cptbox_closefrom(int lowfd);

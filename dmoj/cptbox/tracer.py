@@ -116,7 +116,7 @@ class TracedPopen(Process):
             wall_time=None,
     ):
         self._executable = executable or find_exe_in_path(args[0])
-        self._avoid_seccomp = security is None or avoid_seccomp
+        self.use_seccomp = security is not None and not avoid_seccomp
 
         self._args = args
         self._chdir = cwd

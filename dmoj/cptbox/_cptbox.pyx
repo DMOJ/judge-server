@@ -6,7 +6,6 @@ from libc.signal cimport SIGTRAP, SIGXCPU
 from libcpp cimport bool
 from posix.resource cimport rusage
 from posix.types cimport pid_t
-from typing import List
 
 __all__ = ['Process', 'Debugger', 'bsd_get_proc_cwd', 'bsd_get_proc_fdno', 'MAX_SYSCALL_NUMBER',
            'AT_FDCWD', 'ALL_ABIS', 'SUPPORTED_ABIS',
@@ -62,6 +61,8 @@ cdef extern from 'ptbox.h' nogil:
         double wall_clock_time()
         const rusage *getrusage()
         bint was_initialized()
+        bool seccomp()
+        void seccomp(bool enabled)
 
     cdef bint PTBOX_FREEBSD
     cdef bint PTBOX_SECCOMP
@@ -109,7 +110,7 @@ cdef extern from 'helper.h' nogil:
         int debugger_type
         bint avoid_seccomp
         int abi_for_seccomp
-        bint *syscall_whitelist
+        bint *seccomp_whitelist
 
     void cptbox_closefrom(int lowfd)
     int cptbox_child_run(child_config *)
@@ -435,18 +436,18 @@ cdef class Process:
             for i in range(len(fds)):
                 config.fds[i] = fds[i]
 
-        config.avoid_seccomp = self._avoid_seccomp
-        if not self._avoid_seccomp:
+        config.avoid_seccomp = not self.use_seccomp
+        if self.use_seccomp:
             config.abi_for_seccomp = self._abi_for_seccomp()
-        config.syscall_whitelist = <bint*>malloc(sizeof(bint) * MAX_SYSCALL_NUMBER)
-        for i in range(MAX_SYSCALL_NUMBER):
-            # We have to force exit syscalls to trap, so that we can be notified
-            # that the process spawned successfully when using `seccomp`. Otherwise,
-            # a simple assembly program could terminate without ever trapping.
-            if not self.debugger.is_exit(i):
-                config.syscall_whitelist[i] = self._syscall_whitelist[i]
-            else:
-                config.syscall_whitelist[i] = False
+            config.seccomp_whitelist = <bint*>malloc(sizeof(bint) * MAX_SYSCALL_NUMBER)
+            for i in range(MAX_SYSCALL_NUMBER):
+                # We have to force exit syscalls to trap, so that we can be notified
+                # that the process spawned successfully when using `seccomp`. Otherwise,
+                # a simple assembly program could terminate without ever trapping.
+                if not self.debugger.is_exit(i):
+                    config.seccomp_whitelist[i] = self._syscall_whitelist[i]
+                else:
+                    config.seccomp_whitelist[i] = False
 
         if self.process.spawn(pt_child, &config):
             raise RuntimeError('failed to spawn child')
@@ -460,6 +461,13 @@ cdef class Process:
         self._exitcode = exitcode
         self._exited = True
         return self._exitcode
+
+    property use_seccomp:
+        def __get__(self):
+            return self.process.seccomp()
+
+        def __set__(self, bool enabled):
+            self.process.seccomp(enabled)
 
     property was_initialized:
         def __get__(self):

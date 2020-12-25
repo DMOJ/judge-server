@@ -123,7 +123,7 @@ int cptbox_child_run(const struct child_config *config) {
             // or plumbing libseccomp pseudosyscall mapping up to here.
         } else {
             for (int syscall = 0; syscall < MAX_SYSCALL; syscall++) {
-                if (config->syscall_whitelist[syscall]) {
+                if (config->seccomp_whitelist[syscall]) {
                     if ((rc = seccomp_rule_add(ctx, SCMP_ACT_ALLOW, syscall, 0))) {
                         fprintf(stderr, "seccomp_rule_add(..., %d): %s\n", syscall, strerror(-rc));
                         // This failure is not fatal, it'll just cause the syscall to trap anyway.

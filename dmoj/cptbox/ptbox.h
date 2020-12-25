@@ -114,6 +114,8 @@ public:
     double wall_clock_time();
     const rusage *getrusage() { return &_rusage; }
     bool was_initialized() { return _initialized; }
+    bool seccomp() { return _seccomp; }
+    void seccomp(bool enable);
 protected:
     int dispatch(int event, unsigned long param);
     int protection_fault(int syscall);
@@ -129,6 +131,7 @@ private:
     void *event_context;
     bool _trace_syscalls;
     bool _initialized;
+    bool _seccomp;
 };
 
 class pt_debugger {
@@ -173,7 +176,7 @@ public:
     void settid(pid_t tid);
     bool is_enter() {
       // All seccomp events are enter events.
-      return PTBOX_SECCOMP ? true : syscall_[tid] != 0;
+      return process->seccomp() ? true : syscall_[tid] != 0;
     }
 #endif
 

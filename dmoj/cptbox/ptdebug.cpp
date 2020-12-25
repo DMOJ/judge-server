@@ -57,9 +57,6 @@ void pt_debugger::settid(pid_t tid) {
 }
 #endif
 
-void pt_debugger::pre_syscall() {}
-void pt_debugger::post_syscall() {}
-
 long pt_debugger::peek_reg(int idx) {
 #if PTBOX_FREEBSD
     return ((reg_type*)&bsd_converted_regs)[idx];

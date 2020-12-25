@@ -9,8 +9,6 @@
 #define DEBUGGER_ARM        4
 #define DEBUGGER_ARM64      5
 
-pt_debugger *get_ptdebugger(int type);
-
 struct child_config {
     unsigned long memory;
     unsigned long address_space;

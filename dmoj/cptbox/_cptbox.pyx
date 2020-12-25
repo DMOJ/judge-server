@@ -108,8 +108,6 @@ cdef extern from 'helper.h' nogil:
         DEBUGGER_ARM
         DEBUGGER_ARM64
 
-    pt_debugger *get_ptdebugger(int type)
-
 
 cdef extern from 'fcntl.h' nogil:
     cdef int _AT_FDCWD "AT_FDCWD"
@@ -351,7 +349,7 @@ cdef class Process:
         self._nproc = -1
         self._signal = 0
 
-        self._debugger = get_ptdebugger(debugger)
+        self._debugger = new pt_debugger()
         if not self._debugger:
             raise ValueError('Unsupported debugger configuration')
 

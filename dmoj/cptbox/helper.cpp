@@ -56,36 +56,6 @@ inline unsigned int get_seccomp_arch(int type) {
     return 0;
 }
 
-pt_debugger *get_ptdebugger(int type) {
-    switch (type) {
-#ifdef HAS_DEBUGGER_X86
-        case DEBUGGER_X86:
-            return new pt_debugger_x86();
-#endif
-#ifdef HAS_DEBUGGER_X64
-        case DEBUGGER_X64:
-            return new pt_debugger_x64();
-#endif
-#ifdef HAS_DEBUGGER_X86_ON_X64
-        case DEBUGGER_X86_ON_X64:
-            return new pt_debugger_x86_on_x64();
-#endif
-#ifdef HAS_DEBUGGER_X32
-        case DEBUGGER_X32:
-            return new pt_debugger_x32();
-#endif
-#ifdef HAS_DEBUGGER_ARM
-        case DEBUGGER_ARM:
-            return new pt_debugger_arm();
-#endif
-#ifdef HAS_DEBUGGER_ARM64
-        case DEBUGGER_ARM64:
-            return new pt_debugger_arm64();
-#endif
-    }
-    return NULL;
-}
-
 inline void setrlimit2(int resource, rlim_t cur, rlim_t max) {
     rlimit limit;
     limit.rlim_cur = cur;

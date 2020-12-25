@@ -29,29 +29,11 @@
 #include <seccomp.h>
 #endif
 
-#if defined(__amd64__)
-#   define HAS_DEBUGGER_X64
-#   define HAS_DEBUGGER_X86_ON_X64
-#   define HAS_DEBUGGER_X32
-#elif defined(__i386__)
-#   define HAS_DEBUGGER_X86
-#endif
-
-#if defined(__arm64__) || defined(__aarch64__)
-#   define HAS_DEBUGGER_ARM
-#   define HAS_DEBUGGER_ARM64
-#elif defined(__arm__)
-#   define HAS_DEBUGGER_ARM
-#endif
-
-#if defined(__arm__) || defined(__arm64__) || defined(__aarch64__)
-#   define PTBOX_NEED_PRE_POST_SYSCALL
-#endif
-
 #if PTBOX_FREEBSD
 #include "ext_freebsd.h"
 #else
 #include "ext_linux.h"
+#include <sys/user.h>
 #endif
 
 #define MAX_SYSCALL 568
@@ -69,6 +51,16 @@
 #define PTBOX_EXIT_NORMAL 0
 #define PTBOX_EXIT_PROTECTION 1
 #define PTBOX_EXIT_SEGFAULT 2
+
+#define PTBOX_ABI_X86 0
+#define PTBOX_ABI_X64 1
+#define PTBOX_ABI_X32 2
+#define PTBOX_ABI_ARM 3
+#define PTBOX_ABI_ARM64 5
+
+#if !PTBOX_FREEBSD && defined(__amd64__)
+#   include "ptdebug_x64.h"
+#endif
 
 inline void timespec_add(struct timespec *a, struct timespec *b, struct timespec *result) {
     result->tv_sec = a->tv_sec + b->tv_sec ;
@@ -138,29 +130,29 @@ class pt_debugger {
 public:
     pt_debugger();
 
-    virtual int syscall() = 0;
-    virtual void syscall(int) = 0;
-    virtual long result() = 0;
-    virtual void result(long) = 0;
-    virtual long arg0() = 0;
-    virtual long arg1() = 0;
-    virtual long arg2() = 0;
-    virtual long arg3() = 0;
-    virtual long arg4() = 0;
-    virtual long arg5() = 0;
-    virtual void arg0(long) = 0;
-    virtual void arg1(long) = 0;
-    virtual void arg2(long) = 0;
-    virtual void arg3(long) = 0;
-    virtual void arg4(long) = 0;
-    virtual void arg5(long) = 0;
+    int syscall();
+    void syscall(int);
+    long result();
+    void result(long);
+    long arg0();
+    long arg1();
+    long arg2();
+    long arg3();
+    long arg4();
+    long arg5();
+    void arg0(long);
+    void arg1(long);
+    void arg2(long);
+    void arg3(long);
+    void arg4(long);
+    void arg5(long);
 
-    virtual long peek_reg(int reg);
-    virtual void poke_reg(int reg, long data);
+    long peek_reg(int reg);
+    void poke_reg(int reg, long data);
 
-    virtual bool is_exit(int syscall) = 0;
-    virtual int getpid_syscall() = 0;
-    int execve_syscall() { return execve_id; }
+    bool is_exit(int syscall);
+    int getpid_syscall();
+    int execve_syscall();
 
     void set_process(pt_process *);
     virtual void new_process();
@@ -183,18 +175,22 @@ public:
     }
 #endif
 
-    virtual void pre_syscall();
-    virtual void post_syscall();
+    void pre_syscall();
+    void post_syscall();
+    int abi() { return abi_; }
 
     void on_return(pt_syscall_return_callback callback, void *context) {
         on_return_callback = callback;
         on_return_context = context;
     }
-protected:
+private:
     pt_process *process;
     pt_syscall_return_callback on_return_callback;
     void *on_return_context;
     int execve_id;
+    int abi_;
+    pt_regs regs;
+    bool regs_changed;
     std::map<pid_t, int> syscall_;
     bool use_peekdata = false;
     virtual char *readstr_peekdata(unsigned long addr, size_t max_size);
@@ -203,171 +199,6 @@ protected:
 #endif
     friend class pt_process;
 };
-
-#ifdef HAS_DEBUGGER_X86
-class pt_debugger_x86 : public pt_debugger {
-public:
-    pt_debugger_x86();
-
-    virtual int syscall();
-    virtual void syscall(int);
-    virtual long result();
-    virtual void result(long);
-    virtual long arg0();
-    virtual long arg1();
-    virtual long arg2();
-    virtual long arg3();
-    virtual long arg4();
-    virtual long arg5();
-    virtual void arg0(long);
-    virtual void arg1(long);
-    virtual void arg2(long);
-    virtual void arg3(long);
-    virtual void arg4(long);
-    virtual void arg5(long);
-    virtual bool is_exit(int syscall);
-    virtual int getpid_syscall();
-};
-#endif
-
-#ifdef HAS_DEBUGGER_X64
-class pt_debugger_x64 : public pt_debugger {
-public:
-    pt_debugger_x64();
-
-    virtual int syscall();
-    virtual void syscall(int);
-    virtual long result();
-    virtual void result(long);
-    virtual long arg0();
-    virtual long arg1();
-    virtual long arg2();
-    virtual long arg3();
-    virtual long arg4();
-    virtual long arg5();
-    virtual void arg0(long);
-    virtual void arg1(long);
-    virtual void arg2(long);
-    virtual void arg3(long);
-    virtual void arg4(long);
-    virtual void arg5(long);
-    virtual bool is_exit(int syscall);
-    virtual int getpid_syscall();
-};
-#endif
-
-#ifdef HAS_DEBUGGER_X86_ON_X64
-class pt_debugger_x86_on_x64 : public pt_debugger_x64 {
-public:
-    pt_debugger_x86_on_x64();
-
-    virtual int syscall();
-    virtual void syscall(int);
-    virtual long result();
-    virtual void result(long);
-    virtual long arg0();
-    virtual long arg1();
-    virtual long arg2();
-    virtual long arg3();
-    virtual long arg4();
-    virtual long arg5();
-    virtual void arg0(long);
-    virtual void arg1(long);
-    virtual void arg2(long);
-    virtual void arg3(long);
-    virtual void arg4(long);
-    virtual void arg5(long);
-    virtual bool is_exit(int syscall);
-    virtual int getpid_syscall();
-
-    virtual long peek_reg(int);
-    virtual void poke_reg(int, long);
-};
-#endif
-
-#ifdef HAS_DEBUGGER_X32
-class pt_debugger_x32 : public pt_debugger_x64 {
-public:
-    virtual int syscall();
-};
-#endif
-
-#ifdef HAS_DEBUGGER_ARM
-class pt_debugger_arm : public pt_debugger {
-public:
-    pt_debugger_arm();
-
-    virtual int syscall();
-    virtual void syscall(int);
-    virtual long result();
-    virtual void result(long);
-    virtual long arg0();
-    virtual long arg1();
-    virtual long arg2();
-    virtual long arg3();
-    virtual long arg4();
-    virtual long arg5();
-    virtual void arg0(long);
-    virtual void arg1(long);
-    virtual void arg2(long);
-    virtual void arg3(long);
-    virtual void arg4(long);
-    virtual void arg5(long);
-    virtual bool is_exit(int syscall);
-    virtual int getpid_syscall();
-
-    virtual long peek_reg(int);
-    virtual void poke_reg(int, long);
-
-    virtual void pre_syscall();
-    virtual void post_syscall();
-
-protected:
-    union {
-        unsigned long arm64_reg[34];
-        uint32_t arm32_reg[18];
-    };
-    bool arm_reg_changed;
-};
-#endif
-
-#ifdef HAS_DEBUGGER_ARM64
-class pt_debugger_arm64 : public pt_debugger_arm {
-public:
-    pt_debugger_arm64();
-
-    virtual int syscall();
-    virtual long result();
-    virtual void result(long);
-    virtual long arg0();
-    virtual long arg1();
-    virtual long arg2();
-    virtual long arg3();
-    virtual long arg4();
-    virtual long arg5();
-    virtual void arg0(long);
-    virtual void arg1(long);
-    virtual void arg2(long);
-    virtual void arg3(long);
-    virtual void arg4(long);
-    virtual void arg5(long);
-    virtual bool is_exit(int syscall);
-    virtual int getpid_syscall();
-
-    virtual long peek_reg(int);
-    virtual void poke_reg(int, long);
-
-    virtual void pre_syscall();
-    virtual void post_syscall();
-
-protected:
-    union {
-        unsigned long arm64_reg[34];
-        uint32_t arm32_reg[18];
-    };
-    bool arm64_reg_changed;
-};
-#endif
 
 pt_process *pt_alloc_process(pt_debugger *);
 void pt_free_process(pt_process *);

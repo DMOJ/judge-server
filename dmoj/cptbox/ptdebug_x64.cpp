@@ -3,16 +3,13 @@
 #include "ptbox.h"
 
 #ifdef __amd64__
+#include <elf.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ptrace.h>
 #include <sys/uio.h>
-
-#ifndef NT_PRSTATUS
-#   define NT_PRSTATUS 1
-#endif
 
 #ifndef __X32_SYSCALL_BIT
 #   define __X32_SYSCALL_BIT 0x40000000UL

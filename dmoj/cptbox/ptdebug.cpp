@@ -57,38 +57,6 @@ void pt_debugger::settid(pid_t tid) {
 }
 #endif
 
-long pt_debugger::peek_reg(int idx) {
-#if PTBOX_FREEBSD
-    return ((reg_type*)&bsd_converted_regs)[idx];
-#else
-    long res;
-    errno = 0;
-    res = ptrace(PTRACE_PEEKUSER, tid, sizeof(long) * idx, 0);
-    if (res == -1 && errno)
-        perror("ptrace(PTRACE_PEEKUSER)");
-    return res;
-#endif
-}
-
-void pt_debugger::poke_reg(int idx, long data) {
-#if PTBOX_FREEBSD
-    ((reg_type*)&bsd_converted_regs)[idx] = data;
-
-    struct reg bsd_regs;
-
-    // Update bsd_regs with latest regs, since not all are mapped by map_regs_from_linux and we don't want
-    // garbage to be written to the other registers.
-    // Alternatively we could be mapping them in map_regs, but that'd be more fragile and less easy (there are
-    // some registers, like r_trapno on FreeBSD, that have no real equivalent on Linux, and vice-versa).
-    ptrace(PT_GETREGS, tid, (caddr_t) &bsd_regs, 0);
-
-    map_regs_from_linux(&bsd_regs, &bsd_converted_regs);
-    ptrace(PT_SETREGS, tid, (caddr_t) &bsd_regs, 0);
-#else
-    ptrace(PTRACE_POKEUSER, tid, sizeof(long) * idx, data);
-#endif
-}
-
 #if PTBOX_FREEBSD
 typedef int ptrace_read_t;
 #else

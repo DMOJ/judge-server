@@ -63,6 +63,8 @@ enum {
 
 #if !PTBOX_FREEBSD && defined(__amd64__)
 #   include "ptdebug_x64.h"
+#elif !PTBOX_FREEBSD && (defined(__arm64__) || defined(__aarch64__))
+#   include "ptdebug_arm64.h"
 #endif
 
 inline void timespec_add(struct timespec *a, struct timespec *b, struct timespec *result) {
@@ -149,9 +151,6 @@ public:
     void arg3(long);
     void arg4(long);
     void arg5(long);
-
-    long peek_reg(int reg);
-    void poke_reg(int reg, long data);
 
     bool is_exit(int syscall);
     int getpid_syscall();

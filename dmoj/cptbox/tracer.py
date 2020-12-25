@@ -71,7 +71,7 @@ class AdvancedDebugger(Debugger):
 
     @property
     def skip_syscall_id(self):
-        return translator[sys_getpid][_SYSCALL_INDICIES[self.abi]]
+        return translator[sys_getpid][_SYSCALL_INDICIES[self.abi]][0]
 
     def get_syscall_name(self, syscall):
         callname = 'unknown'

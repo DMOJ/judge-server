@@ -132,7 +132,7 @@ int pt_debugger::getpid_syscall() {
     return 39;
 }
 
-int pt_debugger::execve_syscall() {
+int pt_debugger::first_execve_syscall() {
     return 59;
 }
 #endif /* __amd64__ */

@@ -157,7 +157,7 @@ public:
 
     bool is_exit(int syscall);
     int getpid_syscall();
-    int execve_syscall();
+    int first_execve_syscall();
 
     void set_process(pt_process *);
     virtual void new_process();

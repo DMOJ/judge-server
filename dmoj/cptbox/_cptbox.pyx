@@ -83,10 +83,12 @@ cdef extern from 'ptbox.h' nogil:
         PTBOX_ABI_X32
         PTBOX_ABI_ARM
         PTBOX_ABI_ARM64
+        PTBOX_ABI_COUNT
 
     cdef bool debugger_supports_abi "pt_debugger::supports_abi" (int)
 
 ALL_ABIS = [PTBOX_ABI_X86, PTBOX_ABI_X64, PTBOX_ABI_X32, PTBOX_ABI_ARM, PTBOX_ABI_ARM64]
+assert len(ALL_ABIS) == PTBOX_ABI_COUNT
 SUPPORTED_ABIS = list(filter(debugger_supports_abi, ALL_ABIS))
 
 cdef extern from 'helper.h' nogil:
@@ -117,10 +119,10 @@ cdef extern from 'helper.h' nogil:
 
 
 cdef extern from 'fcntl.h' nogil:
-    cdef int _AT_FDCWD "AT_FDCWD"
+    cpdef enum:
+        AT_FDCWD
 
 MAX_SYSCALL_NUMBER = MAX_SYSCALL
-AT_FDCWD = _AT_FDCWD
 
 cdef int pt_child(void *context) nogil:
     cdef child_config *config = <child_config*> context

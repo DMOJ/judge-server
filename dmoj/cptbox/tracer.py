@@ -18,7 +18,6 @@ from dmoj.utils.os_ext import (
     ARCH_X32,
     ARCH_X64,
     ARCH_X86,
-    INTERPRETER_ARCH,
     file_arch,
     find_exe_in_path,
     oom_score_adj,
@@ -38,7 +37,7 @@ _SYSCALL_INDICIES[PTBOX_ABI_X32] = 2
 _SYSCALL_INDICIES[PTBOX_ABI_ARM] = 3
 _SYSCALL_INDICIES[PTBOX_ABI_ARM64] = 5
 
-_arch_map = {
+_abi_map = {
     ARCH_X86: PTBOX_ABI_X86,
     ARCH_X64: PTBOX_ABI_X64,
     ARCH_X32: PTBOX_ABI_X32,
@@ -98,6 +97,7 @@ class TracedPopen(Process):
     def __init__(
             self,
             args,
+            avoid_seccomp=False,
             executable=None,
             security=None,
             time=0,
@@ -116,8 +116,7 @@ class TracedPopen(Process):
             wall_time=None,
     ):
         self._executable = executable or find_exe_in_path(args[0])
-        self._abi = _arch_map.get(file_arch(self._executable), 0)
-        index = _SYSCALL_INDICIES[self._abi]
+        self._avoid_seccomp = security is None or avoid_seccomp
 
         self._args = args
         self._chdir = cwd
@@ -147,19 +146,21 @@ class TracedPopen(Process):
         if security is None:
             self._trace_syscalls = False
         else:
-            for i in range(SYSCALL_COUNT):
-                handler = security.get(i, DISALLOW)
-                for call in translator[i][index]:
-                    if call is None:
-                        continue
-                    if isinstance(handler, int):
-                        self._syscall_whitelist[call] = handler == ALLOW
-                    else:
-                        if not callable(handler):
-                            raise ValueError('Handler not callable: ' + handler)
-                        self._callbacks[call] = handler
-                        handler = _CALLBACK
-                    self._handler(call, handler)
+            for abi in SUPPORTED_ABIS:
+                index = _SYSCALL_INDICIES[abi]
+                for i in range(SYSCALL_COUNT):
+                    handler = security.get(i, DISALLOW)
+                    for call in translator[i][index]:
+                        if call is None:
+                            continue
+                        if isinstance(handler, int):
+                            self._syscall_whitelist[call] = handler == ALLOW
+                        else:
+                            if not callable(handler):
+                                raise ValueError('Handler not callable: ' + handler)
+                            self._callbacks[call] = handler
+                            handler = _CALLBACK
+                        self._handler(abi, call, handler)
 
         self._died = threading.Event()
         self._spawned_or_errored = threading.Event()
@@ -176,8 +177,8 @@ class TracedPopen(Process):
         if self._spawn_error:
             raise self._spawn_error
 
-    def _arch_for_seccomp(self):
-        return self._abi
+    def _abi_for_seccomp(self):
+        return _abi_map.get(file_arch(self._executable), 0)
 
     def wait(self):
         self._died.wait()
@@ -376,4 +377,4 @@ class TracedPopen(Process):
 
 
 def can_debug(arch):
-    return arch in _arch_map
+    return _abi_map.get(arch) in SUPPORTED_ABIS

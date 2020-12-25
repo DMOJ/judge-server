@@ -1,10 +1,13 @@
-from typing import Any, Callable
+from typing import Any, Callable, List
 
-DEBUGGER_X86: int
-DEBUGGER_X64: int
-DEBUGGER_X32: int
-DEBUGGER_ARM: int
-DEBUGGER_ARM64: int
+PTBOX_ABI_X86: int
+PTBOX_ABI_X64: int
+PTBOX_ABI_X32: int
+PTBOX_ABI_ARM: int
+PTBOX_ABI_ARM64: int
+
+ALL_ABIS: List[int]
+SUPPORTED_ABIS: List[int]
 
 Debugger: Any
 Process: Any

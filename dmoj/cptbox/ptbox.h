@@ -52,11 +52,14 @@
 #define PTBOX_EXIT_PROTECTION 1
 #define PTBOX_EXIT_SEGFAULT 2
 
-#define PTBOX_ABI_X86 0
-#define PTBOX_ABI_X64 1
-#define PTBOX_ABI_X32 2
-#define PTBOX_ABI_ARM 3
-#define PTBOX_ABI_ARM64 4
+enum {
+    PTBOX_ABI_X86 = 0,
+    PTBOX_ABI_X64,
+    PTBOX_ABI_X32,
+    PTBOX_ABI_ARM,
+    PTBOX_ABI_ARM64,
+    PTBOX_ABI_COUNT,
+};
 
 #if !PTBOX_FREEBSD && defined(__amd64__)
 #   include "ptdebug_x64.h"
@@ -99,7 +102,7 @@ public:
     pt_process(pt_debugger *debugger);
     void set_callback(pt_handler_callback, void *context);
     void set_event_proc(pt_event_callback, void *context);
-    int set_handler(int syscall, int handler);
+    int set_handler(int abi, int syscall, int handler);
     bool trace_syscalls() { return _trace_syscalls; }
     void trace_syscalls(bool value) { _trace_syscalls = value; }
     int spawn(pt_fork_handler child, void *context);
@@ -114,7 +117,7 @@ protected:
     int protection_fault(int syscall);
 private:
     pid_t pid;
-    int handler[MAX_SYSCALL];
+    int handler[PTBOX_ABI_COUNT][MAX_SYSCALL];
     pt_handler_callback callback;
     void *context;
     struct timespec exec_time, start_time, end_time;
@@ -178,6 +181,7 @@ public:
     void pre_syscall();
     void post_syscall();
     int abi() { return abi_; }
+    static bool supports_abi(int);
 
     void on_return(pt_syscall_return_callback callback, void *context) {
         on_return_callback = callback;
@@ -199,7 +203,4 @@ private:
 #endif
     friend class pt_process;
 };
-
-pt_process *pt_alloc_process(pt_debugger *);
-void pt_free_process(pt_process *);
 #endif

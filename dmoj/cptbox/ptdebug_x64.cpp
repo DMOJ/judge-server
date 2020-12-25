@@ -18,6 +18,16 @@
 #   define __X32_SYSCALL_BIT 0x40000000UL
 #endif
 
+bool pt_debugger::supports_abi(int abi) {
+    switch (abi) {
+        case PTBOX_ABI_X86:
+        case PTBOX_ABI_X64:
+        case PTBOX_ABI_X32:
+            return true;
+    }
+    return false;
+}
+
 void pt_debugger::pre_syscall() {
     struct iovec iovec;
     iovec.iov_base = &regs;

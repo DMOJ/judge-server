@@ -3,11 +3,14 @@ from libc.stdio cimport FILE, fopen, fclose, fgets, sprintf
 from libc.stdlib cimport malloc, free, strtoul
 from libc.string cimport strncmp, strlen
 from libc.signal cimport SIGTRAP, SIGXCPU
+from libcpp cimport bool
 from posix.resource cimport rusage
 from posix.types cimport pid_t
+from typing import List
 
 __all__ = ['Process', 'Debugger', 'bsd_get_proc_cwd', 'bsd_get_proc_fdno', 'MAX_SYSCALL_NUMBER',
-           'AT_FDCWD', 'PTBOX_ABI_X86', 'PTBOX_ABI_X64', 'PTBOX_ABI_X32', 'PTBOX_ABI_ARM', 'PTBOX_ABI_ARM64']
+           'AT_FDCWD', 'ALL_ABIS', 'SUPPORTED_ABIS',
+           'PTBOX_ABI_X86', 'PTBOX_ABI_X64', 'PTBOX_ABI_X32', 'PTBOX_ABI_ARM', 'PTBOX_ABI_ARM64']
 
 
 cdef extern from 'ptbox.h' nogil:
@@ -49,7 +52,7 @@ cdef extern from 'ptbox.h' nogil:
         pt_process(pt_debugger *) except +
         void set_callback(pt_handler_callback callback, void* context)
         void set_event_proc(pt_event_callback, void *context)
-        int set_handler(int syscall, int handler)
+        int set_handler(int abi, int syscall, int handler)
         bint trace_syscalls()
         void trace_syscalls(bint value)
         int spawn(pt_fork_handler, void *context)
@@ -81,6 +84,11 @@ cdef extern from 'ptbox.h' nogil:
         PTBOX_ABI_ARM
         PTBOX_ABI_ARM64
 
+    cdef bool debugger_supports_abi "pt_debugger::supports_abi" (int)
+
+ALL_ABIS = [PTBOX_ABI_X86, PTBOX_ABI_X64, PTBOX_ABI_X32, PTBOX_ABI_ARM, PTBOX_ABI_ARM64]
+SUPPORTED_ABIS = list(filter(debugger_supports_abi, ALL_ABIS))
+
 cdef extern from 'helper.h' nogil:
     cdef struct child_config:
         unsigned long memory # affects only sbrk heap
@@ -99,7 +107,8 @@ cdef extern from 'helper.h' nogil:
         int max_fd
         int *fds
         int debugger_type
-        bint trace_syscalls
+        bint avoid_seccomp
+        int abi_for_seccomp
         bint *syscall_whitelist
 
     void cptbox_closefrom(int lowfd)
@@ -347,6 +356,7 @@ cdef class Process:
     cdef public unsigned int _cpu_time
     cdef public int _nproc, _fsize
     cdef unsigned long _max_memory
+    cdef public bint _avoid_seccomp
 
     @classmethod
     def create_debugger(cls) -> Debugger:
@@ -389,8 +399,8 @@ cdef class Process:
                     self._cpu_time_exceeded()
         return 0
 
-    cpdef _handler(self, syscall, handler):
-        self.process.set_handler(syscall, handler)
+    cpdef _handler(self, abi, syscall, handler):
+        self.process.set_handler(abi, syscall, handler)
 
     cpdef _protection_fault(self, syscall):
         pass
@@ -398,7 +408,7 @@ cdef class Process:
     cpdef _cpu_time_exceeded(self):
         pass
 
-    cpdef _arch_for_seccomp(self):
+    cpdef _abi_for_seccomp(self):
         raise NotImplementedError()
 
     cpdef _spawn(self, file, args, env=(), chdir='', fds=None):
@@ -422,13 +432,14 @@ cdef class Process:
         else:
             config.max_fd = 2 + len(fds)
             config.fds = <int*>malloc(sizeof(int) * len(fds))
-            for i in xrange(len(fds)):
+            for i in range(len(fds)):
                 config.fds[i] = fds[i]
 
-        config.debugger_type = self._arch_for_seccomp()
-        config.trace_syscalls = self._trace_syscalls
+        config.avoid_seccomp = self._avoid_seccomp
+        if not self._avoid_seccomp:
+            config.abi_for_seccomp = self._abi_for_seccomp()
         config.syscall_whitelist = <bint*>malloc(sizeof(bint) * MAX_SYSCALL_NUMBER)
-        for i in xrange(MAX_SYSCALL_NUMBER):
+        for i in range(MAX_SYSCALL_NUMBER):
             # We have to force exit syscalls to trap, so that we can be notified
             # that the process spawned successfully when using `seccomp`. Otherwise,
             # a simple assembly program could terminate without ever trapping.

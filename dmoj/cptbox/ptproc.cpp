@@ -16,14 +16,6 @@
 
 #include "ptbox.h"
 
-pt_process *pt_alloc_process(pt_debugger *debugger) {
-    return new pt_process(debugger);
-}
-
-void pt_free_process(pt_process *process) {
-    delete process;
-}
-
 pt_process::pt_process(pt_debugger *debugger) :
     pid(0), callback(NULL), context(NULL), debugger(debugger),
     event_proc(NULL), event_context(NULL), _trace_syscalls(true),
@@ -60,10 +52,10 @@ void pt_process::set_event_proc(pt_event_callback callback, void *context) {
     this->event_context = context;
 }
 
-int pt_process::set_handler(int syscall, int handler) {
+int pt_process::set_handler(int abi, int syscall, int handler) {
     if (syscall >= MAX_SYSCALL || syscall < 0)
         return 1;
-    this->handler[syscall] = handler;
+    this->handler[abi][syscall] = handler;
     return 0;
 }
 
@@ -265,7 +257,7 @@ int pt_process::monitor() {
 
             if (in_syscall) {
                 if (syscall >= 0 && syscall < MAX_SYSCALL) {
-                    switch (handler[syscall]) {
+                    switch (handler[debugger->abi()][syscall]) {
                         case PTBOX_HANDLER_ALLOW:
                             break;
                         case PTBOX_HANDLER_STDOUTERR: {

@@ -19,7 +19,8 @@ struct child_config {
     int max_fd;
     int *fds;
     int debugger_type;
-    int trace_syscalls;
+    int avoid_seccomp;
+    int abi_for_seccomp;
     int *syscall_whitelist;
 };
 

@@ -103,7 +103,7 @@ int cptbox_child_run(const struct child_config *config) {
     kill(getpid(), SIGSTOP);
 
 #if PTBOX_SECCOMP
-    if (config->trace_syscalls) {
+    if (!config->avoid_seccomp) {
         scmp_filter_ctx ctx = seccomp_init(SCMP_ACT_TRACE(0));
         if (!ctx) {
             fprintf(stderr, "Failed to initialize seccomp context!");
@@ -111,7 +111,7 @@ int cptbox_child_run(const struct child_config *config) {
         }
 
         int rc;
-        unsigned int child_arch = get_seccomp_arch(config->debugger_type);
+        unsigned int child_arch = get_seccomp_arch(config->abi_for_seccomp);
         if (child_arch != seccomp_arch_native()) {
             if ((rc = seccomp_arch_add(ctx, child_arch))) {
                 fprintf(stderr, "seccomp_arch_add: %s\n", strerror(-rc));

@@ -303,6 +303,7 @@
 438	pidfd_getfd
 439	faccessat2
 440	process_madvise
+441	epoll_pwait2
 512	rt_sigaction
 513	rt_sigreturn
 514	ioctl

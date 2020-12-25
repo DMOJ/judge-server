@@ -155,7 +155,6 @@ public:
     void arg4(long);
     void arg5(long);
 
-    int getpid_syscall();
     int first_execve_syscall();
 
     void set_process(pt_process *);

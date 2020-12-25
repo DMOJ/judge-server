@@ -189,20 +189,18 @@ def bsd_get_proc_fdno(pid_t pid, int fd):
 cdef class Debugger:
     cdef pt_debugger *thisptr
     cdef object on_return_callback
-    cdef int _getpid_syscall
     cdef int _debugger_type
 
     def __cinit__(self):
         self.thisptr = new pt_debugger()
-        self._getpid_syscall = self.thisptr.getpid_syscall()
+
+    property skip_syscall_id:
+        def __get__(self):
+            raise NotImplementedError()
 
     property type:
         def __get__(self):
             return self._debugger_type
-
-    property getpid_syscall:
-        def __get__(self):
-            return self._getpid_syscall
 
     property syscall:
         def __get__(self):
@@ -212,7 +210,7 @@ cdef class Debugger:
             # When using seccomp, -1 as syscall means "skip"; when we are not,
             # we swap with a harmless syscall without side-effects (getpid).
             if not PTBOX_SECCOMP and value == -1:
-                self.thisptr.syscall(self._getpid_syscall)
+                self.thisptr.syscall(self.skip_syscall_id)
             else:
                 self.thisptr.syscall(value)
 

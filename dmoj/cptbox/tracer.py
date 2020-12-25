@@ -9,7 +9,7 @@ from typing import List, Optional
 
 from dmoj.cptbox._cptbox import *
 from dmoj.cptbox.handlers import ALLOW, DISALLOW, _CALLBACK
-from dmoj.cptbox.syscalls import SYSCALL_COUNT, by_id, translator, sys_exit, sys_exit_group
+from dmoj.cptbox.syscalls import SYSCALL_COUNT, by_id, translator, sys_exit, sys_exit_group, sys_getpid
 from dmoj.error import InternalError
 from dmoj.utils.communicate import safe_communicate as _safe_communicate
 from dmoj.utils.os_ext import (
@@ -68,6 +68,10 @@ class AdvancedDebugger(Debugger):
     @property
     def address_bits(self):
         return _address_bits.get(self.abi)
+
+    @property
+    def skip_syscall_id(self):
+        return translator[sys_getpid][_SYSCALL_INDICIES[self.abi]]
 
     def get_syscall_name(self, syscall):
         callname = 'unknown'

@@ -102,10 +102,6 @@ MAKE_ACCESSOR(arg5, r5, regs[5])
 
 #undef MAKE_ACCESSOR
 
-int pt_debugger::getpid_syscall() {
-    return 172;
-}
-
 int pt_debugger::first_execve_syscall() {
     // There is no orig_x8 on ARM64, and execve clears all registers.
     // Therefore, 0 is the register value when coming out of a system call.

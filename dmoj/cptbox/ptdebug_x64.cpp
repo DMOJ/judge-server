@@ -124,10 +124,6 @@ MAKE_ACCESSOR(arg5, ebp, r9)
 
 #undef MAKE_ACCESSOR
 
-int pt_debugger::getpid_syscall() {
-    return 39;
-}
-
 int pt_debugger::first_execve_syscall() {
     return 59;
 }

@@ -31,24 +31,23 @@
 inline unsigned int get_seccomp_arch(int type) {
     switch (type) {
 #ifdef SCMP_ARCH_X86
-        case DEBUGGER_X86:
-        case DEBUGGER_X86_ON_X64:
+        case PTBOX_ABI_X86:
             return SCMP_ARCH_X86;
 #endif
 #ifdef SCMP_ARCH_X86_64
-        case DEBUGGER_X64:
+        case PTBOX_ABI_X64:
             return SCMP_ARCH_X86_64;
 #endif
 #ifdef SCMP_ARCH_X32
-        case DEBUGGER_X32:
+        case PTBOX_ABI_X32:
             return SCMP_ARCH_X32;
 #endif
 #ifdef SCMP_ARCH_ARM
-        case DEBUGGER_ARM:
+        case PTBOX_ABI_ARM:
             return SCMP_ARCH_ARM;
 #endif
 #ifdef SCMP_ARCH_AARCH64
-        case DEBUGGER_ARM64:
+        case PTBOX_ABI_ARM64:
             return SCMP_ARCH_AARCH64;
 #endif
     }

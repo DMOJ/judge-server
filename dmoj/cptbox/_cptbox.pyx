@@ -7,8 +7,7 @@ from posix.resource cimport rusage
 from posix.types cimport pid_t
 
 __all__ = ['Process', 'Debugger', 'bsd_get_proc_cwd', 'bsd_get_proc_fdno', 'MAX_SYSCALL_NUMBER',
-           'DEBUGGER_X86', 'DEBUGGER_X64', 'DEBUGGER_X86_ON_X64', 'DEBUGGER_X32', 'DEBUGGER_ARM',
-           'DEBUGGER_ARM64', 'AT_FDCWD']
+           'AT_FDCWD', 'PTBOX_ABI_X86', 'PTBOX_ABI_X64', 'PTBOX_ABI_X32', 'PTBOX_ABI_ARM', 'PTBOX_ABI_ARM64']
 
 
 cdef extern from 'ptbox.h' nogil:
@@ -43,6 +42,7 @@ cdef extern from 'ptbox.h' nogil:
         pid_t getpid()
         pid_t gettid()
         int getpid_syscall()
+        int abi()
         void on_return(pt_syscall_return_callback callback, void *context)
 
     cdef cppclass pt_process:
@@ -74,6 +74,13 @@ cdef extern from 'ptbox.h' nogil:
     cdef int PTBOX_EXIT_PROTECTION
     cdef int PTBOX_EXIT_SEGFAULT
 
+    cpdef enum:
+        PTBOX_ABI_X86
+        PTBOX_ABI_X64
+        PTBOX_ABI_X32
+        PTBOX_ABI_ARM
+        PTBOX_ABI_ARM64
+
 cdef extern from 'helper.h' nogil:
     cdef struct child_config:
         unsigned long memory # affects only sbrk heap
@@ -99,14 +106,6 @@ cdef extern from 'helper.h' nogil:
     int cptbox_child_run(child_config *)
     char *_bsd_get_proc_cwd "bsd_get_proc_cwd"(pid_t pid)
     char *_bsd_get_proc_fdno "bsd_get_proc_fdno"(pid_t pid, int fdno)
-
-    cpdef enum:
-        DEBUGGER_X86
-        DEBUGGER_X64
-        DEBUGGER_X86_ON_X64
-        DEBUGGER_X32
-        DEBUGGER_ARM
-        DEBUGGER_ARM64
 
 
 cdef extern from 'fcntl.h' nogil:
@@ -183,6 +182,10 @@ cdef class Debugger:
     cdef object on_return_callback
     cdef int _getpid_syscall
     cdef int _debugger_type
+
+    def __cinit__(self):
+        self.thisptr = new pt_debugger()
+        self._getpid_syscall = self.thisptr.getpid_syscall()
 
     property type:
         def __get__(self):
@@ -316,6 +319,10 @@ cdef class Debugger:
         def __get__(self):
             return self.thisptr.getpid()
 
+    property abi:
+        def __get__(self):
+            return self.thisptr.abi()
+
     def is_exit(self, syscall):
         return self.thisptr.is_exit(syscall)
 
@@ -341,7 +348,11 @@ cdef class Process:
     cdef public int _nproc, _fsize
     cdef unsigned long _max_memory
 
-    def __cinit__(self, int debugger, debugger_type, *args, **kwargs):
+    @classmethod
+    def create_debugger(cls) -> Debugger:
+        return Debugger()
+
+    def __cinit__(self, debugger_type, *args, **kwargs):
         self._child_memory = self._child_address = 0
         self._child_stdin = self._child_stdout = self._child_stderr = -1
         self._cpu_time = 0
@@ -349,15 +360,8 @@ cdef class Process:
         self._nproc = -1
         self._signal = 0
 
-        self._debugger = new pt_debugger()
-        if not self._debugger:
-            raise ValueError('Unsupported debugger configuration')
-
-        self.debugger = <Debugger?>debugger_type()
-        self.debugger.thisptr = self._debugger
-        self.debugger._getpid_syscall = self._debugger.getpid_syscall()
-        self.debugger._debugger_type = debugger
-        self.process = new pt_process(self._debugger)
+        self.debugger = self.create_debugger()
+        self.process = new pt_process(self.debugger.thisptr)
         self.process.set_callback(pt_syscall_handler, <void*>self)
         self.process.set_event_proc(pt_event_handler, <void*>self)
 
@@ -394,6 +398,9 @@ cdef class Process:
     cpdef _cpu_time_exceeded(self):
         pass
 
+    cpdef _arch_for_seccomp(self):
+        raise NotImplementedError()
+
     cpdef _spawn(self, file, args, env=(), chdir='', fds=None):
         cdef child_config config
         config.address_space = self._child_address
@@ -418,7 +425,7 @@ cdef class Process:
             for i in xrange(len(fds)):
                 config.fds[i] = fds[i]
 
-        config.debugger_type = self.debugger._debugger_type
+        config.debugger_type = self._arch_for_seccomp()
         config.trace_syscalls = self._trace_syscalls
         config.syscall_whitelist = <bint*>malloc(sizeof(bint) * MAX_SYSCALL_NUMBER)
         for i in xrange(MAX_SYSCALL_NUMBER):

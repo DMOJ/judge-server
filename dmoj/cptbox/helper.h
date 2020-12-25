@@ -2,13 +2,6 @@
 #ifndef idABBEC9C1_3EF3_4A45_B187B10060CB9F85
 #define idABBEC9C1_3EF3_4A45_B187B10060CB9F85
 
-#define DEBUGGER_X86        0
-#define DEBUGGER_X64        1
-#define DEBUGGER_X86_ON_X64 2
-#define DEBUGGER_X32        3
-#define DEBUGGER_ARM        4
-#define DEBUGGER_ARM64      5
-
 struct child_config {
     unsigned long memory;
     unsigned long address_space;

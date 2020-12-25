@@ -56,7 +56,7 @@
 #define PTBOX_ABI_X64 1
 #define PTBOX_ABI_X32 2
 #define PTBOX_ABI_ARM 3
-#define PTBOX_ABI_ARM64 5
+#define PTBOX_ABI_ARM64 4
 
 #if !PTBOX_FREEBSD && defined(__amd64__)
 #   include "ptdebug_x64.h"

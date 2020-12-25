@@ -30,29 +30,28 @@ PIPE = subprocess.PIPE
 log = logging.getLogger('dmoj.cptbox')
 
 _PIPE_BUF = getattr(select, 'PIPE_BUF', 512)
-_SYSCALL_INDICIES: List[Optional[int]] = [None] * 7
+_SYSCALL_INDICIES: List[Optional[int]] = [None] * 5
 
-if 'freebsd' in sys.platform:
-    _SYSCALL_INDICIES[DEBUGGER_X64] = 4
-else:
-    _SYSCALL_INDICIES[DEBUGGER_X86] = 0
-    _SYSCALL_INDICIES[DEBUGGER_X86_ON_X64] = 0
-    _SYSCALL_INDICIES[DEBUGGER_X64] = 1
-    _SYSCALL_INDICIES[DEBUGGER_X32] = 2
-    _SYSCALL_INDICIES[DEBUGGER_ARM] = 3
-    _SYSCALL_INDICIES[DEBUGGER_ARM64] = 5
+_SYSCALL_INDICIES[PTBOX_ABI_X86] = 0
+_SYSCALL_INDICIES[PTBOX_ABI_X64] = 1
+_SYSCALL_INDICIES[PTBOX_ABI_X32] = 2
+_SYSCALL_INDICIES[PTBOX_ABI_ARM] = 3
+_SYSCALL_INDICIES[PTBOX_ABI_ARM64] = 5
 
-# (python arch, executable arch) -> debugger
 _arch_map = {
-    (ARCH_X86, ARCH_X86): DEBUGGER_X86,
-    (ARCH_X64, ARCH_X64): DEBUGGER_X64,
-    (ARCH_X64, ARCH_X86): DEBUGGER_X86_ON_X64,
-    (ARCH_X64, ARCH_X32): DEBUGGER_X32,
-    (ARCH_X32, ARCH_X32): DEBUGGER_X32,
-    (ARCH_X32, ARCH_X86): DEBUGGER_X86_ON_X64,
-    (ARCH_ARM, ARCH_ARM): DEBUGGER_ARM,
-    (ARCH_A64, ARCH_ARM): DEBUGGER_ARM,
-    (ARCH_A64, ARCH_A64): DEBUGGER_ARM64,
+    ARCH_X86: PTBOX_ABI_X86,
+    ARCH_X64: PTBOX_ABI_X64,
+    ARCH_X32: PTBOX_ABI_X32,
+    ARCH_ARM: PTBOX_ABI_ARM,
+    ARCH_A64: PTBOX_ABI_ARM64,
+}
+
+_address_bits = {
+    PTBOX_ABI_X86: 32,
+    PTBOX_ABI_X64: 64,
+    PTBOX_ABI_X32: 32,
+    PTBOX_ABI_ARM: 32,
+    PTBOX_ABI_ARM64: 64,
 }
 
 
@@ -67,9 +66,13 @@ class AdvancedDebugger(Debugger):
     def syscall_name(self):
         return self.get_syscall_name(self.syscall)
 
+    @property
+    def address_bits(self):
+        return _address_bits.get(self.abi)
+
     def get_syscall_name(self, syscall):
         callname = 'unknown'
-        index = self._syscall_index
+        index = _SYSCALL_INDICIES[self.abi]
         for id, call in enumerate(translator):
             if syscall in call[index]:
                 callname = by_id[id]
@@ -87,51 +90,35 @@ class AdvancedDebugger(Debugger):
         return utf8text(read)
 
 
-# SecurePopen is a subclass of a cython class, _cptbox.Process. Since it is exceedingly unwise
-# to do everything in cython, determining the debugger class is left to do here. However, since
-# the debugger is constructed in __cinit__, we have to pass the determined debugger class to
-# SecurePopen.__new__. While we can simply override __new__, many complication arises from having
-# different parameters to __new__ and __init__, the latter of which is given the *original* arguments
-# as passed to type.__call__. Hence, we use a metaclass to pass the extra debugger argument to both
-# __new__ and __init__.
-class TracedPopenMeta(type):
-    def __call__(self, argv, executable=None, *args, **kwargs):
-        executable = executable or find_exe_in_path(argv[0])
-        arch = file_arch(executable)
-        debugger = _arch_map.get((INTERPRETER_ARCH, arch))
-        if debugger is None:
-            raise RuntimeError('Executable type %s could not be debugged on Python type %s' % (arch, INTERPRETER_ARCH))
-        return super().__call__(debugger, self.debugger_type, argv, executable, *args, **kwargs)
-
-
-class TracedPopen(Process, metaclass=TracedPopenMeta):
-    debugger_type = AdvancedDebugger
+class TracedPopen(Process):
+    @classmethod
+    def create_debugger(cls):
+        return AdvancedDebugger()
 
     def __init__(
-        self,
-        debugger,
-        _,
-        args,
-        executable=None,
-        security=None,
-        time=0,
-        memory=0,
-        stdin=PIPE,
-        stdout=PIPE,
-        stderr=None,
-        env=None,
-        nproc=0,
-        fsize=0,
-        address_grace=4096,
-        data_grace=0,
-        personality=0,
-        cwd='',
-        fds=None,
-        wall_time=None,
+            self,
+            args,
+            executable=None,
+            security=None,
+            time=0,
+            memory=0,
+            stdin=PIPE,
+            stdout=PIPE,
+            stderr=None,
+            env=None,
+            nproc=0,
+            fsize=0,
+            address_grace=4096,
+            data_grace=0,
+            personality=0,
+            cwd='',
+            fds=None,
+            wall_time=None,
     ):
-        self._debugger_type = debugger
-        self._syscall_index = index = _SYSCALL_INDICIES[debugger]
         self._executable = executable or find_exe_in_path(args[0])
+        self._abi = _arch_map.get(file_arch(self._executable), 0)
+        index = _SYSCALL_INDICIES[self._abi]
+
         self._args = args
         self._chdir = cwd
         self._env = [
@@ -153,9 +140,6 @@ class TracedPopen(Process, metaclass=TracedPopenMeta):
         self._fds = fds
         self.__init_streams(stdin, stdout, stderr)
         self.protection_fault = None
-
-        self.debugger._syscall_index = index
-        self.debugger.address_bits = 64 if debugger in (DEBUGGER_X64, DEBUGGER_ARM64) else 32
 
         self._security = security
         self._callbacks = [None] * MAX_SYSCALL_NUMBER
@@ -191,6 +175,9 @@ class TracedPopen(Process, metaclass=TracedPopenMeta):
         self._spawned_or_errored.wait()
         if self._spawn_error:
             raise self._spawn_error
+
+    def _arch_for_seccomp(self):
+        return self._abi
 
     def wait(self):
         self._died.wait()
@@ -252,7 +239,7 @@ class TracedPopen(Process, metaclass=TracedPopenMeta):
         try:
             callback = self._callbacks[syscall]
         except IndexError:
-            if self._syscall_index == 3:
+            if self.debugger.abi == PTBOX_ABI_ARM:
                 # ARM-specific
                 return 0xF0000 < syscall < 0xF0006
             return False
@@ -389,4 +376,4 @@ class TracedPopen(Process, metaclass=TracedPopenMeta):
 
 
 def can_debug(arch):
-    return (INTERPRETER_ARCH, arch) in _arch_map
+    return arch in _arch_map

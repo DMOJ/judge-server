@@ -155,7 +155,6 @@ public:
     void arg4(long);
     void arg5(long);
 
-    bool is_exit(int syscall);
     int getpid_syscall();
     int first_execve_syscall();
 

@@ -124,10 +124,6 @@ MAKE_ACCESSOR(arg5, ebp, r9)
 
 #undef MAKE_ACCESSOR
 
-bool pt_debugger::is_exit(int syscall) {
-    return syscall == 231 || syscall == 60;
-}
-
 int pt_debugger::getpid_syscall() {
     return 39;
 }

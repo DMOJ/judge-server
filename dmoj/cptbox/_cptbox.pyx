@@ -38,7 +38,6 @@ cdef extern from 'ptbox.h' nogil:
         void arg3(long)
         void arg4(long)
         void arg5(long)
-        bint is_exit(int)
         char *readstr(unsigned long, size_t)
         void freestr(char*)
         pid_t getpid()
@@ -333,9 +332,6 @@ cdef class Debugger:
         def __get__(self):
             return self.thisptr.abi()
 
-    def is_exit(self, syscall):
-        return self.thisptr.is_exit(syscall)
-
     def on_return(self, callback):
         self.on_return_callback = callback
         self.thisptr.on_return(pt_syscall_return_handler, <void*>self)
@@ -409,7 +405,7 @@ cdef class Process:
     cpdef _cpu_time_exceeded(self):
         pass
 
-    cpdef _abi_for_seccomp(self):
+    cpdef _get_seccomp_abi_whitelist(self):
         raise NotImplementedError()
 
     cpdef _spawn(self, file, args, env=(), chdir='', fds=None):
@@ -438,16 +434,10 @@ cdef class Process:
 
         config.avoid_seccomp = not self.use_seccomp
         if self.use_seccomp:
-            config.abi_for_seccomp = self._abi_for_seccomp()
+            config.abi_for_seccomp, whitelist = self._get_seccomp_abi_whitelist()
             config.seccomp_whitelist = <bint*>malloc(sizeof(bint) * MAX_SYSCALL_NUMBER)
             for i in range(MAX_SYSCALL_NUMBER):
-                # We have to force exit syscalls to trap, so that we can be notified
-                # that the process spawned successfully when using `seccomp`. Otherwise,
-                # a simple assembly program could terminate without ever trapping.
-                if not self.debugger.is_exit(i):
-                    config.seccomp_whitelist[i] = self._syscall_whitelist[i]
-                else:
-                    config.seccomp_whitelist[i] = False
+                config.seccomp_whitelist[i] = i < len(whitelist) and whitelist[i]
 
         if self.process.spawn(pt_child, &config):
             raise RuntimeError('failed to spawn child')

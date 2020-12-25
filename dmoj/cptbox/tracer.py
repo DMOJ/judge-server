@@ -9,7 +9,7 @@ from typing import List, Optional
 
 from dmoj.cptbox._cptbox import *
 from dmoj.cptbox.handlers import ALLOW, DISALLOW, _CALLBACK
-from dmoj.cptbox.syscalls import SYSCALL_COUNT, by_id, translator
+from dmoj.cptbox.syscalls import SYSCALL_COUNT, by_id, translator, sys_exit, sys_exit_group
 from dmoj.error import InternalError
 from dmoj.utils.communicate import safe_communicate as _safe_communicate
 from dmoj.utils.os_ext import (
@@ -142,7 +142,6 @@ class TracedPopen(Process):
 
         self._security = security
         self._callbacks = [None] * MAX_SYSCALL_NUMBER
-        self._syscall_whitelist = [False] * MAX_SYSCALL_NUMBER
         if security is None:
             self._trace_syscalls = False
         else:
@@ -153,9 +152,7 @@ class TracedPopen(Process):
                     for call in translator[i][index]:
                         if call is None:
                             continue
-                        if isinstance(handler, int):
-                            self._syscall_whitelist[call] = handler == ALLOW
-                        else:
+                        if not isinstance(handler, int):
                             if not callable(handler):
                                 raise ValueError('Handler not callable: ' + handler)
                             self._callbacks[call] = handler
@@ -177,8 +174,22 @@ class TracedPopen(Process):
         if self._spawn_error:
             raise self._spawn_error
 
-    def _abi_for_seccomp(self):
-        return _abi_map.get(file_arch(self._executable), 0)
+    def _get_seccomp_abi_whitelist(self):
+        abi = _abi_map.get(file_arch(self._executable), 0)
+        whitelist = [False] * MAX_SYSCALL_NUMBER
+        index = _SYSCALL_INDICIES[abi]
+        for i in range(SYSCALL_COUNT):
+            # Ensure at least one syscall traps.
+            # Otherwise, a simple assembly program could terminate without ever trapping.
+            if i in (sys_exit, sys_exit_group):
+                continue
+            handler = self._security.get(i, DISALLOW)
+            for call in translator[i][index]:
+                if call is None:
+                    continue
+                if isinstance(handler, int):
+                    whitelist[call] = handler == ALLOW
+        return abi, whitelist
 
     def wait(self):
         self._died.wait()

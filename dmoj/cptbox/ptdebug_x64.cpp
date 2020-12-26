@@ -3,6 +3,7 @@
 #include "ptbox.h"
 
 #ifdef __amd64__
+#include <asm/unistd.h>
 #include <elf.h>
 #include <errno.h>
 #include <stdio.h>
@@ -10,10 +11,6 @@
 #include <string.h>
 #include <sys/ptrace.h>
 #include <sys/uio.h>
-
-#ifndef __X32_SYSCALL_BIT
-#   define __X32_SYSCALL_BIT 0x40000000UL
-#endif
 
 bool pt_debugger::supports_abi(int abi) {
     switch (abi) {

@@ -53,7 +53,7 @@ void pt_debugger::post_syscall() {
     }
 }
 
-#define INVALID_ABI(source) fprintf(stderr, source ": Invalid ABI\n")
+#define INVALID_ABI(source) fprintf(stderr, source ": Invalid ABI\n"), abort()
 
 int pt_debugger::syscall() {
     switch (abi_) {
@@ -65,7 +65,6 @@ int pt_debugger::syscall() {
             return regs.x64.orig_rax;
         default:
             INVALID_ABI("ptdebug_x64.cpp:syscall getter");
-            return -1;
     }
 }
 
@@ -95,7 +94,7 @@ void pt_debugger::syscall(int id) {
             case PTBOX_ABI_X64: \
                 return regs.x64.x64_name; \
             default: \
-                return INVALID_ABI("ptdebug_x64.cpp:" #method " getter"); \
+                INVALID_ABI("ptdebug_x64.cpp:" #method " getter"); \
         } \
     } \
     \

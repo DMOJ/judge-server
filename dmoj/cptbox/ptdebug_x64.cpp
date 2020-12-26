@@ -53,7 +53,7 @@ void pt_debugger::post_syscall() {
     }
 }
 
-#define INVALID_ABI(source) fprintf(stderr, source ": Invalid ABI\n"), abort()
+#define UNKNOWN_ABI(source) fprintf(stderr, source ": Invalid ABI\n"), abort()
 
 int pt_debugger::syscall() {
     switch (abi_) {
@@ -66,7 +66,7 @@ int pt_debugger::syscall() {
         case PTBOX_ABI_INVALID:
             return -1;
         default:
-            INVALID_ABI("ptdebug_x64.cpp:syscall getter");
+            UNKNOWN_ABI("ptdebug_x64.cpp:syscall getter");
     }
 }
 
@@ -85,7 +85,7 @@ void pt_debugger::syscall(int id) {
         case PTBOX_ABI_INVALID:
             return;
         default:
-            INVALID_ABI("ptdebug_x64.cpp:syscall setter");
+            UNKNOWN_ABI("ptdebug_x64.cpp:syscall setter");
     }
 }
 
@@ -100,7 +100,7 @@ void pt_debugger::syscall(int id) {
             case PTBOX_ABI_INVALID: \
                 return -1; \
             default: \
-                INVALID_ABI("ptdebug_x64.cpp:" #method " getter"); \
+                UNKNOWN_ABI("ptdebug_x64.cpp:" #method " getter"); \
         } \
     } \
     \
@@ -117,7 +117,7 @@ void pt_debugger::syscall(int id) {
             case PTBOX_ABI_INVALID: \
                 return; \
             default: \
-                INVALID_ABI("ptdebug_x64.cpp:" #method " setter"); \
+                UNKNOWN_ABI("ptdebug_x64.cpp:" #method " setter"); \
         } \
     }
 

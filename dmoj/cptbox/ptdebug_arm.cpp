@@ -89,11 +89,10 @@ MAKE_ACCESSOR(arg5, ARM_r5)
 #undef MAKE_ACCESSOR
 
 int pt_debugger::first_execve_syscall_id() {
-    // execve is actually 11, but...
     // There is no orig_r8 on ARM, and execve clears all registers.
     // Therefore, 0 is the register value when coming out of a system call.
     // We will pretend 0 is execve.
-    return 0;
+    return process->use_seccomp() ? 11 : 0;
 }
 
 #endif /* __arm__ */

@@ -104,6 +104,6 @@ int pt_debugger::first_execve_syscall() {
     // There is no orig_x8 on ARM64, and execve clears all registers.
     // Therefore, 0 is the register value when coming out of a system call.
     // We will pretend 0 is execve if we aren't using seccomp.
-    return process->seccomp() ? 221 : 0;
+    return process->use_seccomp() ? 221 : 0;
 }
 #endif /* defined(__arm64__) || defined(__aarch64__) */

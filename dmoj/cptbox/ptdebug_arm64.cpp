@@ -100,7 +100,7 @@ MAKE_ACCESSOR(arg5, r5, regs[5])
 
 #undef MAKE_ACCESSOR
 
-int pt_debugger::first_execve_syscall() {
+int pt_debugger::first_execve_syscall_id() {
     // There is no orig_x8 on ARM64, and execve clears all registers.
     // Therefore, 0 is the register value when coming out of a system call.
     // We will pretend 0 is execve if we aren't using seccomp.

@@ -155,7 +155,7 @@ public:
     void arg4(long);
     void arg5(long);
 
-    int first_execve_syscall();
+    int first_execve_syscall_id();
 
     void set_process(pt_process *);
     virtual void new_process();

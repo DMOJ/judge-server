@@ -127,7 +127,7 @@ MAKE_ACCESSOR(arg5, ebp, r9)
 
 #undef MAKE_ACCESSOR
 
-int pt_debugger::first_execve_syscall() {
+int pt_debugger::first_execve_syscall_id() {
     return 59;
 }
 #endif /* __amd64__ */

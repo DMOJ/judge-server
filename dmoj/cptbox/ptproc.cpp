@@ -227,7 +227,7 @@ int pt_process::monitor() {
                 // (after which they'll go down the PTBOX_HANDLER_ALLOW branch below).
 
                 // Allow exactly one invocation of `execve`, no questions asked.
-                if (syscall == debugger->first_execve_syscall()) {
+                if (syscall == debugger->first_execve_syscall_id()) {
                     if (execve_allowed) {
                         execve_allowed = false;
                         goto resume_process;
@@ -241,8 +241,8 @@ int pt_process::monitor() {
                     goto resume_process;
                 }
 
-                if ((_use_seccomp && syscall != debugger->first_execve_syscall() /* always true */) ||
-                    (!_use_seccomp && !in_syscall && syscall == debugger->first_execve_syscall() &&
+                if ((_use_seccomp && syscall != debugger->first_execve_syscall_id() /* always true */) ||
+                    (!_use_seccomp && !in_syscall && syscall == debugger->first_execve_syscall_id() &&
                      debugger->result() == 0)) {
                   spawned = this->_initialized = true;
                   goto resume_process;

@@ -28,21 +28,21 @@ void pt_debugger::pre_syscall() {
     iovec.iov_len = sizeof regs;
     if (ptrace(PTRACE_GETREGSET, tid, NT_PRSTATUS, &iovec)) {
         perror("ptrace(PTRACE_GETREGSET)");
-    }
-
-    if (iovec.iov_len == sizeof regs.x86) {
-        abi_ = PTBOX_ABI_X86;
-    } else if (regs.x64.orig_rax & __X32_SYSCALL_BIT) {
-        abi_ = PTBOX_ABI_X32;
+        abi_ = PTBOX_ABI_INVALID;
     } else {
-        abi_ = PTBOX_ABI_X64;
+        if (iovec.iov_len == sizeof regs.x86) {
+            abi_ = PTBOX_ABI_X86;
+        } else if (regs.x64.orig_rax & __X32_SYSCALL_BIT) {
+            abi_ = PTBOX_ABI_X32;
+        } else {
+            abi_ = PTBOX_ABI_X64;
+        }
+        regs_changed = false;
     }
-
-    regs_changed = false;
 }
 
 void pt_debugger::post_syscall() {
-    if (!regs_changed)
+    if (!regs_changed || abi_ == PTBOX_ABI_INVALID)
         return;
 
     struct iovec iovec;
@@ -93,6 +93,8 @@ void pt_debugger::syscall(int id) {
             case PTBOX_ABI_X32: \
             case PTBOX_ABI_X64: \
                 return regs.x64.x64_name; \
+            case PTBOX_ABI_INVALID: \
+                return -1; \
             default: \
                 INVALID_ABI("ptdebug_x64.cpp:" #method " getter"); \
         } \
@@ -107,6 +109,8 @@ void pt_debugger::syscall(int id) {
             case PTBOX_ABI_X32: \
             case PTBOX_ABI_X64: \
                 regs.x64.x64_name = value; \
+                return; \
+            case PTBOX_ABI_INVALID: \
                 return; \
             default: \
                 INVALID_ABI("ptdebug_x64.cpp:" #method " setter"); \

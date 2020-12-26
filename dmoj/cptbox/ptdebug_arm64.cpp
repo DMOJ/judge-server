@@ -23,14 +23,15 @@ void pt_debugger::pre_syscall() {
     iovec.iov_len = sizeof regs;
     if (ptrace(PTRACE_GETREGSET, tid, NT_PRSTATUS, &iovec)) {
         perror("ptrace(PTRACE_GETREGSET)");
+        abi_ = PTBOX_ABI_INVALID;
+    } else {
+        abi_ = iovec.iov_len == sizeof regs.arm32 ? PTBOX_ABI_ARM : PTBOX_ABI_ARM64;
+        regs_changed = false;
     }
-
-    abi_ = iovec.iov_len == sizeof regs.arm32 ? PTBOX_ABI_ARM : PTBOX_ABI_ARM64;
-    regs_changed = false;
 }
 
 void pt_debugger::post_syscall() {
-    if (!regs_changed)
+    if (!regs_changed || abi_ == PTBOX_ABI_INVALID)
         return;
 
     struct iovec iovec;
@@ -41,7 +42,7 @@ void pt_debugger::post_syscall() {
     }
 }
 
-#define INVALID_ABI(source) fprintf(stderr, source ": Invalid ABI\n"), abort()
+#define UNKNOWN_ABI(source) fprintf(stderr, source ": Invalid ABI\n"), abort()
 
 int pt_debugger::syscall() {
     switch (abi_) {
@@ -49,8 +50,10 @@ int pt_debugger::syscall() {
             return regs.arm32.r7;
         case PTBOX_ABI_ARM64:
             return regs.arm64.regs[8];
+        case PTBOX_ABI_INVALID:
+            return -1;
         default:
-            INVALID_ABI("ptdebug_arm64.cpp:syscall getter");
+            UNKNOWN_ABI("ptdebug_arm64.cpp:syscall getter");
     }
 }
 
@@ -70,8 +73,10 @@ void pt_debugger::syscall(int id) {
                 return regs.arm32.arm32_name; \
             case PTBOX_ABI_ARM64: \
                 return regs.arm64.arm64_name; \
+            case PTBOX_ABI_INVALID: \
+                return -1; \
             default: \
-                INVALID_ABI("ptdebug_arm64.cpp:" #method " getter"); \
+                UNKNOWN_ABI("ptdebug_arm64.cpp:" #method " getter"); \
         } \
     } \
     \
@@ -84,8 +89,10 @@ void pt_debugger::syscall(int id) {
             case PTBOX_ABI_ARM64: \
                 regs.arm64.arm64_name = value; \
                 return; \
+            case PTBOX_ABI_INVALID: \
+                return; \
             default: \
-                INVALID_ABI("ptdebug_arm64.cpp:" #method " setter"); \
+                UNKNOWN_ABI("ptdebug_arm64.cpp:" #method " setter"); \
         } \
     }
 

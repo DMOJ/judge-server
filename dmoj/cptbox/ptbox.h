@@ -59,6 +59,7 @@ enum {
     PTBOX_ABI_ARM,
     PTBOX_ABI_ARM64,
     PTBOX_ABI_COUNT,
+    PTBOX_ABI_INVALID = -1,
 };
 
 #if !PTBOX_FREEBSD && defined(__amd64__)

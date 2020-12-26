@@ -71,9 +71,13 @@ class AdvancedDebugger(Debugger):
 
     @property
     def noop_syscall_id(self):
+        if self.abi == PTBOX_ABI_INVALID:
+            raise ValueError('ABI is invalid')
         return translator[sys_getpid][_SYSCALL_INDICIES[self.abi]][0]
 
     def get_syscall_name(self, syscall):
+        if self.abi == PTBOX_ABI_INVALID:
+            return 'failed to read registers'
         callname = 'unknown'
         index = _SYSCALL_INDICIES[self.abi]
         for id, call in enumerate(translator):

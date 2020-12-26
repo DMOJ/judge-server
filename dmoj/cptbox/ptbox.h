@@ -65,6 +65,8 @@ enum {
 #   include "ptdebug_x64.h"
 #elif !PTBOX_FREEBSD && defined(__i386__)
 #   include "ptdebug_x86.h"
+#elif !PTBOX_FREEBSD && defined(__arm__)
+#   include "ptdebug_arm.h"
 #elif !PTBOX_FREEBSD && (defined(__arm64__) || defined(__aarch64__))
 #   include "ptdebug_arm64.h"
 #endif

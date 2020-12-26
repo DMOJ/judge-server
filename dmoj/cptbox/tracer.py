@@ -34,15 +34,23 @@ _SYSCALL_INDICIES[PTBOX_ABI_X86] = 0
 _SYSCALL_INDICIES[PTBOX_ABI_X64] = 1
 _SYSCALL_INDICIES[PTBOX_ABI_X32] = 2
 _SYSCALL_INDICIES[PTBOX_ABI_ARM] = 3
+_SYSCALL_INDICIES[PTBOX_ABI_FREEBSD_X64] = 4
 _SYSCALL_INDICIES[PTBOX_ABI_ARM64] = 5
 
-_abi_map = {
-    ARCH_X86: PTBOX_ABI_X86,
-    ARCH_X64: PTBOX_ABI_X64,
-    ARCH_X32: PTBOX_ABI_X32,
-    ARCH_ARM: PTBOX_ABI_ARM,
-    ARCH_A64: PTBOX_ABI_ARM64,
-}
+FREEBSD = sys.platform.startswith('freebsd')
+
+if FREEBSD:
+    _abi_map = {
+        ARCH_X64: PTBOX_ABI_FREEBSD_X64,
+    }
+else:
+    _abi_map = {
+        ARCH_X86: PTBOX_ABI_X86,
+        ARCH_X64: PTBOX_ABI_X64,
+        ARCH_X32: PTBOX_ABI_X32,
+        ARCH_ARM: PTBOX_ABI_ARM,
+        ARCH_A64: PTBOX_ABI_ARM64,
+    }
 
 _address_bits = {
     PTBOX_ABI_X86: 32,
@@ -50,6 +58,7 @@ _address_bits = {
     PTBOX_ABI_X32: 32,
     PTBOX_ABI_ARM: 32,
     PTBOX_ABI_ARM64: 64,
+    PTBOX_ABI_FREEBSD_X64: 64,
 }
 
 
@@ -152,10 +161,10 @@ class TracedPopen(Process):
             for abi in SUPPORTED_ABIS:
                 index = _SYSCALL_INDICIES[abi]
                 for i in range(SYSCALL_COUNT):
-                    handler = security.get(i, DISALLOW)
                     for call in translator[i][index]:
                         if call is None:
                             continue
+                        handler = security.get(i, DISALLOW)
                         if not isinstance(handler, int):
                             if not callable(handler):
                                 raise ValueError('Handler not callable: ' + handler)
@@ -315,13 +324,15 @@ class TracedPopen(Process):
 
             self._spawned_or_errored.set()
 
-        # Adjust OOM score on the child process, sacrificing it before the judge process.
-        try:
-            oom_score_adj(OOM_SCORE_ADJ_MAX, self.pid)
-        except Exception:
-            import traceback
+        if not FREEBSD:
+            # Adjust OOM score on the child process, sacrificing it before the judge process.
+            # This is not possible on FreeBSD.
+            try:
+                oom_score_adj(OOM_SCORE_ADJ_MAX, self.pid)
+            except Exception:
+                import traceback
 
-            traceback.print_exc()
+                traceback.print_exc()
 
         # TODO(tbrindus): this code should be the same as [self.returncode], so it shouldn't be duplicated
         code = self._monitor()

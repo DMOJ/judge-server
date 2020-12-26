@@ -21,7 +21,7 @@ except IOError:
     is_wsl = False
 
 # Allow manually disabling seccomp on old kernels. WSL doesn't have seccomp.
-has_seccomp = not is_wsl and os.environ.get('DMOJ_USE_SECCOMP') != 'no'
+has_seccomp = sys.platform.startswith('linux') and not is_wsl and os.environ.get('DMOJ_USE_SECCOMP') != 'no'
 
 try:
     from Cython.Build import cythonize
@@ -95,7 +95,7 @@ class build_ext_dmoj(build_ext, object):
 
 
 cptbox_sources = ['_cptbox.pyx', 'helper.cpp', 'ptdebug.cpp', 'ptdebug_x86.cpp', 'ptdebug_x64.cpp',
-                  'ptdebug_arm.cpp', 'ptdebug_arm64.cpp', 'ptproc.cpp']
+                  'ptdebug_arm.cpp', 'ptdebug_arm64.cpp', 'ptdebug_freebsd_x64.cpp', 'ptproc.cpp']
 
 if not has_pyx:
     cptbox_sources[0] = cptbox_sources[0].replace('.pyx', '.cpp')

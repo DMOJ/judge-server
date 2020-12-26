@@ -196,8 +196,8 @@ int pt_process::monitor() {
         if ((WSTOPSIG(status) == SIGTRAP && (status >> 16) == PTRACE_EVENT_SECCOMP) ||
                 WSTOPSIG(status) == (0x80 | SIGTRAP)) {
             debugger->settid(pid);
-            debugger->pre_syscall();
 #endif
+            debugger->pre_syscall();
 #if defined(__FreeBSD_version) && __FreeBSD_version >= 1002501
             int syscall = lwpi.pl_syscall_code;
 #else

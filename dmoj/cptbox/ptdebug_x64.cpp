@@ -2,7 +2,7 @@
 #define _BSD_SOURCE
 #include "ptbox.h"
 
-#ifdef __amd64__
+#if !PTBOX_FREEBSD && defined(__amd64__)
 #include <asm/unistd.h>
 #include <elf.h>
 #include <errno.h>

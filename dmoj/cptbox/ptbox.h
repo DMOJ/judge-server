@@ -20,7 +20,7 @@
 #endif
 
 #ifndef PTBOX_NO_SECCOMP
-#define PTBOX_SECCOMP !PTBOX_FREEBSD
+#define PTBOX_SECCOMP 1
 #else
 #define PTBOX_SECCOMP 0
 #endif
@@ -57,11 +57,14 @@ enum {
     PTBOX_ABI_X32,
     PTBOX_ABI_ARM,
     PTBOX_ABI_ARM64,
+    PTBOX_ABI_FREEBSD_X64,
     PTBOX_ABI_COUNT,
     PTBOX_ABI_INVALID = -1,
 };
 
-#if !PTBOX_FREEBSD && defined(__amd64__)
+#if PTBOX_FREEBSD && defined(__amd64__)
+#   include "ptdebug_freebsd_x64.h"
+#elif !PTBOX_FREEBSD && defined(__amd64__)
 #   include "ptdebug_x64.h"
 #elif !PTBOX_FREEBSD && defined(__i386__)
 #   include "ptdebug_x86.h"
@@ -203,11 +206,12 @@ private:
     int abi_;
     ptbox_regs regs;
     bool regs_changed;
-    std::map<pid_t, int> syscall_;
     bool use_peekdata = false;
     char *readstr_peekdata(unsigned long addr, size_t max_size);
 #if PTBOX_FREEBSD
-    linux_pt_reg bsd_converted_regs;
+    int _bsd_syscall;
+#else
+    std::map<pid_t, int> syscall_;
 #endif
     friend class pt_process;
 };

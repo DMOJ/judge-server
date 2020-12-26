@@ -197,7 +197,7 @@ cdef class Debugger:
     def __dealloc__(self):
         del self.thisptr
 
-    property skip_syscall_id:
+    property noop_syscall_id:
         def __get__(self):
             raise NotImplementedError()
 
@@ -209,7 +209,7 @@ cdef class Debugger:
             # When using seccomp, -1 as syscall means "skip"; when we are not,
             # we swap with a harmless syscall without side-effects (getpid).
             if not PTBOX_SECCOMP and value == -1:
-                self.thisptr.syscall(self.skip_syscall_id)
+                self.thisptr.syscall(self.noop_syscall_id)
             else:
                 self.thisptr.syscall(value)
 

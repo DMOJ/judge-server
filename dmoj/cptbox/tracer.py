@@ -70,7 +70,7 @@ class AdvancedDebugger(Debugger):
         return _address_bits.get(self.abi)
 
     @property
-    def skip_syscall_id(self):
+    def noop_syscall_id(self):
         return translator[sys_getpid][_SYSCALL_INDICIES[self.abi]][0]
 
     def get_syscall_name(self, syscall):

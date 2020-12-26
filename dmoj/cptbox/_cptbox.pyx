@@ -404,43 +404,48 @@ cdef class Process:
 
     cpdef _spawn(self, file, args, env=(), chdir='', fds=None):
         cdef child_config config
-        config.address_space = self._child_address
-        config.memory = self._child_memory
-        config.cpu_time = self._cpu_time
-        config.nproc = self._nproc
-        config.fsize = self._fsize
-        config.personality = self._child_personality
-        config.file = file
-        config.dir = chdir
-        config.stdin_ = self._child_stdin
-        config.stdout_ = self._child_stdout
-        config.stderr_ = self._child_stderr
-        config.argv = alloc_string_array(args)
-        config.envp = alloc_string_array(env)
-        if fds is None or not len(fds):
-            config.max_fd = 2
-            config.fds = NULL
-        else:
-            config.max_fd = 2 + len(fds)
-            config.fds = <int*>malloc(sizeof(int) * len(fds))
-            for i in range(len(fds)):
-                config.fds[i] = fds[i]
+        config.argv = NULL
+        config.envp = NULL
+        config.fds = NULL
+        config.seccomp_whitelist = NULL
 
-        config.use_seccomp = self.use_seccomp
-        if config.use_seccomp:
-            config.abi_for_seccomp, whitelist = self._get_seccomp_abi_whitelist()
-            config.seccomp_whitelist = <bint*>malloc(sizeof(bint) * MAX_SYSCALL_NUMBER)
-            for i in range(MAX_SYSCALL_NUMBER):
-                config.seccomp_whitelist[i] = i < len(whitelist) and whitelist[i]
-        else:
-            config.seccomp_whitelist = NULL
+        try:
+            config.address_space = self._child_address
+            config.memory = self._child_memory
+            config.cpu_time = self._cpu_time
+            config.nproc = self._nproc
+            config.fsize = self._fsize
+            config.personality = self._child_personality
+            config.file = file
+            config.dir = chdir
+            config.stdin_ = self._child_stdin
+            config.stdout_ = self._child_stdout
+            config.stderr_ = self._child_stderr
+            config.argv = alloc_string_array(args)
+            config.envp = alloc_string_array(env)
+            if fds is None or not len(fds):
+                config.max_fd = 2
+            else:
+                config.max_fd = 2 + len(fds)
+                config.fds = <int*>malloc(sizeof(int) * len(fds))
+                for i in range(len(fds)):
+                    config.fds[i] = fds[i]
 
-        if self.process.spawn(pt_child, &config):
-            raise RuntimeError('failed to spawn child')
-        free(config.argv)
-        free(config.envp)
-        free(config.fds)
-        free(config.seccomp_whitelist)
+            config.use_seccomp = self.use_seccomp
+            if config.use_seccomp:
+                config.abi_for_seccomp, whitelist = self._get_seccomp_abi_whitelist()
+                assert len(whitelist) == MAX_SYSCALL_NUMBER
+                config.seccomp_whitelist = <bint*>malloc(sizeof(bint) * MAX_SYSCALL_NUMBER)
+                for i in range(MAX_SYSCALL_NUMBER):
+                    config.seccomp_whitelist[i] = whitelist[i]
+
+            if self.process.spawn(pt_child, &config):
+                raise RuntimeError('failed to spawn child')
+        finally:
+            free(config.argv)
+            free(config.envp)
+            free(config.fds)
+            free(config.seccomp_whitelist)
 
     cpdef _monitor(self):
         cdef int exitcode

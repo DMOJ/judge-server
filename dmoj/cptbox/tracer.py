@@ -98,9 +98,8 @@ class AdvancedDebugger(Debugger):
 
 
 class TracedPopen(Process):
-    @classmethod
-    def create_debugger(cls):
-        return AdvancedDebugger()
+    def create_debugger(self):
+        return AdvancedDebugger(self)
 
     def __init__(
             self,

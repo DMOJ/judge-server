@@ -189,12 +189,17 @@ def bsd_get_proc_fdno(pid_t pid, int fd):
     return res
 
 
+cdef class Process
+
+
 cdef class Debugger:
     cdef pt_debugger *thisptr
+    cdef Process process
     cdef object on_return_callback
 
-    def __cinit__(self):
+    def __cinit__(self, Process process):
         self.thisptr = new pt_debugger()
+        self.process = process
 
     def __dealloc__(self):
         del self.thisptr
@@ -210,7 +215,7 @@ cdef class Debugger:
         def __set__(self, value):
             # When using seccomp, -1 as syscall means "skip"; when we are not,
             # we swap with a harmless syscall without side-effects (getpid).
-            if not PTBOX_SECCOMP and value == -1:
+            if not self.process.use_seccomp and value == -1:
                 self.thisptr.syscall(self.noop_syscall_id)
             else:
                 self.thisptr.syscall(value)
@@ -352,9 +357,8 @@ cdef class Process:
     cdef public int _nproc, _fsize
     cdef unsigned long _max_memory
 
-    @classmethod
-    def create_debugger(cls) -> Debugger:
-        return Debugger()
+    def create_debugger(self) -> Debugger:
+        return Debugger(self)
 
     def __cinit__(self, *args, **kwargs):
         self._child_memory = self._child_address = 0

@@ -426,17 +426,22 @@ cdef class Process:
             for i in range(len(fds)):
                 config.fds[i] = fds[i]
 
-        config.avoid_seccomp = not self.use_seccomp
         if self.use_seccomp:
+            config.avoid_seccomp = False
             config.abi_for_seccomp, whitelist = self._get_seccomp_abi_whitelist()
             config.seccomp_whitelist = <bint*>malloc(sizeof(bint) * MAX_SYSCALL_NUMBER)
             for i in range(MAX_SYSCALL_NUMBER):
                 config.seccomp_whitelist[i] = i < len(whitelist) and whitelist[i]
+        else:
+            config.avoid_seccomp = True
+            config.seccomp_whitelist = NULL
 
         if self.process.spawn(pt_child, &config):
             raise RuntimeError('failed to spawn child')
         free(config.argv)
         free(config.envp)
+        free(config.fds)
+        free(config.seccomp_whitelist)
 
     cpdef _monitor(self):
         cdef int exitcode

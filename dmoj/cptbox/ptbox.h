@@ -161,10 +161,9 @@ public:
     int first_execve_syscall_id();
 
     void set_process(pt_process *);
-    virtual void new_process();
-    virtual char *readstr(unsigned long addr, size_t max_size);
-    virtual void freestr(char *);
-    virtual ~pt_debugger();
+    void new_process();
+    char *readstr(unsigned long addr, size_t max_size);
+    void freestr(char *);
 
     pid_t gettid() { return tid; }
     pid_t tid; // TODO maybe call super instead
@@ -200,7 +199,7 @@ private:
     bool regs_changed;
     std::map<pid_t, int> syscall_;
     bool use_peekdata = false;
-    virtual char *readstr_peekdata(unsigned long addr, size_t max_size);
+    char *readstr_peekdata(unsigned long addr, size_t max_size);
 #if PTBOX_FREEBSD
     linux_pt_reg bsd_converted_regs;
 #endif

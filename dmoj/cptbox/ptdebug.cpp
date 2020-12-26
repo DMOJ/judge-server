@@ -205,5 +205,3 @@ char *pt_debugger::readstr_peekdata(unsigned long addr, size_t max_size) {
 void pt_debugger::freestr(char *buf) {
     free(buf);
 }
-
-pt_debugger::~pt_debugger() {}

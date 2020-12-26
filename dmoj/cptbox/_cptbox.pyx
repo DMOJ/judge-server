@@ -60,8 +60,8 @@ cdef extern from 'ptbox.h' nogil:
         double wall_clock_time()
         const rusage *getrusage()
         bint was_initialized()
-        bool seccomp()
-        void seccomp(bool enabled)
+        bool use_seccomp()
+        void use_seccomp(bool enabled)
 
     cdef bint PTBOX_FREEBSD
     cdef bint PTBOX_SECCOMP
@@ -108,7 +108,7 @@ cdef extern from 'helper.h' nogil:
         int stderr_
         int max_fd
         int *fds
-        bint avoid_seccomp
+        bool use_seccomp
         int abi_for_seccomp
         bint *seccomp_whitelist
 
@@ -193,6 +193,9 @@ cdef class Debugger:
 
     def __cinit__(self):
         self.thisptr = new pt_debugger()
+
+    def __dealloc__(self):
+        del self.thisptr
 
     property skip_syscall_id:
         def __get__(self):
@@ -336,7 +339,6 @@ cdef class Debugger:
 
 
 cdef class Process:
-    cdef pt_debugger *_debugger
     cdef pt_process *process
     cdef public Debugger debugger
     cdef readonly bint _exited
@@ -347,7 +349,6 @@ cdef class Process:
     cdef public unsigned int _cpu_time
     cdef public int _nproc, _fsize
     cdef unsigned long _max_memory
-    cdef public bint _avoid_seccomp
 
     @classmethod
     def create_debugger(cls) -> Debugger:
@@ -368,7 +369,6 @@ cdef class Process:
 
     def __dealloc__(self):
         del self.process
-        del self._debugger
 
     def _callback(self, syscall):
         return False
@@ -426,14 +426,13 @@ cdef class Process:
             for i in range(len(fds)):
                 config.fds[i] = fds[i]
 
-        if self.use_seccomp:
-            config.avoid_seccomp = False
+        config.use_seccomp = self.use_seccomp
+        if config.use_seccomp:
             config.abi_for_seccomp, whitelist = self._get_seccomp_abi_whitelist()
             config.seccomp_whitelist = <bint*>malloc(sizeof(bint) * MAX_SYSCALL_NUMBER)
             for i in range(MAX_SYSCALL_NUMBER):
                 config.seccomp_whitelist[i] = i < len(whitelist) and whitelist[i]
         else:
-            config.avoid_seccomp = True
             config.seccomp_whitelist = NULL
 
         if self.process.spawn(pt_child, &config):
@@ -453,10 +452,10 @@ cdef class Process:
 
     property use_seccomp:
         def __get__(self):
-            return self.process.seccomp()
+            return self.process.use_seccomp()
 
         def __set__(self, bool enabled):
-            self.process.seccomp(enabled)
+            self.process.use_seccomp(enabled)
 
     property was_initialized:
         def __get__(self):

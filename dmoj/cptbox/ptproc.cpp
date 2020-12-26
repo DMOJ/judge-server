@@ -95,8 +95,8 @@ int pt_process::protection_fault(int syscall) {
     return PTBOX_EXIT_PROTECTION;
 }
 
-void pt_process::seccomp(bool enabled) {
-    _seccomp = PTBOX_SECCOMP && enabled;
+void pt_process::use_seccomp(bool enabled) {
+    _use_seccomp = PTBOX_SECCOMP && enabled;
 }
 
 int pt_process::monitor() {
@@ -168,7 +168,7 @@ int pt_process::monitor() {
 #else
             // This is right after SIGSTOP is received:
             ptrace(PTRACE_SETOPTIONS, pid, NULL,
-                   PTRACE_O_TRACEEXIT | (_seccomp ? PTRACE_O_TRACESECCOMP : PTRACE_O_TRACESYSGOOD) |
+                   PTRACE_O_TRACEEXIT | (_use_seccomp ? PTRACE_O_TRACESECCOMP : PTRACE_O_TRACESYSGOOD) |
 #ifdef PTRACE_O_EXITKILL // Kill all sandboxed process automatically when process exits.
                    PTRACE_O_EXITKILL |
 #endif
@@ -241,8 +241,8 @@ int pt_process::monitor() {
                     goto resume_process;
                 }
 
-                if ((_seccomp && syscall != debugger->first_execve_syscall() /* always true */) ||
-                    (!_seccomp && !in_syscall && syscall == debugger->first_execve_syscall() &&
+                if ((_use_seccomp && syscall != debugger->first_execve_syscall() /* always true */) ||
+                    (!_use_seccomp && !in_syscall && syscall == debugger->first_execve_syscall() &&
                      debugger->result() == 0)) {
                   spawned = this->_initialized = true;
                   goto resume_process;
@@ -283,7 +283,7 @@ int pt_process::monitor() {
 
             // Syscall has "ended". What we do here varies a bit between if we're using seccomp
             // or not, since with seccomp we will have no return event.
-            if ((_seccomp || !in_syscall) && debugger->on_return_callback) {
+            if ((_use_seccomp || !in_syscall) && debugger->on_return_callback) {
                 debugger->on_return_callback(debugger->on_return_context, syscall);
                 debugger->on_return_callback = NULL;
                 debugger->on_return_context = NULL;
@@ -341,7 +341,7 @@ resume_process:
 #if PTBOX_FREEBSD
         ptrace(_trace_syscalls ? PT_SYSCALL : PT_CONTINUE, pid, (caddr_t) 1, first ? 0 : signal);
 #else
-        ptrace(_trace_syscalls && !PTBOX_SECCOMP ? PTRACE_SYSCALL : PTRACE_CONT, pid, NULL, first ? NULL : (void*) signal);
+        ptrace(_trace_syscalls && !_use_seccomp ? PTRACE_SYSCALL : PTRACE_CONT, pid, NULL, first ? NULL : (void*) signal);
 #endif
         first = false;
     }

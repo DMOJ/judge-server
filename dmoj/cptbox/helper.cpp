@@ -103,7 +103,7 @@ int cptbox_child_run(const struct child_config *config) {
     kill(getpid(), SIGSTOP);
 
 #if PTBOX_SECCOMP
-    if (!config->avoid_seccomp) {
+    if (config->use_seccomp) {
         scmp_filter_ctx ctx = seccomp_init(SCMP_ACT_TRACE(0));
         if (!ctx) {
             fprintf(stderr, "Failed to initialize seccomp context!");

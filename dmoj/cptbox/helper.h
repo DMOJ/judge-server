@@ -18,7 +18,7 @@ struct child_config {
     int stderr_;
     int max_fd;
     int *fds;
-    int avoid_seccomp;
+    bool use_seccomp;
     int abi_for_seccomp;
     int *seccomp_whitelist;
 };

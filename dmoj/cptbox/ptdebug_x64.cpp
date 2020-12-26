@@ -63,6 +63,8 @@ int pt_debugger::syscall() {
             return regs.x64.orig_rax & ~__X32_SYSCALL_BIT;
         case PTBOX_ABI_X64:
             return regs.x64.orig_rax;
+        case PTBOX_ABI_INVALID:
+            return -1;
         default:
             INVALID_ABI("ptdebug_x64.cpp:syscall getter");
     }
@@ -79,6 +81,8 @@ void pt_debugger::syscall(int id) {
             return;
         case PTBOX_ABI_X64:
             regs.x64.orig_rax = id;
+            return;
+        case PTBOX_ABI_INVALID:
             return;
         default:
             INVALID_ABI("ptdebug_x64.cpp:syscall setter");

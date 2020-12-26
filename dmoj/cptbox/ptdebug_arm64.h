@@ -1,5 +1,10 @@
+#ifndef id6ef72cec_c4c7_4879_9591_5c984afaa8a5
+#define id6ef72cec_c4c7_4879_9591_5c984afaa8a5
+
+#include <asm/ptrace.h>
+
 typedef union {
-    struct user_regs_struct arm64;
+    struct user_pt_regs arm64;
     struct {
         uint32_t r0;
         uint32_t r1;
@@ -20,4 +25,6 @@ typedef union {
         uint32_t cpsr;
         uint32_t orig_r0;
     } arm32;
-} pt_regs;
+} ptbox_regs;
+
+#endif

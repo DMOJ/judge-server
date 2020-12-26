@@ -33,7 +33,6 @@
 #include "ext_freebsd.h"
 #else
 #include "ext_linux.h"
-#include <sys/user.h>
 #endif
 
 #define MAX_SYSCALL 568
@@ -195,7 +194,7 @@ private:
     void *on_return_context;
     int execve_id;
     int abi_;
-    pt_regs regs;
+    ptbox_regs regs;
     bool regs_changed;
     std::map<pid_t, int> syscall_;
     bool use_peekdata = false;

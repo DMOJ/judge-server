@@ -1,5 +1,11 @@
+#pragma once
+#ifndef ida57e8432_9ad6_4c63_8376_bb4395f2c3aa
+#define ida57e8432_9ad6_4c63_8376_bb4395f2c3aa
+
+#include <sys/user.h>
+
 typedef union {
-    struct user_regs_struct      x64;
+    struct user_regs_struct x64;
     struct {
         uint32_t ebx;
         uint32_t ecx;
@@ -19,4 +25,6 @@ typedef union {
         uint32_t esp;
         uint32_t xss;
     } x86;
-} pt_regs;
+} ptbox_regs;
+
+#endif

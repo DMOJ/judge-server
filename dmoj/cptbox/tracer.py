@@ -29,7 +29,7 @@ PIPE = subprocess.PIPE
 log = logging.getLogger('dmoj.cptbox')
 
 _PIPE_BUF = getattr(select, 'PIPE_BUF', 512)
-_SYSCALL_INDICIES: List[Optional[int]] = [None] * 5
+_SYSCALL_INDICIES: List[Optional[int]] = [None] * PTBOX_ABI_COUNT
 
 _SYSCALL_INDICIES[PTBOX_ABI_X86] = 0
 _SYSCALL_INDICIES[PTBOX_ABI_X64] = 1
@@ -149,7 +149,7 @@ class TracedPopen(Process):
         self.protection_fault = None
 
         self._security = security
-        self._callbacks = [None] * MAX_SYSCALL_NUMBER
+        self._callbacks = [[None] * MAX_SYSCALL_NUMBER for _ in range(PTBOX_ABI_COUNT)]
         if security is None:
             self._trace_syscalls = False
         else:
@@ -163,7 +163,7 @@ class TracedPopen(Process):
                         if not isinstance(handler, int):
                             if not callable(handler):
                                 raise ValueError('Handler not callable: ' + handler)
-                            self._callbacks[call] = handler
+                            self._callbacks[abi][call] = handler
                             handler = _CALLBACK
                         self._handler(abi, call, handler)
 
@@ -256,8 +256,12 @@ class TracedPopen(Process):
             log.warning('Skipping the killing of process because it already exited: %s', self.pid)
 
     def _callback(self, syscall):
+        if self.debugger.abi == PTBOX_ABI_INVALID:
+            log.warning('Received invalid ABI when handling syscall %d', syscall)
+            return False
+
         try:
-            callback = self._callbacks[syscall]
+            callback = self._callbacks[self.debugger.abi][syscall]
         except IndexError:
             if self.debugger.abi == PTBOX_ABI_ARM:
                 # ARM-specific

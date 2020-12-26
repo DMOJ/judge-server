@@ -29,15 +29,17 @@ void pt_debugger::pre_syscall() {
     struct iovec iovec;
     iovec.iov_base = &regs;
     iovec.iov_len = sizeof regs;
-    if (ptrace(PTRACE_GETREGSET, tid, NT_PRSTATUS, &iovec))
+    if (ptrace(PTRACE_GETREGSET, tid, NT_PRSTATUS, &iovec)) {
         perror("ptrace(PTRACE_GETREGSET)");
+    }
 
-    if (iovec.iov_len == sizeof regs.x86)
+    if (iovec.iov_len == sizeof regs.x86) {
         abi_ = PTBOX_ABI_X86;
-    else if (regs.x64.orig_rax & __X32_SYSCALL_BIT)
+    } else if (regs.x64.orig_rax & __X32_SYSCALL_BIT) {
         abi_ = PTBOX_ABI_X32;
-    else
+    } else {
         abi_ = PTBOX_ABI_X64;
+    }
 
     regs_changed = false;
 }
@@ -49,8 +51,9 @@ void pt_debugger::post_syscall() {
     struct iovec iovec;
     iovec.iov_base = &regs;
     iovec.iov_len = abi_ == PTBOX_ABI_X86 ? sizeof regs.x86 : sizeof regs.x64;
-    if (ptrace(PTRACE_SETREGSET, tid, NT_PRSTATUS, &iovec))
+    if (ptrace(PTRACE_SETREGSET, tid, NT_PRSTATUS, &iovec)) {
         perror("ptrace(PTRACE_SETREGSET)");
+    }
 }
 
 #define INVALID_ABI(source) fprintf(stderr, source ": Invalid ABI\n")

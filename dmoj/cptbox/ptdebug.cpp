@@ -50,10 +50,11 @@ void pt_debugger::setpid(pid_t pid) {
 #else
 void pt_debugger::settid(pid_t tid) {
     this->tid = tid;
-#if !PTBOX_SECCOMP // All seccomp syscall events are enter events
-    if (!syscall_.count(tid)) syscall_[tid] = 0;
-    syscall_[tid] ^= 1;
-#endif
+    if (!process->use_seccomp()) {
+        // All seccomp syscall events are enter events
+        if (!syscall_.count(tid)) syscall_[tid] = 0;
+        syscall_[tid] ^= 1;
+    }
 }
 #endif
 

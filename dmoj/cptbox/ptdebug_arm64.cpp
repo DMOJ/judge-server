@@ -5,6 +5,7 @@
 
 #if defined(__arm64__) || defined(__aarch64__)
 #include <elf.h>
+#include <stdlib.h>
 #include <sys/ptrace.h>
 #include <sys/uio.h>
 

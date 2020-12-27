@@ -405,7 +405,7 @@ cdef class Process:
     cpdef _cpu_time_exceeded(self):
         pass
 
-    cpdef _get_seccomp_abi_whitelist(self):
+    cpdef _get_seccomp_abi_and_whitelist(self):
         raise NotImplementedError()
 
     cpdef _spawn(self, file, args, env=(), chdir='', fds=None):
@@ -439,7 +439,7 @@ cdef class Process:
 
             config.use_seccomp = self.use_seccomp
             if config.use_seccomp:
-                config.abi_for_seccomp, whitelist = self._get_seccomp_abi_whitelist()
+                config.abi_for_seccomp, whitelist = self._get_seccomp_abi_and_whitelist()
                 assert len(whitelist) == MAX_SYSCALL_NUMBER
                 config.seccomp_whitelist = <bint*>malloc(sizeof(bint) * MAX_SYSCALL_NUMBER)
                 for i in range(MAX_SYSCALL_NUMBER):

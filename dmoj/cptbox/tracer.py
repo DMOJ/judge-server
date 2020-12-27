@@ -181,7 +181,7 @@ class TracedPopen(Process):
         if self._spawn_error:
             raise self._spawn_error
 
-    def _get_seccomp_abi_whitelist(self):
+    def _get_seccomp_abi_and_whitelist(self):
         abi = _abi_map.get(file_arch(self._executable), 0)
         whitelist = [False] * MAX_SYSCALL_NUMBER
         index = _SYSCALL_INDICIES[abi]

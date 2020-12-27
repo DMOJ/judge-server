@@ -2,75 +2,106 @@
 #define _BSD_SOURCE
 #include "ptbox.h"
 
-#ifdef HAS_DEBUGGER_X86
+#ifdef __i386__
+#include <elf.h>
 #include <sys/ptrace.h>
+#include <sys/uio.h>
 
-#define EBX 0
-#define ECX 1
-#define EDX 2
-#define ESI 3
-#define EDI 4
-#define EBP 5
-#define EAX 6
-#define DS 7
-#define ES 8
-#define FS 9
-#define GS 10
-#define ORIG_EAX 11
-#define EIP 12
-#define CS 13
-#define EFL 14
-#define UESP 15
-#define SS 16
-
-int pt_debugger_x86::syscall() {
-    return (int) peek_reg(ORIG_EAX);
+bool pt_debugger::supports_abi(int abi) {
+    return abi == PTBOX_ABI_X86;
 }
 
-void pt_debugger_x86::syscall(int id) {
-    poke_reg(ORIG_EAX, id);
+void pt_debugger::pre_syscall() {
+    struct iovec iovec;
+    iovec.iov_base = &regs;
+    iovec.iov_len = sizeof regs;
+    if (ptrace(PTRACE_GETREGSET, tid, NT_PRSTATUS, &iovec)) {
+        perror("ptrace(PTRACE_GETREGSET)");
+        abi_ = PTBOX_ABI_INVALID;
+    } else {
+        abi_ = PTBOX_ABI_X86;
+        regs_changed = false;
+    }
 }
 
-long pt_debugger_x86::result() {
-    return peek_reg(EAX);
+void pt_debugger::post_syscall() {
+    if (!regs_changed || abi_ == PTBOX_ABI_INVALID)
+        return;
+
+    struct iovec iovec;
+    iovec.iov_base = &regs;
+    iovec.iov_len = sizeof regs;
+    if (ptrace(PTRACE_SETREGSET, tid, NT_PRSTATUS, &iovec)) {
+        perror("ptrace(PTRACE_SETREGSET)");
+        abort();
+    }
 }
 
-void pt_debugger_x86::result(long value) {
-    poke_reg(EAX, value);
+#define UNKNOWN_ABI(source) fprintf(stderr, source ": Invalid ABI\n"), abort()
+
+int pt_debugger::syscall() {
+    switch (abi_) {
+        case PTBOX_ABI_X86:
+            return regs.orig_eax;
+        case PTBOX_ABI_INVALID:
+            return -1;
+        default:
+            UNKNOWN_ABI("ptdebug_x86.cpp:syscall getter");
+    }
 }
 
-#define make_arg(id, reg) \
-    long pt_debugger_x86::arg##id() { \
-        return peek_reg(reg); \
+void pt_debugger::syscall(int id) {
+    regs_changed = true;
+    switch (abi_) {
+        case PTBOX_ABI_X86:
+            regs.orig_eax = id;
+            return;
+        case PTBOX_ABI_INVALID:
+            return;
+        default:
+            UNKNOWN_ABI("ptdebug_x86.cpp:syscall setter");
+    }
+}
+
+#define MAKE_ACCESSOR(method, reg_name) \
+    long pt_debugger::method() { \
+        switch (abi_) { \
+            case PTBOX_ABI_X86: \
+                return regs.reg_name; \
+            case PTBOX_ABI_INVALID: \
+                return -1; \
+            default: \
+                UNKNOWN_ABI("ptdebug_x86.cpp:" #method " getter"); \
+        } \
     } \
     \
-    void pt_debugger_x86::arg##id(long data) {\
-        poke_reg(reg, data); \
+    void pt_debugger::method(long value) { \
+        regs_changed = true; \
+        switch (abi_) { \
+            case PTBOX_ABI_X86: \
+                regs.reg_name = value; \
+            case PTBOX_ABI_INVALID: \
+                return; \
+            default: \
+                UNKNOWN_ABI("ptdebug_x86.cpp:" #method " setter"); \
+        } \
     }
 
-make_arg(0, EBX);
-make_arg(1, ECX);
-make_arg(2, EDX);
-make_arg(3, ESI);
-make_arg(4, EDI);
+MAKE_ACCESSOR(result, eax)
+MAKE_ACCESSOR(arg0, ebx)
+MAKE_ACCESSOR(arg1, ecx)
+MAKE_ACCESSOR(arg2, edx)
+MAKE_ACCESSOR(arg3, esi)
+MAKE_ACCESSOR(arg4, edi)
+#undef MAKE_ACCESSOR
 
-#undef make_arg
-
-long pt_debugger_x86::arg5() {
+long pt_debugger::arg5() {
     return 0;
 }
 
-void pt_debugger_x86::arg5(long data) {}
+void pt_debugger::arg5(long data) {}
 
-bool pt_debugger_x86::is_exit(int syscall) {
-    return syscall == 252 || syscall == 1;
+int pt_debugger::first_execve_syscall_id() {
+    return 11;
 }
-
-int pt_debugger_x86::getpid_syscall() {
-    return 20;
-}
-
-pt_debugger_x86::pt_debugger_x86() {
-    execve_id = 11;
-}
-#endif /* HAS_DEBUGGER_X86 */
+#endif /* __i386__ */

@@ -16,14 +16,6 @@
 
 #include "ptbox.h"
 
-pt_process *pt_alloc_process(pt_debugger *debugger) {
-    return new pt_process(debugger);
-}
-
-void pt_free_process(pt_process *process) {
-    delete process;
-}
-
 pt_process::pt_process(pt_debugger *debugger) :
     pid(0), callback(NULL), context(NULL), debugger(debugger),
     event_proc(NULL), event_context(NULL), _trace_syscalls(true),
@@ -60,10 +52,10 @@ void pt_process::set_event_proc(pt_event_callback callback, void *context) {
     this->event_context = context;
 }
 
-int pt_process::set_handler(int syscall, int handler) {
+int pt_process::set_handler(int abi, int syscall, int handler) {
     if (syscall >= MAX_SYSCALL || syscall < 0)
         return 1;
-    this->handler[syscall] = handler;
+    this->handler[abi][syscall] = handler;
     return 0;
 }
 
@@ -101,6 +93,15 @@ int pt_process::protection_fault(int syscall) {
         ptrace(PT_KILL, debugger->tid, (caddr_t) 1, 0);
 #endif
     return PTBOX_EXIT_PROTECTION;
+}
+
+bool pt_process::use_seccomp(bool enabled) {
+    if (pid) {
+        // Do not allow updates after the process is spawned.
+        return false;
+    }
+    _use_seccomp = PTBOX_SECCOMP && enabled;
+    return true;
 }
 
 int pt_process::monitor() {
@@ -171,17 +172,12 @@ int pt_process::monitor() {
             ptrace(PT_FOLLOW_FORK, pid, 0, 1);
 #else
             // This is right after SIGSTOP is received:
-            ptrace(PTRACE_SETOPTIONS, pid, NULL, PTRACE_O_TRACEEXIT |
-#if PTBOX_SECCOMP // Use seccomp to lower tracing overhead.
-                                                 PTRACE_O_TRACESECCOMP |
-#else
-                                                 PTRACE_O_TRACESYSGOOD |
-#endif
+            ptrace(PTRACE_SETOPTIONS, pid, NULL,
+                   PTRACE_O_TRACEEXIT | (_use_seccomp ? PTRACE_O_TRACESECCOMP : PTRACE_O_TRACESYSGOOD) |
 #ifdef PTRACE_O_EXITKILL // Kill all sandboxed process automatically when process exits.
-                                                 PTRACE_O_EXITKILL |
+                   PTRACE_O_EXITKILL |
 #endif
-                                                 PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK |
-                                                 PTRACE_O_TRACEVFORK);
+                   PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK | PTRACE_O_TRACEVFORK);
 #endif
             // We now set the process group to the actual pgid.
             pgid = pid;
@@ -197,11 +193,8 @@ int pt_process::monitor() {
             debugger->setpid(pid);
             debugger->update_syscall(&lwpi);
 #else
-#if PTBOX_SECCOMP
-        if (WSTOPSIG(status) == SIGTRAP && (status >> 16) == PTRACE_EVENT_SECCOMP) {
-#else
-        if (WSTOPSIG(status) == (0x80 | SIGTRAP)) {
-#endif
+        if ((WSTOPSIG(status) == SIGTRAP && (status >> 16) == PTRACE_EVENT_SECCOMP) ||
+                WSTOPSIG(status) == (0x80 | SIGTRAP)) {
             debugger->settid(pid);
             debugger->pre_syscall();
 #endif
@@ -239,7 +232,7 @@ int pt_process::monitor() {
                 // (after which they'll go down the PTBOX_HANDLER_ALLOW branch below).
 
                 // Allow exactly one invocation of `execve`, no questions asked.
-                if (syscall == debugger->execve_syscall()) {
+                if (syscall == debugger->first_execve_syscall_id()) {
                     if (execve_allowed) {
                         execve_allowed = false;
                         goto resume_process;
@@ -253,11 +246,9 @@ int pt_process::monitor() {
                     goto resume_process;
                 }
 
-#if PTBOX_SECCOMP
-                if (syscall != debugger->execve_syscall() /* always true */) {
-#else
-                if (!in_syscall && syscall == debugger->execve_syscall() && debugger->result() == 0) {
-#endif
+                if ((_use_seccomp && syscall != debugger->first_execve_syscall_id() /* always true */) ||
+                    (!_use_seccomp && !in_syscall && syscall == debugger->first_execve_syscall_id() &&
+                     debugger->result() == 0)) {
                   spawned = this->_initialized = true;
                   goto resume_process;
                 }
@@ -265,7 +256,7 @@ int pt_process::monitor() {
 
             if (in_syscall) {
                 if (syscall >= 0 && syscall < MAX_SYSCALL) {
-                    switch (handler[syscall]) {
+                    switch (handler[debugger->abi()][syscall]) {
                         case PTBOX_HANDLER_ALLOW:
                             break;
                         case PTBOX_HANDLER_STDOUTERR: {
@@ -297,7 +288,7 @@ int pt_process::monitor() {
 
             // Syscall has "ended". What we do here varies a bit between if we're using seccomp
             // or not, since with seccomp we will have no return event.
-            if ((PTBOX_SECCOMP || !in_syscall) && debugger->on_return_callback) {
+            if ((_use_seccomp || !in_syscall) && debugger->on_return_callback) {
                 debugger->on_return_callback(debugger->on_return_context, syscall);
                 debugger->on_return_callback = NULL;
                 debugger->on_return_context = NULL;
@@ -355,7 +346,7 @@ resume_process:
 #if PTBOX_FREEBSD
         ptrace(_trace_syscalls ? PT_SYSCALL : PT_CONTINUE, pid, (caddr_t) 1, first ? 0 : signal);
 #else
-        ptrace(_trace_syscalls && !PTBOX_SECCOMP ? PTRACE_SYSCALL : PTRACE_CONT, pid, NULL, first ? NULL : (void*) signal);
+        ptrace(_trace_syscalls && !_use_seccomp ? PTRACE_SYSCALL : PTRACE_CONT, pid, NULL, first ? NULL : (void*) signal);
 #endif
         first = false;
     }

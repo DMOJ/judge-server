@@ -50,47 +50,13 @@ void pt_debugger::setpid(pid_t pid) {
 #else
 void pt_debugger::settid(pid_t tid) {
     this->tid = tid;
-#if !PTBOX_SECCOMP // All seccomp syscall events are enter events
-    if (!syscall_.count(tid)) syscall_[tid] = 0;
-    syscall_[tid] ^= 1;
-#endif
+    if (!process->use_seccomp()) {
+        // All seccomp syscall events are enter events
+        if (!syscall_.count(tid)) syscall_[tid] = 0;
+        syscall_[tid] ^= 1;
+    }
 }
 #endif
-
-void pt_debugger::pre_syscall() {}
-void pt_debugger::post_syscall() {}
-
-long pt_debugger::peek_reg(int idx) {
-#if PTBOX_FREEBSD
-    return ((reg_type*)&bsd_converted_regs)[idx];
-#else
-    long res;
-    errno = 0;
-    res = ptrace(PTRACE_PEEKUSER, tid, sizeof(long) * idx, 0);
-    if (res == -1 && errno)
-        perror("ptrace(PTRACE_PEEKUSER)");
-    return res;
-#endif
-}
-
-void pt_debugger::poke_reg(int idx, long data) {
-#if PTBOX_FREEBSD
-    ((reg_type*)&bsd_converted_regs)[idx] = data;
-
-    struct reg bsd_regs;
-
-    // Update bsd_regs with latest regs, since not all are mapped by map_regs_from_linux and we don't want
-    // garbage to be written to the other registers.
-    // Alternatively we could be mapping them in map_regs, but that'd be more fragile and less easy (there are
-    // some registers, like r_trapno on FreeBSD, that have no real equivalent on Linux, and vice-versa).
-    ptrace(PT_GETREGS, tid, (caddr_t) &bsd_regs, 0);
-
-    map_regs_from_linux(&bsd_regs, &bsd_converted_regs);
-    ptrace(PT_SETREGS, tid, (caddr_t) &bsd_regs, 0);
-#else
-    ptrace(PTRACE_POKEUSER, tid, sizeof(long) * idx, data);
-#endif
-}
 
 #if PTBOX_FREEBSD
 typedef int ptrace_read_t;
@@ -240,5 +206,3 @@ char *pt_debugger::readstr_peekdata(unsigned long addr, size_t max_size) {
 void pt_debugger::freestr(char *buf) {
     free(buf);
 }
-
-pt_debugger::~pt_debugger() {}

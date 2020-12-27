@@ -95,8 +95,7 @@ class build_ext_dmoj(build_ext, object):
 
 
 cptbox_sources = ['_cptbox.pyx', 'helper.cpp', 'ptdebug.cpp', 'ptdebug_x86.cpp', 'ptdebug_x64.cpp',
-                  'ptdebug_x86_on_x64.cpp', 'ptdebug_x32.cpp', 'ptdebug_arm.cpp', 'ptdebug_arm64.cpp',
-                  'ptproc.cpp']
+                  'ptdebug_arm.cpp', 'ptdebug_arm64.cpp', 'ptproc.cpp']
 
 if not has_pyx:
     cptbox_sources[0] = cptbox_sources[0].replace('.pyx', '.cpp')

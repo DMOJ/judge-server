@@ -3,12 +3,14 @@ from libc.stdio cimport FILE, fopen, fclose, fgets, sprintf
 from libc.stdlib cimport malloc, free, strtoul
 from libc.string cimport strncmp, strlen
 from libc.signal cimport SIGTRAP, SIGXCPU
+from libcpp cimport bool
 from posix.resource cimport rusage
 from posix.types cimport pid_t
 
 __all__ = ['Process', 'Debugger', 'bsd_get_proc_cwd', 'bsd_get_proc_fdno', 'MAX_SYSCALL_NUMBER',
-           'DEBUGGER_X86', 'DEBUGGER_X64', 'DEBUGGER_X86_ON_X64', 'DEBUGGER_X32', 'DEBUGGER_ARM',
-           'DEBUGGER_ARM64', 'AT_FDCWD']
+           'AT_FDCWD', 'ALL_ABIS', 'SUPPORTED_ABIS',
+           'PTBOX_ABI_X86', 'PTBOX_ABI_X64', 'PTBOX_ABI_X32', 'PTBOX_ABI_ARM', 'PTBOX_ABI_ARM64',
+           'PTBOX_ABI_INVALID', 'PTBOX_ABI_COUNT']
 
 
 cdef extern from 'ptbox.h' nogil:
@@ -37,19 +39,19 @@ cdef extern from 'ptbox.h' nogil:
         void arg3(long)
         void arg4(long)
         void arg5(long)
-        bint is_exit(int)
         char *readstr(unsigned long, size_t)
         void freestr(char*)
         pid_t getpid()
         pid_t gettid()
         int getpid_syscall()
+        int abi()
         void on_return(pt_syscall_return_callback callback, void *context)
 
     cdef cppclass pt_process:
         pt_process(pt_debugger *) except +
         void set_callback(pt_handler_callback callback, void* context)
         void set_event_proc(pt_event_callback, void *context)
-        int set_handler(int syscall, int handler)
+        int set_handler(int abi, int syscall, int handler)
         bint trace_syscalls()
         void trace_syscalls(bint value)
         int spawn(pt_fork_handler, void *context)
@@ -59,6 +61,8 @@ cdef extern from 'ptbox.h' nogil:
         double wall_clock_time()
         const rusage *getrusage()
         bint was_initialized()
+        bool use_seccomp()
+        bool use_seccomp(bool enabled)
 
     cdef bint PTBOX_FREEBSD
     cdef bint PTBOX_SECCOMP
@@ -73,6 +77,21 @@ cdef extern from 'ptbox.h' nogil:
     cdef int PTBOX_EXIT_NORMAL
     cdef int PTBOX_EXIT_PROTECTION
     cdef int PTBOX_EXIT_SEGFAULT
+
+    cpdef enum:
+        PTBOX_ABI_X86
+        PTBOX_ABI_X64
+        PTBOX_ABI_X32
+        PTBOX_ABI_ARM
+        PTBOX_ABI_ARM64
+        PTBOX_ABI_COUNT
+        PTBOX_ABI_INVALID
+
+    cdef bool debugger_supports_abi "pt_debugger::supports_abi" (int)
+
+ALL_ABIS = [PTBOX_ABI_X86, PTBOX_ABI_X64, PTBOX_ABI_X32, PTBOX_ABI_ARM, PTBOX_ABI_ARM64]
+assert len(ALL_ABIS) == PTBOX_ABI_COUNT
+SUPPORTED_ABIS = list(filter(debugger_supports_abi, ALL_ABIS))
 
 cdef extern from 'helper.h' nogil:
     cdef struct child_config:
@@ -91,31 +110,21 @@ cdef extern from 'helper.h' nogil:
         int stderr_
         int max_fd
         int *fds
-        int debugger_type
-        bint trace_syscalls
-        bint *syscall_whitelist
+        bool use_seccomp
+        int abi_for_seccomp
+        bint *seccomp_whitelist
 
     void cptbox_closefrom(int lowfd)
     int cptbox_child_run(child_config *)
     char *_bsd_get_proc_cwd "bsd_get_proc_cwd"(pid_t pid)
     char *_bsd_get_proc_fdno "bsd_get_proc_fdno"(pid_t pid, int fdno)
 
-    cpdef enum:
-        DEBUGGER_X86
-        DEBUGGER_X64
-        DEBUGGER_X86_ON_X64
-        DEBUGGER_X32
-        DEBUGGER_ARM
-        DEBUGGER_ARM64
-
-    pt_debugger *get_ptdebugger(int type)
-
 
 cdef extern from 'fcntl.h' nogil:
-    cdef int _AT_FDCWD "AT_FDCWD"
+    cpdef enum:
+        AT_FDCWD
 
 MAX_SYSCALL_NUMBER = MAX_SYSCALL
-AT_FDCWD = _AT_FDCWD
 
 cdef int pt_child(void *context) nogil:
     cdef child_config *config = <child_config*> context
@@ -180,19 +189,24 @@ def bsd_get_proc_fdno(pid_t pid, int fd):
     return res
 
 
+cdef class Process
+
+
 cdef class Debugger:
     cdef pt_debugger *thisptr
+    cdef Process process
     cdef object on_return_callback
-    cdef int _getpid_syscall
-    cdef int _debugger_type
 
-    property type:
-        def __get__(self):
-            return self._debugger_type
+    def __cinit__(self, Process process):
+        self.thisptr = new pt_debugger()
+        self.process = process
 
-    property getpid_syscall:
+    def __dealloc__(self):
+        del self.thisptr
+
+    property noop_syscall_id:
         def __get__(self):
-            return self._getpid_syscall
+            raise NotImplementedError()
 
     property syscall:
         def __get__(self):
@@ -201,8 +215,8 @@ cdef class Debugger:
         def __set__(self, value):
             # When using seccomp, -1 as syscall means "skip"; when we are not,
             # we swap with a harmless syscall without side-effects (getpid).
-            if not PTBOX_SECCOMP and value == -1:
-                self.thisptr.syscall(self._getpid_syscall)
+            if not self.process.use_seccomp and value == -1:
+                self.thisptr.syscall(self.noop_syscall_id)
             else:
                 self.thisptr.syscall(value)
 
@@ -318,8 +332,9 @@ cdef class Debugger:
         def __get__(self):
             return self.thisptr.getpid()
 
-    def is_exit(self, syscall):
-        return self.thisptr.is_exit(syscall)
+    property abi:
+        def __get__(self):
+            return self.thisptr.abi()
 
     def on_return(self, callback):
         self.on_return_callback = callback
@@ -331,7 +346,6 @@ cdef class Debugger:
 
 
 cdef class Process:
-    cdef pt_debugger *_debugger
     cdef pt_process *process
     cdef public Debugger debugger
     cdef readonly bint _exited
@@ -343,7 +357,10 @@ cdef class Process:
     cdef public int _nproc, _fsize
     cdef unsigned long _max_memory
 
-    def __cinit__(self, int debugger, debugger_type, *args, **kwargs):
+    def create_debugger(self) -> Debugger:
+        return Debugger(self)
+
+    def __cinit__(self, *args, **kwargs):
         self._child_memory = self._child_address = 0
         self._child_stdin = self._child_stdout = self._child_stderr = -1
         self._cpu_time = 0
@@ -351,21 +368,13 @@ cdef class Process:
         self._nproc = -1
         self._signal = 0
 
-        self._debugger = get_ptdebugger(debugger)
-        if not self._debugger:
-            raise ValueError('Unsupported debugger configuration')
-
-        self.debugger = <Debugger?>debugger_type()
-        self.debugger.thisptr = self._debugger
-        self.debugger._getpid_syscall = self._debugger.getpid_syscall()
-        self.debugger._debugger_type = debugger
-        self.process = new pt_process(self._debugger)
+        self.debugger = self.create_debugger()
+        self.process = new pt_process(self.debugger.thisptr)
         self.process.set_callback(pt_syscall_handler, <void*>self)
         self.process.set_event_proc(pt_event_handler, <void*>self)
 
     def __dealloc__(self):
         del self.process
-        del self._debugger
 
     def _callback(self, syscall):
         return False
@@ -387,8 +396,8 @@ cdef class Process:
                     self._cpu_time_exceeded()
         return 0
 
-    cpdef _handler(self, syscall, handler):
-        self.process.set_handler(syscall, handler)
+    cpdef _handler(self, abi, syscall, handler):
+        self.process.set_handler(abi, syscall, handler)
 
     cpdef _protection_fault(self, syscall):
         pass
@@ -396,46 +405,53 @@ cdef class Process:
     cpdef _cpu_time_exceeded(self):
         pass
 
+    cpdef _get_seccomp_abi_and_whitelist(self):
+        raise NotImplementedError()
+
     cpdef _spawn(self, file, args, env=(), chdir='', fds=None):
         cdef child_config config
-        config.address_space = self._child_address
-        config.memory = self._child_memory
-        config.cpu_time = self._cpu_time
-        config.nproc = self._nproc
-        config.fsize = self._fsize
-        config.personality = self._child_personality
-        config.file = file
-        config.dir = chdir
-        config.stdin_ = self._child_stdin
-        config.stdout_ = self._child_stdout
-        config.stderr_ = self._child_stderr
-        config.argv = alloc_string_array(args)
-        config.envp = alloc_string_array(env)
-        if fds is None or not len(fds):
-            config.max_fd = 2
-            config.fds = NULL
-        else:
-            config.max_fd = 2 + len(fds)
-            config.fds = <int*>malloc(sizeof(int) * len(fds))
-            for i in xrange(len(fds)):
-                config.fds[i] = fds[i]
+        config.argv = NULL
+        config.envp = NULL
+        config.fds = NULL
+        config.seccomp_whitelist = NULL
 
-        config.debugger_type = self.debugger._debugger_type
-        config.trace_syscalls = self._trace_syscalls
-        config.syscall_whitelist = <bint*>malloc(sizeof(bint) * MAX_SYSCALL_NUMBER)
-        for i in xrange(MAX_SYSCALL_NUMBER):
-            # We have to force exit syscalls to trap, so that we can be notified
-            # that the process spawned successfully when using `seccomp`. Otherwise,
-            # a simple assembly program could terminate without ever trapping.
-            if not self.debugger.is_exit(i):
-                config.syscall_whitelist[i] = self._syscall_whitelist[i]
+        try:
+            config.address_space = self._child_address
+            config.memory = self._child_memory
+            config.cpu_time = self._cpu_time
+            config.nproc = self._nproc
+            config.fsize = self._fsize
+            config.personality = self._child_personality
+            config.file = file
+            config.dir = chdir
+            config.stdin_ = self._child_stdin
+            config.stdout_ = self._child_stdout
+            config.stderr_ = self._child_stderr
+            config.argv = alloc_string_array(args)
+            config.envp = alloc_string_array(env)
+            if fds is None or not len(fds):
+                config.max_fd = 2
             else:
-                config.syscall_whitelist[i] = False
+                config.max_fd = 2 + len(fds)
+                config.fds = <int*>malloc(sizeof(int) * len(fds))
+                for i in range(len(fds)):
+                    config.fds[i] = fds[i]
 
-        if self.process.spawn(pt_child, &config):
-            raise RuntimeError('failed to spawn child')
-        free(config.argv)
-        free(config.envp)
+            config.use_seccomp = self.use_seccomp
+            if config.use_seccomp:
+                config.abi_for_seccomp, whitelist = self._get_seccomp_abi_and_whitelist()
+                assert len(whitelist) == MAX_SYSCALL_NUMBER
+                config.seccomp_whitelist = <bint*>malloc(sizeof(bint) * MAX_SYSCALL_NUMBER)
+                for i in range(MAX_SYSCALL_NUMBER):
+                    config.seccomp_whitelist[i] = whitelist[i]
+
+            if self.process.spawn(pt_child, &config):
+                raise RuntimeError('failed to spawn child')
+        finally:
+            free(config.argv)
+            free(config.envp)
+            free(config.fds)
+            free(config.seccomp_whitelist)
 
     cpdef _monitor(self):
         cdef int exitcode
@@ -444,6 +460,14 @@ cdef class Process:
         self._exitcode = exitcode
         self._exited = True
         return self._exitcode
+
+    property use_seccomp:
+        def __get__(self):
+            return self.process.use_seccomp()
+
+        def __set__(self, bool enabled):
+            if not self.process.use_seccomp(enabled):
+                raise RuntimeError("Can't change whether seccomp is used after process is created.")
 
     property was_initialized:
         def __get__(self):

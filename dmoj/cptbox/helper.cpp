@@ -31,59 +31,28 @@
 inline unsigned int get_seccomp_arch(int type) {
     switch (type) {
 #ifdef SCMP_ARCH_X86
-        case DEBUGGER_X86:
-        case DEBUGGER_X86_ON_X64:
+        case PTBOX_ABI_X86:
             return SCMP_ARCH_X86;
 #endif
 #ifdef SCMP_ARCH_X86_64
-        case DEBUGGER_X64:
+        case PTBOX_ABI_X64:
             return SCMP_ARCH_X86_64;
 #endif
 #ifdef SCMP_ARCH_X32
-        case DEBUGGER_X32:
+        case PTBOX_ABI_X32:
             return SCMP_ARCH_X32;
 #endif
 #ifdef SCMP_ARCH_ARM
-        case DEBUGGER_ARM:
+        case PTBOX_ABI_ARM:
             return SCMP_ARCH_ARM;
 #endif
 #ifdef SCMP_ARCH_AARCH64
-        case DEBUGGER_ARM64:
+        case PTBOX_ABI_ARM64:
             return SCMP_ARCH_AARCH64;
 #endif
     }
 
     return 0;
-}
-
-pt_debugger *get_ptdebugger(int type) {
-    switch (type) {
-#ifdef HAS_DEBUGGER_X86
-        case DEBUGGER_X86:
-            return new pt_debugger_x86();
-#endif
-#ifdef HAS_DEBUGGER_X64
-        case DEBUGGER_X64:
-            return new pt_debugger_x64();
-#endif
-#ifdef HAS_DEBUGGER_X86_ON_X64
-        case DEBUGGER_X86_ON_X64:
-            return new pt_debugger_x86_on_x64();
-#endif
-#ifdef HAS_DEBUGGER_X32
-        case DEBUGGER_X32:
-            return new pt_debugger_x32();
-#endif
-#ifdef HAS_DEBUGGER_ARM
-        case DEBUGGER_ARM:
-            return new pt_debugger_arm();
-#endif
-#ifdef HAS_DEBUGGER_ARM64
-        case DEBUGGER_ARM64:
-            return new pt_debugger_arm64();
-#endif
-    }
-    return NULL;
 }
 
 inline void setrlimit2(int resource, rlim_t cur, rlim_t max) {
@@ -134,7 +103,7 @@ int cptbox_child_run(const struct child_config *config) {
     kill(getpid(), SIGSTOP);
 
 #if PTBOX_SECCOMP
-    if (config->trace_syscalls) {
+    if (config->use_seccomp) {
         scmp_filter_ctx ctx = seccomp_init(SCMP_ACT_TRACE(0));
         if (!ctx) {
             fprintf(stderr, "Failed to initialize seccomp context!");
@@ -142,7 +111,7 @@ int cptbox_child_run(const struct child_config *config) {
         }
 
         int rc;
-        unsigned int child_arch = get_seccomp_arch(config->debugger_type);
+        unsigned int child_arch = get_seccomp_arch(config->abi_for_seccomp);
         if (child_arch != seccomp_arch_native()) {
             if ((rc = seccomp_arch_add(ctx, child_arch))) {
                 fprintf(stderr, "seccomp_arch_add: %s\n", strerror(-rc));
@@ -154,7 +123,7 @@ int cptbox_child_run(const struct child_config *config) {
             // or plumbing libseccomp pseudosyscall mapping up to here.
         } else {
             for (int syscall = 0; syscall < MAX_SYSCALL; syscall++) {
-                if (config->syscall_whitelist[syscall]) {
+                if (config->seccomp_whitelist[syscall]) {
                     if ((rc = seccomp_rule_add(ctx, SCMP_ACT_ALLOW, syscall, 0))) {
                         fprintf(stderr, "seccomp_rule_add(..., %d): %s\n", syscall, strerror(-rc));
                         // This failure is not fatal, it'll just cause the syscall to trap anyway.

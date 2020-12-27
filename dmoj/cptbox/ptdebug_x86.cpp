@@ -33,6 +33,7 @@ void pt_debugger::post_syscall() {
     iovec.iov_len = sizeof regs;
     if (ptrace(PTRACE_SETREGSET, tid, NT_PRSTATUS, &iovec)) {
         perror("ptrace(PTRACE_SETREGSET)");
+        abort();
     }
 }
 

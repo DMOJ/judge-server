@@ -50,6 +50,7 @@ void pt_debugger::post_syscall() {
     iovec.iov_len = abi_ == PTBOX_ABI_X86 ? sizeof regs.x86 : sizeof regs.x64;
     if (ptrace(PTRACE_SETREGSET, tid, NT_PRSTATUS, &iovec)) {
         perror("ptrace(PTRACE_SETREGSET)");
+        abort();
     }
 }
 

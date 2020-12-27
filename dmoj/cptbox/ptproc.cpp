@@ -95,8 +95,13 @@ int pt_process::protection_fault(int syscall) {
     return PTBOX_EXIT_PROTECTION;
 }
 
-void pt_process::use_seccomp(bool enabled) {
+bool pt_process::use_seccomp(bool enabled) {
+    if (pid) {
+        // Do not allow updates after the process is spawned.
+        return false;
+    }
     _use_seccomp = PTBOX_SECCOMP && enabled;
+    return true;
 }
 
 int pt_process::monitor() {

@@ -62,7 +62,7 @@ cdef extern from 'ptbox.h' nogil:
         const rusage *getrusage()
         bint was_initialized()
         bool use_seccomp()
-        void use_seccomp(bool enabled)
+        bool use_seccomp(bool enabled)
 
     cdef bint PTBOX_FREEBSD
     cdef bint PTBOX_SECCOMP
@@ -466,7 +466,8 @@ cdef class Process:
             return self.process.use_seccomp()
 
         def __set__(self, bool enabled):
-            self.process.use_seccomp(enabled)
+            if not self.process.use_seccomp(enabled):
+                raise RuntimeError("Can't change whether seccomp is used after process is created.")
 
     property was_initialized:
         def __get__(self):

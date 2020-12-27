@@ -119,7 +119,7 @@ public:
     const rusage *getrusage() { return &_rusage; }
     bool was_initialized() { return _initialized; }
     bool use_seccomp() { return _use_seccomp; }
-    void use_seccomp(bool enable);
+    bool use_seccomp(bool enable);
 protected:
     int dispatch(int event, unsigned long param);
     int protection_fault(int syscall);

@@ -21,8 +21,6 @@ struct child_config {
     int stdin_;
     int stdout_;
     int stderr_;
-    int max_fd;
-    int *fds;
     bool use_seccomp;
     int abi_for_seccomp;
     int *seccomp_whitelist;

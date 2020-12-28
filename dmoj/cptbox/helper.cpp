@@ -89,11 +89,7 @@ int cptbox_child_run(const struct child_config *config) {
     if (config->stdin_ >= 0)  dup2(config->stdin_, 0);
     if (config->stdout_ >= 0) dup2(config->stdout_, 1);
     if (config->stderr_ >= 0) dup2(config->stderr_, 2);
-
-    for (int i = 3; i <= config->max_fd; ++i)
-        dup2(config->fds[i-3], i);
-
-    cptbox_closefrom(config->max_fd + 1);
+    cptbox_closefrom(3);
 
     if (ptrace_traceme()) {
         perror("ptrace");

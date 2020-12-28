@@ -111,8 +111,6 @@ cdef extern from 'helper.h' nogil:
         int stdin_
         int stdout_
         int stderr_
-        int max_fd
-        int *fds
         bool use_seccomp
         int abi_for_seccomp
         bint *seccomp_whitelist
@@ -432,11 +430,10 @@ cdef class Process:
     cpdef _get_seccomp_abi_and_whitelist(self):
         raise NotImplementedError()
 
-    cpdef _spawn(self, file, args, env=(), chdir='', fds=None):
+    cpdef _spawn(self, file, args, env=(), chdir=''):
         cdef child_config config
         config.argv = NULL
         config.envp = NULL
-        config.fds = NULL
         config.seccomp_whitelist = NULL
 
         try:
@@ -453,13 +450,6 @@ cdef class Process:
             config.stderr_ = self._child_stderr
             config.argv = alloc_byte_array(args)
             config.envp = alloc_byte_array(env)
-            if fds is None or not len(fds):
-                config.max_fd = 2
-            else:
-                config.max_fd = 2 + len(fds)
-                config.fds = <int*>malloc(sizeof(int) * len(fds))
-                for i in range(len(fds)):
-                    config.fds[i] = fds[i]
 
             config.use_seccomp = self.use_seccomp
             if config.use_seccomp:
@@ -474,7 +464,6 @@ cdef class Process:
         finally:
             free(config.argv)
             free(config.envp)
-            free(config.fds)
             free(config.seccomp_whitelist)
 
     cpdef _monitor(self):

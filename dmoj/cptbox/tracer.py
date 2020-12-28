@@ -119,7 +119,6 @@ class TracedPopen(Process):
             data_grace=0,
             personality=0,
             cwd='',
-            fds=None,
             wall_time=None,
     ):
         self._executable = executable or find_exe_in_path(args[0])
@@ -143,7 +142,6 @@ class TracedPopen(Process):
         self._fsize = fsize
         self._is_tle = False
         self._is_ole = False
-        self._fds = fds
         self.__init_streams(stdin, stdout, stderr)
         self.protection_fault = None
 
@@ -304,7 +302,7 @@ class TracedPopen(Process):
 
     def _run_process(self):
         try:
-            self._spawn(self._executable, self._args, self._env, self._chdir, self._fds)
+            self._spawn(self._executable, self._args, self._env, self._chdir)
         except:  # noqa: E722, need to catch absolutely everything
             self._spawn_error = sys.exc_info()[0]
             self._died.set()

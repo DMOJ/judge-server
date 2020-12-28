@@ -11,7 +11,7 @@ from posix.types cimport pid_t
 __all__ = ['Process', 'Debugger', 'bsd_get_proc_cwd', 'bsd_get_proc_fdno', 'MAX_SYSCALL_NUMBER',
            'AT_FDCWD', 'ALL_ABIS', 'SUPPORTED_ABIS', 'NATIVE_ABI',
            'PTBOX_ABI_X86', 'PTBOX_ABI_X64', 'PTBOX_ABI_X32', 'PTBOX_ABI_ARM', 'PTBOX_ABI_ARM64',
-           'PTBOX_ABI_INVALID', 'PTBOX_ABI_COUNT',
+           'PTBOX_ABI_FREEBSD_X64', 'PTBOX_ABI_INVALID', 'PTBOX_ABI_COUNT',
            'PTBOX_SPAWN_FAIL_NO_NEW_PRIVS', 'PTBOX_SPAWN_FAIL_SECCOMP', 'PTBOX_SPAWN_FAIL_TRACEME',
            'PTBOX_SPAWN_FAIL_EXECVE']
 
@@ -87,13 +87,14 @@ cdef extern from 'ptbox.h' nogil:
         PTBOX_ABI_X32
         PTBOX_ABI_ARM
         PTBOX_ABI_ARM64
+        PTBOX_ABI_FREEBSD_X64
         PTBOX_ABI_COUNT
         PTBOX_ABI_INVALID
 
     cdef int native_abi "pt_debugger::native_abi"
     cdef bool debugger_supports_abi "pt_debugger::supports_abi" (int)
 
-ALL_ABIS = [PTBOX_ABI_X86, PTBOX_ABI_X64, PTBOX_ABI_X32, PTBOX_ABI_ARM, PTBOX_ABI_ARM64]
+ALL_ABIS = [PTBOX_ABI_X86, PTBOX_ABI_X64, PTBOX_ABI_X32, PTBOX_ABI_ARM, PTBOX_ABI_ARM64, PTBOX_ABI_FREEBSD_X64]
 assert len(ALL_ABIS) == PTBOX_ABI_COUNT
 SUPPORTED_ABIS = list(filter(debugger_supports_abi, ALL_ABIS))
 NATIVE_ABI = native_abi

@@ -32,16 +32,7 @@ void pt_debugger::new_process() {
 
 #if PTBOX_FREEBSD
 void pt_debugger::update_syscall(struct ptrace_lwpinfo *info) {
-    struct reg bsd_regs;
-    ptrace(PT_GETREGS, tid, (caddr_t) &bsd_regs, 0);
-    map_regs_to_linux(&bsd_regs, &bsd_converted_regs);
-
-    if (info->pl_flags & PL_FLAG_SCX)
-        bsd_converted_regs.orig_rax = syscall_[info->pl_lwpid];
-        // Not available on all kernels.
-        // bsd_converted_regs.orig_rax = info->pl_syscall_code;
-    else if (info->pl_flags & PL_FLAG_SCE)
-        syscall_[info->pl_lwpid] = bsd_converted_regs.rax;
+    _bsd_syscall = info->pl_syscall_code;
 }
 
 void pt_debugger::setpid(pid_t pid) {

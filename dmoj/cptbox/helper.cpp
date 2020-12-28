@@ -80,11 +80,13 @@ int cptbox_child_run(const struct child_config *config) {
         }
 
         int rc;
+        // By default, the native architecture is added to the filter already, so we add all the non-native ones.
+        // This will bloat the filter due to additional architectures, but a few extra compares in the BPF matters
+        // very little when syscalls are rare and other overhead is expensive.
         for (uint32_t *arch = pt_debugger::seccomp_non_native_arch_list; *arch; ++arch) {
             if ((rc = seccomp_arch_add(ctx, *arch))) {
                 fprintf(stderr, "seccomp_arch_add(%u): %s\n", *arch, strerror(-rc));
                 // This failure is not fatal, it'll just cause the syscall to trap anyway.
-                return 203;
             }
         }
 

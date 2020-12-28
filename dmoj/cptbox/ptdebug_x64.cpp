@@ -12,6 +12,8 @@
 #include <sys/ptrace.h>
 #include <sys/uio.h>
 
+int pt_debugger::native_abi = PTBOX_ABI_X64;
+
 bool pt_debugger::supports_abi(int abi) {
     switch (abi) {
         case PTBOX_ABI_X86:
@@ -21,6 +23,10 @@ bool pt_debugger::supports_abi(int abi) {
     }
     return false;
 }
+
+#if PTBOX_SECCOMP
+uint32_t pt_debugger::seccomp_non_native_arch_list[] = { SCMP_ARCH_X86, SCMP_ARCH_X32, 0 };
+#endif
 
 void pt_debugger::pre_syscall() {
     struct iovec iovec;

@@ -184,7 +184,12 @@ public:
     void pre_syscall();
     void post_syscall();
     int abi() { return abi_; }
+
+    static int native_abi;
     static bool supports_abi(int);
+#if PTBOX_SECCOMP
+    static uint32_t seccomp_non_native_arch_list[];
+#endif
 
     void on_return(pt_syscall_return_callback callback, void *context) {
         on_return_callback = callback;

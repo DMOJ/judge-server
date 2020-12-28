@@ -28,33 +28,6 @@
 #   define FD_DIR "/proc/self/fd"
 #endif
 
-inline unsigned int get_seccomp_arch(int type) {
-    switch (type) {
-#ifdef SCMP_ARCH_X86
-        case PTBOX_ABI_X86:
-            return SCMP_ARCH_X86;
-#endif
-#ifdef SCMP_ARCH_X86_64
-        case PTBOX_ABI_X64:
-            return SCMP_ARCH_X86_64;
-#endif
-#ifdef SCMP_ARCH_X32
-        case PTBOX_ABI_X32:
-            return SCMP_ARCH_X32;
-#endif
-#ifdef SCMP_ARCH_ARM
-        case PTBOX_ABI_ARM:
-            return SCMP_ARCH_ARM;
-#endif
-#ifdef SCMP_ARCH_AARCH64
-        case PTBOX_ABI_ARM64:
-            return SCMP_ARCH_AARCH64;
-#endif
-    }
-
-    return 0;
-}
-
 inline void setrlimit2(int resource, rlim_t cur, rlim_t max) {
     rlimit limit;
     limit.rlim_cur = cur;
@@ -107,23 +80,21 @@ int cptbox_child_run(const struct child_config *config) {
         }
 
         int rc;
-        unsigned int child_arch = get_seccomp_arch(config->abi_for_seccomp);
-        if (child_arch != seccomp_arch_native()) {
-            if ((rc = seccomp_arch_add(ctx, child_arch))) {
-                fprintf(stderr, "seccomp_arch_add: %s\n", strerror(-rc));
-                goto seccomp_fail;
+        // By default, the native architecture is added to the filter already, so we add all the non-native ones.
+        // This will bloat the filter due to additional architectures, but a few extra compares in the BPF matters
+        // very little when syscalls are rare and other overhead is expensive.
+        for (uint32_t *arch = pt_debugger::seccomp_non_native_arch_list; *arch; ++arch) {
+            if ((rc = seccomp_arch_add(ctx, *arch))) {
+                fprintf(stderr, "seccomp_arch_add(%u): %s\n", *arch, strerror(-rc));
+                // This failure is not fatal, it'll just cause the syscall to trap anyway.
             }
-            // FIXME(tbrindus): do nothing else for now. The seccomp filter will
-            // be empty and trap on every syscall. Pending
-            //   https://github.com/seccomp/libseccomp/issues/259
-            // or plumbing libseccomp pseudosyscall mapping up to here.
-        } else {
-            for (int syscall = 0; syscall < MAX_SYSCALL; syscall++) {
-                if (config->seccomp_whitelist[syscall]) {
-                    if ((rc = seccomp_rule_add(ctx, SCMP_ACT_ALLOW, syscall, 0))) {
-                        fprintf(stderr, "seccomp_rule_add(..., %d): %s\n", syscall, strerror(-rc));
-                        // This failure is not fatal, it'll just cause the syscall to trap anyway.
-                    }
+        }
+
+        for (int syscall = 0; syscall < MAX_SYSCALL; syscall++) {
+            if (config->seccomp_whitelist[syscall]) {
+                if ((rc = seccomp_rule_add(ctx, SCMP_ACT_ALLOW, syscall, 0))) {
+                    fprintf(stderr, "seccomp_rule_add(..., %d): %s\n", syscall, strerror(-rc));
+                    // This failure is not fatal, it'll just cause the syscall to trap anyway.
                 }
             }
         }

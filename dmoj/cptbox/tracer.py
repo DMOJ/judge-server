@@ -18,7 +18,6 @@ from dmoj.utils.os_ext import (
     ARCH_X32,
     ARCH_X64,
     ARCH_X86,
-    file_arch,
     find_exe_in_path,
     oom_score_adj,
     OOM_SCORE_ADJ_MAX,
@@ -179,10 +178,9 @@ class TracedPopen(Process):
         if self._spawn_error:
             raise self._spawn_error
 
-    def _get_seccomp_abi_and_whitelist(self):
-        abi = _abi_map.get(file_arch(self._executable), 0)
+    def _get_seccomp_whitelist(self):
         whitelist = [False] * MAX_SYSCALL_NUMBER
-        index = _SYSCALL_INDICIES[abi]
+        index = _SYSCALL_INDICIES[NATIVE_ABI]
         for i in range(SYSCALL_COUNT):
             # Ensure at least one syscall traps.
             # Otherwise, a simple assembly program could terminate without ever trapping.
@@ -194,7 +192,7 @@ class TracedPopen(Process):
                     continue
                 if isinstance(handler, int):
                     whitelist[call] = handler == ALLOW
-        return abi, whitelist
+        return whitelist
 
     def wait(self):
         self._died.wait()

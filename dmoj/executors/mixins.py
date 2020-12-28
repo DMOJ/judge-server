@@ -120,7 +120,6 @@ class PlatformExecutorMixin(metaclass=abc.ABCMeta):
             address_grace=self.get_address_grace(),
             data_grace=self.data_grace,
             personality=self.personality,
-            fds=kwargs.get('fds'),
             time=kwargs.get('time'),
             memory=kwargs.get('memory'),
             wall_time=kwargs.get('wall_time'),

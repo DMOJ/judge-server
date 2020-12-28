@@ -1,3 +1,4 @@
+# cython: language_level=3
 from cpython.exc cimport PyErr_SetFromErrno
 from libc.stdio cimport FILE, fopen, fclose, fgets, sprintf
 from libc.stdlib cimport malloc, free, strtoul
@@ -139,7 +140,7 @@ cdef void pt_syscall_return_handler(void *context, int syscall) with gil:
 cdef int pt_event_handler(void *context, int event, unsigned long param) nogil:
     return (<Process>context)._event_handler(event, param)
 
-cdef char **alloc_string_array(list):
+cdef char **alloc_byte_array(list):
     cdef char **array = <char**>malloc((len(list) + 1) * sizeof(char*))
     for i, elem in enumerate(list):
         array[i] = elem
@@ -164,7 +165,7 @@ cpdef unsigned long get_memory(pid_t pid) nogil:
         if strncmp(line, "VmHWM:", 6) == 0:
             start = line
             length = strlen(line)
-            line[length-3] = '\0'
+            line[length-3] = b'\0'
             while not 48 <= start[0] <= 57:
                 start += 1
             memory = strtoul(start, NULL, 0)
@@ -204,119 +205,134 @@ cdef class Debugger:
     def __dealloc__(self):
         del self.thisptr
 
-    property noop_syscall_id:
-        def __get__(self):
-            raise NotImplementedError()
+    @property
+    def noop_syscall_id(self):
+        raise NotImplementedError()
 
-    property syscall:
-        def __get__(self):
-            return self.thisptr.syscall()
+    @property
+    def syscall(self):
+        return self.thisptr.syscall()
 
-        def __set__(self, value):
-            # When using seccomp, -1 as syscall means "skip"; when we are not,
-            # we swap with a harmless syscall without side-effects (getpid).
-            if not self.process.use_seccomp and value == -1:
-                self.thisptr.syscall(self.noop_syscall_id)
-            else:
-                self.thisptr.syscall(value)
+    @syscall.setter
+    def syscall(self, value):
+        # When using seccomp, -1 as syscall means "skip"; when we are not,
+        # we swap with a harmless syscall without side-effects (getpid).
+        if not self.process.use_seccomp and value == -1:
+            self.thisptr.syscall(self.noop_syscall_id)
+        else:
+            self.thisptr.syscall(value)
 
-    property result:
-        def __get__(self):
-            return self.thisptr.result()
+    @property
+    def result(self):
+        return self.thisptr.result()
 
-        def __set__(self, value):
-            self.thisptr.result(<long>value)
+    @result.setter
+    def result(self, value):
+        self.thisptr.result(<long>value)
 
-    property uresult:
-        def __get__(self):
-            return <unsigned long>self.thisptr.result()
+    @property
+    def uresult(self):
+        return <unsigned long>self.thisptr.result()
 
-        def __set__(self, value):
-            self.thisptr.result(<long><unsigned long>value)
+    @uresult.setter
+    def uresult(self, value):
+        self.thisptr.result(<long><unsigned long>value)
 
-    property arg0:
-        def __get__(self):
-            return self.thisptr.arg0()
+    @property
+    def arg0(self):
+        return self.thisptr.arg0()
 
-        def __set__(self, value):
-            self.thisptr.arg0(<long>value)
+    @arg0.setter
+    def arg0(self, value):
+        self.thisptr.arg0(<long>value)
 
-    property arg1:
-        def __get__(self):
-            return self.thisptr.arg1()
+    @property
+    def arg1(self):
+        return self.thisptr.arg1()
 
-        def __set__(self, value):
-            self.thisptr.arg1(<long>value)
+    @arg1.setter
+    def arg1(self, value):
+        self.thisptr.arg1(<long>value)
 
-    property arg2:
-        def __get__(self):
-            return self.thisptr.arg2()
+    @property
+    def arg2(self):
+        return self.thisptr.arg2()
 
-        def __set__(self, value):
-            self.thisptr.arg2(<long>value)
+    @arg2.setter
+    def arg2(self, value):
+        self.thisptr.arg2(<long>value)
 
-    property arg3:
-        def __get__(self):
-            return self.thisptr.arg3()
+    @property
+    def arg3(self):
+        return self.thisptr.arg3()
 
-        def __set__(self, value):
-            self.thisptr.arg3(<long>value)
+    @arg3.setter
+    def arg3(self, value):
+        self.thisptr.arg3(<long>value)
 
-    property arg4:
-        def __get__(self):
-            return self.thisptr.arg4()
+    @property
+    def arg4(self):
+        return self.thisptr.arg4()
 
-        def __set__(self, value):
-            self.thisptr.arg4(<long>value)
+    @arg4.setter
+    def arg4(self, value):
+        self.thisptr.arg4(<long>value)
 
-    property arg5:
-        def __get__(self):
-            return self.thisptr.arg5()
+    @property
+    def arg5(self):
+        return self.thisptr.arg5()
 
-        def __set__(self, value):
-            self.thisptr.arg5(<long>value)
+    @arg5.setter
+    def arg5(self, value):
+        self.thisptr.arg5(<long>value)
 
-    property uarg0:
-        def __get__(self):
-            return <unsigned long>self.thisptr.arg0()
+    @property
+    def uarg0(self):
+        return <unsigned long>self.thisptr.arg0()
 
-        def __set__(self, value):
-            self.thisptr.arg0(<long><unsigned long>value)
+    @uarg0.setter
+    def uarg0(self, value):
+        self.thisptr.arg0(<long><unsigned long>value)
 
-    property uarg1:
-        def __get__(self):
-            return <unsigned long>self.thisptr.arg1()
+    @property
+    def uarg1(self):
+        return <unsigned long>self.thisptr.arg1()
 
-        def __set__(self, value):
-            self.thisptr.arg1(<long><unsigned long>value)
+    @uarg1.setter
+    def uarg1(self, value):
+        self.thisptr.arg1(<long><unsigned long>value)
 
-    property uarg2:
-        def __get__(self):
-            return <unsigned long>self.thisptr.arg2()
+    @property
+    def uarg2(self):
+        return <unsigned long>self.thisptr.arg2()
 
-        def __set__(self, value):
-            self.thisptr.arg2(<long><unsigned long>value)
+    @uarg2.setter
+    def uarg2(self, value):
+        self.thisptr.arg2(<long><unsigned long>value)
 
-    property uarg3:
-        def __get__(self):
-            return <unsigned long>self.thisptr.arg3()
+    @property
+    def uarg3(self):
+        return <unsigned long>self.thisptr.arg3()
 
-        def __set__(self, value):
-            self.thisptr.arg3(<long><unsigned long>value)
+    @uarg3.setter
+    def uarg3(self, value):
+        self.thisptr.arg3(<long><unsigned long>value)
 
-    property uarg4:
-        def __get__(self):
-            return <unsigned long>self.thisptr.arg4()
+    @property
+    def uarg4(self):
+        return <unsigned long>self.thisptr.arg4()
 
-        def __set__(self, value):
-            self.thisptr.arg4(<long><unsigned long>value)
+    @uarg4.setter
+    def uarg4(self, value):
+        self.thisptr.arg4(<long><unsigned long>value)
 
-    property uarg5:
-        def __get__(self):
-            return <unsigned long>self.thisptr.arg5()
+    @property
+    def uarg5(self):
+        return <unsigned long>self.thisptr.arg5()
 
-        def __set__(self, value):
-            self.thisptr.arg5(<long><unsigned long>value)
+    @uarg5.setter
+    def uarg5(self, value):
+        self.thisptr.arg5(<long><unsigned long>value)
 
     def readstr(self, unsigned long address, size_t max_size=4096):
         cdef char* str = self.thisptr.readstr(address, max_size)
@@ -324,17 +340,17 @@ cdef class Debugger:
         self.thisptr.freestr(str)
         return pystr
 
-    property tid:
-        def __get__(self):
-            return self.thisptr.gettid()
+    @property
+    def tid(self):
+        return self.thisptr.gettid()
 
-    property pid:
-        def __get__(self):
-            return self.thisptr.getpid()
+    @property
+    def pid(self):
+        return self.thisptr.getpid()
 
-    property abi:
-        def __get__(self):
-            return self.thisptr.abi()
+    @property
+    def abi(self):
+        return self.thisptr.abi()
 
     def on_return(self, callback):
         self.on_return_callback = callback
@@ -357,7 +373,7 @@ cdef class Process:
     cdef public int _nproc, _fsize
     cdef unsigned long _max_memory
 
-    def create_debugger(self) -> Debugger:
+    cpdef Debugger create_debugger(self):
         return Debugger(self)
 
     def __cinit__(self, *args, **kwargs):
@@ -427,8 +443,8 @@ cdef class Process:
             config.stdin_ = self._child_stdin
             config.stdout_ = self._child_stdout
             config.stderr_ = self._child_stderr
-            config.argv = alloc_string_array(args)
-            config.envp = alloc_string_array(env)
+            config.argv = alloc_byte_array(args)
+            config.envp = alloc_byte_array(env)
             if fds is None or not len(fds):
                 config.max_fd = 2
             else:
@@ -461,61 +477,63 @@ cdef class Process:
         self._exited = True
         return self._exitcode
 
-    property use_seccomp:
-        def __get__(self):
-            return self.process.use_seccomp()
+    @property
+    def use_seccomp(self):
+        return self.process.use_seccomp()
 
-        def __set__(self, bool enabled):
-            if not self.process.use_seccomp(enabled):
-                raise RuntimeError("Can't change whether seccomp is used after process is created.")
+    @use_seccomp.setter
+    def use_seccomp(self, bool enabled):
+        if not self.process.use_seccomp(enabled):
+            raise RuntimeError("Can't change whether seccomp is used after process is created.")
 
-    property was_initialized:
-        def __get__(self):
-            return self.process.was_initialized()
+    @property
+    def was_initialized(self):
+        return self.process.was_initialized()
 
-    property _trace_syscalls:
-        def __get__(self):
-            return self.process.trace_syscalls()
+    @property
+    def _trace_syscalls(self):
+        return self.process.trace_syscalls()
 
-        def __set__(self, bint value):
-            self.process.trace_syscalls(value)
+    @_trace_syscalls.setter
+    def _trace_syscalls(self, bint value):
+        self.process.trace_syscalls(value)
 
-    property pid:
-        def __get__(self):
-            return self.process.getpid()
+    @property
+    def pid(self):
+        return self.process.getpid()
 
-    property execution_time:
-        def __get__(self):
-            return self.process.execution_time()
+    @property
+    def execution_time(self):
+        return self.process.execution_time()
 
-    property wall_clock_time:
-        def __get__(self):
-            return self.process.wall_clock_time()
+    @property
+    def wall_clock_time(self):
+        return self.process.wall_clock_time()
 
-    property cpu_time:
-        def __get__(self):
-            cdef const rusage *usage = self.process.getrusage()
-            return usage.ru_utime.tv_sec + usage.ru_utime.tv_usec / 1000000.
+    @property
+    def cpu_time(self):
+        cdef const rusage *usage = self.process.getrusage()
+        return usage.ru_utime.tv_sec + usage.ru_utime.tv_usec / 1000000.
 
-    property max_memory:
-        def __get__(self):
-            if PTBOX_FREEBSD:
-                return self.process.getrusage().ru_maxrss
-            if self._exited:
-                return self._max_memory or self.process.getrusage().ru_maxrss
-            cdef unsigned long memory = get_memory(self.process.getpid())
-            if memory > 0:
-                self._max_memory = memory
+    @property
+    def max_memory(self):
+        if PTBOX_FREEBSD:
+            return self.process.getrusage().ru_maxrss
+        if self._exited:
             return self._max_memory or self.process.getrusage().ru_maxrss
+        cdef unsigned long memory = get_memory(self.process.getpid())
+        if memory > 0:
+            self._max_memory = memory
+        return self._max_memory or self.process.getrusage().ru_maxrss
 
-    property signal:
-        def __get__(self):
-            if not self._exited:
-                return None
-            return self._signal if self.was_initialized else 0
+    @property
+    def signal(self):
+        if not self._exited:
+            return None
+        return self._signal if self.was_initialized else 0
 
-    property returncode:
-        def __get__(self):
-            if not self._exited:
-                return None
-            return self._exitcode
+    @property
+    def returncode(self):
+        if not self._exited:
+            return None
+        return self._exitcode

@@ -109,7 +109,6 @@ cdef extern from 'helper.h' nogil:
         int stdin_
         int stdout_
         int stderr_
-        int max_fd
         bool use_seccomp
         int abi_for_seccomp
         bint *seccomp_whitelist
@@ -443,7 +442,6 @@ cdef class Process:
             config.stderr_ = self._child_stderr
             config.argv = alloc_byte_array(args)
             config.envp = alloc_byte_array(env)
-            config.max_fd = 2
 
             config.use_seccomp = self.use_seccomp
             if config.use_seccomp:

@@ -22,7 +22,6 @@ struct child_config {
     int stdout_;
     int stderr_;
     bool use_seccomp;
-    int abi_for_seccomp;
     int *seccomp_whitelist;
 };
 

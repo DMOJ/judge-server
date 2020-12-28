@@ -89,7 +89,7 @@ class Result:
                 feedback = strsignal(process.signal).lower()
 
         if process.protection_fault:
-            syscall, callname, args = process.protection_fault
+            syscall, callname, args, update_errno = process.protection_fault
             print_protection_fault(process.protection_fault)
             callname = callname.replace('sys_', '', 1)
             message = '%s syscall disallowed' % callname

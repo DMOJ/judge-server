@@ -28,13 +28,14 @@ bool pt_debugger::supports_abi(int abi) {
 uint32_t pt_debugger::seccomp_non_native_arch_list[] = { SCMP_ARCH_X86, SCMP_ARCH_X32, 0 };
 #endif
 
-void pt_debugger::pre_syscall() {
+bool pt_debugger::pre_syscall() {
     struct iovec iovec;
     iovec.iov_base = &regs;
     iovec.iov_len = sizeof regs;
     if (ptrace(PTRACE_GETREGSET, tid, NT_PRSTATUS, &iovec)) {
         perror("ptrace(PTRACE_GETREGSET)");
         abi_ = PTBOX_ABI_INVALID;
+        return false;
     } else {
         if (iovec.iov_len == sizeof regs.x86) {
             abi_ = PTBOX_ABI_X86;
@@ -44,20 +45,22 @@ void pt_debugger::pre_syscall() {
             abi_ = PTBOX_ABI_X64;
         }
         regs_changed = false;
+        return true;
     }
 }
 
-void pt_debugger::post_syscall() {
+bool pt_debugger::post_syscall() {
     if (!regs_changed || abi_ == PTBOX_ABI_INVALID)
-        return;
+        return true;
 
     struct iovec iovec;
     iovec.iov_base = &regs;
     iovec.iov_len = abi_ == PTBOX_ABI_X86 ? sizeof regs.x86 : sizeof regs.x64;
     if (ptrace(PTRACE_SETREGSET, tid, NT_PRSTATUS, &iovec)) {
         perror("ptrace(PTRACE_SETREGSET)");
-        abort();
+        return false;
     }
+    return true;
 }
 
 #define UNKNOWN_ABI(source) fprintf(stderr, source ": Invalid ABI\n"), abort()

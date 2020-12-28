@@ -75,7 +75,7 @@ int cptbox_child_run(const struct child_config *config) {
 
 #ifdef PR_SET_NO_NEW_PRIVS  // Since Linux 3.5
     if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0))
-        return 202;
+        return PTBOX_SPAWN_FAIL_NO_NEW_PRIVS;
 #endif
 
 #ifdef PR_SET_SPECULATION_CTRL  // Since Linux 4.17
@@ -97,7 +97,7 @@ int cptbox_child_run(const struct child_config *config) {
 
     if (ptrace_traceme()) {
         perror("ptrace");
-        return 204;
+        return PTBOX_SPAWN_FAIL_TRACEME;
     }
 
     kill(getpid(), SIGSTOP);
@@ -167,10 +167,10 @@ int cptbox_child_run(const struct child_config *config) {
 
     execve(config->file, config->argv, config->envp);
     perror("execve");
-    return 205;
+    return PTBOX_SPAWN_FAIL_EXECVE;
 
 seccomp_fail:
-    return 203;
+    return PTBOX_SPAWN_FAIL_SECCOMP;
 }
 
 // From python's _posixsubprocess

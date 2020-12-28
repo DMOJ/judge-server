@@ -2,6 +2,11 @@
 #ifndef idABBEC9C1_3EF3_4A45_B187B10060CB9F85
 #define idABBEC9C1_3EF3_4A45_B187B10060CB9F85
 
+#define PTBOX_SPAWN_FAIL_NO_NEW_PRIVS   202
+#define PTBOX_SPAWN_FAIL_SECCOMP        203
+#define PTBOX_SPAWN_FAIL_TRACEME        204
+#define PTBOX_SPAWN_FAIL_EXECVE         205
+
 struct child_config {
     unsigned long memory;
     unsigned long address_space;

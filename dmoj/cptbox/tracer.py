@@ -201,15 +201,17 @@ class TracedPopen(Process):
     def wait(self):
         self._died.wait()
         if not self.was_initialized:
-            if self.returncode == 203:
+            if self.returncode == PTBOX_SPAWN_FAIL_NO_NEW_PRIVS:
+                raise RuntimeError('failed to call prctl(PR_SET_NO_NEW_PRIVS)')
+            elif self.returncode == PTBOX_SPAWN_FAIL_SECCOMP:
                 raise RuntimeError('failed to set up seccomp policy')
-            elif self.returncode == 204:
+            elif self.returncode == PTBOX_SPAWN_FAIL_TRACEME:
                 raise RuntimeError(
                     'failed to ptrace child, check Yama config '
                     '(https://www.kernel.org/doc/Documentation/security/Yama.txt, should be '
                     'at most 1); if running in Docker, must run container with `--cap-add=SYS_PTRACE`'
                 )
-            elif self.returncode == 205:
+            elif self.returncode == PTBOX_SPAWN_FAIL_EXECVE:
                 raise RuntimeError('failed to spawn child')
         return self.returncode
 

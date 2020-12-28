@@ -11,7 +11,9 @@ from posix.types cimport pid_t
 __all__ = ['Process', 'Debugger', 'bsd_get_proc_cwd', 'bsd_get_proc_fdno', 'MAX_SYSCALL_NUMBER',
            'AT_FDCWD', 'ALL_ABIS', 'SUPPORTED_ABIS',
            'PTBOX_ABI_X86', 'PTBOX_ABI_X64', 'PTBOX_ABI_X32', 'PTBOX_ABI_ARM', 'PTBOX_ABI_ARM64',
-           'PTBOX_ABI_INVALID', 'PTBOX_ABI_COUNT']
+           'PTBOX_ABI_INVALID', 'PTBOX_ABI_COUNT',
+           'PTBOX_SPAWN_FAIL_NO_NEW_PRIVS', 'PTBOX_SPAWN_FAIL_SECCOMP', 'PTBOX_SPAWN_FAIL_TRACEME',
+           'PTBOX_SPAWN_FAIL_EXECVE']
 
 
 cdef extern from 'ptbox.h' nogil:
@@ -119,6 +121,12 @@ cdef extern from 'helper.h' nogil:
     int cptbox_child_run(child_config *)
     char *_bsd_get_proc_cwd "bsd_get_proc_cwd"(pid_t pid)
     char *_bsd_get_proc_fdno "bsd_get_proc_fdno"(pid_t pid, int fdno)
+
+    cpdef enum:
+        PTBOX_SPAWN_FAIL_NO_NEW_PRIVS
+        PTBOX_SPAWN_FAIL_SECCOMP
+        PTBOX_SPAWN_FAIL_TRACEME
+        PTBOX_SPAWN_FAIL_EXECVE
 
 
 cdef extern from 'fcntl.h' nogil:

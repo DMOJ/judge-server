@@ -27,7 +27,7 @@ cdef extern from 'ptbox.h' nogil:
 
     cdef cppclass pt_debugger:
         int syscall()
-        void syscall(int)
+        bool syscall(int)
         long result()
         void result(long)
         long arg0()
@@ -227,9 +227,9 @@ cdef class Debugger:
         # When using seccomp, -1 as syscall means "skip"; when we are not,
         # we swap with a harmless syscall without side-effects (getpid).
         if not self.process.use_seccomp and value == -1:
-            self.thisptr.syscall(self.noop_syscall_id)
-        else:
-            self.thisptr.syscall(value)
+            value = self.noop_syscall_id
+        if not self.thisptr.syscall(value):
+            PyErr_SetFromErrno(OSError)
 
     @property
     def result(self):

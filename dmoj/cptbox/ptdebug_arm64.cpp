@@ -65,13 +65,16 @@ int pt_debugger::syscall() {
     }
 }
 
-void pt_debugger::syscall(int id) {
+bool pt_debugger::syscall(int id) {
     struct iovec iovec;
     iovec.iov_base = &id;
     iovec.iov_len = sizeof id;
 
-    if (ptrace(PTRACE_SETREGSET, tid, NT_ARM_SYSTEM_CALL, &iovec))
+    if (ptrace(PTRACE_SETREGSET, tid, NT_ARM_SYSTEM_CALL, &iovec)) {
         perror("ptrace(PTRACE_SETREGSET, NT_ARM_SYSTEM_CALL)");
+        return false;
+    }
+    return true;
 }
 
 #define MAKE_ACCESSOR(method, arm32_name, arm64_name) \

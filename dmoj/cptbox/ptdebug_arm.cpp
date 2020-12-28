@@ -56,9 +56,12 @@ int pt_debugger::syscall() {
     }
 }
 
-void pt_debugger::syscall(int id) {
-    if (ptrace(PTRACE_SET_SYSCALL, tid, 0, id) == -1)
+bool pt_debugger::syscall(int id) {
+    if (ptrace(PTRACE_SET_SYSCALL, tid, 0, id) == -1) {
         perror("ptrace(PTRACE_SET_SYSCALL)");
+        return false;
+    }
+    return true;
 }
 
 #define MAKE_ACCESSOR(method, reg_name) \

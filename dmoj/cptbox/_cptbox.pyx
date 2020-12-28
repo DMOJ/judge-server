@@ -1,5 +1,5 @@
 # cython: language_level=3
-from cpython.exc cimport PyErr_SetFromErrno
+from cpython.exc cimport PyErr_NoMemory, PyErr_SetFromErrno
 from libc.stdio cimport FILE, fopen, fclose, fgets, sprintf
 from libc.stdlib cimport malloc, free, strtoul
 from libc.string cimport strncmp, strlen
@@ -149,14 +149,17 @@ cdef void pt_syscall_return_handler(void *context, int syscall) with gil:
 cdef int pt_event_handler(void *context, int event, unsigned long param) nogil:
     return (<Process>context)._event_handler(event, param)
 
-cdef char **alloc_byte_array(list):
-    cdef char **array = <char**>malloc((len(list) + 1) * sizeof(char*))
-    for i, elem in enumerate(list):
-        array[i] = elem
-    array[len(list)] = NULL
+cdef char **alloc_byte_array(list list) except NULL:
+    cdef size_t length = len(list)
+    cdef char **array = <char**>malloc((length + 1) * sizeof(char*))
+    if not array:
+        PyErr_NoMemory()
+    for i in range(length):
+        array[i] = list[i]
+    array[length] = NULL
     return array
 
-cpdef unsigned long get_memory(pid_t pid) nogil:
+cdef unsigned long get_memory(pid_t pid) nogil:
     cdef unsigned long memory = 0
     cdef char path[128]
     cdef char line[128]
@@ -223,10 +226,10 @@ cdef class Debugger:
         return self.thisptr.syscall()
 
     @syscall.setter
-    def syscall(self, value):
+    def syscall(self, int value):
         # When using seccomp, -1 as syscall means "skip"; when we are not,
         # we swap with a harmless syscall without side-effects (getpid).
-        if not self.process.use_seccomp and value == -1:
+        if not self.process._use_seccomp() and value == -1:
             self.thisptr.syscall(self.noop_syscall_id)
         else:
             self.thisptr.syscall(value)
@@ -454,12 +457,14 @@ cdef class Process:
             config.argv = alloc_byte_array(args)
             config.envp = alloc_byte_array(env)
 
-            config.use_seccomp = self.use_seccomp
+            config.use_seccomp = self._use_seccomp()
             if config.use_seccomp:
                 whitelist = self._get_seccomp_whitelist()
-                assert len(whitelist) == MAX_SYSCALL_NUMBER
-                config.seccomp_whitelist = <bint*>malloc(sizeof(bint) * MAX_SYSCALL_NUMBER)
-                for i in range(MAX_SYSCALL_NUMBER):
+                assert len(whitelist) == MAX_SYSCALL
+                config.seccomp_whitelist = <bint*>malloc(sizeof(bint) * MAX_SYSCALL)
+                if not config.seccomp_whitelist:
+                    PyErr_NoMemory()
+                for i in range(MAX_SYSCALL):
                     config.seccomp_whitelist[i] = whitelist[i]
 
             if self.process.spawn(pt_child, &config):
@@ -476,6 +481,9 @@ cdef class Process:
         self._exitcode = exitcode
         self._exited = True
         return self._exitcode
+
+    cdef inline bool _use_seccomp(self):
+        return self.process.use_seccomp()
 
     @property
     def use_seccomp(self):
@@ -530,7 +538,7 @@ cdef class Process:
     def signal(self):
         if not self._exited:
             return None
-        return self._signal if self.was_initialized else 0
+        return self._signal if self.process.was_initialized() else 0
 
     @property
     def returncode(self):

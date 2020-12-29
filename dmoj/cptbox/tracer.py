@@ -1,3 +1,4 @@
+import errno
 import logging
 import os
 import select
@@ -10,7 +11,6 @@ from typing import List, Optional
 from dmoj.cptbox._cptbox import *
 from dmoj.cptbox.handlers import ALLOW, DISALLOW, _CALLBACK
 from dmoj.cptbox.syscalls import SYSCALL_COUNT, by_id, translator, sys_exit, sys_exit_group, sys_getpid
-from dmoj.error import InternalError
 from dmoj.utils.communicate import safe_communicate as _safe_communicate
 from dmoj.utils.os_ext import find_exe_in_path, oom_score_adj, OOM_SCORE_ADJ_MAX
 from dmoj.utils.unicode import utf8bytes, utf8text
@@ -129,6 +129,7 @@ class TracedPopen(Process):
         self._is_tle = False
         self._is_ole = False
         self.__init_streams(stdin, stdout, stderr)
+        self._last_ptrace_errno = None
         self.protection_fault = None
 
         self._security = security
@@ -256,16 +257,17 @@ class TracedPopen(Process):
             return callback(self.debugger)
         return False
 
-    def _protection_fault(self, syscall):
+    def _protection_fault(self, syscall, is_update):
         # When signed, 0xFFFFFFFF is equal to -1, meaning that ptrace failed to read the syscall for some reason.
         # We can't continue debugging as this could potentially be unsafe, so we should exit loudly.
         # See <https://github.com/DMOJ/judge/issues/181> for more details.
-        if syscall == 0xFFFFFFFF:
-            raise InternalError('ptrace failed')
-            # TODO: this would be more useful if we had access to a proper errno
-            # import errno, os
-            # err = ...
-            # raise InternalError('ptrace error: %d (%s: %s)' % (err, errno.errorcode[err], os.strerror(err)))
+        if syscall == -1:
+            err = self._last_ptrace_errno
+            if err is None:
+                log.error('ptrace failed with unknown error')
+            else:
+                log.error('ptrace error: %d (%s: %s)', err, errno.errorcode[err], os.strerror(err))
+            self.protection_fault = (-1, 'ptrace fail', [0] * 6, None)
         else:
             callname = self.debugger.get_syscall_name(syscall)
             self.protection_fault = (
@@ -279,7 +281,11 @@ class TracedPopen(Process):
                     self.debugger.uarg4,
                     self.debugger.uarg5,
                 ],
+                self._last_ptrace_errno if is_update else None,
             )
+
+    def _ptrace_error(self, error):
+        self._last_ptrace_errno = error
 
     def _cpu_time_exceeded(self):
         log.warning('SIGXCPU in process %d', self.pid)

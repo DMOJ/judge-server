@@ -76,6 +76,8 @@ cdef extern from 'ptbox.h' nogil:
     cdef int PTBOX_EVENT_EXITED
     cdef int PTBOX_EVENT_SIGNAL
     cdef int PTBOX_EVENT_PROTECTION
+    cdef int PTBOX_EVENT_PTRACE_ERROR
+    cdef int PTBOX_EVENT_UPDATE_FAIL
 
     cdef int PTBOX_EXIT_NORMAL
     cdef int PTBOX_EXIT_PROTECTION
@@ -415,7 +417,13 @@ cdef class Process:
             self._max_memory = get_memory(self.process.getpid()) or self._max_memory
         if event == PTBOX_EVENT_PROTECTION:
             with gil:
-                self._protection_fault(param)
+                self._protection_fault(<long>param, is_update=False)
+        if event == PTBOX_EVENT_UPDATE_FAIL:
+            with gil:
+                self._protection_fault(<long>param, is_update=True)
+        if event == PTBOX_EVENT_PTRACE_ERROR:
+            with gil:
+                self._ptrace_error(param)
         if event == PTBOX_EVENT_SIGNAL:
             if param != SIGTRAP:
                 self._signal = param
@@ -427,7 +435,10 @@ cdef class Process:
     cpdef _handler(self, abi, syscall, handler):
         self.process.set_handler(abi, syscall, handler)
 
-    cpdef _protection_fault(self, syscall):
+    cpdef _protection_fault(self, syscall, is_update):
+        pass
+
+    cpdef _ptrace_error(self, errno):
         pass
 
     cpdef _cpu_time_exceeded(self):

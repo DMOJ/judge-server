@@ -78,8 +78,8 @@ int pt_process::spawn(pt_fork_handler child, void *context) {
     return 0;
 }
 
-int pt_process::protection_fault(int syscall) {
-    dispatch(PTBOX_EVENT_PROTECTION, syscall);
+int pt_process::protection_fault(int syscall, int type) {
+    dispatch(type, syscall);
     dispatch(PTBOX_EVENT_EXITING, PTBOX_EXIT_PROTECTION);
     killpg(pid, SIGKILL);
 #if PTBOX_FREEBSD
@@ -197,7 +197,11 @@ int pt_process::monitor() {
                 WSTOPSIG(status) == (0x80 | SIGTRAP)) {
             debugger->settid(pid);
 #endif
-            debugger->pre_syscall();
+            if (!debugger->pre_syscall()) {
+                dispatch(PTBOX_EVENT_PTRACE_ERROR, errno);
+                exit_reason = protection_fault(-1);
+                continue;
+            }
 #if defined(__FreeBSD_version) && __FreeBSD_version >= 1002501
             int syscall = lwpi.pl_syscall_code;
 #else
@@ -294,7 +298,11 @@ int pt_process::monitor() {
                 debugger->on_return_context = NULL;
             }
 
-            debugger->post_syscall();
+            if (!debugger->post_syscall()) {
+                dispatch(PTBOX_EVENT_PTRACE_ERROR, errno);
+                exit_reason = protection_fault(syscall, PTBOX_EVENT_UPDATE_FAIL);
+                continue;
+            }
         } else {
 #if PTBOX_FREEBSD
             // No events aside from signal event on FreeBSD

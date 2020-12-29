@@ -46,6 +46,8 @@
 #define PTBOX_EVENT_EXITED 2
 #define PTBOX_EVENT_SIGNAL 3
 #define PTBOX_EVENT_PROTECTION 4
+#define PTBOX_EVENT_PTRACE_ERROR 5
+#define PTBOX_EVENT_UPDATE_FAIL 6
 
 #define PTBOX_EXIT_NORMAL 0
 #define PTBOX_EXIT_PROTECTION 1
@@ -125,7 +127,7 @@ public:
     bool use_seccomp(bool enable);
 protected:
     int dispatch(int event, unsigned long param);
-    int protection_fault(int syscall);
+    int protection_fault(int syscall, int type = PTBOX_EVENT_PROTECTION);
 private:
     pid_t pid;
     int handler[PTBOX_ABI_COUNT][MAX_SYSCALL];
@@ -184,8 +186,8 @@ public:
     }
 #endif
 
-    void pre_syscall();
-    void post_syscall();
+    bool pre_syscall();
+    bool post_syscall();
     int abi() { return abi_; }
 
     static int native_abi;

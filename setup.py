@@ -3,7 +3,10 @@ import io
 import os
 import sys
 import traceback
+from distutils.ccompiler import CCompiler
 from distutils.errors import DistutilsPlatformError
+from multiprocessing import cpu_count
+from multiprocessing.pool import ThreadPool
 
 from setuptools import Extension, find_packages, setup
 from setuptools.command.build_ext import build_ext
@@ -22,6 +25,13 @@ except IOError:
 
 # Allow manually disabling seccomp on old kernels. WSL doesn't have seccomp.
 has_seccomp = sys.platform.startswith('linux') and not is_wsl and os.environ.get('DMOJ_USE_SECCOMP') != 'no'
+try:
+    parallel = int(os.environ['DMOJ_PARALLEL'])
+except (KeyError, ValueError):
+    parallel = cpu_count()
+else:
+    if parallel == 0:
+        parallel = cpu_count()
 
 try:
     from Cython.Build import cythonize
@@ -45,6 +55,26 @@ class SimpleSharedObject(Extension, object):
         self.ext_names.add(name)
         if '.' in name:
             self.ext_names.add(name.split('.')[-1])
+
+
+def parallel_compile(self, sources, output_dir=None, macros=None, include_dirs=None, debug=0, extra_preargs=None,
+                     extra_postargs=None, depends=None):
+    macros, objects, extra_postargs, pp_opts, build = \
+        self._setup_compile(output_dir, macros, include_dirs, sources, depends, extra_postargs)
+    cc_args = self._get_cc_args(pp_opts, debug, extra_preargs)
+
+    def compile_object(obj):
+        try:
+            src, ext = build[obj]
+        except KeyError:
+            return
+        self._compile(obj, src, ext, cc_args, extra_postargs, pp_opts)
+
+    ThreadPool(parallel).map(compile_object, objects)
+    return objects
+
+
+CCompiler.compile = parallel_compile
 
 
 class build_ext_dmoj(build_ext, object):

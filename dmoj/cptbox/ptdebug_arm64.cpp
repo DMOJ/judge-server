@@ -5,8 +5,8 @@
 
 #if defined(__arm64__) || defined(__aarch64__)
 #include <elf.h>
+#include <stdio.h>
 #include <stdlib.h>
-#include <sys/ptrace.h>
 #include <sys/uio.h>
 
 int pt_debugger::native_abi = PTBOX_ABI_ARM64;
@@ -24,33 +24,12 @@ bool pt_debugger::supports_abi(int abi) {
 uint32_t pt_debugger::seccomp_non_native_arch_list[] = { SCMP_ARCH_ARM, 0 };
 #endif
 
-bool pt_debugger::pre_syscall() {
-    struct iovec iovec;
-    iovec.iov_base = &regs;
-    iovec.iov_len = sizeof regs;
-    if (ptrace(PTRACE_GETREGSET, tid, NT_PRSTATUS, &iovec)) {
-        perror("ptrace(PTRACE_GETREGSET)");
-        abi_ = PTBOX_ABI_INVALID;
-        return false;
-    } else {
-        abi_ = iovec.iov_len == sizeof regs.arm32 ? PTBOX_ABI_ARM : PTBOX_ABI_ARM64;
-        regs_changed = false;
-        return true;
-    }
+int pt_debugger::abi_from_reg_size(size_t reg_size) {
+    return reg_size == sizeof regs.arm32 ? PTBOX_ABI_ARM : PTBOX_ABI_ARM64;
 }
 
-bool pt_debugger::post_syscall() {
-    if (!regs_changed || abi_ == PTBOX_ABI_INVALID)
-        return true;
-
-    struct iovec iovec;
-    iovec.iov_base = &regs;
-    iovec.iov_len = abi_ == PTBOX_ABI_ARM ? sizeof regs.arm32 : sizeof regs.arm64;
-    if (ptrace(PTRACE_SETREGSET, tid, NT_PRSTATUS, &iovec)) {
-        perror("ptrace(PTRACE_SETREGSET)");
-        return false;
-    }
-    return true;
+size_t pt_debugger::reg_size_from_abi(int abi) {
+    return abi_ == PTBOX_ABI_ARM ? sizeof regs.arm32 : sizeof regs.arm64;
 }
 
 #define UNKNOWN_ABI(source) fprintf(stderr, source ": Invalid ABI\n"), abort()

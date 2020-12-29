@@ -65,7 +65,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Download docker image
-        run: docker pull dmoj/runtimes-tier3
+        run: docker pull ghcr.io/dmoj/runtimes-tier3:amd64-latest
       - name: Install python
         run: |
           curl -L "https://github.com/DMOJ/runtimes-python/releases/latest/download/python${{ matrix.python-version }}-amd64.tar.gz" |
@@ -108,7 +108,7 @@ jobs:
           mkdir -p "$HOME/docker-cache/pip"
           sudo chown root:root -R "$HOME/docker-cache"
       - name: Execute tests in docker
-        run: docker run -e PYTHON_VERSION="${{ matrix.python-version }}" -e DMOJ_USE_SECCOMP="$([ ${{ matrix.sandbox }} = seccomp ] && echo yes || echo no)" -v "$(pwd):/code" -v "$HOME/docker-cache:/root/.cache" --cap-add=SYS_PTRACE dmoj/runtimes-tier3
+        run: docker run -e PYTHON_VERSION="${{ matrix.python-version }}" -e DMOJ_USE_SECCOMP="$([ ${{ matrix.sandbox }} = seccomp ] && echo yes || echo no)" -v "$(pwd):/code" -v "$HOME/docker-cache:/root/.cache" --cap-add=SYS_PTRACE ghcr.io/dmoj/runtimes-tier3:amd64-latest
       - name: Upload coverage data
         uses: codecov/codecov-action@v1
       - name: Prepare cache for storage

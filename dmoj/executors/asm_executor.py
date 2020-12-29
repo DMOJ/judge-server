@@ -2,10 +2,9 @@ import os
 import re
 from typing import List, Optional
 
-from dmoj.cptbox.tracer import can_debug
+from dmoj.cptbox import PTBOX_ABI_X86, PTBOX_ABI_X64, can_debug
 from dmoj.executors.compiled_executor import CompiledExecutor
 from dmoj.judgeenv import env, skip_self_test
-from dmoj.utils.os_ext import ARCH_X64, ARCH_X86
 from dmoj.utils.unicode import utf8text
 
 refeatures = re.compile(r'^[#;@|!]\s*features:\s*([\w\s,]+)', re.M)
@@ -13,7 +12,7 @@ feature_split = re.compile(r'[\s,]+').split
 
 
 class ASMExecutor(CompiledExecutor):
-    arch: str
+    abi: int
     ld_m: str
     as_name: str
     ld_name: str
@@ -94,7 +93,7 @@ class ASMExecutor(CompiledExecutor):
 
     @classmethod
     def initialize(cls):
-        if cls.qemu_path is None and not can_debug(cls.arch):
+        if cls.qemu_path is None and not can_debug(cls.abi):
             return False
         if any(
             i is None for i in (cls.get_as_path(), cls.get_ld_path(), cls.dynamic_linker, cls.crt_pre, cls.crt_post)
@@ -115,7 +114,7 @@ class ASMExecutor(CompiledExecutor):
 
     @classmethod
     def autoconfig(cls):
-        if not can_debug(cls.arch):
+        if not can_debug(cls.abi):
             return {}, False, 'Unable to natively debug'
         return super().autoconfig()
 
@@ -166,7 +165,7 @@ class NASMExecutor(ASMExecutor):
 
 
 class PlatformX86Mixin(ASMExecutor):
-    arch = ARCH_X86
+    abi = PTBOX_ABI_X86
     ld_name = 'ld_x86'
     ld_m = 'elf_i386'
     platform_prefixes = ['i586-linux-gnu']
@@ -184,7 +183,7 @@ class PlatformX86Mixin(ASMExecutor):
 
 
 class PlatformX64Mixin(ASMExecutor):
-    arch = ARCH_X64
+    abi = PTBOX_ABI_X64
     ld_name = 'ld_x64'
     ld_m = 'elf_x86_64'
     platform_prefixes = ['x86_64-linux-gnu']

@@ -12,16 +12,7 @@ from dmoj.cptbox.handlers import ALLOW, DISALLOW, _CALLBACK
 from dmoj.cptbox.syscalls import SYSCALL_COUNT, by_id, translator, sys_exit, sys_exit_group, sys_getpid
 from dmoj.error import InternalError
 from dmoj.utils.communicate import safe_communicate as _safe_communicate
-from dmoj.utils.os_ext import (
-    ARCH_A64,
-    ARCH_ARM,
-    ARCH_X32,
-    ARCH_X64,
-    ARCH_X86,
-    find_exe_in_path,
-    oom_score_adj,
-    OOM_SCORE_ADJ_MAX,
-)
+from dmoj.utils.os_ext import find_exe_in_path, oom_score_adj, OOM_SCORE_ADJ_MAX
 from dmoj.utils.unicode import utf8bytes, utf8text
 
 PIPE = subprocess.PIPE
@@ -38,19 +29,6 @@ _SYSCALL_INDICIES[PTBOX_ABI_FREEBSD_X64] = 4
 _SYSCALL_INDICIES[PTBOX_ABI_ARM64] = 5
 
 FREEBSD = sys.platform.startswith('freebsd')
-
-if FREEBSD:
-    _abi_map = {
-        ARCH_X64: PTBOX_ABI_FREEBSD_X64,
-    }
-else:
-    _abi_map = {
-        ARCH_X86: PTBOX_ABI_X86,
-        ARCH_X64: PTBOX_ABI_X64,
-        ARCH_X32: PTBOX_ABI_X32,
-        ARCH_ARM: PTBOX_ABI_ARM,
-        ARCH_A64: PTBOX_ABI_ARM64,
-    }
 
 _address_bits = {
     PTBOX_ABI_X86: 32,
@@ -407,5 +385,5 @@ class TracedPopen(Process):
         return _safe_communicate(self, input=input, outlimit=sys.maxsize, errlimit=sys.maxsize)
 
 
-def can_debug(arch):
-    return _abi_map.get(arch) in SUPPORTED_ABIS
+def can_debug(abi):
+    return abi in SUPPORTED_ABIS

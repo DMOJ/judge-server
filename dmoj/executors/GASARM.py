@@ -1,10 +1,10 @@
+from dmoj.cptbox import PTBOX_ABI_ARM
 from dmoj.executors.asm_executor import GASExecutor
 from dmoj.judgeenv import env
-from dmoj.utils.os_ext import ARCH_ARM
 
 
 class Executor(GASExecutor):
-    arch = ARCH_ARM
+    abi = PTBOX_ABI_ARM
     as_name = 'as_arm'
     ld_name = 'ld_arm'
     ld_m = 'armelf_linux_eabi'

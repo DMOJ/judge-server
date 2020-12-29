@@ -206,6 +206,10 @@ private:
     void *on_return_context;
     int execve_id;
     int abi_;
+    int abi_from_reg_size(size_t);
+#if !PTBOX_FREEBSD
+    size_t reg_size_from_abi(int);
+#endif
     ptbox_regs regs;
     bool regs_changed;
     bool use_peekdata = false;

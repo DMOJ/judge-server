@@ -3,9 +3,8 @@
 #include "ptbox.h"
 
 #ifdef __arm__
-#include <elf.h>
-#include <sys/ptrace.h>
-#include <sys/uio.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 int pt_debugger::native_abi = PTBOX_ABI_ARM;
 
@@ -17,33 +16,12 @@ bool pt_debugger::supports_abi(int abi) {
 uint32_t pt_debugger::seccomp_non_native_arch_list[] = { 0 };
 #endif
 
-bool pt_debugger::pre_syscall() {
-    struct iovec iovec;
-    iovec.iov_base = &regs;
-    iovec.iov_len = sizeof regs;
-    if (ptrace(PTRACE_GETREGSET, tid, NT_PRSTATUS, &iovec)) {
-        perror("ptrace(PTRACE_GETREGSET)");
-        abi_ = PTBOX_ABI_INVALID;
-        return false;
-    } else {
-        abi_ = PTBOX_ABI_ARM;
-        regs_changed = false;
-        return true;
-    }
+int pt_debugger::abi_from_reg_size(size_t) {
+    return PTBOX_ABI_ARM;
 }
 
-bool pt_debugger::post_syscall() {
-    if (!regs_changed || abi_ == PTBOX_ABI_INVALID)
-        return true;
-
-    struct iovec iovec;
-    iovec.iov_base = &regs;
-    iovec.iov_len = sizeof regs;
-    if (ptrace(PTRACE_SETREGSET, tid, NT_PRSTATUS, &iovec)) {
-        perror("ptrace(PTRACE_SETREGSET)");
-        return false;
-    }
-    return true;
+size_t pt_debugger::reg_size_from_abi(int) {
+    return sizeof regs;
 }
 
 #define UNKNOWN_ABI(source) fprintf(stderr, source ": Invalid ABI\n"), abort()

@@ -5,7 +5,6 @@
 #if PTBOX_FREEBSD && defined(__amd64__)
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/ptrace.h>
 
 int pt_debugger::native_abi = PTBOX_ABI_FREEBSD_X64;
 
@@ -13,30 +12,10 @@ bool pt_debugger::supports_abi(int abi) {
     return abi == PTBOX_ABI_FREEBSD_X64;
 }
 
-bool pt_debugger::pre_syscall() {
-    if (ptrace(PT_GETREGS, tid, (caddr_t) &regs, 0)) {
-        perror("ptrace(PT_GETREGS)");
-        abi_ = PTBOX_ABI_INVALID;
-        return false;
-    } else {
-        abi_ = PTBOX_ABI_FREEBSD_X64;
-        regs_changed = false;
-        return true;
-    }
+int pt_debugger::abi_from_reg_size(size_t) {
+    return PTBOX_ABI_FREEBSD_X64;
 }
 
-bool pt_debugger::post_syscall() {
-    if (!regs_changed || abi_ == PTBOX_ABI_INVALID)
-        return true;
-
-    if (ptrace(PT_SETREGS, tid, (caddr_t) &regs, 0)) {
-        perror("ptrace(PTRACE_SETREGSET)");
-        return false;
-    }
-    return true;
-}
-
-#define STRINGIFY(x) #x
 #define UNKNOWN_ABI(source) fprintf(stderr, source ": Invalid ABI\n"), abort()
 
 int pt_debugger::syscall() {
@@ -52,7 +31,7 @@ bool pt_debugger::syscall(int value) {
         case PTBOX_ABI_INVALID:
             return false;
         default: \
-            UNKNOWN_ABI("ptdebug_freebsd_x64.cpp:" STRINGIFY(method) " setter");
+            UNKNOWN_ABI("ptdebug_freebsd_x64.cpp:syscall setter");
     }
 }
 
@@ -64,7 +43,7 @@ bool pt_debugger::syscall(int value) {
             case PTBOX_ABI_INVALID: \
                 return -1; \
             default: \
-                UNKNOWN_ABI("ptdebug_freebsd_x64.cpp:" STRINGIFY(method) " getter"); \
+                UNKNOWN_ABI("ptdebug_freebsd_x64.cpp:" #method " getter"); \
         } \
     } \
     \

@@ -199,6 +199,8 @@ int pt_process::monitor() {
 #endif
             if (!debugger->pre_syscall()) {
                 dispatch(PTBOX_EVENT_PTRACE_ERROR, errno);
+                exit_reason = protection_fault(-1);
+                continue;
             }
 #if defined(__FreeBSD_version) && __FreeBSD_version >= 1002501
             int syscall = lwpi.pl_syscall_code;

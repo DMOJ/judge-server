@@ -414,10 +414,10 @@ cdef class Process:
             self._max_memory = get_memory(self.process.getpid()) or self._max_memory
         if event == PTBOX_EVENT_PROTECTION:
             with gil:
-                self._protection_fault(param, is_update=False)
+                self._protection_fault(<long>param, is_update=False)
         if event == PTBOX_EVENT_UPDATE_FAIL:
             with gil:
-                self._protection_fault(param, is_update=True)
+                self._protection_fault(<long>param, is_update=True)
         if event == PTBOX_EVENT_PTRACE_ERROR:
             with gil:
                 self._ptrace_error(param)

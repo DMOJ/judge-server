@@ -77,20 +77,20 @@ int pt_debugger::syscall() {
     }
 }
 
-void pt_debugger::syscall(int id) {
+bool pt_debugger::syscall(int id) {
     regs_changed = true;
     switch (abi_) {
         case PTBOX_ABI_X86:
             regs.x86.orig_eax = id;
-            return;
+            return true;
         case PTBOX_ABI_X32:
             regs.x64.orig_rax = id | __X32_SYSCALL_BIT;
-            return;
+            return true;
         case PTBOX_ABI_X64:
             regs.x64.orig_rax = id;
-            return;
+            return true;
         case PTBOX_ABI_INVALID:
-            return;
+            return false;
         default:
             UNKNOWN_ABI("ptdebug_x64.cpp:syscall setter");
     }

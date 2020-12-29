@@ -146,7 +146,7 @@ public:
     pt_debugger();
 
     int syscall();
-    void syscall(int);
+    bool syscall(int);
     long result();
     void result(long);
     long arg0();

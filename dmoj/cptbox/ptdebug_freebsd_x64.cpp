@@ -40,14 +40,14 @@ int pt_debugger::syscall() {
     return _bsd_syscall;
 }
 
-void pt_debugger::syscall(int value) {
+bool pt_debugger::syscall(int value) {
     regs_changed = true;
     switch (abi_) {
         case PTBOX_ABI_FREEBSD_X64:
             regs.r_rax = value;
-            return; \
+            return true; \
         case PTBOX_ABI_INVALID:
-            return;
+            return false;
         default: \
             UNKNOWN_ABI("ptdebug_freebsd_x64.cpp:" STRINGIFY(method) " setter");
     }

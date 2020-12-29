@@ -5,7 +5,6 @@ import sys
 import traceback
 from distutils.ccompiler import CCompiler
 from distutils.errors import DistutilsPlatformError
-from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
 
 from setuptools import Extension, find_packages, setup
@@ -28,10 +27,10 @@ has_seccomp = sys.platform.startswith('linux') and not is_wsl and os.environ.get
 try:
     parallel = int(os.environ['DMOJ_PARALLEL'])
 except (KeyError, ValueError):
-    parallel = cpu_count()
+    parallel = os.cpu_count()
 else:
     if parallel == 0:
-        parallel = cpu_count()
+        parallel = os.cpu_count()
 
 try:
     from Cython.Build import cythonize
@@ -74,7 +73,8 @@ def parallel_compile(self, sources, output_dir=None, macros=None, include_dirs=N
     return objects
 
 
-CCompiler.compile = parallel_compile
+if parallel is not None:
+    CCompiler.compile = parallel_compile
 
 
 class build_ext_dmoj(build_ext, object):

@@ -1,4 +1,5 @@
 #define _BSD_SOURCE
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -79,7 +80,9 @@ bool pt_debugger::pre_syscall() {
 }
 
 bool pt_debugger::post_syscall() {
-    if (!regs_changed || abi_ == PTBOX_ABI_INVALID)
+    // Should not be possible because pt_process should already have generated a protection fault.
+    assert(abi_ != PTBOX_ABI_INVALID);
+    if (!regs_changed)
         return true;
 
 #if PTBOX_FREEBSD

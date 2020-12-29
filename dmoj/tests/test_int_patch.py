@@ -5,6 +5,8 @@ from parameterized import parameterized_class
 
 from dmoj.utils import builtin_int_patch
 
+int_ = int
+
 
 @parameterized_class([
     {'use_patch': True},
@@ -35,6 +37,10 @@ class IntrospectionTest(unittest.TestCase):
 
     def test_type_check(self):
         self.assertEqual(type(1), int)
+
+    def test_identity(self):
+        self.assertIs(int(1), 1)
+        self.assertIs(type(int(1)), int_)
 
 
 class ParseTest(unittest.TestCase):

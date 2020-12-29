@@ -73,7 +73,7 @@ def parallel_compile(self, sources, output_dir=None, macros=None, include_dirs=N
     return objects
 
 
-if parallel is not None:
+if parallel not in (None, 1):
     CCompiler.compile = parallel_compile
 
 

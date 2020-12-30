@@ -4,6 +4,7 @@
 
 #if !PTBOX_FREEBSD && defined(__amd64__)
 #include <asm/unistd.h>
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -25,11 +26,19 @@ uint32_t pt_debugger::seccomp_non_native_arch_list[] = { SCMP_ARCH_X86, SCMP_ARC
 
 int pt_debugger::abi_from_reg_size(size_t reg_size) {
     if (reg_size == sizeof regs.x86) {
+        if (is_enter() && regs.x86.eax != -ENOSYS) {
+            fprintf(stderr, "Expected eax to be -NOSYS on syscall enter, got 0x%08x\n", regs.x86.eax);
+        }
         return PTBOX_ABI_X86;
-    } else if (regs.x64.orig_rax & __X32_SYSCALL_BIT) {
-        return PTBOX_ABI_X32;
     } else {
-        return PTBOX_ABI_X64;
+        if (is_enter() && regs.x64.rax != -ENOSYS) {
+            fprintf(stderr, "Expected rax to be -NOSYS on syscall enter, got 0x%016llx\n", regs.x64.rax);
+        }
+        if (regs.x64.orig_rax & __X32_SYSCALL_BIT) {
+            return PTBOX_ABI_X32;
+        } else {
+            return PTBOX_ABI_X64;
+        }
     }
 }
 

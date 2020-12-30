@@ -3,6 +3,7 @@
 #include "ptbox.h"
 
 #ifdef __i386__
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -17,6 +18,9 @@ uint32_t pt_debugger::seccomp_non_native_arch_list[] = { 0 };
 #endif
 
 int pt_debugger::abi_from_reg_size(size_t) {
+    if (is_enter() && regs.eax != -ENOSYS) {
+        fprintf(stderr, "Expected eax to be -NOSYS on syscall enter, got 0x%08x\n", regs.eax);
+    }
     return PTBOX_ABI_X86;
 }
 

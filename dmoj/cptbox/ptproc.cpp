@@ -198,6 +198,12 @@ int pt_process::monitor() {
             debugger->settid(pid);
 #endif
             if (!debugger->pre_syscall()) {
+#if !PTBOX_FREEBSD
+                if (errno == ESRCH) {
+                    fprintf(stderr, "thread disappeared: %d, ignoring.\n", pid);
+                    continue;
+                }
+#endif
                 dispatch(PTBOX_EVENT_PTRACE_ERROR, errno);
                 exit_reason = protection_fault(-1);
                 continue;

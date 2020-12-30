@@ -197,13 +197,11 @@ public:
 #endif
 
     void on_return(pt_syscall_return_callback callback, void *context) {
-        on_return_callback = callback;
-        on_return_context = context;
+        on_return_[tid] = std::make_pair(callback, context);
     }
 private:
     pt_process *process;
-    pt_syscall_return_callback on_return_callback;
-    void *on_return_context;
+    std::map<pid_t, std::pair<pt_syscall_return_callback, void*>> on_return_;
     int execve_id;
     int abi_;
     int abi_from_reg_size(size_t);

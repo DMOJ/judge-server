@@ -15,7 +15,7 @@
 #include <elf.h>
 #endif
 
-pt_debugger::pt_debugger() : on_return_callback(NULL) {}
+pt_debugger::pt_debugger() {}
 
 bool has_null(char *buf, unsigned long size) {
     for (unsigned long i = 0; i < size; ++i) {

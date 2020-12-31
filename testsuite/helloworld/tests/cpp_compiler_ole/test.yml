@@ -1,0 +1,6 @@
+language: CPP11
+time: 1
+memory: 1024
+source: hello.cpp
+expect: CE
+feedback: compiler output too long

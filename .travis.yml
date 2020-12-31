@@ -19,12 +19,6 @@ install:
   - |
     curl -L "https://github.com/DMOJ/runtimes-python/releases/latest/download/python$PYTHON_VERSION-$ARCH.tar.gz" |
       tar -xz
-  - >
-    git clone --depth 25 \
-              --single-branch \
-              --branch ${DMOJ_JUDGE_TESTSUITE_BRANCH:-master} \
-              https://github.com/${DMOJ_JUDGE_TESTSUITE_SLUG:-DMOJ/judge-testsuite} testsuite &&
-    git -C testsuite reset --hard ${DMOJ_JUDGE_TESTSUITE_COMMIT_SHA:-HEAD}
 cache:
   directories:
     - /home/travis/.cache/pip

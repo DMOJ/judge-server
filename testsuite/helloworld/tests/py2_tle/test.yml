@@ -1,0 +1,5 @@
+language: PY2
+time: 0.25
+memory: 65536
+source: helloworld.py
+expect: TLE

@@ -70,13 +70,6 @@ jobs:
         run: |
           curl -L "https://github.com/DMOJ/runtimes-python/releases/latest/download/python${{ matrix.python-version }}-amd64.tar.gz" |
           tar -xz
-      - name: Download testsuite
-        run: |
-          git clone --depth 25 \
-                        --single-branch \
-                        --branch ${DMOJ_JUDGE_TESTSUITE_BRANCH:-master} \
-                        https://github.com/${DMOJ_JUDGE_TESTSUITE_SLUG:-DMOJ/judge-testsuite} testsuite &&
-              git -C testsuite reset --hard ${DMOJ_JUDGE_TESTSUITE_COMMIT_SHA:-HEAD}
       - name: Create docker scripts
         run: |
           cat > run <<'EOF'

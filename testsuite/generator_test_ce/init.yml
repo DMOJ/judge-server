@@ -1,0 +1,3 @@
+generator: generator.cpp
+test_cases:
+- points: 10

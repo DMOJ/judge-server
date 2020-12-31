@@ -1,0 +1,5 @@
+generator:
+    source: generator.cpp
+    time_limit: 2
+test_cases:
+- {points: 10}

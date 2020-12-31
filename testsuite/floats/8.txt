@@ -1,0 +1,4 @@
+Floats Test
+nan
+NaN
+NAN

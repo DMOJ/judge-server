@@ -1,0 +1,8 @@
+checker:
+  name: bridged
+  args:
+    files: [checker.c, header.h]
+    lang: C
+test_cases:
+- points: 10
+

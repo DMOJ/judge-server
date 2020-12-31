@@ -1,0 +1,7 @@
+checker:
+  name: linecount
+  args: {feedback: True}
+test_cases:
+- {in: 1.txt, out: 1.txt, points: 1}
+- {in: 2.txt, out: 1.txt, points: 1}
+- {in: 3.txt, out: 1.txt, points: 1}

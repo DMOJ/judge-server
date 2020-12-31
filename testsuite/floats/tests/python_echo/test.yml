@@ -1,0 +1,5 @@
+language: PY2
+time: 2
+memory: 65536
+source: echo.py
+cases: [AC,AC,WA,WA,WA,AC,WA]

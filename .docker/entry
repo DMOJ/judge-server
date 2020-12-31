@@ -5,18 +5,19 @@ export PYTHONUNBUFFERED=1
 export LANG=C.UTF-8
 export PYTHONIOENCODING=utf8
 
-cd /judge
+cd /judge || exit
 pip3 install -q -e .
 
-if [ "$1" == "run" ]; then
-    command=dmoj
-elif [ "$1" == "cli" ]; then
-    command=dmoj-cli
-else
-    echo "Invalid command, must be one of [run, cli]" 1>&2
-    exit 1
-fi
+case "$1" in
+run) command=(dmoj) ;;
+cli) command=(dmoj-cli) ;;
+test) command=(python3 -- -m dmoj.testsuite testsuite) ;;
+*)
+  echo "Invalid command, must be one of [run, cli, test]" 1>&2
+  exit 1
+  ;;
+esac
 
 shift
 . ~judge/.profile
-runuser -u judge "${command}" -- $@
+runuser -u judge "${command[@]}" -- "$@"

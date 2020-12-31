@@ -1,0 +1,15 @@
+var minium, maxium, mid : int
+var status : string
+minium := 1
+maxium := 2 * 10 ** 9
+loop
+    mid := minium + (maxium - minium) div 2
+    put mid
+    get status
+    if status = "SINKS" then
+        minium := mid + 1
+    elsif status = "FLOATS" then
+        maxium := mid - 1
+    end if
+    exit when status = "OK"
+end loop

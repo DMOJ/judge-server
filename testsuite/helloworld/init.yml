@@ -1,0 +1,2 @@
+test_cases:
+- {in: helloworld.in, out: helloworld.out, points: 100}

@@ -1,0 +1,5 @@
+generator: generator.cpp
+test_cases:
+- {in: 1.in, points: 10}
+- {in: 2.in, points: 10}
+- {in: 3.in, points: 30}

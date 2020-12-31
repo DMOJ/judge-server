@@ -1,0 +1,8 @@
+checker:
+  name: bridged
+  args:
+    files: checker.cpp
+    lang: CPP14
+    type: coci
+test_cases:
+- points: 10

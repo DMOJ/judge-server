@@ -1,0 +1,6 @@
+language: PY2
+time: 2
+memory: 65536
+source: not_num.py
+expect: WA
+feedback: expected int, got "A"

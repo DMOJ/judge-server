@@ -199,6 +199,15 @@ int pt_process::monitor() {
 #endif
             if (!debugger->pre_syscall()) {
 #if !PTBOX_FREEBSD
+                // When debugging a multithreaded application, the following sequence of events can happen:
+                // 1. Thread #1 does sys_exit_group
+                // 2. Thread #2 does any syscall
+                // 3. Thread #1 traps, and we handle sys_exit_group
+                // 4. sys_exit_group is allowed, all threads are killed
+                // 5. Thread #2 traps, and we attempt to read registers
+                // 6. Since thread has been killed, this results in ESRCH
+                // So we ignore ESRCH. Note that PTRACE_EVENT_EXIT triggers for the thread AFTER this ESRCH,
+                // so we can't know in advance if this will happen.
                 if (errno == ESRCH) {
                     fprintf(stderr, "thread disappeared: %d, ignoring.\n", pid);
                     continue;

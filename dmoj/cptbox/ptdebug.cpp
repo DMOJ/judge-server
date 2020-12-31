@@ -44,6 +44,10 @@ void pt_debugger::setpid(pid_t pid) {
     this->tid = pid;
 }
 #else
+void pt_debugger::tid_reset(pid_t tid) {
+    syscall_[tid] = 0;
+}
+
 void pt_debugger::settid(pid_t tid) {
     this->tid = tid;
     if (!process->use_seccomp()) {

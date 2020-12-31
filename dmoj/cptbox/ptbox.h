@@ -180,6 +180,7 @@ public:
     void setpid(pid_t pid);
 #else
     void settid(pid_t tid);
+    void tid_reset(pid_t tid);
     bool is_enter() {
       // All seccomp events are enter events.
       return process->use_seccomp() ? true : syscall_[tid] != 0;

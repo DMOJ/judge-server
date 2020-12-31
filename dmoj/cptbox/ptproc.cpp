@@ -319,12 +319,6 @@ int pt_process::monitor() {
                 continue;
             }
         } else {
-            // We can only find whether a syscall-stop is enter or exit by toggling. However, blind toggling
-            // when we receive a syscall-stop does not work. To quote strace:
-            // > The rule is that syscall-enter-stop is always followed by syscall-exit-stop,
-            // > PTRACE_EVENT stop or tracee's death - no other kinds of ptrace-stop can occur in between.
-            // Therefore, we reset the enter/exit toggle if we get something that is not a syscall-stop.
-            debugger->tid_reset(pid);
 #if PTBOX_FREEBSD
             // No events aside from signal event on FreeBSD
             // (TODO: maybe check for PL_SIGNAL instead of both PL_SIGNAL and PL_NONE?)
@@ -335,6 +329,13 @@ int pt_process::monitor() {
             if (signal == SIGSTOP)
                 signal = 0;
 #else
+            // We can only find whether a syscall-stop is enter or exit by toggling. However, blind toggling
+            // when we receive a syscall-stop does not work. To quote strace:
+            // > The rule is that syscall-enter-stop is always followed by syscall-exit-stop,
+            // > PTRACE_EVENT stop or tracee's death - no other kinds of ptrace-stop can occur in between.
+            // Therefore, we reset the enter/exit toggle if we get something that is not a syscall-stop.
+            debugger->tid_reset(pid);
+
             switch (WSTOPSIG(status)) {
                 case SIGTRAP:
                     switch (status >> 16) {

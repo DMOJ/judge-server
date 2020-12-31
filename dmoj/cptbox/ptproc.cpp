@@ -292,10 +292,10 @@ int pt_process::monitor() {
 
             // Syscall has "ended". What we do here varies a bit between if we're using seccomp
             // or not, since with seccomp we will have no return event.
-            if ((_use_seccomp || !in_syscall) && debugger->on_return_callback) {
-                debugger->on_return_callback(debugger->on_return_context, syscall);
-                debugger->on_return_callback = NULL;
-                debugger->on_return_context = NULL;
+            if ((_use_seccomp || !in_syscall) && debugger->on_return_.count(pid)) {
+                std::pair<pt_syscall_return_callback, void*> callback = debugger->on_return_[pid];
+                callback.first(callback.second, syscall);
+                debugger->on_return_.erase(pid);
             }
 
             if (!debugger->post_syscall()) {

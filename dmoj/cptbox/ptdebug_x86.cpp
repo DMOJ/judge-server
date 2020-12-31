@@ -3,6 +3,7 @@
 #include "ptbox.h"
 
 #ifdef __i386__
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -37,14 +38,14 @@ int pt_debugger::syscall() {
     }
 }
 
-bool pt_debugger::syscall(int id) {
+int pt_debugger::syscall(int id) {
     regs_changed = true;
     switch (abi_) {
         case PTBOX_ABI_X86:
             regs.orig_eax = id;
-            return true;
+            return 0;
         case PTBOX_ABI_INVALID:
-            return false;
+            return EINVAL;
         default:
             UNKNOWN_ABI("ptdebug_x86.cpp:syscall setter");
     }

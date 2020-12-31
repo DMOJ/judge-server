@@ -148,7 +148,7 @@ public:
     pt_debugger();
 
     int syscall();
-    bool syscall(int);
+    int syscall(int);
     long result();
     void result(long);
     long arg0();
@@ -187,8 +187,8 @@ public:
     }
 #endif
 
-    bool pre_syscall();
-    bool post_syscall();
+    int pre_syscall();
+    int post_syscall();
     int abi() { return abi_; }
 
     static int native_abi;

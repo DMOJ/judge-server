@@ -107,7 +107,7 @@ bool pt_process::use_seccomp(bool enabled) {
 int pt_process::monitor() {
     bool in_syscall = false, first = true, spawned = false, execve_allowed = true;
     struct timespec start, end, delta;
-    int status, exit_reason = PTBOX_EXIT_NORMAL;
+    int status, exit_reason = PTBOX_EXIT_NORMAL, err;
     // Set pgid to -this->pid such that -pgid becomes pid, resulting
     // in the initial wait be on the main thread. This allows it a chance
     // of creating a new process group.
@@ -197,7 +197,7 @@ int pt_process::monitor() {
                 WSTOPSIG(status) == (0x80 | SIGTRAP)) {
             debugger->settid(pid);
 #endif
-            if (!debugger->pre_syscall()) {
+            if ((err = debugger->pre_syscall()) != 0) {
 #if !PTBOX_FREEBSD
                 // When debugging a multithreaded application, the following sequence of events can happen:
                 // 1. Thread #1 does sys_exit_group
@@ -208,12 +208,12 @@ int pt_process::monitor() {
                 // 6. Since thread has been killed, this results in ESRCH
                 // So we ignore ESRCH. Note that PTRACE_EVENT_EXIT triggers for the thread AFTER this ESRCH,
                 // so we can't know in advance if this will happen.
-                if (errno == ESRCH) {
+                if (err == ESRCH) {
                     fprintf(stderr, "thread disappeared: %d, ignoring.\n", pid);
                     continue;
                 }
 #endif
-                dispatch(PTBOX_EVENT_PTRACE_ERROR, errno);
+                dispatch(PTBOX_EVENT_PTRACE_ERROR, err);
                 exit_reason = protection_fault(-1);
                 continue;
             }
@@ -313,8 +313,8 @@ int pt_process::monitor() {
                 debugger->on_return_.erase(pid);
             }
 
-            if (!debugger->post_syscall()) {
-                dispatch(PTBOX_EVENT_PTRACE_ERROR, errno);
+            if ((err = debugger->post_syscall()) != 0) {
+                dispatch(PTBOX_EVENT_PTRACE_ERROR, err);
                 exit_reason = protection_fault(syscall, PTBOX_EVENT_UPDATE_FAIL);
                 continue;
             }

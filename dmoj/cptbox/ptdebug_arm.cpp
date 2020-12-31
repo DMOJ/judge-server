@@ -3,6 +3,7 @@
 #include "ptbox.h"
 
 #ifdef __arm__
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -37,12 +38,13 @@ int pt_debugger::syscall() {
     }
 }
 
-bool pt_debugger::syscall(int id) {
+int pt_debugger::syscall(int id) {
     if (ptrace(PTRACE_SET_SYSCALL, tid, 0, id) == -1) {
+        int err = errno;
         perror("ptrace(PTRACE_SET_SYSCALL)");
-        return false;
+        return err;
     }
-    return true;
+    return 0;
 }
 
 #define MAKE_ACCESSOR(method, reg_name) \

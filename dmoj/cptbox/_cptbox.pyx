@@ -27,7 +27,7 @@ cdef extern from 'ptbox.h' nogil:
 
     cdef cppclass pt_debugger:
         int syscall()
-        bool syscall(int)
+        int syscall(int)
         long result()
         void result(long)
         long arg0()
@@ -136,6 +136,9 @@ cdef extern from 'fcntl.h' nogil:
     cpdef enum:
         AT_FDCWD
 
+cdef extern from "errno.h":
+    int errno
+
 MAX_SYSCALL_NUMBER = MAX_SYSCALL
 
 cdef int pt_child(void *context) nogil:
@@ -233,7 +236,9 @@ cdef class Debugger:
         # we swap with a harmless syscall without side-effects (getpid).
         if not self.process._use_seccomp() and value == -1:
             value = self.noop_syscall_id
-        if not self.thisptr.syscall(value):
+        global errno
+        errno = self.thisptr.syscall(value)
+        if errno:
             PyErr_SetFromErrno(OSError)
 
     @property

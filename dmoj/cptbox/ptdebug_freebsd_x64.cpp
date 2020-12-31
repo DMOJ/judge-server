@@ -3,6 +3,7 @@
 #include "ptbox.h"
 
 #if PTBOX_FREEBSD && defined(__amd64__)
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -22,14 +23,14 @@ int pt_debugger::syscall() {
     return _bsd_syscall;
 }
 
-bool pt_debugger::syscall(int value) {
+int pt_debugger::syscall(int id) {
     regs_changed = true;
     switch (abi_) {
         case PTBOX_ABI_FREEBSD_X64:
-            regs.r_rax = value;
-            return true; \
+            regs.r_rax = id;
+            return 0; \
         case PTBOX_ABI_INVALID:
-            return false;
+            return EINVAL;
         default: \
             UNKNOWN_ABI("ptdebug_freebsd_x64.cpp:syscall setter");
     }

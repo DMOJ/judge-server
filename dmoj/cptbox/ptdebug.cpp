@@ -58,9 +58,11 @@ void pt_debugger::settid(pid_t tid) {
 }
 #endif
 
-bool pt_debugger::pre_syscall() {
+int pt_debugger::pre_syscall() {
+    int err;
 #if PTBOX_FREEBSD
     if (ptrace(PT_GETREGS, tid, (caddr_t) &regs, 0)) {
+        err = errno;
         perror("ptrace(PT_GETREGS)");
 #else
     struct iovec iovec;
@@ -68,10 +70,11 @@ bool pt_debugger::pre_syscall() {
     iovec.iov_len = sizeof regs;
 
     if (ptrace(PTRACE_GETREGSET, tid, NT_PRSTATUS, &iovec)) {
+        err = errno;
         perror("ptrace(PTRACE_GETREGSET)");
 #endif
         abi_ = PTBOX_ABI_INVALID;
-        return false;
+        return err;
     } else {
 #if PTBOX_FREEBSD
         abi_ = abi_from_reg_size(sizeof regs);
@@ -79,29 +82,32 @@ bool pt_debugger::pre_syscall() {
         abi_ = abi_from_reg_size(iovec.iov_len);
 #endif
         regs_changed = false;
-        return true;
+        return 0;
     }
 }
 
-bool pt_debugger::post_syscall() {
+int pt_debugger::post_syscall() {
     // Should not be possible because pt_process should already have generated a protection fault.
     assert(abi_ != PTBOX_ABI_INVALID);
     if (!regs_changed)
-        return true;
+        return 0;
 
+    int err;
 #if PTBOX_FREEBSD
     if (ptrace(PT_SETREGS, tid, (caddr_t) &regs, 0)) {
+        err = errno;
         perror("ptrace(PTRACE_SETREGSET)");
 #else
     struct iovec iovec;
     iovec.iov_base = &regs;
     iovec.iov_len = sizeof regs;
     if (ptrace(PTRACE_SETREGSET, tid, NT_PRSTATUS, &iovec)) {
+        err = errno;
         perror("ptrace(PTRACE_SETREGSET)");
 #endif
-        return false;
+        return err;
     }
-    return true;
+    return 0;
 }
 
 #if PTBOX_FREEBSD

@@ -5,6 +5,7 @@
 
 #if defined(__arm64__) || defined(__aarch64__)
 #include <elf.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/uio.h>
@@ -47,16 +48,17 @@ int pt_debugger::syscall() {
     }
 }
 
-bool pt_debugger::syscall(int id) {
+int pt_debugger::syscall(int id) {
     struct iovec iovec;
     iovec.iov_base = &id;
     iovec.iov_len = sizeof id;
 
     if (ptrace(PTRACE_SETREGSET, tid, NT_ARM_SYSTEM_CALL, &iovec)) {
+        int err = errno;
         perror("ptrace(PTRACE_SETREGSET, NT_ARM_SYSTEM_CALL)");
-        return false;
+        return err;
     }
-    return true;
+    return 0;
 }
 
 #define MAKE_ACCESSOR(method, arm32_name, arm64_name) \

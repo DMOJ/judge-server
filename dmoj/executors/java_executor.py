@@ -38,6 +38,14 @@ def find_class(source):
     return class_name
 
 
+def handle_procctl(debugger):
+    P_PID = 0
+    PROC_STACKGAP_CTL = 17
+    PROC_STACKGAP_STATUS = 18
+    return (debugger.arg0 == P_PID and debugger.arg1 == debugger.pid and
+            debugger.arg2 in (PROC_STACKGAP_CTL, PROC_STACKGAP_STATUS))
+
+
 class JavaExecutor(SingleDigitVersionMixin, CompiledExecutor):
     ext = 'java'
 
@@ -46,7 +54,7 @@ class JavaExecutor(SingleDigitVersionMixin, CompiledExecutor):
     nproc = -1
     fsize = 1048576  # Allow 1 MB for writing crash log.
     address_grace = 786432
-    syscalls = ['pread64', 'clock_nanosleep', 'socketpair']
+    syscalls = ['pread64', 'clock_nanosleep', 'socketpair', ('procctl', handle_procctl), 'setrlimit', 'thr_set_name']
 
     jvm_regex: Optional[str] = None
     security_policy = policy

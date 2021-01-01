@@ -45,6 +45,11 @@ else:
     # Linux-style ld.
     BASE_FILESYSTEM += [r'/etc/ld\.so\.(?:nohwcap|preload|cache)$']
 
+UTF8_LOCALE = 'C.UTF-8'
+
+if sys.platform.startswith('freebsd') and sys.platform < 'freebsd13':
+    UTF8_LOCALE = 'en_US.UTF-8'
+
 
 class PlatformExecutorMixin(metaclass=abc.ABCMeta):
     address_grace = 65536
@@ -83,7 +88,7 @@ class PlatformExecutorMixin(metaclass=abc.ABCMeta):
         return self.address_grace
 
     def get_env(self):
-        env = {'LANG': 'C.UTF-8'}
+        env = {'LANG': UTF8_LOCALE}
         if self.unbuffered:
             env['CPTBOX_STDOUT_BUFFER_SIZE'] = 0
         return env

@@ -197,6 +197,8 @@ class TracedPopen(Process):
                 )
             elif self.returncode == PTBOX_SPAWN_FAIL_EXECVE:
                 raise RuntimeError('failed to spawn child')
+            elif self.returncode >= 0:
+                raise RuntimeError('process failed to initialize with unknown exit code: %d' % self.returncode)
         return self.returncode
 
     def poll(self):

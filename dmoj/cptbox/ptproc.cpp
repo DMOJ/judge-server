@@ -105,7 +105,7 @@ bool pt_process::use_seccomp(bool enabled) {
 }
 
 int pt_process::monitor() {
-    bool in_syscall = false, first = true, spawned = false, execve_allowed = true;
+    bool in_syscall = false, first = true, spawned = false;
     struct timespec start, end, delta;
     int status, exit_reason = PTBOX_EXIT_NORMAL, err;
     // Set pgid to -this->pid such that -pgid becomes pid, resulting
@@ -230,46 +230,14 @@ int pt_process::monitor() {
 
             //printf("%d: %s syscall %d\n", pid, in_syscall ? "Enter" : "Exit", syscall);
             if (!spawned) {
-                // Detecting whether a process spawned successfully is difficult.
-                //
-                // Without `seccomp`: different kernel versions do different things when
-                // an rlimit is hit during the `execve`. It's possible for the process to
-                // receive a SIGKILL midway through the call; it's also possible for the
-                // call to return with a nonzero value (e.g. -ENOMEM).
-                //
-                // So, we only mark the process as spawned if we receive a post-`execve`
-                // trap (meaning the process was not SIGKILLed halfway through), and the
-                // return value of `execve` is 0.
-                //
-                // With `seccomp`: we have no post-syscall trap, so we mark the process
-                // as spawned when we hit the first non-`execve` syscall. This can be
-                // problematic if we don't trap on exit syscalls, since a simple assembly
-                // program could theoretically run without causing any syscall traps.
-                //
-                // We take some care when building the syscall whitelist to not add exit
-                // syscalls to the whitelist, so that their invocation will cause a trap
-                // (after which they'll go down the PTBOX_HANDLER_ALLOW branch below).
-
-                // Allow exactly one invocation of `execve`, no questions asked.
-                if (syscall == debugger->first_execve_syscall_id()) {
-                    if (execve_allowed) {
-                        execve_allowed = false;
-                        goto resume_process;
-                    }
-                    // Fall through to in_syscall branch below, which will kill the process
-                    // if `execve` was invoked more than once without being whitelisted.
-                } else if (execve_allowed) {
+                if (debugger->is_end_of_first_execve()) {
+                    spawned = this->_initialized = true;
+                    goto resume_process;
+                } else {
                     // Allow any syscalls before the first execve. This allows us to do things
                     // like provide debug messages when ptrace or seccomp initialization fails,
                     // without being hampered by the sandbox.
                     goto resume_process;
-                }
-
-                if ((_use_seccomp && syscall != debugger->first_execve_syscall_id() /* always true */) ||
-                    (!_use_seccomp && !in_syscall && syscall == debugger->first_execve_syscall_id() &&
-                     debugger->result() == 0)) {
-                  spawned = this->_initialized = true;
-                  goto resume_process;
                 }
             }
 

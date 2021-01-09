@@ -164,7 +164,7 @@ public:
     void arg4(long);
     void arg5(long);
 
-    int first_execve_syscall_id();
+    bool is_end_of_first_execve();
 
     void set_process(pt_process *);
     void new_process();

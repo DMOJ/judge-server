@@ -117,6 +117,7 @@ MAKE_ACCESSOR(arg5, ebp, r9)
 #undef MAKE_ACCESSOR
 
 int pt_debugger::first_execve_syscall_id() {
-    return 59;
+    // When not using seccomp, upon exit from execve to a 32-bit process, orig_eax turns to sys_execve on 32-bit.
+    return process->use_seccomp() || abi_ != PTBOX_ABI_X86 ? 59 : 11;
 }
 #endif /* __amd64__ */

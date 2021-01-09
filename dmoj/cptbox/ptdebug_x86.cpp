@@ -89,7 +89,11 @@ long pt_debugger::arg5() {
 
 void pt_debugger::arg5(long data) {}
 
-int pt_debugger::first_execve_syscall_id() {
-    return 11;
+bool pt_debugger::is_end_of_first_execve() {
+    if (process->use_seccomp()) {
+        return syscall() == 11;
+    } else {
+        return !is_enter() && syscall() == 11 && result() == 0;
+    }
 }
 #endif /* __i386__ */

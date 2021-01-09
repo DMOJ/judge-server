@@ -1,0 +1,5 @@
+language: NASM64
+time: 1
+memory: 4096
+source: kill_judge.asm
+expect: IR

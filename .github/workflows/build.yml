@@ -32,7 +32,7 @@ jobs:
     - name: Verify mypy types
       run: |
         mypy --version
-        mypy .
+        mypy dmoj
   test-sdist:
     runs-on: ubuntu-latest
     steps:

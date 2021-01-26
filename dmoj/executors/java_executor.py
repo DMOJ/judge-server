@@ -86,17 +86,20 @@ class JavaExecutor(SingleDigitVersionMixin, CompiledExecutor):
     def get_write_fs(self):
         return super().get_write_fs() + [os.path.join(self._dir, 'submission_jvm_crash.log')]
 
-    def get_cmdline(self, **kwargs):
-        agent_flags = '-javaagent:%s=policy:%s' % (self._agent_file, self._policy_file)
+    def get_agent_flag(self):
+        agent_flag = '-javaagent:%s=policy:%s' % (self._agent_file, self._policy_file)
         for hint in self._hints:
-            agent_flags += ',%s' % hint
+            agent_flag += ',%s' % hint
         if self.unbuffered:
-            agent_flags += ',nobuf'
+            agent_flag += ',nobuf'
+        return agent_flag
+
+    def get_cmdline(self, **kwargs):
         # 128m is equivalent to 1<<27 in Thread constructor
         return [
             'java',
             self.get_vm_mode(),
-            agent_flags,
+            self.get_agent_flag(),
             '-Xss128m',
             '-Xmx%dK' % kwargs['orig_memory'],
             '-XX:+UseSerialGC',

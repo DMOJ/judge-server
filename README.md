@@ -33,7 +33,7 @@ Versions up to and including [v1.4.0](https://github.com/DMOJ/judge-server/relea
 The DMOJ judge does **not** need a root user to run on Linux machines: it will run just fine under a normal user.
 
 Supported languages include:
-* C++ 11/14/17 (GCC and Clang)
+* C++ 11/14/17/20 (GCC and Clang)
 * C 99/11
 * Java 8/9/10/11/15
 * Python 2/3

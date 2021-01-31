@@ -8,7 +8,7 @@ from dmoj.utils.unicode import utf8bytes
 
 class SignatureGrader(StandardGrader):
     def _generate_binary(self):
-        siggraders = ('C', 'C11', 'CPP03', 'CPP11', 'CPP14', 'CPP17', 'CLANG', 'CLANGX')
+        siggraders = ('C', 'C11', 'CPP03', 'CPP11', 'CPP14', 'CPP17', 'CPP20', 'CLANG', 'CLANGX')
 
         if self.language in siggraders:
             aux_sources = {}

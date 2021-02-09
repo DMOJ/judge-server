@@ -100,8 +100,10 @@ class Problem:
                     raise InvalidInitException('test case format yielded no case number')
                 if batch is not None:
                     batch_ids.add(batch)
+                else:
+                    batch = case # for non-batched cases, treat case number as batch number
 
-                setattr(groups[batch or case][case], filetype, testcase_file)
+                setattr(groups[batch][case], filetype, testcase_file)
 
         test_cases = []
         for batch_or_case_id in sorted(groups.keys()):

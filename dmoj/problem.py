@@ -101,7 +101,7 @@ class Problem:
                 if batch is not None:
                     batch_ids.add(batch)
                 else:
-                    batch = case # for non-batched cases, treat case number as batch number
+                    batch = case  # for non-batched cases, treat case number as batch number
 
                 setattr(groups[batch][case], filetype, testcase_file)
 

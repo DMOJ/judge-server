@@ -224,6 +224,7 @@ int pt_process::monitor() {
 #endif
 #if PTBOX_FREEBSD
             in_syscall = lwpi.pl_flags & PL_FLAG_SCE;
+            debugger->_bsd_in_syscall = in_syscall;
 #else
             in_syscall = debugger->is_enter();
 #endif

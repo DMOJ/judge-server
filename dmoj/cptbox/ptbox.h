@@ -178,6 +178,7 @@ public:
 #if PTBOX_FREEBSD
     void update_syscall(struct ptrace_lwpinfo *info);
     void setpid(pid_t pid);
+    bool is_enter() { return _bsd_in_syscall; }
 #else
     void settid(pid_t tid);
     void tid_reset(pid_t tid);
@@ -215,6 +216,7 @@ private:
     char *readstr_peekdata(unsigned long addr, size_t max_size);
 #if PTBOX_FREEBSD
     int _bsd_syscall;
+    bool _bsd_in_syscall;
 #else
     std::map<pid_t, int> syscall_;
 #endif

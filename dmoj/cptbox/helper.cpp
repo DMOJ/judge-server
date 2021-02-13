@@ -3,6 +3,7 @@
 
 #include <dirent.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>
@@ -10,6 +11,7 @@
 #include <stdlib.h>
 #include <sys/resource.h>
 #include <sys/types.h>
+#include <sys/mman.h>
 
 #ifdef __FreeBSD__
 #   include <sys/param.h>
@@ -289,4 +291,25 @@ char *bsd_get_proc_cwd(pid_t pid) {
 
 char *bsd_get_proc_fdno(pid_t pid, int fdno) {
     return bsd_get_proc_fd(pid, 0, fdno);
+}
+
+int memory_fd_create(void) {
+#ifdef __FreeBSD__
+    char filename[] = "/tmp/cptbox-memoryfd-XXXXXXXX";
+    int fd = mkstemp(filename);
+    if (fd > 0)
+        unlink(filename);
+    return fd;
+#else
+    return memfd_create("cptbox memory_fd", MFD_ALLOW_SEALING);
+#endif
+}
+
+int memory_fd_seal(int fd) {
+#ifdef __FreeBSD__
+    errno = ENOSYS;
+    return -1;
+#else
+    return fcntl(fd, F_ADD_SEALS, F_SEAL_GROW | F_SEAL_SHRINK | F_SEAL_WRITE);
+#endif
 }

@@ -131,6 +131,9 @@ cdef extern from 'helper.h' nogil:
         PTBOX_SPAWN_FAIL_TRACEME
         PTBOX_SPAWN_FAIL_EXECVE
 
+    int _memory_fd_create "memory_fd_create"()
+    int _memory_fd_seal "memory_fd_seal"(int fd)
+
 
 cdef extern from 'fcntl.h' nogil:
     cpdef enum:
@@ -206,6 +209,16 @@ def bsd_get_proc_fdno(pid_t pid, int fd):
     free(buf)
     return res
 
+def memory_fd_create():
+    cdef int fd = _memory_fd_create()
+    if fd < 0:
+        PyErr_SetFromErrno(OSError)
+    return fd
+
+def memory_fd_seal(int fd):
+    cdef int result = _memory_fd_seal(fd)
+    if result == -1:
+        PyErr_SetFromErrno(OSError)
 
 cdef class Process
 

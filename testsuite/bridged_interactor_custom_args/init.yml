@@ -1,0 +1,6 @@
+interactive:
+  files: interact.py
+  args_format_string: '"The arguments"'
+  lang: PY3
+test_cases:
+- {points: 100}

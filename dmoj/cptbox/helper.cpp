@@ -3,6 +3,7 @@
 
 #include <dirent.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>
@@ -10,6 +11,7 @@
 #include <stdlib.h>
 #include <sys/resource.h>
 #include <sys/types.h>
+#include <sys/mman.h>
 
 #ifdef __FreeBSD__
 #   include <sys/param.h>
@@ -27,64 +29,6 @@
 #else
 #   define FD_DIR "/proc/self/fd"
 #endif
-
-inline unsigned int get_seccomp_arch(int type) {
-    switch (type) {
-#ifdef SCMP_ARCH_X86
-        case DEBUGGER_X86:
-        case DEBUGGER_X86_ON_X64:
-            return SCMP_ARCH_X86;
-#endif
-#ifdef SCMP_ARCH_X86_64
-        case DEBUGGER_X64:
-            return SCMP_ARCH_X86_64;
-#endif
-#ifdef SCMP_ARCH_X32
-        case DEBUGGER_X32:
-            return SCMP_ARCH_X32;
-#endif
-#ifdef SCMP_ARCH_ARM
-        case DEBUGGER_ARM:
-            return SCMP_ARCH_ARM;
-#endif
-#ifdef SCMP_ARCH_AARCH64
-        case DEBUGGER_ARM64:
-            return SCMP_ARCH_AARCH64;
-#endif
-    }
-
-    return 0;
-}
-
-pt_debugger *get_ptdebugger(int type) {
-    switch (type) {
-#ifdef HAS_DEBUGGER_X86
-        case DEBUGGER_X86:
-            return new pt_debugger_x86();
-#endif
-#ifdef HAS_DEBUGGER_X64
-        case DEBUGGER_X64:
-            return new pt_debugger_x64();
-#endif
-#ifdef HAS_DEBUGGER_X86_ON_X64
-        case DEBUGGER_X86_ON_X64:
-            return new pt_debugger_x86_on_x64();
-#endif
-#ifdef HAS_DEBUGGER_X32
-        case DEBUGGER_X32:
-            return new pt_debugger_x32();
-#endif
-#ifdef HAS_DEBUGGER_ARM
-        case DEBUGGER_ARM:
-            return new pt_debugger_arm();
-#endif
-#ifdef HAS_DEBUGGER_ARM64
-        case DEBUGGER_ARM64:
-            return new pt_debugger_arm64();
-#endif
-    }
-    return NULL;
-}
 
 inline void setrlimit2(int resource, rlim_t cur, rlim_t max) {
     rlimit limit;
@@ -106,7 +50,7 @@ int cptbox_child_run(const struct child_config *config) {
 
 #ifdef PR_SET_NO_NEW_PRIVS  // Since Linux 3.5
     if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0))
-        return 202;
+        return PTBOX_SPAWN_FAIL_NO_NEW_PRIVS;
 #endif
 
 #ifdef PR_SET_SPECULATION_CTRL  // Since Linux 4.17
@@ -120,21 +64,17 @@ int cptbox_child_run(const struct child_config *config) {
     if (config->stdin_ >= 0)  dup2(config->stdin_, 0);
     if (config->stdout_ >= 0) dup2(config->stdout_, 1);
     if (config->stderr_ >= 0) dup2(config->stderr_, 2);
-
-    for (int i = 3; i <= config->max_fd; ++i)
-        dup2(config->fds[i-3], i);
-
-    cptbox_closefrom(config->max_fd + 1);
+    cptbox_closefrom(3);
 
     if (ptrace_traceme()) {
         perror("ptrace");
-        return 204;
+        return PTBOX_SPAWN_FAIL_TRACEME;
     }
 
     kill(getpid(), SIGSTOP);
 
 #if PTBOX_SECCOMP
-    if (config->trace_syscalls) {
+    if (config->use_seccomp) {
         scmp_filter_ctx ctx = seccomp_init(SCMP_ACT_TRACE(0));
         if (!ctx) {
             fprintf(stderr, "Failed to initialize seccomp context!");
@@ -142,23 +82,21 @@ int cptbox_child_run(const struct child_config *config) {
         }
 
         int rc;
-        unsigned int child_arch = get_seccomp_arch(config->debugger_type);
-        if (child_arch != seccomp_arch_native()) {
-            if ((rc = seccomp_arch_add(ctx, child_arch))) {
-                fprintf(stderr, "seccomp_arch_add: %s\n", strerror(-rc));
-                goto seccomp_fail;
+        // By default, the native architecture is added to the filter already, so we add all the non-native ones.
+        // This will bloat the filter due to additional architectures, but a few extra compares in the BPF matters
+        // very little when syscalls are rare and other overhead is expensive.
+        for (uint32_t *arch = pt_debugger::seccomp_non_native_arch_list; *arch; ++arch) {
+            if ((rc = seccomp_arch_add(ctx, *arch))) {
+                fprintf(stderr, "seccomp_arch_add(%u): %s\n", *arch, strerror(-rc));
+                // This failure is not fatal, it'll just cause the syscall to trap anyway.
             }
-            // FIXME(tbrindus): do nothing else for now. The seccomp filter will
-            // be empty and trap on every syscall. Pending
-            //   https://github.com/seccomp/libseccomp/issues/259
-            // or plumbing libseccomp pseudosyscall mapping up to here.
-        } else {
-            for (int syscall = 0; syscall < MAX_SYSCALL; syscall++) {
-                if (config->syscall_whitelist[syscall]) {
-                    if ((rc = seccomp_rule_add(ctx, SCMP_ACT_ALLOW, syscall, 0))) {
-                        fprintf(stderr, "seccomp_rule_add(..., %d): %s\n", syscall, strerror(-rc));
-                        // This failure is not fatal, it'll just cause the syscall to trap anyway.
-                    }
+        }
+
+        for (int syscall = 0; syscall < MAX_SYSCALL; syscall++) {
+            if (config->seccomp_whitelist[syscall]) {
+                if ((rc = seccomp_rule_add(ctx, SCMP_ACT_ALLOW, syscall, 0))) {
+                    fprintf(stderr, "seccomp_rule_add(..., %d): %s\n", syscall, strerror(-rc));
+                    // This failure is not fatal, it'll just cause the syscall to trap anyway.
                 }
             }
         }
@@ -198,10 +136,10 @@ int cptbox_child_run(const struct child_config *config) {
 
     execve(config->file, config->argv, config->envp);
     perror("execve");
-    return 205;
+    return PTBOX_SPAWN_FAIL_EXECVE;
 
 seccomp_fail:
-    return 203;
+    return PTBOX_SPAWN_FAIL_SECCOMP;
 }
 
 // From python's _posixsubprocess
@@ -353,4 +291,25 @@ char *bsd_get_proc_cwd(pid_t pid) {
 
 char *bsd_get_proc_fdno(pid_t pid, int fdno) {
     return bsd_get_proc_fd(pid, 0, fdno);
+}
+
+int memory_fd_create(void) {
+#ifdef __FreeBSD__
+    char filename[] = "/tmp/cptbox-memoryfd-XXXXXXXX";
+    int fd = mkstemp(filename);
+    if (fd > 0)
+        unlink(filename);
+    return fd;
+#else
+    return memfd_create("cptbox memory_fd", MFD_ALLOW_SEALING);
+#endif
+}
+
+int memory_fd_seal(int fd) {
+#ifdef __FreeBSD__
+    errno = ENOSYS;
+    return -1;
+#else
+    return fcntl(fd, F_ADD_SEALS, F_SEAL_GROW | F_SEAL_SHRINK | F_SEAL_WRITE);
+#endif
 }

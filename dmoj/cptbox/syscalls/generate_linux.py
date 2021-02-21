@@ -53,10 +53,10 @@ with open('linux-arm.tbl', 'w') as arm, utf8reader(urlopen(LINUX_SYSCALLS_ARM)) 
             if not line or line.startswith('#'):
                 continue
             syscall = line.split()
-            id = syscall[0]
+            id_str = syscall[0]
             name = syscall[2].strip('_')
         else:
-            id, func = match.groups()
+            id_str, func = match.groups()
             if func in func_to_name:
                 name = func_to_name[func]
             else:
@@ -64,20 +64,30 @@ with open('linux-arm.tbl', 'w') as arm, utf8reader(urlopen(LINUX_SYSCALLS_ARM)) 
         if name == 'fstatat64':
             name = 'fstatat'
         names.add(name)
-        print('%d\t%s' % (int(id), name), file=arm)
+        print('%d\t%s' % (int(id_str), name), file=arm)
 
 renr = re.compile(r'#define\s+__NR(?:3264)?_([a-z0-9_]+)\s+(\d+)')
-with open('linux-generic.tbl', 'w') as generic, utf8reader(urlopen(LINUX_SYSCALLS_GENERIC)) as data:
+with open('linux-generic.tbl', 'w') as generic64, open('linux-generic32.tbl', 'w') as generic32, \
+        utf8reader(urlopen(LINUX_SYSCALLS_GENERIC)) as data:
+    only_32 = False
     for line in data:
         if '#undef __NR_syscalls' in line:
             break
+        if '#if __BITS_PER_LONG == 32' in line:
+            only_32 = True
+            continue
+        if '#endif' in line:
+            only_32 = False
         match = renr.search(line)
         if match:
-            name, id = match.groups()
+            name, id_str = match.groups()
+            id = int(id_str)
             if name in ('arch_specific_syscall', 'sync_file_range2'):
                 continue
             names.add(name)
-            print('%d\t%s' % (int(id), name), file=generic)
+            if not only_32:
+                print('%d\t%s' % (id, name), file=generic64)
+            print('%d\t%s' % (id, name), file=generic32)
 
 with open('aliases.list') as aliases:
     for line in aliases:

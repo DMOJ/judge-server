@@ -1,4 +1,5 @@
 #define _BSD_SOURCE
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,7 +11,11 @@
 #include <unistd.h>
 #include "ptbox.h"
 
-pt_debugger::pt_debugger() : on_return_callback(NULL) {}
+#if !PTBOX_FREEBSD
+#include <elf.h>
+#endif
+
+pt_debugger::pt_debugger() {}
 
 bool has_null(char *buf, unsigned long size) {
     for (unsigned long i = 0; i < size; ++i) {
@@ -32,64 +37,77 @@ void pt_debugger::new_process() {
 
 #if PTBOX_FREEBSD
 void pt_debugger::update_syscall(struct ptrace_lwpinfo *info) {
-    struct reg bsd_regs;
-    ptrace(PT_GETREGS, tid, (caddr_t) &bsd_regs, 0);
-    map_regs_to_linux(&bsd_regs, &bsd_converted_regs);
-
-    if (info->pl_flags & PL_FLAG_SCX)
-        bsd_converted_regs.orig_rax = syscall_[info->pl_lwpid];
-        // Not available on all kernels.
-        // bsd_converted_regs.orig_rax = info->pl_syscall_code;
-    else if (info->pl_flags & PL_FLAG_SCE)
-        syscall_[info->pl_lwpid] = bsd_converted_regs.rax;
+    _bsd_syscall = info->pl_syscall_code;
 }
 
 void pt_debugger::setpid(pid_t pid) {
     this->tid = pid;
 }
 #else
+void pt_debugger::tid_reset(pid_t tid) {
+    syscall_[tid] = 0;
+}
+
 void pt_debugger::settid(pid_t tid) {
     this->tid = tid;
-#if !PTBOX_SECCOMP // All seccomp syscall events are enter events
-    if (!syscall_.count(tid)) syscall_[tid] = 0;
-    syscall_[tid] ^= 1;
-#endif
+    if (!process->use_seccomp()) {
+        // All seccomp syscall events are enter events
+        if (!syscall_.count(tid)) syscall_[tid] = 0;
+        syscall_[tid] ^= 1;
+    }
 }
 #endif
 
-void pt_debugger::pre_syscall() {}
-void pt_debugger::post_syscall() {}
-
-long pt_debugger::peek_reg(int idx) {
+int pt_debugger::pre_syscall() {
+    int err;
 #if PTBOX_FREEBSD
-    return ((reg_type*)&bsd_converted_regs)[idx];
+    if (ptrace(PT_GETREGS, tid, (caddr_t) &regs, 0)) {
+        err = errno;
+        perror("ptrace(PT_GETREGS)");
 #else
-    long res;
-    errno = 0;
-    res = ptrace(PTRACE_PEEKUSER, tid, sizeof(long) * idx, 0);
-    if (res == -1 && errno)
-        perror("ptrace(PTRACE_PEEKUSER)");
-    return res;
+    struct iovec iovec;
+    iovec.iov_base = &regs;
+    iovec.iov_len = sizeof regs;
+
+    if (ptrace(PTRACE_GETREGSET, tid, NT_PRSTATUS, &iovec)) {
+        err = errno;
+        perror("ptrace(PTRACE_GETREGSET)");
 #endif
+        abi_ = PTBOX_ABI_INVALID;
+        return err;
+    } else {
+#if PTBOX_FREEBSD
+        abi_ = abi_from_reg_size(sizeof regs);
+#else
+        abi_ = abi_from_reg_size(iovec.iov_len);
+#endif
+        regs_changed = false;
+        return 0;
+    }
 }
 
-void pt_debugger::poke_reg(int idx, long data) {
+int pt_debugger::post_syscall() {
+    // Should not be possible because pt_process should already have generated a protection fault.
+    assert(abi_ != PTBOX_ABI_INVALID);
+    if (!regs_changed)
+        return 0;
+
+    int err;
 #if PTBOX_FREEBSD
-    ((reg_type*)&bsd_converted_regs)[idx] = data;
-
-    struct reg bsd_regs;
-
-    // Update bsd_regs with latest regs, since not all are mapped by map_regs_from_linux and we don't want
-    // garbage to be written to the other registers.
-    // Alternatively we could be mapping them in map_regs, but that'd be more fragile and less easy (there are
-    // some registers, like r_trapno on FreeBSD, that have no real equivalent on Linux, and vice-versa).
-    ptrace(PT_GETREGS, tid, (caddr_t) &bsd_regs, 0);
-
-    map_regs_from_linux(&bsd_regs, &bsd_converted_regs);
-    ptrace(PT_SETREGS, tid, (caddr_t) &bsd_regs, 0);
+    if (ptrace(PT_SETREGS, tid, (caddr_t) &regs, 0)) {
+        err = errno;
+        perror("ptrace(PTRACE_SETREGSET)");
 #else
-    ptrace(PTRACE_POKEUSER, tid, sizeof(long) * idx, data);
+    struct iovec iovec;
+    iovec.iov_base = &regs;
+    iovec.iov_len = sizeof regs;
+    if (ptrace(PTRACE_SETREGSET, tid, NT_PRSTATUS, &iovec)) {
+        err = errno;
+        perror("ptrace(PTRACE_SETREGSET)");
 #endif
+        return err;
+    }
+    return 0;
 }
 
 #if PTBOX_FREEBSD
@@ -240,5 +258,3 @@ char *pt_debugger::readstr_peekdata(unsigned long addr, size_t max_size) {
 void pt_debugger::freestr(char *buf) {
     free(buf);
 }
-
-pt_debugger::~pt_debugger() {}

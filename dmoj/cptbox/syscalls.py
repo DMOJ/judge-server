@@ -1,12 +1,13 @@
 import os
-from typing import List
+from typing import List, Tuple
 
-order = ['linux-x86.tbl', 'linux-x64.tbl', 'linux-x32.tbl', 'linux-arm.tbl', 'freebsd.tbl', 'linux-generic.tbl']
+order = ['linux-x86.tbl', 'linux-x64.tbl', 'linux-x32.tbl', 'linux-arm.tbl', 'freebsd.tbl',
+         'linux-generic.tbl', 'linux-generic32.tbl']
 max_id = 0
 by_name = {}
 by_id: List[str] = []
 __all__: List[str] = by_id
-translator = None
+translator: List[Tuple[List[int], ...]]
 
 
 def create():

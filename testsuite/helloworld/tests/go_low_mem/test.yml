@@ -1,0 +1,5 @@
+language: GO
+time: 2
+memory: 8192
+source: helloworld.go
+expect: AC

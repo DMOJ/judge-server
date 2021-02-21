@@ -17,7 +17,7 @@ jobs:
         cd dmoj/cptbox/syscalls
         python generate_linux.py
     - name: Create pull request
-      uses: peter-evans/create-pull-request@v2
+      uses: peter-evans/create-pull-request@v3
       with:
         token: ${{ secrets.REPO_SCOPED_TOKEN }}
         commit-message: 'cptbox: update Linux syscall list'
@@ -26,4 +26,3 @@ jobs:
         labels: cptbox, security, enhancement
         assignees: Xyene, quantum5
         branch: update-syscalls
-

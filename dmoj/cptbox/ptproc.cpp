@@ -16,14 +16,6 @@
 
 #include "ptbox.h"
 
-pt_process *pt_alloc_process(pt_debugger *debugger) {
-    return new pt_process(debugger);
-}
-
-void pt_free_process(pt_process *process) {
-    delete process;
-}
-
 pt_process::pt_process(pt_debugger *debugger) :
     pid(0), callback(NULL), context(NULL), debugger(debugger),
     event_proc(NULL), event_context(NULL), _trace_syscalls(true),
@@ -60,10 +52,10 @@ void pt_process::set_event_proc(pt_event_callback callback, void *context) {
     this->event_context = context;
 }
 
-int pt_process::set_handler(int syscall, int handler) {
+int pt_process::set_handler(int abi, int syscall, int handler) {
     if (syscall >= MAX_SYSCALL || syscall < 0)
         return 1;
-    this->handler[syscall] = handler;
+    this->handler[abi][syscall] = handler;
     return 0;
 }
 
@@ -86,8 +78,8 @@ int pt_process::spawn(pt_fork_handler child, void *context) {
     return 0;
 }
 
-int pt_process::protection_fault(int syscall) {
-    dispatch(PTBOX_EVENT_PROTECTION, syscall);
+int pt_process::protection_fault(int syscall, int type) {
+    dispatch(type, syscall);
     dispatch(PTBOX_EVENT_EXITING, PTBOX_EXIT_PROTECTION);
     killpg(pid, SIGKILL);
 #if PTBOX_FREEBSD
@@ -103,10 +95,19 @@ int pt_process::protection_fault(int syscall) {
     return PTBOX_EXIT_PROTECTION;
 }
 
+bool pt_process::use_seccomp(bool enabled) {
+    if (pid) {
+        // Do not allow updates after the process is spawned.
+        return false;
+    }
+    _use_seccomp = PTBOX_SECCOMP && enabled;
+    return true;
+}
+
 int pt_process::monitor() {
-    bool in_syscall = false, first = true, spawned = false, execve_allowed = true;
+    bool in_syscall = false, first = true, spawned = false;
     struct timespec start, end, delta;
-    int status, exit_reason = PTBOX_EXIT_NORMAL;
+    int status, exit_reason = PTBOX_EXIT_NORMAL, err;
     // Set pgid to -this->pid such that -pgid becomes pid, resulting
     // in the initial wait be on the main thread. This allows it a chance
     // of creating a new process group.
@@ -171,17 +172,12 @@ int pt_process::monitor() {
             ptrace(PT_FOLLOW_FORK, pid, 0, 1);
 #else
             // This is right after SIGSTOP is received:
-            ptrace(PTRACE_SETOPTIONS, pid, NULL, PTRACE_O_TRACEEXIT |
-#if PTBOX_SECCOMP // Use seccomp to lower tracing overhead.
-                                                 PTRACE_O_TRACESECCOMP |
-#else
-                                                 PTRACE_O_TRACESYSGOOD |
-#endif
+            ptrace(PTRACE_SETOPTIONS, pid, NULL,
+                   PTRACE_O_TRACEEXIT | (_use_seccomp ? PTRACE_O_TRACESECCOMP : PTRACE_O_TRACESYSGOOD) |
 #ifdef PTRACE_O_EXITKILL // Kill all sandboxed process automatically when process exits.
-                                                 PTRACE_O_EXITKILL |
+                   PTRACE_O_EXITKILL |
 #endif
-                                                 PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK |
-                                                 PTRACE_O_TRACEVFORK);
+                   PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK | PTRACE_O_TRACEVFORK);
 #endif
             // We now set the process group to the actual pgid.
             pgid = pid;
@@ -197,14 +193,30 @@ int pt_process::monitor() {
             debugger->setpid(pid);
             debugger->update_syscall(&lwpi);
 #else
-#if PTBOX_SECCOMP
-        if (WSTOPSIG(status) == SIGTRAP && (status >> 16) == PTRACE_EVENT_SECCOMP) {
-#else
-        if (WSTOPSIG(status) == (0x80 | SIGTRAP)) {
-#endif
+        if (_use_seccomp ? WSTOPSIG(status) == SIGTRAP && (status >> 8) == (SIGTRAP | PTRACE_EVENT_SECCOMP << 8) :
+                WSTOPSIG(status) == (0x80 | SIGTRAP)) {
             debugger->settid(pid);
-            debugger->pre_syscall();
 #endif
+            if ((err = debugger->pre_syscall()) != 0) {
+#if !PTBOX_FREEBSD
+                // When debugging a multithreaded application, the following sequence of events can happen:
+                // 1. Thread #1 does sys_exit_group
+                // 2. Thread #2 does any syscall
+                // 3. Thread #1 traps, and we handle sys_exit_group
+                // 4. sys_exit_group is allowed, all threads are killed
+                // 5. Thread #2 traps, and we attempt to read registers
+                // 6. Since thread has been killed, this results in ESRCH
+                // So we ignore ESRCH. Note that PTRACE_EVENT_EXIT triggers for the thread AFTER this ESRCH,
+                // so we can't know in advance if this will happen.
+                if (err == ESRCH) {
+                    fprintf(stderr, "thread disappeared: %d, ignoring.\n", pid);
+                    continue;
+                }
+#endif
+                dispatch(PTBOX_EVENT_PTRACE_ERROR, err);
+                exit_reason = protection_fault(-1);
+                continue;
+            }
 #if defined(__FreeBSD_version) && __FreeBSD_version >= 1002501
             int syscall = lwpi.pl_syscall_code;
 #else
@@ -212,60 +224,27 @@ int pt_process::monitor() {
 #endif
 #if PTBOX_FREEBSD
             in_syscall = lwpi.pl_flags & PL_FLAG_SCE;
+            debugger->_bsd_in_syscall = in_syscall;
 #else
             in_syscall = debugger->is_enter();
 #endif
 
             //printf("%d: %s syscall %d\n", pid, in_syscall ? "Enter" : "Exit", syscall);
             if (!spawned) {
-                // Detecting whether a process spawned successfully is difficult.
-                //
-                // Without `seccomp`: different kernel versions do different things when
-                // an rlimit is hit during the `execve`. It's possible for the process to
-                // receive a SIGKILL midway through the call; it's also possible for the
-                // call to return with a nonzero value (e.g. -ENOMEM).
-                //
-                // So, we only mark the process as spawned if we receive a post-`execve`
-                // trap (meaning the process was not SIGKILLed halfway through), and the
-                // return value of `execve` is 0.
-                //
-                // With `seccomp`: we have no post-syscall trap, so we mark the process
-                // as spawned when we hit the first non-`execve` syscall. This can be
-                // problematic if we don't trap on exit syscalls, since a simple assembly
-                // program could theoretically run without causing any syscall traps.
-                //
-                // We take some care when building the syscall whitelist to not add exit
-                // syscalls to the whitelist, so that their invocation will cause a trap
-                // (after which they'll go down the PTBOX_HANDLER_ALLOW branch below).
-
-                // Allow exactly one invocation of `execve`, no questions asked.
-                if (syscall == debugger->execve_syscall()) {
-                    if (execve_allowed) {
-                        execve_allowed = false;
-                        goto resume_process;
-                    }
-                    // Fall through to in_syscall branch below, which will kill the process
-                    // if `execve` was invoked more than once without being whitelisted.
-                } else if (execve_allowed) {
+                if (debugger->is_end_of_first_execve()) {
+                    spawned = this->_initialized = true;
+                    goto resume_process;
+                } else {
                     // Allow any syscalls before the first execve. This allows us to do things
                     // like provide debug messages when ptrace or seccomp initialization fails,
                     // without being hampered by the sandbox.
                     goto resume_process;
                 }
-
-#if PTBOX_SECCOMP
-                if (syscall != debugger->execve_syscall() /* always true */) {
-#else
-                if (!in_syscall && syscall == debugger->execve_syscall() && debugger->result() == 0) {
-#endif
-                  spawned = this->_initialized = true;
-                  goto resume_process;
-                }
             }
 
             if (in_syscall) {
                 if (syscall >= 0 && syscall < MAX_SYSCALL) {
-                    switch (handler[syscall]) {
+                    switch (handler[debugger->abi()][syscall]) {
                         case PTBOX_HANDLER_ALLOW:
                             break;
                         case PTBOX_HANDLER_STDOUTERR: {
@@ -297,13 +276,17 @@ int pt_process::monitor() {
 
             // Syscall has "ended". What we do here varies a bit between if we're using seccomp
             // or not, since with seccomp we will have no return event.
-            if ((PTBOX_SECCOMP || !in_syscall) && debugger->on_return_callback) {
-                debugger->on_return_callback(debugger->on_return_context, syscall);
-                debugger->on_return_callback = NULL;
-                debugger->on_return_context = NULL;
+            if ((_use_seccomp || !in_syscall) && debugger->on_return_.count(pid)) {
+                std::pair<pt_syscall_return_callback, void*> callback = debugger->on_return_[pid];
+                callback.first(callback.second, syscall);
+                debugger->on_return_.erase(pid);
             }
 
-            debugger->post_syscall();
+            if ((err = debugger->post_syscall()) != 0) {
+                dispatch(PTBOX_EVENT_PTRACE_ERROR, err);
+                exit_reason = protection_fault(syscall, PTBOX_EVENT_UPDATE_FAIL);
+                continue;
+            }
         } else {
 #if PTBOX_FREEBSD
             // No events aside from signal event on FreeBSD
@@ -315,6 +298,13 @@ int pt_process::monitor() {
             if (signal == SIGSTOP)
                 signal = 0;
 #else
+            // We can only find whether a syscall-stop is enter or exit by toggling. However, blind toggling
+            // when we receive a syscall-stop does not work. To quote strace:
+            // > The rule is that syscall-enter-stop is always followed by syscall-exit-stop,
+            // > PTRACE_EVENT stop or tracee's death - no other kinds of ptrace-stop can occur in between.
+            // Therefore, we reset the enter/exit toggle if we get something that is not a syscall-stop.
+            debugger->tid_reset(pid);
+
             switch (WSTOPSIG(status)) {
                 case SIGTRAP:
                     switch (status >> 16) {
@@ -355,7 +345,7 @@ resume_process:
 #if PTBOX_FREEBSD
         ptrace(_trace_syscalls ? PT_SYSCALL : PT_CONTINUE, pid, (caddr_t) 1, first ? 0 : signal);
 #else
-        ptrace(_trace_syscalls && !PTBOX_SECCOMP ? PTRACE_SYSCALL : PTRACE_CONT, pid, NULL, first ? NULL : (void*) signal);
+        ptrace(_trace_syscalls && !_use_seccomp ? PTRACE_SYSCALL : PTRACE_CONT, pid, NULL, first ? NULL : (void*) signal);
 #endif
         first = false;
     }

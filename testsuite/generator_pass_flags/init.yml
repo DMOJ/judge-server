@@ -1,0 +1,7 @@
+generator:
+  source: generator.cpp
+  flags: [-DFLAG]
+test_cases:
+- {generator_args: [1], points: 10}
+- {generator_args: [2], points: 10}
+- {generator_args: [3], points: 30}

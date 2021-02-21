@@ -1,0 +1,6 @@
+language: MONOCS
+time: 2
+memory: 65536
+source: oom.cs
+expect: IR
+feedback: 'System.OutOfMemoryException'

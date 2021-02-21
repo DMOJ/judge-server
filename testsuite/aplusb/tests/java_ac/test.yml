@@ -1,0 +1,5 @@
+language: JAVA8
+time: 5
+memory: 65536
+source: aplusb.java
+expect: AC

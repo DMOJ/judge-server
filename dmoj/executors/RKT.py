@@ -1,17 +1,17 @@
 import os
 
 from dmoj.executors.compiled_executor import CompiledExecutor
-from dmoj.executors.mixins import ScriptDirectoryMixin
 
 
-class Executor(ScriptDirectoryMixin, CompiledExecutor):
+class Executor(CompiledExecutor):
     ext = 'rkt'
     name = 'RKT'
-    fs = [os.path.expanduser(r'~/\.racket/.*?'), '/etc/racket/.*?']
+    fs = [os.path.expanduser(r'~/\.racket/'), os.path.expanduser(r'~/\.local/share/racket/'),
+          '/etc/racket/.*?', '/etc/passwd$']
 
     command = 'racket'
 
-    syscalls = ['epoll_create', 'epoll_wait', 'poll']
+    syscalls = ['epoll_create', 'epoll_wait']
     # Racket SIGABRTs under low-memory conditions before actually crossing the memory limit,
     # so give it a bit of headroom to be properly marked as MLE.
     data_grace = 4096

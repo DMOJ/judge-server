@@ -1,0 +1,8 @@
+checker:
+  name: bridged
+  args:
+    files: [checker.cpp, testlib.h]
+    lang: CPP11
+    type: testlib
+test_cases:
+- points: 10

@@ -4,6 +4,7 @@ from collections import deque
 from typing import Dict, List
 
 from dmoj.executors.compiled_executor import CompiledExecutor
+from dmoj.executors.mixins import SingleDigitVersionMixin
 from dmoj.judgeenv import env
 from dmoj.utils.unicode import utf8bytes, utf8text
 
@@ -15,7 +16,7 @@ MAX_ERRORS = 5
 recppexc = re.compile(br"terminate called after throwing an instance of \'([A-Za-z0-9_:]+)\'\r?$", re.M)
 
 
-class GCCExecutor(CompiledExecutor):
+class GCCExecutor(SingleDigitVersionMixin, CompiledExecutor):
     defines: List[str] = []
     flags: List[str] = []
     name = 'GCC'

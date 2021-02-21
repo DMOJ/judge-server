@@ -45,6 +45,11 @@ else:
     # Linux-style ld.
     BASE_FILESYSTEM += [r'/etc/ld\.so\.(?:nohwcap|preload|cache)$']
 
+UTF8_LOCALE = 'C.UTF-8'
+
+if sys.platform.startswith('freebsd') and sys.platform < 'freebsd13':
+    UTF8_LOCALE = 'en_US.UTF-8'
+
 
 class PlatformExecutorMixin(metaclass=abc.ABCMeta):
     address_grace = 65536
@@ -83,7 +88,7 @@ class PlatformExecutorMixin(metaclass=abc.ABCMeta):
         return self.address_grace
 
     def get_env(self):
-        env = {'LANG': 'C.UTF-8'}
+        env = {'LANG': UTF8_LOCALE}
         if self.unbuffered:
             env['CPTBOX_STDOUT_BUFFER_SIZE'] = 0
         return env
@@ -120,7 +125,6 @@ class PlatformExecutorMixin(metaclass=abc.ABCMeta):
             address_grace=self.get_address_grace(),
             data_grace=self.data_grace,
             personality=self.personality,
-            fds=kwargs.get('fds'),
             time=kwargs.get('time'),
             memory=kwargs.get('memory'),
             wall_time=kwargs.get('wall_time'),
@@ -155,11 +159,5 @@ class NullStdoutMixin:
         return result
 
 
-class ScriptDirectoryMixin:
-    """
-    Certain script executors need access to the entire directory of the script,
-    usually for some searching purposes.
-    """
-
-    def get_fs(self):
-        return super().get_fs() + [self._dir]
+class SingleDigitVersionMixin:
+    version_regex = re.compile(r'.*?(\d+(?:\.\d+)*)', re.DOTALL)

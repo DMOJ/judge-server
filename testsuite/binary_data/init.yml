@@ -1,0 +1,7 @@
+binary_data: True
+generator: gen.c
+checker: identical
+test_cases:
+- {points: 10, generator_args: [1]}
+- {points: 10, generator_args: [2]}
+- {points: 10, generator_args: [3]}

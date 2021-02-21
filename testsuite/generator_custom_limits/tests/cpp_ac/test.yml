@@ -1,0 +1,5 @@
+language: CPP11
+time: 5
+memory: 65536
+source: aplusb.cpp
+expect: AC

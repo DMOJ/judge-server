@@ -11,6 +11,13 @@ from dmoj.cptbox.syscalls import *
 from dmoj.utils.unicode import utf8text
 
 log = logging.getLogger('dmoj.security')
+open_write_flags = [os.O_WRONLY, os.O_RDWR, os.O_TRUNC, os.O_CREAT, os.O_EXCL]
+
+try:
+    open_write_flags.append(os.O_TMPFILE)
+except AttributeError:
+    # This may not exist on FreeBSD, so we ignore.
+    pass
 
 
 class IsolateTracer(dict):
@@ -60,6 +67,7 @@ class IsolateTracer(dict):
                 sys_select: ALLOW,
                 sys_newselect: ALLOW,
                 sys_modify_ldt: ALLOW,
+                sys_poll: ALLOW,
                 sys_ppoll: ALLOW,
                 sys_getgroups32: ALLOW,
                 sys_sched_getaffinity: ALLOW,
@@ -178,7 +186,7 @@ class IsolateTracer(dict):
             )
 
     def is_write_flags(self, open_flags):
-        for flag in [os.O_WRONLY, os.O_RDWR, os.O_TRUNC, os.O_CREAT, os.O_EXCL, os.O_TMPFILE]:
+        for flag in open_write_flags:
             # Strict equality is necessary here, since e.g. O_TMPFILE has multiple bits set,
             # and O_DIRECTORY & O_TMPFILE > 0.
             if open_flags & flag == flag:

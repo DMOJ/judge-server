@@ -3,109 +3,111 @@
 #include "ptbox.h"
 #include <cstdio>
 
-#ifdef HAS_DEBUGGER_ARM64
-#include <sys/ptrace.h>
+#if defined(__arm64__) || defined(__aarch64__)
+#include <elf.h>
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <sys/uio.h>
 
-#define ARM_x0 0
-#define ARM_x1 1
-#define ARM_x2 2
-#define ARM_x3 3
-#define ARM_x4 4
-#define ARM_x5 5
-#define ARM_x6 6
-#define ARM_x7 7
-#define ARM_x8 8
+int pt_debugger::native_abi = PTBOX_ABI_ARM64;
 
-#include <elf.h>
-
-void pt_debugger_arm64::pre_syscall() {
-    struct iovec iovec;
-    iovec.iov_base = arm64_reg;
-    iovec.iov_len = sizeof arm64_reg;
-    if (ptrace(PTRACE_GETREGSET, tid, NT_PRSTATUS, &iovec))
-        perror("ptrace(PTRACE_GETREGSET)");
-
-    arm_reg_changed = false;
+bool pt_debugger::supports_abi(int abi) {
+    switch (abi) {
+        case PTBOX_ABI_ARM:
+        case PTBOX_ABI_ARM64:
+            return true;
+    }
+    return false;
 }
 
-void pt_debugger_arm64::post_syscall() {
-    if (!arm_reg_changed)
-        return;
-
-    struct iovec iovec;
-    iovec.iov_base = arm64_reg;
-    iovec.iov_len = sizeof arm64_reg;
-    if (ptrace(PTRACE_SETREGSET, tid, NT_PRSTATUS, &iovec))
-        perror("ptrace(PTRACE_SETREGSET)");
-}
-
-long pt_debugger_arm64::peek_reg(int reg) {
-    return arm64_reg[reg];
-}
-
-void pt_debugger_arm64::poke_reg(int reg, long data) {
-    arm64_reg[reg] = data;
-    arm_reg_changed = true;
-}
-
-int pt_debugger_arm64::syscall() {
-    return (int) peek_reg(ARM_x8);
-}
-
-long pt_debugger_arm64::result() {
-    return peek_reg(ARM_x0);
-}
-
-void pt_debugger_arm64::result(long value) {
-    poke_reg(ARM_x0, value);
-}
-
-long pt_debugger_arm64::arg0() {
-    return peek_reg(ARM_x0);
-}
-
-void pt_debugger_arm64::arg0(long data) {
-#if !PTBOX_FREEBSD
-    if (is_enter())
-        poke_reg(ARM_x0, data);
+#if PTBOX_SECCOMP
+uint32_t pt_debugger::seccomp_non_native_arch_list[] = { SCMP_ARCH_ARM, 0 };
 #endif
+
+int pt_debugger::abi_from_reg_size(size_t reg_size) {
+    return reg_size == sizeof regs.arm32 ? PTBOX_ABI_ARM : PTBOX_ABI_ARM64;
 }
 
-#define make_arg(id, reg) \
-    long pt_debugger_arm64::arg##id() { \
-        return peek_reg(reg); \
+size_t pt_debugger::reg_size_from_abi(int abi) {
+    return abi_ == PTBOX_ABI_ARM ? sizeof regs.arm32 : sizeof regs.arm64;
+}
+
+#define UNKNOWN_ABI(source) fprintf(stderr, source ": Invalid ABI\n"), abort()
+
+int pt_debugger::syscall() {
+    switch (abi_) {
+        case PTBOX_ABI_ARM:
+            return regs.arm32.r7;
+        case PTBOX_ABI_ARM64:
+            return regs.arm64.regs[8];
+        case PTBOX_ABI_INVALID:
+            return -1;
+        default:
+            UNKNOWN_ABI("ptdebug_arm64.cpp:syscall getter");
+    }
+}
+
+int pt_debugger::syscall(int id) {
+    struct iovec iovec;
+    iovec.iov_base = &id;
+    iovec.iov_len = sizeof id;
+
+    if (ptrace(PTRACE_SETREGSET, tid, NT_ARM_SYSTEM_CALL, &iovec)) {
+        int err = errno;
+        perror("ptrace(PTRACE_SETREGSET, NT_ARM_SYSTEM_CALL)");
+        return err;
+    }
+    return 0;
+}
+
+#define MAKE_ACCESSOR(method, arm32_name, arm64_name) \
+    long pt_debugger::method() { \
+        switch (abi_) { \
+            case PTBOX_ABI_ARM: \
+                return regs.arm32.arm32_name; \
+            case PTBOX_ABI_ARM64: \
+                return regs.arm64.arm64_name; \
+            case PTBOX_ABI_INVALID: \
+                return -1; \
+            default: \
+                UNKNOWN_ABI("ptdebug_arm64.cpp:" #method " getter"); \
+        } \
     } \
     \
-    void pt_debugger_arm64::arg##id(long data) {\
-        poke_reg(reg, data); \
+    void pt_debugger::method(long value) { \
+        regs_changed = true; \
+        switch (abi_) { \
+            case PTBOX_ABI_ARM: \
+                regs.arm32.arm32_name = value; \
+                return; \
+            case PTBOX_ABI_ARM64: \
+                regs.arm64.arm64_name = value; \
+                return; \
+            case PTBOX_ABI_INVALID: \
+                return; \
+            default: \
+                UNKNOWN_ABI("ptdebug_arm64.cpp:" #method " setter"); \
+        } \
     }
 
-make_arg(1, ARM_x1);
-make_arg(2, ARM_x2);
-make_arg(3, ARM_x3);
-make_arg(4, ARM_x4);
-make_arg(5, ARM_x5);
+MAKE_ACCESSOR(result, r7, regs[8])
+MAKE_ACCESSOR(arg0, r0, regs[0])
+MAKE_ACCESSOR(arg1, r1, regs[1])
+MAKE_ACCESSOR(arg2, r2, regs[2])
+MAKE_ACCESSOR(arg3, r3, regs[3])
+MAKE_ACCESSOR(arg4, r4, regs[4])
+MAKE_ACCESSOR(arg5, r5, regs[5])
 
-#undef make_arg
+#undef MAKE_ACCESSOR
 
-bool pt_debugger_arm64::is_exit(int syscall) {
-    return syscall == 93 || syscall == 94;
+bool pt_debugger::is_end_of_first_execve() {
+    if (process->use_seccomp()) {
+        return syscall() == 221;
+    } else {
+        // There is no orig_x8 on ARM64, and execve clears all registers when finished.
+        // Therefore, 0 is the register value when coming out of a system call.
+        return !is_enter() && syscall() == 0 && result() == 0;
+    }
 }
-
-int pt_debugger_arm64::getpid_syscall() {
-    return 172;
-}
-
-pt_debugger_arm64::pt_debugger_arm64() {
-#if PTBOX_SECCOMP
-    execve_id = 221;
-#else
-    // execve is actually 221, but...
-    // There is no orig_x8 on ARM64, and execve clears all registers.
-    // Therefore, 0 is the register value when coming out of a system call.
-    // We will pretend 0 is execve.
-    execve_id = 0;
-#endif
-}
-#endif /* HAS_DEBUGGER_ARM64 */
+#endif /* defined(__arm64__) || defined(__aarch64__) */

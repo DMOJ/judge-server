@@ -1,0 +1,5 @@
+language: PY2
+time: 2
+memory: 65536
+source: no_flush.py
+expect: AC

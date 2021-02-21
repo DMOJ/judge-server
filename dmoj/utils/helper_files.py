@@ -32,7 +32,7 @@ def compile_with_auxiliary_files(filenames, flags=[], lang=None, compiler_time_l
     use_cpp = any(map(lambda name: os.path.splitext(name)[1] in ['.cpp', '.cc'], filenames))
     use_c = any(map(lambda name: os.path.splitext(name)[1] in ['.c'], filenames))
     if lang is None:
-        best_choices = ('CPP17', 'CPP14', 'CPP11', 'CPP03') if use_cpp else ('C11', 'C')
+        best_choices = ('CPP20', 'CPP17', 'CPP14', 'CPP11', 'CPP03') if use_cpp else ('C11', 'C')
         lang = find_runtime(best_choices)
 
     executor = executors.get(lang)
@@ -67,7 +67,7 @@ def parse_helper_file_error(proc, executor, name, stderr, time_limit, memory_lim
     elif proc.is_mle:
         error = '%s ran out of memory (> %s Kb)' % (name, memory_limit)
     elif proc.protection_fault:
-        syscall, callname, args = proc.protection_fault
+        syscall, callname, args, update_errno = proc.protection_fault
         error = '%s invoked disallowed syscall %s (%s)' % (name, syscall, callname)
     elif proc.returncode:
         if proc.returncode > 0:

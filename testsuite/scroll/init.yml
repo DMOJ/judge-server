@@ -1,0 +1,3 @@
+checker: checker.py
+test_cases:
+- {points: 100}

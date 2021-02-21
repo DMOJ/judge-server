@@ -1,0 +1,6 @@
+language: PY3
+time: 1
+memory: 65536
+source: ac.py
+expect: AC
+points: 1

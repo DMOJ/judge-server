@@ -1,0 +1,6 @@
+language: JAVA8
+time: 2
+memory: 65536
+source: helloworld.java
+expect: IR
+feedback: public static void main(String[] args) not found

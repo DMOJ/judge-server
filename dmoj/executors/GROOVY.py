@@ -25,7 +25,7 @@ println System.in.newReader().readLine()
         self._class_name = problem_id
 
     def get_cmdline(self, **kwargs):
-        res = super().get_cmdline()
+        res = super().get_cmdline(**kwargs)
 
         res[-2:-1] = ['-Dsubmission.file=%s' % self._class_name] + self.runtime_dict['groovy_args']
         return res

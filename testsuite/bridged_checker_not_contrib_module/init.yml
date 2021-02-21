@@ -1,0 +1,8 @@
+checker:
+  name: bridged
+  args:
+    files: check.py
+    lang: PY3
+    type: not-a-contrib-module
+test_cases:
+- {points: 100}

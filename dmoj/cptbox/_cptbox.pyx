@@ -1,14 +1,19 @@
-from cpython.exc cimport PyErr_SetFromErrno
+# cython: language_level=3
+from cpython.exc cimport PyErr_NoMemory, PyErr_SetFromErrno
 from libc.stdio cimport FILE, fopen, fclose, fgets, sprintf
 from libc.stdlib cimport malloc, free, strtoul
 from libc.string cimport strncmp, strlen
 from libc.signal cimport SIGTRAP, SIGXCPU
+from libcpp cimport bool
 from posix.resource cimport rusage
 from posix.types cimport pid_t
 
 __all__ = ['Process', 'Debugger', 'bsd_get_proc_cwd', 'bsd_get_proc_fdno', 'MAX_SYSCALL_NUMBER',
-           'DEBUGGER_X86', 'DEBUGGER_X64', 'DEBUGGER_X86_ON_X64', 'DEBUGGER_X32', 'DEBUGGER_ARM',
-           'DEBUGGER_ARM64', 'AT_FDCWD']
+           'AT_FDCWD', 'ALL_ABIS', 'SUPPORTED_ABIS', 'NATIVE_ABI',
+           'PTBOX_ABI_X86', 'PTBOX_ABI_X64', 'PTBOX_ABI_X32', 'PTBOX_ABI_ARM', 'PTBOX_ABI_ARM64',
+           'PTBOX_ABI_FREEBSD_X64', 'PTBOX_ABI_INVALID', 'PTBOX_ABI_COUNT',
+           'PTBOX_SPAWN_FAIL_NO_NEW_PRIVS', 'PTBOX_SPAWN_FAIL_SECCOMP', 'PTBOX_SPAWN_FAIL_TRACEME',
+           'PTBOX_SPAWN_FAIL_EXECVE']
 
 
 cdef extern from 'ptbox.h' nogil:
@@ -22,7 +27,7 @@ cdef extern from 'ptbox.h' nogil:
 
     cdef cppclass pt_debugger:
         int syscall()
-        void syscall(int)
+        int syscall(int)
         long result()
         void result(long)
         long arg0()
@@ -37,19 +42,19 @@ cdef extern from 'ptbox.h' nogil:
         void arg3(long)
         void arg4(long)
         void arg5(long)
-        bint is_exit(int)
         char *readstr(unsigned long, size_t)
         void freestr(char*)
         pid_t getpid()
         pid_t gettid()
         int getpid_syscall()
+        int abi()
         void on_return(pt_syscall_return_callback callback, void *context)
 
     cdef cppclass pt_process:
         pt_process(pt_debugger *) except +
         void set_callback(pt_handler_callback callback, void* context)
         void set_event_proc(pt_event_callback, void *context)
-        int set_handler(int syscall, int handler)
+        int set_handler(int abi, int syscall, int handler)
         bint trace_syscalls()
         void trace_syscalls(bint value)
         int spawn(pt_fork_handler, void *context)
@@ -59,6 +64,8 @@ cdef extern from 'ptbox.h' nogil:
         double wall_clock_time()
         const rusage *getrusage()
         bint was_initialized()
+        bool use_seccomp()
+        bool use_seccomp(bool enabled)
 
     cdef bint PTBOX_FREEBSD
     cdef bint PTBOX_SECCOMP
@@ -69,10 +76,30 @@ cdef extern from 'ptbox.h' nogil:
     cdef int PTBOX_EVENT_EXITED
     cdef int PTBOX_EVENT_SIGNAL
     cdef int PTBOX_EVENT_PROTECTION
+    cdef int PTBOX_EVENT_PTRACE_ERROR
+    cdef int PTBOX_EVENT_UPDATE_FAIL
 
     cdef int PTBOX_EXIT_NORMAL
     cdef int PTBOX_EXIT_PROTECTION
     cdef int PTBOX_EXIT_SEGFAULT
+
+    cpdef enum:
+        PTBOX_ABI_X86
+        PTBOX_ABI_X64
+        PTBOX_ABI_X32
+        PTBOX_ABI_ARM
+        PTBOX_ABI_ARM64
+        PTBOX_ABI_FREEBSD_X64
+        PTBOX_ABI_COUNT
+        PTBOX_ABI_INVALID
+
+    cdef int native_abi "pt_debugger::native_abi"
+    cdef bool debugger_supports_abi "pt_debugger::supports_abi" (int)
+
+ALL_ABIS = [PTBOX_ABI_X86, PTBOX_ABI_X64, PTBOX_ABI_X32, PTBOX_ABI_ARM, PTBOX_ABI_ARM64, PTBOX_ABI_FREEBSD_X64]
+assert len(ALL_ABIS) == PTBOX_ABI_COUNT
+SUPPORTED_ABIS = list(filter(debugger_supports_abi, ALL_ABIS))
+NATIVE_ABI = native_abi
 
 cdef extern from 'helper.h' nogil:
     cdef struct child_config:
@@ -89,11 +116,9 @@ cdef extern from 'helper.h' nogil:
         int stdin_
         int stdout_
         int stderr_
-        int max_fd
-        int *fds
-        int debugger_type
-        bint trace_syscalls
-        bint *syscall_whitelist
+        bool use_seccomp
+        int abi_for_seccomp
+        bint *seccomp_whitelist
 
     void cptbox_closefrom(int lowfd)
     int cptbox_child_run(child_config *)
@@ -101,21 +126,23 @@ cdef extern from 'helper.h' nogil:
     char *_bsd_get_proc_fdno "bsd_get_proc_fdno"(pid_t pid, int fdno)
 
     cpdef enum:
-        DEBUGGER_X86
-        DEBUGGER_X64
-        DEBUGGER_X86_ON_X64
-        DEBUGGER_X32
-        DEBUGGER_ARM
-        DEBUGGER_ARM64
+        PTBOX_SPAWN_FAIL_NO_NEW_PRIVS
+        PTBOX_SPAWN_FAIL_SECCOMP
+        PTBOX_SPAWN_FAIL_TRACEME
+        PTBOX_SPAWN_FAIL_EXECVE
 
-    pt_debugger *get_ptdebugger(int type)
+    int _memory_fd_create "memory_fd_create"()
+    int _memory_fd_seal "memory_fd_seal"(int fd)
 
 
 cdef extern from 'fcntl.h' nogil:
-    cdef int _AT_FDCWD "AT_FDCWD"
+    cpdef enum:
+        AT_FDCWD
+
+cdef extern from "errno.h":
+    int errno
 
 MAX_SYSCALL_NUMBER = MAX_SYSCALL
-AT_FDCWD = _AT_FDCWD
 
 cdef int pt_child(void *context) nogil:
     cdef child_config *config = <child_config*> context
@@ -130,14 +157,17 @@ cdef void pt_syscall_return_handler(void *context, int syscall) with gil:
 cdef int pt_event_handler(void *context, int event, unsigned long param) nogil:
     return (<Process>context)._event_handler(event, param)
 
-cdef char **alloc_string_array(list):
-    cdef char **array = <char**>malloc((len(list) + 1) * sizeof(char*))
-    for i, elem in enumerate(list):
-        array[i] = elem
-    array[len(list)] = NULL
+cdef char **alloc_byte_array(list list) except NULL:
+    cdef size_t length = len(list)
+    cdef char **array = <char**>malloc((length + 1) * sizeof(char*))
+    if not array:
+        PyErr_NoMemory()
+    for i in range(length):
+        array[i] = list[i]
+    array[length] = NULL
     return array
 
-cpdef unsigned long get_memory(pid_t pid) nogil:
+cdef unsigned long get_memory(pid_t pid) nogil:
     cdef unsigned long memory = 0
     cdef char path[128]
     cdef char line[128]
@@ -155,7 +185,7 @@ cpdef unsigned long get_memory(pid_t pid) nogil:
         if strncmp(line, "VmHWM:", 6) == 0:
             start = line
             length = strlen(line)
-            line[length-3] = '\0'
+            line[length-3] = b'\0'
             while not 48 <= start[0] <= 57:
                 start += 1
             memory = strtoul(start, NULL, 0)
@@ -179,130 +209,162 @@ def bsd_get_proc_fdno(pid_t pid, int fd):
     free(buf)
     return res
 
+def memory_fd_create():
+    cdef int fd = _memory_fd_create()
+    if fd < 0:
+        PyErr_SetFromErrno(OSError)
+    return fd
+
+def memory_fd_seal(int fd):
+    cdef int result = _memory_fd_seal(fd)
+    if result == -1:
+        PyErr_SetFromErrno(OSError)
+
+cdef class Process
+
 
 cdef class Debugger:
     cdef pt_debugger *thisptr
+    cdef Process process
     cdef object on_return_callback
-    cdef int _getpid_syscall
-    cdef int _debugger_type
 
-    property type:
-        def __get__(self):
-            return self._debugger_type
+    def __cinit__(self, Process process):
+        self.thisptr = new pt_debugger()
+        self.process = process
 
-    property getpid_syscall:
-        def __get__(self):
-            return self._getpid_syscall
+    def __dealloc__(self):
+        del self.thisptr
 
-    property syscall:
-        def __get__(self):
-            return self.thisptr.syscall()
+    @property
+    def noop_syscall_id(self):
+        raise NotImplementedError()
 
-        def __set__(self, value):
-            # When using seccomp, -1 as syscall means "skip"; when we are not,
-            # we swap with a harmless syscall without side-effects (getpid).
-            if not PTBOX_SECCOMP and value == -1:
-                self.thisptr.syscall(self._getpid_syscall)
-            else:
-                self.thisptr.syscall(value)
+    @property
+    def syscall(self):
+        return self.thisptr.syscall()
 
-    property result:
-        def __get__(self):
-            return self.thisptr.result()
+    @syscall.setter
+    def syscall(self, int value):
+        # When using seccomp, -1 as syscall means "skip"; when we are not,
+        # we swap with a harmless syscall without side-effects (getpid).
+        if not self.process._use_seccomp() and value == -1:
+            value = self.noop_syscall_id
+        global errno
+        errno = self.thisptr.syscall(value)
+        if errno:
+            PyErr_SetFromErrno(OSError)
 
-        def __set__(self, value):
-            self.thisptr.result(<long>value)
+    @property
+    def result(self):
+        return self.thisptr.result()
 
-    property uresult:
-        def __get__(self):
-            return <unsigned long>self.thisptr.result()
+    @result.setter
+    def result(self, value):
+        self.thisptr.result(<long>value)
 
-        def __set__(self, value):
-            self.thisptr.result(<long><unsigned long>value)
+    @property
+    def uresult(self):
+        return <unsigned long>self.thisptr.result()
 
-    property arg0:
-        def __get__(self):
-            return self.thisptr.arg0()
+    @uresult.setter
+    def uresult(self, value):
+        self.thisptr.result(<long><unsigned long>value)
 
-        def __set__(self, value):
-            self.thisptr.arg0(<long>value)
+    @property
+    def arg0(self):
+        return self.thisptr.arg0()
 
-    property arg1:
-        def __get__(self):
-            return self.thisptr.arg1()
+    @arg0.setter
+    def arg0(self, value):
+        self.thisptr.arg0(<long>value)
 
-        def __set__(self, value):
-            self.thisptr.arg1(<long>value)
+    @property
+    def arg1(self):
+        return self.thisptr.arg1()
 
-    property arg2:
-        def __get__(self):
-            return self.thisptr.arg2()
+    @arg1.setter
+    def arg1(self, value):
+        self.thisptr.arg1(<long>value)
 
-        def __set__(self, value):
-            self.thisptr.arg2(<long>value)
+    @property
+    def arg2(self):
+        return self.thisptr.arg2()
 
-    property arg3:
-        def __get__(self):
-            return self.thisptr.arg3()
+    @arg2.setter
+    def arg2(self, value):
+        self.thisptr.arg2(<long>value)
 
-        def __set__(self, value):
-            self.thisptr.arg3(<long>value)
+    @property
+    def arg3(self):
+        return self.thisptr.arg3()
 
-    property arg4:
-        def __get__(self):
-            return self.thisptr.arg4()
+    @arg3.setter
+    def arg3(self, value):
+        self.thisptr.arg3(<long>value)
 
-        def __set__(self, value):
-            self.thisptr.arg4(<long>value)
+    @property
+    def arg4(self):
+        return self.thisptr.arg4()
 
-    property arg5:
-        def __get__(self):
-            return self.thisptr.arg5()
+    @arg4.setter
+    def arg4(self, value):
+        self.thisptr.arg4(<long>value)
 
-        def __set__(self, value):
-            self.thisptr.arg5(<long>value)
+    @property
+    def arg5(self):
+        return self.thisptr.arg5()
 
-    property uarg0:
-        def __get__(self):
-            return <unsigned long>self.thisptr.arg0()
+    @arg5.setter
+    def arg5(self, value):
+        self.thisptr.arg5(<long>value)
 
-        def __set__(self, value):
-            self.thisptr.arg0(<long><unsigned long>value)
+    @property
+    def uarg0(self):
+        return <unsigned long>self.thisptr.arg0()
 
-    property uarg1:
-        def __get__(self):
-            return <unsigned long>self.thisptr.arg1()
+    @uarg0.setter
+    def uarg0(self, value):
+        self.thisptr.arg0(<long><unsigned long>value)
 
-        def __set__(self, value):
-            self.thisptr.arg1(<long><unsigned long>value)
+    @property
+    def uarg1(self):
+        return <unsigned long>self.thisptr.arg1()
 
-    property uarg2:
-        def __get__(self):
-            return <unsigned long>self.thisptr.arg2()
+    @uarg1.setter
+    def uarg1(self, value):
+        self.thisptr.arg1(<long><unsigned long>value)
 
-        def __set__(self, value):
-            self.thisptr.arg2(<long><unsigned long>value)
+    @property
+    def uarg2(self):
+        return <unsigned long>self.thisptr.arg2()
 
-    property uarg3:
-        def __get__(self):
-            return <unsigned long>self.thisptr.arg3()
+    @uarg2.setter
+    def uarg2(self, value):
+        self.thisptr.arg2(<long><unsigned long>value)
 
-        def __set__(self, value):
-            self.thisptr.arg3(<long><unsigned long>value)
+    @property
+    def uarg3(self):
+        return <unsigned long>self.thisptr.arg3()
 
-    property uarg4:
-        def __get__(self):
-            return <unsigned long>self.thisptr.arg4()
+    @uarg3.setter
+    def uarg3(self, value):
+        self.thisptr.arg3(<long><unsigned long>value)
 
-        def __set__(self, value):
-            self.thisptr.arg4(<long><unsigned long>value)
+    @property
+    def uarg4(self):
+        return <unsigned long>self.thisptr.arg4()
 
-    property uarg5:
-        def __get__(self):
-            return <unsigned long>self.thisptr.arg5()
+    @uarg4.setter
+    def uarg4(self, value):
+        self.thisptr.arg4(<long><unsigned long>value)
 
-        def __set__(self, value):
-            self.thisptr.arg5(<long><unsigned long>value)
+    @property
+    def uarg5(self):
+        return <unsigned long>self.thisptr.arg5()
+
+    @uarg5.setter
+    def uarg5(self, value):
+        self.thisptr.arg5(<long><unsigned long>value)
 
     def readstr(self, unsigned long address, size_t max_size=4096):
         cdef char* str = self.thisptr.readstr(address, max_size)
@@ -310,16 +372,17 @@ cdef class Debugger:
         self.thisptr.freestr(str)
         return pystr
 
-    property tid:
-        def __get__(self):
-            return self.thisptr.gettid()
+    @property
+    def tid(self):
+        return self.thisptr.gettid()
 
-    property pid:
-        def __get__(self):
-            return self.thisptr.getpid()
+    @property
+    def pid(self):
+        return self.thisptr.getpid()
 
-    def is_exit(self, syscall):
-        return self.thisptr.is_exit(syscall)
+    @property
+    def abi(self):
+        return self.thisptr.abi()
 
     def on_return(self, callback):
         self.on_return_callback = callback
@@ -331,7 +394,6 @@ cdef class Debugger:
 
 
 cdef class Process:
-    cdef pt_debugger *_debugger
     cdef pt_process *process
     cdef public Debugger debugger
     cdef readonly bint _exited
@@ -343,7 +405,10 @@ cdef class Process:
     cdef public int _nproc, _fsize
     cdef unsigned long _max_memory
 
-    def __cinit__(self, int debugger, debugger_type, *args, **kwargs):
+    cpdef Debugger create_debugger(self):
+        return Debugger(self)
+
+    def __cinit__(self, *args, **kwargs):
         self._child_memory = self._child_address = 0
         self._child_stdin = self._child_stdout = self._child_stderr = -1
         self._cpu_time = 0
@@ -351,21 +416,13 @@ cdef class Process:
         self._nproc = -1
         self._signal = 0
 
-        self._debugger = get_ptdebugger(debugger)
-        if not self._debugger:
-            raise ValueError('Unsupported debugger configuration')
-
-        self.debugger = <Debugger?>debugger_type()
-        self.debugger.thisptr = self._debugger
-        self.debugger._getpid_syscall = self._debugger.getpid_syscall()
-        self.debugger._debugger_type = debugger
-        self.process = new pt_process(self._debugger)
+        self.debugger = self.create_debugger()
+        self.process = new pt_process(self.debugger.thisptr)
         self.process.set_callback(pt_syscall_handler, <void*>self)
         self.process.set_event_proc(pt_event_handler, <void*>self)
 
     def __dealloc__(self):
         del self.process
-        del self._debugger
 
     def _callback(self, syscall):
         return False
@@ -378,7 +435,13 @@ cdef class Process:
             self._max_memory = get_memory(self.process.getpid()) or self._max_memory
         if event == PTBOX_EVENT_PROTECTION:
             with gil:
-                self._protection_fault(param)
+                self._protection_fault(<long>param, is_update=False)
+        if event == PTBOX_EVENT_UPDATE_FAIL:
+            with gil:
+                self._protection_fault(<long>param, is_update=True)
+        if event == PTBOX_EVENT_PTRACE_ERROR:
+            with gil:
+                self._ptrace_error(param)
         if event == PTBOX_EVENT_SIGNAL:
             if param != SIGTRAP:
                 self._signal = param
@@ -387,55 +450,58 @@ cdef class Process:
                     self._cpu_time_exceeded()
         return 0
 
-    cpdef _handler(self, syscall, handler):
-        self.process.set_handler(syscall, handler)
+    cpdef _handler(self, abi, syscall, handler):
+        self.process.set_handler(abi, syscall, handler)
 
-    cpdef _protection_fault(self, syscall):
+    cpdef _protection_fault(self, syscall, is_update):
+        pass
+
+    cpdef _ptrace_error(self, errno):
         pass
 
     cpdef _cpu_time_exceeded(self):
         pass
 
-    cpdef _spawn(self, file, args, env=(), chdir='', fds=None):
+    cpdef _get_seccomp_whitelist(self):
+        raise NotImplementedError()
+
+    cpdef _spawn(self, file, args, env=(), chdir=''):
         cdef child_config config
-        config.address_space = self._child_address
-        config.memory = self._child_memory
-        config.cpu_time = self._cpu_time
-        config.nproc = self._nproc
-        config.fsize = self._fsize
-        config.personality = self._child_personality
-        config.file = file
-        config.dir = chdir
-        config.stdin_ = self._child_stdin
-        config.stdout_ = self._child_stdout
-        config.stderr_ = self._child_stderr
-        config.argv = alloc_string_array(args)
-        config.envp = alloc_string_array(env)
-        if fds is None or not len(fds):
-            config.max_fd = 2
-            config.fds = NULL
-        else:
-            config.max_fd = 2 + len(fds)
-            config.fds = <int*>malloc(sizeof(int) * len(fds))
-            for i in xrange(len(fds)):
-                config.fds[i] = fds[i]
+        config.argv = NULL
+        config.envp = NULL
+        config.seccomp_whitelist = NULL
 
-        config.debugger_type = self.debugger._debugger_type
-        config.trace_syscalls = self._trace_syscalls
-        config.syscall_whitelist = <bint*>malloc(sizeof(bint) * MAX_SYSCALL_NUMBER)
-        for i in xrange(MAX_SYSCALL_NUMBER):
-            # We have to force exit syscalls to trap, so that we can be notified
-            # that the process spawned successfully when using `seccomp`. Otherwise,
-            # a simple assembly program could terminate without ever trapping.
-            if not self.debugger.is_exit(i):
-                config.syscall_whitelist[i] = self._syscall_whitelist[i]
-            else:
-                config.syscall_whitelist[i] = False
+        try:
+            config.address_space = self._child_address
+            config.memory = self._child_memory
+            config.cpu_time = self._cpu_time
+            config.nproc = self._nproc
+            config.fsize = self._fsize
+            config.personality = self._child_personality
+            config.file = file
+            config.dir = chdir
+            config.stdin_ = self._child_stdin
+            config.stdout_ = self._child_stdout
+            config.stderr_ = self._child_stderr
+            config.argv = alloc_byte_array(args)
+            config.envp = alloc_byte_array(env)
 
-        if self.process.spawn(pt_child, &config):
-            raise RuntimeError('failed to spawn child')
-        free(config.argv)
-        free(config.envp)
+            config.use_seccomp = self._use_seccomp()
+            if config.use_seccomp:
+                whitelist = self._get_seccomp_whitelist()
+                assert len(whitelist) == MAX_SYSCALL
+                config.seccomp_whitelist = <bint*>malloc(sizeof(bint) * MAX_SYSCALL)
+                if not config.seccomp_whitelist:
+                    PyErr_NoMemory()
+                for i in range(MAX_SYSCALL):
+                    config.seccomp_whitelist[i] = whitelist[i]
+
+            if self.process.spawn(pt_child, &config):
+                raise RuntimeError('failed to spawn child')
+        finally:
+            free(config.argv)
+            free(config.envp)
+            free(config.seccomp_whitelist)
 
     cpdef _monitor(self):
         cdef int exitcode
@@ -445,53 +511,66 @@ cdef class Process:
         self._exited = True
         return self._exitcode
 
-    property was_initialized:
-        def __get__(self):
-            return self.process.was_initialized()
+    cdef inline bool _use_seccomp(self):
+        return self.process.use_seccomp()
 
-    property _trace_syscalls:
-        def __get__(self):
-            return self.process.trace_syscalls()
+    @property
+    def use_seccomp(self):
+        return self.process.use_seccomp()
 
-        def __set__(self, bint value):
-            self.process.trace_syscalls(value)
+    @use_seccomp.setter
+    def use_seccomp(self, bool enabled):
+        if not self.process.use_seccomp(enabled):
+            raise RuntimeError("Can't change whether seccomp is used after process is created.")
 
-    property pid:
-        def __get__(self):
-            return self.process.getpid()
+    @property
+    def was_initialized(self):
+        return self.process.was_initialized()
 
-    property execution_time:
-        def __get__(self):
-            return self.process.execution_time()
+    @property
+    def _trace_syscalls(self):
+        return self.process.trace_syscalls()
 
-    property wall_clock_time:
-        def __get__(self):
-            return self.process.wall_clock_time()
+    @_trace_syscalls.setter
+    def _trace_syscalls(self, bint value):
+        self.process.trace_syscalls(value)
 
-    property cpu_time:
-        def __get__(self):
-            cdef const rusage *usage = self.process.getrusage()
-            return usage.ru_utime.tv_sec + usage.ru_utime.tv_usec / 1000000.
+    @property
+    def pid(self):
+        return self.process.getpid()
 
-    property max_memory:
-        def __get__(self):
-            if PTBOX_FREEBSD:
-                return self.process.getrusage().ru_maxrss
-            if self._exited:
-                return self._max_memory or self.process.getrusage().ru_maxrss
-            cdef unsigned long memory = get_memory(self.process.getpid())
-            if memory > 0:
-                self._max_memory = memory
+    @property
+    def execution_time(self):
+        return self.process.execution_time()
+
+    @property
+    def wall_clock_time(self):
+        return self.process.wall_clock_time()
+
+    @property
+    def cpu_time(self):
+        cdef const rusage *usage = self.process.getrusage()
+        return usage.ru_utime.tv_sec + usage.ru_utime.tv_usec / 1000000.
+
+    @property
+    def max_memory(self):
+        if PTBOX_FREEBSD:
+            return self.process.getrusage().ru_maxrss
+        if self._exited:
             return self._max_memory or self.process.getrusage().ru_maxrss
+        cdef unsigned long memory = get_memory(self.process.getpid())
+        if memory > 0:
+            self._max_memory = memory
+        return self._max_memory or self.process.getrusage().ru_maxrss
 
-    property signal:
-        def __get__(self):
-            if not self._exited:
-                return None
-            return self._signal if self.was_initialized else 0
+    @property
+    def signal(self):
+        if not self._exited:
+            return None
+        return self._signal if self.process.was_initialized() else 0
 
-    property returncode:
-        def __get__(self):
-            if not self._exited:
-                return None
-            return self._exitcode
+    @property
+    def returncode(self):
+        if not self._exited:
+            return None
+        return self._exitcode

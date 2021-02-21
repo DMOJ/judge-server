@@ -8,6 +8,7 @@ from typing import Optional
 
 from dmoj.error import CompileError, InternalError
 from dmoj.executors.compiled_executor import CompiledExecutor
+from dmoj.executors.mixins import SingleDigitVersionMixin
 from dmoj.judgeenv import skip_self_test
 from dmoj.utils.unicode import utf8bytes, utf8text
 
@@ -37,14 +38,23 @@ def find_class(source):
     return class_name
 
 
-class JavaExecutor(CompiledExecutor):
+def handle_procctl(debugger):
+    P_PID = 0
+    PROC_STACKGAP_CTL = 17
+    PROC_STACKGAP_STATUS = 18
+    return (debugger.arg0 == P_PID and debugger.arg1 == debugger.pid and
+            debugger.arg2 in (PROC_STACKGAP_CTL, PROC_STACKGAP_STATUS))
+
+
+class JavaExecutor(SingleDigitVersionMixin, CompiledExecutor):
     ext = 'java'
 
     vm: str
     compiler: str
     nproc = -1
-    fsize = 64  # Allow 64 bytes for dumping state file.
+    fsize = 1048576  # Allow 1 MB for writing crash log.
     address_grace = 786432
+    syscalls = ['pread64', 'clock_nanosleep', 'socketpair', ('procctl', handle_procctl), 'setrlimit', 'thr_set_name']
 
     jvm_regex: Optional[str] = None
     security_policy = policy
@@ -67,23 +77,29 @@ class JavaExecutor(CompiledExecutor):
     def get_compiled_file(self):
         return None
 
-    def get_security(self, launch_kwargs=None):
-        return None
-
     def get_executable(self):
         return self.get_vm()
 
-    def get_cmdline(self, **kwargs):
-        agent_flags = '-javaagent:%s=policy:%s' % (self._agent_file, self._policy_file)
+    def get_fs(self):
+        return super().get_fs() + [self._agent_file]
+
+    def get_write_fs(self):
+        return super().get_write_fs() + [os.path.join(self._dir, 'submission_jvm_crash.log')]
+
+    def get_agent_flag(self):
+        agent_flag = '-javaagent:%s=policy:%s' % (self._agent_file, self._policy_file)
         for hint in self._hints:
-            agent_flags += ',%s' % hint
+            agent_flag += ',%s' % hint
         if self.unbuffered:
-            agent_flags += ',nobuf'
+            agent_flag += ',nobuf'
+        return agent_flag
+
+    def get_cmdline(self, **kwargs):
         # 128m is equivalent to 1<<27 in Thread constructor
         return [
             'java',
             self.get_vm_mode(),
-            agent_flags,
+            self.get_agent_flag(),
             '-Xss128m',
             '-Xmx%dK' % kwargs['orig_memory'],
             '-XX:+UseSerialGC',

@@ -1,0 +1,4 @@
+signature_grader: {entry: handler.c, header: header.h}
+test_cases:
+- {in: siggrade.1.in, out: siggrade.1.out, points: 50}
+- {in: siggrade.2.in, out: siggrade.2.out, points: 50}

@@ -1,0 +1,5 @@
+language: TUR
+time: 2
+memory: 65536
+source: seed2.tur
+expect: AC

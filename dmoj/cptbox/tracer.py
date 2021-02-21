@@ -1,3 +1,4 @@
+import errno
 import logging
 import os
 import select
@@ -9,50 +10,33 @@ from typing import List, Optional
 
 from dmoj.cptbox._cptbox import *
 from dmoj.cptbox.handlers import ALLOW, DISALLOW, _CALLBACK
-from dmoj.cptbox.syscalls import SYSCALL_COUNT, by_id, translator
-from dmoj.error import InternalError
+from dmoj.cptbox.syscalls import SYSCALL_COUNT, by_id, translator, sys_exit, sys_exit_group, sys_getpid
 from dmoj.utils.communicate import safe_communicate as _safe_communicate
-from dmoj.utils.os_ext import (
-    ARCH_A64,
-    ARCH_ARM,
-    ARCH_X32,
-    ARCH_X64,
-    ARCH_X86,
-    INTERPRETER_ARCH,
-    file_arch,
-    find_exe_in_path,
-    oom_score_adj,
-    OOM_SCORE_ADJ_MAX,
-)
+from dmoj.utils.os_ext import find_exe_in_path, oom_score_adj, OOM_SCORE_ADJ_MAX
 from dmoj.utils.unicode import utf8bytes, utf8text
 
 PIPE = subprocess.PIPE
 log = logging.getLogger('dmoj.cptbox')
 
 _PIPE_BUF = getattr(select, 'PIPE_BUF', 512)
-_SYSCALL_INDICIES: List[Optional[int]] = [None] * 7
+_SYSCALL_INDICIES: List[Optional[int]] = [None] * PTBOX_ABI_COUNT
 
-if 'freebsd' in sys.platform:
-    _SYSCALL_INDICIES[DEBUGGER_X64] = 4
-else:
-    _SYSCALL_INDICIES[DEBUGGER_X86] = 0
-    _SYSCALL_INDICIES[DEBUGGER_X86_ON_X64] = 0
-    _SYSCALL_INDICIES[DEBUGGER_X64] = 1
-    _SYSCALL_INDICIES[DEBUGGER_X32] = 2
-    _SYSCALL_INDICIES[DEBUGGER_ARM] = 3
-    _SYSCALL_INDICIES[DEBUGGER_ARM64] = 5
+_SYSCALL_INDICIES[PTBOX_ABI_X86] = 0
+_SYSCALL_INDICIES[PTBOX_ABI_X64] = 1
+_SYSCALL_INDICIES[PTBOX_ABI_X32] = 2
+_SYSCALL_INDICIES[PTBOX_ABI_ARM] = 3
+_SYSCALL_INDICIES[PTBOX_ABI_FREEBSD_X64] = 4
+_SYSCALL_INDICIES[PTBOX_ABI_ARM64] = 5
 
-# (python arch, executable arch) -> debugger
-_arch_map = {
-    (ARCH_X86, ARCH_X86): DEBUGGER_X86,
-    (ARCH_X64, ARCH_X64): DEBUGGER_X64,
-    (ARCH_X64, ARCH_X86): DEBUGGER_X86_ON_X64,
-    (ARCH_X64, ARCH_X32): DEBUGGER_X32,
-    (ARCH_X32, ARCH_X32): DEBUGGER_X32,
-    (ARCH_X32, ARCH_X86): DEBUGGER_X86_ON_X64,
-    (ARCH_ARM, ARCH_ARM): DEBUGGER_ARM,
-    (ARCH_A64, ARCH_ARM): DEBUGGER_ARM,
-    (ARCH_A64, ARCH_A64): DEBUGGER_ARM64,
+FREEBSD = sys.platform.startswith('freebsd')
+
+_address_bits = {
+    PTBOX_ABI_X86: 32,
+    PTBOX_ABI_X64: 64,
+    PTBOX_ABI_X32: 32,
+    PTBOX_ABI_ARM: 32,
+    PTBOX_ABI_ARM64: 64,
+    PTBOX_ABI_FREEBSD_X64: 64,
 }
 
 
@@ -67,9 +51,21 @@ class AdvancedDebugger(Debugger):
     def syscall_name(self):
         return self.get_syscall_name(self.syscall)
 
+    @property
+    def address_bits(self):
+        return _address_bits.get(self.abi)
+
+    @property
+    def noop_syscall_id(self):
+        if self.abi == PTBOX_ABI_INVALID:
+            raise ValueError('ABI is invalid')
+        return translator[sys_getpid][_SYSCALL_INDICIES[self.abi]][0]
+
     def get_syscall_name(self, syscall):
+        if self.abi == PTBOX_ABI_INVALID:
+            return 'failed to read registers'
         callname = 'unknown'
-        index = self._syscall_index
+        index = _SYSCALL_INDICIES[self.abi]
         for id, call in enumerate(translator):
             if syscall in call[index]:
                 callname = by_id[id]
@@ -87,51 +83,33 @@ class AdvancedDebugger(Debugger):
         return utf8text(read)
 
 
-# SecurePopen is a subclass of a cython class, _cptbox.Process. Since it is exceedingly unwise
-# to do everything in cython, determining the debugger class is left to do here. However, since
-# the debugger is constructed in __cinit__, we have to pass the determined debugger class to
-# SecurePopen.__new__. While we can simply override __new__, many complication arises from having
-# different parameters to __new__ and __init__, the latter of which is given the *original* arguments
-# as passed to type.__call__. Hence, we use a metaclass to pass the extra debugger argument to both
-# __new__ and __init__.
-class TracedPopenMeta(type):
-    def __call__(self, argv, executable=None, *args, **kwargs):
-        executable = executable or find_exe_in_path(argv[0])
-        arch = file_arch(executable)
-        debugger = _arch_map.get((INTERPRETER_ARCH, arch))
-        if debugger is None:
-            raise RuntimeError('Executable type %s could not be debugged on Python type %s' % (arch, INTERPRETER_ARCH))
-        return super().__call__(debugger, self.debugger_type, argv, executable, *args, **kwargs)
-
-
-class TracedPopen(Process, metaclass=TracedPopenMeta):
-    debugger_type = AdvancedDebugger
+class TracedPopen(Process):
+    def create_debugger(self):
+        return AdvancedDebugger(self)
 
     def __init__(
-        self,
-        debugger,
-        _,
-        args,
-        executable=None,
-        security=None,
-        time=0,
-        memory=0,
-        stdin=PIPE,
-        stdout=PIPE,
-        stderr=None,
-        env=None,
-        nproc=0,
-        fsize=0,
-        address_grace=4096,
-        data_grace=0,
-        personality=0,
-        cwd='',
-        fds=None,
-        wall_time=None,
+            self,
+            args,
+            avoid_seccomp=False,
+            executable=None,
+            security=None,
+            time=0,
+            memory=0,
+            stdin=PIPE,
+            stdout=PIPE,
+            stderr=None,
+            env=None,
+            nproc=0,
+            fsize=0,
+            address_grace=4096,
+            data_grace=0,
+            personality=0,
+            cwd='',
+            wall_time=None,
     ):
-        self._debugger_type = debugger
-        self._syscall_index = index = _SYSCALL_INDICIES[debugger]
         self._executable = executable or find_exe_in_path(args[0])
+        self.use_seccomp = security is not None and not avoid_seccomp
+
         self._args = args
         self._chdir = cwd
         self._env = [
@@ -150,32 +128,28 @@ class TracedPopen(Process, metaclass=TracedPopenMeta):
         self._fsize = fsize
         self._is_tle = False
         self._is_ole = False
-        self._fds = fds
         self.__init_streams(stdin, stdout, stderr)
+        self._last_ptrace_errno = None
         self.protection_fault = None
 
-        self.debugger._syscall_index = index
-        self.debugger.address_bits = 64 if debugger in (DEBUGGER_X64, DEBUGGER_ARM64) else 32
-
         self._security = security
-        self._callbacks = [None] * MAX_SYSCALL_NUMBER
-        self._syscall_whitelist = [False] * MAX_SYSCALL_NUMBER
+        self._callbacks = [[None] * MAX_SYSCALL_NUMBER for _ in range(PTBOX_ABI_COUNT)]
         if security is None:
             self._trace_syscalls = False
         else:
-            for i in range(SYSCALL_COUNT):
-                handler = security.get(i, DISALLOW)
-                for call in translator[i][index]:
-                    if call is None:
-                        continue
-                    if isinstance(handler, int):
-                        self._syscall_whitelist[call] = handler == ALLOW
-                    else:
-                        if not callable(handler):
-                            raise ValueError('Handler not callable: ' + handler)
-                        self._callbacks[call] = handler
-                        handler = _CALLBACK
-                    self._handler(call, handler)
+            for abi in SUPPORTED_ABIS:
+                index = _SYSCALL_INDICIES[abi]
+                for i in range(SYSCALL_COUNT):
+                    for call in translator[i][index]:
+                        if call is None:
+                            continue
+                        handler = security.get(i, DISALLOW)
+                        if not isinstance(handler, int):
+                            if not callable(handler):
+                                raise ValueError('Handler not callable: ' + handler)
+                            self._callbacks[abi][call] = handler
+                            handler = _CALLBACK
+                        self._handler(abi, call, handler)
 
         self._died = threading.Event()
         self._spawned_or_errored = threading.Event()
@@ -192,19 +166,39 @@ class TracedPopen(Process, metaclass=TracedPopenMeta):
         if self._spawn_error:
             raise self._spawn_error
 
+    def _get_seccomp_whitelist(self):
+        whitelist = [False] * MAX_SYSCALL_NUMBER
+        index = _SYSCALL_INDICIES[NATIVE_ABI]
+        for i in range(SYSCALL_COUNT):
+            # Ensure at least one syscall traps.
+            # Otherwise, a simple assembly program could terminate without ever trapping.
+            if i in (sys_exit, sys_exit_group):
+                continue
+            handler = self._security.get(i, DISALLOW)
+            for call in translator[i][index]:
+                if call is None:
+                    continue
+                if isinstance(handler, int):
+                    whitelist[call] = handler == ALLOW
+        return whitelist
+
     def wait(self):
         self._died.wait()
         if not self.was_initialized:
-            if self.returncode == 203:
+            if self.returncode == PTBOX_SPAWN_FAIL_NO_NEW_PRIVS:
+                raise RuntimeError('failed to call prctl(PR_SET_NO_NEW_PRIVS)')
+            elif self.returncode == PTBOX_SPAWN_FAIL_SECCOMP:
                 raise RuntimeError('failed to set up seccomp policy')
-            elif self.returncode == 204:
+            elif self.returncode == PTBOX_SPAWN_FAIL_TRACEME:
                 raise RuntimeError(
                     'failed to ptrace child, check Yama config '
                     '(https://www.kernel.org/doc/Documentation/security/Yama.txt, should be '
                     'at most 1); if running in Docker, must run container with `--cap-add=SYS_PTRACE`'
                 )
-            elif self.returncode == 205:
+            elif self.returncode == PTBOX_SPAWN_FAIL_EXECVE:
                 raise RuntimeError('failed to spawn child')
+            elif self.returncode >= 0:
+                raise RuntimeError('process failed to initialize with unknown exit code: %d' % self.returncode)
         return self.returncode
 
     def poll(self):
@@ -249,10 +243,14 @@ class TracedPopen(Process, metaclass=TracedPopenMeta):
             log.warning('Skipping the killing of process because it already exited: %s', self.pid)
 
     def _callback(self, syscall):
+        if self.debugger.abi == PTBOX_ABI_INVALID:
+            log.warning('Received invalid ABI when handling syscall %d', syscall)
+            return False
+
         try:
-            callback = self._callbacks[syscall]
+            callback = self._callbacks[self.debugger.abi][syscall]
         except IndexError:
-            if self._syscall_index == 3:
+            if self.debugger.abi == PTBOX_ABI_ARM:
                 # ARM-specific
                 return 0xF0000 < syscall < 0xF0006
             return False
@@ -261,16 +259,17 @@ class TracedPopen(Process, metaclass=TracedPopenMeta):
             return callback(self.debugger)
         return False
 
-    def _protection_fault(self, syscall):
+    def _protection_fault(self, syscall, is_update):
         # When signed, 0xFFFFFFFF is equal to -1, meaning that ptrace failed to read the syscall for some reason.
         # We can't continue debugging as this could potentially be unsafe, so we should exit loudly.
         # See <https://github.com/DMOJ/judge/issues/181> for more details.
-        if syscall == 0xFFFFFFFF:
-            raise InternalError('ptrace failed')
-            # TODO: this would be more useful if we had access to a proper errno
-            # import errno, os
-            # err = ...
-            # raise InternalError('ptrace error: %d (%s: %s)' % (err, errno.errorcode[err], os.strerror(err)))
+        if syscall == -1:
+            err = self._last_ptrace_errno
+            if err is None:
+                log.error('ptrace failed with unknown error')
+            else:
+                log.error('ptrace error: %d (%s: %s)', err, errno.errorcode[err], os.strerror(err))
+            self.protection_fault = (-1, 'ptrace fail', [0] * 6, None)
         else:
             callname = self.debugger.get_syscall_name(syscall)
             self.protection_fault = (
@@ -284,7 +283,11 @@ class TracedPopen(Process, metaclass=TracedPopenMeta):
                     self.debugger.uarg4,
                     self.debugger.uarg5,
                 ],
+                self._last_ptrace_errno if is_update else None,
             )
+
+    def _ptrace_error(self, error):
+        self._last_ptrace_errno = error
 
     def _cpu_time_exceeded(self):
         log.warning('SIGXCPU in process %d', self.pid)
@@ -292,7 +295,7 @@ class TracedPopen(Process, metaclass=TracedPopenMeta):
 
     def _run_process(self):
         try:
-            self._spawn(self._executable, self._args, self._env, self._chdir, self._fds)
+            self._spawn(self._executable, self._args, self._env, self._chdir)
         except:  # noqa: E722, need to catch absolutely everything
             self._spawn_error = sys.exc_info()[0]
             self._died.set()
@@ -307,13 +310,15 @@ class TracedPopen(Process, metaclass=TracedPopenMeta):
 
             self._spawned_or_errored.set()
 
-        # Adjust OOM score on the child process, sacrificing it before the judge process.
-        try:
-            oom_score_adj(OOM_SCORE_ADJ_MAX, self.pid)
-        except Exception:
-            import traceback
+        if not FREEBSD:
+            # Adjust OOM score on the child process, sacrificing it before the judge process.
+            # This is not possible on FreeBSD.
+            try:
+                oom_score_adj(OOM_SCORE_ADJ_MAX, self.pid)
+            except Exception:
+                import traceback
 
-            traceback.print_exc()
+                traceback.print_exc()
 
         # TODO(tbrindus): this code should be the same as [self.returncode], so it shouldn't be duplicated
         code = self._monitor()
@@ -388,5 +393,5 @@ class TracedPopen(Process, metaclass=TracedPopenMeta):
         return _safe_communicate(self, input=input, outlimit=sys.maxsize, errlimit=sys.maxsize)
 
 
-def can_debug(arch):
-    return (INTERPRETER_ARCH, arch) in _arch_map
+def can_debug(abi):
+    return abi in SUPPORTED_ABIS

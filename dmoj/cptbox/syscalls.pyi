@@ -56,6 +56,7 @@ sys_epoll_create1: int
 sys_epoll_ctl: int
 sys_epoll_ctl_old: int
 sys_epoll_pwait: int
+sys_epoll_pwait2: int
 sys_epoll_wait: int
 sys_epoll_wait_old: int
 sys_eventfd: int
@@ -262,6 +263,7 @@ sys_pread64: int
 sys_preadv: int
 sys_preadv2: int
 sys_prlimit64: int
+sys_process_madvise: int
 sys_process_vm_readv: int
 sys_process_vm_writev: int
 sys_prof: int

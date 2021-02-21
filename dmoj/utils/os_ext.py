@@ -1,13 +1,9 @@
 import ctypes
 import ctypes.util
 import os
-import re
 import signal
-import subprocess
-import sys
 
-from dmoj.utils.unicode import utf8bytes, utf8text
-
+from dmoj.utils.unicode import utf8bytes
 
 OOM_SCORE_ADJ_MAX = 1000
 OOM_SCORE_ADJ_MIN = -1000
@@ -50,37 +46,6 @@ def find_exe_in_path(path):
         if os.access(p, os.X_OK):
             return utf8bytes(p)
     raise OSError()
-
-
-def file_info(path, split=re.compile(r'[\s,]').split):
-    try:
-        return split(utf8text(subprocess.check_output(['file', '-b', '-L', path])))
-    except (OSError, subprocess.CalledProcessError):
-        raise IOError('call to file(1) failed -- does the utility exist?')
-
-
-ARCH_X86 = 'x86'
-ARCH_X64 = 'x64'
-ARCH_X32 = 'x32'
-ARCH_ARM = 'arm'
-ARCH_A64 = 'arm64'
-
-
-def file_arch(path):
-    info = file_info(path)
-
-    if '32-bit' in info:
-        if 'ARM' in info:
-            return ARCH_ARM
-        return ARCH_X32 if 'x86-64' in info else ARCH_X86
-    elif '64-bit' in info:
-        if 'aarch64' in info:
-            return ARCH_A64
-        return ARCH_X64
-    return None
-
-
-INTERPRETER_ARCH = file_arch(sys.executable)
 
 
 def bool_env(name):

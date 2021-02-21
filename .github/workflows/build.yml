@@ -32,7 +32,7 @@ jobs:
     - name: Verify mypy types
       run: |
         mypy --version
-        mypy .
+        mypy dmoj
   test-sdist:
     runs-on: ubuntu-latest
     steps:
@@ -68,17 +68,8 @@ jobs:
         run: docker pull dmoj/runtimes-tier3
       - name: Install python
         run: |
-          if [ "${{ matrix.python-version }}" != 3.8 ]; then
-            curl -L "https://github.com/DMOJ/runtimes-python/releases/latest/download/python${{ matrix.python-version }}-amd64.tar.gz" |
-            tar -xz
-          fi
-      - name: Download testsuite
-        run: |
-          git clone --depth 25 \
-                        --single-branch \
-                        --branch ${DMOJ_JUDGE_TESTSUITE_BRANCH:-master} \
-                        https://github.com/${DMOJ_JUDGE_TESTSUITE_SLUG:-DMOJ/judge-testsuite} testsuite &&
-              git -C testsuite reset --hard ${DMOJ_JUDGE_TESTSUITE_COMMIT_SHA:-HEAD}
+          curl -L "https://github.com/DMOJ/runtimes-python/releases/latest/download/python${{ matrix.python-version }}-amd64.tar.gz" |
+          tar -xz
       - name: Create docker scripts
         run: |
           cat > run <<'EOF'
@@ -87,17 +78,11 @@ jobs:
           export LANG=C.UTF-8
           export PYTHONIOENCODING=utf8
           cd /code
-          if [ "${{ matrix.python-version }}" != 3.8 ]; then
-            PYTHON="/code/python${{ matrix.python-version }}/bin/python${{ matrix.python-version }}"
-            "$PYTHON" -m pip install --upgrade pip wheel
-            "$PYTHON" -m pip install cython coverage
-          else
-            PYTHON=/usr/bin/python3.8
-            pip3 install coverage
-          fi
+          export PYTHON="/code/python${{ matrix.python-version }}/bin/python${{ matrix.python-version }}"
+          "$PYTHON" -m pip install --upgrade pip wheel
+          "$PYTHON" -m pip install cython coverage
           "$PYTHON" -m pip install -e .[test]
           chmod o+w .
-          export PYTHON
           runuser -u judge -w PATH /code/run-su
           EOF
 

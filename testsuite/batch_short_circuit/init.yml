@@ -1,0 +1,6 @@
+test_cases:
+- batched:
+  - {in: 2.txt, out: 2.txt}
+  - {in: 1.txt, out: 1.txt}
+  points: 0
+- {in: 2.txt, out: 1.txt, points: 5}

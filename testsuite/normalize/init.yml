@@ -1,0 +1,4 @@
+checker: normalize.py
+test_cases:
+- {in: in1.txt, out: out.txt, points: 1}
+- {in: in2.txt, out: out.txt, points: 1}

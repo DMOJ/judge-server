@@ -1,0 +1,5 @@
+language: MONOCS
+time: 2
+memory: 65536
+source: helloworld.cs
+expect: AC

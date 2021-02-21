@@ -1,10 +1,9 @@
 from dmoj.executors.compiled_executor import CompiledExecutor
-from dmoj.executors.mixins import ScriptDirectoryMixin
 
 
 # Running DART normally results in unholy memory usage
 # Thankfully compiling it results in something...far more sane
-class Executor(ScriptDirectoryMixin, CompiledExecutor):
+class Executor(CompiledExecutor):
     ext = 'dart'
     name = 'DART'
     nproc = -1  # Dart uses a really, really large number of threads

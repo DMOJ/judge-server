@@ -139,46 +139,53 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
     only_executors |= args.only_executors and set(args.only_executors.split(',')) or set()
     exclude_executors |= args.exclude_executors and set(args.exclude_executors.split(',')) or set()
 
-    if os.getenv('DMOJ_IN_DOCKER'):
+    is_docker = bool(os.getenv('DMOJ_IN_DOCKER'))
+    if is_docker:
         if not cli:
             api_listen = api_listen or ('0.0.0.0', 9998)
 
         with open('/judge-runtime-paths.yml', 'rb') as runtimes_file:
             env.update(yaml.safe_load(runtimes_file))
 
+        problem_dirs = ['/problems']
+
     model_file = os.path.expanduser(args.config)
-    with open(model_file) as init_file:
-        env.update(yaml.safe_load(init_file))
+    try:
+        with open(model_file) as init_file:
+            env.update(yaml.safe_load(init_file))
 
-        if getattr(args, 'judge_name', None):
-            env['id'] = args.judge_name
+            if getattr(args, 'judge_name', None):
+                env['id'] = args.judge_name
 
-        if getattr(args, 'judge_key', None):
-            env['key'] = args.judge_key
+            if getattr(args, 'judge_key', None):
+                env['key'] = args.judge_key
 
-        problem_dirs = env.problem_storage_root
-        if problem_dirs is None:
-            if not testsuite:
-                raise SystemExit(
-                    'problem_storage_root not specified in "%s"; no problems available to grade' % model_file
-                )
+            problem_dirs = env.problem_storage_root
+            if problem_dirs is None:
+                if not testsuite:
+                    raise SystemExit(
+                        'problem_storage_root not specified in "%s"; no problems available to grade' % model_file
+                    )
+    except IOError:
+        if not is_docker:
+            raise
+
+    # Populate cache and send warnings
+    get_problem_roots(warnings=True)
+
+    def get_path(x, y):
+        return utf8text(os.path.normpath(os.path.join(x, y)))
+
+    if isinstance(problem_dirs, str):
+        problem_dirs = [problem_dirs]
+
+    problem_watches = []
+    for dir in problem_dirs:
+        if isinstance(dir, ConfigNode):
+            for _, recursive_root in dir.iteritems():
+                problem_watches.append(get_path(_root, recursive_root))
         else:
-            # Populate cache and send warnings
-            get_problem_roots(warnings=True)
-
-            def get_path(x, y):
-                return utf8text(os.path.normpath(os.path.join(x, y)))
-
-            if isinstance(problem_dirs, str):
-                problem_dirs = [problem_dirs]
-
-            problem_watches = []
-            for dir in problem_dirs:
-                if isinstance(dir, ConfigNode):
-                    for _, recursive_root in dir.iteritems():
-                        problem_watches.append(get_path(_root, recursive_root))
-                else:
-                    problem_watches.append(get_path(_root, dir))
+            problem_watches.append(get_path(_root, dir))
 
     if testsuite:
         if not os.path.isdir(args.tests_dir):

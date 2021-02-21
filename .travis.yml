@@ -17,16 +17,8 @@ jobs:
 install:
   - docker pull "$DOCKER_IMAGE"
   - |
-    if [ "$PYTHON_VERSION" != 3.8 ]; then
-      curl -L "https://github.com/DMOJ/runtimes-python/releases/latest/download/python$PYTHON_VERSION-$ARCH.tar.gz" |
-        tar -xz
-    fi
-  - >
-    git clone --depth 25 \
-              --single-branch \
-              --branch ${DMOJ_JUDGE_TESTSUITE_BRANCH:-master} \
-              https://github.com/${DMOJ_JUDGE_TESTSUITE_SLUG:-DMOJ/judge-testsuite} testsuite &&
-    git -C testsuite reset --hard ${DMOJ_JUDGE_TESTSUITE_COMMIT_SHA:-HEAD}
+    curl -L "https://github.com/DMOJ/runtimes-python/releases/latest/download/python$PYTHON_VERSION-$ARCH.tar.gz" |
+      tar -xz
 cache:
   directories:
     - /home/travis/.cache/pip
@@ -38,17 +30,11 @@ script:
     export LANG=C.UTF-8
     export PYTHONIOENCODING=utf8
     cd /code
-    if [ "$PYTHON_VERSION" != 3.8 ]; then
-      PYTHON="/code/python$PYTHON_VERSION/bin/python$PYTHON_VERSION"
-      "$PYTHON" -m pip install --upgrade pip wheel
-      "$PYTHON" -m pip install cython coverage
-    else
-      PYTHON=/usr/bin/python3.8
-      pip3 install coverage
-    fi
+    export PYTHON="/code/python$PYTHON_VERSION/bin/python$PYTHON_VERSION"
+    "$PYTHON" -m pip install --upgrade pip wheel
+    "$PYTHON" -m pip install cython coverage
     "$PYTHON" -m pip install -e .[test]
     chmod o+w .
-    export PYTHON
     runuser -u judge -w PATH /code/run-su
     EOF
   - |

@@ -1,0 +1,6 @@
+interactive:
+  files: interact.py
+  lang: PY3
+  type: not-a-contrib-module
+test_cases:
+- {points: 100}

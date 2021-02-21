@@ -2,13 +2,12 @@ import re
 from collections import deque
 
 from dmoj.executors.compiled_executor import CompiledExecutor
-from dmoj.executors.mixins import ScriptDirectoryMixin
 from dmoj.utils.unicode import utf8bytes, utf8text
 
 retraceback = re.compile(r'Traceback \(most recent call last\):\n.*?\n([a-zA-Z_]\w*)(?::[^\n]*?)?$', re.S | re.M)
 
 
-class PythonExecutor(ScriptDirectoryMixin, CompiledExecutor):
+class PythonExecutor(CompiledExecutor):
     loader_script = '''\
 import runpy, sys, os
 del sys.argv[0]

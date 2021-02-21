@@ -1,0 +1,9 @@
+checker:
+  name: bridged
+  args:
+    files: checker.c
+    lang: C
+    flags: [-DFLAG]
+test_cases:
+- points: 10
+

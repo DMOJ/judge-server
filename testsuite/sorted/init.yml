@@ -1,0 +1,6 @@
+checker: sorted
+test_cases:
+- {in: 1.txt, out: 1.txt, points: 1}
+- {in: 1.txt, out: 2.txt, points: 1}
+- {in: 3.txt, out: 3.txt, points: 1}
+- {in: 3.txt, out: 4.txt, points: 1}

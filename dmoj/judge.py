@@ -19,6 +19,7 @@ from dmoj.judgeenv import clear_problem_dirs_cache, env, get_supported_problems,
 from dmoj.monitor import Monitor
 from dmoj.problem import BatchedTestCase, Problem, TestCase
 from dmoj.result import Result
+from dmoj.utils import builtin_int_patch
 from dmoj.utils.ansi import ansi_style, print_ansi, strip_ansi
 from dmoj.utils.unicode import unicode_stdout_stderr, utf8bytes, utf8text
 
@@ -530,9 +531,11 @@ def sanity_check():
 
         # However running as root on Linux is a Bad Idea
         if os.getuid() == 0:
-            startup_warnings.append(
-                'running the judge as root can be potentially unsafe, consider using an unprivileged user instead'
+            print(
+                'running the judge as root is unsafe, please use an unprivileged user instead',
+                file=sys.stderr
             )
+            return False
 
         # Our sandbox filter is long but simple, so we can see large improvements
         # in overhead by enabling the BPF JIT for seccomp.
@@ -563,6 +566,7 @@ def make_host_port(judgeenv):
 
 def main():  # pragma: no cover
     unicode_stdout_stderr()
+    builtin_int_patch.apply()
 
     if not sanity_check():
         return 1

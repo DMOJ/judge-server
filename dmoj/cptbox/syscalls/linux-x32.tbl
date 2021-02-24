@@ -304,6 +304,7 @@
 439	faccessat2
 440	process_madvise
 441	epoll_pwait2
+442	mount_setattr
 512	rt_sigaction
 513	rt_sigreturn
 514	ioctl

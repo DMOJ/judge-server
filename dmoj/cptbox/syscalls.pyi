@@ -204,6 +204,7 @@ sys_mmap: int
 sys_mmap2: int
 sys_modify_ldt: int
 sys_mount: int
+sys_mount_setattr: int
 sys_move_mount: int
 sys_move_pages: int
 sys_mprotect: int

@@ -1,5 +1,3 @@
-from operator import itemgetter
-
 from dmoj import judgeenv
 from dmoj.commands.base_command import Command
 from dmoj.error import InvalidCommandException
@@ -49,7 +47,7 @@ class SubmitCommand(Command):
             source_file = language_id
             language_id = None  # source file / language id optional
 
-        if problem_id not in map(itemgetter(0), judgeenv.get_supported_problems()):
+        if problem_id not in judgeenv.get_supported_problems():
             raise InvalidCommandException("unknown problem '%s'" % problem_id)
         elif not language_id:
             if source_file:

@@ -1,6 +1,5 @@
 import sys
 import traceback
-from operator import itemgetter
 
 from dmoj.commands.base_command import Command
 from dmoj.error import InvalidCommandException

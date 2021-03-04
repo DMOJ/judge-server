@@ -1,6 +1,5 @@
 import re
 from itertools import zip_longest
-from operator import itemgetter
 
 from dmoj import judgeenv
 from dmoj.commands.base_command import Command
@@ -25,15 +24,14 @@ class ListProblemsCommand(Command):
 
         if _args.filter:
             r = re.compile(_args.filter)
-            all_problems = list(filter(lambda x: r.match(x[0]) is not None, all_problems))
+            all_problems = list(filter(lambda p: r.match(p) is not None, all_problems))
 
         if _args.limit:
             all_problems = all_problems[: _args.limit]
 
         if len(all_problems):
-            problems = iter(map(itemgetter(0), all_problems))
-            max_len = max(len(p[0]) for p in all_problems)
-            for row in zip_longest(*[problems] * 4, fillvalue=''):
+            max_len = max(len(p) for p in all_problems)
+            for row in zip_longest(*[iter(all_problems)] * 4, fillvalue=''):
                 print(' '.join(('%*s' % (-max_len, row[i])) for i in range(4)))
             print()
         else:

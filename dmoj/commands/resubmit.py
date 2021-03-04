@@ -1,5 +1,3 @@
-from operator import itemgetter
-
 from dmoj import judgeenv
 from dmoj.commands.base_command import Command
 from dmoj.error import InvalidCommandException
@@ -34,7 +32,7 @@ class ResubmitCommand(Command):
         tl = args.time_limit or tl
         ml = args.memory_limit or ml
 
-        if id not in map(itemgetter(0), judgeenv.get_supported_problems()):
+        if id not in judgeenv.get_supported_problems():
             raise InvalidCommandException("unknown problem '%s'" % problem_id)
         elif lang not in executors:
             raise InvalidCommandException("unknown language '%s'" % lang)

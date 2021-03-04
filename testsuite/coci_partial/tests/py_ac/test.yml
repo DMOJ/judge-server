@@ -3,4 +3,4 @@ time: 2
 memory: 65536
 source: ac.py
 expect: AC
-points: 2
+score: 2

@@ -15,7 +15,7 @@ from typing import Any, Callable, Dict, Generator, List, NamedTuple, Optional, T
 from dmoj import packet
 from dmoj.control import JudgeControlRequestHandler
 from dmoj.error import CompileError
-from dmoj.judgeenv import clear_problem_dirs_cache, env, get_supported_problems, startup_warnings
+from dmoj.judgeenv import clear_problem_dirs_cache, env, get_supported_problems_and_mtimes, startup_warnings
 from dmoj.monitor import Monitor
 from dmoj.problem import BatchedTestCase, Problem, TestCase
 from dmoj.result import Result
@@ -99,7 +99,7 @@ class Judge:
 
             try:
                 clear_problem_dirs_cache()
-                self.packet_manager.supported_problems_packet(get_supported_problems())
+                self.packet_manager.supported_problems_packet(get_supported_problems_and_mtimes())
             except Exception:
                 log.exception('Failed to update problems.')
 

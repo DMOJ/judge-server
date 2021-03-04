@@ -130,7 +130,7 @@ class Tester:
     def test_all(self):
         total_fails = 0
 
-        for problem, _ in get_supported_problems():
+        for problem in get_supported_problems():
             if self.problem_regex is not None and not self.problem_regex.match(problem):
                 continue
             root = get_problem_root(problem)

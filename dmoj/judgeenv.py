@@ -1,6 +1,7 @@
 import argparse
 import os
 import ssl
+from operator import itemgetter
 from typing import Dict, List, Set
 
 import yaml
@@ -292,9 +293,9 @@ def get_problem_watches():
     return problem_watches
 
 
-def get_supported_problems():
+def get_supported_problems_and_mtimes():
     """
-    Fetches a list of all problems supported by this judge.
+    Fetches a list of all problems supported by this judge and their mtimes.
     :return:
         A list of all problems in tuple format: (problem id, mtime)
     """
@@ -305,6 +306,10 @@ def get_supported_problems():
             if os.access(os.path.join(dir, problem, 'init.yml'), os.R_OK):
                 problems.append((problem, os.path.getmtime(os.path.join(dir, problem))))
     return problems
+
+
+def get_supported_problems():
+    return map(itemgetter(0), get_supported_problems_and_mtimes())
 
 
 def get_runtime_versions():

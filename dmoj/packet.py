@@ -13,7 +13,7 @@ import zlib
 from typing import List, Optional, TYPE_CHECKING, Tuple
 
 from dmoj import sysinfo
-from dmoj.judgeenv import get_runtime_versions, get_supported_problems
+from dmoj.judgeenv import get_runtime_versions, get_supported_problems_and_mtimes
 from dmoj.result import Result
 from dmoj.utils.unicode import utf8bytes, utf8text
 
@@ -87,7 +87,7 @@ class PacketManager:
         self._do_reconnect()
 
     def _connect(self):
-        problems = get_supported_problems()
+        problems = get_supported_problems_and_mtimes()
         versions = get_runtime_versions()
 
         log.info('Opening connection to: [%s]:%s', self.host, self.port)

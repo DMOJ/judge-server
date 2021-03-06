@@ -12,9 +12,8 @@ from yaml.scanner import ScannerError
 
 from dmoj import checkers
 from dmoj.config import ConfigNode, InvalidInitException
-from dmoj.generator import GeneratorManager
 from dmoj.judgeenv import env, get_problem_root
-from dmoj.utils.helper_files import parse_helper_file_error
+from dmoj.utils.helper_files import compile_with_auxiliary_files, parse_helper_file_error
 from dmoj.utils.module import load_module_from_file
 
 DEFAULT_TEST_CASE_INPUT_PATTERN = r'^(?=.*?\.in|in).*?(?:(?:^|\W)(?P<batch>\d+)[^\d\s]+)?(?P<case>\d+)[^\d\s]*$'
@@ -27,7 +26,6 @@ class Problem:
         self.time_limit = time_limit
         self.memory_limit = memory_limit
         self.meta = ConfigNode(meta)
-        self.generator_manager = GeneratorManager()
 
         # Cache root dir so that we don't need to scan all roots (potentially very slow on networked mount).
         self.root_dir = get_problem_root(problem_id)
@@ -264,7 +262,6 @@ class TestCase:
         time_limit = env.generator_time_limit
         memory_limit = env.generator_memory_limit
         compiler_time_limit = env.generator_compiler_time_limit
-        should_cache = True
         lang = None  # Default to C/C++
 
         base = get_problem_root(self.problem.id)
@@ -288,16 +285,13 @@ class TestCase:
             time_limit = gen.time_limit or time_limit
             memory_limit = gen.memory_limit or memory_limit
             compiler_time_limit = gen.compiler_time_limit or compiler_time_limit
-            should_cache = gen.get('cached', True)
             lang = gen.language
 
         if not isinstance(filenames, list):
             filenames = [filenames]
 
-        filenames = [os.path.join(base, name) for name in filenames]
-        executor = self.problem.generator_manager.get_generator(
-            filenames, flags, lang=lang, compiler_time_limit=compiler_time_limit, should_cache=should_cache
-        )
+        filenames = [os.path.abspath(os.path.join(base, name)) for name in filenames]
+        executor = compile_with_auxiliary_files(filenames, flags, lang, compiler_time_limit)
 
         # convert all args to str before launching; allows for smoother int passing
         args = map(str, args)

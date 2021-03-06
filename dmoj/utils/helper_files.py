@@ -13,7 +13,7 @@ def mktemp(data):
     return tmp
 
 
-def compile_with_auxiliary_files(filenames, flags=[], lang=None, compiler_time_limit=None, should_cache=True):
+def compile_with_auxiliary_files(filenames, flags=[], lang=None, compiler_time_limit=None, unbuffered=False):
     from dmoj.executors import executors
     from dmoj.executors.compiled_executor import CompiledExecutor
 
@@ -52,11 +52,11 @@ def compile_with_auxiliary_files(filenames, flags=[], lang=None, compiler_time_l
     # Optimize the common case.
     if use_cpp or use_c:
         # Some auxiliary files (like those using testlib.h) take an extremely long time to compile, so we cache them.
-        executor = executor('_aux_file', None, aux_sources=sources, cached=should_cache, **kwargs)
+        executor = executor('_aux_file', None, aux_sources=sources, cached=True, unbuffered=unbuffered, **kwargs)
     else:
         if len(sources) > 1:
             raise InternalError('non-C/C++ auxilary programs cannot be multi-file')
-        executor = executor('_aux_file', list(sources.values())[0], **kwargs)
+        executor = executor('_aux_file', list(sources.values())[0], cached=True, unbuffered=unbuffered, **kwargs)
 
     return executor
 

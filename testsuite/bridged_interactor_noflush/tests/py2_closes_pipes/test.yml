@@ -1,5 +1,5 @@
 language: PY2
-time: 1
+time: 2
 memory: 65536
 source: seed2.py
-expect: TLE
+expect: WA

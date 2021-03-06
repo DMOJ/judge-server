@@ -10,14 +10,14 @@ from dmoj.utils.helper_files import compile_with_auxiliary_files, mktemp
 from dmoj.utils.unicode import utf8text
 
 
-def get_executor(problem_id, files, flags, lang, compiler_time_limit, should_cache):
+def get_executor(problem_id, files, flags, lang, compiler_time_limit):
     if isinstance(files, str):
         filenames = [files]
     elif isinstance(files.unwrap(), list):
         filenames = list(files.unwrap())
 
     filenames = [os.path.join(get_problem_root(problem_id), f) for f in filenames]
-    executor = compile_with_auxiliary_files(filenames, flags, lang, compiler_time_limit, should_cache)
+    executor = compile_with_auxiliary_files(filenames, flags, lang, compiler_time_limit)
 
     return executor
 
@@ -34,13 +34,12 @@ def check(
     compiler_time_limit=env['generator_compiler_limit'],
     feedback=True,
     flags=[],
-    cached=True,
     type='default',
     args_format_string=None,
     point_value=None,
     **kwargs,
 ) -> CheckerResult:
-    executor = get_executor(problem_id, files, flags, lang, compiler_time_limit, cached)
+    executor = get_executor(problem_id, files, flags, lang, compiler_time_limit)
 
     if type not in contrib_modules:
         raise InternalError('%s is not a valid contrib module' % type)

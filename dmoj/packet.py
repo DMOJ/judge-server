@@ -115,17 +115,13 @@ class PacketManager:
         log.info('Judge "%s" online: [%s]:%s', self.name, self.host, self.port)
 
     def _reconnect(self):
-        if self.fallback > 86400:
-            # Return 0 to avoid supervisor restart.
-            raise SystemExit(0)
-
         log.warning('Attempting reconnection in %.0fs: [%s]:%s', self.fallback, self.host, self.port)
 
         if self.conn is not None:
             log.info('Dropping old connection.')
             self.conn.close()
         time.sleep(self.fallback)
-        self.fallback *= 1.5
+        self.fallback = min(self.fallback * 1.5, 60)
         self._do_reconnect()
 
     def _do_reconnect(self):

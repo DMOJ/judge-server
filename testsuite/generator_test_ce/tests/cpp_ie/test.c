@@ -1,5 +1,5 @@
 #include <stdio.h>
 int main() {
-    puts("This should not run");
-    return 0;
+  puts("This should not run");
+  return 0;
 }

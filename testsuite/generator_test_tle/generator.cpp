@@ -3,8 +3,8 @@
 
 using namespace std;
 
-int main()
-{
-    for(;;);
-    return 0;
+int main() {
+  for (;;)
+    ;
+  return 0;
 }

@@ -118,7 +118,7 @@ def ci_test(executors_to_test, overrides, allow_fail=frozenset()):
     tester = Tester()
     fails = tester.test_all()
     print()
-    print('Test complete')
+    print('Test complete.')
     if fails:
         print_ansi('#ansi[A total of %d case(s) failed](red|bold).' % fails)
     else:

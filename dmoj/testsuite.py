@@ -290,7 +290,7 @@ def main():
     tester = Tester(judgeenv.problem_regex, judgeenv.case_regex)
     fails = tester.test_all()
     print()
-    print('Test complete')
+    print('Test complete.')
     if fails:
         print_ansi('#ansi[A total of %d case(s) failed](red|bold).' % fails)
     else:

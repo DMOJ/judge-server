@@ -1,0 +1,5 @@
+archive: cases.zip
+test_cases:
+  input_format: ((?P<batch>\w+)\.)?(?P<case>\d+)\.in
+  output_format: ((?P<batch>\w+)\.)?(?P<case>\d+)\.out
+  case_points: [0, 1]

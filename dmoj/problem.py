@@ -104,7 +104,7 @@ class Problem:
                 setattr(groups[batch][case], filetype, testcase_file)
 
         test_cases = []
-        for batch_or_case_id in sorted(groups.keys()):
+        for batch_or_case_id in sorted(groups.keys(), key=lambda id: (isinstance(id, int), id)):
             group_cases = groups[batch_or_case_id]
             if batch_or_case_id in batch_ids:
                 test_cases.append(

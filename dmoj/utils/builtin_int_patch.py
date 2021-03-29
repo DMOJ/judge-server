@@ -24,7 +24,7 @@ class patched_int_meta(type):
 
 
 class patched_int(int_, metaclass=patched_int_meta):
-    def __new__(cls, s, *args, **kwargs):
+    def __new__(cls, s=0, *args, **kwargs):
         if isinstance(s, str) and len(s) > INT_MAX_NUMBER_DIGITS:
             raise ValueError('integer is too long')
         if cls is patched_int:

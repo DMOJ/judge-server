@@ -1,5 +1,7 @@
 import unittest
 
+from dmoj.result import CheckerResult
+
 
 class CheckerTest(unittest.TestCase):
     def assert_pass(self, check, str1, str2, expect=True):
@@ -61,3 +63,20 @@ class CheckerTest(unittest.TestCase):
         assert check(b'1 2\n3', b'3\n1 2')
         assert not check(b'1 2\n3', b'3\n2 1')
         assert check(b'1 2\n3', b'3\n2 1', split_on='whitespace')
+
+    def test_linematches(self):
+        from dmoj.checkers.linematches import check
+
+        def validate(res, expected_points, passed):
+            return isinstance(res, CheckerResult) and res.points == expected_points and res.passed == passed
+
+        assert not check(b'1', b'1\n2', point_distribution=[1, 1])
+        assert not check(b'1\n2', b'1')
+
+        assert validate(check(b'1', b'1\n2', filler_lines_required=False, point_distribution=[4, 6]), 0.4, True)
+        assert validate(check(b'1\n3', b'1\n2', point_distribution=[4, 6]), 0.4, True)
+
+        assert validate(check(b'3\n2', b'1\n2', point_distribution=[4, 6]), 0.6, True)
+        assert validate(check(b'1\n2', b'1\n2', point_distribution=[4, 6]), 1, True)
+
+        assert validate(check(b'1', b'2', point_distribution=[1]), 0, False)

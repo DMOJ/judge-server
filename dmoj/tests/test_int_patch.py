@@ -39,6 +39,7 @@ class IntrospectionTest(unittest.TestCase):
         self.assertEqual(type(1), int)
 
     def test_identity(self):
+        self.assertIs(int(), 0)
         self.assertIs(int(1), 1)
         self.assertIs(type(int(1)), int_)
 

@@ -1,3 +1,4 @@
+import builtins
 import re
 from collections import deque
 
@@ -53,7 +54,10 @@ runpy.run_path(sys.argv[0], run_name='__main__')
         if not match:
             return ''
         exception = match[0].group(1)
-        return '' if len(exception) > 20 else exception
+        if exception in builtins.__dict__ and issubclass(builtins.__dict__[exception], BaseException):
+            return exception
+        else:
+            return ''
 
     @classmethod
     def get_version_flags(cls, command):

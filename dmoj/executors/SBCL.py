@@ -17,6 +17,7 @@ class Executor(NullStdoutMixin, CompiledExecutor):
     test_program = '(write-line (read-line))'
     address_grace = 262144
     data_grace = 262144
+    nproc = -1
 
     compile_script = '''(compile-file "{code}")'''
 

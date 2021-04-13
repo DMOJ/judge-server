@@ -5,6 +5,7 @@ class Executor(CompiledExecutor):
     ext = 'zig'
     name = 'ZIG'
     command = 'zig'
+    compiler_time_limit = 30
     test_program = '''
 const std = @import("std");
 

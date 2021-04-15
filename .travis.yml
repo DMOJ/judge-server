@@ -55,4 +55,4 @@ after_script:
   - bash <(curl -s https://codecov.io/bash)
 notifications:
   slack:
-    secure: "cJMFsXwvAZxSR/p8WFYUAtJmPxnq+MZKhXQgaHZp7D0tveh6v0/O/GDfO+3B3Ep7/SBNiAj/wfH/ivDVjiSWVN/2DYSiHtzMZ9Jkq2CQzMzX5u3l7J04bO617K8+eRGOFQcYj+GPRntF4GebSgfMuhXwba2N/KjAA9QMKOTlJpU="
+    secure: Ip7Hi4IQpRv1PisnB+9FUuxaYwu9piaxTeDumpcRhiO7o1btiLeGf+bVdXZJB9IU3AkH0p163UtxQeAj9yxts3iWKQsQnJKAVrSWw+wwB+aoIGYu40qRka0Lxrft91TU6k0NRAYaOYnn1ogZbNuZUyO3GB1H8xZjDiCFdHaoYdM=

@@ -20,6 +20,8 @@ jobs:
       uses: peter-evans/create-pull-request@v3
       with:
         token: ${{ secrets.REPO_SCOPED_TOKEN }}
+        author: dmoj-build <build@dmoj.ca>
+        committer: dmoj-build <build@dmoj.ca>
         commit-message: 'cptbox: update Linux syscall list'
         title: 'Update Linux syscall list'
         body: This PR has been auto-generated to update the syscall definitions in `cptbox`.

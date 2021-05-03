@@ -171,6 +171,9 @@ sys_kexec_file_load: int
 sys_kexec_load: int
 sys_keyctl: int
 sys_kill: int
+sys_landlock_add_rule: int
+sys_landlock_create_ruleset: int
+sys_landlock_restrict_self: int
 sys_lchown: int
 sys_lchown32: int
 sys_lgetxattr: int

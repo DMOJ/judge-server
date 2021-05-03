@@ -26,5 +26,5 @@ jobs:
         title: 'Update Linux syscall list'
         body: This PR has been auto-generated to update the syscall definitions in `cptbox`.
         labels: cptbox, security, enhancement
-        assignees: Xyene, quantum5
+        reviewers: Xyene, quantum5
         branch: update-syscalls

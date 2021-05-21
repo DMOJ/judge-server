@@ -38,7 +38,9 @@ class Problem:
         self.config = ProblemConfig(self.problem_data, meta)
 
         self.problem_data.archive = self._resolve_archive_files()
-        self._resolve_test_cases()
+
+        if not self._resolve_test_cases():
+            raise InvalidInitException('No test cases? What am I judging?')
 
     def _match_test_cases(self, filenames, input_case_pattern, output_case_pattern, case_points):
         def try_match_int(match, group):
@@ -120,7 +122,7 @@ class Problem:
 
         # We support several ways for specifying cases. The first is a list of cases, and requires no extra work.
         if test_cases is not None and isinstance(test_cases.unwrap(), list):
-            return
+            return test_cases
 
         def get_with_default(name, default):
             if not test_cases:
@@ -134,6 +136,8 @@ class Problem:
             re.compile(get_with_default('output_format', DEFAULT_TEST_CASE_OUTPUT_PATTERN), re.IGNORECASE),
             iter(get_with_default('case_points', itertools.repeat(self.config.points))),
         )
+
+        return self.config['test_cases']
 
     def load_checker(self, name):
         if name in self._checkers:

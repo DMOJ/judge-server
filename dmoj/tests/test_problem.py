@@ -96,5 +96,20 @@ class ProblemTest(unittest.TestCase):
             with self.assertRaisesRegex(InvalidInitException, 'bad archive:'):
                 Problem('test', 2, 16384, {})
 
+    def test_no_testcases(self):
+        class MockProblem(Problem):
+            def _resolve_archive_files(self):
+                return None
+
+            def _problem_file_list(self):
+                return []
+
+        with mock.patch('dmoj.problem.get_problem_root') as gpr:
+            gpr.return_value = '/proc'
+            self.problem_data = ProblemDataManager(None)
+            self.problem_data.update({'init.yml': 'archive: foo.zip'})
+            with self.assertRaisesRegex(InvalidInitException, 'No test cases'):
+                MockProblem('test', 2, 16384, {})
+
     def tearDown(self):
         self.data_patch.stop()

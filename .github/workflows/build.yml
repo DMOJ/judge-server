@@ -27,7 +27,7 @@ jobs:
         python-version: 3.7
     - name: Install dependencies and mypy
       run: |
-        pip install cython mypy
+        pip install cython mypy types-termcolor types-requests types-PyYAML
         pip install -r requirements.txt
     - name: Verify mypy types
       run: |

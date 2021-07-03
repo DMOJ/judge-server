@@ -281,7 +281,7 @@ sys_pwritev: int
 sys_pwritev2: int
 sys_query_module: int
 sys_quotactl: int
-sys_quotactl_path: int
+sys_quotactl_fd: int
 sys_read: int
 sys_readahead: int
 sys_readdir: int

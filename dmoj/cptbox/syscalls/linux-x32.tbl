@@ -309,6 +309,7 @@
 444	landlock_create_ruleset
 445	landlock_add_rule
 446	landlock_restrict_self
+447	memfd_secret
 512	rt_sigaction
 513	rt_sigreturn
 514	ioctl

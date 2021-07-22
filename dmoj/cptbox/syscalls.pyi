@@ -194,6 +194,7 @@ sys_madvise: int
 sys_mbind: int
 sys_membarrier: int
 sys_memfd_create: int
+sys_memfd_secret: int
 sys_migrate_pages: int
 sys_mincore: int
 sys_mkdir: int

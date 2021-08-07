@@ -20,7 +20,7 @@ class ListProblemsCommand(Command):
         if _args.limit is not None and _args.limit <= 0:
             raise InvalidCommandException('--limit must be >= 0')
 
-        all_problems = judgeenv.get_supported_problems()
+        all_problems = list(judgeenv.get_supported_problems())
 
         if _args.filter:
             r = re.compile(_args.filter)

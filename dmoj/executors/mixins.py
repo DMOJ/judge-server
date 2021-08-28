@@ -36,8 +36,8 @@ else:
     # Linux and kFreeBSD mounts linux-style procfs.
     BASE_FILESYSTEM += [
         '/proc$',
-        '/proc/(?:self|{pid})/(?:maps|exe|auxv)$',
-        '/proc/(?:self|{pid})$',
+        '/proc/self/(?:maps|exe|auxv)$',
+        '/proc/self$',
         '/proc/(?:meminfo|stat|cpuinfo|filesystems|xen|uptime)$',
         '/proc/sys/vm/overcommit_memory$',
     ]

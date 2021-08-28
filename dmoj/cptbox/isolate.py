@@ -23,10 +23,8 @@ except AttributeError:
 class IsolateTracer(dict):
     def __init__(self, read_fs, write_fs=None, writable=(1, 2)):
         super().__init__()
-        self.read_fs = read_fs
-        self.write_fs = write_fs
-        self.read_fs_jail = {}
-        self.write_fs_jail = {}
+        self.read_fs_jail = self._compile_fs_jail(read_fs)
+        self.write_fs_jail = self._compile_fs_jail(write_fs)
 
         self._writable = list(writable)
 
@@ -185,6 +183,14 @@ class IsolateTracer(dict):
                 }
             )
 
+    def _compile_fs_jail(self, fs):
+        if fs:
+            fs_re = '|'.join(fs)
+        else:
+            fs_re = '(?!)'  # Disallow accessing everything by default.
+
+        return re.compile(fs_re)
+
     def is_write_flags(self, open_flags):
         for flag in open_write_flags:
             # Strict equality is necessary here, since e.g. O_TMPFILE has multiple bits set,
@@ -235,26 +241,6 @@ class IsolateTracer(dict):
 
         return check
 
-    def _get_fs_jail(self, debugger, is_write):
-        # The only syscalls that can ever have is_write=True are open and
-        # openat: if we ever want to support syscalls like unlink or mkdir,
-        # this behaviour will need to be changed. Currently, they result in
-        # an unconditional EPERM.
-        jail = self.write_fs_jail if is_write else self.read_fs_jail
-        fs = jail.get(debugger.pid)
-
-        if fs is None:
-            fs_parts = self.write_fs if is_write else self.read_fs
-            if fs_parts:
-                fs_re = '|'.join(map(lambda p: p.format(pid=debugger.pid), fs_parts))
-            else:
-                fs_re = '(?!)'  # Disallow accessing everything by default.
-
-            fs = re.compile(fs_re)
-            jail[debugger.pid] = fs
-
-        return fs
-
     def _file_access_check(self, rel_file, debugger, is_open, flag_reg=1, dirfd=AT_FDCWD):
         # Either process called open(NULL, ...), or we failed to read the path
         # in cptbox.  Either way this call should not be allowed; if the path
@@ -271,7 +257,8 @@ class IsolateTracer(dict):
             return '(undecodable)', False
 
         is_write = is_open and self.is_write_flags(getattr(debugger, 'uarg%d' % flag_reg))
-        if self._get_fs_jail(debugger, is_write).match(file) is None:
+        fs_jail = self.write_fs_jail if is_write else self.read_fs_jail
+        if fs_jail.match(file) is None:
             return file, False
         return file, True
 

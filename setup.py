@@ -18,12 +18,12 @@ has_pyx = os.path.exists(os.path.join(os.path.dirname(__file__), 'dmoj', 'cptbox
 
 try:
     with open('/proc/version') as f:
-        is_wsl = 'microsoft' in f.read().lower()
+        is_wsl1 = 'Microsoft' in f.read()
 except IOError:
-    is_wsl = False
+    is_wsl1 = False
 
-# Allow manually disabling seccomp on old kernels. WSL doesn't have seccomp.
-has_seccomp = sys.platform.startswith('linux') and not is_wsl and os.environ.get('DMOJ_USE_SECCOMP') != 'no'
+# Allow manually disabling seccomp on old kernels. WSL 1 doesn't have seccomp.
+has_seccomp = sys.platform.startswith('linux') and not is_wsl1 and os.environ.get('DMOJ_USE_SECCOMP') != 'no'
 try:
     parallel = int(os.environ['DMOJ_PARALLEL'])
 except (KeyError, ValueError):
@@ -141,8 +141,8 @@ if sys.platform.startswith('freebsd'):
     libs += ['procstat']
 
 macros = []
-if is_wsl:
-    macros.append(('WSL', None))
+if is_wsl1:
+    macros.append(('WSL1', None))
 
 if not has_seccomp:
     print('*' * 79)

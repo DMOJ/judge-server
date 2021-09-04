@@ -435,3 +435,4 @@
 445	landlock_add_rule
 446	landlock_restrict_self
 447	memfd_secret
+448	process_mrelease

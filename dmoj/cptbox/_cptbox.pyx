@@ -30,6 +30,8 @@ cdef extern from 'ptbox.h' nogil:
         int syscall(int)
         long result()
         void result(long)
+        long error()
+        void error(long)
         long arg0()
         long arg1()
         long arg2()
@@ -269,6 +271,14 @@ cdef class Debugger:
     @uresult.setter
     def uresult(self, value):
         self.thisptr.result(<long><unsigned long>value)
+
+    @property
+    def errno(self):
+        return <long>self.thisptr.error()
+
+    @errno.setter
+    def errno(self, value):
+        self.thisptr.error(<long>value)
 
     @property
     def arg0(self):

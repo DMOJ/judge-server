@@ -9,7 +9,7 @@ STDOUTERR = 3
 def errno_handler(code):
     def handler(debugger):
         def on_return():
-            debugger.result = -code
+            debugger.errno = code
 
         debugger.syscall = -1
         debugger.on_return(on_return)

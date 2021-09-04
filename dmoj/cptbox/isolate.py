@@ -5,7 +5,7 @@ import sys
 
 from dmoj.cptbox._cptbox import AT_FDCWD, bsd_get_proc_cwd, bsd_get_proc_fdno
 from dmoj.cptbox.tracer import MaxLengthExceeded
-from dmoj.cptbox.handlers import ACCESS_EACCES, ACCESS_ENOENT, ACCESS_EPERM, ALLOW
+from dmoj.cptbox.handlers import ACCESS_EACCES, ACCESS_ENAMETOOLONG, ACCESS_ENOENT, ACCESS_EPERM, ALLOW
 
 from dmoj.cptbox.syscalls import *
 from dmoj.utils.unicode import utf8text
@@ -207,7 +207,7 @@ class IsolateTracer(dict):
                 file = debugger.readstr(file_ptr)
             except MaxLengthExceeded as e:
                 log.warning('Denied access via syscall %s to overly long path: %r', syscall, e.args[0])
-                return ACCESS_ENOENT(debugger)
+                return ACCESS_ENAMETOOLONG(debugger)
             except UnicodeDecodeError as e:
                 log.warning('Denied access via syscall %s to path with invalid unicode: %r', syscall, e.object)
                 return ACCESS_ENOENT(debugger)
@@ -217,7 +217,7 @@ class IsolateTracer(dict):
                 return True
 
             log.debug('Denied access via syscall %s: %s', syscall, file)
-            return ACCESS_ENOENT(debugger)
+            return ACCESS_EPERM(debugger)
 
         return check
 
@@ -227,7 +227,7 @@ class IsolateTracer(dict):
                 file = debugger.readstr(debugger.uarg1)
             except MaxLengthExceeded as e:
                 log.warning('Denied access via syscall %s to overly long path: %r', syscall, e.args[0])
-                return ACCESS_ENOENT(debugger)
+                return ACCESS_ENAMETOOLONG(debugger)
             except UnicodeDecodeError as e:
                 log.warning('Denied access via syscall %s to path with invalid unicode: %r', syscall, e.object)
                 return ACCESS_ENOENT(debugger)
@@ -237,7 +237,7 @@ class IsolateTracer(dict):
                 return True
 
             log.debug('Denied access via syscall %s: %s', syscall, file)
-            return ACCESS_ENOENT(debugger)
+            return ACCESS_EPERM(debugger)
 
         return check
 

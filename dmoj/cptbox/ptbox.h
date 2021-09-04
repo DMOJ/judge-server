@@ -151,6 +151,8 @@ public:
     int syscall(int);
     long result();
     void result(long);
+    long error(); // would name this errno, but it conflicts with the errno macro
+    void error(long);
     long arg0();
     long arg1();
     long arg2();

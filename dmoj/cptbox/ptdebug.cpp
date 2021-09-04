@@ -110,6 +110,17 @@ int pt_debugger::post_syscall() {
     return 0;
 }
 
+#if !PTBOX_FREEBSD
+long pt_debugger::error() {
+    long res = result();
+    return res >= -4096 && res < 0 ? -res : 0;
+}
+
+void pt_debugger::error(long value) {
+    result(-value);
+}
+#endif
+
 #if PTBOX_FREEBSD
 typedef int ptrace_read_t;
 #else

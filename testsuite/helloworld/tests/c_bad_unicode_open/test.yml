@@ -1,0 +1,5 @@
+language: C
+time: 1
+memory: 16384
+source: bad_unicode.c
+expect: AC

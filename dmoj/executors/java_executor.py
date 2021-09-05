@@ -4,6 +4,7 @@ import re
 import subprocess
 import sys
 from collections import deque
+from pathlib import PurePath
 from typing import Optional
 
 from dmoj.error import CompileError, InternalError
@@ -81,7 +82,8 @@ class JavaExecutor(SingleDigitVersionMixin, CompiledExecutor):
         return self.get_vm()
 
     def get_fs(self):
-        return super().get_fs() + [self._agent_file]
+        return super().get_fs() + [f'{re.escape(self._agent_file)}$'] + \
+            [f'{re.escape(str(parent))}$' for parent in PurePath(self._agent_file).parents]
 
     def get_write_fs(self):
         return super().get_write_fs() + [os.path.join(self._dir, 'submission_jvm_crash.log')]

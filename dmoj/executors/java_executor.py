@@ -4,10 +4,10 @@ import re
 import subprocess
 import sys
 from collections import deque
-from pathlib import PurePath
+from pathlib import Path, PurePath
 from typing import Optional
 
-from dmoj.cptbox.filesystem_policies import ExactDir, ExactFile
+from dmoj.cptbox.filesystem_policies import ExactDir, ExactFile, RecursiveDir
 from dmoj.error import CompileError, InternalError
 from dmoj.executors.compiled_executor import CompiledExecutor
 from dmoj.executors.mixins import SingleDigitVersionMixin
@@ -86,11 +86,15 @@ class JavaExecutor(SingleDigitVersionMixin, CompiledExecutor):
         return self.get_vm()
 
     def get_fs(self):
-        return (
+        fs = (
             super().get_fs()
             + [ExactFile(self._agent_file)]
             + [ExactDir(str(parent)) for parent in PurePath(self._agent_file).parents]
         )
+        vm_config = Path(self.get_vm()).parent.parent / 'lib' / 'jvm.cfg'
+        if vm_config.is_symlink():
+            fs += [RecursiveDir(os.path.dirname(os.path.realpath(vm_config)))]
+        return fs
 
     def get_write_fs(self):
         return super().get_write_fs() + [ExactFile(os.path.join(self._dir, 'submission_jvm_crash.log'))]
@@ -210,7 +214,7 @@ class JavaExecutor(SingleDigitVersionMixin, CompiledExecutor):
     def unravel_java(cls, path):
         with open(path, 'rb') as f:
             if f.read(2) != '#!':
-                return path
+                return os.path.realpath(path)
 
         with open(os.devnull, 'w') as devnull:
             process = subprocess.Popen(['bash', '-x', path, '-version'], stdout=devnull, stderr=subprocess.PIPE)

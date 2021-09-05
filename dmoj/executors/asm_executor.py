@@ -2,7 +2,7 @@ import os
 import re
 from typing import List, Optional
 
-from dmoj.cptbox import PTBOX_ABI_X86, PTBOX_ABI_X64, can_debug
+from dmoj.cptbox import PTBOX_ABI_X64, PTBOX_ABI_X86, can_debug
 from dmoj.executors.compiled_executor import CompiledExecutor
 from dmoj.judgeenv import env, skip_self_test
 from dmoj.utils.unicode import utf8text

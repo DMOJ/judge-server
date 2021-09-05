@@ -4,10 +4,9 @@ import re
 import sys
 
 from dmoj.cptbox._cptbox import AT_FDCWD, bsd_get_proc_cwd, bsd_get_proc_fdno
-from dmoj.cptbox.tracer import MaxLengthExceeded
 from dmoj.cptbox.handlers import ACCESS_EACCES, ACCESS_ENAMETOOLONG, ACCESS_ENOENT, ACCESS_EPERM, ALLOW
-
 from dmoj.cptbox.syscalls import *
+from dmoj.cptbox.tracer import MaxLengthExceeded
 from dmoj.utils.unicode import utf8text
 
 log = logging.getLogger('dmoj.security')

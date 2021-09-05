@@ -1,7 +1,7 @@
-watchdog
-pyyaml
-termcolor
 cython
-pygments
-setproctitle
 pylru
+pygments
+pyyaml
+setproctitle
+termcolor
+watchdog

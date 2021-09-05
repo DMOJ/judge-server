@@ -4,7 +4,15 @@ import sys
 
 from dmoj.cptbox._cptbox import AT_FDCWD, bsd_get_proc_cwd, bsd_get_proc_fdno
 from dmoj.cptbox.filesystem_policies import FilesystemPolicy
-from dmoj.cptbox.handlers import ACCESS_EACCES, ACCESS_ENAMETOOLONG, ACCESS_ENOENT, ACCESS_EPERM, ALLOW
+from dmoj.cptbox.handlers import (
+    ACCESS_EACCES,
+    ACCESS_EFAULT,
+    ACCESS_EINVAL,
+    ACCESS_ENAMETOOLONG,
+    ACCESS_ENOENT,
+    ACCESS_EPERM,
+    ALLOW,
+)
 from dmoj.cptbox.syscalls import *
 from dmoj.cptbox.tracer import MaxLengthExceeded
 from dmoj.utils.unicode import utf8text
@@ -206,12 +214,12 @@ class IsolateTracer(dict):
                 log.warning('Denied access via syscall %s to path with invalid unicode: %r', syscall, e.object)
                 return ACCESS_ENOENT(debugger)
 
-            file, accessible = self._file_access_check(file, debugger, is_open)
-            if accessible:
+            file, error = self._file_access_check(file, debugger, is_open)
+            if not error:
                 return True
 
-            log.debug('Denied access via syscall %s: %s', syscall, file)
-            return ACCESS_EPERM(debugger)
+            log.debug('Denied access via syscall %s (error: %s): %s', syscall, error.error_name, file)
+            return error(debugger)
 
         return check
 
@@ -226,12 +234,12 @@ class IsolateTracer(dict):
                 log.warning('Denied access via syscall %s to path with invalid unicode: %r', syscall, e.object)
                 return ACCESS_ENOENT(debugger)
 
-            file, accessible = self._file_access_check(file, debugger, is_open, dirfd=debugger.arg0, flag_reg=2)
-            if accessible:
+            file, error = self._file_access_check(file, debugger, is_open, dirfd=debugger.arg0, flag_reg=2)
+            if not error:
                 return True
 
-            log.debug('Denied access via syscall %s: %s', syscall, file)
-            return ACCESS_EPERM(debugger)
+            log.debug('Denied access via syscall %s (error: %s): %s', syscall, error.error_name, file)
+            return error(debugger)
 
         return check
 
@@ -242,17 +250,58 @@ class IsolateTracer(dict):
         # without any downside, and if it was *not* NULL and we failed to read
         # it, then we should *definitely* stop the call here.
         if rel_file is None:
-            return '(nil)', False
+            return '(nil)', ACCESS_EFAULT
+
+        is_write = is_open and self.is_write_flags(getattr(debugger, 'uarg%d' % flag_reg))
+        fs_jail = self.write_fs_jail if is_write else self.read_fs_jail
 
         try:
             file = self.get_full_path(debugger, rel_file, dirfd)
         except UnicodeDecodeError:
             log.exception('Unicode decoding error while opening relative to %d: %r', dirfd, rel_file)
-            return '(undecodable)', False
+            return '(undecodable)', ACCESS_EINVAL
 
-        is_write = is_open and self.is_write_flags(getattr(debugger, 'uarg%d' % flag_reg))
-        fs_jail = self.write_fs_jail if is_write else self.read_fs_jail
-        return file, fs_jail.check(file)
+        # We want to ensure that if there are symlinks, the user must be able to access both the symlink and
+        # its destination. However, we are doing path-based checks, which means we have to check these as
+        # as normalized paths. normpath can normalize a path, but also changes the meaning of paths in presence of
+        # symlinked directories etc. Therefore, we compare both realpath and normpath and ensure that they refer to
+        # the same file, and check the accessibility of both.
+        #
+        # This works, except when the child process uses /proc/self, which refers to something else in this process.
+        # Therefore, we "project" it by changing it to /proc/[pid] for computing the realpath and doing the samefile
+        # check. However, we still keep it as /proc/self when checking access rules.
+        projected = normalized = '/' + os.path.normpath(file).lstrip('/')
+        if normalized.startswith('/proc/self'):
+            file = os.path.join(f'/proc/{debugger.pid}', os.path.relpath(file, '/proc/self'))
+            projected = '/' + os.path.normpath(file).lstrip('/')
+        real = os.path.realpath(file)
+
+        try:
+            same = normalized == real or os.path.samefile(projected, real)
+        except OSError:
+            log.debug('Denying access due to inability to stat: normalizes to: %s, actually: %s', normalized, real)
+            return file, ACCESS_ENOENT
+        else:
+            if not same:
+                log.warning(
+                    'Denying access due to suspected symlink trickery: normalizes to: %s, actually: %s',
+                    normalized,
+                    real,
+                )
+                return file, ACCESS_EPERM
+
+        if not fs_jail.check(normalized):
+            return normalized, ACCESS_EPERM
+
+        if normalized != real:
+            proc_dir = f'/proc/{debugger.pid}'
+            if real.startswith(proc_dir):
+                real = os.path.join('/proc/self', os.path.relpath(real, proc_dir))
+
+            if not fs_jail.check(real):
+                return real, ACCESS_EPERM
+
+        return real, None
 
     def get_full_path(self, debugger, file, dirfd=AT_FDCWD):
         dirfd = (dirfd & 0x7FFFFFFF) - (dirfd & 0x80000000)

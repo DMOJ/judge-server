@@ -4,7 +4,7 @@ import re
 import subprocess
 import sys
 from collections import deque
-from pathlib import PurePath
+from pathlib import Path, PurePath
 from typing import Optional
 
 from dmoj.error import CompileError, InternalError
@@ -82,7 +82,12 @@ class JavaExecutor(SingleDigitVersionMixin, CompiledExecutor):
         return self.get_vm()
 
     def get_fs(self):
-        return super().get_fs() + [f'{re.escape(self._agent_file)}$'] + \
+        vm_config_fs = []
+        vm_config = Path(self.get_vm()).parent.parent / 'lib' / 'jvm.cfg'
+        if vm_config.is_symlink():
+            vm_config_fs = [f'{re.escape(os.path.dirname(os.path.realpath(vm_config)))}(?:$|/)']
+
+        return super().get_fs() + vm_config_fs + [f'{re.escape(self._agent_file)}$'] + \
             [f'{re.escape(str(parent))}$' for parent in PurePath(self._agent_file).parents]
 
     def get_write_fs(self):
@@ -203,7 +208,7 @@ class JavaExecutor(SingleDigitVersionMixin, CompiledExecutor):
     def unravel_java(cls, path):
         with open(path, 'rb') as f:
             if f.read(2) != '#!':
-                return path
+                return os.path.realpath(path)
 
         with open(os.devnull, 'w') as devnull:
             process = subprocess.Popen(['bash', '-x', path, '-version'], stdout=devnull, stderr=subprocess.PIPE)

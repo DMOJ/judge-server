@@ -6,7 +6,7 @@ _CALLBACK = 2
 STDOUTERR = 3
 
 
-def errno_handler(code):
+def errno_handler(name, code):
     def handler(debugger):
         def on_return():
             debugger.errno = code
@@ -15,9 +15,11 @@ def errno_handler(code):
         debugger.on_return(on_return)
         return True
 
+    handler.error_name = name
+    handler.errno = code
     return handler
 
 
 for err in dir(errno):
     if err[0] == 'E':
-        globals()['ACCESS_%s' % err] = errno_handler(getattr(errno, err))
+        globals()['ACCESS_%s' % err] = errno_handler(err, getattr(errno, err))

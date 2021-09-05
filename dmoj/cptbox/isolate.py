@@ -4,7 +4,8 @@ import re
 import sys
 
 from dmoj.cptbox._cptbox import AT_FDCWD, bsd_get_proc_cwd, bsd_get_proc_fdno
-from dmoj.cptbox.handlers import ACCESS_EACCES, ACCESS_ENAMETOOLONG, ACCESS_ENOENT, ACCESS_EPERM, ALLOW
+from dmoj.cptbox.handlers import ACCESS_EACCES, ACCESS_EFAULT, ACCESS_EINVAL, ACCESS_ENAMETOOLONG, ACCESS_ENOENT, \
+    ACCESS_EPERM, ALLOW
 from dmoj.cptbox.syscalls import *
 from dmoj.cptbox.tracer import MaxLengthExceeded
 from dmoj.utils.unicode import utf8text
@@ -211,12 +212,12 @@ class IsolateTracer(dict):
                 log.warning('Denied access via syscall %s to path with invalid unicode: %r', syscall, e.object)
                 return ACCESS_ENOENT(debugger)
 
-            file, accessible = self._file_access_check(file, debugger, is_open)
-            if accessible:
+            file, error = self._file_access_check(file, debugger, is_open)
+            if not error:
                 return True
 
-            log.debug('Denied access via syscall %s: %s', syscall, file)
-            return ACCESS_EPERM(debugger)
+            log.debug('Denied access via syscall %s (error: %s): %s', syscall, error.error_name, file)
+            return error(debugger)
 
         return check
 
@@ -231,12 +232,12 @@ class IsolateTracer(dict):
                 log.warning('Denied access via syscall %s to path with invalid unicode: %r', syscall, e.object)
                 return ACCESS_ENOENT(debugger)
 
-            file, accessible = self._file_access_check(file, debugger, is_open, dirfd=debugger.arg0, flag_reg=2)
-            if accessible:
+            file, error = self._file_access_check(file, debugger, is_open, dirfd=debugger.arg0, flag_reg=2)
+            if not error:
                 return True
 
-            log.debug('Denied access via syscall %s: %s', syscall, file)
-            return ACCESS_EPERM(debugger)
+            log.debug('Denied access via syscall %s (error: %s): %s', syscall, error.error_name, file)
+            return error(debugger)
 
         return check
 
@@ -247,26 +248,52 @@ class IsolateTracer(dict):
         # without any downside, and if it was *not* NULL and we failed to read
         # it, then we should *definitely* stop the call here.
         if rel_file is None:
-            return '(nil)', False
+            return '(nil)', ACCESS_EFAULT
+
+        is_write = is_open and self.is_write_flags(getattr(debugger, 'uarg%d' % flag_reg))
+        fs_jail = self.write_fs_jail if is_write else self.read_fs_jail
 
         try:
             file = self.get_full_path(debugger, rel_file, dirfd)
         except UnicodeDecodeError:
             log.exception('Unicode decoding error while opening relative to %d: %r', dirfd, rel_file)
-            return '(undecodable)', False
+            return '(undecodable)', ACCESS_EINVAL
 
-        is_write = is_open and self.is_write_flags(getattr(debugger, 'uarg%d' % flag_reg))
-        fs_jail = self.write_fs_jail if is_write else self.read_fs_jail
-        if fs_jail.match(file) is None:
-            return file, False
-        return file, True
+        actual = normalized = '/' + os.path.normpath(file).lstrip('/')
+        if normalized.startswith('/proc/self'):
+            file = os.path.join(f'/proc/{debugger.pid}', os.path.relpath(file, '/proc/self'))
+            actual = '/' + os.path.normpath(file).lstrip('/')
+        real = os.path.realpath(file)
+
+        try:
+            same = normalized == real or os.path.samefile(actual, real)
+        except OSError:
+            log.debug('Denying access due to inability to stat: normalizes to: %s, actually: %s', normalized, real)
+            return file, ACCESS_ENOENT
+        else:
+            if not same:
+                log.warning('Denying access due to suspected symlink trickery: normalizes to: %s, actually: %s',
+                            normalized, real)
+                return file, ACCESS_EPERM
+
+        if fs_jail.match(normalized) is None:
+            return normalized, ACCESS_EPERM
+
+        if normalized != real:
+            proc_dir = f'/proc/{debugger.pid}'
+            if real.startswith(proc_dir):
+                real = os.path.join('/proc/self', os.path.relpath(real, proc_dir))
+
+            if fs_jail.match(real) is None:
+                return real, ACCESS_EPERM
+
+        return real, None
 
     def get_full_path(self, debugger, file, dirfd=AT_FDCWD):
         dirfd = (dirfd & 0x7FFFFFFF) - (dirfd & 0x80000000)
         if not file.startswith('/'):
             dir = self._getcwd_pid(debugger.pid) if dirfd == AT_FDCWD else self._getfd_pid(debugger.pid, dirfd)
             file = os.path.join(dir, file)
-        file = '/' + os.path.normpath(file).lstrip('/')
         return file
 
     def do_kill(self, debugger):

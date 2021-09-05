@@ -10,9 +10,9 @@ from typing import List, Optional
 
 from dmoj.cptbox._cptbox import *
 from dmoj.cptbox.handlers import ALLOW, DISALLOW, _CALLBACK
-from dmoj.cptbox.syscalls import SYSCALL_COUNT, by_id, translator, sys_exit, sys_exit_group, sys_getpid
+from dmoj.cptbox.syscalls import SYSCALL_COUNT, by_id, sys_exit, sys_exit_group, sys_getpid, translator
 from dmoj.utils.communicate import safe_communicate as _safe_communicate
-from dmoj.utils.os_ext import find_exe_in_path, oom_score_adj, OOM_SCORE_ADJ_MAX
+from dmoj.utils.os_ext import OOM_SCORE_ADJ_MAX, find_exe_in_path, oom_score_adj
 from dmoj.utils.unicode import utf8bytes, utf8text
 
 PIPE = subprocess.PIPE

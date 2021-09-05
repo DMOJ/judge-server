@@ -1,7 +1,8 @@
-watchdog
-pyyaml
-termcolor
 cython
-pygments
-setproctitle
+flake8-import-order
 pylru
+pygments
+pyyaml
+setproctitle
+termcolor
+watchdog

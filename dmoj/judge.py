@@ -1,9 +1,9 @@
 #!/usr/bin/python
 import logging
+import multiprocessing
 import os
 import signal
 import sys
-import multiprocessing
 import threading
 import traceback
 from enum import Enum

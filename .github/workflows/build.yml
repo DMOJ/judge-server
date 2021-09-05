@@ -11,7 +11,7 @@ jobs:
         python-version: 3.9
     - name: Install Black and Flake8
       run: |
-        pip install black==19.3b0 flake8 flake8-future-import flake8-logging-format
+        pip install black==19.3b0 flake8 flake8-future-import flake8-logging-format flake8-import-order
     - name: Run Flake8
       run: |
         black --version

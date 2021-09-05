@@ -1,5 +1,4 @@
 cython
-flake8-import-order
 pylru
 pygments
 pyyaml

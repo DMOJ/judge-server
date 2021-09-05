@@ -36,7 +36,12 @@ BASE_WRITE_FILESYSTEM = [ExactFile('/dev/stdout'), ExactFile('/dev/stderr'), Exa
 
 
 if 'freebsd' in sys.platform:
-    BASE_FILESYSTEM += [ExactFile('/etc/spwd.db'), ExactFile('/etc/pwd.db'), ExactFile('/dev/hv_tsc')]
+    BASE_FILESYSTEM += [
+        ExactFile('/etc/spwd.db'),
+        ExactFile('/etc/pwd.db'),
+        ExactFile('/dev/hv_tsc'),
+        RecursiveDir('/dev/fd'),
+    ]
 
 else:
     BASE_FILESYSTEM += [

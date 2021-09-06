@@ -1,5 +1,6 @@
 import os
 
+from dmoj.cptbox.filesystem_policies import ExactFile
 from dmoj.executors.script_executor import ScriptExecutor
 
 
@@ -38,7 +39,7 @@ process.stdin.on 'readable', () ->
         return [self.get_command(), self.runtime_dict['coffee'], self._code]
 
     def get_fs(self):
-        return super().get_fs() + [self.runtime_dict['coffee'], self._code]
+        return super().get_fs() + [ExactFile(self.runtime_dict['coffee']), ExactFile(self._code)]
 
     @classmethod
     def get_versionable_commands(cls):

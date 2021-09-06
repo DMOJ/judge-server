@@ -1,5 +1,6 @@
 import os
 
+from dmoj.cptbox.filesystem_policies import ExactFile
 from dmoj.executors.compiled_executor import CompiledExecutor
 from dmoj.judgeenv import env
 
@@ -15,7 +16,7 @@ put echo
 """
 
     def get_fs(self):
-        return super().get_fs() + [self._code + 'bc']
+        return super().get_fs() + [ExactFile(self._code + 'bc')]
 
     def get_compile_args(self):
         tprologc = self.runtime_dict['tprologc']

@@ -6,6 +6,7 @@ import sys
 from typing import Any, List, Tuple, Union
 
 from dmoj.cptbox import IsolateTracer, TracedPopen, syscalls
+from dmoj.cptbox.filesystem_policies import ExactDir, ExactFile, FilesystemAccessRule, RecursiveDir
 from dmoj.cptbox.handlers import ALLOW
 from dmoj.error import InternalError
 from dmoj.judgeenv import env
@@ -13,37 +14,58 @@ from dmoj.utils import setbufsize_path
 from dmoj.utils.unicode import utf8bytes
 
 BASE_FILESYSTEM = [
-    '/dev/(?:null|tty|zero|u?random)$',
-    '/usr/(?!home)',
-    '/lib(?:32|64)?/',
-    '/opt/',
-    '/etc$',
-    '/etc/(?:localtime|timezone)$',
-    '/usr$',
-    '/tmp$',
-    '/$',
+    ExactFile('/dev/null'),
+    ExactFile('/dev/tty'),
+    ExactFile('/dev/zero'),
+    ExactFile('/dev/urandom'),
+    ExactFile('/dev/random'),
+    *[RecursiveDir(f'/usr/{d}') for d in os.listdir('/usr') if d != 'home' and os.path.isdir(f'/usr/{d}')],
+    RecursiveDir('/lib'),
+    RecursiveDir('/lib32'),
+    RecursiveDir('/lib64'),
+    RecursiveDir('/opt'),
+    ExactDir('/etc'),
+    ExactFile('/etc/localtime'),
+    ExactFile('/etc/timezone'),
+    ExactDir('/usr'),
+    ExactDir('/tmp'),
+    ExactDir('/'),
 ]
-BASE_WRITE_FILESYSTEM = ['/dev/stdout$', '/dev/stderr$', '/dev/null$']
+
+BASE_WRITE_FILESYSTEM = [ExactFile('/dev/stdout'), ExactFile('/dev/stderr'), ExactFile('/dev/null')]
+
 
 if 'freebsd' in sys.platform:
-    BASE_FILESYSTEM += [r'/etc/s?pwd\.db$', '/dev/hv_tsc$']
+    BASE_FILESYSTEM += [ExactFile('/etc/spwd.db'), ExactFile('/etc/pwd.db'), ExactFile('/dev/hv_tsc')]
+
 else:
-    BASE_FILESYSTEM += ['/sys/devices/system/cpu(?:$|/online)', '/etc/selinux/config$']
+    BASE_FILESYSTEM += [
+        ExactDir('/sys/devices/system/cpu'),
+        ExactFile('/sys/devices/system/cpu/online'),
+        ExactFile('/etc/selinux/config'),
+    ]
 
 if sys.platform.startswith('freebsd'):
-    BASE_FILESYSTEM += [r'/etc/libmap\.conf$', r'/var/run/ld-elf\.so\.hints$']
+    BASE_FILESYSTEM += [ExactFile('/etc/libmap.conf'), ExactFile('/var/run/ld-elf.so.hints')]
 else:
     # Linux and kFreeBSD mounts linux-style procfs.
     BASE_FILESYSTEM += [
-        '/proc$',
-        '/proc/self/(?:maps|exe|auxv)$',
-        '/proc/self$',
-        '/proc/(?:meminfo|stat|cpuinfo|filesystems|xen|uptime)$',
-        '/proc/sys/vm/overcommit_memory$',
+        ExactDir('/proc'),
+        ExactDir('/proc/self'),
+        ExactFile('/proc/self/maps'),
+        ExactFile('/proc/self/exe'),
+        ExactFile('/proc/self/auxv'),
+        ExactFile('/proc/meminfo'),
+        ExactFile('/proc/stat'),
+        ExactFile('/proc/cpuinfo'),
+        ExactFile('/proc/filesystems'),
+        ExactDir('/proc/xen'),
+        ExactFile('/proc/uptime'),
+        ExactFile('/proc/sys/vm/overcommit_memory'),
     ]
 
     # Linux-style ld.
-    BASE_FILESYSTEM += [r'/etc/ld\.so\.(?:nohwcap|preload|cache)$']
+    BASE_FILESYSTEM += [ExactFile('/etc/ld.so.nohwcap'), ExactFile('/etc/ld.so.preload'), ExactFile('/etc/ld.so.cache')]
 
 UTF8_LOCALE = 'C.UTF-8'
 
@@ -56,8 +78,8 @@ class PlatformExecutorMixin(metaclass=abc.ABCMeta):
     data_grace = 0
     fsize = 0
     personality = 0x0040000  # ADDR_NO_RANDOMIZE
-    fs: List[str] = []
-    write_fs: List[str] = []
+    fs: List[FilesystemAccessRule] = []
+    write_fs: List[FilesystemAccessRule] = []
     syscalls: List[Union[str, Tuple[str, Any]]] = []
 
     def _add_syscalls(self, sec):
@@ -74,9 +96,20 @@ class PlatformExecutorMixin(metaclass=abc.ABCMeta):
         return self._add_syscalls(sec)
 
     def get_fs(self):
+        return BASE_FILESYSTEM + self.fs + self._load_extra_fs() + [RecursiveDir(self._dir)]
+
+    def _load_extra_fs(self):
         name = self.get_executor_name()
-        fs = BASE_FILESYSTEM + self.fs + env.get('extra_fs', {}).get(name, []) + [re.escape(self._dir)]
-        return fs
+        extra_fs_config = env.get('extra_fs', {}).get(name, [])
+        extra_fs = []
+        constructors = dict(exact_file=ExactFile, exact_dir=ExactDir, recursive_dir=RecursiveDir)
+        for rules in extra_fs_config:
+            for type, path in rules.iteritems():
+                constructor = constructors.get(type)
+                assert constructor, f"Can't load rule for extra path with rule type {type}"
+                extra_fs.append(constructor(path))
+
+        return extra_fs
 
     def get_write_fs(self):
         return BASE_WRITE_FILESYSTEM + self.write_fs

@@ -1,17 +1,11 @@
-import os
-
+from dmoj.cptbox.filesystem_policies import ExactFile, RecursiveDir
 from dmoj.executors.compiled_executor import CompiledExecutor
 
 
 class Executor(CompiledExecutor):
     ext = 'rkt'
     name = 'RKT'
-    fs = [
-        os.path.expanduser(r'~/\.racket/'),
-        os.path.expanduser(r'~/\.local/share/racket/'),
-        '/etc/racket/.*?',
-        '/etc/passwd$',
-    ]
+    fs = [RecursiveDir('/etc/racket'), ExactFile('/etc/passwd')]
 
     command = 'racket'
 

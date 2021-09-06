@@ -1,7 +1,7 @@
 import os
-import re
 from typing import List, Optional
 
+from dmoj.cptbox.filesystem_policies import ExactFile, RecursiveDir
 from dmoj.executors.base_executor import BaseExecutor
 from dmoj.utils.unicode import utf8bytes
 
@@ -24,9 +24,9 @@ class ScriptExecutor(BaseExecutor):
 
     def get_fs(self) -> list:
         home = self.runtime_dict.get('%s_home' % self.get_executor_name().lower())
-        fs = super().get_fs() + [self._code]
+        fs = super().get_fs() + [ExactFile(self._code)]
         if home is not None:
-            fs.append(re.escape(home))
+            fs += [RecursiveDir(home)]
         return fs
 
     def create_files(self, problem_id: str, source_code: bytes) -> None:

@@ -16,7 +16,6 @@ void main() {
     address_grace = 128 * 1024
 
     syscalls = ['epoll_create', 'epoll_ctl', 'epoll_wait', 'timerfd_settime', 'memfd_create', 'ftruncate']
-    fs = ['.*/vm-service$']
 
     def get_compile_args(self):
         return [self.get_command(), '--snapshot=%s' % self.get_compiled_file(), self._code]

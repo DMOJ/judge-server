@@ -3,6 +3,7 @@ import re
 from collections import deque
 
 from dmoj.cptbox import TracedPopen
+from dmoj.cptbox.filesystem_policies import RecursiveDir
 from dmoj.cptbox.handlers import ACCESS_EAGAIN
 from dmoj.executors.compiled_executor import CompiledExecutor
 from dmoj.result import Result
@@ -32,7 +33,7 @@ class MonoExecutor(CompiledExecutor):
     # get flagged as MLE.
     data_grace = 65536
     cptbox_popen_class = MonoTracedPopen
-    fs = ['/etc/mono/']
+    fs = [RecursiveDir('/etc/mono')]
     # Mono sometimes forks during its crashdump procedure, but continues even if
     # the call to fork fails.
     syscalls = [

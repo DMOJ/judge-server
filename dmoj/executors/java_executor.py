@@ -7,6 +7,7 @@ from collections import deque
 from pathlib import PurePath
 from typing import Optional
 
+from dmoj.cptbox.filesystem_policies import ExactDir, ExactFile
 from dmoj.error import CompileError, InternalError
 from dmoj.executors.compiled_executor import CompiledExecutor
 from dmoj.executors.mixins import SingleDigitVersionMixin
@@ -87,12 +88,12 @@ class JavaExecutor(SingleDigitVersionMixin, CompiledExecutor):
     def get_fs(self):
         return (
             super().get_fs()
-            + [f'{re.escape(self._agent_file)}$']
-            + [f'{re.escape(str(parent))}$' for parent in PurePath(self._agent_file).parents]
+            + [ExactFile(self._agent_file)]
+            + [ExactDir(str(parent)) for parent in PurePath(self._agent_file).parents]
         )
 
     def get_write_fs(self):
-        return super().get_write_fs() + [os.path.join(self._dir, 'submission_jvm_crash.log')]
+        return super().get_write_fs() + [ExactFile(os.path.join(self._dir, 'submission_jvm_crash.log'))]
 
     def get_agent_flag(self):
         agent_flag = '-javaagent:%s=policy:%s' % (self._agent_file, self._policy_file)

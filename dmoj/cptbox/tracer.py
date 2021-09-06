@@ -12,7 +12,7 @@ from dmoj.cptbox._cptbox import *
 from dmoj.cptbox.handlers import ALLOW, DISALLOW, _CALLBACK
 from dmoj.cptbox.syscalls import SYSCALL_COUNT, by_id, sys_exit, sys_exit_group, sys_getpid, translator
 from dmoj.utils.communicate import safe_communicate as _safe_communicate
-from dmoj.utils.os_ext import OOM_SCORE_ADJ_MAX, find_exe_in_path, oom_score_adj
+from dmoj.utils.os_ext import OOM_SCORE_ADJ_MAX, oom_score_adj
 from dmoj.utils.unicode import utf8bytes, utf8text
 
 PIPE = subprocess.PIPE
@@ -107,7 +107,7 @@ class TracedPopen(Process):
             cwd='',
             wall_time=None,
     ):
-        self._executable = executable or find_exe_in_path(args[0])
+        self._executable = executable
         self.use_seccomp = security is not None and not avoid_seccomp
 
         self._args = args

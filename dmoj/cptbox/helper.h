@@ -34,4 +34,10 @@ char *bsd_get_proc_fdno(pid_t pid, int fdno);
 int memory_fd_create(void);
 int memory_fd_seal(int fd);
 
+#ifdef WSL1
+#   define IS_WSL1 1
+#else
+#   define IS_WSL1 0
+#endif
+
 #endif

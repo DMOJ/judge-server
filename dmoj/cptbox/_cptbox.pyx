@@ -13,7 +13,7 @@ __all__ = ['Process', 'Debugger', 'bsd_get_proc_cwd', 'bsd_get_proc_fdno', 'MAX_
            'PTBOX_ABI_X86', 'PTBOX_ABI_X64', 'PTBOX_ABI_X32', 'PTBOX_ABI_ARM', 'PTBOX_ABI_ARM64',
            'PTBOX_ABI_FREEBSD_X64', 'PTBOX_ABI_INVALID', 'PTBOX_ABI_COUNT',
            'PTBOX_SPAWN_FAIL_NO_NEW_PRIVS', 'PTBOX_SPAWN_FAIL_SECCOMP', 'PTBOX_SPAWN_FAIL_TRACEME',
-           'PTBOX_SPAWN_FAIL_EXECVE']
+           'PTBOX_SPAWN_FAIL_EXECVE', 'IS_WSL1']
 
 
 cdef extern from 'ptbox.h' nogil:
@@ -132,6 +132,8 @@ cdef extern from 'helper.h' nogil:
         PTBOX_SPAWN_FAIL_SECCOMP
         PTBOX_SPAWN_FAIL_TRACEME
         PTBOX_SPAWN_FAIL_EXECVE
+
+        IS_WSL1
 
     int _memory_fd_create "memory_fd_create"()
     int _memory_fd_seal "memory_fd_seal"(int fd)

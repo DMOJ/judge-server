@@ -9,19 +9,19 @@ retraceback = re.compile(r'Traceback \(most recent call last\):\n.*?\n([a-zA-Z_]
 
 
 class PythonExecutor(CompiledExecutor):
-    loader_script = '''\
+    loader_script = """\
 import runpy, sys, os
 del sys.argv[0]
 sys.stdin = os.fdopen(0, 'r', 65536)
 sys.stdout = os.fdopen(1, 'w', 65536)
 runpy.run_path(sys.argv[0], run_name='__main__')
-'''
+"""
 
-    unbuffered_loader_script = '''\
+    unbuffered_loader_script = """\
 import runpy, sys
 del sys.argv[0]
 runpy.run_path(sys.argv[0], run_name='__main__')
-'''
+"""
     address_grace = 131072
     ext = 'py'
 

@@ -17,10 +17,10 @@ class Executor(CompiledExecutor):
     data_grace = 4096
     address_grace = 131072
 
-    test_program = '''\
+    test_program = """\
 #lang racket
 (displayln (read-line))
-'''
+"""
 
     def get_compile_args(self):
         return [self.runtime_dict['raco'], 'make', self._code]

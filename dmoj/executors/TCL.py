@@ -10,10 +10,10 @@ class Executor(ScriptExecutor):
     address_grace = 131072
     command = 'tclsh'
     syscalls = ['connect', 'access', 'getsockname']
-    test_program = '''\
+    test_program = """\
 gets stdin input
 puts $input
-'''
+"""
 
     @classmethod
     def get_runtime_versions(cls):

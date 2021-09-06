@@ -15,9 +15,9 @@ class Executor(ScriptExecutor):
         'socketpair',
         ('fpathconf', ACCESS_EACCES),
     ]
-    test_program = '''\
+    test_program = """\
 int main() {
     write(Stdio.stdin.gets());
     return 0;
 }
-'''
+"""

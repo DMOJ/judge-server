@@ -5,7 +5,7 @@ class Executor(CompiledExecutor):
     ext = 'i'
     name = 'ICK'
     command = 'ick'
-    test_program = '''\
+    test_program = """\
         PLEASE DO ,1 <- #1
         DO .4 <- #0
         DO .5 <- #0
@@ -28,7 +28,7 @@ class Executor(CompiledExecutor):
         DO .5 <- .2
         DO ,1SUB#1 <- .3
 (30)    PLEASE READ OUT ,1
-'''
+"""
 
     def get_compile_args(self):
         flags = [self.get_command(), '-O', self._code]

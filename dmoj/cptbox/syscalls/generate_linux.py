@@ -99,14 +99,14 @@ with open('freebsd.tbl') as freebsd:
 
 with open('../syscalls.pyi', 'w') as interface:
     print(
-        '''\
+        """\
 from typing import List, Dict
 
 translator: List[List[int]]
 by_name: Dict[str, int]
 by_id: List[str]
 SYSCALL_COUNT: int
-''',
+""",
         file=interface,
     )
     for name in sorted(names):

@@ -9,13 +9,13 @@ class Executor(CompiledExecutor):
     command = 'cobc'
     address_grace = 131072
     compile_output_index = 0
-    test_program = '''\
+    test_program = """\
 	IDENTIFICATION DIVISION.
 	PROGRAM-ID. HELLO-WORLD.
 	PROCEDURE DIVISION.
 		DISPLAY 'echo: Hello, World!'.
 		STOP RUN.
-'''  # noqa: W191
+"""  # noqa: W191
 
     def get_compile_args(self):
         return [self.get_command(), '-x', '-free', self._code]

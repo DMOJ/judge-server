@@ -6,7 +6,7 @@ class Executor(PlatformX64Mixin, NASMExecutor):
 
     name = 'NASM64'
 
-    test_program = '''\
+    test_program = """\
 section .text
 global  _start
 
@@ -34,4 +34,4 @@ _exit:
 
 section .bss
     buffer  resb    4096
-'''
+"""

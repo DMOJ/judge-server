@@ -19,7 +19,7 @@ class Executor(NullStdoutMixin, CompiledExecutor):
     data_grace = 262144
     nproc = -1
 
-    compile_script = '''(compile-file "{code}")'''
+    compile_script = """(compile-file "{code}")"""
 
     def get_compile_args(self):
         return [self.get_command(), '--eval', self.compile_script.format(code=self._code), '--quit']
@@ -33,7 +33,7 @@ class Executor(NullStdoutMixin, CompiledExecutor):
             '--no-sysinit',
             '--no-userinit',
             '--load',
-            self.problem + ".fasl",
+            self.problem + '.fasl',
             '--quit',
             '--end-toplevel-options',
         ]

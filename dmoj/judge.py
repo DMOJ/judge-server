@@ -162,7 +162,7 @@ class Judge:
                     handler_func = ipc_handler_dispatch[ipc_type]
                 except KeyError:
                     raise RuntimeError(
-                        "judge got unexpected IPC message from worker: %s" % ((ipc_type, data),)
+                        'judge got unexpected IPC message from worker: %s' % ((ipc_type, data),)
                     ) from None
 
                 handler_func(report, *data)
@@ -222,7 +222,7 @@ class Judge:
 
     def _ipc_batch_begin(self, report, batch_number: int) -> None:
         self.packet_manager.batch_begin_packet()
-        report(ansi_style("#ansi[Batch #%d](yellow|bold)" % batch_number))
+        report(ansi_style('#ansi[Batch #%d](yellow|bold)' % batch_number))
 
     def _ipc_batch_end(self, _report, _batch_number: int) -> None:
         self.packet_manager.batch_end_packet()
@@ -232,7 +232,7 @@ class Judge:
         report(ansi_style('#ansi[Forcefully terminating grading. Temporary files may not be deleted.](red|bold)'))
 
     def _ipc_unhandled_exception(self, _report, message: str) -> None:
-        logger.error("Unhandled exception in worker process")
+        logger.error('Unhandled exception in worker process')
         self.log_internal_error(message=message)
 
     def abort_grading(self, submission_id: Optional[int] = None) -> None:
@@ -305,7 +305,7 @@ class JudgeWorker:
 
         self.worker_process_conn, child_conn = multiprocessing.Pipe()
         self.worker_process = multiprocessing.Process(
-            name="DMOJ Judge Handler for %s/%d" % (self.submission.problem_id, self.submission.id),
+            name='DMOJ Judge Handler for %s/%d' % (self.submission.problem_id, self.submission.id),
             target=self._worker_process_main,
             args=(child_conn, self.worker_process_conn),
         )
@@ -325,7 +325,7 @@ class JudgeWorker:
                 self.worker_process.kill()
                 raise
             except Exception:
-                logger.error("Failed to read IPC message from worker!")
+                logger.error('Failed to read IPC message from worker!')
                 raise
 
             if ipc_type == IPC.BYE:
@@ -343,7 +343,7 @@ class JudgeWorker:
                 logger.exception('Exception while waiting for worker to shut down, ignoring...')
             finally:
                 if self.worker_process.is_alive():
-                    logger.error("Worker is still alive, sending SIGKILL!")
+                    logger.error('Worker is still alive, sending SIGKILL!')
                     self.worker_process.kill()
 
     def request_abort_grading(self) -> None:
@@ -352,7 +352,7 @@ class JudgeWorker:
         try:
             self.worker_process_conn.send((IPC.REQUEST_ABORT, ()))
         except Exception:
-            logger.exception("Failed to send abort request to worker, did it race?")
+            logger.exception('Failed to send abort request to worker, did it race?')
 
     def _worker_process_main(
         self,
@@ -374,7 +374,7 @@ class JudgeWorker:
                 try:
                     ipc_type, data = judge_process_conn.recv()
                 except:  # noqa: E722, whatever happened, we have to abort now.
-                    logger.exception("Judge unexpectedly hung up!")
+                    logger.exception('Judge unexpectedly hung up!')
                     self._do_abort()
                     return
 
@@ -383,7 +383,7 @@ class JudgeWorker:
                 elif ipc_type == IPC.REQUEST_ABORT:
                     self._do_abort()
                 else:
-                    raise RuntimeError("worker got unexpected IPC message from judge: %s" % ((ipc_type, data),))
+                    raise RuntimeError('worker got unexpected IPC message from judge: %s' % ((ipc_type, data),))
 
         def _report_unhandled_exception() -> None:
             # We can't pickle the whole traceback object, so just send the formatted exception.
@@ -426,7 +426,7 @@ class JudgeWorker:
                 # this case, since we're blocking the main judge from proceeding.
                 ipc_recv_thread.join(timeout=IPC_TEARDOWN_TIMEOUT)
                 if ipc_recv_thread.is_alive():
-                    logger.error("Judge IPC recv thread is still alive after timeout, shutting worker down anyway!")
+                    logger.error('Judge IPC recv thread is still alive after timeout, shutting worker down anyway!')
 
             # FIXME(tbrindus): we need to do this because cleaning up temporary directories happens on __del__, which
             # won't get called if we exit the process right now (so we'd leak all files created by the grader). This

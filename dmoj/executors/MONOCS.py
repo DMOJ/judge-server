@@ -7,7 +7,7 @@ class Executor(MonoExecutor):
     command = 'mono-csc'
     command_paths = ['mono-csc', 'mcs', 'dmcs', 'gmcs']
 
-    test_program = '''\
+    test_program = """\
 using System;
 
 class test {
@@ -16,7 +16,7 @@ class test {
         while (!string.IsNullOrEmpty(line = Console.ReadLine()))
             Console.WriteLine(line);
     }
-}'''
+}"""
 
     def get_compile_args(self):
         return [self.get_command(), self._code, '-r:System.Numerics.dll', '-out:%s' % self.get_compiled_file()]

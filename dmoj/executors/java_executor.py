@@ -129,11 +129,11 @@ class JavaExecutor(SingleDigitVersionMixin, CompiledExecutor):
                 pass
 
         if b'Error: Main method not found in class' in stderr:
-            exception = "public static void main(String[] args) not found"
+            exception = 'public static void main(String[] args) not found'
         else:
             match = deque(reexception.finditer(utf8text(stderr, 'replace')), maxlen=1)
             if not match:
-                exception = "abnormal termination"  # Probably exited without calling shutdown hooks
+                exception = 'abnormal termination'  # Probably exited without calling shutdown hooks
             else:
                 exception = match[0].group(1).split(':')[0]
 

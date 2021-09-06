@@ -136,7 +136,7 @@ class BaseExecutor(PlatformExecutorMixin):
             return True
 
         if output:
-            print_ansi("%-39s%s" % ('Self-testing #ansi[%s](|underline):' % cls.get_executor_name(), ''), end=' ')
+            print_ansi('%-39s%s' % ('Self-testing #ansi[%s](|underline):' % cls.get_executor_name(), ''), end=' ')
         try:
             executor = cls(cls.test_name, utf8bytes(cls.test_program))
             proc = executor.launch(
@@ -159,7 +159,7 @@ class BaseExecutor(PlatformExecutorMixin):
                 cls.get_runtime_versions()
                 usage = '[%.3fs, %d KB]' % (proc.execution_time, proc.max_memory)
                 print_ansi(
-                    "%s %-19s" % (['#ansi[Failed](red|bold) ', '#ansi[Success](green|bold)'][res], usage), end=' '
+                    '%s %-19s' % (['#ansi[Failed](red|bold) ', '#ansi[Success](green|bold)'][res], usage), end=' '
                 )
 
                 runtime_version: List[Tuple[str, str]] = []
@@ -167,7 +167,7 @@ class BaseExecutor(PlatformExecutorMixin):
                     assert version is not None
                     runtime_version.append((runtime, '.'.join(map(str, version))))
 
-                print_ansi(', '.join(["#ansi[%s](cyan|bold) %s" % v for v in runtime_version]))
+                print_ansi(', '.join(['#ansi[%s](cyan|bold) %s' % v for v in runtime_version]))
             if stdout.strip() != test_message and error_callback:
                 error_callback('Got unexpected stdout output:\n' + utf8text(stdout))
             if stderr:

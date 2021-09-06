@@ -4,7 +4,7 @@ from typing import List
 from dmoj.error import CompileError
 from dmoj.executors.C import Executor as CExecutor
 
-template = b'''\
+template = b"""\
 #define _GNU_SOURCE
 #include <errno.h>
 #include <stdio.h>
@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
 
     {code}
 }
-'''
+"""
 
 trans = {
     ord('>'): b'++p;',

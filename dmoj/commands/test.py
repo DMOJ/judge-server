@@ -79,7 +79,7 @@ class TestCommand(Command):
             map(lambda x: "'%s'" % x, filter(lambda problem_id: problem_id not in supported_problems, problem_ids))
         )
         if unknown_problems:
-            raise InvalidCommandException("unknown problem(s) %s" % unknown_problems)
+            raise InvalidCommandException('unknown problem(s) %s' % unknown_problems)
 
         tester = ProblemTester()
         total_fails = 0

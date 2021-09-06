@@ -6,13 +6,13 @@ class Executor(NullStdoutMixin, CompiledExecutor):
     ext = 'pas'
     name = 'PAS'
     command = 'fpc'
-    test_program = '''\
+    test_program = """\
 var line : string;
 begin
     readln(line);
     writeln(line);
 end.
-'''
+"""
 
     def get_compile_args(self):
         return [self.get_command(), '-Fe/dev/stderr', '-So', '-O2', self._code]

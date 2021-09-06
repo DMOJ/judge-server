@@ -3,7 +3,7 @@ import os
 from dmoj.executors.compiled_executor import CompiledExecutor
 from dmoj.utils.os_ext import bool_env
 
-CARGO_TOML = b'''\
+CARGO_TOML = b"""\
 [package]
 name = "user_submission"
 version = "1.0.0"
@@ -11,9 +11,9 @@ version = "1.0.0"
 [dependencies]
 dmoj = "0.1"
 rand = "0.3"
-'''
+"""
 
-CARGO_LOCK = b'''\
+CARGO_LOCK = b"""\
 cargo-features = ["strip"]
 
 [root]
@@ -59,16 +59,16 @@ dependencies = [
 "checksum lazy_static 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "6abe0ee2e758cd6bc8a2cd56726359007748fbf4128da998b65d0b70f881e19b"
 "checksum libc 0.2.18 (registry+https://github.com/rust-lang/crates.io-index)" = "a51822fc847e7a8101514d1d44e354ba2ffa7d4c194dcab48870740e327cac70"
 "checksum rand 0.3.15 (registry+https://github.com/rust-lang/crates.io-index)" = "022e0636ec2519ddae48154b028864bdce4eaf7d35226ab8e65c611be97b189d"
-'''  # noqa: E501
+"""  # noqa: E501
 
-HELLO_WORLD_PROGRAM = '''\
+HELLO_WORLD_PROGRAM = """\
 #[macro_use] extern crate dmoj;
 extern crate rand;
 
 fn main() {
     println!("echo: Hello, World!");
 }
-'''
+"""
 
 
 class Executor(CompiledExecutor):

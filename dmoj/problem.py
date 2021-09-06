@@ -224,7 +224,7 @@ class BatchedTestCase:
         self.points = config.points
         self.batched_cases = cases
         if any(isinstance(case, BatchedTestCase) for case in self.batched_cases):
-            raise InvalidInitException("nested batches")
+            raise InvalidInitException('nested batches')
         self.problem = problem
 
     def __str__(self):
@@ -243,7 +243,7 @@ class TestCase:
         self._generated = None
 
     def _normalize(self, data):
-        # Perhaps the correct answer may be "no output", in which case it'll be
+        # Perhaps the correct answer may be 'no output', in which case it'll be
         # None here if sourced from a generator.
         data = data or b''
 
@@ -285,7 +285,7 @@ class TestCase:
             elif isinstance(gen.source.unwrap(), list):
                 filenames = list(gen.source.unwrap())
             else:
-                raise InvalidInitException("invalid generator declaration")
+                raise InvalidInitException('invalid generator declaration')
 
             if gen.flags:
                 flags += gen.flags

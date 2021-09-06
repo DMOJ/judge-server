@@ -7,7 +7,7 @@ class Executor(JavacExecutor):
     name = 'JAVA9'
     jvm_regex = r'java-9-|openjdk9|oracle-java9'
 
-    test_program = '''\
+    test_program = """\
 import java.io.IOException;
 
 interface IORunnable {
@@ -27,7 +27,7 @@ public class self_test {
                 System.out.write(buffer, 0, read);
         });
     }
-}'''
+}"""
 
     def get_compile_args(self):
         return [self.get_compiler(), '-encoding', 'UTF-8', self._code]

@@ -6,7 +6,7 @@ class Executor(CPPExecutor):
     command_paths = ['g++-5', 'g++-4.9', 'g++-4.8', 'g++']
     std = 'c++11'
     name = 'CPP11'
-    test_program = '''
+    test_program = """
 #include <iostream>
 
 int main() {
@@ -14,4 +14,4 @@ int main() {
     std::cout << input;
     return 0;
 }
-'''
+"""

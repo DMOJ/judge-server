@@ -22,7 +22,7 @@ class Executor(CompiledExecutor):
     command = 'go'
     syscalls = ['mincore', 'epoll_create1', 'epoll_ctl', 'epoll_pwait', 'pselect6', 'mlock']
     test_name = 'echo'
-    test_program = '''\
+    test_program = """\
 package main
 
 import "os"
@@ -33,7 +33,7 @@ func main() {
     bio := bufio.NewReader(os.Stdin)
     text, _ := bio.ReadString(0)
     fmt.Print(text)
-}'''
+}"""
 
     def get_compile_env(self):
         return {

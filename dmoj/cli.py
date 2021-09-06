@@ -114,7 +114,7 @@ def cli_main():
                 return cmd.execute(line[1:])
             except InvalidCommandException as e:
                 if e.message:
-                    print_ansi("#ansi[%s](red|bold)\n" % e.message)
+                    print_ansi('#ansi[%s](red|bold)\n' % e.message)
                 print()
                 return 1
         else:
@@ -129,7 +129,7 @@ def cli_main():
             return run_command(judgeenv.cli_command)
         else:
             while True:
-                command = input(ansi_style("#ansi[dmoj](magenta)#ansi[>](green) ")).strip()
+                command = input(ansi_style('#ansi[dmoj](magenta)#ansi[>](green) ')).strip()
                 run_command(shlex.split(command))
     except (EOFError, KeyboardInterrupt):
         print()

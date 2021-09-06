@@ -20,12 +20,12 @@ class Executor(ScriptExecutor):
         'eventfd2',
         'statx',
     ]
-    test_program = '''\
+    test_program = """\
 process.stdin.on 'readable', () ->
   chunk = process.stdin.read()
   if chunk != null
     process.stdout.write chunk
-'''
+"""
     address_grace = 1048576
 
     @classmethod

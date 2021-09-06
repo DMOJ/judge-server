@@ -15,11 +15,11 @@ class Executor(JavaExecutor):
     vm = 'kotlin_vm'
     security_policy = policy
 
-    test_program = '''\
+    test_program = """\
 fun main(args: Array<String>) {
     println(readLine())
 }
-'''
+"""
 
     def create_files(self, problem_id, source_code, *args, **kwargs):
         super().create_files(problem_id, source_code, *args, **kwargs)

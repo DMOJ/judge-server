@@ -8,11 +8,11 @@ class Executor(CompiledExecutor):
     ext = 't'
     name = 'TUR'
     command = 'tprolog'
-    test_program = '''\
+    test_program = """\
 var echo : string
 get echo : *
 put echo
-'''
+"""
 
     def get_fs(self):
         return super().get_fs() + [self._code + 'bc']

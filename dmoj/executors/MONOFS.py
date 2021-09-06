@@ -7,14 +7,14 @@ class Executor(MonoExecutor):
     command = 'fsharpc'
     compiler_time_limit = 20
 
-    test_program = '''\
+    test_program = """\
 open System
 
 [<EntryPoint>]
 let main argv =
     Console.WriteLine(Console.ReadLine())
     0
-'''
+"""
 
     def get_compile_args(self):
         return [

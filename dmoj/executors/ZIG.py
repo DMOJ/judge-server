@@ -6,7 +6,7 @@ class Executor(CompiledExecutor):
     name = 'ZIG'
     command = 'zig'
     compiler_time_limit = 30
-    test_program = '''
+    test_program = """
 const std = @import("std");
 
 pub fn main() !void {
@@ -19,7 +19,7 @@ pub fn main() !void {
         if (line.len == 0) break;
         try stdout.print("{}", .{line});
     }
-}'''
+}"""
 
     def create_files(self, problem_id, source_code, *args, **kwargs):
         # This cleanup needs to happen because Zig refuses to compile carriage returns.

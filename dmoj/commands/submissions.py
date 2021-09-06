@@ -16,7 +16,7 @@ class ListSubmissionsCommand(Command):
         args = self.arg_parser.parse_args(line)
 
         if args.limit is not None and args.limit <= 0:
-            raise InvalidCommandException("--limit must be >= 0")
+            raise InvalidCommandException('--limit must be >= 0')
 
         submissions = self.judge.graded_submissions if not args.limit else self.judge.graded_submissions[: args.limit]
 

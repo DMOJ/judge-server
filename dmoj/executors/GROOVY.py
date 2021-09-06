@@ -16,9 +16,9 @@ class Executor(JavaExecutor):
     vm = 'groovy_vm'
     security_policy = policy
 
-    test_program = '''\
+    test_program = """\
 println System.in.newReader().readLine()
-'''
+"""
 
     def create_files(self, problem_id, source_code, *args, **kwargs):
         super().create_files(problem_id, source_code, *args, **kwargs)

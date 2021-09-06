@@ -5,11 +5,11 @@ class Executor(ScriptExecutor):
     name = 'FORTH'
     command = 'gforth'
     ext = 'fs'
-    test_program = '''\
+    test_program = """\
 : HELLO  ( -- ) ." echo: Hello, World!" CR ;
 
 HELLO
-'''
+"""
     fs = [r'/\.gforth-history$']
 
     def get_cmdline(self, **kwargs):

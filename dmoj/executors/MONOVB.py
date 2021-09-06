@@ -9,7 +9,7 @@ class Executor(MonoExecutor):
     command = 'mono-vbnc'
     compile_output_index = 0
 
-    test_program = '''\
+    test_program = """\
 Imports System
 
 Public Module modmain
@@ -17,7 +17,7 @@ Public Module modmain
      Console.WriteLine(Console.ReadLine())
    End Sub
 End Module
-'''
+"""
 
     def get_compile_args(self):
         return [self.get_command(), '/nologo', '/quiet', '/optimize+', '/out:%s' % self.get_compiled_file(), self._code]

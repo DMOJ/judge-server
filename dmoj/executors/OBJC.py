@@ -14,7 +14,7 @@ class Executor(GCCExecutor):
     name = 'OBJC'
     address_grace = 131072
 
-    test_program = r'''
+    test_program = r"""
 #import <Foundation/Foundation.h>
 
 int main (int argc, const char * argv[]) {
@@ -25,7 +25,7 @@ int main (int argc, const char * argv[]) {
     [pool drain];
     return 0;
 }
-'''
+"""
 
     def get_flags(self):
         return self.objc_flags + super().get_flags()

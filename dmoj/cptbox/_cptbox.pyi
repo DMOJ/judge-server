@@ -12,7 +12,34 @@ PTBOX_ABI_COUNT: int
 ALL_ABIS: List[int]
 SUPPORTED_ABIS: List[int]
 
-Debugger: Any
+
+class Debugger:
+    syscall: int
+    result: int
+    errno: int
+    arg0: int
+    arg1: int
+    arg2: int
+    arg3: int
+    arg4: int
+    arg5: int
+
+    uresult: int
+    uarg0: int
+    uarg1: int
+    uarg2: int
+    uarg3: int
+    uarg4: int
+    uarg5: int
+
+    pid: int
+    tid: int
+    abi: int
+
+    def readstr(self, address: int, max_size: int = ...) -> str: ...
+    def on_return(self, callback: Callable[[], None]): ...
+
+
 Process: Any
 
 AT_FDCWD: int

@@ -2,10 +2,11 @@ import logging
 import os
 import re
 import sys
+from typing import Optional, Tuple
 
-from dmoj.cptbox._cptbox import AT_FDCWD, bsd_get_proc_cwd, bsd_get_proc_fdno
+from dmoj.cptbox._cptbox import AT_FDCWD, Debugger, bsd_get_proc_cwd, bsd_get_proc_fdno
 from dmoj.cptbox.handlers import ACCESS_EACCES, ACCESS_EFAULT, ACCESS_EINVAL, ACCESS_ENAMETOOLONG, ACCESS_ENOENT, \
-    ACCESS_EPERM, ALLOW
+    ACCESS_EPERM, ALLOW, ErrnoHandlerCallback, HandlerCallback
 from dmoj.cptbox.syscalls import *
 from dmoj.cptbox.tracer import MaxLengthExceeded
 from dmoj.utils.unicode import utf8text
@@ -191,7 +192,7 @@ class IsolateTracer(dict):
 
         return re.compile(fs_re)
 
-    def is_write_flags(self, open_flags):
+    def is_write_flags(self, open_flags: int) -> bool:
         for flag in open_write_flags:
             # Strict equality is necessary here, since e.g. O_TMPFILE has multiple bits set,
             # and O_DIRECTORY & O_TMPFILE > 0.
@@ -200,8 +201,8 @@ class IsolateTracer(dict):
 
         return False
 
-    def check_file_access(self, syscall, argument, is_open=False):
-        def check(debugger):
+    def check_file_access(self, syscall, argument, is_open=False) -> HandlerCallback:
+        def check(debugger: Debugger) -> bool:
             file_ptr = getattr(debugger, 'uarg%d' % argument)
             try:
                 file = debugger.readstr(file_ptr)
@@ -221,8 +222,8 @@ class IsolateTracer(dict):
 
         return check
 
-    def check_file_access_at(self, syscall, is_open=False):
-        def check(debugger):
+    def check_file_access_at(self, syscall, is_open=False) -> HandlerCallback:
+        def check(debugger: Debugger) -> bool:
             try:
                 file = debugger.readstr(debugger.uarg1)
             except MaxLengthExceeded as e:
@@ -241,7 +242,7 @@ class IsolateTracer(dict):
 
         return check
 
-    def _file_access_check(self, rel_file, debugger, is_open, flag_reg=1, dirfd=AT_FDCWD):
+    def _file_access_check(self, rel_file, debugger, is_open, flag_reg=1, dirfd=AT_FDCWD) -> Tuple[str, Optional[ErrnoHandlerCallback]]:
         # Either process called open(NULL, ...), or we failed to read the path
         # in cptbox.  Either way this call should not be allowed; if the path
         # was indeed NULL we can end the request before it gets to the kernel
@@ -289,22 +290,22 @@ class IsolateTracer(dict):
 
         return real, None
 
-    def get_full_path(self, debugger, file, dirfd=AT_FDCWD):
+    def get_full_path(self, debugger: Debugger, file: str, dirfd: int = AT_FDCWD) -> str:
         dirfd = (dirfd & 0x7FFFFFFF) - (dirfd & 0x80000000)
         if not file.startswith('/'):
             dir = self._getcwd_pid(debugger.pid) if dirfd == AT_FDCWD else self._getfd_pid(debugger.pid, dirfd)
             file = os.path.join(dir, file)
         return file
 
-    def do_kill(self, debugger):
+    def do_kill(self, debugger: Debugger) -> bool:
         # Allow tgkill to execute as long as the target thread group is the debugged process
         # libstdc++ seems to use this to signal itself, see <https://github.com/DMOJ/judge/issues/183>
         return True if debugger.uarg0 == debugger.pid else ACCESS_EPERM(debugger)
 
-    def do_prlimit(self, debugger):
+    def do_prlimit(self, debugger: Debugger) -> bool:
         return True if debugger.uarg0 in (0, debugger.pid) else ACCESS_EPERM(debugger)
 
-    def do_prctl(self, debugger):
+    def do_prctl(self, debugger: Debugger) -> bool:
         PR_GET_DUMPABLE = 3
         PR_SET_NAME = 15
         PR_GET_NAME = 16

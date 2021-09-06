@@ -36,18 +36,6 @@ def strsignal(signo):
     return "Unknown signal %d" % signo
 
 
-def find_exe_in_path(path):
-    if os.path.isabs(path):
-        return path
-    if os.sep in path:
-        return os.path.abspath(path)
-    for dir in os.environ.get('PATH', os.defpath).split(os.pathsep):
-        p = os.path.join(dir, path)
-        if os.access(p, os.X_OK):
-            return utf8bytes(p)
-    raise OSError()
-
-
 def bool_env(name):
     value = os.environ.get(name, '')
     return value.lower() in ('true', 'yes', '1', 'y', 't')

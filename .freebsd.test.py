@@ -31,13 +31,18 @@ OVERRIDES = {}
 
 def main():
     judgeenv.env['runtime'] = {}
-    judgeenv.env['extra_fs'] = {'PERL': ['/dev/dtrace/helper$'], 'RUBY2': ['/dev/dtrace/helper$']}
+    judgeenv.env['extra_fs'] = {
+        'PERL': [{'exact_file': '/dev/dtrace/helper'}],
+        'RUBY2': [{'exact_file': '/dev/dtrace/helper'}],
+    }
 
     logging.basicConfig(level=logging.INFO)
 
     print('Using extra allowed filesystems:')
     for lang, fs in judgeenv.env['extra_fs'].iteritems():
-        print('%-6s: %s' % (lang, '|'.join(fs)))
+        for rules in fs:
+            for access_type, file in rules.iteritems():
+                print('%-6s: %s: %s' % (lang, access_type, file))
     print()
 
     print('Testing executors...')

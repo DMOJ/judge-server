@@ -1,9 +1,9 @@
 import logging
 import os
-import re
 import sys
 
 from dmoj.cptbox._cptbox import AT_FDCWD, bsd_get_proc_cwd, bsd_get_proc_fdno
+from dmoj.cptbox.filesystem_policies import FilesystemPolicy
 from dmoj.cptbox.handlers import ACCESS_EACCES, ACCESS_ENAMETOOLONG, ACCESS_ENOENT, ACCESS_EPERM, ALLOW
 from dmoj.cptbox.syscalls import *
 from dmoj.cptbox.tracer import MaxLengthExceeded
@@ -183,12 +183,7 @@ class IsolateTracer(dict):
             )
 
     def _compile_fs_jail(self, fs):
-        if fs:
-            fs_re = '|'.join(fs)
-        else:
-            fs_re = '(?!)'  # Disallow accessing everything by default.
-
-        return re.compile(fs_re)
+        return FilesystemPolicy(fs or [])
 
     def is_write_flags(self, open_flags):
         for flag in open_write_flags:
@@ -257,9 +252,7 @@ class IsolateTracer(dict):
 
         is_write = is_open and self.is_write_flags(getattr(debugger, 'uarg%d' % flag_reg))
         fs_jail = self.write_fs_jail if is_write else self.read_fs_jail
-        if fs_jail.match(file) is None:
-            return file, False
-        return file, True
+        return file, fs_jail.check(file)
 
     def get_full_path(self, debugger, file, dirfd=AT_FDCWD):
         dirfd = (dirfd & 0x7FFFFFFF) - (dirfd & 0x80000000)

@@ -3,6 +3,7 @@ import shlex
 import subprocess
 
 from dmoj.contrib import contrib_modules
+from dmoj.cptbox import IS_WSL1
 from dmoj.error import InternalError
 from dmoj.graders.standard import StandardGrader
 from dmoj.judgeenv import env, get_problem_root
@@ -16,6 +17,10 @@ class BridgedInteractiveGrader(StandardGrader):
         self.handler_data = self.problem.config.interactive
         self.interactor_binary = self._generate_interactor_binary()
         self.contrib_type = self.handler_data.get('type', 'default')
+
+        if IS_WSL1:
+            raise InternalError('Using cptbox built on WSL1, bridged interactive grader will not work.')
+
         if self.contrib_type not in contrib_modules:
             raise InternalError('%s is not a valid contrib module' % self.contrib_type)
 

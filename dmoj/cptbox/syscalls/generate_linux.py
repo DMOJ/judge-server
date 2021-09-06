@@ -93,6 +93,10 @@ with open('aliases.list') as aliases:
     for line in aliases:
         names.add(line.split()[1])
 
+with open('freebsd.tbl') as freebsd:
+    for line in freebsd:
+        names.add(line.split()[1])
+
 with open('../syscalls.pyi', 'w') as interface:
     print(
         '''\

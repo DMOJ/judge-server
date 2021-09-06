@@ -25,9 +25,20 @@ env = ConfigNode(
         'compiled_binary_cache_dir': None,  # Location to store cached binaries, defaults to tempdir
         'compiled_binary_cache_size': 100,  # Maximum number of executables to cache (LRU order)
         'runtime': {},
-        # Map of executor: [list of extra allowed file regexes], used to configure
+        # Map of executor: fs_config, used to configure
         # the filesystem sandbox on a per-machine basis, without having to hack
         # executor source.
+        # fs_config is a list of dictionaries. Each dictionary should contain one key/value pair.
+        # Three keys are possible:
+        # `exact_file`, to allow a specific file
+        # `exact_dir`, to allow listing files in a directory
+        # `recursive_dir`, to allow everything under and including a directory
+        # Example YAML:
+        # extra_fs:
+        #   PERL:
+        #   - exact_file: /dev/dtrace/helper
+        #   - exact_dir: /some/exact/directory
+        #   - recursive_dir: /some/directory/and/all/children
         'extra_fs': {},
         # List of judge URLs to ping on problem data updates (the URLs are expected
         # to host judges running with --api-host and --api-port)

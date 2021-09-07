@@ -1,6 +1,6 @@
-from typing import List, Dict
+from typing import List, Dict, Tuple
 
-translator: List[List[int]]
+translator: List[Tuple[List[int], ...]]
 by_name: Dict[str, int]
 by_id: List[str]
 SYSCALL_COUNT: int

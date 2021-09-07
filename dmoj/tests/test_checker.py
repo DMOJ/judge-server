@@ -33,8 +33,8 @@ class CheckerTest(unittest.TestCase):
         self.assert_standard_fail(check, b'ab', b'a b')
 
         # Checkers should handle mixed bytes/str
-        self.assert_standard_pass(check, b'a', u'a')
-        self.assert_standard_fail(check, b'a', u'b')
+        self.assert_standard_pass(check, b'a', 'a')
+        self.assert_standard_fail(check, b'a', 'b')
 
     def assert_wa_feedback(self, result, feedback):
         self.assertIsInstance(result, CheckerResult)

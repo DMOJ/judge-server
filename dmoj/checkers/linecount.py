@@ -4,7 +4,7 @@ from typing import Union
 from dmoj.result import CheckerResult
 from dmoj.utils.unicode import utf8bytes
 
-verdict = u'\u2717\u2713'
+verdict = '\u2717\u2713'
 
 
 def check(

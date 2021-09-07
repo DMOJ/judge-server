@@ -29,6 +29,7 @@ _SYSCALL_INDICIES[PTBOX_ABI_FREEBSD_X64] = 4
 _SYSCALL_INDICIES[PTBOX_ABI_ARM64] = 5
 
 FREEBSD = sys.platform.startswith('freebsd')
+BAD_SECCOMP = sys.platform == 'linux' and tuple(map(int, os.uname().release.partition('-')[0].split('.'))) < (4, 8)
 
 _address_bits = {
     PTBOX_ABI_X86: 32,
@@ -111,6 +112,10 @@ class TracedPopen(Process):
     ):
         self._executable = executable
         self.use_seccomp = security is not None and not avoid_seccomp
+
+        if self.use_seccomp and BAD_SECCOMP:
+            log.warning('Requires Linux 4.8+ to use seccomp, you have: %s', os.uname().release)
+            self.use_seccomp = False
 
         self._args = args
         self._chdir = cwd

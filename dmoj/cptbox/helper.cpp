@@ -93,9 +93,16 @@ int cptbox_child_run(const struct child_config *config) {
         }
 
         for (int syscall = 0; syscall < MAX_SYSCALL; syscall++) {
-            if (config->seccomp_whitelist[syscall]) {
+            int handler = config->seccomp_handlers[syscall];
+            if (handler == 0) {
                 if ((rc = seccomp_rule_add(ctx, SCMP_ACT_ALLOW, syscall, 0))) {
-                    fprintf(stderr, "seccomp_rule_add(..., %d): %s\n", syscall, strerror(-rc));
+                    fprintf(stderr, "seccomp_rule_add(..., SCMP_ACT_ALLOW, %d): %s\n", syscall, strerror(-rc));
+                    // This failure is not fatal, it'll just cause the syscall to trap anyway.
+                }
+            } else if (handler > 0) {
+                if ((rc = seccomp_rule_add(ctx, SCMP_ACT_ERRNO(handler), syscall, 0))) {
+                    fprintf(stderr, "seccomp_rule_add(..., SCMP_ACT_ERRNO(%d), %d): %s\n",
+                        handler, syscall, strerror(-rc));
                     // This failure is not fatal, it'll just cause the syscall to trap anyway.
                 }
             }

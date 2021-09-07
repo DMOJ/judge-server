@@ -8,10 +8,7 @@ from dmoj.utils import builtin_int_patch
 int_ = int
 
 
-@parameterized_class([
-    {'use_patch': True},
-    {'use_patch': False},
-])
+@parameterized_class([{'use_patch': True}, {'use_patch': False}])
 class IntrospectionTest(unittest.TestCase):
     def setUp(self) -> None:
         if self.use_patch:
@@ -55,8 +52,9 @@ class ParseTest(unittest.TestCase):
         self.assertEqual(int('1'), 1)
         self.assertEqual(int('-1'), -1)
         self.assertEqual(int('1337'), 1337)
-        self.assertEqual(int('9' * builtin_int_patch.INT_MAX_NUMBER_DIGITS),
-                         10 ** builtin_int_patch.INT_MAX_NUMBER_DIGITS - 1)
+        self.assertEqual(
+            int('9' * builtin_int_patch.INT_MAX_NUMBER_DIGITS), 10 ** builtin_int_patch.INT_MAX_NUMBER_DIGITS - 1
+        )
 
     def test_parse_string_long(self):
         with self.assertRaises(ValueError):
@@ -65,5 +63,6 @@ class ParseTest(unittest.TestCase):
     def test_parse_int(self):
         self.assertEqual(int(1), 1)
         self.assertEqual(int(-1337), -1337)
-        self.assertEqual(int(10 ** builtin_int_patch.INT_MAX_NUMBER_DIGITS),
-                         10 ** builtin_int_patch.INT_MAX_NUMBER_DIGITS)
+        self.assertEqual(
+            int(10 ** builtin_int_patch.INT_MAX_NUMBER_DIGITS), 10 ** builtin_int_patch.INT_MAX_NUMBER_DIGITS
+        )

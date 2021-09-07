@@ -7,8 +7,12 @@ from dmoj.utils.unicode import utf8bytes
 
 
 def check(
-    process_output: bytes, judge_output: bytes, point_value: float = 1,
-    point_distribution: List[int] = [1], filler_lines_required: bool = True, **kwargs
+    process_output: bytes,
+    judge_output: bytes,
+    point_value: float = 1,
+    point_distribution: List[int] = [1],
+    filler_lines_required: bool = True,
+    **kwargs
 ) -> Union[CheckerResult, bool]:
     judge_lines = list(filter(None, resplit(b'[\r\n]', utf8bytes(judge_output))))
 

@@ -43,8 +43,11 @@ def handle_procctl(debugger):
     P_PID = 0
     PROC_STACKGAP_CTL = 17
     PROC_STACKGAP_STATUS = 18
-    return (debugger.arg0 == P_PID and debugger.arg1 == debugger.pid and
-            debugger.arg2 in (PROC_STACKGAP_CTL, PROC_STACKGAP_STATUS))
+    return (
+        debugger.arg0 == P_PID
+        and debugger.arg1 == debugger.pid
+        and debugger.arg2 in (PROC_STACKGAP_CTL, PROC_STACKGAP_STATUS)
+    )
 
 
 class JavaExecutor(SingleDigitVersionMixin, CompiledExecutor):
@@ -82,8 +85,11 @@ class JavaExecutor(SingleDigitVersionMixin, CompiledExecutor):
         return self.get_vm()
 
     def get_fs(self):
-        return super().get_fs() + [f'{re.escape(self._agent_file)}$'] + \
-            [f'{re.escape(str(parent))}$' for parent in PurePath(self._agent_file).parents]
+        return (
+            super().get_fs()
+            + [f'{re.escape(self._agent_file)}$']
+            + [f'{re.escape(str(parent))}$' for parent in PurePath(self._agent_file).parents]
+        )
 
     def get_write_fs(self):
         return super().get_write_fs() + [os.path.join(self._dir, 'submission_jvm_crash.log')]

@@ -3,4 +3,5 @@ requires = ["setuptools", "wheel", "Cython"]
 
 [tool.black]
 line-length = 120
-skip-string-normalization = true
+skip-string-normalization = true  # Black prefers double-quotes
+extend-exclude = '^/testsuite/'

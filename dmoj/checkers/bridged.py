@@ -55,7 +55,7 @@ def check(
             )
         )
         process = executor.launch(
-            *checker_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, memory=memory_limit, time=time_limit,
+            *checker_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, memory=memory_limit, time=time_limit
         )
 
         proc_output, error = process.communicate()

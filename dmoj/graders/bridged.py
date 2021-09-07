@@ -106,5 +106,5 @@ class BridgedInteractiveGrader(StandardGrader):
         flags = self.handler_data.get('flags', [])
         unbuffered = self.handler_data.get('unbuffered', True)
         return compile_with_auxiliary_files(
-            filenames, flags, self.handler_data.lang, self.handler_data.compiler_time_limit, unbuffered,
+            filenames, flags, self.handler_data.lang, self.handler_data.compiler_time_limit, unbuffered
         )

@@ -1,13 +1,19 @@
-from typing import Any
+from dmoj.cptbox._cptbox import Debugger
 
 ALLOW: int
 DISALLOW: int
 _CALLBACK: int
 STDOUTERR: int
-ACCESS_EACCES: Any
-ACCESS_EAGAIN: Any
-ACCESS_EFAULT: Any
-ACCESS_EINVAL: Any
-ACCESS_ENOENT: Any
-ACCESS_EPERM: Any
-ACCESS_ENAMETOOLONG: Any
+
+class ErrnoHandlerCallback:
+    errno: int
+    error_name: str
+    def __call__(self, debugger: Debugger) -> bool: ...
+
+ACCESS_EACCES: ErrnoHandlerCallback
+ACCESS_EAGAIN: ErrnoHandlerCallback
+ACCESS_EFAULT: ErrnoHandlerCallback
+ACCESS_EINVAL: ErrnoHandlerCallback
+ACCESS_ENOENT: ErrnoHandlerCallback
+ACCESS_EPERM: ErrnoHandlerCallback
+ACCESS_ENAMETOOLONG: ErrnoHandlerCallback

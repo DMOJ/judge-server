@@ -6,7 +6,7 @@ import signal
 import subprocess
 import sys
 import threading
-from typing import List, Optional
+from typing import Callable, List, Optional
 
 from dmoj.cptbox._cptbox import *
 from dmoj.cptbox.handlers import ALLOW, DISALLOW, _CALLBACK
@@ -38,6 +38,8 @@ _address_bits = {
     PTBOX_ABI_ARM64: 64,
     PTBOX_ABI_FREEBSD_X64: 64,
 }
+
+HandlerCallback = Callable[[Debugger], bool]
 
 
 class MaxLengthExceeded(ValueError):

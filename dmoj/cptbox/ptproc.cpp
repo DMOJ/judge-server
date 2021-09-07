@@ -96,15 +96,6 @@ int pt_process::protection_fault(int syscall, int type) {
     return PTBOX_EXIT_PROTECTION;
 }
 
-bool pt_process::use_seccomp(bool enabled) {
-    if (pid) {
-        // Do not allow updates after the process is spawned.
-        return false;
-    }
-    _use_seccomp = PTBOX_SECCOMP && enabled;
-    return true;
-}
-
 int pt_process::monitor() {
     bool in_syscall = false, first = true, spawned = false;
     struct timespec start, end, delta;
@@ -135,7 +126,7 @@ int pt_process::monitor() {
         timespec_sub(&end, &start, &delta);
         timespec_add(&exec_time, &delta, &exec_time);
         int signal = 0;
-        bool trap_next_syscall_event = _trace_syscalls && !_use_seccomp;
+        bool trap_next_syscall_event = _trace_syscalls && PTBOX_FREEBSD;
 
         //printf("pid: %d (%d)\n", pid, this->pid);
 
@@ -175,7 +166,7 @@ int pt_process::monitor() {
 #else
             // This is right after SIGSTOP is received:
             ptrace(PTRACE_SETOPTIONS, pid, NULL,
-                   PTRACE_O_TRACEEXIT | (_use_seccomp ? PTRACE_O_TRACESECCOMP : 0) | PTRACE_O_TRACESYSGOOD |
+                   PTRACE_O_TRACEEXIT | PTRACE_O_TRACESECCOMP | PTRACE_O_TRACESYSGOOD |
 #ifdef PTRACE_O_EXITKILL // Kill all sandboxed process automatically when process exits.
                    PTRACE_O_EXITKILL |
 #endif
@@ -195,7 +186,7 @@ int pt_process::monitor() {
             debugger->setpid(pid);
             debugger->update_syscall(&lwpi);
 #else
-        if ((_use_seccomp && (status >> 8) == (SIGTRAP | PTRACE_EVENT_SECCOMP << 8)) ||
+        if ((status >> 8) == (SIGTRAP | PTRACE_EVENT_SECCOMP << 8) ||
                 WSTOPSIG(status) == (0x80 | SIGTRAP)) {
             debugger->settid(pid);
 #endif
@@ -228,7 +219,7 @@ int pt_process::monitor() {
             in_syscall = lwpi.pl_flags & PL_FLAG_SCE;
             debugger->_bsd_in_syscall = in_syscall;
 #else
-            in_syscall = _use_seccomp ? (status >> 8) == (SIGTRAP | PTRACE_EVENT_SECCOMP << 8) : debugger->is_enter();
+            in_syscall = (status >> 8) == (SIGTRAP | PTRACE_EVENT_SECCOMP << 8);
 #endif
 
             //printf("%d: %s syscall %d\n", pid, in_syscall ? "Enter" : "Exit", syscall);
@@ -277,15 +268,15 @@ int pt_process::monitor() {
             }
 
             if (debugger->on_return_.count(pid)) {
-                if (!in_syscall) {
+                if (in_syscall) {
+                    // When using seccomp, we'll need to specifically enable tracing after entering
+                    // to get the corresponding syscall-exit-stop, which we will use to run on_return.
+                    trap_next_syscall_event = true;
+                } else {
                     // Fire the on_return handler if we are in a syscall-exit-stop.
                     std::pair<pt_syscall_return_callback, void*> callback = debugger->on_return_[pid];
                     callback.first(callback.second, syscall);
                     debugger->on_return_.erase(pid);
-                } else if (_use_seccomp) {
-                    // When using seccomp, we'll need to specifically enable tracing after entering
-                    // to get the corresponding syscall-exit-stop, which we will use to run on_return.
-                    trap_next_syscall_event = true;
                 }
             }
 

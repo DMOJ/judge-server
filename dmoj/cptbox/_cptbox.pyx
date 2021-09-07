@@ -13,7 +13,7 @@ __all__ = ['Process', 'Debugger', 'bsd_get_proc_cwd', 'bsd_get_proc_fdno', 'MAX_
            'PTBOX_ABI_X86', 'PTBOX_ABI_X64', 'PTBOX_ABI_X32', 'PTBOX_ABI_ARM', 'PTBOX_ABI_ARM64',
            'PTBOX_ABI_FREEBSD_X64', 'PTBOX_ABI_INVALID', 'PTBOX_ABI_COUNT',
            'PTBOX_SPAWN_FAIL_NO_NEW_PRIVS', 'PTBOX_SPAWN_FAIL_SECCOMP', 'PTBOX_SPAWN_FAIL_TRACEME',
-           'PTBOX_SPAWN_FAIL_EXECVE', 'IS_WSL1']
+           'PTBOX_SPAWN_FAIL_EXECVE']
 
 
 cdef extern from 'ptbox.h' nogil:
@@ -66,11 +66,8 @@ cdef extern from 'ptbox.h' nogil:
         double wall_clock_time()
         const rusage *getrusage()
         bint was_initialized()
-        bool use_seccomp()
-        bool use_seccomp(bool enabled)
 
     cdef bint PTBOX_FREEBSD
-    cdef bint PTBOX_SECCOMP
     cdef int MAX_SYSCALL
 
     cdef int PTBOX_EVENT_ATTACH
@@ -118,7 +115,6 @@ cdef extern from 'helper.h' nogil:
         int stdin_
         int stdout_
         int stderr_
-        bool use_seccomp
         int abi_for_seccomp
         int *seccomp_handlers
 
@@ -132,8 +128,6 @@ cdef extern from 'helper.h' nogil:
         PTBOX_SPAWN_FAIL_SECCOMP
         PTBOX_SPAWN_FAIL_TRACEME
         PTBOX_SPAWN_FAIL_EXECVE
-
-        IS_WSL1
 
     int _memory_fd_create "memory_fd_create"()
     int _memory_fd_seal "memory_fd_seal"(int fd)
@@ -249,9 +243,7 @@ cdef class Debugger:
 
     @syscall.setter
     def syscall(self, int value):
-        # When using seccomp, -1 as syscall means "skip"; when we are not,
-        # we swap with a harmless syscall without side-effects (getpid).
-        if not self.process._use_seccomp() and value == -1:
+        if PTBOX_FREEBSD and value == -1:
             value = self.noop_syscall_id
         global errno
         errno = self.thisptr.syscall(value)
@@ -498,8 +490,7 @@ cdef class Process:
             config.argv = alloc_byte_array(args)
             config.envp = alloc_byte_array(env)
 
-            config.use_seccomp = self._use_seccomp()
-            if config.use_seccomp:
+            if not PTBOX_FREEBSD:
                 handlers = self._get_seccomp_handlers()
                 assert len(handlers) == MAX_SYSCALL
 
@@ -524,18 +515,6 @@ cdef class Process:
         self._exitcode = exitcode
         self._exited = True
         return self._exitcode
-
-    cdef inline bool _use_seccomp(self):
-        return self.process.use_seccomp()
-
-    @property
-    def use_seccomp(self):
-        return self.process.use_seccomp()
-
-    @use_seccomp.setter
-    def use_seccomp(self, bool enabled):
-        if not self.process.use_seccomp(enabled):
-            raise RuntimeError("Can't change whether seccomp is used after process is created.")
 
     @property
     def was_initialized(self):

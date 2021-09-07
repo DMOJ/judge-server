@@ -17,14 +17,6 @@ if os.name == 'nt':
 has_pyx = os.path.exists(os.path.join(os.path.dirname(__file__), 'dmoj', 'cptbox', '_cptbox.pyx'))
 
 try:
-    with open('/proc/version') as f:
-        is_wsl1 = 'Microsoft' in f.read()
-except IOError:
-    is_wsl1 = False
-
-# Allow manually disabling seccomp on old kernels. WSL 1 doesn't have seccomp.
-has_seccomp = sys.platform.startswith('linux') and not is_wsl1 and os.environ.get('DMOJ_USE_SECCOMP') != 'no'
-try:
     parallel = int(os.environ['DMOJ_PARALLEL'])
 except (KeyError, ValueError):
     parallel = os.cpu_count()
@@ -153,25 +145,14 @@ SOURCE_DIR = os.path.dirname(__file__)
 cptbox_sources = [os.path.join(SOURCE_DIR, 'dmoj', 'cptbox', f) for f in cptbox_sources]
 
 libs = ['rt']
-
-if has_seccomp:
-    libs += ['seccomp']
 if sys.platform.startswith('freebsd'):
     libs += ['procstat']
-
-macros = []
-if is_wsl1:
-    macros.append(('WSL1', None))
-
-if not has_seccomp:
-    print('*' * 79)
-    print('Building without seccomp, expect lower sandbox performance.')
-    print('*' * 79)
-    macros.append(('PTBOX_NO_SECCOMP', None))
+else:
+    libs += ['seccomp']
 
 extensions = [
     Extension('dmoj.checkers._checker', sources=['dmoj/checkers/_checker.c']),
-    Extension('dmoj.cptbox._cptbox', sources=cptbox_sources, language='c++', libraries=libs, define_macros=macros),
+    Extension('dmoj.cptbox._cptbox', sources=cptbox_sources, language='c++', libraries=libs),
     SimpleSharedObject('dmoj.utils.setbufsize', sources=['dmoj/utils/setbufsize.c']),
 ]
 

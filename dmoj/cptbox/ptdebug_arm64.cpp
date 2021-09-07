@@ -21,9 +21,7 @@ bool pt_debugger::supports_abi(int abi) {
     return false;
 }
 
-#if PTBOX_SECCOMP
 uint32_t pt_debugger::seccomp_non_native_arch_list[] = { SCMP_ARCH_ARM, 0 };
-#endif
 
 int pt_debugger::abi_from_reg_size(size_t reg_size) {
     return reg_size == sizeof regs.arm32 ? PTBOX_ABI_ARM : PTBOX_ABI_ARM64;
@@ -102,12 +100,6 @@ MAKE_ACCESSOR(arg5, r5, regs[5])
 #undef MAKE_ACCESSOR
 
 bool pt_debugger::is_end_of_first_execve() {
-    if (process->use_seccomp()) {
-        return syscall() == 221;
-    } else {
-        // There is no orig_x8 on ARM64, and execve clears all registers when finished.
-        // Therefore, 0 is the register value when coming out of a system call.
-        return !is_enter() && syscall() == 0 && result() == 0;
-    }
+    return syscall() == 221;
 }
 #endif /* defined(__arm64__) || defined(__aarch64__) */

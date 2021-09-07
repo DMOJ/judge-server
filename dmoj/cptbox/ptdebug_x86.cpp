@@ -13,9 +13,7 @@ bool pt_debugger::supports_abi(int abi) {
     return abi == PTBOX_ABI_X86;
 }
 
-#if PTBOX_SECCOMP
 uint32_t pt_debugger::seccomp_non_native_arch_list[] = { 0 };
-#endif
 
 int pt_debugger::abi_from_reg_size(size_t) {
     return PTBOX_ABI_X86;
@@ -90,10 +88,6 @@ long pt_debugger::arg5() {
 void pt_debugger::arg5(long data) {}
 
 bool pt_debugger::is_end_of_first_execve() {
-    if (process->use_seccomp()) {
-        return syscall() == 11;
-    } else {
-        return !is_enter() && syscall() == 11 && result() == 0;
-    }
+    return syscall() == 11;
 }
 #endif /* __i386__ */

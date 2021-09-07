@@ -8,11 +8,9 @@ addons:
       - jq
 jobs:
   include:
-    - env: DMOJ_USE_SECCOMP="yes" PYTHON_VERSION=3.8 ARCH=aarch64 DOCKER_IMAGE=dmoj/runtimes-tier1
+    - env: PYTHON_VERSION=3.8 ARCH=aarch64 DOCKER_IMAGE=dmoj/runtimes-tier1
       arch: arm64
-    - env: DMOJ_USE_SECCOMP="yes" PYTHON_VERSION=3.9 ARCH=aarch64 DOCKER_IMAGE=dmoj/runtimes-tier1
-      arch: arm64
-    - env: DMOJ_USE_SECCOMP="no"  PYTHON_VERSION=3.9 ARCH=aarch64 DOCKER_IMAGE=dmoj/runtimes-tier1
+    - env: PYTHON_VERSION=3.9 ARCH=aarch64 DOCKER_IMAGE=dmoj/runtimes-tier1
       arch: arm64
 install:
   - docker pull "$DOCKER_IMAGE"
@@ -49,7 +47,7 @@ script:
     EOF
   - chmod a+x run run-su
   - mkdir -p /home/travis/.cache/pip && sudo chown root:root -R /home/travis/.cache/pip
-  - docker run -e PYTHON_VERSION="$PYTHON_VERSION" -e DMOJ_USE_SECCOMP="$DMOJ_USE_SECCOMP" -v "$(pwd):/code" -v /home/travis/.cache:/root/.cache --cap-add=SYS_PTRACE "$DOCKER_IMAGE"
+  - docker run -e PYTHON_VERSION="$PYTHON_VERSION" -v "$(pwd):/code" -v /home/travis/.cache:/root/.cache --cap-add=SYS_PTRACE "$DOCKER_IMAGE"
   - sudo chown -R travis:travis /home/travis/.cache/pip
 after_script:
   - bash <(curl -s https://codecov.io/bash)

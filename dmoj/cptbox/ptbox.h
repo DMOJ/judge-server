@@ -8,7 +8,6 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/param.h>
-
 #include <sys/ptrace.h>
 
 #include <map>
@@ -19,19 +18,10 @@
 #   define PTBOX_FREEBSD 0
 #endif
 
-#ifndef PTBOX_NO_SECCOMP
-#define PTBOX_SECCOMP 1
-#else
-#define PTBOX_SECCOMP 0
-#endif
-
-#if PTBOX_SECCOMP
-#include <seccomp.h>
-#endif
-
 #if PTBOX_FREEBSD
 #include "ext_freebsd.h"
 #else
+#include <seccomp.h>
 #include "ext_linux.h"
 #endif
 
@@ -123,8 +113,6 @@ public:
     double wall_clock_time();
     const rusage *getrusage() { return &_rusage; }
     bool was_initialized() { return _initialized; }
-    bool use_seccomp() { return _use_seccomp; }
-    bool use_seccomp(bool enable);
 protected:
     int dispatch(int event, unsigned long param);
     int protection_fault(int syscall, int type = PTBOX_EVENT_PROTECTION);
@@ -140,7 +128,6 @@ private:
     void *event_context;
     bool _trace_syscalls;
     bool _initialized;
-    bool _use_seccomp;
 };
 
 class pt_debugger {
@@ -184,10 +171,6 @@ public:
 #else
     void settid(pid_t tid);
     void tid_reset(pid_t tid);
-    bool is_enter() {
-      // All seccomp events are enter events.
-      return process->use_seccomp() ? true : syscall_[tid] != 0;
-    }
 #endif
 
     int pre_syscall();
@@ -196,7 +179,7 @@ public:
 
     static int native_abi;
     static bool supports_abi(int);
-#if PTBOX_SECCOMP
+#if !PTBOX_FREEBSD
     static uint32_t seccomp_non_native_arch_list[];
 #endif
 

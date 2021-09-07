@@ -99,7 +99,6 @@ class TracedPopen(Process):
         args: List[bytes],
         *,
         executable: bytes,
-        avoid_seccomp: bool = False,
         security=None,
         time: int = 0,
         memory: int = 0,
@@ -116,11 +115,9 @@ class TracedPopen(Process):
         wall_time: Optional[float] = None,
     ) -> None:
         self._executable = executable
-        self.use_seccomp = security is not None and not avoid_seccomp
 
-        if self.use_seccomp and BAD_SECCOMP:
-            log.warning('Requires Linux 4.8+ to use seccomp, you have: %s', os.uname().release)
-            self.use_seccomp = False
+        if BAD_SECCOMP:
+            raise RuntimeError(f'Sandbox requires Linux 4.8+ to use seccomp, you have {os.uname().release}')
 
         self._args = args
         self._chdir = cwd

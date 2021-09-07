@@ -52,11 +52,6 @@ void pt_debugger::tid_reset(pid_t tid) {
 
 void pt_debugger::settid(pid_t tid) {
     this->tid = tid;
-    if (!process->use_seccomp()) {
-        // All seccomp syscall events are enter events
-        if (!syscall_.count(tid)) syscall_[tid] = 0;
-        syscall_[tid] ^= 1;
-    }
 }
 #endif
 

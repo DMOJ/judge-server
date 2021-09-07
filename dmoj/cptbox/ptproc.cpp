@@ -1,3 +1,4 @@
+#define _DEFAULT_SOURCE
 #define _BSD_SOURCE
 
 #include <errno.h>
@@ -351,7 +352,8 @@ resume_process:
 #if PTBOX_FREEBSD
         ptrace(trap_next_syscall_event ? PT_SYSCALL : PT_CONTINUE, pid, (caddr_t) 1, first ? 0 : signal);
 #else
-        ptrace(trap_next_syscall_event ? PTRACE_SYSCALL : PTRACE_CONT, pid, NULL, first ? NULL : (void*) signal);
+        ptrace(trap_next_syscall_event ? PTRACE_SYSCALL : PTRACE_CONT, pid, NULL,
+               first ? NULL : (void*) (intptr_t) signal);
 #endif
         first = false;
     }

@@ -161,7 +161,7 @@ static int pos_int_from_ascii(char *name) {
     return num;
 }
 
-static void cptbox_close_fd(int fd) {
+static inline void cptbox_close_fd(int fd) {
     while (close(fd) < 0 && errno == EINTR);
 }
 
@@ -172,7 +172,7 @@ static void cptbox_closefrom_brute(int lowfd) {
         cptbox_close_fd(lowfd);
 }
 
-static void cptbox_closefrom_dirent(int lowfd) {
+static inline void cptbox_closefrom_dirent(int lowfd) {
     DIR *d = opendir(FD_DIR);
     dirent *dir;
 
@@ -208,7 +208,7 @@ struct linux_dirent64 {
     char d_name[256];
 };
 
-static void cptbox_closefrom_getdents(int lowfd) {
+static inline void cptbox_closefrom_getdents(int lowfd) {
     int fd_dir = open(FD_DIR, O_RDONLY, 0);
     if (fd_dir == -1) {
         cptbox_closefrom_brute(lowfd);

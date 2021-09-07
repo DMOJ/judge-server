@@ -23,8 +23,17 @@ class TestManager:
         self.output('\t\t' + message.replace('\r\n', '\n').replace('\n', '\r\n\t\t'))
         self.failed = True
 
-    def set_expected(self, codes_all, codes_cases, score_all, score_cases,
-                     feedback_all, feedback_cases, extended_feedback_all, extended_feedback_cases):
+    def set_expected(
+        self,
+        codes_all,
+        codes_cases,
+        score_all,
+        score_cases,
+        feedback_all,
+        feedback_cases,
+        extended_feedback_all,
+        extended_feedback_cases,
+    ):
         self.failed = False
         self.codes_all = codes_all
         self.codes_cases = codes_cases
@@ -59,8 +68,9 @@ class TestManager:
                     % (position, result.points, ', '.join(self.score_cases[position]))
                 )
         elif self.score_all is not None and result.points not in self.score_all:
-            self.fail('Unexpected global score: %s, expecting %s' % (
-                result.points, ', '.join(map(str, self.score_all))))
+            self.fail(
+                'Unexpected global score: %s, expecting %s' % (result.points, ', '.join(map(str, self.score_all)))
+            )
 
         feedback = self.feedback_all
         if position in self.feedback_cases:
@@ -72,8 +82,10 @@ class TestManager:
         if position in self.extended_feedback_cases:
             extended_feedback = self.extended_feedback_cases[position]
         if extended_feedback is not None and result.extended_feedback not in extended_feedback:
-            self.fail('Unexpected extended feedback: "%s", expected: "%s"' %
-                      (result.extended_feedback, '", "'.join(extended_feedback)))
+            self.fail(
+                'Unexpected extended feedback: "%s", expected: "%s"'
+                % (result.extended_feedback, '", "'.join(extended_feedback))
+            )
 
     def compile_error_packet(self, log):
         if 'CE' not in self.codes_all:
@@ -228,9 +240,7 @@ class Tester:
         codes_all, codes_cases = self.parse_expect(
             config.get('expect', 'AC'), config.get('cases', {}), self.parse_expected_codes
         )
-        score_all, score_cases = self.parse_expect(
-            config.get('score'), config.get('score_cases', {}), self.parse_score
-        )
+        score_all, score_cases = self.parse_expect(config.get('score'), config.get('score_cases', {}), self.parse_score)
         feedback_all, feedback_cases = self.parse_expect(
             config.get('feedback'), config.get('feedback_cases', {}), self.parse_feedback
         )
@@ -245,8 +255,14 @@ class Tester:
         for source in sources:
             self.sub_id += 1
             self.manager.set_expected(
-                codes_all, codes_cases, score_all, score_cases, feedback_all,
-                feedback_cases, extended_feedback_all, extended_feedback_cases
+                codes_all,
+                codes_cases,
+                score_all,
+                score_cases,
+                feedback_all,
+                feedback_cases,
+                extended_feedback_all,
+                extended_feedback_cases,
             )
             self.judge.begin_grading(
                 Submission(self.sub_id, problem, language, source, time, memory, False, {}),

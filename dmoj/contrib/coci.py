@@ -26,5 +26,5 @@ class ContribModule(TestlibContribModule):
             return CheckerResult(True, points, feedback=feedback)
         else:
             return super().parse_return_code(
-                proc, executor, point_value, time_limit, memory_limit, feedback, name, stderr,
+                proc, executor, point_value, time_limit, memory_limit, feedback, name, stderr
             )

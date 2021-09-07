@@ -531,10 +531,7 @@ def sanity_check():
 
         # However running as root on Linux is a Bad Idea
         if os.getuid() == 0:
-            print(
-                'running the judge as root is unsafe, please use an unprivileged user instead',
-                file=sys.stderr
-            )
+            print('running the judge as root is unsafe, please use an unprivileged user instead', file=sys.stderr)
             return False
 
         # Our sandbox filter is long but simple, so we can see large improvements

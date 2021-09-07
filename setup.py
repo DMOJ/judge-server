@@ -56,10 +56,20 @@ class SimpleSharedObject(Extension, object):
             self.ext_names.add(name.split('.')[-1])
 
 
-def parallel_compile(self, sources, output_dir=None, macros=None, include_dirs=None, debug=0, extra_preargs=None,
-                     extra_postargs=None, depends=None):
-    macros, objects, extra_postargs, pp_opts, build = \
-        self._setup_compile(output_dir, macros, include_dirs, sources, depends, extra_postargs)
+def parallel_compile(
+    self,
+    sources,
+    output_dir=None,
+    macros=None,
+    include_dirs=None,
+    debug=0,
+    extra_preargs=None,
+    extra_postargs=None,
+    depends=None,
+):
+    macros, objects, extra_postargs, pp_opts, build = self._setup_compile(
+        output_dir, macros, include_dirs, sources, depends, extra_postargs
+    )
     cc_args = self._get_cc_args(pp_opts, debug, extra_preargs)
 
     def compile_object(obj):
@@ -124,8 +134,17 @@ class build_ext_dmoj(build_ext, object):
         print('*' * 79)
 
 
-cptbox_sources = ['_cptbox.pyx', 'helper.cpp', 'ptdebug.cpp', 'ptdebug_x86.cpp', 'ptdebug_x64.cpp',
-                  'ptdebug_arm.cpp', 'ptdebug_arm64.cpp', 'ptdebug_freebsd_x64.cpp', 'ptproc.cpp']
+cptbox_sources = [
+    '_cptbox.pyx',
+    'helper.cpp',
+    'ptdebug.cpp',
+    'ptdebug_x86.cpp',
+    'ptdebug_x64.cpp',
+    'ptdebug_arm.cpp',
+    'ptdebug_arm64.cpp',
+    'ptdebug_freebsd_x64.cpp',
+    'ptproc.cpp',
+]
 
 if not has_pyx:
     cptbox_sources[0] = cptbox_sources[0].replace('.pyx', '.cpp')
@@ -150,10 +169,11 @@ if not has_seccomp:
     print('*' * 79)
     macros.append(('PTBOX_NO_SECCOMP', None))
 
-extensions = [Extension('dmoj.checkers._checker', sources=['dmoj/checkers/_checker.c']),
-              Extension('dmoj.cptbox._cptbox', sources=cptbox_sources,
-                        language='c++', libraries=libs, define_macros=macros),
-              SimpleSharedObject('dmoj.utils.setbufsize', sources=['dmoj/utils/setbufsize.c'])]
+extensions = [
+    Extension('dmoj.checkers._checker', sources=['dmoj/checkers/_checker.c']),
+    Extension('dmoj.cptbox._cptbox', sources=cptbox_sources, language='c++', libraries=libs, define_macros=macros),
+    SimpleSharedObject('dmoj.utils.setbufsize', sources=['dmoj/utils/setbufsize.c']),
+]
 
 with io.open(os.path.join(os.path.dirname(__file__), 'README.md'), encoding='utf-8') as f:
     readme = f.read()
@@ -171,16 +191,13 @@ setup(
             'dmoj = dmoj.judge:main',
             'dmoj-cli = dmoj.cli:main',
             'dmoj-autoconf = dmoj.executors.autoconfig:main',
-        ],
+        ]
     },
     ext_modules=cythonize(extensions),
     install_requires=['watchdog', 'pyyaml', 'termcolor', 'pygments', 'setproctitle', 'pylru'],
     tests_require=['requests', 'parameterized'],
-    extras_require={
-        'test': ['requests', 'parameterized'],
-    },
+    extras_require={'test': ['requests', 'parameterized']},
     cmdclass={'build_ext': build_ext_dmoj},
-
     author='DMOJ Team',
     author_email='contact@dmoj.ca',
     url='https://github.com/DMOJ/judge-server',

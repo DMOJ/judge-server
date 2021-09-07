@@ -80,8 +80,11 @@ class CheckerTest(unittest.TestCase):
         self.assertFalse(check(b'1', b'1\n2', point_distribution=[1, 1]))
         self.assertFalse(check(b'1\n2', b'1'))
 
-        self.assert_partial(check(b'1', b'1\n2', filler_lines_required=False, point_distribution=[4, 6]),
-                            expected_points=0.4, passed=True)
+        self.assert_partial(
+            check(b'1', b'1\n2', filler_lines_required=False, point_distribution=[4, 6]),
+            expected_points=0.4,
+            passed=True,
+        )
         self.assert_partial(check(b'1\n3', b'1\n2', point_distribution=[4, 6]), expected_points=0.4, passed=True)
 
         self.assert_partial(check(b'3\n2', b'1\n2', point_distribution=[4, 6]), expected_points=0.6, passed=True)

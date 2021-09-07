@@ -28,8 +28,9 @@ def check(
             count += 1
 
     return CheckerResult(
-        count == len(judge_lines), point_value * count / len(judge_lines),
-        extended_feedback='Case Feedback:\n' + ''.join(cases) if feedback else ''
+        count == len(judge_lines),
+        point_value * count / len(judge_lines),
+        extended_feedback='Case Feedback:\n' + ''.join(cases) if feedback else '',
     )
 
 

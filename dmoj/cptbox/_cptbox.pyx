@@ -120,7 +120,7 @@ cdef extern from 'helper.h' nogil:
         int stderr_
         bool use_seccomp
         int abi_for_seccomp
-        bint *seccomp_whitelist
+        int *seccomp_handlers
 
     void cptbox_closefrom(int lowfd)
     int cptbox_child_run(child_config *)
@@ -474,14 +474,14 @@ cdef class Process:
     cpdef _cpu_time_exceeded(self):
         pass
 
-    cpdef _get_seccomp_whitelist(self):
-        raise NotImplementedError()
+    cpdef _get_seccomp_handlers(self):
+        return [-1] * MAX_SYSCALL
 
     cpdef _spawn(self, file, args, env=(), chdir=''):
         cdef child_config config
         config.argv = NULL
         config.envp = NULL
-        config.seccomp_whitelist = NULL
+        config.seccomp_handlers = NULL
 
         try:
             config.address_space = self._child_address
@@ -500,20 +500,22 @@ cdef class Process:
 
             config.use_seccomp = self._use_seccomp()
             if config.use_seccomp:
-                whitelist = self._get_seccomp_whitelist()
-                assert len(whitelist) == MAX_SYSCALL
-                config.seccomp_whitelist = <bint*>malloc(sizeof(bint) * MAX_SYSCALL)
-                if not config.seccomp_whitelist:
+                handlers = self._get_seccomp_handlers()
+                assert len(handlers) == MAX_SYSCALL
+
+                config.seccomp_handlers = <int*>malloc(sizeof(int) * MAX_SYSCALL)
+                if not config.seccomp_handlers:
                     PyErr_NoMemory()
+
                 for i in range(MAX_SYSCALL):
-                    config.seccomp_whitelist[i] = whitelist[i]
+                    config.seccomp_handlers[i] = handlers[i]
 
             if self.process.spawn(pt_child, &config):
                 raise RuntimeError('failed to spawn child')
         finally:
             free(config.argv)
             free(config.envp)
-            free(config.seccomp_whitelist)
+            free(config.seccomp_handlers)
 
     cpdef _monitor(self):
         cdef int exitcode

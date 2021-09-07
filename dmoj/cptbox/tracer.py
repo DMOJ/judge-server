@@ -9,7 +9,7 @@ import threading
 from typing import Callable, List, Optional
 
 from dmoj.cptbox._cptbox import *
-from dmoj.cptbox.handlers import ALLOW, DISALLOW, _CALLBACK
+from dmoj.cptbox.handlers import ALLOW, DISALLOW, ErrnoHandlerCallback, _CALLBACK
 from dmoj.cptbox.syscalls import SYSCALL_COUNT, by_id, sys_exit, sys_exit_group, sys_getpid, translator
 from dmoj.utils.communicate import safe_communicate as _safe_communicate
 from dmoj.utils.os_ext import OOM_SCORE_ADJ_MAX, oom_score_adj
@@ -168,8 +168,8 @@ class TracedPopen(Process):
         if self._spawn_error:
             raise self._spawn_error
 
-    def _get_seccomp_whitelist(self):
-        whitelist = [False] * MAX_SYSCALL_NUMBER
+    def _get_seccomp_handlers(self):
+        handlers = [-1] * MAX_SYSCALL_NUMBER
         index = _SYSCALL_INDICIES[NATIVE_ABI]
         for i in range(SYSCALL_COUNT):
             # Ensure at least one syscall traps.
@@ -180,9 +180,11 @@ class TracedPopen(Process):
             for call in translator[i][index]:
                 if call is None:
                     continue
-                if isinstance(handler, int):
-                    whitelist[call] = handler == ALLOW
-        return whitelist
+                if isinstance(handler, int) and handler == ALLOW:
+                    handlers[call] = 0
+                elif isinstance(handler, ErrnoHandlerCallback):
+                    handlers[call] = handler.errno
+        return handlers
 
     def wait(self):
         self._died.wait()

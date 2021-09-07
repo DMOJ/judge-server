@@ -22,7 +22,7 @@ struct child_config {
     int stdout_;
     int stderr_;
     bool use_seccomp;
-    int *seccomp_whitelist;
+    int *seccomp_handlers;
 };
 
 void cptbox_closefrom(int lowfd);

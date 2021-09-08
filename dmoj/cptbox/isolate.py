@@ -187,6 +187,7 @@ class IsolateTracer(dict):
                     sys_ktimer_delete: ALLOW,
                     sys_cap_getmode: ALLOW,
                     sys_minherit: ALLOW,
+                    sys_thr_set_name: ALLOW,
                 }
             )
 

@@ -157,6 +157,8 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
                 # be killed.
                 try:
                     oom_score_adj(OOM_SCORE_ADJ_MAX)
+                except FileNotFoundError:
+                    pass
                 except Exception:
                     import traceback
 

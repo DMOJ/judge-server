@@ -30,6 +30,9 @@ The judge implements secure grading on Linux and FreeBSD machines.
 
 Versions up to and including [v1.4.0](https://github.com/DMOJ/judge-server/releases/tag/v1.4.0) also supported grading on Windows machines.
 
+Versions up to and including [v3.0.2](https://github.com/DMOJ/judge-server/releases/tag/v3.0.2) also supported grading
+with pure ptrace without seccomp, which is useful on Linux kernel versions before 4.8.
+
 The DMOJ judge does **not** need a root user to run on Linux machines: it will run just fine under a normal user.
 
 Supported languages include:
@@ -107,8 +110,6 @@ $ pip install -e .
 
 Several environment variables can be specified to control the compilation of the sandbox:
 
-* `DMOJ_USE_SECCOMP`; set it to `no` if you're building on a pre-Linux 3.5 kernel to disable `seccomp` filtering in favour of pure `ptrace` (slower).
-   This flag has no effect when building outside of Linux.
 * `DMOJ_TARGET_ARCH`; use it to override the default architecture specified for compiling the sandbox (via `-march`).
    Usually this is `native`, but will not be specified on ARM unless `DMOJ_TARGET_ARCH` is set (a generic, slow build will be compiled instead).
 

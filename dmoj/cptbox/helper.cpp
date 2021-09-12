@@ -22,6 +22,7 @@
 #else
 // No ASLR on FreeBSD... not as of 11.0, anyway
 #   include <sys/personality.h>
+#   include <sys/prctl.h>
 #endif
 
 #if defined(__FreeBSD__) || (defined(__APPLE__) && defined(__MACH__))
@@ -46,12 +47,9 @@ int cptbox_child_run(const struct child_config *config) {
     // There is no ASLR on FreeBSD, but disable it elsewhere
     if (config->personality > 0)
         personality(config->personality);
-#endif
 
-#ifdef PR_SET_NO_NEW_PRIVS  // Since Linux 3.5
     if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0))
         return PTBOX_SPAWN_FAIL_NO_NEW_PRIVS;
-#endif
 
 #ifdef PR_SET_SPECULATION_CTRL  // Since Linux 4.17
     // Turn off Spectre Variant 4 protection in case it is turned on; we don't
@@ -59,6 +57,7 @@ int cptbox_child_run(const struct child_config *config) {
     // best-effort attempt, and don't stop the submission from running if the
     // prctl fails.
     prctl(PR_SET_SPECULATION_CTRL, PR_SPEC_STORE_BYPASS, PR_SPEC_ENABLE, 0, 0);
+#endif
 #endif
 
     if (config->stdin_ >= 0)  dup2(config->stdin_, 0);

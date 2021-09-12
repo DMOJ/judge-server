@@ -1,3 +1,4 @@
+from dmoj.cptbox.filesystem_policies import ExactFile
 from dmoj.executors.compiled_executor import CompiledExecutor
 from dmoj.executors.mixins import NullStdoutMixin
 
@@ -6,6 +7,9 @@ class Executor(NullStdoutMixin, CompiledExecutor):
     ext = 'pas'
     name = 'PAS'
     command = 'fpc'
+    compiler_read_fs = [
+        ExactFile('/etc/fpc.cfg'),
+    ]
     test_program = """\
 var line : string;
 begin

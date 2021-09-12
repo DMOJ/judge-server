@@ -12,6 +12,7 @@ ignore =
     C818  # trailing comma on bare tuple prohibited
 per-file-ignores =
     # F403: import *, F405: name comes from import *
+    ./dmoj/executors/compiled_executor.py:F403,F405
     ./dmoj/cptbox/isolate.py:F403,F405
     ./dmoj/cptbox/tracer.py:F403,F405
     # F821: undefined name, flake8 incorrectly thinks name is deleted

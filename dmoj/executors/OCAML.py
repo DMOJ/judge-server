@@ -1,3 +1,4 @@
+from dmoj.cptbox.filesystem_policies import RecursiveDir
 from dmoj.executors.compiled_executor import CompiledExecutor
 
 
@@ -8,6 +9,9 @@ class Executor(CompiledExecutor):
     ext = 'ml'
     name = 'OCAML'
     command = 'ocamlfind'
+    compiler_read_fs = [
+        RecursiveDir('~/.opam'),
+    ]
     test_program = """
 open! Base
 open! Core

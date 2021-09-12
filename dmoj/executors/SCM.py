@@ -1,3 +1,4 @@
+from dmoj.cptbox.filesystem_policies import RecursiveDir
 from dmoj.executors.compiled_executor import CompiledExecutor
 
 
@@ -6,6 +7,9 @@ class Executor(CompiledExecutor):
     name = 'SCM'
     command = 'chicken-csc'
     command_paths = ['chicken-csc', 'csc']
+    compiler_read_fs = [
+        RecursiveDir('/var/lib/chicken'),
+    ]
     test_program = '(import chicken.io) (map print (read-lines))'
 
     def get_compile_args(self):

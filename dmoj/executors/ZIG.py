@@ -1,3 +1,4 @@
+from dmoj.cptbox.filesystem_policies import RecursiveDir
 from dmoj.executors.compiled_executor import CompiledExecutor
 
 
@@ -6,6 +7,10 @@ class Executor(CompiledExecutor):
     name = 'ZIG'
     command = 'zig'
     compiler_time_limit = 30
+    compiler_read_fs = [
+        RecursiveDir('~/.cache'),
+    ]
+    compiler_write_fs = compiler_read_fs
     test_program = """
 const std = @import("std");
 

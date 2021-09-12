@@ -1,5 +1,6 @@
 import os
 import subprocess
+from pathlib import Path
 
 from dmoj.executors.java_executor import JavaExecutor
 from dmoj.utils.unicode import utf8text
@@ -28,6 +29,9 @@ println System.in.newReader().readLine()
 
     def get_compile_args(self):
         return [self.get_compiler(), self._code]
+
+    def get_compile_env(self):
+        return {'JAVA_HOME': str(Path(os.path.realpath(self.get_vm())).parent.parent)}
 
     @classmethod
     def get_versionable_commands(cls):

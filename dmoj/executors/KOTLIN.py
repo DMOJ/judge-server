@@ -1,3 +1,4 @@
+from dmoj.cptbox.filesystem_policies import ExactFile
 from dmoj.executors.java_executor import JavaExecutor
 
 
@@ -7,6 +8,10 @@ class Executor(JavaExecutor):
 
     compiler = 'kotlinc'
     compiler_time_limit = 20
+    compiler_read_fs = [
+        ExactFile('/bin/uname'),
+        ExactFile('/bin/bash'),
+    ]
     vm = 'kotlin_vm'
 
     test_program = """\

@@ -1,5 +1,6 @@
 import subprocess
 
+from dmoj.cptbox.filesystem_policies import ExactFile
 from dmoj.executors.compiled_executor import CompiledExecutor
 
 
@@ -9,6 +10,9 @@ class Executor(CompiledExecutor):
     command = 'cobc'
     address_grace = 131072
     compile_output_index = 0
+    compiler_read_fs = [
+        ExactFile('/etc/gnucobol/default.conf'),
+    ]
     test_program = """\
 	IDENTIFICATION DIVISION.
 	PROGRAM-ID. HELLO-WORLD.

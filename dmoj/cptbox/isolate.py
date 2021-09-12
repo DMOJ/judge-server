@@ -58,8 +58,6 @@ class IsolateTracer(dict):
                 sys_lstat: self.check_file_access('lstat', 0),
                 sys_lstat64: self.check_file_access('lstat64', 0),
                 sys_fstatat: self.check_file_access_at('fstatat'),
-                sys_mkdir: ACCESS_EPERM,
-                sys_unlink: ACCESS_EPERM,
                 sys_tgkill: self.do_kill,
                 sys_kill: self.do_kill,
                 sys_prctl: self.do_prctl,
@@ -82,6 +80,7 @@ class IsolateTracer(dict):
                 sys_sched_getscheduler: ALLOW,
                 sys_sched_get_priority_min: ALLOW,
                 sys_sched_get_priority_max: ALLOW,
+                sys_sched_setscheduler: ALLOW,
                 sys_timerfd_create: ALLOW,
                 sys_timer_create: ALLOW,
                 sys_timer_settime: ALLOW,
@@ -158,6 +157,7 @@ class IsolateTracer(dict):
         if 'freebsd' in sys.platform:
             self.update(
                 {
+                    sys_mkdir: ACCESS_EPERM,
                     sys_obreak: ALLOW,
                     sys_sysarch: ALLOW,
                     sys_sysctl: ALLOW,  # TODO: More strict?
@@ -205,7 +205,9 @@ class IsolateTracer(dict):
 
         return False
 
-    def check_file_access(self, syscall, argument, is_open=False) -> HandlerCallback:
+    def check_file_access(self, syscall, argument, is_write=None, is_open=False) -> HandlerCallback:
+        assert is_write is None or not is_open
+
         def check(debugger: Debugger) -> bool:
             file_ptr = getattr(debugger, 'uarg%d' % argument)
             try:
@@ -217,7 +219,7 @@ class IsolateTracer(dict):
                 log.warning('Denied access via syscall %s to path with invalid unicode: %r', syscall, e.object)
                 return ACCESS_ENOENT(debugger)
 
-            file, error = self._file_access_check(file, debugger, is_open)
+            file, error = self._file_access_check(file, debugger, is_open, is_write=is_write)
             if not error:
                 return True
 
@@ -226,10 +228,11 @@ class IsolateTracer(dict):
 
         return check
 
-    def check_file_access_at(self, syscall, is_open=False) -> HandlerCallback:
+    def check_file_access_at(self, syscall, argument=1, is_open=False, is_write=None) -> HandlerCallback:
         def check(debugger: Debugger) -> bool:
+            file_ptr = getattr(debugger, 'uarg%d' % argument)
             try:
-                file = debugger.readstr(debugger.uarg1)
+                file = debugger.readstr(file_ptr)
             except MaxLengthExceeded as e:
                 log.warning('Denied access via syscall %s to overly long path: %r', syscall, e.args[0])
                 return ACCESS_ENAMETOOLONG(debugger)
@@ -237,7 +240,9 @@ class IsolateTracer(dict):
                 log.warning('Denied access via syscall %s to path with invalid unicode: %r', syscall, e.object)
                 return ACCESS_ENOENT(debugger)
 
-            file, error = self._file_access_check(file, debugger, is_open, dirfd=debugger.arg0, flag_reg=2)
+            file, error = self._file_access_check(
+                file, debugger, is_open, is_write=is_write, dirfd=debugger.arg0, flag_reg=2
+            )
             if not error:
                 return True
 
@@ -247,7 +252,7 @@ class IsolateTracer(dict):
         return check
 
     def _file_access_check(
-        self, rel_file, debugger, is_open, flag_reg=1, dirfd=AT_FDCWD
+        self, rel_file, debugger, is_open, is_write=None, flag_reg=1, dirfd=AT_FDCWD
     ) -> Tuple[str, Optional[ErrnoHandlerCallback]]:
         # Either process called open(NULL, ...), or we failed to read the path
         # in cptbox.  Either way this call should not be allowed; if the path
@@ -257,7 +262,8 @@ class IsolateTracer(dict):
         if rel_file is None:
             return '(nil)', ACCESS_EFAULT
 
-        is_write = is_open and self.is_write_flags(getattr(debugger, 'uarg%d' % flag_reg))
+        if is_write is None and is_open:
+            is_write = self.is_write_flags(getattr(debugger, 'uarg%d' % flag_reg))
         fs_jail = self.write_fs_jail if is_write else self.read_fs_jail
 
         try:
@@ -273,11 +279,11 @@ class IsolateTracer(dict):
         # the same file, and check the accessibility of both.
         #
         # This works, except when the child process uses /proc/self, which refers to something else in this process.
-        # Therefore, we "project" it by changing it to /proc/[pid] for computing the realpath and doing the samefile
+        # Therefore, we "project" it by changing it to /proc/[tid] for computing the realpath and doing the samefile
         # check. However, we still keep it as /proc/self when checking access rules.
         projected = normalized = '/' + os.path.normpath(file).lstrip('/')
         if normalized.startswith('/proc/self'):
-            file = os.path.join(f'/proc/{debugger.pid}', os.path.relpath(file, '/proc/self'))
+            file = os.path.join(f'/proc/{debugger.tid}', os.path.relpath(file, '/proc/self'))
             projected = '/' + os.path.normpath(file).lstrip('/')
         real = os.path.realpath(file)
 
@@ -299,14 +305,14 @@ class IsolateTracer(dict):
             return normalized, ACCESS_EACCES
 
         if normalized != real:
-            proc_dir = f'/proc/{debugger.pid}'
+            proc_dir = f'/proc/{debugger.tid}'
             if real.startswith(proc_dir):
                 real = os.path.join('/proc/self', os.path.relpath(real, proc_dir))
 
             if not fs_jail.check(real):
                 return real, ACCESS_EACCES
 
-        return real, None
+        return normalized, None
 
     def get_full_path(self, debugger: Debugger, file: str, dirfd: int = AT_FDCWD) -> str:
         dirfd = (dirfd & 0x7FFFFFFF) - (dirfd & 0x80000000)

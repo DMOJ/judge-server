@@ -71,7 +71,7 @@ class JavaExecutor(SingleDigitVersionMixin, CompiledExecutor):
         self._agent_file = JAVA_SANDBOX
 
     def get_compile_popen_kwargs(self):
-        return {'executable': self.get_compiler()}
+        return {'executable': utf8bytes(self.get_compiler())}
 
     def get_compiled_file(self):
         return None

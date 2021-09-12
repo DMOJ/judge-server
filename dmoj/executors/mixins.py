@@ -32,7 +32,7 @@ BASE_FILESYSTEM = [
     ExactDir('/'),
 ]
 
-BASE_WRITE_FILESYSTEM = [ExactFile('/dev/stdout'), ExactFile('/dev/stderr'), ExactFile('/dev/null')]
+BASE_WRITE_FILESYSTEM = [ExactFile('/dev/null')]
 
 
 if 'freebsd' in sys.platform:

@@ -113,14 +113,7 @@ int pt_process::monitor() {
     while (true) {
         clock_gettime(CLOCK_MONOTONIC, &start);
 
-#ifdef WSL1
-        // WSL1 currently doesn't support waiting on process groups.
-        // Hence, we must assume there is only one subprocess at all times.
-        // This assumption is valid for normal case of DMOJ usage.
-        pid = wait4(-1, &status, __WALL, &_rusage);
-#else
         pid = wait4(-pgid, &status, __WALL, &_rusage);
-#endif
 
         clock_gettime(CLOCK_MONOTONIC, &end);
         timespec_sub(&end, &start, &delta);

@@ -1,3 +1,4 @@
+from dmoj.cptbox.filesystem_policies import ExactFile
 from dmoj.executors.compiled_executor import CompiledExecutor
 
 
@@ -6,6 +7,9 @@ class Executor(CompiledExecutor):
     name = 'D'
     address_grace = 32768
     command = 'dmd'
+    compiler_read_fs = [
+        ExactFile('/etc/dmd.conf'),
+    ]
     test_program = """\
 import std.stdio;
 

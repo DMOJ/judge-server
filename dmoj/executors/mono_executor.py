@@ -34,10 +34,10 @@ class MonoExecutor(CompiledExecutor):
     data_grace = 65536
     cptbox_popen_class = MonoTracedPopen
     fs = [RecursiveDir('/etc/mono')]
+    compiler_read_fs = fs
     # Mono sometimes forks during its crashdump procedure, but continues even if
     # the call to fork fails.
     syscalls = [
-        'sched_setscheduler',
         'wait4',
         'rt_sigsuspend',
         'msync',

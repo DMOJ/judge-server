@@ -1,6 +1,7 @@
 import os
 import subprocess
 
+from dmoj.cptbox.filesystem_policies import ExactFile, RecursiveDir
 from dmoj.executors.java_executor import JavaExecutor
 from dmoj.utils.unicode import utf8text
 
@@ -12,6 +13,14 @@ class Executor(JavaExecutor):
 
     compiler = 'scalac'
     compiler_time_limit = 20
+    compiler_read_fs = [
+        ExactFile('/bin/uname'),
+        ExactFile('/bin/readlink'),
+        ExactFile('/bin/grep'),
+        ExactFile('/bin/stty'),
+        ExactFile('/bin/bash'),
+        RecursiveDir('/etc/alternatives'),
+    ]
     vm = 'scala_vm'
 
     test_program = """\

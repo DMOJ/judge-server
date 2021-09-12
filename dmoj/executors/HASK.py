@@ -1,3 +1,4 @@
+from dmoj.cptbox.filesystem_policies import RecursiveDir
 from dmoj.executors.compiled_executor import CompiledExecutor
 from dmoj.executors.mixins import NullStdoutMixin
 
@@ -6,6 +7,11 @@ class Executor(NullStdoutMixin, CompiledExecutor):
     ext = 'hs'
     name = 'HASK'
     command = 'ghc'
+    compiler_read_fs = [
+        RecursiveDir('/proc/self/task'),
+        RecursiveDir('/var/lib/ghc'),
+    ]
+
     test_program = """\
 main = do
     a <- getContents

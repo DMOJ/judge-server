@@ -6,6 +6,10 @@ class Executor(CompiledExecutor):
     ext = 'rkt'
     name = 'RKT'
     fs = [RecursiveDir('/etc/racket'), ExactFile('/etc/passwd')]
+    compiler_read_fs = [
+        RecursiveDir('/etc/racket'),
+        RecursiveDir('~/.local/share/racket'),
+    ]
 
     command = 'racket'
 

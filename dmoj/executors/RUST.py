@@ -1,5 +1,6 @@
 import os
 
+from dmoj.cptbox.filesystem_policies import ExactFile, RecursiveDir
 from dmoj.executors.compiled_executor import CompiledExecutor
 from dmoj.utils.os_ext import bool_env
 
@@ -77,6 +78,13 @@ class Executor(CompiledExecutor):
     command = 'cargo'
     test_program = HELLO_WORLD_PROGRAM
     compiler_time_limit = 20
+    compiler_read_fs = [
+        RecursiveDir('/home'),
+        ExactFile('/etc/resolv.conf'),
+    ]
+    compiler_write_fs = [
+        RecursiveDir('~/.cargo'),
+    ]
 
     def create_files(self, problem_id, source_code, *args, **kwargs):
         os.mkdir(self._file('src'))

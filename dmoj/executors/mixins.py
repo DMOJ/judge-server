@@ -3,7 +3,7 @@ import os
 import re
 import shutil
 import sys
-from typing import Any, List, Tuple, Union
+from typing import Any, List, Sequence, Tuple, Union
 
 from dmoj.cptbox import IsolateTracer, TracedPopen, syscalls
 from dmoj.cptbox.filesystem_policies import ExactDir, ExactFile, FilesystemAccessRule, RecursiveDir
@@ -83,8 +83,8 @@ class PlatformExecutorMixin(metaclass=abc.ABCMeta):
     data_grace = 0
     fsize = 0
     personality = 0x0040000  # ADDR_NO_RANDOMIZE
-    fs: List[FilesystemAccessRule] = []
-    write_fs: List[FilesystemAccessRule] = []
+    fs: Sequence[FilesystemAccessRule] = []
+    write_fs: Sequence[FilesystemAccessRule] = []
     syscalls: List[Union[str, Tuple[str, Any]]] = []
 
     def _add_syscalls(self, sec):

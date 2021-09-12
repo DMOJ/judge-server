@@ -57,7 +57,7 @@ class FilesystemPolicy:
         if rule.path == '/':
             return self._finalize_root_rule(rule)
 
-        path = rule.path
+        path = os.path.expanduser(rule.path)
         assert os.path.abspath(path) == path, 'FilesystemAccessRule must specify a normalized, absolute path to rule'
         *directory_path, final_component = path.split('/')[1:]
 
@@ -68,6 +68,11 @@ class FilesystemPolicy:
             node = new_node
 
         self._finalize_rule(node, final_component, rule)
+
+        # Add symlink targets too
+        real_path = os.path.realpath(path)
+        if real_path != path:
+            self._add_rule(type(rule)(real_path))
 
     def _assert_rule_type(self, rule: FilesystemAccessRule) -> None:
         if os.path.exists(rule.path):

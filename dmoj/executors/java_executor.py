@@ -1,4 +1,5 @@
 import errno
+import glob
 import os
 import re
 import subprocess
@@ -84,7 +85,8 @@ class JavaExecutor(SingleDigitVersionMixin, CompiledExecutor):
             + [ExactFile(self._agent_file)]
             + [ExactDir(str(parent)) for parent in PurePath(self._agent_file).parents]
         )
-        vm_config = Path(self.get_vm()).parent.parent / 'lib' / 'jvm.cfg'
+        vm_parent = Path(os.path.realpath(self.get_vm())).parent.parent
+        vm_config = Path(glob.glob(f'{vm_parent}/**/jvm.cfg', recursive=True)[0])
         if vm_config.is_symlink():
             fs += [RecursiveDir(os.path.dirname(os.path.realpath(vm_config)))]
         return fs

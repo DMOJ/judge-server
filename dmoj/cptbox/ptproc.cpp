@@ -268,7 +268,7 @@ int pt_process::monitor() {
                 } else {
                     // Fire the on_return handler if we are in a syscall-exit-stop.
                     std::pair<pt_syscall_return_callback, void*> callback = debugger->on_return_[pid];
-                    callback.first(callback.second, syscall);
+                    callback.first(callback.second, pid, syscall);
                     debugger->on_return_.erase(pid);
                 }
             }

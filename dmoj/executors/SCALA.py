@@ -4,9 +4,6 @@ import subprocess
 from dmoj.executors.java_executor import JavaExecutor
 from dmoj.utils.unicode import utf8text
 
-with open(os.path.join(os.path.dirname(__file__), 'scala-security.policy')) as policy_file:
-    policy = policy_file.read()
-
 
 # Must emulate terminal, otherwise `scalac` hangs on a call to `stty`
 class Executor(JavaExecutor):
@@ -16,7 +13,6 @@ class Executor(JavaExecutor):
     compiler = 'scalac'
     compiler_time_limit = 20
     vm = 'scala_vm'
-    security_policy = policy
 
     test_program = """\
 object self_test extends App {

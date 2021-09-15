@@ -25,9 +25,6 @@ reexception = re.compile(r'7257b50d-e37a-4664-b1a5-b1340b4206c0: (.*?)$', re.U |
 
 JAVA_SANDBOX = os.path.abspath(os.path.join(os.path.dirname(__file__), 'java_sandbox.jar'))
 
-with open(os.path.join(os.path.dirname(__file__), 'java-security.policy'), 'r') as policy_file:
-    policy = policy_file.read()
-
 
 def find_class(source):
     source = reinline_comment.sub('', restring.sub('', recomment.sub('', source)))
@@ -62,7 +59,6 @@ class JavaExecutor(SingleDigitVersionMixin, CompiledExecutor):
     syscalls = ['pread64', 'clock_nanosleep', 'socketpair', ('procctl', handle_procctl), 'setrlimit', 'thr_set_name']
 
     jvm_regex: Optional[str] = None
-    security_policy = policy
 
     def __init__(self, problem_id, source_code, **kwargs):
         self._class_name = None
@@ -72,9 +68,6 @@ class JavaExecutor(SingleDigitVersionMixin, CompiledExecutor):
         super().create_files(problem_id, source_code, *args, **kwargs)
 
         self._agent_file = JAVA_SANDBOX
-        self._policy_file = self._file('security.policy')
-        with open(self._policy_file, 'w') as file:
-            file.write(self.security_policy)
 
     def get_compile_popen_kwargs(self):
         return {'executable': self.get_compiler()}
@@ -100,12 +93,10 @@ class JavaExecutor(SingleDigitVersionMixin, CompiledExecutor):
         return super().get_write_fs() + [ExactFile(os.path.join(self._dir, 'submission_jvm_crash.log'))]
 
     def get_agent_flag(self):
-        agent_flag = '-javaagent:%s=policy:%s' % (self._agent_file, self._policy_file)
-        for hint in self._hints:
-            agent_flag += ',%s' % hint
+        hints = [*self._hints]
         if self.unbuffered:
-            agent_flag += ',nobuf'
-        return agent_flag
+            hints.append('nobuf')
+        return f'-javaagent:{self._agent_file}={",".join(hints)}'
 
     def get_cmdline(self, **kwargs):
         # 128m is equivalent to 1<<27 in Thread constructor

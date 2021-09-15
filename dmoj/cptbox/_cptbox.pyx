@@ -21,7 +21,7 @@ cdef extern from 'ptbox.h' nogil:
     long ptrace_traceme()
 
     ctypedef int (*pt_handler_callback)(void *context, int syscall)
-    ctypedef void (*pt_syscall_return_callback)(void *context, int syscall)
+    ctypedef void (*pt_syscall_return_callback)(void *context, pid_t pid, int syscall)
     ctypedef int (*pt_fork_handler)(void *context)
     ctypedef int (*pt_event_callback)(void *context, int event, unsigned long param)
 
@@ -149,8 +149,8 @@ cdef int pt_child(void *context) nogil:
 cdef int pt_syscall_handler(void *context, int syscall) nogil:
     return (<Process>context)._syscall_handler(syscall)
 
-cdef void pt_syscall_return_handler(void *context, int syscall) with gil:
-    (<Debugger>context)._on_return(syscall)
+cdef void pt_syscall_return_handler(void *context, pid_t pid, int syscall) with gil:
+    (<Debugger>context)._on_return(pid, syscall)
 
 cdef int pt_event_handler(void *context, int event, unsigned long param) nogil:
     return (<Process>context)._event_handler(event, param)
@@ -229,6 +229,7 @@ cdef class Debugger:
     def __cinit__(self, Process process):
         self.thisptr = new pt_debugger()
         self.process = process
+        self.on_return_callback = {}
 
     def __dealloc__(self):
         del self.thisptr
@@ -389,12 +390,12 @@ cdef class Debugger:
         return self.thisptr.abi()
 
     def on_return(self, callback):
-        self.on_return_callback = callback
+        self.on_return_callback[self.tid] = callback
         self.thisptr.on_return(pt_syscall_return_handler, <void*>self)
 
-    cdef _on_return(self, int syscall) with gil:
-        self.on_return_callback()
-        self.on_return_callback = None
+    cdef _on_return(self, pid_t pid, int syscall) with gil:
+        self.on_return_callback[pid]()
+        del self.on_return_callback[pid]
 
 
 cdef class Process:

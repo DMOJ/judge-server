@@ -94,7 +94,7 @@ inline void timespec_sub(struct timespec *a, struct timespec *b, struct timespec
 class pt_debugger;
 
 typedef int (*pt_handler_callback)(void *context, int syscall);
-typedef void (*pt_syscall_return_callback)(void *context, int syscall);
+typedef void (*pt_syscall_return_callback)(void *context, pid_t pid, int syscall);
 typedef int (*pt_fork_handler)(void *context);
 typedef int (*pt_event_callback)(void *context, int event, unsigned long param);
 

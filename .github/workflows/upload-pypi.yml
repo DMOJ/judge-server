@@ -7,10 +7,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
-      - name: Set up Python 3.7
+      - name: Set up Python 3.9
         uses: actions/setup-python@v1
         with:
-          python-version: 3.7
+          python-version: 3.9
       - name: Install build dependencies
         run: pip install cython
       - name: Create sdist
@@ -22,7 +22,7 @@ jobs:
           pip install dist/*.tar.gz
           dmoj-autoconf
       - name: Publish package to PyPI
-        uses: pypa/gh-action-pypi-publish@v1.0.0a0
+        uses: pypa/gh-action-pypi-publish@v1.4.2
         with:
           user: __token__
           password: ${{ secrets.pypi_password }}

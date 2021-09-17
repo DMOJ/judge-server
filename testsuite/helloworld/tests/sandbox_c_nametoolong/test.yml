@@ -1,5 +1,5 @@
 language: C
 time: 1
-memory: 16384
+memory: 65536
 source: nametoolong.c
 expect: AC

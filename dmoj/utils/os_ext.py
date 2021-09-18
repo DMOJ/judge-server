@@ -2,6 +2,7 @@ import ctypes
 import ctypes.util
 import os
 import signal
+from typing import Optional
 
 from dmoj.utils.unicode import utf8bytes
 
@@ -9,18 +10,15 @@ OOM_SCORE_ADJ_MAX = 1000
 OOM_SCORE_ADJ_MIN = -1000
 
 
-def oom_score_adj(score, to=None):
+def oom_score_adj(score: int, to: Optional[int] = None) -> None:
     if not (OOM_SCORE_ADJ_MIN <= score <= OOM_SCORE_ADJ_MAX):
         raise OSError()
 
-    if to is None:
-        to = 'self'
-
-    with open('/proc/%s/oom_score_adj' % to, 'wb') as f:
+    with open(f'/proc/{"self" if to is None else to}/oom_score_adj', 'wb') as f:
         f.write(utf8bytes(str(score)))
 
 
-def strsignal(signo):
+def strsignal(signo: int) -> str:
     # in large part from http://code.activestate.com/recipes/578899-strsignal/
     libc = ctypes.CDLL(ctypes.util.find_library('c'))
     strsignal_c = ctypes.CFUNCTYPE(ctypes.c_char_p, ctypes.c_int)(('strsignal', libc), ((1,),))
@@ -36,6 +34,6 @@ def strsignal(signo):
     return 'Unknown signal %d' % signo
 
 
-def bool_env(name):
+def bool_env(name: str) -> bool:
     value = os.environ.get(name, '')
     return value.lower() in ('true', 'yes', '1', 'y', 't')

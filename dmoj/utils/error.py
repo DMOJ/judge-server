@@ -1,11 +1,12 @@
 import errno
 import logging
 import os
+from typing import List, Optional, Tuple
 
 log = logging.getLogger('dmoj.cptbox')
 
 
-def print_protection_fault(fault):
+def print_protection_fault(fault: Tuple[int, str, List[int], Optional[int]]) -> None:
     syscall, callname, args, update_errno = fault
     if update_errno is not None:
         log.warning(

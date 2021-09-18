@@ -15,8 +15,7 @@ from dmoj.cptbox.handlers import ACCESS_EFAULT, ACCESS_EPERM, ALLOW
 from dmoj.cptbox.syscalls import *
 from dmoj.cptbox.tracer import AdvancedDebugger
 from dmoj.error import CompileError, OutputLimitExceeded
-from dmoj.executors.base_executor import BaseExecutor
-from dmoj.executors.mixins import BASE_FILESYSTEM, BASE_WRITE_FILESYSTEM
+from dmoj.executors.base_executor import BASE_FILESYSTEM, BASE_WRITE_FILESYSTEM, BaseExecutor
 from dmoj.judgeenv import env
 from dmoj.utils.communicate import safe_communicate
 from dmoj.utils.error import print_protection_fault

@@ -1,7 +1,9 @@
 import builtins
 import re
 from collections import deque
+from typing import List
 
+from dmoj.cptbox import TracedPopen
 from dmoj.executors.compiled_executor import CompiledExecutor
 from dmoj.utils.unicode import utf8bytes, utf8text
 
@@ -25,20 +27,29 @@ runpy.run_path(sys.argv[0], run_name='__main__')
     address_grace = 131072
     ext = 'py'
 
-    def get_compile_args(self):
-        return [self.get_command(), '-m', 'compileall', '-q', self._dir]
+    def get_compile_args(self) -> List[str]:
+        command = self.get_command()
+        assert self._dir is not None
+        assert command is not None
+        return [command, '-m', 'compileall', '-q', self._dir]
 
-    def get_cmdline(self, **kwargs):
+    def get_cmdline(self, **kwargs) -> List[str]:
         # -B: Don't write .pyc/.pyo, since sandbox will kill those writes
         # -S: Disable site module for speed (no loading dist-packages nor site-packages)
-        return [self.get_command(), '-BS' + ('u' if self.unbuffered else ''), self._loader, self._code]
+        command = self.get_command()
+        assert command is not None
+        assert self._code is not None
+        return [command, '-BS' + ('u' if self.unbuffered else ''), self._loader, self._code]
 
-    def get_executable(self):
-        return self.get_command()
+    def get_executable(self) -> str:
+        command = self.get_command()
+        assert command is not None
+        return command
 
-    def create_files(self, problem_id, source_code, **kwargs):
+    def create_files(self, problem_id: str, source_code: bytes, *args, **kwargs) -> None:
         super().create_files(problem_id, source_code, **kwargs)
         self._loader = self._file('-loader.py')
+        assert self._code is not None
         with open(self._code, 'wb') as fo, open(self._loader, 'w') as loader:
             # We want source code to be UTF-8, but the normal (Python 2) way of having
             # "# -*- coding: utf-8 -*-" in header changes line numbers, so we write
@@ -47,7 +58,7 @@ runpy.run_path(sys.argv[0], run_name='__main__')
             fo.write(utf8bytes(source_code))
             loader.write(self.unbuffered_loader_script if self.unbuffered else self.loader_script)
 
-    def parse_feedback_from_stderr(self, stderr, process):
+    def parse_feedback_from_stderr(self, stderr: bytes, process: TracedPopen) -> str:
         if not stderr or len(stderr) > 2048:
             return ''
         match = deque(retraceback.finditer(utf8text(stderr, 'replace')), maxlen=1)
@@ -60,5 +71,5 @@ runpy.run_path(sys.argv[0], run_name='__main__')
             return ''
 
     @classmethod
-    def get_version_flags(cls, command):
+    def get_version_flags(cls, command: str) -> List[str]:
         return ['-V']

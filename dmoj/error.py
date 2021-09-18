@@ -5,6 +5,10 @@ class CompileError(Exception):
     def __init__(self, message):
         super().__init__(utf8text(message, 'replace'))
 
+    @property
+    def message(self) -> str:
+        return self.args[0]
+
 
 class InternalError(Exception):
     pass

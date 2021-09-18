@@ -8,6 +8,7 @@ from dmoj.result import Result
 from dmoj.utils.os_ext import strsignal
 
 if TYPE_CHECKING:
+    from dmoj.cptbox import TracedPopen
     from dmoj.executors.base_executor import BaseExecutor
 
 
@@ -72,7 +73,9 @@ def compile_with_auxiliary_files(
     return executor
 
 
-def parse_helper_file_error(proc, executor, name: str, stderr: bytes, time_limit: int, memory_limit: int) -> None:
+def parse_helper_file_error(
+    proc: 'TracedPopen', executor: 'BaseExecutor', name: str, stderr: bytes, time_limit: int, memory_limit: int
+) -> None:
     if proc.is_tle:
         error = f'{name} timed out (> {time_limit} seconds)'
     elif proc.is_mle:
@@ -82,8 +85,9 @@ def parse_helper_file_error(proc, executor, name: str, stderr: bytes, time_limit
         error = f'{name} invoked disallowed syscall {syscall} ({callname})'
     elif proc.returncode:
         if proc.returncode > 0:
-            error = f'{name} exited with nonzero code {proc.returncode:d}'
+            error = f'{name} exited with nonzero code {proc.returncode}'
         else:
+            assert proc.signal is not None
             error = f'{name} exited with {strsignal(proc.signal)}'
         feedback = Result.get_feedback_str(stderr, proc, executor)
         if feedback:

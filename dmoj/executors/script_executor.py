@@ -1,13 +1,13 @@
 import os
-from typing import List, Optional
+from typing import Dict, List, Optional
 
-from dmoj.cptbox.filesystem_policies import ExactFile, RecursiveDir
+from dmoj.cptbox.filesystem_policies import ExactFile, FilesystemAccessRule, RecursiveDir
 from dmoj.executors.base_executor import BaseExecutor
 from dmoj.utils.unicode import utf8bytes
 
 
 class ScriptExecutor(BaseExecutor):
-    def __init__(self, problem_id: str, source_code: bytes, **kwargs):
+    def __init__(self, problem_id: str, source_code: bytes, **kwargs) -> None:
         super().__init__(problem_id, source_code, **kwargs)
         self._code = self._file(self.source_filename_format.format(problem_id=problem_id, ext=self.ext))
         self.create_files(problem_id, source_code)
@@ -22,7 +22,7 @@ class ScriptExecutor(BaseExecutor):
             return os.path.join(cls.runtime_dict['%s_home' % name], 'bin', cls.command)
         return None
 
-    def get_fs(self) -> list:
+    def get_fs(self) -> List[FilesystemAccessRule]:
         home = self.runtime_dict.get('%s_home' % self.get_executor_name().lower())
         fs = super().get_fs() + [ExactFile(self._code)]
         if home is not None:
@@ -43,7 +43,7 @@ class ScriptExecutor(BaseExecutor):
         assert command is not None
         return command
 
-    def get_env(self) -> dict:
+    def get_env(self) -> Dict[str, str]:
         env = super().get_env()
         env_key = self.get_executor_name().lower() + '_env'
         if env_key in self.runtime_dict:

@@ -2,14 +2,16 @@ import abc
 import hashlib
 import os
 import pty
+import struct
 import sys
 from typing import Dict, List, Optional, Sequence
 
 import pylru
 
 from dmoj.cptbox import IsolateTracer, TracedPopen
+from dmoj.cptbox._cptbox import AT_FDCWD
 from dmoj.cptbox.filesystem_policies import ExactFile, FilesystemAccessRule, RecursiveDir
-from dmoj.cptbox.handlers import ALLOW
+from dmoj.cptbox.handlers import ACCESS_EFAULT, ACCESS_EPERM, ALLOW
 from dmoj.cptbox.syscalls import *
 from dmoj.error import CompileError, OutputLimitExceeded
 from dmoj.executors.base_executor import BaseExecutor
@@ -72,6 +74,9 @@ class _CompiledExecutorMeta(abc.ABCMeta):
         return obj
 
 
+UTIME_OMIT = (1 << 30) - 2
+
+
 class CompilerIsolateTracer(IsolateTracer):
     def __init__(self, tmpdir, read_fs, write_fs, *args, **kwargs):
         read_fs += BASE_FILESYSTEM + [
@@ -105,10 +110,7 @@ class CompilerIsolateTracer(IsolateTracer):
                 # Miscellaneous other filesystem system calls
                 sys_chdir: self.check_file_access('chdir', 0),
                 sys_chmod: self.check_file_access('chmod', 0, is_write=True),
-                # FIXME: Mono breaks if we don't implement Linux's special
-                # handling for UTIME_OMIT. This is undocumented but nonethelss
-                # relied on.
-                sys_utimensat: ALLOW,
+                sys_utimensat: self.do_utimensat,
                 sys_statx: self.check_file_access_at('statx'),
                 sys_umask: ALLOW,
                 sys_flock: ALLOW,
@@ -170,6 +172,32 @@ class CompilerIsolateTracer(IsolateTracer):
                     sys_utimes: self.check_file_access('utimes', 0),
                 }
             )
+
+    def do_utimensat(self, debugger) -> bool:
+        timespec = struct.Struct({32: '=ii', 64: '=QQ'}[debugger.address_bits])
+
+        try:
+            buffer = debugger.readbytes(debugger.uarg2, timespec.size * 2)
+        except OSError:
+            return ACCESS_EFAULT(debugger)
+
+        # Emulate https://github.com/torvalds/linux/blob/v5.14/fs/utimes.c#L157-L160
+        times = list(timespec.iter_unpack(buffer))
+        if times[0][1] == UTIME_OMIT and times[1][1] == UTIME_OMIT:
+            debugger.syscall = -1
+
+            def on_return():
+                debugger.result = 0
+
+            debugger.on_return(on_return)
+            return True
+
+        # Emulate https://github.com/torvalds/linux/blob/v5.14/fs/utimes.c#L142-L143
+        if debugger.uarg0 != AT_FDCWD and not debugger.uarg1:
+            path = self._getfd_pid(debugger.tid, debugger.uarg0)
+            return True if self.write_fs_jail.check(path) else ACCESS_EPERM(debugger)
+
+        return self.check_file_access_at('utimensat')(debugger)
 
 
 class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):

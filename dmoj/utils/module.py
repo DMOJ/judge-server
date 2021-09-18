@@ -1,8 +1,9 @@
 import os
 import types
+from typing import Any, Optional
 
 
-def load_module(name, code, filename=None):
+def load_module(name: str, code: str, filename: Optional[str] = None) -> Any:
     mod = types.ModuleType(name)
     if filename is not None:
         mod.__file__ = filename
@@ -10,7 +11,7 @@ def load_module(name, code, filename=None):
     return mod
 
 
-def load_module_from_file(filename):
+def load_module_from_file(filename: str) -> Any:
     path, name = os.path.split(filename)
     name, ext = os.path.splitext(name)
 

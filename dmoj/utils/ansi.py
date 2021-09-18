@@ -3,12 +3,12 @@ import re
 from termcolor import colored
 
 
-def strip_ansi(s):
+def strip_ansi(s: str) -> str:
     # http://stackoverflow.com/questions/13506033/filtering-out-ansi-escape-sequences
     return re.sub(r'\x1b\[([0-9,A-Z]{1,2}(;[0-9]{1,2})?(;[0-9]{3})?)?[m|K]?', '', s)
 
 
-def ansi_style(text):
+def ansi_style(text: str) -> str:
     from dmoj.judgeenv import no_ansi
 
     def format_inline(text, attrs):
@@ -24,5 +24,5 @@ def ansi_style(text):
     )
 
 
-def print_ansi(*args, **kwargs):
+def print_ansi(*args, **kwargs) -> None:
     print(*map(ansi_style, args), **kwargs)

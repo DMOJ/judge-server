@@ -1,9 +1,10 @@
 import os
 import traceback
 from importlib import import_module
+from typing import Any, Callable, Dict, List, Optional, Pattern, Sequence, Set
 
 
-def get_available_modules(pattern, dirname, only=None, exclude=None):
+def get_available_modules(pattern: Pattern, dirname: str, only: Set[str] = None, exclude: Set[str] = None) -> List[str]:
     to_load = {i.group(1) for i in map(pattern.match, os.listdir(dirname)) if i is not None}
     if only:
         to_load &= only
@@ -12,7 +13,7 @@ def get_available_modules(pattern, dirname, only=None, exclude=None):
     return sorted(to_load)
 
 
-def load_module(name, ignored_errors):
+def load_module(name: str, ignored_errors: Sequence[str]) -> Any:
     try:
         return import_module(name)
     except ImportError as e:
@@ -20,7 +21,14 @@ def load_module(name, ignored_errors):
             traceback.print_exc()
 
 
-def load_modules(to_load, load, attr, modules_dict, excluded_aliases, loading_message=None):
+def load_modules(
+    to_load: Sequence[str],
+    load: Callable[[str], Any],
+    attr: str,
+    modules_dict: Dict[str, Any],
+    excluded_aliases: Set[str],
+    loading_message: Optional[str] = None,
+) -> None:
     if loading_message:
         print(loading_message)
 

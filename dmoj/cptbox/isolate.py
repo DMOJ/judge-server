@@ -311,7 +311,7 @@ class IsolateTracer(dict):
     def get_full_path(self, debugger: Debugger, file: str, dirfd: int = AT_FDCWD) -> str:
         dirfd = (dirfd & 0x7FFFFFFF) - (dirfd & 0x80000000)
         if not file.startswith('/'):
-            dir = self._getcwd_pid(debugger.pid) if dirfd == AT_FDCWD else self._getfd_pid(debugger.pid, dirfd)
+            dir = self._getcwd_pid(debugger.tid) if dirfd == AT_FDCWD else self._getfd_pid(debugger.tid, dirfd)
             file = os.path.join(dir, file)
         file = '/' + os.path.normpath(file).lstrip('/')
         return file

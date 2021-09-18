@@ -205,19 +205,25 @@ class IsolateTracer(dict):
 
         return False
 
+    @staticmethod
+    def read_path(syscall: str, debugger: Debugger, ptr: int):
+        try:
+            file = debugger.readstr(ptr)
+        except MaxLengthExceeded as e:
+            log.warning('Denied access via syscall %s to overly long path: %r', syscall, e.args[0])
+            return None, ACCESS_ENAMETOOLONG(debugger)
+        except UnicodeDecodeError as e:
+            log.warning('Denied access via syscall %s to path with invalid unicode: %r', syscall, e.object)
+            return None, ACCESS_ENOENT(debugger)
+        return file, None
+
     def check_file_access(self, syscall, argument, is_write=None, is_open=False) -> HandlerCallback:
         assert is_write is None or not is_open
 
         def check(debugger: Debugger) -> bool:
-            file_ptr = getattr(debugger, 'uarg%d' % argument)
-            try:
-                file = debugger.readstr(file_ptr)
-            except MaxLengthExceeded as e:
-                log.warning('Denied access via syscall %s to overly long path: %r', syscall, e.args[0])
-                return ACCESS_ENAMETOOLONG(debugger)
-            except UnicodeDecodeError as e:
-                log.warning('Denied access via syscall %s to path with invalid unicode: %r', syscall, e.object)
-                return ACCESS_ENOENT(debugger)
+            file, error = self.read_path(syscall, debugger, getattr(debugger, 'uarg%d' % argument))
+            if error is not None:
+                return error
 
             file, error = self._file_access_check(file, debugger, is_open, is_write=is_write)
             if not error:
@@ -230,15 +236,9 @@ class IsolateTracer(dict):
 
     def check_file_access_at(self, syscall, argument=1, is_open=False, is_write=None) -> HandlerCallback:
         def check(debugger: Debugger) -> bool:
-            file_ptr = getattr(debugger, 'uarg%d' % argument)
-            try:
-                file = debugger.readstr(file_ptr)
-            except MaxLengthExceeded as e:
-                log.warning('Denied access via syscall %s to overly long path: %r', syscall, e.args[0])
-                return ACCESS_ENAMETOOLONG(debugger)
-            except UnicodeDecodeError as e:
-                log.warning('Denied access via syscall %s to path with invalid unicode: %r', syscall, e.object)
-                return ACCESS_ENOENT(debugger)
+            file, error = self.read_path(syscall, debugger, getattr(debugger, 'uarg%d' % argument))
+            if error is not None:
+                return error
 
             file, error = self._file_access_check(
                 file, debugger, is_open, is_write=is_write, dirfd=debugger.arg0, flag_reg=2

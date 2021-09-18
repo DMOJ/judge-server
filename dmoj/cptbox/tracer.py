@@ -6,7 +6,7 @@ import signal
 import subprocess
 import sys
 import threading
-from typing import Callable, Dict, List, Optional, Tuple, Type
+from typing import Callable, List, Mapping, Optional, Tuple, Type
 
 from dmoj.cptbox._cptbox import *
 from dmoj.cptbox.handlers import ALLOW, DISALLOW, ErrnoHandlerCallback, _CALLBACK
@@ -105,7 +105,7 @@ class TracedPopen(Process):
         stdin: Optional[int] = PIPE,
         stdout: Optional[int] = PIPE,
         stderr: Optional[int] = None,
-        env: Optional[Dict[str, str]] = None,
+        env: Optional[Mapping[str, Optional[str]]] = None,
         nproc: int = 0,
         fsize: int = 0,
         address_grace: int = 4096,

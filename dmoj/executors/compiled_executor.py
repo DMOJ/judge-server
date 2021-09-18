@@ -13,6 +13,7 @@ from dmoj.cptbox._cptbox import AT_FDCWD
 from dmoj.cptbox.filesystem_policies import ExactFile, FilesystemAccessRule, RecursiveDir
 from dmoj.cptbox.handlers import ACCESS_EFAULT, ACCESS_EPERM, ALLOW
 from dmoj.cptbox.syscalls import *
+from dmoj.cptbox.tracer import AdvancedDebugger
 from dmoj.error import CompileError, OutputLimitExceeded
 from dmoj.executors.base_executor import BaseExecutor
 from dmoj.executors.mixins import BASE_FILESYSTEM, BASE_WRITE_FILESYSTEM
@@ -173,24 +174,26 @@ class CompilerIsolateTracer(IsolateTracer):
                 }
             )
 
-    def do_utimensat(self, debugger) -> bool:
+    def do_utimensat(self, debugger: AdvancedDebugger) -> bool:
         timespec = struct.Struct({32: '=ii', 64: '=QQ'}[debugger.address_bits])
 
-        try:
-            buffer = debugger.readbytes(debugger.uarg2, timespec.size * 2)
-        except OSError:
-            return ACCESS_EFAULT(debugger)
+        # Emulate https://github.com/torvalds/linux/blob/v5.14/fs/utimes.c#L152-L161
+        times_ptr = debugger.uarg2
+        if times_ptr:
+            try:
+                buffer = debugger.readbytes(times_ptr, timespec.size * 2)
+            except OSError:
+                return ACCESS_EFAULT(debugger)
 
-        # Emulate https://github.com/torvalds/linux/blob/v5.14/fs/utimes.c#L157-L160
-        times = list(timespec.iter_unpack(buffer))
-        if times[0][1] == UTIME_OMIT and times[1][1] == UTIME_OMIT:
-            debugger.syscall = -1
+            times = list(timespec.iter_unpack(buffer))
+            if times[0][1] == UTIME_OMIT and times[1][1] == UTIME_OMIT:
+                debugger.syscall = -1
 
-            def on_return():
-                debugger.result = 0
+                def on_return():
+                    debugger.result = 0
 
-            debugger.on_return(on_return)
-            return True
+                debugger.on_return(on_return)
+                return True
 
         # Emulate https://github.com/torvalds/linux/blob/v5.14/fs/utimes.c#L142-L143
         if debugger.uarg0 != AT_FDCWD and not debugger.uarg1:

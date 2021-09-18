@@ -116,8 +116,8 @@ class CompilerIsolateTracer(IsolateTracer):
                 sys_flock: ALLOW,
                 sys_fsync: ALLOW,
                 sys_fadvise64: ALLOW,
+                sys_fchmodat: self.check_file_access_at('fchmodat', is_write=True),
                 # FIXME: this allows changing any FD that is open, not just RW ones.
-                sys_fchmodat: ALLOW,
                 sys_fchmod: ALLOW,
                 sys_fallocate: ALLOW,
                 sys_ftruncate: ALLOW,

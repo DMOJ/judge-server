@@ -4,7 +4,7 @@ import os
 import pty
 import struct
 import sys
-from typing import Dict, List, Optional, Sequence
+from typing import Any, Dict, IO, List, Optional, Sequence
 
 import pylru
 
@@ -247,7 +247,7 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
     compiler_read_fs: Sequence[FilesystemAccessRule] = []
     compiler_write_fs: Sequence[FilesystemAccessRule] = []
 
-    def __init__(self, problem_id: str, source_code: bytes, *args, **kwargs):
+    def __init__(self, problem_id: str, source_code: bytes, *args, **kwargs) -> None:
         super().__init__(problem_id, source_code, **kwargs)
         self.warning = None
         self._executable = None
@@ -264,10 +264,10 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
     def get_compile_args(self) -> List[str]:
         raise NotImplementedError()
 
-    def get_compile_env(self) -> Optional[dict]:
+    def get_compile_env(self) -> Optional[Dict[str, str]]:
         return None
 
-    def get_compile_popen_kwargs(self) -> dict:
+    def get_compile_popen_kwargs(self) -> Dict[str, Any]:
         return {}
 
     def create_compile_process(self, args: List[str]) -> TracedPopen:
@@ -308,17 +308,17 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
             Wrap pty-related IO errors so that we don't crash Popen.communicate()
             """
 
-            def __init__(self, fd):
-                self.fd = fd
+            def __init__(self, io: IO) -> None:
+                self.io = io
 
             def read(self, *args, **kwargs):
                 try:
-                    return self.fd.read(*args, **kwargs)
+                    return self.io.read(*args, **kwargs)
                 except (IOError, OSError):
-                    return ''
+                    return b''
 
             def __getattr__(self, attr):
-                return getattr(self.fd, attr)
+                return getattr(self.io, attr)
 
         # Since stderr and stdout are connected to the same slave pty, proc.stderr will contain the merged stdout
         # of the process as well.

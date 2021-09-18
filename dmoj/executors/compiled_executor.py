@@ -118,8 +118,7 @@ class CompilerIsolateTracer(IsolateTracer):
                 sys_fallocate: ALLOW,
                 sys_ftruncate: ALLOW,
                 sys_rename: self.do_rename,
-                # FIXME: this doesn't validate the source nor target
-                sys_renameat: ALLOW,
+                sys_renameat: self.do_renameat,
                 # I/O system calls
                 sys_readv: ALLOW,
                 sys_pwrite64: ALLOW,
@@ -212,6 +211,22 @@ class CompilerIsolateTracer(IsolateTracer):
         if not self._file_access_check(old_path, debugger, is_write=True, is_open=False):
             return ACCESS_EPERM(debugger)
         if not self._file_access_check(new_path, debugger, is_write=True, is_open=False):
+            return ACCESS_EPERM(debugger)
+
+        return True
+
+    def do_renameat(self, debugger: Debugger) -> bool:
+        old_path, old_path_error = self.read_path('renameat', debugger, debugger.uarg1)
+        if old_path_error is not None:
+            return old_path_error
+
+        new_path, new_path_error = self.read_path('renameat', debugger, debugger.uarg3)
+        if new_path_error is not None:
+            return new_path_error
+
+        if not self._file_access_check(old_path, debugger, is_write=True, is_open=False, dirfd=debugger.uarg0):
+            return ACCESS_EPERM(debugger)
+        if not self._file_access_check(new_path, debugger, is_write=True, is_open=False, dirfd=debugger.uarg2):
             return ACCESS_EPERM(debugger)
 
         return True

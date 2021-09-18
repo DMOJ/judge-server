@@ -9,6 +9,7 @@ import traceback
 from distutils.spawn import find_executable
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
+from dmoj.cptbox import TracedPopen
 from dmoj.executors.mixins import PlatformExecutorMixin
 from dmoj.judgeenv import env, skip_self_test
 from dmoj.result import Result
@@ -43,7 +44,7 @@ class BaseExecutor(PlatformExecutorMixin):
         hints: Optional[List[str]] = None,
         unbuffered: bool = False,
         **kwargs
-    ):
+    ) -> None:
         self._tempdir = dest_dir or env.tempdir
         self._dir = None
         self.problem = problem_id
@@ -53,7 +54,7 @@ class BaseExecutor(PlatformExecutorMixin):
 
         for arg, value in kwargs.items():
             if not hasattr(self, arg):
-                raise TypeError('Unexpected keyword argument: %s' % arg)
+                raise TypeError(f'Unexpected keyword argument: {arg}')
             setattr(self, arg, value)
 
     def cleanup(self) -> None:
@@ -72,7 +73,7 @@ class BaseExecutor(PlatformExecutorMixin):
                 if exc.errno != errno.ENOENT:
                     raise
 
-    def __del__(self):
+    def __del__(self) -> None:
         self.cleanup()
 
     def _file(self, *paths: str) -> str:
@@ -95,7 +96,7 @@ class BaseExecutor(PlatformExecutorMixin):
     def get_nproc(self) -> int:
         return self.nproc
 
-    def populate_result(self, stderr, result, process):
+    def populate_result(self, stderr: bytes, result: Result, process: TracedPopen) -> None:
         # Translate status codes/process results into Result object for status codes
         result.max_memory = process.max_memory or 0.0
         result.execution_time = process.execution_time or 0.0
@@ -114,8 +115,8 @@ class BaseExecutor(PlatformExecutorMixin):
 
         result.update_feedback(stderr, process, self)
 
-    def parse_feedback_from_stderr(self, stderr, process):
-        pass
+    def parse_feedback_from_stderr(self, stderr: bytes, process: TracedPopen) -> str:
+        return ''
 
     @classmethod
     def get_command(cls) -> Optional[str]:
@@ -136,7 +137,7 @@ class BaseExecutor(PlatformExecutorMixin):
             return True
 
         if output:
-            print_ansi('%-39s%s' % ('Self-testing #ansi[%s](|underline):' % cls.get_executor_name(), ''), end=' ')
+            print_ansi(f'Self-testing #ansi[{cls.get_executor_name()}](|underline):'.ljust(39), end=' ')
         try:
             executor = cls(cls.test_name, utf8bytes(cls.test_program))
             proc = executor.launch(
@@ -157,10 +158,8 @@ class BaseExecutor(PlatformExecutorMixin):
             if output:
                 # Cache the versions now, so that the handshake packet doesn't take ages to generate
                 cls.get_runtime_versions()
-                usage = '[%.3fs, %d KB]' % (proc.execution_time, proc.max_memory)
-                print_ansi(
-                    '%s %-19s' % (['#ansi[Failed](red|bold) ', '#ansi[Success](green|bold)'][res], usage), end=' '
-                )
+                usage = f'[{proc.execution_time:.3f}s, {proc.max_memory} KB]'
+                print_ansi(f'{["#ansi[Failed](red|bold) ", "#ansi[Success](green|bold)"][res]} {usage:<19}', end=' ')
 
                 runtime_version: List[Tuple[str, str]] = []
                 for runtime, version in cls.get_runtime_versions():
@@ -235,7 +234,7 @@ class BaseExecutor(PlatformExecutorMixin):
         return ['--version']
 
     @classmethod
-    def find_command_from_list(cls, files: str) -> Optional[str]:
+    def find_command_from_list(cls, files: List[str]) -> Optional[str]:
         for file in files:
             if os.path.isabs(file):
                 if os.path.exists(file):
@@ -247,7 +246,9 @@ class BaseExecutor(PlatformExecutorMixin):
         return None
 
     @classmethod
-    def autoconfig_find_first(cls, mapping) -> Tuple[Optional[dict], bool, str, str]:
+    def autoconfig_find_first(
+        cls, mapping: Optional[Dict[str, List[str]]]
+    ) -> Tuple[Optional[Dict[str, Any]], bool, str, str]:
         if mapping is None:
             return {}, False, 'Unimplemented', ''
         result = {}
@@ -255,12 +256,12 @@ class BaseExecutor(PlatformExecutorMixin):
         for key, files in mapping.items():
             file = cls.find_command_from_list(files)
             if file is None:
-                return None, False, 'Failed to find "%s"' % key, ''
+                return None, False, f'Failed to find "{key}"', ''
             result[key] = file
         return cls.autoconfig_run_test(result)
 
     @classmethod
-    def autoconfig_run_test(cls, result: dict) -> Tuple[dict, bool, str, str]:
+    def autoconfig_run_test(cls, result: Dict[str, Any]) -> Tuple[Dict[str, str], bool, str, str]:
         executor: Any = type('Executor', (cls,), {'runtime_dict': result})
         executor.__module__ = cls.__module__
         errors: List[str] = []
@@ -268,7 +269,7 @@ class BaseExecutor(PlatformExecutorMixin):
         if success:
             message = ''
             if len(result) == 1:
-                message = 'Using %s' % list(result.values())[0]
+                message = f'Using {list(result.values())[0]}'
         else:
             message = 'Failed self-test'
         return result, success, message, '\n'.join(errors)
@@ -280,5 +281,5 @@ class BaseExecutor(PlatformExecutorMixin):
         return {cls.command: cls.command_paths or [cls.command]}
 
     @classmethod
-    def autoconfig(cls) -> Tuple[Optional[dict], bool, str, str]:
+    def autoconfig(cls) -> Tuple[Optional[Dict[str, Any]], bool, str, str]:
         return cls.autoconfig_find_first(cls.get_find_first_mapping())

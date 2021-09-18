@@ -159,10 +159,7 @@ int pt_process::monitor() {
 #else
             // This is right after SIGSTOP is received:
             ptrace(PTRACE_SETOPTIONS, pid, NULL,
-                   PTRACE_O_TRACEEXIT | PTRACE_O_TRACESECCOMP | PTRACE_O_TRACESYSGOOD |
-#ifdef PTRACE_O_EXITKILL // Kill all sandboxed process automatically when process exits.
-                   PTRACE_O_EXITKILL |
-#endif
+                   PTRACE_O_TRACEEXIT | PTRACE_O_TRACESECCOMP | PTRACE_O_TRACESYSGOOD | PTRACE_O_EXITKILL |
                    PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK | PTRACE_O_TRACEVFORK);
 #endif
             // We now set the process group to the actual pgid.

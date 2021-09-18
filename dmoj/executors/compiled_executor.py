@@ -9,7 +9,7 @@ from typing import Dict, List, Optional, Sequence
 import pylru
 
 from dmoj.cptbox import IsolateTracer, TracedPopen
-from dmoj.cptbox._cptbox import AT_FDCWD
+from dmoj.cptbox._cptbox import AT_FDCWD, Debugger
 from dmoj.cptbox.filesystem_policies import ExactFile, FilesystemAccessRule, RecursiveDir
 from dmoj.cptbox.handlers import ACCESS_EFAULT, ACCESS_EPERM, ALLOW
 from dmoj.cptbox.syscalls import *
@@ -118,8 +118,7 @@ class CompilerIsolateTracer(IsolateTracer):
                 sys_fsync: ALLOW,
                 sys_fadvise64: ALLOW,
                 sys_fchmodat: self.check_file_access_at('fchmodat', is_write=True),
-                # FIXME: this allows changing any FD that is open, not just RW ones.
-                sys_fchmod: ALLOW,
+                sys_fchmod: self.do_fchmod,
                 sys_fallocate: ALLOW,
                 sys_ftruncate: ALLOW,
                 # FIXME: this doesn't validate the source nor target
@@ -201,6 +200,10 @@ class CompilerIsolateTracer(IsolateTracer):
             return True if self.write_fs_jail.check(path) else ACCESS_EPERM(debugger)
 
         return self.check_file_access_at('utimensat')(debugger)
+
+    def do_fchmod(self, debugger: Debugger) -> bool:
+        path = self._getfd_pid(debugger.tid, debugger.uarg0)
+        return True if self.write_fs_jail.check(path) else ACCESS_EPERM(debugger)
 
 
 class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):

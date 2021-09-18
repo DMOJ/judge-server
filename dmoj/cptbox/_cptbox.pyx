@@ -1,5 +1,6 @@
 # cython: language_level=3
 from cpython.exc cimport PyErr_NoMemory, PyErr_SetFromErrno
+from cpython.bytes cimport PyBytes_AsString, PyBytes_FromStringAndSize
 from libc.stdio cimport FILE, fopen, fclose, fgets, sprintf
 from libc.stdlib cimport malloc, free, strtoul
 from libc.string cimport strncmp, strlen
@@ -46,6 +47,7 @@ cdef extern from 'ptbox.h' nogil:
         void arg5(long)
         char *readstr(unsigned long, size_t)
         void freestr(char*)
+        bool readbytes(unsigned long, char *, size_t)
         pid_t getpid()
         pid_t gettid()
         int getpid_syscall()
@@ -376,6 +378,12 @@ cdef class Debugger:
         pystr = <object>str if str != NULL else None
         self.thisptr.freestr(str)
         return pystr
+
+    def readbytes(self, unsigned long address, size_t size):
+        buffer = PyBytes_FromStringAndSize(NULL, size)
+        if not self.thisptr.readbytes(address, PyBytes_AsString(buffer), size):
+            PyErr_SetFromErrno(OSError)
+        return buffer
 
     @property
     def tid(self):

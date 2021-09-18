@@ -159,6 +159,7 @@ public:
     void new_process();
     char *readstr(unsigned long addr, size_t max_size);
     void freestr(char *);
+    bool readbytes(unsigned long addr, char *buffer, size_t size);
 
     pid_t gettid() { return tid; }
     pid_t tid; // TODO maybe call super instead

@@ -7,7 +7,7 @@ import sys
 import tempfile
 import traceback
 from distutils.spawn import find_executable
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
 
 from dmoj.cptbox import IsolateTracer, TracedPopen, syscalls
 from dmoj.cptbox.filesystem_policies import ExactDir, ExactFile, FilesystemAccessRule, RecursiveDir
@@ -27,7 +27,7 @@ if os.path.isdir('/usr/home'):
 else:
     USR_DIR = [RecursiveDir('/usr')]
 
-BASE_FILESYSTEM = [
+BASE_FILESYSTEM: List[FilesystemAccessRule] = [
     ExactFile('/dev/null'),
     ExactFile('/dev/tty'),
     ExactFile('/dev/zero'),
@@ -46,7 +46,7 @@ BASE_FILESYSTEM = [
     ExactDir('/'),
 ]
 
-BASE_WRITE_FILESYSTEM = [ExactFile('/dev/null')]
+BASE_WRITE_FILESYSTEM: List[FilesystemAccessRule] = [ExactFile('/dev/null')]
 
 if 'freebsd' in sys.platform:
     BASE_FILESYSTEM += [
@@ -108,8 +108,8 @@ class BaseExecutor:
     data_grace = 0
     fsize = 0
     personality = 0x0040000  # ADDR_NO_RANDOMIZE
-    fs: Sequence[FilesystemAccessRule] = []
-    write_fs: Sequence[FilesystemAccessRule] = []
+    fs: List[FilesystemAccessRule] = []
+    write_fs: List[FilesystemAccessRule] = []
     syscalls: List[Union[str, Tuple[str, Any]]] = []
 
     _dir: Optional[str] = None
@@ -196,27 +196,31 @@ class BaseExecutor:
     def parse_feedback_from_stderr(self, stderr: bytes, process: TracedPopen) -> str:
         return ''
 
-    def _add_syscalls(self, sec):
-        for name in self.get_allowed_syscalls():
-            if isinstance(name, tuple) and len(name) == 2:
-                name, handler = name
+    def _add_syscalls(self, sec: IsolateTracer) -> IsolateTracer:
+        for item in self.get_allowed_syscalls():
+            if isinstance(item, tuple):
+                name, handler = item
             else:
+                name = item
                 handler = ALLOW
-            sec[getattr(syscalls, 'sys_' + name)] = handler
+            sec[getattr(syscalls, f'sys_{name}')] = handler
         return sec
 
-    def get_security(self, launch_kwargs=None):
+    def get_security(self, launch_kwargs=None) -> IsolateTracer:
         sec = IsolateTracer(self.get_fs(), write_fs=self.get_write_fs())
         return self._add_syscalls(sec)
 
-    def get_fs(self):
+    def get_fs(self) -> List[FilesystemAccessRule]:
+        assert self._dir is not None
         return BASE_FILESYSTEM + self.fs + self._load_extra_fs() + [RecursiveDir(self._dir)]
 
-    def _load_extra_fs(self):
+    def _load_extra_fs(self) -> List[FilesystemAccessRule]:
         name = self.get_executor_name()
         extra_fs_config = env.get('extra_fs', {}).get(name, [])
         extra_fs = []
-        constructors = dict(exact_file=ExactFile, exact_dir=ExactDir, recursive_dir=RecursiveDir)
+        constructors: Dict[str, Type[FilesystemAccessRule]] = dict(
+            exact_file=ExactFile, exact_dir=ExactDir, recursive_dir=RecursiveDir
+        )
         for rules in extra_fs_config:
             for type, path in rules.iteritems():
                 constructor = constructors.get(type)
@@ -225,22 +229,23 @@ class BaseExecutor:
 
         return extra_fs
 
-    def get_write_fs(self):
+    def get_write_fs(self) -> List[FilesystemAccessRule]:
         return BASE_WRITE_FILESYSTEM + self.write_fs
 
-    def get_allowed_syscalls(self):
+    def get_allowed_syscalls(self) -> List[Union[str, Tuple[str, Any]]]:
         return self.syscalls
 
-    def get_address_grace(self):
+    def get_address_grace(self) -> int:
         return self.address_grace
 
-    def get_env(self):
+    def get_env(self) -> Dict[str, str]:
         env = {'LANG': UTF8_LOCALE}
         if self.unbuffered:
-            env['CPTBOX_STDOUT_BUFFER_SIZE'] = 0
+            env['CPTBOX_STDOUT_BUFFER_SIZE'] = '0'
         return env
 
-    def launch(self, *args, **kwargs):
+    def launch(self, *args, **kwargs) -> TracedPopen:
+        assert self._dir is not None
         for src, dst in kwargs.get('symlinks', {}).items():
             src = os.path.abspath(os.path.join(self._dir, src))
             # Disallow the creation of symlinks outside the submission directory.
@@ -265,15 +270,17 @@ class BaseExecutor:
         }
         env.update(self.get_env())
 
+        executable = self.get_executable()
+        assert executable is not None
         return TracedPopen(
             [utf8bytes(a) for a in self.get_cmdline(**kwargs) + list(args)],
-            executable=utf8bytes(self.get_executable()),
+            executable=utf8bytes(executable),
             security=self.get_security(launch_kwargs=kwargs),
             address_grace=self.get_address_grace(),
             data_grace=self.data_grace,
             personality=self.personality,
-            time=kwargs.get('time'),
-            memory=kwargs.get('memory'),
+            time=kwargs.get('time', 0),
+            memory=kwargs.get('memory', 0),
             wall_time=kwargs.get('wall_time'),
             stdin=kwargs.get('stdin'),
             stdout=kwargs.get('stdout'),

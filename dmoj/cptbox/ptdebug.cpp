@@ -266,3 +266,31 @@ char *pt_debugger::readstr_peekdata(unsigned long addr, size_t max_size) {
 void pt_debugger::freestr(char *buf) {
     free(buf);
 }
+
+bool pt_debugger::readbytes(unsigned long addr, char *buffer, size_t size) {
+#if !PTBOX_FREEBSD
+    struct iovec local, remote;
+    local.iov_base = (void *) buffer;
+    local.iov_len = size;
+    remote.iov_base = (void *) addr;
+    remote.iov_len = size;
+
+    return process_vm_readv(tid, &local, 1, &remote, 1, 0) > 0;
+#else
+    union {
+        ptrace_read_t val;
+        char byte[sizeof(ptrace_read_t)];
+    } data;
+    size_t read = 0;
+
+    while (read < size) {
+        errno = 0;
+        data.val = ptrace(PT_READ_D, tid, (caddr_t) (addr + read), 0);
+        if (data.val == -1 && errno)
+            return false;
+        memcpy(buffer + read, data.byte, size - read < sizeof(ptrace_read_t) ? size - read : sizeof(ptrace_read_t));
+        read += sizeof(ptrace_read_t);
+    }
+    return true;
+#endif
+}

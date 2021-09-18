@@ -6,9 +6,10 @@ import subprocess
 import sys
 from collections import deque
 from pathlib import Path, PurePath
-from typing import Optional
+from typing import Any, Dict, List, Optional, Tuple, Type
 
-from dmoj.cptbox.filesystem_policies import ExactDir, ExactFile, RecursiveDir
+from dmoj.cptbox import Debugger, TracedPopen
+from dmoj.cptbox.filesystem_policies import ExactDir, ExactFile, FilesystemAccessRule, RecursiveDir
 from dmoj.error import CompileError, InternalError
 from dmoj.executors.compiled_executor import CompiledExecutor
 from dmoj.executors.mixins import SingleDigitVersionMixin
@@ -27,18 +28,18 @@ reexception = re.compile(r'7257b50d-e37a-4664-b1a5-b1340b4206c0: (.*?)$', re.U |
 JAVA_SANDBOX = os.path.abspath(os.path.join(os.path.dirname(__file__), 'java_sandbox.jar'))
 
 
-def find_class(source):
+def find_class(source: str) -> str:
     source = reinline_comment.sub('', restring.sub('', recomment.sub('', source)))
     class_name = reclass.search(source)
     if class_name is None:
         raise CompileError('No public class: your main class must be declared as a "public class"\n')
     package = repackage.search(source)
     if package:
-        raise CompileError('Invalid package %s: do not declare package\n' % package.group(1))
-    return class_name
+        raise CompileError(f'Invalid package {package.group(1)}: do not declare package\n')
+    return class_name.group(1)
 
 
-def handle_procctl(debugger):
+def handle_procctl(debugger: Debugger) -> bool:
     P_PID = 0
     PROC_STACKGAP_CTL = 17
     PROC_STACKGAP_STATUS = 18
@@ -68,65 +69,68 @@ class JavaExecutor(SingleDigitVersionMixin, CompiledExecutor):
     ]
 
     jvm_regex: Optional[str] = None
+    _class_name: Optional[str]
 
-    def __init__(self, problem_id, source_code, **kwargs):
+    def __init__(self, problem_id: str, source_code: bytes, **kwargs) -> None:
         self._class_name = None
+        self._agent_file = JAVA_SANDBOX
         super().__init__(problem_id, source_code, **kwargs)
 
-    def create_files(self, problem_id, source_code, *args, **kwargs):
-        super().create_files(problem_id, source_code, *args, **kwargs)
-
-        self._agent_file = JAVA_SANDBOX
-
-    def get_compile_popen_kwargs(self):
+    def get_compile_popen_kwargs(self) -> Dict[str, Any]:
         return {'executable': utf8bytes(self.get_compiler())}
 
-    def get_compiled_file(self):
-        return None
+    def get_compiled_file(self) -> str:
+        return ''
 
-    def get_executable(self):
-        return self.get_vm()
+    def get_executable(self) -> str:
+        vm = self.get_vm()
+        assert vm is not None
+        return vm
 
-    def get_fs(self):
+    def get_fs(self) -> List[FilesystemAccessRule]:
         fs = (
             super().get_fs()
             + [ExactFile(self._agent_file)]
             + [ExactDir(str(parent)) for parent in PurePath(self._agent_file).parents]
         )
-        vm_parent = Path(os.path.realpath(self.get_vm())).parent.parent
+        vm = self.get_vm()
+        assert vm is not None
+        vm_parent = Path(os.path.realpath(vm)).parent.parent
         vm_config = Path(glob.glob(f'{vm_parent}/**/jvm.cfg', recursive=True)[0])
         if vm_config.is_symlink():
             fs += [RecursiveDir(os.path.dirname(os.path.realpath(vm_config)))]
         return fs
 
-    def get_write_fs(self):
+    def get_write_fs(self) -> List[FilesystemAccessRule]:
+        assert self._dir is not None
         return super().get_write_fs() + [ExactFile(os.path.join(self._dir, 'submission_jvm_crash.log'))]
 
-    def get_agent_flag(self):
+    def get_agent_flag(self) -> str:
         hints = [*self._hints]
         if self.unbuffered:
             hints.append('nobuf')
         return f'-javaagent:{self._agent_file}={",".join(hints)}'
 
-    def get_cmdline(self, **kwargs):
+    def get_cmdline(self, **kwargs) -> List[str]:
         # 128m is equivalent to 1<<27 in Thread constructor
         return [
             'java',
             self.get_vm_mode(),
             self.get_agent_flag(),
             '-Xss128m',
-            '-Xmx%dK' % kwargs['orig_memory'],
+            f'-Xmx{kwargs["orig_memory"]}K',
             '-XX:+UseSerialGC',
             '-XX:ErrorFile=submission_jvm_crash.log',
-            self._class_name,
+            self._class_name or '',
         ]
 
-    def launch(self, *args, **kwargs):
+    def launch(self, *args, **kwargs) -> TracedPopen:
         kwargs['orig_memory'], kwargs['memory'] = kwargs['memory'], 0
         return super().launch(*args, **kwargs)
 
-    def parse_feedback_from_stderr(self, stderr, process):
+    def parse_feedback_from_stderr(self, stderr: bytes, process: TracedPopen) -> str:
         if process.returncode:
+            assert self._dir is not None
             try:
                 with open(os.path.join(self._dir, 'submission_jvm_crash.log'), 'r') as err:
                     log = err.read()
@@ -152,27 +156,29 @@ class JavaExecutor(SingleDigitVersionMixin, CompiledExecutor):
         return exception
 
     @classmethod
-    def get_vm(cls):
+    def get_vm(cls) -> Optional[str]:
         return cls.runtime_dict.get(cls.vm)
 
     @classmethod
-    def get_vm_mode(cls):
-        return '-%s' % cls.runtime_dict.get(cls.vm + '_mode', 'client')
+    def get_vm_mode(cls) -> str:
+        return f'-{cls.runtime_dict.get(cls.vm + "_mode", "client")}'
 
     @classmethod
-    def get_compiler(cls):
+    def get_compiler(cls) -> Optional[str]:
         return cls.runtime_dict.get(cls.compiler)
 
     @classmethod
-    def initialize(cls):
-        if cls.get_vm() is None or cls.get_compiler() is None:
+    def initialize(cls) -> bool:
+        vm = cls.get_vm()
+        compiler = cls.get_compiler()
+        if vm is None or compiler is None:
             return False
-        if not os.path.isfile(cls.get_vm()) or not os.path.isfile(cls.get_compiler()):
+        if not os.path.isfile(vm) or not os.path.isfile(compiler):
             return False
         return skip_self_test or cls.run_self_test()
 
     @classmethod
-    def test_jvm(cls, name, path):
+    def test_jvm(cls, name: str, path: str) -> Tuple[Dict[str, Any], bool, str]:
         raise NotImplementedError()
 
     @classmethod
@@ -184,9 +190,9 @@ class JavaExecutor(SingleDigitVersionMixin, CompiledExecutor):
         return ['-version']
 
     @classmethod
-    def autoconfig(cls):
+    def autoconfig(cls) -> Tuple[Optional[Dict[str, Any]], bool, str, str]:
         if cls.jvm_regex is None:
-            return {}, False, 'Unimplemented'
+            return {}, False, 'Unimplemented', ''
 
         JVM_DIR = '/usr/local' if sys.platform.startswith('freebsd') else '/usr/lib/jvm'
         regex = re.compile(cls.jvm_regex)
@@ -205,14 +211,14 @@ class JavaExecutor(SingleDigitVersionMixin, CompiledExecutor):
                 try:
                     config, success, message = cls.test_jvm(item, path)
                 except (NotImplementedError, TypeError, ValueError):
-                    return {}, False, 'Unimplemented'
+                    return {}, False, 'Unimplemented', ''
                 else:
                     if success:
-                        return config, success, message
-        return {}, False, 'Could not find JVM'
+                        return config, success, message, ''
+        return {}, False, 'Could not find JVM', ''
 
     @classmethod
-    def unravel_java(cls, path):
+    def unravel_java(cls, path: str) -> str:
         with open(path, 'rb') as f:
             if f.read(2) != '#!':
                 return os.path.realpath(path)
@@ -220,40 +226,43 @@ class JavaExecutor(SingleDigitVersionMixin, CompiledExecutor):
         with open(os.devnull, 'w') as devnull:
             process = subprocess.Popen(['bash', '-x', path, '-version'], stdout=devnull, stderr=subprocess.PIPE)
 
-        log = [i for i in process.communicate()[1].split('\n') if 'exec' in i]
-        cmdline = log[-1].lstrip('+ ').split()
-        return cmdline[1] if len(cmdline) > 1 else path
+        log = [i for i in process.communicate()[1].split(b'\n') if b'exec' in i]
+        cmdline = log[-1].lstrip(b'+ ').split()
+        return utf8text(cmdline[1]) if len(cmdline) > 1 else os.path.realpath(path)
 
 
 class JavacExecutor(JavaExecutor):
-    def create_files(self, problem_id, source_code, *args, **kwargs):
+    def create_files(self, problem_id: str, source_code: bytes, *args, **kwargs) -> None:
         super().create_files(problem_id, source_code, *args, **kwargs)
         # This step is necessary because of Unicode classnames
         try:
-            source_code = utf8text(source_code)
+            source = utf8text(source_code)
         except UnicodeDecodeError:
             raise CompileError('Your UTF-8 is bad, and you should feel bad')
-        class_name = find_class(source_code)
-        self._code = self._file('%s.java' % class_name.group(1))
+        class_name = find_class(source)
+        self._code = self._file(f'{class_name}.java')
         try:
             with open(self._code, 'wb') as fo:
-                fo.write(utf8bytes(source_code))
+                fo.write(utf8bytes(source))
         except IOError as e:
             if e.errno in (errno.ENAMETOOLONG, errno.ENOENT, errno.EINVAL):
                 raise CompileError('Why do you need a class name so long? As a judge, I sentence your code to death.\n')
             raise
-        self._class_name = class_name.group(1)
+        self._class_name = class_name
 
-    def get_compile_args(self):
-        return [self.get_compiler(), '-Xlint', '-encoding', 'UTF-8', self._code]
+    def get_compile_args(self) -> List[str]:
+        compiler = self.get_compiler()
+        assert compiler is not None
+        assert self._code is not None
+        return [compiler, '-Xlint', '-encoding', 'UTF-8', self._code]
 
-    def handle_compile_error(self, output):
+    def handle_compile_error(self, output: bytes):
         if b'is public, should be declared in a file named' in utf8bytes(output):
             raise CompileError('You are a troll. Trolls are not welcome. As a judge, I sentence your code to death.\n')
         raise CompileError(output)
 
     @classmethod
-    def test_jvm(cls, name, path):
+    def test_jvm(cls, name: str, path: str) -> Tuple[Dict[str, Any], bool, str]:
         vm_path = os.path.join(path, 'bin', 'java')
         compiler_path = os.path.join(path, 'bin', 'javac')
 
@@ -267,13 +276,13 @@ class JavacExecutor(JavaExecutor):
             for mode in vm_modes:
                 result = {cls.vm: vm_path, cls_vm_mode: mode, cls.compiler: compiler_path}
 
-                executor = type('Executor', (cls,), {'runtime_dict': result})
+                executor: Type[JavacExecutor] = type('Executor', (cls,), {'runtime_dict': result})
                 success = executor.run_self_test(output=False)
                 if success:
                     # Don't pollute the YAML in the usual case where it's -client
                     if mode == 'client':
                         del result[cls_vm_mode]
-                    return result, success, 'Using %s (%s VM)' % (vm_path, mode)
+                    return result, success, f'Using {vm_path} ({mode} VM)'
             else:
                 # If absolutely no VM mode works, then we've failed the self test
                 return result, False, 'Failed self-test'

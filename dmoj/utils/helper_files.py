@@ -76,7 +76,7 @@ def parse_helper_file_error(proc, executor, name: str, stderr: bytes, time_limit
     if proc.is_tle:
         error = f'{name} timed out (> {time_limit} seconds)'
     elif proc.is_mle:
-        error = f'{name} ran out of memory (> {memory_limit} Kb)'
+        error = f'{name} ran out of memory (> {memory_limit} KB)'
     elif proc.protection_fault:
         syscall, callname, args, update_errno = proc.protection_fault
         error = f'{name} invoked disallowed syscall {syscall} ({callname})'

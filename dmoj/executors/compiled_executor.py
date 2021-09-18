@@ -121,8 +121,8 @@ class CompilerIsolateTracer(IsolateTracer):
                 sys_fchmod: self.do_fchmod,
                 sys_fallocate: ALLOW,
                 sys_ftruncate: ALLOW,
+                sys_rename: self.do_rename,
                 # FIXME: this doesn't validate the source nor target
-                sys_rename: ALLOW,
                 sys_renameat: ALLOW,
                 # I/O system calls
                 sys_readv: ALLOW,
@@ -204,6 +204,22 @@ class CompilerIsolateTracer(IsolateTracer):
     def do_fchmod(self, debugger: Debugger) -> bool:
         path = self._getfd_pid(debugger.tid, debugger.uarg0)
         return True if self.write_fs_jail.check(path) else ACCESS_EPERM(debugger)
+
+    def do_rename(self, debugger: Debugger) -> bool:
+        old_path, old_path_error = self.read_path('rename', debugger, debugger.uarg0)
+        if old_path_error is not None:
+            return old_path_error
+
+        new_path, new_path_error = self.read_path('rename', debugger, debugger.uarg1)
+        if new_path_error is not None:
+            return new_path_error
+
+        if not self._file_access_check(old_path, debugger, is_write=True, is_open=False):
+            return ACCESS_EPERM(debugger)
+        if not self._file_access_check(new_path, debugger, is_write=True, is_open=False):
+            return ACCESS_EPERM(debugger)
+
+        return True
 
 
 class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):

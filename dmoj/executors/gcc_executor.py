@@ -1,8 +1,9 @@
 import os
 import re
 from collections import deque
-from typing import Dict, List
+from typing import Any, Dict, List, Optional, Tuple, Type
 
+from dmoj.cptbox import TracedPopen
 from dmoj.executors.compiled_executor import CompiledExecutor
 from dmoj.executors.mixins import SingleDigitVersionMixin
 from dmoj.judgeenv import env
@@ -25,15 +26,15 @@ class GCCExecutor(SingleDigitVersionMixin, CompiledExecutor):
 
     source_dict: Dict[str, bytes] = {}
 
-    def __init__(self, problem_id, main_source, **kwargs):
+    def __init__(self, problem_id: str, source_code: bytes, **kwargs) -> None:
         self.source_dict = kwargs.pop('aux_sources', {})
-        if main_source:
-            self.source_dict[problem_id + self.ext] = main_source
+        if source_code:
+            self.source_dict[problem_id + self.ext] = source_code
         self.defines = kwargs.pop('defines', [])
 
-        super().__init__(problem_id, main_source, **kwargs)
+        super().__init__(problem_id, source_code, **kwargs)
 
-    def create_files(self, problem_id, main_source, **kwargs):
+    def create_files(self, problem_id: str, source_code: bytes, *args, **kwargs) -> None:
         self.source_paths = []
         for name, source in self.source_dict.items():
             if '.' not in name:
@@ -54,7 +55,7 @@ class GCCExecutor(SingleDigitVersionMixin, CompiledExecutor):
         return []
 
     def get_flags(self) -> List[str]:
-        return self.flags + ['-fmax-errors=%d' % MAX_ERRORS]
+        return self.flags + [f'-fmax-errors={MAX_ERRORS}']
 
     def get_defines(self) -> List[str]:
         return ['-DONLINE_JUDGE'] + self.defines
@@ -73,15 +74,15 @@ class GCCExecutor(SingleDigitVersionMixin, CompiledExecutor):
             + ['-s', '-o', self.get_compiled_file()]
         )
 
-    def get_compile_env(self) -> dict:
+    def get_compile_env(self) -> Optional[Dict[str, str]]:
         return GCC_COMPILE
 
-    def get_env(self) -> dict:
+    def get_env(self) -> Dict[str, str]:
         env = super().get_env() or {}
         env.update(GCC_ENV)
         return env
 
-    def parse_feedback_from_stderr(self, stderr, process):
+    def parse_feedback_from_stderr(self, stderr: bytes, process: TracedPopen) -> str:
         if not stderr or len(stderr) > 2048:
             return ''
         match = deque(recppexc.finditer(stderr), maxlen=1)
@@ -94,7 +95,7 @@ class GCCExecutor(SingleDigitVersionMixin, CompiledExecutor):
     def get_march_flag(cls) -> str:
         conf_arch = cls.runtime_dict.get(cls.arch, 'native')
         if conf_arch:
-            return '-march=%s' % conf_arch
+            return f'-march={conf_arch}'
         # arch must've been explicitly disabled
         return ''
 
@@ -103,32 +104,34 @@ class GCCExecutor(SingleDigitVersionMixin, CompiledExecutor):
         return ['-dumpversion']
 
     @classmethod
-    def autoconfig_run_test(cls, result):
+    def autoconfig_run_test(cls, result: Dict[str, Any]) -> Tuple[Dict[str, str], bool, str, str]:
         # Some versions of GCC/Clang (like those in Raspbian or ARM64 Debian)
         # can't autodetect the CPU, in which case our unconditional passing of
         # -march=native breaks. Here we try to see if -march=native works, and
         # if not fall back to a generic (slow) build.
         for target in ['native', None]:
             result[cls.arch] = target
-            executor = type('Executor', (cls,), {'runtime_dict': result})
+            executor: Type[GCCExecutor] = type('Executor', (cls,), {'runtime_dict': result})
             executor.__module__ = cls.__module__
-            errors = []
+            errors: List[str] = []
             success = executor.run_self_test(output=False, error_callback=errors.append)
             if success:
-                message = 'Using %s (%s target)' % (result[cls.command], target or 'generic')
+                assert cls.command is not None
+                message = f'Using {result[cls.command]} ({target or "generic"} target)'
                 # Don't pollute the YAML in the default case
                 if target == 'native':
                     del result[cls.arch]
-                return result, success, message, None
+                return result, success, message, ''
         return result, success, 'Failed self-test', '\n'.join(errors)
 
     @classmethod
-    def autoconfig(cls):
+    def autoconfig(cls) -> Tuple[Optional[Dict[str, Any]], bool, str, str]:
         return super().autoconfig()
 
     @classmethod
-    def initialize(cls):
+    def initialize(cls) -> bool:
         res = super().initialize()
         if res:
-            cls.has_color = cls.get_runtime_versions()[0][1] > (4, 9)
+            versions = cls.get_runtime_versions()
+            cls.has_color = versions is not None and versions[0][1] is not None and versions[0][1] > (4, 9)
         return res

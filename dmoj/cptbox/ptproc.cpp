@@ -271,6 +271,14 @@ int pt_process::monitor() {
             }
 
             if ((err = debugger->post_syscall()) != 0) {
+#if !PTBOX_FREEBSD
+                // Again, it is possible for the process to be killed between pre_syscall and post_syscall.
+                // We ignore ESRCH in such a case.
+                if (err == ESRCH) {
+                    fprintf(stderr, "thread disappeared: %d, ignoring.\n", pid);
+                    continue;
+                }
+#endif
                 dispatch(PTBOX_EVENT_PTRACE_ERROR, err);
                 exit_reason = protection_fault(syscall, PTBOX_EVENT_UPDATE_FAIL);
                 continue;

@@ -2,8 +2,9 @@ import atexit
 import readline
 import shlex
 import sys
-from typing import cast
+from typing import List, cast
 
+from dmoj.commands.base_command import GradedSubmission
 from dmoj.error import InvalidCommandException
 from dmoj.judge import Judge
 from dmoj.packet import PacketManager
@@ -61,6 +62,8 @@ class LocalPacketManager:
 
 
 class LocalJudge(Judge):
+    graded_submissions: List[GradedSubmission]
+
     def __init__(self):
         super().__init__(cast(PacketManager, LocalPacketManager(self)))
         self.submission_id_counter = 0

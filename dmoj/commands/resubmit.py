@@ -9,7 +9,7 @@ class ResubmitCommand(Command):
     name = 'resubmit'
     help = 'Resubmit a submission with different parameters.'
 
-    def _populate_parser(self):
+    def _populate_parser(self) -> None:
         self.arg_parser.add_argument('submission_id', type=int, help='id of submission to resubmit')
         self.arg_parser.add_argument('-p', '--problem', help='id of problem to grade', metavar='<problem id>')
         self.arg_parser.add_argument(
@@ -22,7 +22,7 @@ class ResubmitCommand(Command):
             '-ml', '--memory-limit', type=int, help='memory limit for grading, in kilobytes', metavar='<memory limit>'
         )
 
-    def execute(self, line):
+    def execute(self, line: str) -> None:
         args = self.arg_parser.parse_args(line)
 
         problem_id, lang, src, tl, ml = self.get_submission_data(args.submission_id)
@@ -33,9 +33,9 @@ class ResubmitCommand(Command):
         ml = args.memory_limit or ml
 
         if id not in judgeenv.get_supported_problems():
-            raise InvalidCommandException("unknown problem '%s'" % problem_id)
+            raise InvalidCommandException(f"unknown problem '{problem_id}'")
         elif lang not in executors:
-            raise InvalidCommandException("unknown language '%s'" % lang)
+            raise InvalidCommandException(f"unknown language '{lang}'")
         elif tl <= 0:
             raise InvalidCommandException('--time-limit must be >= 0')
         elif ml <= 0:

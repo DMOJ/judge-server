@@ -10,11 +10,11 @@ class ListProblemsCommand(Command):
     name = 'problems'
     help = 'Lists the problems available to be graded on this judge.'
 
-    def _populate_parser(self):
+    def _populate_parser(self) -> None:
         self.arg_parser.add_argument('filter', nargs='?', help='regex filter for problem names (optional)')
         self.arg_parser.add_argument('-l', '--limit', type=int, help='limit number of results', metavar='<limit>')
 
-    def execute(self, line):
+    def execute(self, line: str) -> None:
         _args = self.arg_parser.parse_args(line)
 
         if _args.limit is not None and _args.limit <= 0:
@@ -32,7 +32,7 @@ class ListProblemsCommand(Command):
         if len(all_problems):
             max_len = max(len(p) for p in all_problems)
             for row in zip_longest(*[iter(all_problems)] * 4, fillvalue=''):
-                print(' '.join(('%*s' % (-max_len, row[i])) for i in range(4)))
+                print(' '.join(f'{row[i]:<{max_len}}' for i in range(4)))
             print()
         else:
             raise InvalidCommandException('No problems matching filter found.')

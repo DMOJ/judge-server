@@ -6,10 +6,10 @@ class RejudgeCommand(Command):
     name = 'rejudge'
     help = 'Rejudge a submission.'
 
-    def _populate_parser(self):
+    def _populate_parser(self) -> None:
         self.arg_parser.add_argument('submission_id', type=int, help='id of submission to rejudge')
 
-    def execute(self, line):
+    def execute(self, line: str) -> None:
         args = self.arg_parser.parse_args(line)
         problem_id, lang, src, tl, ml = self.get_submission_data(args.submission_id)
 

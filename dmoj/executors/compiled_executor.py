@@ -88,16 +88,12 @@ class CompilerIsolateTracer(IsolateTracer):
         write_fs += BASE_WRITE_FILESYSTEM + [RecursiveDir(tmpdir)]
         super().__init__(read_fs, *args, write_fs=write_fs, **kwargs)
 
-        # FIXME: big hack to force execve to be handled even with seccomp.
-        def handle_execve(debugger):
-            return True
-
         self.update(
             {
                 # Process spawning system calls
                 sys_fork: ALLOW,
                 sys_vfork: ALLOW,
-                sys_execve: handle_execve,
+                sys_execve: ALLOW,
                 # Directory system calls
                 sys_mkdir: self.check_file_access('mkdir', 0, is_write=True),
                 sys_mkdirat: self.check_file_access_at('mkdirat', is_write=True),

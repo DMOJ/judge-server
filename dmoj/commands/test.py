@@ -1,5 +1,6 @@
 import sys
 import traceback
+from typing import Any, Dict, Iterable
 
 from dmoj.commands.base_command import Command
 from dmoj.error import InvalidCommandException
@@ -10,8 +11,8 @@ from dmoj.utils.ansi import ansi_style, print_ansi
 
 
 class ProblemTester(Tester):
-    def test_problem(self, problem_id):
-        self.output(ansi_style('Testing problem #ansi[%s](cyan|bold)...') % problem_id)
+    def run_problem_tests(self, problem_id: str) -> int:
+        self.output(ansi_style(f'Testing problem #ansi[{problem_id}](cyan|bold)...'))
 
         config = ProblemConfig(ProblemDataManager(get_problem_root(problem_id)))
 
@@ -27,7 +28,7 @@ class ProblemTester(Tester):
                 continue
 
             test_name = test.get('label', test['source'])
-            self.output(ansi_style('\tRunning test #ansi[%s](yellow|bold)') % test_name)
+            self.output(ansi_style(f'\tRunning test #ansi[{test_name}](yellow|bold)'))
             try:
                 test_fails = self.run_test(problem_id, test)
             except Exception:
@@ -36,14 +37,15 @@ class ProblemTester(Tester):
                 self.output(traceback.format_exc())
             else:
                 self.output(
-                    ansi_style('\tResult of test #ansi[%s](yellow|bold): ') % test_name
+                    ansi_style(f'\tResult of test #ansi[{test_name}](yellow|bold): ')
                     + ansi_style(['#ansi[Failed](red|bold)', '#ansi[Success](green|bold)'][not test_fails])
                 )
                 fails += test_fails
 
         return fails
 
-    def _check_targets(targets):
+    @staticmethod
+    def _check_targets(targets: Iterable[str]) -> bool:
         if 'posix' in targets:
             return True
         if 'freebsd' in sys.platform:
@@ -55,7 +57,7 @@ class ProblemTester(Tester):
             return True
         return False
 
-    def run_test(self, problem_id, config):
+    def run_test(self, problem_id: str, config: Dict[str, Any]) -> int:
         if 'targets' in config and not self._check_targets(config['targets']):
             return 0
 
@@ -66,37 +68,35 @@ class TestCommand(Command):
     name = 'test'
     help = 'Runs tests on problems.'
 
-    def _populate_parser(self):
+    def _populate_parser(self) -> None:
         self.arg_parser.add_argument('problem_ids', nargs='+', help='ids of problems to test')
 
-    def execute(self, line):
+    def execute(self, line: str) -> int:
         args = self.arg_parser.parse_args(line)
 
         problem_ids = args.problem_ids
         supported_problems = set(get_supported_problems())
 
-        unknown_problems = ', '.join(
-            map(lambda x: "'%s'" % x, filter(lambda problem_id: problem_id not in supported_problems, problem_ids))
-        )
+        unknown_problems = ', '.join(f"'{i}'" for i in problem_ids if i not in supported_problems)
         if unknown_problems:
-            raise InvalidCommandException('unknown problem(s) %s' % unknown_problems)
+            raise InvalidCommandException(f'unknown problem(s) {unknown_problems}')
 
         tester = ProblemTester()
         total_fails = 0
         for problem_id in problem_ids:
-            fails = tester.test_problem(problem_id)
+            fails = tester.run_problem_tests(problem_id)
             if fails:
-                print_ansi('Problem #ansi[%s](cyan|bold) #ansi[failed %d case(s)](red|bold).' % (problem_id, fails))
+                print_ansi(f'Problem #ansi[{problem_id}](cyan|bold) #ansi[failed {fails} case(s)](red|bold).')
             else:
-                print_ansi('Problem #ansi[%s](cyan|bold) passed with flying colours.' % problem_id)
+                print_ansi(f'Problem #ansi[{problem_id}](cyan|bold) passed with flying colours.')
             print()
             total_fails += fails
 
         print()
         print('Test complete.')
-        if fails:
-            print_ansi('#ansi[A total of %d test(s) failed](red|bold)' % fails)
+        if total_fails:
+            print_ansi(f'#ansi[A total of {total_fails} test(s) failed](red|bold)')
         else:
             print_ansi('#ansi[All tests passed.](green|bold)')
 
-        return fails
+        return total_fails

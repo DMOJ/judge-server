@@ -1,3 +1,5 @@
+from typing import Optional
+
 from dmoj import judgeenv
 from dmoj.commands.base_command import Command
 from dmoj.error import InvalidCommandException
@@ -9,7 +11,7 @@ class SubmitCommand(Command):
     name = 'submit'
     help = 'Grades a submission.'
 
-    def _populate_parser(self):
+    def _populate_parser(self) -> None:
         self.arg_parser.add_argument('problem_id', help='id of problem to grade')
         self.arg_parser.add_argument(
             'language_id', nargs='?', default=None, help='id of the language to grade in (e.g., PY2)'
@@ -34,21 +36,21 @@ class SubmitCommand(Command):
             metavar='<memory limit>',
         )
 
-    def execute(self, line):
+    def execute(self, line: str) -> None:
         args = self.arg_parser.parse_args(line)
 
-        problem_id = args.problem_id
-        language_id = args.language_id
-        time_limit = args.time_limit
-        memory_limit = args.memory_limit
-        source_file = args.source_file
+        problem_id: str = args.problem_id
+        language_id: Optional[str] = args.language_id
+        time_limit: float = args.time_limit
+        memory_limit: int = args.memory_limit
+        source_file: Optional[str] = args.source_file
 
         if language_id not in executors:
             source_file = language_id
             language_id = None  # source file / language id optional
 
         if problem_id not in judgeenv.get_supported_problems():
-            raise InvalidCommandException("unknown problem '%s'" % problem_id)
+            raise InvalidCommandException(f"unknown problem '{problem_id}'")
         elif not language_id:
             if source_file:
                 filename, dot, ext = source_file.partition('.')
@@ -61,12 +63,13 @@ class SubmitCommand(Command):
             else:
                 raise InvalidCommandException('no language is selected')
         elif language_id not in executors:
-            raise InvalidCommandException("unknown language '%s'" % language_id)
+            raise InvalidCommandException(f"unknown language '{language_id}'")
         elif time_limit <= 0:
             raise InvalidCommandException('--time-limit must be >= 0')
         elif memory_limit <= 0:
             raise InvalidCommandException('--memory-limit must be >= 0')
 
+        assert language_id is not None
         src = self.get_source(source_file) if source_file else self.open_editor(language_id)
 
         self.judge.submission_id_counter += 1

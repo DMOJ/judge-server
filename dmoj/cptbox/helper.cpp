@@ -232,10 +232,8 @@ static inline void cptbox_closefrom_getdents(int lowfd) {
 #endif
 
 void cptbox_closefrom(int lowfd) {
-#if defined(__FreeBSD__) && __FreeBSD__ >= 8
+#if defined(__FreeBSD__)
     closefrom(lowfd);
-#elif defined(F_CLOSEM)
-    fcntl(fd, F_CLOSEM, 0);
 #elif defined(__linux__)
     cptbox_closefrom_getdents(lowfd);
 #else

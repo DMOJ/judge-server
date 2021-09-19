@@ -163,7 +163,6 @@ class CompilerIsolateTracer(IsolateTracer):
                     sys_rfork: ALLOW,
                     sys_procctl: ALLOW,
                     sys_cap_rights_limit: ALLOW,
-                    # FIXME: this allows changing any FD that is open, not just RW ones.
                     sys_posix_fadvise: ALLOW,
                     sys_posix_fallocate: ALLOW,
                     sys_setrlimit: ALLOW,

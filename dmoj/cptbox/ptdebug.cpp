@@ -278,12 +278,10 @@ void pt_debugger::freestr(char *buf) {
 }
 
 bool pt_debugger::readbytes(unsigned long addr, char *buffer, size_t size) {
-#if PTBOX_FREEBSD
-    return readbytes_peekdata(addr, buffer, size);
-#else
     if (use_peekdata)
         return readbytes_peekdata(addr, buffer, size);
 
+#if !PTBOX_FREEBSD
     struct iovec local, remote;
     local.iov_base = (void *) buffer;
     local.iov_len = size;
@@ -293,13 +291,29 @@ bool pt_debugger::readbytes(unsigned long addr, char *buffer, size_t size) {
     if (process_vm_readv(tid, &local, 1, &remote, 1, 0) > 0)
         return true;
 
+    perror("process_vm_readv");
+#else
+    struct ptrace_io_desc iod = {
+        .piod_op   = PIOD_READ_D,
+        .piod_offs = (void *) addr,
+        .piod_addr = (void *) buffer,
+        .piod_len  = size,
+    };
+
+    if (ptrace(PT_IO, tid, (caddr_t) &iod, 0) < 0)
+        perror("ptrace(PT_IO)");
+    else if (size == iod.piod_len)
+        return true;
+    else
+        fprintf(stderr, "%d: failed to read %zu bytes, read %zu instead", tid, size, iod.piod_len);
+#endif
+
     if (readbytes_peekdata(addr, buffer, size)) {
         use_peekdata = true;
         return true;
     }
 
     return false;
-#endif
 }
 
 bool pt_debugger::readbytes_peekdata(unsigned long addr, char *buffer, size_t size) {
@@ -312,8 +326,6 @@ bool pt_debugger::readbytes_peekdata(unsigned long addr, char *buffer, size_t si
     while (read < size) {
         errno = 0;
 #if PTBOX_FREEBSD
-        // TODO: we could use PT_IO to speed up this entire function by reading
-        // chunks rather than bytes
         data.val = ptrace(PT_READ_D, tid, (caddr_t) (addr + read), 0);
 #else
         data.val = ptrace(PTRACE_PEEKDATA, tid, addr + read, NULL);

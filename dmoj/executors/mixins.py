@@ -53,22 +53,6 @@ else:
 if sys.platform.startswith('freebsd'):
     BASE_FILESYSTEM += [ExactFile('/etc/libmap.conf'), ExactFile('/var/run/ld-elf.so.hints')]
 else:
-    # Linux and kFreeBSD mounts linux-style procfs.
-    BASE_FILESYSTEM += [
-        ExactDir('/proc'),
-        ExactDir('/proc/self'),
-        ExactFile('/proc/self/maps'),
-        ExactFile('/proc/self/exe'),
-        ExactFile('/proc/self/auxv'),
-        ExactFile('/proc/meminfo'),
-        ExactFile('/proc/stat'),
-        ExactFile('/proc/cpuinfo'),
-        ExactFile('/proc/filesystems'),
-        ExactDir('/proc/xen'),
-        ExactFile('/proc/uptime'),
-        ExactFile('/proc/sys/vm/overcommit_memory'),
-    ]
-
     # Linux-style ld.
     BASE_FILESYSTEM += [ExactFile('/etc/ld.so.nohwcap'), ExactFile('/etc/ld.so.preload'), ExactFile('/etc/ld.so.cache')]
 

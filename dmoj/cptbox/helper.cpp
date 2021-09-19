@@ -1,34 +1,35 @@
-#include "ptbox.h"
 #include "helper.h"
+#include "ptbox.h"
 
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
-#include <string.h>
-#include <unistd.h>
 #include <stdlib.h>
+#include <string.h>
+#include <sys/mman.h>
 #include <sys/resource.h>
 #include <sys/types.h>
-#include <sys/mman.h>
+#include <unistd.h>
 
 #ifdef __FreeBSD__
-#   include <sys/param.h>
-#   include <sys/queue.h>
-#   include <sys/socket.h>
-#   include <sys/sysctl.h>
-#   include <libprocstat.h>
+#include <sys/param.h>
+#include <sys/queue.h>
+#include <sys/socket.h>
+#include <sys/sysctl.h>
+
+#include <libprocstat.h>
 #else
 // No ASLR on FreeBSD... not as of 11.0, anyway
-#   include <sys/personality.h>
-#   include <sys/prctl.h>
+#include <sys/personality.h>
+#include <sys/prctl.h>
 #endif
 
 #if defined(__FreeBSD__) || (defined(__APPLE__) && defined(__MACH__))
-#   define FD_DIR "/dev/fd"
+#define FD_DIR "/dev/fd"
 #else
-#   define FD_DIR "/proc/self/fd"
+#define FD_DIR "/proc/self/fd"
 #endif
 
 inline void setrlimit2(int resource, rlim_t cur, rlim_t max) {
@@ -60,9 +61,12 @@ int cptbox_child_run(const struct child_config *config) {
 #endif
 #endif
 
-    if (config->stdin_ >= 0)  dup2(config->stdin_, 0);
-    if (config->stdout_ >= 0) dup2(config->stdout_, 1);
-    if (config->stderr_ >= 0) dup2(config->stderr_, 2);
+    if (config->stdin_ >= 0)
+        dup2(config->stdin_, 0);
+    if (config->stdout_ >= 0)
+        dup2(config->stdout_, 1);
+    if (config->stderr_ >= 0)
+        dup2(config->stderr_, 2);
     cptbox_closefrom(3);
 
     if (ptrace_traceme()) {
@@ -99,8 +103,7 @@ int cptbox_child_run(const struct child_config *config) {
             }
         } else if (handler > 0) {
             if ((rc = seccomp_rule_add(ctx, SCMP_ACT_ERRNO(handler), syscall, 0))) {
-                fprintf(stderr, "seccomp_rule_add(..., SCMP_ACT_ERRNO(%d), %d): %s\n",
-                    handler, syscall, strerror(-rc));
+                fprintf(stderr, "seccomp_rule_add(..., SCMP_ACT_ERRNO(%d), %d): %s\n", handler, syscall, strerror(-rc));
                 // This failure is not fatal, it'll just cause the syscall to trap anyway.
             }
         }
@@ -154,17 +157,19 @@ static int pos_int_from_ascii(char *name) {
         ++name;
     }
     if (*name)
-        return -1;  /* Non digit found, not a number. */
+        return -1; /* Non digit found, not a number. */
     return num;
 }
 
 static inline void cptbox_close_fd(int fd) {
-    while (close(fd) < 0 && errno == EINTR);
+    while (close(fd) < 0 && errno == EINTR)
+        ;
 }
 
 static void cptbox_closefrom_brute(int lowfd) {
     int max_fd = sysconf(_SC_OPEN_MAX);
-    if (max_fd < 0) max_fd = 16384;
+    if (max_fd < 0)
+        max_fd = 16384;
     for (; lowfd <= max_fd; ++lowfd)
         cptbox_close_fd(lowfd);
 }
@@ -178,13 +183,16 @@ static inline void cptbox_closefrom_dirent(int lowfd) {
         errno = 0;
         while ((dir = readdir(d))) {
             int fd = pos_int_from_ascii(dir->d_name);
-            if (fd < lowfd || fd == fd_dirent) continue;
+            if (fd < lowfd || fd == fd_dirent)
+                continue;
             cptbox_close_fd(fd);
             errno = 0;
         }
-        if (errno) cptbox_closefrom_brute(lowfd);
+        if (errno)
+            cptbox_closefrom_brute(lowfd);
         closedir(d);
-    } else cptbox_closefrom_brute(lowfd);
+    } else
+        cptbox_closefrom_brute(lowfd);
 }
 
 // Borrowing some SYS_getdents64 magic from python's _posixsubprocess.
@@ -193,9 +201,9 @@ static inline void cptbox_closefrom_dirent(int lowfd) {
 // possibly be exec'd before we close the fd. If it is, we have
 // bigger problems than leaking the directory fd.
 #ifdef __linux__
-#include <sys/syscall.h>
-#include <sys/stat.h>
 #include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/syscall.h>
 
 struct linux_dirent64 {
     unsigned long long d_ino;
@@ -212,16 +220,14 @@ static inline void cptbox_closefrom_getdents(int lowfd) {
     } else {
         char buffer[sizeof(struct linux_dirent64)];
         int bytes;
-        while ((bytes = syscall(SYS_getdents64, fd_dir,
-                                (struct linux_dirent64 *)buffer,
-                                sizeof(buffer))) > 0) {
+        while ((bytes = syscall(SYS_getdents64, fd_dir, (struct linux_dirent64 *) buffer, sizeof(buffer))) > 0) {
             struct linux_dirent64 *entry;
             int offset;
             for (offset = 0; offset < bytes; offset += entry->d_reclen) {
                 int fd;
-                entry = (struct linux_dirent64 *)(buffer + offset);
+                entry = (struct linux_dirent64 *) (buffer + offset);
                 if ((fd = pos_int_from_ascii(entry->d_name)) < 0)
-                    continue;  /* Not a number. */
+                    continue; /* Not a number. */
                 if (fd != fd_dir && fd >= lowfd)
                     cptbox_close_fd(fd);
             }
@@ -258,20 +264,21 @@ char *bsd_get_proc_fd(pid_t pid, int fdflags, int fdno) {
         if (kp) {
             head = procstat_getfiles(procstat, kp, 0);
             if (head) {
-                err = EPERM; // Most likely you have no access
+                err = EPERM;  // Most likely you have no access
                 STAILQ_FOREACH(fst, head, next) {
-                    if ((fdflags && fst->fs_uflags & fdflags) ||
-                       (!fdflags && fst->fs_fd == fdno)) {
-                        buf = (char*) malloc(strlen(fst->fs_path) + 1);
+                    if ((fdflags && fst->fs_uflags & fdflags) || (!fdflags && fst->fs_fd == fdno)) {
+                        buf = (char *) malloc(strlen(fst->fs_path) + 1);
                         if (buf)
                             strcpy(buf, fst->fs_path);
                         err = buf ? 0 : ENOMEM;
                         break;
                     }
                 }
-            } else err = errno;
+            } else
+                err = errno;
             procstat_freeprocs(procstat, kp);
-        } else err = errno;
+        } else
+            err = errno;
         procstat_close(procstat);
         errno = err;
     }

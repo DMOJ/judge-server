@@ -30,10 +30,10 @@ int pt_debugger::syscall(int id) {
     switch (abi_) {
         case PTBOX_ABI_FREEBSD_X64:
             regs.r_rax = id;
-            return 0; \
+            return 0;
         case PTBOX_ABI_INVALID:
             return EINVAL;
-        default: \
+        default:
             UNKNOWN_ABI("ptdebug_freebsd_x64.cpp:syscall setter");
     }
 }
@@ -88,29 +88,29 @@ void pt_debugger::error(long value) {
     }
 }
 
-#define MAKE_ACCESSOR(method, reg_name) \
-    long pt_debugger::method() { \
-        switch (abi_) { \
-            case PTBOX_ABI_FREEBSD_X64: \
-                return regs.r_##reg_name; \
-            case PTBOX_ABI_INVALID: \
-                return -1; \
-            default: \
-                UNKNOWN_ABI("ptdebug_freebsd_x64.cpp:" #method " getter"); \
-        } \
-    } \
-    \
-    void pt_debugger::method(long value) { \
-        regs_changed = true; \
-        switch (abi_) { \
-            case PTBOX_ABI_FREEBSD_X64: \
-                regs.r_##reg_name = value; \
-                return; \
-            case PTBOX_ABI_INVALID: \
-                return; \
-            default: \
-                UNKNOWN_ABI("ptdebug_freebsd_x64.cpp:" #method " setter"); \
-        } \
+#define MAKE_ACCESSOR(method, reg_name)                                                                                \
+    long pt_debugger::method() {                                                                                       \
+        switch (abi_) {                                                                                                \
+            case PTBOX_ABI_FREEBSD_X64:                                                                                \
+                return regs.r_##reg_name;                                                                              \
+            case PTBOX_ABI_INVALID:                                                                                    \
+                return -1;                                                                                             \
+            default:                                                                                                   \
+                UNKNOWN_ABI("ptdebug_freebsd_x64.cpp:" #method " getter");                                             \
+        }                                                                                                              \
+    }                                                                                                                  \
+                                                                                                                       \
+    void pt_debugger::method(long value) {                                                                             \
+        regs_changed = true;                                                                                           \
+        switch (abi_) {                                                                                                \
+            case PTBOX_ABI_FREEBSD_X64:                                                                                \
+                regs.r_##reg_name = value;                                                                             \
+                return;                                                                                                \
+            case PTBOX_ABI_INVALID:                                                                                    \
+                return;                                                                                                \
+            default:                                                                                                   \
+                UNKNOWN_ABI("ptdebug_freebsd_x64.cpp:" #method " setter");                                             \
+        }                                                                                                              \
     }
 
 MAKE_ACCESSOR(arg0, rdi)

@@ -2,46 +2,46 @@
 #ifndef idA6398CB6_D711_4634_9D89FF6B1D215169
 #define idA6398CB6_D711_4634_9D89FF6B1D215169
 
-#include <stddef.h>
 #include <inttypes.h>
-#include <sys/resource.h>
-#include <sys/types.h>
-#include <sys/time.h>
+#include <stddef.h>
 #include <sys/param.h>
 #include <sys/ptrace.h>
+#include <sys/resource.h>
+#include <sys/time.h>
+#include <sys/types.h>
 
 #include <map>
 
 #if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
-#   define PTBOX_FREEBSD 1
+#define PTBOX_FREEBSD 1
 #else
-#   define PTBOX_FREEBSD 0
+#define PTBOX_FREEBSD 0
 #endif
 
 #if PTBOX_FREEBSD
 #include "ext_freebsd.h"
 #else
-#include <seccomp.h>
 #include "ext_linux.h"
+#include <seccomp.h>
 #endif
 
-#define MAX_SYSCALL 568
-#define PTBOX_HANDLER_DENY 0
-#define PTBOX_HANDLER_ALLOW 1
-#define PTBOX_HANDLER_CALLBACK 2
+#define MAX_SYSCALL             568
+#define PTBOX_HANDLER_DENY      0
+#define PTBOX_HANDLER_ALLOW     1
+#define PTBOX_HANDLER_CALLBACK  2
 #define PTBOX_HANDLER_STDOUTERR 3
 
-#define PTBOX_EVENT_ATTACH 0
-#define PTBOX_EVENT_EXITING 1
-#define PTBOX_EVENT_EXITED 2
-#define PTBOX_EVENT_SIGNAL 3
-#define PTBOX_EVENT_PROTECTION 4
+#define PTBOX_EVENT_ATTACH       0
+#define PTBOX_EVENT_EXITING      1
+#define PTBOX_EVENT_EXITED       2
+#define PTBOX_EVENT_SIGNAL       3
+#define PTBOX_EVENT_PROTECTION   4
 #define PTBOX_EVENT_PTRACE_ERROR 5
-#define PTBOX_EVENT_UPDATE_FAIL 6
+#define PTBOX_EVENT_UPDATE_FAIL  6
 
-#define PTBOX_EXIT_NORMAL 0
+#define PTBOX_EXIT_NORMAL     0
 #define PTBOX_EXIT_PROTECTION 1
-#define PTBOX_EXIT_SEGFAULT 2
+#define PTBOX_EXIT_SEGFAULT   2
 
 enum {
     PTBOX_ABI_X86 = 0,
@@ -55,38 +55,36 @@ enum {
 };
 
 #if PTBOX_FREEBSD && defined(__amd64__)
-#   include "ptdebug_freebsd_x64.h"
+#include "ptdebug_freebsd_x64.h"
 #elif !PTBOX_FREEBSD && defined(__amd64__)
-#   include "ptdebug_x64.h"
+#include "ptdebug_x64.h"
 #elif !PTBOX_FREEBSD && defined(__i386__)
-#   include "ptdebug_x86.h"
+#include "ptdebug_x86.h"
 #elif !PTBOX_FREEBSD && defined(__arm__)
-#   include "ptdebug_arm.h"
+#include "ptdebug_arm.h"
 #elif !PTBOX_FREEBSD && (defined(__arm64__) || defined(__aarch64__))
-#   include "ptdebug_arm64.h"
+#include "ptdebug_arm64.h"
 #endif
 
 inline void timespec_add(struct timespec *a, struct timespec *b, struct timespec *result) {
-    result->tv_sec = a->tv_sec + b->tv_sec ;
-    result->tv_nsec = a->tv_nsec + b->tv_nsec ;
+    result->tv_sec = a->tv_sec + b->tv_sec;
+    result->tv_nsec = a->tv_nsec + b->tv_nsec;
     if (result->tv_nsec >= 1000000000L) {
         result->tv_sec++;
-        result->tv_nsec = result->tv_nsec - 1000000000L ;
+        result->tv_nsec = result->tv_nsec - 1000000000L;
     }
 }
 
 inline void timespec_sub(struct timespec *a, struct timespec *b, struct timespec *result) {
-    if ((a->tv_sec < b->tv_sec) ||
-        ((a->tv_sec == b->tv_sec) &&
-         (a->tv_nsec <= b->tv_nsec))) { /* a <= b? */
-        result->tv_sec = result->tv_nsec = 0 ;
+    if ((a->tv_sec < b->tv_sec) || ((a->tv_sec == b->tv_sec) && (a->tv_nsec <= b->tv_nsec))) { /* a <= b? */
+        result->tv_sec = result->tv_nsec = 0;
     } else { /* a > b */
         result->tv_sec = a->tv_sec - b->tv_sec;
         if (a->tv_nsec < b->tv_nsec) {
-            result->tv_nsec = a->tv_nsec + 1000000000L - b->tv_nsec ;
+            result->tv_nsec = a->tv_nsec + 1000000000L - b->tv_nsec;
             result->tv_sec--; /* Borrow a second-> */
         } else {
-            result->tv_nsec = a->tv_nsec - b->tv_nsec ;
+            result->tv_nsec = a->tv_nsec - b->tv_nsec;
         }
     }
 }
@@ -99,7 +97,7 @@ typedef int (*pt_fork_handler)(void *context);
 typedef int (*pt_event_callback)(void *context, int event, unsigned long param);
 
 class pt_process {
-public:
+  public:
     pt_process(pt_debugger *debugger);
     void set_callback(pt_handler_callback, void *context);
     void set_event_proc(pt_event_callback, void *context);
@@ -113,10 +111,12 @@ public:
     double wall_clock_time();
     const rusage *getrusage() { return &_rusage; }
     bool was_initialized() { return _initialized; }
-protected:
+
+  protected:
     int dispatch(int event, unsigned long param);
     int protection_fault(int syscall, int type = PTBOX_EVENT_PROTECTION);
-private:
+
+  private:
     pid_t pid;
     int handler[PTBOX_ABI_COUNT][MAX_SYSCALL];
     pt_handler_callback callback;
@@ -131,14 +131,14 @@ private:
 };
 
 class pt_debugger {
-public:
+  public:
     pt_debugger();
 
     int syscall();
     int syscall(int);
     long result();
     void result(long);
-    long error(); // would name this errno, but it conflicts with the errno macro
+    long error();  // would name this errno, but it conflicts with the errno macro
     void error(long);
     long arg0();
     long arg1();
@@ -162,7 +162,7 @@ public:
     bool readbytes(unsigned long addr, char *buffer, size_t size);
 
     pid_t gettid() { return tid; }
-    pid_t tid; // TODO maybe call super instead
+    pid_t tid;  // TODO maybe call super instead
     pid_t getpid() { return process->getpid(); }
 
 #if PTBOX_FREEBSD
@@ -187,9 +187,10 @@ public:
     void on_return(pt_syscall_return_callback callback, void *context) {
         on_return_[tid] = std::make_pair(callback, context);
     }
-private:
+
+  private:
     pt_process *process;
-    std::map<pid_t, std::pair<pt_syscall_return_callback, void*>> on_return_;
+    std::map<pid_t, std::pair<pt_syscall_return_callback, void *>> on_return_;
     int execve_id;
     int abi_;
     int abi_from_reg_size(size_t);

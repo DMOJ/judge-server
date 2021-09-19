@@ -2,26 +2,24 @@
 #define _BSD_SOURCE
 
 #include <errno.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #include <string.h>
-#include <signal.h>
-#include <sys/time.h>
-#include <sys/resource.h>
-#include <sys/wait.h>
-#include <unistd.h>
 #include <sys/ptrace.h>
+#include <sys/resource.h>
+#include <sys/time.h>
+#include <sys/wait.h>
+#include <time.h>
+#include <unistd.h>
 
 #include <set>
 
 #include "ptbox.h"
 
-pt_process::pt_process(pt_debugger *debugger) :
-    pid(0), callback(NULL), context(NULL), debugger(debugger),
-    event_proc(NULL), event_context(NULL), _trace_syscalls(true),
-    _initialized(false)
-{
+pt_process::pt_process(pt_debugger *debugger)
+    : pid(0), callback(NULL), context(NULL), debugger(debugger), event_proc(NULL), event_context(NULL),
+      _trace_syscalls(true), _initialized(false) {
     memset(&exec_time, 0, sizeof exec_time);
     memset(&start_time, 0, sizeof exec_time);
     memset(&end_time, 0, sizeof exec_time);
@@ -121,14 +119,14 @@ int pt_process::monitor() {
         int signal = 0;
         bool trap_next_syscall_event = _trace_syscalls && PTBOX_FREEBSD;
 
-        //printf("pid: %d (%d)\n", pid, this->pid);
+        // printf("pid: %d (%d)\n", pid, this->pid);
 
         if (WIFEXITED(status) || WIFSIGNALED(status)) {
             if (first || pid == pgid)
                 break;
             else {
                 children.erase(pid);
-                //printf("Thread/Process exit: %d\n", pid);
+                // printf("Thread/Process exit: %d\n", pid);
                 continue;
             }
         }
@@ -136,13 +134,13 @@ int pt_process::monitor() {
 #if PTBOX_FREEBSD
         ptrace(PT_LWPINFO, pid, (caddr_t) &lwpi, sizeof lwpi);
 
-        //if (lwpi.pl_flags & PL_FLAG_FORKED)
+        // if (lwpi.pl_flags & PL_FLAG_FORKED)
         //    printf("Created process: %d\n", lwpi.pl_child_pid);
 
         if (lwpi.pl_flags & PL_FLAG_CHILD) {
             ptrace(PT_FOLLOW_FORK, pid, 0, 1);
             children.insert(pid);
-            //printf("Started process: %d\n", pid);
+            // printf("Started process: %d\n", pid);
         }
 #endif
 
@@ -160,7 +158,7 @@ int pt_process::monitor() {
             // This is right after SIGSTOP is received:
             ptrace(PTRACE_SETOPTIONS, pid, NULL,
                    PTRACE_O_TRACEEXIT | PTRACE_O_TRACESECCOMP | PTRACE_O_TRACESYSGOOD | PTRACE_O_EXITKILL |
-                   PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK | PTRACE_O_TRACEVFORK);
+                       PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK | PTRACE_O_TRACEVFORK);
 #endif
             // We now set the process group to the actual pgid.
             pgid = pid;
@@ -170,14 +168,13 @@ int pt_process::monitor() {
             goto resume_process;
         }
 
-        //printf("%d: WSTOPSIG(status): %d\n", pid, WSTOPSIG(status));
+        // printf("%d: WSTOPSIG(status): %d\n", pid, WSTOPSIG(status));
 #if PTBOX_FREEBSD
         if (WSTOPSIG(status) == SIGTRAP && lwpi.pl_flags & (PL_FLAG_SCE | PL_FLAG_SCX)) {
             debugger->setpid(pid);
             debugger->update_syscall(&lwpi);
 #else
-        if ((status >> 8) == (SIGTRAP | PTRACE_EVENT_SECCOMP << 8) ||
-                WSTOPSIG(status) == (0x80 | SIGTRAP)) {
+        if ((status >> 8) == (SIGTRAP | PTRACE_EVENT_SECCOMP << 8) || WSTOPSIG(status) == (0x80 | SIGTRAP)) {
             debugger->settid(pid);
 #endif
             if ((err = debugger->pre_syscall()) != 0) {
@@ -212,7 +209,7 @@ int pt_process::monitor() {
             in_syscall = (status >> 8) == (SIGTRAP | PTRACE_EVENT_SECCOMP << 8);
 #endif
 
-            //printf("%d: %s syscall %d\n", pid, in_syscall ? "Enter" : "Exit", syscall);
+            // printf("%d: %s syscall %d\n", pid, in_syscall ? "Enter" : "Exit", syscall);
             if (!spawned) {
                 if (debugger->is_end_of_first_execve()) {
                     spawned = this->_initialized = true;
@@ -239,19 +236,19 @@ int pt_process::monitor() {
                         case PTBOX_HANDLER_CALLBACK:
                             if (callback(context, syscall))
                                 break;
-                            //printf("Killed by callback: %d\n", syscall);
+                            // printf("Killed by callback: %d\n", syscall);
                             exit_reason = protection_fault(syscall);
                             continue;
                         default:
                             // Default is to kill, safety first.
-                            //printf("Killed by DISALLOW or None: %d\n", syscall);
+                            // printf("Killed by DISALLOW or None: %d\n", syscall);
                             exit_reason = protection_fault(syscall);
                             continue;
                     }
-                // We pass any system call that we can't record in our fixed-size array to python.
-                // Python will decide your fate.
+                    // We pass any system call that we can't record in our fixed-size array to python.
+                    // Python will decide your fate.
                 } else if (!callback(context, syscall)) {
-                    //printf("Killed by callback: %d\n", syscall);
+                    // printf("Killed by callback: %d\n", syscall);
                     exit_reason = protection_fault(syscall);
                     continue;
                 }
@@ -264,7 +261,7 @@ int pt_process::monitor() {
                     trap_next_syscall_event = true;
                 } else {
                     // Fire the on_return handler if we are in a syscall-exit-stop.
-                    std::pair<pt_syscall_return_callback, void*> callback = debugger->on_return_[pid];
+                    std::pair<pt_syscall_return_callback, void *> callback = debugger->on_return_[pid];
                     callback.first(callback.second, pid, syscall);
                     debugger->on_return_.erase(pid);
                 }
@@ -312,7 +309,7 @@ int pt_process::monitor() {
                         case PTRACE_EVENT_CLONE: {
                             unsigned long tid;
                             ptrace(PTRACE_GETEVENTMSG, pid, NULL, &tid);
-                            //printf("Created thread: %d\n", tid);
+                            // printf("Created thread: %d\n", tid);
                             break;
                         }
                         case PTRACE_EVENT_FORK:
@@ -320,7 +317,7 @@ int pt_process::monitor() {
                             unsigned long npid;
                             ptrace(PTRACE_GETEVENTMSG, pid, NULL, &npid);
                             children.insert(npid);
-                            //printf("Created process: %d\n", npid);
+                            // printf("Created process: %d\n", npid);
                             break;
                         }
                     }
@@ -331,10 +328,10 @@ int pt_process::monitor() {
 #endif
 
             // Only main process signals are meaningful.
-            if (!first && pid == pgid) // *** Don't set _signal to SIGSTOP if this is the /first/ SIGSTOP
+            if (!first && pid == pgid)  // *** Don't set _signal to SIGSTOP if this is the /first/ SIGSTOP
                 dispatch(PTBOX_EVENT_SIGNAL, WSTOPSIG(status));
         }
-resume_process:
+    resume_process:
         // Pass NULL as signal in case of our first SIGSTOP because the runtime tends to resend it, making all our
         // work for naught. Like abort(), it catches the signal, prints something (^Z?) and then resends it.
         // Doing this prevents a second SIGSTOP from being dispatched to our event handler above. ***
@@ -342,7 +339,7 @@ resume_process:
         ptrace(trap_next_syscall_event ? PT_SYSCALL : PT_CONTINUE, pid, (caddr_t) 1, first ? 0 : signal);
 #else
         ptrace(trap_next_syscall_event ? PTRACE_SYSCALL : PTRACE_CONT, pid, NULL,
-               first ? NULL : (void*) (intptr_t) signal);
+               first ? NULL : (void *) (intptr_t) signal);
 #endif
         first = false;
     }

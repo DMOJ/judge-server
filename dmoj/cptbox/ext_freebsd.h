@@ -7,7 +7,7 @@ inline long ptrace_traceme() {
 
 // Debian GNU/kFreeBSD neglected to define this in their libc.
 #if defined(__FreeBSD_kernel__) && !defined(PT_FOLLOW_FORK)
-#   define PT_FOLLOW_FORK 23
+#define PT_FOLLOW_FORK 23
 #endif
 
 // Constant for wait4

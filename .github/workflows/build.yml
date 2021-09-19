@@ -17,6 +17,12 @@ jobs:
         black --version
         flake8 --version
         flake8
+    - name: Install clang-format 12
+      run: |
+        wget -O clang-format https://github.com/DMOJ/clang-tools-static-binaries/releases/download/master-5ea3d18c/clang-format-12_linux-amd64
+        chmod a+x ./clang-format
+    - name: Run clang-format
+      run: find dmoj/cptbox/ \( -name '*.h' -or -name '*.cpp' \) -not -name _cptbox.cpp -print0 | xargs -0 ./clang-format --dry-run -Werror --color
   mypy:
     runs-on: ubuntu-latest
     steps:

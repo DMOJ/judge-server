@@ -1,0 +1,12 @@
+BasedOnStyle: LLVM
+---
+Language: Cpp
+PointerAlignment: Right
+ColumnLimit: 120
+IndentWidth: 4
+SpaceAfterCStyleCast: yes
+AllowShortFunctionsOnASingleLine: Inline
+SpacesBeforeTrailingComments: 2
+Cpp11BracedListStyle: no
+AlignConsecutiveMacros: Consecutive
+IndentCaseLabels: yes

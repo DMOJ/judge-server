@@ -1,4 +1,5 @@
 import difflib
+from typing import List
 
 import pygments.formatters
 import pygments.lexers
@@ -10,11 +11,11 @@ class DifferenceCommand(Command):
     name = 'diff'
     help = 'Shows difference between two files.'
 
-    def _populate_parser(self):
+    def _populate_parser(self) -> None:
         self.arg_parser.add_argument('id_or_source_1', help='id or path of first source', metavar='<source 1>')
         self.arg_parser.add_argument('id_or_source_2', help='id or path of second source', metavar='<source 2>')
 
-    def get_data(self, id_or_source):
+    def get_data(self, id_or_source: str) -> List[str]:
         try:
             _, _, src, _, _ = self.get_submission_data(int(id_or_source))
         except ValueError:
@@ -22,11 +23,11 @@ class DifferenceCommand(Command):
 
         return src.splitlines()
 
-    def execute(self, line):
+    def execute(self, line: str) -> None:
         args = self.arg_parser.parse_args(line)
 
-        file1 = args.id_or_source_1
-        file2 = args.id_or_source_2
+        file1: str = args.id_or_source_1
+        file2: str = args.id_or_source_2
 
         data1 = self.get_data(file1)
         data2 = self.get_data(file2)

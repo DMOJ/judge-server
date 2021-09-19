@@ -145,15 +145,11 @@ char *pt_debugger::readstr(unsigned long addr, size_t max_size) {
         return nullptr;
     }
 
-#if PTBOX_FREEBSD
-    return readstr_peekdata(addr, max_size);
-#else
     static unsigned long page_size = sysconf(_SC_PAGESIZE);
     static unsigned long page_mask = (unsigned long) -page_size;
 
     char *buf;
     unsigned long remain, read = 0;
-    struct iovec local, remote;
 
     if (use_peekdata) {
         return readstr_peekdata(addr, max_size);
@@ -167,6 +163,8 @@ char *pt_debugger::readstr(unsigned long addr, size_t max_size) {
     }
 
     while (read < max_size) {
+#if !PTBOX_FREEBSD
+        struct iovec local, remote;
         local.iov_base = (void *) (buf + read);
         local.iov_len = remain;
         remote.iov_base = (void *) (addr + read);
@@ -175,13 +173,28 @@ char *pt_debugger::readstr(unsigned long addr, size_t max_size) {
         // The man page guarantees that a partial read cannot happen at
         // sub-iovec granularity, so we don't need to retry here.
         if (process_vm_readv(tid, &local, 1, &remote, 1, 0) > 0) {
+#else
+        struct ptrace_io_desc iod = {
+            .piod_op   = PIOD_READ_D,
+            .piod_offs = (void *) (addr + read),
+            .piod_addr = (void *) (buf + read),
+            .piod_len  = remain,
+        };
+
+        if (ptrace(PT_IO, tid, (caddr_t) &iod, 0) >= 0) {
+            remain = iod.piod_len;
+#endif
             if (memchr(buf + read, '\0', remain)) {
                 return buf;
             }
 
             read += remain;
         } else {
+#if !PTBOX_FREEBSD
             perror("process_vm_readv");
+#else
+            perror("ptrace(PT_IO)");
+#endif
             free(buf);
 
             char *result = readstr_peekdata(addr, max_size);
@@ -198,7 +211,6 @@ char *pt_debugger::readstr(unsigned long addr, size_t max_size) {
 
     buf[max_size] = '\0';
     return buf;
-#endif
 }
 
 char *pt_debugger::readstr_peekdata(unsigned long addr, size_t max_size) {
@@ -239,8 +251,6 @@ char *pt_debugger::readstr_peekdata(unsigned long addr, size_t max_size) {
 
         errno = 0;
 #if PTBOX_FREEBSD
-        // TODO: we could use PT_IO to speed up this entire function by reading
-        // chunks rather than bytes
         data.val = ptrace(PT_READ_D, tid, (caddr_t) (addr + read), 0);
 #else
         data.val = ptrace(PTRACE_PEEKDATA, tid, addr + read, NULL);

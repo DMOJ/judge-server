@@ -59,34 +59,34 @@ int pt_debugger::syscall(int id) {
     return 0;
 }
 
-#define MAKE_ACCESSOR(method, arm32_name, arm64_name) \
-    long pt_debugger::method() { \
-        switch (abi_) { \
-            case PTBOX_ABI_ARM: \
-                return regs.arm32.arm32_name; \
-            case PTBOX_ABI_ARM64: \
-                return regs.arm64.arm64_name; \
-            case PTBOX_ABI_INVALID: \
-                return -1; \
-            default: \
-                UNKNOWN_ABI("ptdebug_arm64.cpp:" #method " getter"); \
-        } \
-    } \
-    \
-    void pt_debugger::method(long value) { \
-        regs_changed = true; \
-        switch (abi_) { \
-            case PTBOX_ABI_ARM: \
-                regs.arm32.arm32_name = value; \
-                return; \
-            case PTBOX_ABI_ARM64: \
-                regs.arm64.arm64_name = value; \
-                return; \
-            case PTBOX_ABI_INVALID: \
-                return; \
-            default: \
-                UNKNOWN_ABI("ptdebug_arm64.cpp:" #method " setter"); \
-        } \
+#define MAKE_ACCESSOR(method, arm32_name, arm64_name)                                                                  \
+    long pt_debugger::method() {                                                                                       \
+        switch (abi_) {                                                                                                \
+            case PTBOX_ABI_ARM:                                                                                        \
+                return regs.arm32.arm32_name;                                                                          \
+            case PTBOX_ABI_ARM64:                                                                                      \
+                return regs.arm64.arm64_name;                                                                          \
+            case PTBOX_ABI_INVALID:                                                                                    \
+                return -1;                                                                                             \
+            default:                                                                                                   \
+                UNKNOWN_ABI("ptdebug_arm64.cpp:" #method " getter");                                                   \
+        }                                                                                                              \
+    }                                                                                                                  \
+                                                                                                                       \
+    void pt_debugger::method(long value) {                                                                             \
+        regs_changed = true;                                                                                           \
+        switch (abi_) {                                                                                                \
+            case PTBOX_ABI_ARM:                                                                                        \
+                regs.arm32.arm32_name = value;                                                                         \
+                return;                                                                                                \
+            case PTBOX_ABI_ARM64:                                                                                      \
+                regs.arm64.arm64_name = value;                                                                         \
+                return;                                                                                                \
+            case PTBOX_ABI_INVALID:                                                                                    \
+                return;                                                                                                \
+            default:                                                                                                   \
+                UNKNOWN_ABI("ptdebug_arm64.cpp:" #method " setter");                                                   \
+        }                                                                                                              \
     }
 
 MAKE_ACCESSOR(result, r0, regs[0])

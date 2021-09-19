@@ -1,17 +1,17 @@
 #define _DEFAULT_SOURCE
 #define _BSD_SOURCE
 
+#include "ptbox.h"
 #include <assert.h>
+#include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <sys/types.h>
 #include <sys/ptrace.h>
+#include <sys/types.h>
 #include <sys/uio.h>
 #include <unistd.h>
-#include "ptbox.h"
 
 #if !PTBOX_FREEBSD
 #include <elf.h>
@@ -130,10 +130,8 @@ typedef long ptrace_read_t;
 
 // Android's bionic C library doesn't have this system call wrapper.
 // Therefore, we use a weak symbol so it could be used when it doesn't exist.
-ssize_t __attribute__((weak)) process_vm_readv(
-    pid_t pid, const struct iovec *lvec, unsigned long liovcnt,
-    const struct iovec *rvec, unsigned long riovcnt, unsigned long flags
-) {
+ssize_t __attribute__((weak)) process_vm_readv(pid_t pid, const struct iovec *lvec, unsigned long liovcnt,
+                                               const struct iovec *rvec, unsigned long riovcnt, unsigned long flags) {
     return syscall(SYS_process_vm_readv, (long) pid, lvec, liovcnt, rvec, riovcnt, flags);
 }
 #endif  // __BIONIC__
@@ -175,10 +173,10 @@ char *pt_debugger::readstr(unsigned long addr, size_t max_size) {
         if (process_vm_readv(tid, &local, 1, &remote, 1, 0) > 0) {
 #else
         struct ptrace_io_desc iod = {
-            .piod_op   = PIOD_READ_D,
+            .piod_op = PIOD_READ_D,
             .piod_offs = (void *) (addr + read),
             .piod_addr = (void *) (buf + read),
-            .piod_len  = remain,
+            .piod_len = remain,
         };
 
         if (ptrace(PT_IO, tid, (caddr_t) &iod, 0) >= 0) {
@@ -294,10 +292,10 @@ bool pt_debugger::readbytes(unsigned long addr, char *buffer, size_t size) {
     perror("process_vm_readv");
 #else
     struct ptrace_io_desc iod = {
-        .piod_op   = PIOD_READ_D,
+        .piod_op = PIOD_READ_D,
         .piod_offs = (void *) addr,
         .piod_addr = (void *) buffer,
-        .piod_len  = size,
+        .piod_len = size,
     };
 
     if (ptrace(PT_IO, tid, (caddr_t) &iod, 0) < 0)

@@ -45,28 +45,28 @@ int pt_debugger::syscall(int id) {
     return 0;
 }
 
-#define MAKE_ACCESSOR(method, reg_name) \
-    long pt_debugger::method() { \
-        switch (abi_) { \
-            case PTBOX_ABI_ARM: \
-                return regs.reg_name; \
-            case PTBOX_ABI_INVALID: \
-                return -1; \
-            default: \
-                UNKNOWN_ABI("ptdebug_arm.cpp:" #method " getter"); \
-        } \
-    } \
-    \
-    void pt_debugger::method(long value) { \
-        regs_changed = true; \
-        switch (abi_) { \
-            case PTBOX_ABI_ARM: \
-                regs.reg_name = value; \
-            case PTBOX_ABI_INVALID: \
-                return; \
-            default: \
-                UNKNOWN_ABI("ptdebug_arm.cpp:" #method " setter"); \
-        } \
+#define MAKE_ACCESSOR(method, reg_name)                                                                                \
+    long pt_debugger::method() {                                                                                       \
+        switch (abi_) {                                                                                                \
+            case PTBOX_ABI_ARM:                                                                                        \
+                return regs.reg_name;                                                                                  \
+            case PTBOX_ABI_INVALID:                                                                                    \
+                return -1;                                                                                             \
+            default:                                                                                                   \
+                UNKNOWN_ABI("ptdebug_arm.cpp:" #method " getter");                                                     \
+        }                                                                                                              \
+    }                                                                                                                  \
+                                                                                                                       \
+    void pt_debugger::method(long value) {                                                                             \
+        regs_changed = true;                                                                                           \
+        switch (abi_) {                                                                                                \
+            case PTBOX_ABI_ARM:                                                                                        \
+                regs.reg_name = value;                                                                                 \
+            case PTBOX_ABI_INVALID:                                                                                    \
+                return;                                                                                                \
+            default:                                                                                                   \
+                UNKNOWN_ABI("ptdebug_arm.cpp:" #method " setter");                                                     \
+        }                                                                                                              \
     }
 
 MAKE_ACCESSOR(result, ARM_r0)

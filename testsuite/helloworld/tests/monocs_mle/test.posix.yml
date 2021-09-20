@@ -1,5 +1,5 @@
 language: MONOCS
 time: 2
-memory: 10240
+memory: 8192
 source: helloworld.cs
 expect: MLE

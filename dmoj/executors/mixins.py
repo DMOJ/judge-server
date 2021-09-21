@@ -13,13 +13,18 @@ from dmoj.judgeenv import env
 from dmoj.utils import setbufsize_path
 from dmoj.utils.unicode import utf8bytes
 
+if os.path.isdir('/usr/home'):
+    USR_DIR = [RecursiveDir(f'/usr/{d}') for d in os.listdir('/usr') if d != 'home' and os.path.isdir(f'/usr/{d}')]
+else:
+    USR_DIR = [RecursiveDir('/usr')]
+
 BASE_FILESYSTEM = [
     ExactFile('/dev/null'),
     ExactFile('/dev/tty'),
     ExactFile('/dev/zero'),
     ExactFile('/dev/urandom'),
     ExactFile('/dev/random'),
-    *[RecursiveDir(f'/usr/{d}') for d in os.listdir('/usr') if d != 'home' and os.path.isdir(f'/usr/{d}')],
+    *USR_DIR,
     RecursiveDir('/lib'),
     RecursiveDir('/lib32'),
     RecursiveDir('/lib64'),

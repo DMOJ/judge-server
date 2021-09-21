@@ -68,7 +68,7 @@ class ConfigNode:
         raise InvalidInitException('config node is not a dict')
 
     def get(self, key, default=None):
-        return self[key] or default
+        return self[key] if key in self else default
 
     def items(self):
         return self.iteritems()

@@ -57,7 +57,15 @@ class JavaExecutor(SingleDigitVersionMixin, CompiledExecutor):
     nproc = -1
     fsize = 1048576  # Allow 1 MB for writing crash log.
     address_grace = 786432
-    syscalls = ['pread64', 'clock_nanosleep', 'socketpair', ('procctl', handle_procctl), 'setrlimit', 'thr_set_name']
+    syscalls = [
+        'pread64',
+        'clock_nanosleep',
+        'socketpair',
+        ('procctl', handle_procctl),
+        'setrlimit',
+        'thr_set_name',
+        'getcpu',
+    ]
 
     jvm_regex: Optional[str] = None
 

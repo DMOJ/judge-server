@@ -1,5 +1,6 @@
 import logging
 import os
+import platform
 import sys
 import traceback
 from typing import cast
@@ -12,6 +13,18 @@ from dmoj.judgeenv import get_problem_root, get_supported_problems
 from dmoj.packet import PacketManager
 from dmoj.utils.ansi import ansi_style, print_ansi
 
+machine = platform.machine()
+arch = {
+    'i386': 'x86',
+    'i486': 'x86',
+    'i586': 'x86',
+    'i686': 'x86',
+    'x86_64': 'amd64',
+    'aarch64': 'arm64',
+    'armv6l': 'arm',
+    'armv7l': 'arm',
+    'armv8l': 'arm64',
+}.get(machine, machine)
 all_executors = executors.executors
 
 
@@ -213,6 +226,10 @@ class Tester:
                 pass
 
         if not config:
+            self.output(ansi_style('\t\t#ansi[Skipped](magenta|bold) - No usable test config'))
+            return 0
+
+        if 'arch' in config and arch not in config['arch']:
             self.output(ansi_style('\t\t#ansi[Skipped](magenta|bold) - No usable test config'))
             return 0
 

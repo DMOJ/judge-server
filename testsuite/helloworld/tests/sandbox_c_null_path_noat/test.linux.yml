@@ -3,3 +3,4 @@ time: 1
 memory: 16384
 source: nullpath.c
 expect: AC
+arch: [x86, amd64, arm]

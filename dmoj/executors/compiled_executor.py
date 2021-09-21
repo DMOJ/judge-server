@@ -94,6 +94,8 @@ class CompilerIsolateTracer(IsolateTracer):
                 sys_fork: ALLOW,
                 sys_vfork: ALLOW,
                 sys_execve: ALLOW,
+                sys_getcpu: ALLOW,
+                sys_getpgid: ALLOW,
                 # Directory system calls
                 sys_mkdir: self.check_file_access('mkdir', 0, is_write=True),
                 sys_mkdirat: self.check_file_access_at('mkdirat', is_write=True),

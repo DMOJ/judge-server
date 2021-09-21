@@ -89,8 +89,8 @@ int pt_debugger::syscall(int id) {
         } \
     }
 
-MAKE_ACCESSOR(result, r7, regs[8])
-MAKE_ACCESSOR(arg0, r0, regs[0])
+MAKE_ACCESSOR(result, r0, regs[0])
+MAKE_ACCESSOR(arg0, orig_r0, regs[0])
 MAKE_ACCESSOR(arg1, r1, regs[1])
 MAKE_ACCESSOR(arg2, r2, regs[2])
 MAKE_ACCESSOR(arg3, r3, regs[3])

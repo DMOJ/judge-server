@@ -9,6 +9,7 @@ class Executor(ScriptExecutor):
     syscalls = [
         # Linux
         'epoll_create',
+        'epoll_create1',
         'epoll_ctl',
         ('fstatfs', ACCESS_EACCES),
         # FreeBSD

@@ -165,6 +165,9 @@ class BaseExecutor(metaclass=ExecutorMeta):
                 if exc.errno != errno.ENOENT:
                     raise
 
+    def create_files(self, problem_id: str, source_code: bytes, *args, **kwargs) -> None:
+        raise NotImplementedError()
+
     def __del__(self) -> None:
         self.cleanup()
 
@@ -182,7 +185,7 @@ class BaseExecutor(metaclass=ExecutorMeta):
     def get_executable(self) -> Optional[str]:
         return None
 
-    def get_cmdline(self, **kwargs):
+    def get_cmdline(self, **kwargs) -> List[str]:
         raise NotImplementedError()
 
     def get_nproc(self) -> int:

@@ -1,5 +1,7 @@
 import subprocess
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
+from dmoj.executors.base_executor import VersionFlags
 from dmoj.executors.mono_executor import MonoExecutor
 
 
@@ -19,22 +21,26 @@ Public Module modmain
 End Module
 """
 
-    def get_compile_args(self):
-        return [self.get_command(), '/nologo', '/quiet', '/optimize+', '/out:%s' % self.get_compiled_file(), self._code]
+    def get_compile_args(self) -> List[str]:
+        command = self.get_command()
+        assert command is not None
+        assert self._code is not None
+        return [command, '/nologo', '/quiet', '/optimize+', f'/out:{self.get_compiled_file()}', self._code]
 
-    def get_compile_popen_kwargs(self):
+    def get_compile_popen_kwargs(self) -> Dict[str, Any]:
         return {'stdout': subprocess.PIPE, 'stderr': subprocess.STDOUT}
 
     @classmethod
-    def get_versionable_commands(cls):
-        return ('vbnc', cls.runtime_dict['mono-vbnc']), ('mono', cls.runtime_dict['mono'])
+    def get_versionable_commands(cls) -> List[Tuple[str, str]]:
+        return [('vbnc', cls.runtime_dict['mono-vbnc']), ('mono', cls.runtime_dict['mono'])]
 
     @classmethod
-    def get_version_flags(cls, command):
+    def get_version_flags(cls, command: str) -> Iterable[VersionFlags]:
         return ['/help'] if command == 'vbnc' else super().get_version_flags(command)
 
     @classmethod
-    def get_find_first_mapping(cls):
+    def get_find_first_mapping(cls) -> Optional[Dict[str, List[str]]]:
         res = super().get_find_first_mapping()
-        res['mono-vbnc'] = ['mono-vbnc', 'vbnc']
+        if res:
+            res['mono-vbnc'] = ['mono-vbnc', 'vbnc']
         return res

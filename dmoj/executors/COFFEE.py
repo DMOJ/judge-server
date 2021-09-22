@@ -1,6 +1,7 @@
 import os
+from typing import Dict, List, Optional, Tuple
 
-from dmoj.cptbox.filesystem_policies import ExactFile
+from dmoj.cptbox.filesystem_policies import ExactFile, FilesystemAccessRule
 from dmoj.executors.script_executor import ScriptExecutor
 
 
@@ -26,21 +27,23 @@ process.stdin.on 'readable', () ->
     address_grace = 1048576
 
     @classmethod
-    def initialize(cls):
+    def initialize(cls) -> bool:
         if 'coffee' not in cls.runtime_dict or not os.path.isfile(cls.runtime_dict['coffee']):
             return False
         return super().initialize()
 
-    def get_cmdline(self, **kwargs):
-        return [self.get_command(), self.runtime_dict['coffee'], self._code]
+    def get_cmdline(self, **kwargs) -> List[str]:
+        command = self.get_command()
+        assert command is not None
+        return [command, self.runtime_dict['coffee'], self._code]
 
-    def get_fs(self):
+    def get_fs(self) -> List[FilesystemAccessRule]:
         return super().get_fs() + [ExactFile(self.runtime_dict['coffee']), ExactFile(self._code)]
 
     @classmethod
-    def get_versionable_commands(cls):
-        return ('coffee', cls.runtime_dict['coffee']), ('node', cls.runtime_dict['node'])
+    def get_versionable_commands(cls) -> List[Tuple[str, str]]:
+        return [('coffee', cls.runtime_dict['coffee']), ('node', cls.runtime_dict['node'])]
 
     @classmethod
-    def get_find_first_mapping(cls):
+    def get_find_first_mapping(cls) -> Optional[Dict[str, List[str]]]:
         return {'node': ['nodejs', 'node'], 'coffee': ['coffee']}

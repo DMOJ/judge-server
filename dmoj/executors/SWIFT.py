@@ -1,3 +1,5 @@
+from typing import List
+
 from dmoj.cptbox.filesystem_policies import RecursiveDir
 from dmoj.executors.compiled_executor import CompiledExecutor
 
@@ -12,5 +14,8 @@ class Executor(CompiledExecutor):
     compiler_write_fs = compiler_read_fs
     test_program = 'print(readLine()!)'
 
-    def get_compile_args(self):
-        return [self.get_command(), self._code]
+    def get_compile_args(self) -> List[str]:
+        command = self.get_command()
+        assert command is not None
+        assert self._code is not None
+        return [command, self._code]

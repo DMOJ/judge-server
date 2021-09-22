@@ -1,3 +1,5 @@
+from typing import Dict, List, Optional, Tuple
+
 from dmoj.cptbox.filesystem_policies import ExactDir, ExactFile, RecursiveDir
 from dmoj.executors.compiled_executor import CompiledExecutor
 
@@ -22,25 +24,33 @@ class Executor(CompiledExecutor):
 (displayln (read-line))
 """
 
-    def get_compile_args(self):
+    def get_compile_args(self) -> List[str]:
+        assert self._code is not None
         return [self.runtime_dict['raco'], 'make', self._code]
 
     def get_cmdline(self, **kwargs):
-        return [self.get_command(), self._code]
+        command = self.get_command()
+        assert command is not None
+        assert self._code is not None
+        return [command, self._code]
 
-    def get_executable(self):
-        return self.get_command()
+    def get_executable(self) -> str:
+        command = self.get_command()
+        assert command is not None
+        return command
 
     @classmethod
-    def initialize(cls):
+    def initialize(cls) -> bool:
         if 'raco' not in cls.runtime_dict:
             return False
         return super().initialize()
 
     @classmethod
-    def get_versionable_commands(cls):
-        return [('racket', cls.get_command())]
+    def get_versionable_commands(cls) -> List[Tuple[str, str]]:
+        command = cls.get_command()
+        assert command is not None
+        return [('racket', command)]
 
     @classmethod
-    def get_find_first_mapping(cls):
+    def get_find_first_mapping(cls) -> Optional[Dict[str, List[str]]]:
         return {'racket': ['racket'], 'raco': ['raco']}

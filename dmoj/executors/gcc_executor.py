@@ -1,9 +1,10 @@
 import os
 import re
 from collections import deque
-from typing import Any, Dict, List, Optional, Tuple, Type
+from typing import Dict, List, Optional, Type
 
 from dmoj.cptbox import TracedPopen
+from dmoj.executors.base_executor import AutoConfigOutput, AutoConfigResult
 from dmoj.executors.compiled_executor import CompiledExecutor
 from dmoj.executors.mixins import SingleDigitVersionMixin
 from dmoj.judgeenv import env
@@ -104,7 +105,7 @@ class GCCExecutor(SingleDigitVersionMixin, CompiledExecutor):
         return ['-dumpversion']
 
     @classmethod
-    def autoconfig_run_test(cls, result: Dict[str, Any]) -> Tuple[Dict[str, str], bool, str, str]:
+    def autoconfig_run_test(cls, result: AutoConfigResult) -> AutoConfigOutput:
         # Some versions of GCC/Clang (like those in Raspbian or ARM64 Debian)
         # can't autodetect the CPU, in which case our unconditional passing of
         # -march=native breaks. Here we try to see if -march=native works, and
@@ -125,7 +126,7 @@ class GCCExecutor(SingleDigitVersionMixin, CompiledExecutor):
         return result, success, 'Failed self-test', '\n'.join(errors)
 
     @classmethod
-    def autoconfig(cls) -> Tuple[Optional[Dict[str, Any]], bool, str, str]:
+    def autoconfig(cls) -> AutoConfigOutput:
         return super().autoconfig()
 
     @classmethod

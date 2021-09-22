@@ -1,8 +1,10 @@
 import os
 import re
+from typing import Dict, List
 
 from dmoj.cptbox.filesystem_policies import ExactFile
 from dmoj.error import CompileError
+from dmoj.executors.base_executor import VersionFlags
 from dmoj.executors.compiled_executor import CompiledExecutor
 
 reinline_comment = re.compile(br'//.*?(?=[\r\n])')
@@ -10,7 +12,7 @@ recomment = re.compile(br'/\*.*?\*/', re.DOTALL)
 repackage = re.compile(br'\s*package\s+main\b')
 
 
-def decomment(x):
+def decomment(x: bytes) -> bytes:
     return reinline_comment.sub(b'', recomment.sub(b'', x))
 
 
@@ -41,7 +43,8 @@ func main() {
     fmt.Print(text)
 }"""
 
-    def get_compile_env(self):
+    def get_compile_env(self) -> Dict[str, str]:
+        assert self._dir is not None
         return {
             # Disable cgo, as it may be used for nefarious things, like linking
             # against arbitrary libraries.
@@ -52,14 +55,17 @@ func main() {
             'GOPATH': '/nonexistent-path',
         }
 
-    def get_compile_args(self):
-        return [self.get_command(), 'build', self._code]
+    def get_compile_args(self) -> List[str]:
+        command = self.get_command()
+        assert command is not None
+        assert self._code is not None
+        return [command, 'build', self._code]
 
     @classmethod
-    def get_version_flags(cls, command):
+    def get_version_flags(cls, command: str) -> List[VersionFlags]:
         return ['version']
 
-    def create_files(self, problem_id, source_code, *args, **kwargs):
+    def create_files(self, problem_id: str, source_code: bytes, *args, **kwargs) -> None:
         source_lines = decomment(source_code).strip().split(b'\n')
         if not repackage.match(source_lines[0]):
             raise CompileError(b'Your code must be defined in package main.\n')

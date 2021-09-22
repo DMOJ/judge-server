@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 
 from .gcc_executor import GCCExecutor
 
@@ -17,5 +17,5 @@ int main() {
 }
 """
 
-    def get_flags(self):
-        return (['-std=%s' % self.std] if self.std else []) + super().get_flags()
+    def get_flags(self) -> List[str]:
+        return ([f'-std={self.std}'] if self.std else []) + super().get_flags()

@@ -1,3 +1,5 @@
+from typing import List
+
 from dmoj.executors.script_executor import ScriptExecutor
 
 
@@ -9,5 +11,5 @@ class Executor(ScriptExecutor):
 
     test_program = '<?php while($f = fgets(STDIN)) echo $f;'
 
-    def get_cmdline(self, **kwargs):
+    def get_cmdline(self, **kwargs) -> List[str]:
         return ['php', self._code]

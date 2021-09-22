@@ -1,3 +1,5 @@
+from typing import List
+
 from dmoj.executors.script_executor import ScriptExecutor
 
 
@@ -20,5 +22,7 @@ class Executor(ScriptExecutor):
     :- main.
 """
 
-    def get_cmdline(self, **kwargs):
-        return [self.get_command(), '--goal=main', '-c', self._code]
+    def get_cmdline(self, **kwargs) -> List[str]:
+        command = self.get_command()
+        assert command is not None
+        return [command, '--goal=main', '-c', self._code]

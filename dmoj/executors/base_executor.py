@@ -19,7 +19,15 @@ from dmoj.utils.ansi import print_ansi
 from dmoj.utils.error import print_protection_fault
 from dmoj.utils.unicode import utf8bytes, utf8text
 
-version_cache: Dict[str, List[Tuple[str, Tuple[int, ...]]]] = {}
+VersionFlags = Union[str, Tuple[str, ...]]
+VersionTuple = Tuple[int, ...]
+RuntimeVersion = Tuple[str, VersionTuple]
+RuntimeVersionList = List[RuntimeVersion]
+
+AutoConfigResult = Dict[str, Any]
+AutoConfigOutput = Tuple[Optional[AutoConfigResult], bool, str, str]
+
+version_cache: Dict[str, RuntimeVersionList] = {}
 
 if os.path.isdir('/usr/home'):
     USR_DIR = [RecursiveDir(f'/usr/{d}') for d in os.listdir('/usr') if d != 'home' and os.path.isdir(f'/usr/{d}')]
@@ -378,12 +386,12 @@ class BaseExecutor(metaclass=ExecutorMeta):
         return [(cls.command, command)]
 
     @classmethod
-    def get_runtime_versions(cls) -> List[Tuple[str, Tuple[int, ...]]]:
+    def get_runtime_versions(cls) -> RuntimeVersionList:
         key = cls.get_executor_name()
         if key in version_cache:
             return version_cache[key]
 
-        versions: List[Tuple[str, Tuple[int, ...]]] = []
+        versions: RuntimeVersionList = []
         for runtime, path in cls.get_versionable_commands():
             flags = cls.get_version_flags(runtime)
 
@@ -408,14 +416,14 @@ class BaseExecutor(metaclass=ExecutorMeta):
         return version_cache[key]
 
     @classmethod
-    def parse_version(cls, command: str, output: str) -> Optional[Tuple[int, ...]]:
+    def parse_version(cls, command: str, output: str) -> Optional[VersionTuple]:
         match = cls.version_regex.match(output)
         if match:
             return tuple(map(int, match.group(1).split('.')))
         return None
 
     @classmethod
-    def get_version_flags(cls, command: str) -> List[str]:
+    def get_version_flags(cls, command: str) -> List[VersionFlags]:
         return ['--version']
 
     @classmethod
@@ -431,9 +439,7 @@ class BaseExecutor(metaclass=ExecutorMeta):
         return None
 
     @classmethod
-    def autoconfig_find_first(
-        cls, mapping: Optional[Dict[str, List[str]]]
-    ) -> Tuple[Optional[Dict[str, Any]], bool, str, str]:
+    def autoconfig_find_first(cls, mapping: Optional[Dict[str, List[str]]]) -> AutoConfigOutput:
         if mapping is None:
             return {}, False, 'Unimplemented', ''
         result = {}
@@ -446,7 +452,7 @@ class BaseExecutor(metaclass=ExecutorMeta):
         return cls.autoconfig_run_test(result)
 
     @classmethod
-    def autoconfig_run_test(cls, result: Dict[str, Any]) -> Tuple[Dict[str, str], bool, str, str]:
+    def autoconfig_run_test(cls, result: AutoConfigResult) -> AutoConfigOutput:
         executor: Any = type('Executor', (cls,), {'runtime_dict': result})
         executor.__module__ = cls.__module__
         errors: List[str] = []
@@ -466,5 +472,5 @@ class BaseExecutor(metaclass=ExecutorMeta):
         return {cls.command: cls.command_paths or [cls.command]}
 
     @classmethod
-    def autoconfig(cls) -> Tuple[Optional[Dict[str, Any]], bool, str, str]:
+    def autoconfig(cls) -> AutoConfigOutput:
         return cls.autoconfig_find_first(cls.get_find_first_mapping())

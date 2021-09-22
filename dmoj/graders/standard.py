@@ -1,16 +1,20 @@
 import logging
 import subprocess
 
+from dmoj.checkers import CheckerOutput
+from dmoj.cptbox import TracedPopen
 from dmoj.error import OutputLimitExceeded
 from dmoj.executors import executors
+from dmoj.executors.base_executor import BaseExecutor
 from dmoj.graders.base import BaseGrader
+from dmoj.problem import TestCase
 from dmoj.result import CheckerResult, Result
 
 log = logging.getLogger('dmoj.graders')
 
 
 class StandardGrader(BaseGrader):
-    def grade(self, case):
+    def grade(self, case: TestCase) -> Result:
         result = Result(case)
 
         input = case.input_data()  # cache generator data
@@ -21,6 +25,7 @@ class StandardGrader(BaseGrader):
 
         process = self._current_proc
 
+        assert process is not None
         self.populate_result(error, result, process)
 
         check = self.check_result(case, result)
@@ -39,10 +44,10 @@ class StandardGrader(BaseGrader):
 
         return result
 
-    def populate_result(self, error, result, process):
+    def populate_result(self, error: bytes, result: Result, process: TracedPopen) -> None:
         self.binary.populate_result(error, result, process)
 
-    def check_result(self, case, result):
+    def check_result(self, case: TestCase, result: Result) -> CheckerOutput:
         # If the submission didn't crash and didn't time out, there's a chance it might be AC
         # We shouldn't run checkers if the submission is already known to be incorrect, because some checkers
         # might be very computationally expensive.
@@ -75,7 +80,7 @@ class StandardGrader(BaseGrader):
 
         return check
 
-    def _launch_process(self, case):
+    def _launch_process(self, case: TestCase) -> None:
         self._current_proc = self.binary.launch(
             time=self.problem.time_limit,
             memory=self.problem.memory_limit,
@@ -86,8 +91,9 @@ class StandardGrader(BaseGrader):
             wall_time=case.config.wall_time_factor * self.problem.time_limit,
         )
 
-    def _interact_with_process(self, case, result, input):
+    def _interact_with_process(self, case: TestCase, result: Result, input: bytes) -> bytes:
         process = self._current_proc
+        assert process is not None
         try:
             result.proc_output, error = process.communicate(
                 input, outlimit=case.config.output_limit_length, errlimit=1048576
@@ -99,7 +105,7 @@ class StandardGrader(BaseGrader):
             process.wait()
         return error
 
-    def _generate_binary(self):
+    def _generate_binary(self) -> BaseExecutor:
         return executors[self.language].Executor(
             self.problem.id,
             self.source,

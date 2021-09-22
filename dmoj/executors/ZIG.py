@@ -1,4 +1,7 @@
+from typing import List
+
 from dmoj.cptbox.filesystem_policies import RecursiveDir
+from dmoj.executors.base_executor import VersionFlags
 from dmoj.executors.compiled_executor import CompiledExecutor
 from dmoj.executors.mixins import StripCarriageReturnsMixin
 
@@ -29,9 +32,12 @@ pub fn main() !void {
     }
 }"""
 
-    def get_compile_args(self):
-        return [self.get_command(), 'build-exe', self._code, '--release-safe', '--name', self.problem]
+    def get_compile_args(self) -> List[str]:
+        command = self.get_command()
+        assert command is not None
+        assert self._code is not None
+        return [command, 'build-exe', self._code, '--release-safe', '--name', self.problem]
 
     @classmethod
-    def get_version_flags(cls, command):
+    def get_version_flags(cls, command: str) -> List[VersionFlags]:
         return ['version']

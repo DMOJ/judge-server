@@ -1,6 +1,7 @@
 from typing import List, Tuple
 
 from dmoj.cptbox.filesystem_policies import RecursiveDir
+from dmoj.executors.base_executor import VersionFlags
 from dmoj.executors.compiled_executor import CompiledExecutor
 
 
@@ -26,5 +27,5 @@ class Executor(CompiledExecutor):
         return [('csc', command)]
 
     @classmethod
-    def get_version_flags(cls, command: str) -> List[str]:
+    def get_version_flags(cls, command: str) -> List[VersionFlags]:
         return ['-version']

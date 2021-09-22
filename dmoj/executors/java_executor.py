@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional, Tuple, Type
 from dmoj.cptbox import Debugger, TracedPopen
 from dmoj.cptbox.filesystem_policies import ExactDir, ExactFile, FilesystemAccessRule, RecursiveDir
 from dmoj.error import CompileError, InternalError
+from dmoj.executors.base_executor import AutoConfigOutput, VersionFlags
 from dmoj.executors.compiled_executor import CompiledExecutor
 from dmoj.executors.mixins import SingleDigitVersionMixin
 from dmoj.judgeenv import skip_self_test
@@ -196,15 +197,17 @@ class JavaExecutor(SingleDigitVersionMixin, CompiledExecutor):
         raise NotImplementedError()
 
     @classmethod
-    def get_versionable_commands(cls):
-        return [('javac', cls.get_compiler())]
+    def get_versionable_commands(cls) -> List[Tuple[str, str]]:
+        compiler = cls.get_compiler()
+        assert compiler is not None
+        return [('javac', compiler)]
 
     @classmethod
-    def get_version_flags(cls, command):
+    def get_version_flags(cls, command: str) -> List[VersionFlags]:
         return ['-version']
 
     @classmethod
-    def autoconfig(cls) -> Tuple[Optional[Dict[str, Any]], bool, str, str]:
+    def autoconfig(cls) -> AutoConfigOutput:
         if cls.jvm_regex is None:
             return {}, False, 'Unimplemented', ''
 
@@ -268,7 +271,7 @@ class JavacExecutor(JavaExecutor):
         compiler = self.get_compiler()
         assert compiler is not None
         assert self._code is not None
-        return [compiler, '-Xlint', '-encoding', 'UTF-8', self._code]
+        return [compiler, '-encoding', 'UTF-8', self._code]
 
     def handle_compile_error(self, output: bytes):
         if b'is public, should be declared in a file named' in utf8bytes(output):
@@ -287,6 +290,7 @@ class JavacExecutor(JavaExecutor):
             # in the config.
             vm_modes = ['client', 'server', 'dcevm', 'zero']
             cls_vm_mode = cls.vm + '_mode'
+            result = {}
             for mode in vm_modes:
                 result = {cls.vm: vm_path, cls_vm_mode: mode, cls.compiler: compiler_path}
 

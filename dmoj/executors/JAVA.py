@@ -27,6 +27,3 @@ public class self_test {
         });
     }
 }"""
-
-    def get_compile_args(self):
-        return [self.get_compiler(), '-encoding', 'UTF-8', self._code]

@@ -1,4 +1,5 @@
 import os
+from typing import List, Tuple
 
 from dmoj.cptbox.filesystem_policies import ExactFile, RecursiveDir
 from dmoj.executors.compiled_executor import CompiledExecutor
@@ -86,7 +87,7 @@ class Executor(CompiledExecutor):
         RecursiveDir('~/.cargo'),
     ]
 
-    def create_files(self, problem_id, source_code, *args, **kwargs):
+    def create_files(self, problem_id: str, source_code: bytes, *args, **kwargs) -> None:
         os.mkdir(self._file('src'))
         with open(self._file('src', 'main.rs'), 'wb') as f:
             f.write(source_code)
@@ -98,14 +99,18 @@ class Executor(CompiledExecutor):
             f.write(CARGO_LOCK)
 
     @classmethod
-    def get_versionable_commands(cls):
-        return [('rustc', os.path.join(os.path.dirname(cls.get_command()), 'rustc'))]
+    def get_versionable_commands(cls) -> List[Tuple[str, str]]:
+        command = cls.get_command()
+        assert command is not None
+        return [('rustc', os.path.join(os.path.dirname(command), 'rustc'))]
 
-    def get_compile_args(self):
-        args = [self.get_command(), 'build', '--release']
+    def get_compile_args(self) -> List[str]:
+        command = self.get_command()
+        assert command is not None
+        args = [command, 'build', '--release']
         if bool_env('DMOJ_CARGO_OFFLINE'):
             args += ['--offline']
         return args
 
-    def get_compiled_file(self):
+    def get_compiled_file(self) -> str:
         return self._file('target', 'release', 'user_submission')

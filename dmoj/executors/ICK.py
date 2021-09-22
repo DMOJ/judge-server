@@ -1,3 +1,5 @@
+from typing import List
+
 from dmoj.executors.compiled_executor import CompiledExecutor
 
 
@@ -30,8 +32,11 @@ class Executor(CompiledExecutor):
 (30)    PLEASE READ OUT ,1
 """
 
-    def get_compile_args(self):
-        flags = [self.get_command(), '-O', self._code]
+    def get_compile_args(self) -> List[str]:
+        command = self.get_command()
+        assert command is not None
+        assert self._code is not None
+        flags = [command, '-O', self._code]
         if self.problem == self.test_name:
             # Do not fail self-test to random compiler bug.
             flags.insert(1, '-b')

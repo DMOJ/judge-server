@@ -43,7 +43,7 @@ def main():
 
         if hasattr(Executor, 'autoconfig'):
             if not args.silent:
-                print_ansi('%-43s%s' % ('Auto-configuring #ansi[%s](|underline):' % name, ''), end=' ', file=sys.stderr)
+                print_ansi(f'Auto-configuring #ansi[{name}](|underline):'.ljust(43), end=' ', file=sys.stderr)
                 sys.stdout.flush()
 
             try:
@@ -59,8 +59,9 @@ def main():
             else:
                 if not args.silent:
                     print_ansi(
-                        ['#ansi[%s](red|bold)', '#ansi[%s](green|bold)'][success]
-                        % (feedback or ['Failed', 'Success'][success]),
+                        f'#ansi[{feedback or "Success"}](green|bold)'
+                        if success
+                        else f'#ansi[{feedback or "Failed"}](red|bold)',
                         file=sys.stderr,
                     )
 
@@ -89,9 +90,7 @@ def main():
     else:
         print_ansi('#ansi[No runtimes configured.](red|bold)', file=sys.__stderr__)
         if not args.verbose:
-            print_ansi(
-                'Run #ansi[%s -V](|underline) to see why this is the case.' % (parser.prog,), file=sys.__stderr__
-            )
+            print_ansi(f'Run #ansi[{parser.prog} -V](|underline) to see why this is the case.', file=sys.__stderr__)
 
     print(yaml.safe_dump({'runtime': result}, default_flow_style=False).rstrip())
 

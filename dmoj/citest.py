@@ -1,7 +1,5 @@
 import os
-import re
 import traceback
-from distutils.version import LooseVersion
 from importlib import import_module
 
 import yaml
@@ -11,28 +9,6 @@ from dmoj.contrib import load_contrib_modules
 from dmoj.executors import executors
 from dmoj.testsuite import Tester
 from dmoj.utils.ansi import print_ansi
-
-
-def find_directory(parent, expr):
-    regex = re.compile(expr)
-    dirs = [d for d in os.listdir(parent) if regex.match(d)]
-    if not dirs:
-        return
-    return os.path.join(parent, max(dirs, key=LooseVersion))
-
-
-def make_override(home, parent, expr):
-    directory = find_directory(parent, expr)
-    if not directory:
-        return
-    return {home: directory}
-
-
-def get_dirs(d):
-    try:
-        return [item for item in os.listdir(d) if os.path.isdir(os.path.join(d, item))]
-    except OSError:
-        return []
 
 
 def ci_test(executors_to_test, overrides, allow_fail=frozenset()):

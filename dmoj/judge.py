@@ -10,14 +10,14 @@ from enum import Enum
 from http.server import HTTPServer
 from itertools import groupby
 from operator import itemgetter
-from typing import Any, Callable, Dict, Generator, List, NamedTuple, Optional, Set, Tuple, Union
+from typing import Any, Callable, Dict, Generator, List, NamedTuple, Optional, Set, Tuple
 
 from dmoj import packet
 from dmoj.control import JudgeControlRequestHandler
 from dmoj.error import CompileError
 from dmoj.judgeenv import clear_problem_dirs_cache, env, get_supported_problems_and_mtimes, startup_warnings
 from dmoj.monitor import Monitor
-from dmoj.problem import BatchedTestCase, Problem, TestCase
+from dmoj.problem import BaseTestCase, BatchedTestCase, Problem
 from dmoj.result import Result
 from dmoj.utils import builtin_int_patch
 from dmoj.utils.ansi import ansi_style, print_ansi, strip_ansi
@@ -470,7 +470,7 @@ class JudgeWorker:
 
         yield IPC.GRADING_BEGIN, (self.grader.run_pretests_only,)
 
-        flattened_cases: List[Tuple[Optional[int], Union[TestCase, BatchedTestCase]]] = []
+        flattened_cases: List[Tuple[Optional[int], BaseTestCase]] = []
         batch_number = 0
         batch_dependencies: List[Set[int]] = []
         for case in self.grader.cases():
@@ -499,6 +499,7 @@ class JudgeWorker:
 
                 # Stop grading if we're short circuiting
                 if is_short_circuiting:
+                    assert isinstance(case, TestCase)
                     result = Result(case, result_flag=Result.SC)
                 else:
                     result = self.grader.grade(case)

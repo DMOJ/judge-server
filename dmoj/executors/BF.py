@@ -1,8 +1,10 @@
 import itertools
 from typing import List
 
+from dmoj.cptbox import TracedPopen
 from dmoj.error import CompileError
 from dmoj.executors.C import Executor as CExecutor
+from dmoj.executors.base_executor import RuntimeVersionList
 
 template = b"""\
 #define _GNU_SOURCE
@@ -58,7 +60,7 @@ class Executor(CExecutor):
         assert command is not None
         return [command, '-O0', *self.source_paths, '-o', self.get_compiled_file()]
 
-    def launch(self, *args, **kwargs):
+    def launch(self, *args, **kwargs) -> TracedPopen:
         memory = kwargs['memory']
         # For some reason, RLIMIT_DATA is being applied to our mmap, so we have to increase the memory limit.
         kwargs['memory'] += 8192
@@ -77,5 +79,5 @@ class Executor(CExecutor):
         return open_brackets != 0
 
     @classmethod
-    def get_runtime_versions(cls):
-        return (('bf', (1, 33, 7)),)
+    def get_runtime_versions(cls) -> RuntimeVersionList:
+        return [('bf', (1, 33, 7))]

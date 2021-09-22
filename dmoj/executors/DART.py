@@ -1,3 +1,5 @@
+from typing import List
+
 from dmoj.cptbox.filesystem_policies import ExactFile, RecursiveDir
 from dmoj.executors.compiled_executor import CompiledExecutor
 
@@ -32,11 +34,16 @@ void main() {
         'ftruncate',
     ]
 
-    def get_compile_args(self):
-        return [self.get_command(), '--snapshot=%s' % self.get_compiled_file(), self._code]
+    def get_compile_args(self) -> List[str]:
+        command = self.get_command()
+        assert command is not None
+        assert self._code is not None
+        return [command, f'--snapshot={self.get_compiled_file()}', self._code]
 
-    def get_cmdline(self, **kwargs):
-        return [self.get_command(), self.get_compiled_file()]
+    def get_cmdline(self, **kwargs) -> List[str]:
+        command = self.get_command()
+        assert command is not None
+        return [command, self.get_compiled_file()]
 
     def get_executable(self):
         return self.get_command()

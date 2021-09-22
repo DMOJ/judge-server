@@ -1,3 +1,5 @@
+from typing import List
+
 from dmoj.executors.shell_executor import ShellExecutor
 
 
@@ -6,5 +8,5 @@ class Executor(ShellExecutor):
     command = 'bash'
     test_program = 'exec cat'
 
-    def get_cmdline(self, **kwargs):
+    def get_cmdline(self, **kwargs) -> List[str]:
         return ['bash', self._code]

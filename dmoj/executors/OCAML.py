@@ -1,4 +1,7 @@
+from typing import List, Tuple
+
 from dmoj.cptbox.filesystem_policies import RecursiveDir
+from dmoj.executors.base_executor import VersionFlags
 from dmoj.executors.compiled_executor import CompiledExecutor
 
 
@@ -22,7 +25,8 @@ let () = (In_channel.iter_lines Stdio.stdin ~f:print_endline)
     # Space for major / minor heaps is reserved ahead of time.
     address_grace = 256 * 1024
 
-    def get_compile_args(self):
+    def get_compile_args(self) -> List[str]:
+        assert self._code is not None
         # fmt: off
         return [
             self.runtime_dict['ocamlfind'],
@@ -41,9 +45,11 @@ let () = (In_channel.iter_lines Stdio.stdin ~f:print_endline)
         # fmt: on
 
     @classmethod
-    def get_version_flags(cls, command):
+    def get_version_flags(cls, command: str) -> List[VersionFlags]:
         return [('opt', '-version')]
 
     @classmethod
-    def get_versionable_commands(cls):
-        return [('ocaml', cls.get_command())]
+    def get_versionable_commands(cls) -> List[Tuple[str, str]]:
+        command = cls.get_command()
+        assert command is not None
+        return [('ocaml', command)]

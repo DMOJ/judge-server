@@ -44,7 +44,7 @@ def get_available():
 
 
 def load_executor(name):
-    return load_module('%s.%s' % (__name__, name), ('No module named "_cptbox"', 'No module named "termios"'))
+    return load_module(f'{__name__}.{name}', ('No module named "_cptbox"', 'No module named "termios"'))
 
 
 def load_executors():

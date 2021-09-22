@@ -17,13 +17,13 @@ class ScriptExecutor(BaseExecutor):
         if cls.command in cls.runtime_dict:
             return cls.runtime_dict[cls.command]
         name = cls.get_executor_name().lower()
-        if '%s_home' % name in cls.runtime_dict:
+        if f'{name}_home' in cls.runtime_dict:
             assert cls.command is not None
-            return os.path.join(cls.runtime_dict['%s_home' % name], 'bin', cls.command)
+            return os.path.join(cls.runtime_dict[f'{name}_home'], 'bin', cls.command)
         return None
 
     def get_fs(self) -> List[FilesystemAccessRule]:
-        home = self.runtime_dict.get('%s_home' % self.get_executor_name().lower())
+        home = self.runtime_dict.get(f'{self.get_executor_name().lower()}_home')
         fs = super().get_fs() + [ExactFile(self._code)]
         if home is not None:
             fs += [RecursiveDir(home)]

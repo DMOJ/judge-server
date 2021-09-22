@@ -1,5 +1,5 @@
 import subprocess
-from typing import Any, Dict, Iterable, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from dmoj.executors.base_executor import VersionFlags
 from dmoj.executors.mono_executor import MonoExecutor
@@ -34,7 +34,7 @@ End Module
         return [('vbnc', cls.runtime_dict['mono-vbnc']), ('mono', cls.runtime_dict['mono'])]
 
     @classmethod
-    def get_version_flags(cls, command: str) -> Iterable[VersionFlags]:
+    def get_version_flags(cls, command: str) -> List[VersionFlags]:
         return ['/help'] if command == 'vbnc' else super().get_version_flags(command)
 
     @classmethod

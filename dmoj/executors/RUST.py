@@ -1,5 +1,6 @@
 import fcntl
 import os
+from typing import List, Optional, Tuple
 
 from dmoj.cptbox.filesystem_policies import ExactFile, RecursiveDir
 from dmoj.executors.compiled_executor import CompiledExecutor
@@ -50,9 +51,9 @@ class Executor(CompiledExecutor):
 
     def __init__(self, problem_id: str, source_code: bytes, **kwargs) -> None:
         super().__init__(problem_id, source_code, **kwargs)
-        self.shared_target = None
+        self.shared_target: Optional[str] = None
 
-    def create_files(self, problem_id, source_code, *args, **kwargs):
+    def create_files(self, problem_id, source_code, *args, **kwargs) -> None:
         os.mkdir(self._file('src'))
         with open(self._file('src', 'main.rs'), 'wb') as f:
             f.write(source_code)
@@ -60,7 +61,7 @@ class Executor(CompiledExecutor):
         with open(self._file('Cargo.toml'), 'wb') as f:
             f.write(CARGO_TOML)
 
-    def get_shared_target(self):
+    def get_shared_target(self) -> str:
         if self.shared_target is not None:
             return self.shared_target
 
@@ -93,12 +94,16 @@ class Executor(CompiledExecutor):
             os.close(self.shared_target_dirfd)
 
     @classmethod
-    def get_versionable_commands(cls):
-        return [('rustc', os.path.join(os.path.dirname(cls.get_command()), 'rustc'))]
+    def get_versionable_commands(cls) -> List[Tuple[str, str]]:
+        command = cls.get_command()
+        assert command is not None
+        return [('rustc', os.path.join(os.path.dirname(command), 'rustc'))]
 
-    def get_compile_args(self):
-        args = [self.get_command(), 'build', '--release', '--offline', '--target-dir', self.get_shared_target()]
+    def get_compile_args(self) -> List[str]:
+        command = self.get_command()
+        assert command is not None
+        args = [command, 'build', '--release', '--offline', '--target-dir', self.get_shared_target()]
         return args
 
-    def get_compiled_file(self):
+    def get_compiled_file(self) -> str:
         return os.path.join(self.get_shared_target(), 'release/user_submission')

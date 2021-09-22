@@ -1,3 +1,5 @@
+from typing import List
+
 from .gcc_executor import GCCExecutor
 
 
@@ -14,5 +16,5 @@ end Hello;
 """
 
     @classmethod
-    def get_version_flags(cls, command):
+    def get_version_flags(cls, command: str) -> List[str]:
         return ['--version']

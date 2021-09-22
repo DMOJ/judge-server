@@ -1,3 +1,6 @@
+from typing import List
+
+from dmoj.executors.base_executor import VersionFlags
 from .gcc_executor import GCCExecutor
 
 
@@ -13,5 +16,5 @@ end Hello;
 """
 
     @classmethod
-    def get_version_flags(cls, command):
+    def get_version_flags(cls, command: str) -> List[VersionFlags]:
         return ['--version']

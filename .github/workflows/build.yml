@@ -51,7 +51,7 @@ jobs:
       run: |
         pip install dist/*.tar.gz
         dmoj-autoconf
-  build:
+  amd64:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -107,3 +107,51 @@ jobs:
         uses: codecov/codecov-action@v1
       - name: Prepare cache for storage
         run: sudo chown -R "$USER:$USER" "$HOME/docker-cache"
+  arm64:
+    runs-on: [self-hosted, Linux, ARM64]
+    strategy:
+      matrix:
+        python-version: [ 3.9 ]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download docker image
+        run: docker pull dmoj/runtimes-tier3
+      - name: Create docker scripts
+        run: |
+          cat > run <<'EOF'
+          #!/bin/bash -e
+          cp -r /code /judge
+          cd /judge
+          curl -L "https://github.com/DMOJ/runtimes-python/releases/latest/download/python${{ matrix.python-version }}-aarch64.tar.gz" | tar -xz
+
+          export PYTHONUNBUFFERED=1
+          export LANG=C.UTF-8
+          export PYTHONIOENCODING=utf8
+          export PYTHON="/judge/python${{ matrix.python-version }}/bin/python${{ matrix.python-version }}"
+
+          "$PYTHON" -m pip install --upgrade pip wheel
+          "$PYTHON" -m pip install cython coverage
+          "$PYTHON" -m pip install -e .[test]
+          chmod o+w .
+
+          code=0
+          runuser -u judge -w PATH /code/run-su || code=$?
+          cp /judge/coverage.xml /code || true
+          exit "$code"
+          EOF
+
+          cat > run-su <<'EOF'
+          #!/bin/bash -e
+          . ~/.profile
+          cd /judge
+          "$PYTHON" -m coverage run -m unittest discover dmoj/tests/
+          "$PYTHON" -m coverage run --append .docker.test.py
+          "$PYTHON" -m coverage combine
+          "$PYTHON" -m coverage xml
+          EOF
+
+          chmod a+x run run-su
+      - name: Execute tests in docker
+        run: docker run -e PYTHON_VERSION="${{ matrix.python-version }}" -v "$(pwd):/code" -v "$HOME/docker-cache:/root/.cache" --cap-add=SYS_PTRACE dmoj/runtimes-tier3
+      - name: Upload coverage data
+        uses: codecov/codecov-action@v1

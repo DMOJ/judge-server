@@ -1,3 +1,5 @@
+from typing import List
+
 from dmoj.executors.java_executor import JavacExecutor
 
 
@@ -28,5 +30,8 @@ public class self_test {
     }
 }"""
 
-    def get_compile_args(self):
-        return [self.get_compiler(), '-encoding', 'UTF-8', '-profile', 'compact1', self._code]
+    def get_compile_args(self) -> List[str]:
+        compiler = self.get_compiler()
+        assert compiler is not None
+        assert self._code is not None
+        return [compiler, '-encoding', 'UTF-8', '-profile', 'compact1', self._code]

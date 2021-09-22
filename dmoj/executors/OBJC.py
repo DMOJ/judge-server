@@ -4,6 +4,8 @@ from typing import List
 
 from dmoj.judgeenv import env
 from .gcc_executor import GCCExecutor
+from ..cptbox.filesystem_policies import ExactFile, FilesystemAccessRule
+from ..utils.unicode import utf8text
 
 
 class Executor(GCCExecutor):
@@ -27,22 +29,22 @@ int main (int argc, const char * argv[]) {
 }
 """
 
-    def get_flags(self):
+    def get_flags(self) -> List[str]:
         return self.objc_flags + super().get_flags()
 
-    def get_ldflags(self):
+    def get_ldflags(self) -> List[str]:
         return self.objc_ldflags + super().get_ldflags()
 
-    def get_fs(self):
-        return super().get_fs() + [r'/proc/\d+/cmdline$']
+    def get_fs(self) -> List[FilesystemAccessRule]:
+        return super().get_fs() + [ExactFile('/proc/self/cmdline')]
 
     @classmethod
-    def initialize(cls):
+    def initialize(cls) -> bool:
         if 'gnustep-config' not in env['runtime'] or not os.path.isfile(env['runtime']['gnustep-config']):
             return False
         try:
-            cls.objc_flags = check_output([env['runtime']['gnustep-config'], '--objc-flags']).split()
-            cls.objc_ldflags = check_output([env['runtime']['gnustep-config'], '--base-libs']).split()
+            cls.objc_flags = utf8text(check_output([env['runtime']['gnustep-config'], '--objc-flags'])).split()
+            cls.objc_ldflags = utf8text(check_output([env['runtime']['gnustep-config'], '--base-libs'])).split()
         except CalledProcessError:
             return False
         return super().initialize()

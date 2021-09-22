@@ -4,7 +4,7 @@ from collections import deque
 from typing import Dict, List, Optional, Type
 
 from dmoj.cptbox import TracedPopen
-from dmoj.executors.base_executor import AutoConfigOutput, AutoConfigResult
+from dmoj.executors.base_executor import AutoConfigOutput, AutoConfigResult, VersionFlags
 from dmoj.executors.compiled_executor import CompiledExecutor
 from dmoj.executors.mixins import SingleDigitVersionMixin
 from dmoj.judgeenv import env
@@ -104,7 +104,7 @@ class GCCExecutor(SingleDigitVersionMixin, CompiledExecutor):
         return ''
 
     @classmethod
-    def get_version_flags(cls, command: str) -> List[str]:
+    def get_version_flags(cls, command: str) -> List[VersionFlags]:
         return ['-dumpversion']
 
     @classmethod
@@ -145,5 +145,5 @@ class CPPExecutor(GCCExecutor):
     std: str
     ext: str = 'cpp'
 
-    def get_flags(self):
+    def get_flags(self) -> List[str]:
         return ([f'-std={self.std}']) + super().get_flags()

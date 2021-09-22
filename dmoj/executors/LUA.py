@@ -1,3 +1,5 @@
+from typing import List
+
 from dmoj.executors.script_executor import ScriptExecutor
 
 
@@ -10,5 +12,5 @@ class Executor(ScriptExecutor):
     test_program = "io.write(io.read('*all'))"
 
     @classmethod
-    def get_version_flags(cls, command):
+    def get_version_flags(cls, command: str) -> List[str]:
         return ['-v']

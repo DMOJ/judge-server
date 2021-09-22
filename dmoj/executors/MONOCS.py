@@ -1,3 +1,5 @@
+from typing import List, Tuple
+
 from dmoj.executors.mono_executor import MonoExecutor
 
 
@@ -17,9 +19,12 @@ class test {
     }
 }"""
 
-    def get_compile_args(self):
-        return [self.get_command(), self._code, '-r:System.Numerics.dll', '-out:%s' % self.get_compiled_file()]
+    def get_compile_args(self) -> List[str]:
+        command = self.get_command()
+        assert command is not None
+        assert self._code is not None
+        return [command, self._code, '-r:System.Numerics.dll', f'-out:{self.get_compiled_file()}']
 
     @classmethod
-    def get_versionable_commands(cls):
-        return ('csc', cls.runtime_dict['mono-csc']), ('mono', cls.runtime_dict['mono'])
+    def get_versionable_commands(cls) -> List[Tuple[str, str]]:
+        return [('csc', cls.runtime_dict['mono-csc']), ('mono', cls.runtime_dict['mono'])]

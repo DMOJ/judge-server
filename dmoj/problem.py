@@ -5,30 +5,62 @@ import subprocess
 import zipfile
 from collections import defaultdict
 from functools import partial
+from typing import (
+    DefaultDict,
+    Dict,
+    IO,
+    Iterable,
+    Iterator,
+    List,
+    Match,
+    Optional,
+    Pattern,
+    Set,
+    TYPE_CHECKING,
+    Tuple,
+    Type,
+    Union,
+    cast,
+)
 
 import yaml
 from yaml.parser import ParserError
 from yaml.scanner import ScannerError
 
 from dmoj import checkers
+from dmoj.checkers import Checker
 from dmoj.config import ConfigNode, InvalidInitException
 from dmoj.judgeenv import env, get_problem_root
 from dmoj.utils.helper_files import compile_with_auxiliary_files, parse_helper_file_error
 from dmoj.utils.module import load_module_from_file
+
+if TYPE_CHECKING:
+    from dmoj.graders.base import BaseGrader
 
 DEFAULT_TEST_CASE_INPUT_PATTERN = r'^(?=.*?\.in|in).*?(?:(?:^|\W)(?P<batch>\d+)[^\d\s]+)?(?P<case>\d+)[^\d\s]*$'
 DEFAULT_TEST_CASE_OUTPUT_PATTERN = r'^(?=.*?\.out|out).*?(?:(?:^|\W)(?P<batch>\d+)[^\d\s]+)?(?P<case>\d+)[^\d\s]*$'
 
 
 class Problem:
-    def __init__(self, problem_id, time_limit, memory_limit, meta):
+    id: str
+    time_limit: float
+    memory_limit: int
+    meta: ConfigNode
+    root_dir: str
+    _checkers: Dict[str, Checker]
+    problem_data: 'ProblemDataManager'
+    config: 'ProblemConfig'
+
+    def __init__(self, problem_id: str, time_limit: float, memory_limit: int, meta: dict) -> None:
         self.id = problem_id
         self.time_limit = time_limit
         self.memory_limit = memory_limit
         self.meta = ConfigNode(meta)
 
         # Cache root dir so that we don't need to scan all roots (potentially very slow on networked mount).
-        self.root_dir = get_problem_root(problem_id)
+        root_dir = get_problem_root(problem_id)
+        assert root_dir is not None
+        self.root_dir = root_dir
         self.problem_data = ProblemDataManager(self.root_dir)
 
         # Checkers modules must be stored in a dict, for the duration of execution,
@@ -42,8 +74,16 @@ class Problem:
         if not self._resolve_test_cases():
             raise InvalidInitException('No test cases? What am I judging?')
 
-    def _match_test_cases(self, filenames, input_case_pattern, output_case_pattern, case_points):
-        def try_match_int(match, group):
+    def _match_test_cases(
+        self,
+        filenames: List[str],
+        input_case_pattern: Pattern[str],
+        output_case_pattern: Pattern[str],
+        case_points: Iterator[int],
+    ) -> List[dict]:
+        key_type = Union[str, int, None]
+
+        def try_match_int(match: Match[str], group: str) -> key_type:
             try:
                 val = match.group(group)
             except IndexError:
@@ -54,7 +94,7 @@ class Problem:
             except (ValueError, TypeError):
                 return val
 
-        def parse_position(pattern, filename):
+        def parse_position(pattern: Pattern[str], filename: str) -> Optional[Tuple[key_type, key_type]]:
             match = pattern.match(filename)
             if not match:
                 return None
@@ -64,12 +104,12 @@ class Problem:
             return try_match_int(match, 'batch'), try_match_int(match, 'case')
 
         class _TestCase:
-            input_file = None
-            output_file = None
+            input_file: Optional[str] = None
+            output_file: Optional[str] = None
 
         # Match all cases with the same (batch, position) mapping.
-        groups = defaultdict(lambda: defaultdict(_TestCase))
-        batch_ids = set()
+        groups: DefaultDict[key_type, DefaultDict[key_type, _TestCase]] = defaultdict(lambda: defaultdict(_TestCase))
+        batch_ids: Set[key_type] = set()
 
         for filetype, pattern in (('input_file', input_case_pattern), ('output_file', output_case_pattern)):
             for testcase_file in filenames:
@@ -110,14 +150,14 @@ class Problem:
 
         return test_cases
 
-    def _problem_file_list(self):
+    def _problem_file_list(self) -> List[str]:
         # We *could* support testcase format specifiers without an archive, but it's harder and most problems should be
         # using archives in the first place.
         if not self.problem_data.archive:
             raise InvalidInitException('can only use test case format specifiers if `archive` is set')
         return self.problem_data.archive.namelist()
 
-    def _resolve_test_cases(self):
+    def _resolve_test_cases(self) -> List[dict]:
         test_cases = self.config.test_cases
 
         # We support several ways for specifying cases. The first is a list of cases, and requires no extra work.
@@ -139,18 +179,18 @@ class Problem:
 
         return self.config['test_cases']
 
-    def load_checker(self, name):
+    def load_checker(self, name: str) -> Checker:
         if name in self._checkers:
             return self._checkers[name]
         self._checkers[name] = checker = load_module_from_file(os.path.join(self.root_dir, name))
         return checker
 
     @property
-    def grader_class(self):
+    def grader_class(self) -> Type['BaseGrader']:
         from dmoj import graders
 
         if 'custom_judge' in self.config:
-            return graders.CustomGrader
+            return cast(Type['BaseGrader'], graders.CustomGrader)
         elif 'signature_grader' in self.config:
             return graders.SignatureGrader
         elif 'interactive' in self.config:
@@ -158,7 +198,7 @@ class Problem:
         else:
             return graders.StandardGrader
 
-    def _resolve_archive_files(self):
+    def _resolve_archive_files(self) -> Optional[zipfile.ZipFile]:
         if self.config.archive:
             archive_path = os.path.join(self.root_dir, self.config.archive)
             if not os.path.exists(archive_path):
@@ -172,12 +212,16 @@ class Problem:
 
 
 class ProblemDataManager(dict):
-    def __init__(self, problem_root_dir, **kwargs):
+    problem_root_dir: str
+    archive: Optional[zipfile.ZipFile]
+
+    def __init__(self, problem_root_dir: str, **kwargs):
         super().__init__(**kwargs)
         self.problem_root_dir = problem_root_dir
         self.archive = None
 
-    def __missing__(self, key):
+    def __missing__(self, key: str) -> bytes:
+        f: IO[bytes]
         try:
             with open(os.path.join(self.problem_root_dir, key), 'rb') as f:
                 return f.read()
@@ -194,7 +238,7 @@ class ProblemDataManager(dict):
 
 
 class ProblemConfig(ConfigNode):
-    def __init__(self, problem_data, meta={}):
+    def __init__(self, problem_data: ProblemDataManager, meta: dict = {}) -> None:
         try:
             doc = yaml.safe_load(problem_data['init.yml'])
         except (IOError, KeyError, ParserError, ScannerError) as e:
@@ -218,8 +262,16 @@ class ProblemConfig(ConfigNode):
             )
 
 
-class BatchedTestCase:
-    def __init__(self, batch_no, config, problem, cases):
+class BaseTestCase:
+    config: ConfigNode
+    points: int
+    problem: Problem
+
+
+class BatchedTestCase(BaseTestCase):
+    batch_no: int
+
+    def __init__(self, batch_no: int, config: ConfigNode, problem: Problem, cases: List[BaseTestCase]) -> None:
         self.config = config
         self.batch_no = batch_no
         self.points = config.points
@@ -233,12 +285,17 @@ class BatchedTestCase:
         if any(dependency < 1 for dependency in self.dependencies):
             raise InvalidInitException('dependencies must be positive integers')
 
-    def __str__(self):
-        return 'BatchedTestCase{cases=%s}' % str(self.batched_cases)
+    def __str__(self) -> str:
+        return f'BatchedTestCase(cases={self.batched_cases!s})'
 
 
-class TestCase:
-    def __init__(self, count, batch_no, config, problem):
+class TestCase(BaseTestCase):
+    batch: int
+    output_prefix_length: int
+    has_binary_data: bool
+    _generated: Optional[Tuple[bytes, bytes]]
+
+    def __init__(self, count: int, batch_no: int, config: ConfigNode, problem: Problem):
         self.position = count
         self.batch = batch_no
         self.config = config
@@ -248,7 +305,7 @@ class TestCase:
         self.has_binary_data = config.binary_data
         self._generated = None
 
-    def _normalize(self, data):
+    def _normalize(self, data: bytes) -> bytes:
         # Perhaps the correct answer may be 'no output', in which case it'll be
         # None here if sourced from a generator.
         data = data or b''
@@ -270,7 +327,7 @@ class TestCase:
 
         return data
 
-    def _run_generator(self, gen, args=None):
+    def _run_generator(self, gen: Union[str, ConfigNode], args: Optional[Iterable[str]] = None) -> None:
         flags = []
         args = args or []
 
@@ -281,6 +338,8 @@ class TestCase:
         lang = None  # Default to C/C++
 
         base = get_problem_root(self.problem.id)
+        assert base is not None
+        filenames: Union[str, list]
         if isinstance(gen, str):
             filenames = gen
         elif isinstance(gen.unwrap(), list):
@@ -310,6 +369,7 @@ class TestCase:
         executor = compile_with_auxiliary_files(filenames, flags, lang, compiler_time_limit)
 
         # convert all args to str before launching; allows for smoother int passing
+        assert args is not None
         args = map(str, args)
 
         # setting large buffers is really important, because otherwise stderr is unbuffered
@@ -322,7 +382,7 @@ class TestCase:
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             stderr_buffer_size=65536,
-            stdout_buffer_size=65536
+            stdout_buffer_size=65536,
         )
 
         try:
@@ -331,11 +391,11 @@ class TestCase:
             input = None
 
         stdout, stderr = proc.unsafe_communicate(input)
-        self._generated = list(map(self._normalize, (stdout, stderr)))
+        self._generated = self._normalize(stdout), self._normalize(stderr)
 
         parse_helper_file_error(proc, executor, 'generator', stderr, time_limit, memory_limit)
 
-    def input_data(self):
+    def input_data(self) -> bytes:
         gen = self.config.generator
 
         # don't try running the generator if we specify an output file explicitly,
@@ -343,22 +403,24 @@ class TestCase:
         if gen and (not self.config['out'] or not self.config['in']):
             if self._generated is None:
                 self._run_generator(gen, args=self.config.generator_args)
+            assert self._generated is not None
             if self._generated[0]:
                 return self._generated[0]
         # in file is optional
         return self._normalize(self.problem.problem_data[self.config['in']]) if self.config['in'] else b''
 
-    def output_data(self):
+    def output_data(self) -> bytes:
         if self.config.out:
             return self._normalize(self.problem.problem_data[self.config.out])
         gen = self.config.generator
         if gen:
             if self._generated is None:
                 self._run_generator(gen, args=self.config.generator_args)
+            assert self._generated is not None
             return self._generated[1]
         return b''
 
-    def checker(self):
+    def checker(self) -> partial:
         try:
             name = self.config['checker'] or 'standard'
             if isinstance(name, ConfigNode):
@@ -380,19 +442,19 @@ class TestCase:
 
         return partial(checker.check, **params)
 
-    def free_data(self):
+    def free_data(self) -> None:
         self._generated = None
 
-    def __str__(self):
-        return 'TestCase{in=%s,out=%s,points=%s}' % (self.config['in'], self.config['out'], self.config['points'])
+    def __str__(self) -> str:
+        return f'TestCase(in={self.config["in"]},out={self.config["out"]},points={self.config["points"]})'
 
     # FIXME(tbrindus): this is a hack working around the fact we can't pickle these fields, but we do need parts of
     # TestCase itself on the other end of the IPC.
     _pickle_blacklist = ('_generated', 'config', 'problem')
 
-    def __getstate__(self):
+    def __getstate__(self) -> dict:
         k = {k: v for k, v in self.__dict__.items() if k not in self._pickle_blacklist}
         return k
 
-    def __setstate__(self, state):
+    def __setstate__(self, state) -> None:
         self.__dict__.update(state)

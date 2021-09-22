@@ -1,6 +1,6 @@
 import os
+import shutil
 import sys
-from distutils.spawn import find_executable
 
 from dmoj.executors.script_executor import ScriptExecutor
 
@@ -13,7 +13,7 @@ class ShellExecutor(ScriptExecutor):
         return self.shell_commands
 
     def get_allowed_exec(self):
-        return list(map(find_executable, self.get_shell_commands()))
+        return list(map(shutil.which, self.get_shell_commands()))
 
     def get_fs(self):
         return super().get_fs() + self.get_allowed_exec()

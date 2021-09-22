@@ -6,7 +6,6 @@ import subprocess
 import sys
 import tempfile
 import traceback
-from distutils.spawn import find_executable
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
 
 from dmoj.cptbox import IsolateTracer, TracedPopen, syscalls
@@ -413,7 +412,7 @@ class BaseExecutor:
                 if os.path.exists(file):
                     return file
             else:
-                path = find_executable(file)
+                path = shutil.which(file)
                 if path is not None:
                     return os.path.abspath(path)
         return None

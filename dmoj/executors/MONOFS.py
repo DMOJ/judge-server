@@ -1,3 +1,6 @@
+from typing import List, Tuple
+
+from dmoj.executors.base_executor import VersionFlags
 from dmoj.executors.mono_executor import MonoExecutor
 
 
@@ -15,20 +18,23 @@ let main argv =
     0
 """
 
-    def get_compile_args(self):
+    def get_compile_args(self) -> List[str]:
+        command = self.get_command()
+        assert command is not None
+        assert self._code is not None
         return [
-            self.get_command(),
+            command,
             '--nologo',
             '--optimize',
             '--tailcalls',
-            '--out:%s' % self.get_compiled_file(),
+            f'--out:{self.get_compiled_file()}',
             self._code,
         ]
 
     @classmethod
-    def get_version_flags(cls, command):
+    def get_version_flags(cls, command: str) -> List[VersionFlags]:
         return ['--help'] if command == cls.command else super().get_version_flags(command)
 
     @classmethod
-    def get_versionable_commands(cls):
-        return ('fsharpc', cls.runtime_dict['fsharpc']), ('mono', cls.runtime_dict['mono'])
+    def get_versionable_commands(cls) -> List[Tuple[str, str]]:
+        return [('fsharpc', cls.runtime_dict['fsharpc']), ('mono', cls.runtime_dict['mono'])]

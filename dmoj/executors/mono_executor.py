@@ -14,7 +14,7 @@ reexception = re.compile(r'\bFATAL UNHANDLED EXCEPTION: (.*?):', re.U)
 
 
 class MonoTracedPopen(TracedPopen):
-    def _cpu_time_exceeded(self):
+    def _cpu_time_exceeded(self) -> None:
         pass
 
 
@@ -56,7 +56,7 @@ class MonoExecutor(CompiledExecutor):
         return env
 
     def get_compiled_file(self) -> str:
-        return self._file('%s.exe' % self.problem)
+        return self._file(f'{self.problem}.exe')
 
     def get_cmdline(self, **kwargs) -> List[str]:
         assert self._executable is not None

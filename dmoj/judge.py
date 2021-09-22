@@ -17,7 +17,7 @@ from dmoj.control import JudgeControlRequestHandler
 from dmoj.error import CompileError
 from dmoj.judgeenv import clear_problem_dirs_cache, env, get_supported_problems_and_mtimes, startup_warnings
 from dmoj.monitor import Monitor
-from dmoj.problem import BaseTestCase, BatchedTestCase, Problem
+from dmoj.problem import BaseTestCase, BatchedTestCase, Problem, TestCase
 from dmoj.result import Result
 from dmoj.utils import builtin_int_patch
 from dmoj.utils.ansi import ansi_style, print_ansi, strip_ansi
@@ -464,9 +464,9 @@ class JudgeWorker:
             yield IPC.COMPILE_ERROR, (error,)
             return
         else:
-            binary = self.grader.binary
-            if hasattr(binary, 'warning') and binary.warning is not None:
-                yield IPC.COMPILE_MESSAGE, (binary.warning,)
+            warning = getattr(self.grader.binary, 'warning', None)
+            if warning is not None:
+                yield IPC.COMPILE_MESSAGE, (warning,)
 
         yield IPC.GRADING_BEGIN, (self.grader.run_pretests_only,)
 
@@ -502,6 +502,7 @@ class JudgeWorker:
                     assert isinstance(case, TestCase)
                     result = Result(case, result_flag=Result.SC)
                 else:
+                    assert isinstance(case, TestCase)
                     result = self.grader.grade(case)
 
                     # If the submission was killed due to a user-initiated abort, any result is meaningless.

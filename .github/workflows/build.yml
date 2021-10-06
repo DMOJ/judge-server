@@ -5,10 +5,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
-    - name: Set up Python 3.9
+    - name: Set up Python 3.10
       uses: actions/setup-python@v1
       with:
-        python-version: 3.9
+        python-version: '3.10'
     - name: Install Black and Flake8
       run: |
         pip install black==21.8b0 flake8 flake8-future-import flake8-logging-format flake8-import-order flake8-quotes flake8-black
@@ -27,10 +27,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
-    - name: Set up Python 3.9
+    - name: Set up Python 3.10
       uses: actions/setup-python@v1
       with:
-        python-version: 3.9
+        python-version: '3.10'
     - name: Install dependencies and mypy
       run: |
         pip install cython mypy types-termcolor types-requests types-PyYAML
@@ -43,10 +43,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
-    - name: Set up Python 3.9
+    - name: Set up Python 3.10
       uses: actions/setup-python@v1
       with:
-        python-version: 3.9
+        python-version: '3.10'
     - name: Install build dependencies
       run: pip install cython
     - name: Create sdist
@@ -61,7 +61,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ 3.6, 3.7, 3.8, 3.9 ]
+        python-version: [ 3.6, 3.7, 3.8, 3.9, '3.10' ]
     steps:
       - uses: actions/checkout@v2
       - name: Download docker image
@@ -117,7 +117,7 @@ jobs:
     runs-on: [self-hosted, Linux, ARM64]
     strategy:
       matrix:
-        python-version: [ 3.9 ]
+        python-version: [ '3.10' ]
     steps:
       - uses: actions/checkout@v2
       - name: Download docker image

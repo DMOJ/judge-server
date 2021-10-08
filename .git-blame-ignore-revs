@@ -13,3 +13,7 @@ ece768dfd3d2915e011706cf12a37017b3f1f328
 # PR 888 - Add flake8-quotes and fix quoting issues
 # https://github.com/DMOJ/judge-server/pull/888
 efc9f427e003f97c258a8aa82b6ce2d6de643ca5
+
+# PR 941 - clang-format C code
+# https://github.com/DMOJ/judge-server/pull/941
+55734c5d96d628d72b2f9b2c339bb94f55612e15

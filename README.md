@@ -1,4 +1,4 @@
-DMOJ Judge [![amd64 Build Status](https://img.shields.io/github/workflow/status/DMOJ/judge-server/build?logo=github)](https://github.com/DMOJ/judge-server/actions?query=workflow%3Abuild) [![arm64 Build Status](https://img.shields.io/travis/DMOJ/judge-server/master?label=arm64&logo=travis)](https://travis-ci.org/github/DMOJ/judge-server) [![FreeBSD Build Status](https://img.shields.io/jenkins/build?jobUrl=https%3A%2F%2Fci.dmoj.ca%2Fview%2FDMOJ%2Fjob%2Fdmoj-judge-freebsd-py3%2F&logo=freebsd)](https://ci.dmoj.ca/view/DMOJ/job/dmoj-judge-freebsd-py3/) [![Coverage](https://img.shields.io/codecov/c/github/DMOJ/judge-server.svg)](https://codecov.io/gh/DMOJ/judge-server) [![Slack](https://slack.dmoj.ca/badge.svg)](https://slack.dmoj.ca)
+DMOJ Judge [![Linux Build Status](https://img.shields.io/github/workflow/status/DMOJ/judge-server/build?logo=github)](https://github.com/DMOJ/judge-server/actions?query=workflow%3Abuild) [![FreeBSD Build Status](https://img.shields.io/jenkins/build?jobUrl=https%3A%2F%2Fci.dmoj.ca%2Fview%2FDMOJ%2Fjob%2Fdmoj-judge-freebsd-py3%2F&logo=freebsd)](https://ci.dmoj.ca/view/DMOJ/job/dmoj-judge-freebsd-py3/) [![Coverage](https://img.shields.io/codecov/c/github/DMOJ/judge-server.svg)](https://codecov.io/gh/DMOJ/judge-server) [![Slack](https://slack.dmoj.ca/badge.svg)](https://slack.dmoj.ca)
 =====
 
 Python [AGPLv3](LICENSE) contest judge backend for the [DMOJ site](http://github.com/DMOJ/online-judge) interface. See it in action at [dmoj.ca](https://dmoj.ca/)!
@@ -21,12 +21,12 @@ A modern online judge and contest platform system, supporting <b>IO-based</b>, <
 
 The judge implements secure grading on Linux and FreeBSD machines.
 
-|           | Linux 	| FreeBSD 	|
+|       | Linux 	| FreeBSD 	|
 |------	|-------	|---------	|
-| x64  	| [✔](https://travis-ci.org/DMOJ/judge-server)     	| [✔](https://ci.dmoj.ca/job/dmoj-judge-freebsd/)       	|
+| x64  	| [✔](https://github.com/DMOJ/judge-server/actions/workflows/build.yml)     	| [✔](https://ci.dmoj.ca/job/dmoj-judge-freebsd/)       	|
 | x86  	| ✔     	|       ¯\\\_(ツ)\_/¯   |
 | x32 	| ✔     	|      &mdash;   	|
-| ARM  	| ✔     	|      ❌   	|
+| ARM  	| [✔](https://github.com/DMOJ/judge-server/actions/workflows/build.yml)     	|      ❌   	|
 
 Versions up to and including [v1.4.0](https://github.com/DMOJ/judge-server/releases/tag/v1.4.0) also supported grading on Windows machines.
 

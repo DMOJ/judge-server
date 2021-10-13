@@ -34,4 +34,4 @@ class Executor(CompiledExecutor):
         for prefix in (b'Error:', b'Note:', b'Warning:'):
             if prefix in output or prefix.lower() in output:
                 return output
-        return ''
+        return b''

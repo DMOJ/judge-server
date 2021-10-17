@@ -16,6 +16,7 @@ from dmoj.utils.os_ext import OOM_SCORE_ADJ_MAX, oom_score_adj
 from dmoj.utils.unicode import utf8bytes, utf8text
 
 PIPE = subprocess.PIPE
+STDOUT = subprocess.STDOUT
 log = logging.getLogger('dmoj.cptbox')
 
 _PIPE_BUF = getattr(select, 'PIPE_BUF', 512)
@@ -398,6 +399,8 @@ class TracedPopen(Process):
             self._stderr, self._child_stderr = os.pipe()
             self.stderr = os.fdopen(self._stderr, 'rb')
             self.stderr_needs_close = True
+        elif stderr == STDOUT:
+            self._stderr, self._child_stderr = -1, self._child_stdout
         elif isinstance(stderr, int):
             self._stderr, self._child_stderr = -1, stderr
         elif stderr is not None:

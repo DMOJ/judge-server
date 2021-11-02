@@ -189,6 +189,7 @@ sys_ftruncate: int
 sys_ftruncate64: int
 sys_futex: int
 sys_futex_time64: int
+sys_futex_waitv: int
 sys_futimens: int
 sys_futimes: int
 sys_futimesat: int

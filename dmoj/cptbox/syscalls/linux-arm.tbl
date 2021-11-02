@@ -438,3 +438,4 @@
 445	landlock_add_rule
 446	landlock_restrict_self
 448	process_mrelease
+449	futex_waitv

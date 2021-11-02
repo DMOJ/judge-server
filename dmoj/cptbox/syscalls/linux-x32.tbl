@@ -311,6 +311,7 @@
 446	landlock_restrict_self
 447	memfd_secret
 448	process_mrelease
+449	futex_waitv
 512	rt_sigaction
 513	rt_sigreturn
 514	ioctl

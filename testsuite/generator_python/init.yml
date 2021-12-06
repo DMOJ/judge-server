@@ -1,6 +1,4 @@
-generator:
-    language: PY2
-    source: gen.py
+generator: gen.py2
 test_cases:
 - {generator_args: [1, 2], points: 1}
 - {generator_args: [10, 20], points: 1}

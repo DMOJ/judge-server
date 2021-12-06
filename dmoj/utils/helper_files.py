@@ -26,7 +26,7 @@ def compile_with_auxiliary_files(
     compiler_time_limit: Optional[int] = None,
     unbuffered: bool = False,
 ) -> 'BaseExecutor':
-    from dmoj.executors import executors
+    from dmoj import executors
     from dmoj.executors.compiled_executor import CompiledExecutor
 
     sources = {}
@@ -35,23 +35,33 @@ def compile_with_auxiliary_files(
         with open(filename, 'rb') as f:
             sources[os.path.basename(filename)] = f.read()
 
-    def find_runtime(languages):
+    def find_runtime(*languages):
         for grader in languages:
-            if grader in executors:
+            if grader in executors.executors:
                 return grader
         return None
 
     use_cpp = any(map(lambda name: os.path.splitext(name)[1] in ['.cpp', '.cc'], filenames))
     use_c = any(map(lambda name: os.path.splitext(name)[1] in ['.c'], filenames))
-    if lang is None:
-        best_choices = ('CPP20', 'CPP17', 'CPP14', 'CPP11', 'CPP03') if use_cpp else ('C11', 'C')
-        lang = find_runtime(best_choices)
+    if not lang:
+        if use_cpp:
+            lang = find_runtime('CPP20', 'CPP17', 'CPP14', 'CPP11', 'CPP03')
+        elif use_c:
+            lang = find_runtime('C11', 'C')
 
-    executor = executors.get(lang)
-    if not executor:
-        raise IOError('could not find an appropriate C++ executor')
+    # TODO: remove above code once `from_filename` is smart enough to
+    # prioritize newer versions of runtimes
+    if not lang:
+        for filename in filenames:
+            try:
+                lang = executors.from_filename(filename).Executor.name
+            except KeyError:
+                continue
 
-    executor = executor.Executor
+    if not lang:
+        raise IOError('could not find an appropriate executor')
+
+    executor = executors.executors[lang].Executor
 
     kwargs = {'fs': executor.fs + [RecursiveDir(tempfile.gettempdir())]}
 

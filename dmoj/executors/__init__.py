@@ -15,6 +15,28 @@ _unsupported_executors = {'BASH'}
 executors: Dict[str, Any] = {}
 
 
+def by_ext(ext: str) -> Any:
+    ext = ext.lower()
+
+    for name, executor in executors.items():
+        if name.lower() == ext:
+            return executor
+
+    for executor in sorted(executors.values(), key=lambda executor: executor.Executor.name):
+        if executor.Executor.ext == ext:
+            return executor
+
+    raise KeyError('no executor for extension "%s"' % ext)
+
+
+def from_filename(filename: str) -> Any:
+    _, _, ext = filename.partition('.')
+    if not ext:
+        raise KeyError('invalid file name')
+
+    return by_ext(ext)
+
+
 def get_available():
     return get_available_modules(
         _reexecutor, os.path.dirname(__file__), only_executors, exclude_executors | _unsupported_executors

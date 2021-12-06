@@ -1,9 +1,8 @@
 from typing import Optional
 
-from dmoj import judgeenv
+from dmoj import executors, judgeenv
 from dmoj.commands.base_command import Command
 from dmoj.error import InvalidCommandException
-from dmoj.executors import executors
 from dmoj.judge import Submission
 
 
@@ -45,7 +44,7 @@ class SubmitCommand(Command):
         memory_limit: int = args.memory_limit
         source_file: Optional[str] = args.source_file
 
-        if language_id not in executors:
+        if language_id not in executors.executors:
             source_file = language_id
             language_id = None  # source file / language id optional
 
@@ -53,16 +52,10 @@ class SubmitCommand(Command):
             raise InvalidCommandException(f"unknown problem '{problem_id}'")
         elif not language_id:
             if source_file:
-                filename, dot, ext = source_file.partition('.')
-                if not ext:
-                    raise InvalidCommandException('invalid file name')
-                else:
-                    # TODO: this should be a proper lookup elsewhere
-                    ext = ext.upper()
-                    language_id = {'PY': 'PY2', 'CPP': 'CPP11', 'JAVA': 'JAVA8'}.get(ext, ext)
+                language_id = executors.from_filename(source_file).Executor.name
             else:
                 raise InvalidCommandException('no language is selected')
-        elif language_id not in executors:
+        elif language_id not in executors.executors:
             raise InvalidCommandException(f"unknown language '{language_id}'")
         elif time_limit <= 0:
             raise InvalidCommandException('--time-limit must be >= 0')

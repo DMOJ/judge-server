@@ -4,7 +4,6 @@ from dmoj.executors.script_executor import ScriptExecutor
 
 class Executor(ScriptExecutor):
     ext = 'pl'
-    name = 'PERL'
     command = 'perl'
     fs = [RecursiveDir('/etc/perl')]
     test_program = 'print<>'

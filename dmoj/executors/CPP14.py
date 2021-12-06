@@ -5,7 +5,6 @@ class Executor(CPPExecutor):
     command = 'g++14'
     command_paths = ['g++-5', 'g++']
     std = 'c++14'
-    name = 'CPP14'
     test_program = """
 #include <iostream>
 

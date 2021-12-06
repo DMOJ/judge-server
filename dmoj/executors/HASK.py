@@ -5,7 +5,6 @@ from dmoj.executors.mixins import NullStdoutMixin
 
 class Executor(NullStdoutMixin, CompiledExecutor):
     ext = 'hs'
-    name = 'HASK'
     command = 'ghc'
     compiler_read_fs = [
         RecursiveDir('/proc/self/task'),

@@ -11,7 +11,6 @@ class Executor(GCCExecutor):
     objc_flags: List[str] = []
     objc_ldflags: List[str] = []
     command = 'gobjc'
-    name = 'OBJC'
     address_grace = 131072
 
     test_program = r"""

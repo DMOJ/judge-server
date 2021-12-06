@@ -3,7 +3,6 @@ from dmoj.executors.script_executor import ScriptExecutor
 
 class Executor(ScriptExecutor):
     ext = 'awk'
-    name = 'AWK'
     command = 'awk'
     command_paths = ['mawk', 'gawk', 'awk']
     syscalls = ['getgroups']  # gawk is annoying.

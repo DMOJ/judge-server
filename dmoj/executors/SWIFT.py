@@ -4,7 +4,6 @@ from dmoj.executors.compiled_executor import CompiledExecutor
 
 class Executor(CompiledExecutor):
     ext = 'swift'
-    name = 'SWIFT'
     command = 'swiftc'
     compiler_read_fs = [
         RecursiveDir('~/.cache'),

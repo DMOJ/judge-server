@@ -7,7 +7,6 @@ from dmoj.executors.script_executor import ScriptExecutor
 
 class Executor(ScriptExecutor):
     ext = 'rb'
-    name = 'RUBY2'
     address_grace = 65536
     test_program = 'puts gets'
     nproc = -1

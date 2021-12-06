@@ -6,7 +6,6 @@ from dmoj.executors.script_executor import ScriptExecutor
 
 class Executor(ScriptExecutor):
     ext = 'coffee'
-    name = 'COFFEE'
     nproc = -1
     command = 'node'
     syscalls = [

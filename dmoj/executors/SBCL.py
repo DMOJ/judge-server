@@ -11,7 +11,6 @@ from dmoj.executors.mixins import NullStdoutMixin
 # and proceeds to run.
 class Executor(NullStdoutMixin, CompiledExecutor):
     ext = 'cl'
-    name = 'SBCL'
     command = 'sbcl'
     syscalls = ['personality']
     test_program = '(write-line (read-line))'

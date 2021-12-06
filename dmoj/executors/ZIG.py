@@ -4,7 +4,6 @@ from dmoj.executors.compiled_executor import CompiledExecutor
 
 class Executor(CompiledExecutor):
     ext = 'zig'
-    name = 'ZIG'
     command = 'zig'
     compiler_time_limit = 30
     compiler_read_fs = [

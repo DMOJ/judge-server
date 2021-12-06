@@ -3,7 +3,6 @@ from dmoj.executors.compiled_executor import CompiledExecutor
 
 class Executor(CompiledExecutor):
     ext = 'i'
-    name = 'ICK'
     command = 'ick'
     test_program = """\
         PLEASE DO ,1 <- #1

@@ -2,7 +2,6 @@ from dmoj.executors.script_executor import ScriptExecutor
 
 
 class Executor(ScriptExecutor):
-    name = 'PHP'
     ext = 'php'
     command = 'php'
     command_paths = ['php7', 'php5', 'php']

@@ -6,7 +6,6 @@ from dmoj.executors.compiled_executor import CompiledExecutor
 
 class Executor(CompiledExecutor):
     ext = 'cbl'
-    name = 'CBL'
     command = 'cobc'
     address_grace = 131072
     compile_output_index = 0

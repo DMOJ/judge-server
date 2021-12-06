@@ -8,7 +8,6 @@ from dmoj.utils.unicode import utf8text
 
 # Must emulate terminal, otherwise `scalac` hangs on a call to `stty`
 class Executor(JavaExecutor):
-    name = 'SCALA'
     ext = 'scala'
 
     compiler = 'scalac'

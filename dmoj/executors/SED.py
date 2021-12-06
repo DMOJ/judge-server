@@ -3,7 +3,6 @@ from dmoj.executors.script_executor import ScriptExecutor
 
 class Executor(ScriptExecutor):
     ext = 'sed'
-    name = 'SED'
     command = 'sed'
     test_program = 's/^//'
 

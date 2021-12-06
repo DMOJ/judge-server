@@ -4,7 +4,6 @@ from dmoj.executors.compiled_executor import CompiledExecutor
 
 class Executor(CompiledExecutor):
     ext = 'scm'
-    name = 'SCM'
     command = 'chicken-csc'
     command_paths = ['chicken-csc', 'csc']
     compiler_read_fs = [

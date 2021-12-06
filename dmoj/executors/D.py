@@ -4,7 +4,6 @@ from dmoj.executors.compiled_executor import CompiledExecutor
 
 class Executor(CompiledExecutor):
     ext = 'd'
-    name = 'D'
     address_grace = 32768
     command = 'dmd'
     compiler_read_fs = [

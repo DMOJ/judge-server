@@ -7,7 +7,6 @@ from dmoj.utils.unicode import utf8text
 
 
 class Executor(JavaExecutor):
-    name = 'GROOVY'
     ext = 'groovy'
 
     compiler = 'groovyc'

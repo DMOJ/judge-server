@@ -15,7 +15,6 @@ def decomment(x):
 
 class Executor(CompiledExecutor):
     ext = 'go'
-    name = 'GO'
     nproc = -1
     data_grace = 98304  # Go uses data segment for heap arena map
     address_grace = 786432

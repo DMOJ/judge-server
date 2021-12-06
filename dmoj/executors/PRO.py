@@ -3,7 +3,6 @@ from dmoj.executors.script_executor import ScriptExecutor
 
 class Executor(ScriptExecutor):
     ext = 'pl'
-    name = 'PRO'
     command = 'swipl'
     test_program = """
     :- set_prolog_flag(verbose,silent).

@@ -4,7 +4,6 @@ from dmoj.executors.compiled_executor import CompiledExecutor
 
 class Executor(CompiledExecutor):
     ext = 'pas'
-    name = 'PAS'
     command = 'fpc'
     compiler_read_fs = [
         ExactFile('/etc/fpc.cfg'),

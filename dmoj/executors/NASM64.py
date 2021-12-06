@@ -4,8 +4,6 @@ from dmoj.executors.asm_executor import NASMExecutor, PlatformX64Mixin
 class Executor(PlatformX64Mixin, NASMExecutor):
     nasm_format = 'elf64'
 
-    name = 'NASM64'
-
     test_program = """\
 section .text
 global  _start

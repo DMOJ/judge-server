@@ -4,7 +4,6 @@ from dmoj.executors.script_executor import ScriptExecutor
 
 class Executor(ScriptExecutor):
     ext = 'pike'
-    name = 'PIKE'
     command = 'pike'
     syscalls = [
         # Linux

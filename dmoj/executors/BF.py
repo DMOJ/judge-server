@@ -44,7 +44,6 @@ trans = {
 
 
 class Executor(CExecutor):
-    name = 'BF'
     test_program = ',+[-.,+]'
 
     def __init__(self, problem_id, source_code, **kwargs):

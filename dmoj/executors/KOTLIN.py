@@ -3,7 +3,6 @@ from dmoj.executors.java_executor import JavaExecutor
 
 
 class Executor(JavaExecutor):
-    name = 'KOTLIN'
     ext = 'kt'
 
     compiler = 'kotlinc'

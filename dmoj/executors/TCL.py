@@ -5,7 +5,6 @@ from dmoj.executors.script_executor import ScriptExecutor
 
 class Executor(ScriptExecutor):
     ext = 'tcl'
-    name = 'TCL'
     nproc = -1  # TCL uses a bunch of threads internally
     address_grace = 131072
     command = 'tclsh'

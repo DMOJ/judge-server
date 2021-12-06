@@ -20,7 +20,6 @@ recppexc = re.compile(br"terminate called after throwing an instance of \'([A-Za
 class GCCExecutor(SingleDigitVersionMixin, CompiledExecutor):
     defines: List[str] = []
     flags: List[str] = []
-    name = 'GCC'
     arch = 'gcc_target_arch'
     has_color = False
 

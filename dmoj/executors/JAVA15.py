@@ -4,7 +4,6 @@ from dmoj.executors.java_executor import JavacExecutor
 class Executor(JavacExecutor):
     compiler = 'javac15'
     vm = 'java15'
-    name = 'JAVA15'
     jvm_regex = r'java-15-|openjdk15'
 
     test_program = '''\

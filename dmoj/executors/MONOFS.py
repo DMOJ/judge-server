@@ -3,7 +3,6 @@ from dmoj.executors.mono_executor import MonoExecutor
 
 class Executor(MonoExecutor):
     ext = 'fs'
-    name = 'MONOFS'
     command = 'fsharpc'
     compiler_time_limit = 20
 

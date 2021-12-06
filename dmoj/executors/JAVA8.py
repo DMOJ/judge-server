@@ -4,7 +4,6 @@ from dmoj.executors.java_executor import JavacExecutor
 class Executor(JavacExecutor):
     compiler = 'javac8'
     vm = 'java8'
-    name = 'JAVA8'
     jvm_regex = r'java-8-|jdk-8-|openjdk8|oracle-java8'
 
     test_program = """\

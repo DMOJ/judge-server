@@ -23,7 +23,6 @@ class ASMExecutor(CompiledExecutor):
     crt_post: List[str]
     platform_prefixes: Optional[List[str]]
 
-    name = 'ASM'
     ext = 'asm'
 
     def __init__(self, problem_id: str, source_code: bytes, *args, **kwargs) -> None:
@@ -128,7 +127,6 @@ class ASMExecutor(CompiledExecutor):
 
 
 class GASExecutor(ASMExecutor):
-    name = 'GAS'
     as_platform_flag: str
 
     def get_as_args(self, obj_file: str) -> List[str]:
@@ -149,7 +147,6 @@ class GASExecutor(ASMExecutor):
 
 
 class NASMExecutor(ASMExecutor):
-    name = 'NASM'
     as_name = 'nasm'
     nasm_format: str
 

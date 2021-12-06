@@ -74,7 +74,6 @@ fn main() {
 
 class Executor(CompiledExecutor):
     ext = 'rs'
-    name = 'RUST'
     command = 'cargo'
     test_program = HELLO_WORLD_PROGRAM
     compiler_time_limit = 20

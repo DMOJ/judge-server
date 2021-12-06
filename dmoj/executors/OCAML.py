@@ -7,7 +7,6 @@ from dmoj.executors.compiled_executor import CompiledExecutor
 # functioning opam + ocamlfind installation to work.
 class Executor(CompiledExecutor):
     ext = 'ml'
-    name = 'OCAML'
     command = 'ocamlfind'
     compiler_read_fs = [
         RecursiveDir('~/.opam'),

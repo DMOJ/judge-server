@@ -19,7 +19,6 @@ class MonoTracedPopen(TracedPopen):
 
 
 class MonoExecutor(CompiledExecutor):
-    name = 'MONO'
     nproc = -1
     address_grace = 262144
     # Give Mono access to 64mb more data segment memory. This is a hack, for

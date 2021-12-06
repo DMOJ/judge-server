@@ -89,7 +89,14 @@ if sys.platform.startswith('freebsd') and sys.platform < 'freebsd13':
     UTF8_LOCALE = 'en_US.UTF-8'
 
 
-class BaseExecutor:
+class ExecutorMeta(type):
+    def __new__(mcs, name, bases, attrs) -> Any:
+        if '__module__' in attrs:
+            attrs['name'] = attrs['__module__'].split('.')[-1]
+        return super().__new__(mcs, name, bases, attrs)
+
+
+class BaseExecutor(metaclass=ExecutorMeta):
     ext: str
     nproc = 0
     command: Optional[str] = None

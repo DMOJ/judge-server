@@ -1,4 +1,3 @@
-import abc
 import hashlib
 import os
 import pty
@@ -15,7 +14,7 @@ from dmoj.cptbox.handlers import ACCESS_EFAULT, ACCESS_EPERM, ALLOW
 from dmoj.cptbox.syscalls import *
 from dmoj.cptbox.tracer import AdvancedDebugger
 from dmoj.error import CompileError, OutputLimitExceeded
-from dmoj.executors.base_executor import BASE_FILESYSTEM, BASE_WRITE_FILESYSTEM, BaseExecutor
+from dmoj.executors.base_executor import BASE_FILESYSTEM, BASE_WRITE_FILESYSTEM, BaseExecutor, ExecutorMeta
 from dmoj.judgeenv import env
 from dmoj.utils.communicate import safe_communicate
 from dmoj.utils.error import print_protection_fault
@@ -32,7 +31,7 @@ from dmoj.utils.unicode import utf8bytes
 # Contract: if cached=True is specified and an entry exists in the cache,
 # `create_files` and `compile` will not be run, and `_executable` will be loaded
 # from the cache.
-class _CompiledExecutorMeta(abc.ABCMeta):
+class _CompiledExecutorMeta(ExecutorMeta):
     @staticmethod
     def _cleanup_cache_entry(_key, executor: 'CompiledExecutor') -> None:
         # Mark the executor as not-cached, so that if this is the very last reference
@@ -43,7 +42,7 @@ class _CompiledExecutorMeta(abc.ABCMeta):
         env.compiled_binary_cache_size, _cleanup_cache_entry
     )
 
-    def __call__(self, *args, **kwargs) -> 'CompiledExecutor':
+    def __call__(cls, *args, **kwargs) -> 'CompiledExecutor':
         is_cached: bool = kwargs.pop('cached', False)
         if is_cached:
             kwargs['dest_dir'] = env.compiled_binary_cache_dir
@@ -56,8 +55,8 @@ class _CompiledExecutorMeta(abc.ABCMeta):
         if is_cached:
             cache_key_material = utf8bytes(obj.__class__.__name__ + obj.__module__) + obj.get_binary_cache_key()
             cache_key = hashlib.sha384(cache_key_material).hexdigest()
-            if cache_key in self.compiled_binary_cache:
-                executor = self.compiled_binary_cache[cache_key]
+            if cache_key in cls.compiled_binary_cache:
+                executor = cls.compiled_binary_cache[cache_key]
                 assert executor._executable is not None
                 # Minimal sanity checking: is the file still there? If not, we'll just recompile.
                 if os.path.isfile(executor._executable):
@@ -69,7 +68,7 @@ class _CompiledExecutorMeta(abc.ABCMeta):
         obj.compile()
 
         if is_cached:
-            self.compiled_binary_cache[cache_key] = obj
+            cls.compiled_binary_cache[cache_key] = obj
 
         return obj
 

@@ -50,6 +50,7 @@ class IsolateTracer(dict):
                 sys_openat: self.check_file_access_at('openat', is_open=True),
                 sys_open: self.check_file_access('open', 0, is_open=True),
                 sys_faccessat: self.check_file_access_at('faccessat'),
+                sys_faccessat2: self.check_file_access_at('faccessat2'),
                 sys_access: self.check_file_access('access', 0),
                 sys_readlink: self.check_file_access('readlink', 0),
                 sys_readlinkat: self.check_file_access_at('readlinkat'),

@@ -104,9 +104,10 @@ class FilesystemPolicy:
     # `path` should be a normalized path
     def check(self, path: str) -> bool:
         assert os.path.abspath(path) == path, 'Must pass a normalized, absolute path to check'
+        components = [] if path == '/' else path.split('/')[1:]
 
         node = self.root
-        for component in path.split('/')[1:]:
+        for component in components:
             if isinstance(node, File):
                 return False
             elif node.access_mode == AccessMode.RECURSIVE:

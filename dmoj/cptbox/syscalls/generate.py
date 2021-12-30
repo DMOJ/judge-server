@@ -8,6 +8,7 @@ LINUX_SYSCALLS_32 = 'https://raw.githubusercontent.com/torvalds/linux/master/arc
 LINUX_SYSCALLS_64 = 'https://raw.githubusercontent.com/torvalds/linux/master/arch/x86/entry/syscalls/syscall_64.tbl'
 LINUX_SYSCALLS_ARM = 'https://raw.githubusercontent.com/torvalds/linux/master/arch/arm/tools/syscall.tbl'
 LINUX_SYSCALLS_GENERIC = 'https://raw.githubusercontent.com/torvalds/linux/master/include/uapi/asm-generic/unistd.h'
+FREEBSD_SYSCALLS = 'https://cgit.freebsd.org/src/plain/sys/kern/syscalls.master'
 
 func_to_name = {}
 names = set()
@@ -89,6 +90,34 @@ with open('linux-generic.tbl', 'w') as generic64, open('linux-generic32.tbl', 'w
             if not only_32:
                 print('%d\t%s' % (id, name), file=generic64)
             print('%d\t%s' % (id, name), file=generic32)
+
+
+renumber = re.compile(r'^(\d+)\s+AUE_\S+\s+\S+(?:\t(\w+)$)?')
+rename = re.compile(r'\t\t\w+ \*?(.*)\(')
+number = -1
+
+
+def freebsd_syscall(name):
+    global number
+    if number == -1:
+        raise RuntimeError('FreeBSD line missed?')
+    name = name.lstrip('_')
+    names.add(name)
+    print(f'{number}\t{name}', file=output)
+    number = -1
+
+
+with open('freebsd.tbl', 'w') as output, utf8reader(urlopen(FREEBSD_SYSCALLS)) as data:
+    for line in data:
+        match = renumber.match(line)
+        if match:
+            number = int(match[1])
+            if match[2]:
+                freebsd_syscall(match[2])
+        else:
+            match = rename.match(line)
+            if match:
+                freebsd_syscall(match[1])
 
 with open('aliases.list') as aliases:
     for line in aliases:

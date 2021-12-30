@@ -159,13 +159,13 @@ class IsolateTracer(dict):
             self.update(
                 {
                     sys_mkdir: ACCESS_EPERM,
-                    sys_obreak: ALLOW,
+                    sys_break: ALLOW,
                     sys_sysarch: ALLOW,
                     sys_sysctl: ALLOW,  # TODO: More strict?
+                    sys_sysctlbyname: ALLOW,  # TODO: More strict?
                     sys_issetugid: ALLOW,
                     sys_rtprio_thread: ALLOW,  # EPERMs when invalid anyway
                     sys_umtx_op: ALLOW,  # http://fxr.watson.org/fxr/source/kern/kern_umtx.c?v=FREEBSD60#L720
-                    sys_nosys: ALLOW,  # what?? TODO: this shouldn't really exist, so why is Python calling it?
                     sys_getcontext: ALLOW,
                     sys_setcontext: ALLOW,
                     sys_pread: ALLOW,
@@ -176,8 +176,6 @@ class IsolateTracer(dict):
                     sys_thr_exit: ALLOW,
                     sys_thr_kill: ALLOW,
                     sys_thr_self: ALLOW,
-                    sys__mmap: ALLOW,
-                    sys___mmap: ALLOW,
                     sys_sigsuspend: ALLOW,
                     sys_clock_getcpuclockid2: ALLOW,
                     sys_fstatfs: ALLOW,

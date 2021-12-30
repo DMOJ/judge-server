@@ -25,7 +25,7 @@
 #include <seccomp.h>
 #endif
 
-#define MAX_SYSCALL             568
+#define MAX_SYSCALL             600
 #define PTBOX_HANDLER_DENY      0
 #define PTBOX_HANDLER_ALLOW     1
 #define PTBOX_HANDLER_CALLBACK  2

@@ -5,9 +5,6 @@ by_name: Dict[str, int]
 by_id: List[str]
 SYSCALL_COUNT: int
 
-sys___mmap: int
-sys__getsockname: int
-sys__mmap: int
 sys__sysctl: int
 sys_abort2: int
 sys_accept: int
@@ -36,15 +33,16 @@ sys_aio_error: int
 sys_aio_fsync: int
 sys_aio_mlock: int
 sys_aio_read: int
+sys_aio_readv: int
 sys_aio_return: int
 sys_aio_suspend: int
 sys_aio_waitcomplete: int
 sys_aio_write: int
+sys_aio_writev: int
 sys_alarm: int
 sys_arch_prctl: int
 sys_arm_fadvise64_64: int
 sys_arm_sync_file_range: int
-sys_asyncdaemon: int
 sys_audit: int
 sys_auditctl: int
 sys_auditon: int
@@ -177,6 +175,7 @@ sys_fsconfig: int
 sys_fsetxattr: int
 sys_fsmount: int
 sys_fsopen: int
+sys_fspacectl: int
 sys_fspick: int
 sys_fstat: int
 sys_fstat64: int
@@ -187,6 +186,7 @@ sys_fsync: int
 sys_ftime: int
 sys_ftruncate: int
 sys_ftruncate64: int
+sys_funlinkat: int
 sys_futex: int
 sys_futex_time64: int
 sys_futex_waitv: int
@@ -205,10 +205,8 @@ sys_getcpu: int
 sys_getcwd: int
 sys_getdents: int
 sys_getdents64: int
-sys_getdescriptor: int
 sys_getdirentries: int
 sys_getdomainname: int
-sys_getdopt: int
 sys_getdtablesize: int
 sys_getegid: int
 sys_getegid32: int
@@ -228,8 +226,6 @@ sys_getkerninfo: int
 sys_getlogin: int
 sys_getloginclass: int
 sys_getpagesize: int
-sys_getpath_fromaddr: int
-sys_getpath_fromfd: int
 sys_getpeername: int
 sys_getpgid: int
 sys_getpgrp: int
@@ -417,7 +413,8 @@ sys_munlockall: int
 sys_munmap: int
 sys_name_to_handle_at: int
 sys_nanosleep: int
-sys_newreboot: int
+sys_netbsd_lchown: int
+sys_netbsd_msync: int
 sys_newselect: int
 sys_nfsclnt: int
 sys_nfsservctl: int
@@ -428,13 +425,11 @@ sys_nlm_syscall: int
 sys_nlstat: int
 sys_nmount: int
 sys_nnpfs_syscall: int
-sys_nosys: int
 sys_nstat: int
 sys_ntp_adjtime: int
 sys_ntp_gettime: int
 sys_numa_getaffinity: int
 sys_numa_setaffinity: int
-sys_obreak: int
 sys_oldfstat: int
 sys_oldlstat: int
 sys_oldolduname: int
@@ -446,7 +441,6 @@ sys_open_tree: int
 sys_openat: int
 sys_openat2: int
 sys_openbsd_poll: int
-sys_ovadvise: int
 sys_pathconf: int
 sys_pause: int
 sys_pciconfig_iobase: int
@@ -455,7 +449,6 @@ sys_pciconfig_write: int
 sys_pdfork: int
 sys_pdgetpid: int
 sys_pdkill: int
-sys_pdwait4: int
 sys_perf_event_open: int
 sys_personality: int
 sys_pidfd_getfd: int
@@ -510,6 +503,7 @@ sys_readdir: int
 sys_readlink: int
 sys_readlinkat: int
 sys_readv: int
+sys_realpathat: int
 sys_reboot: int
 sys_recv: int
 sys_recvfrom: int
@@ -523,10 +517,10 @@ sys_renameat: int
 sys_renameat2: int
 sys_request_key: int
 sys_restart_syscall: int
-sys_resuba: int
 sys_revoke: int
 sys_rfork: int
 sys_rmdir: int
+sys_rpctls_syscall: int
 sys_rseq: int
 sys_rt_sigaction: int
 sys_rt_sigpending: int
@@ -544,6 +538,7 @@ sys_sched_get_priority_max: int
 sys_sched_get_priority_min: int
 sys_sched_getaffinity: int
 sys_sched_getattr: int
+sys_sched_getcpu: int
 sys_sched_getparam: int
 sys_sched_getscheduler: int
 sys_sched_rr_get_interval: int
@@ -560,8 +555,6 @@ sys_sctp_peeloff: int
 sys_seccomp: int
 sys_security: int
 sys_select: int
-sys_sem_lock: int
-sys_sem_wakeup: int
 sys_semconfig: int
 sys_semctl: int
 sys_semget: int
@@ -583,9 +576,7 @@ sys_setaudit: int
 sys_setaudit_addr: int
 sys_setauid: int
 sys_setcontext: int
-sys_setdescriptor: int
 sys_setdomainname: int
-sys_setdopt: int
 sys_setegid: int
 sys_seteuid: int
 sys_setfib: int
@@ -622,9 +613,10 @@ sys_setuid: int
 sys_setuid32: int
 sys_setup: int
 sys_setxattr: int
-sys_sfork: int
 sys_sgetmask: int
 sys_shm_open: int
+sys_shm_open2: int
+sys_shm_rename: int
 sys_shm_unlink: int
 sys_shmat: int
 sys_shmctl: int
@@ -635,6 +627,7 @@ sys_shutdown: int
 sys_sigaction: int
 sys_sigaltstack: int
 sys_sigblock: int
+sys_sigfastblock: int
 sys_siggetmask: int
 sys_signal: int
 sys_signalfd: int
@@ -654,6 +647,7 @@ sys_sigwaitinfo: int
 sys_socket: int
 sys_socketcall: int
 sys_socketpair: int
+sys_specialfd: int
 sys_splice: int
 sys_ssetmask: int
 sys_sstk: int
@@ -675,6 +669,7 @@ sys_syncfs: int
 sys_sysarch: int
 sys_syscall: int
 sys_sysctl: int
+sys_sysctlbyname: int
 sys_sysfs: int
 sys_sysinfo: int
 sys_syslog: int
@@ -714,7 +709,9 @@ sys_ulimit: int
 sys_umask: int
 sys_umount: int
 sys_umount2: int
+sys_umtx_lock: int
 sys_umtx_op: int
+sys_umtx_unlock: int
 sys_uname: int
 sys_undelete: int
 sys_unlink: int
@@ -730,6 +727,7 @@ sys_utimensat_time64: int
 sys_utimes: int
 sys_utrace: int
 sys_uuidgen: int
+sys_vadvise: int
 sys_vfork: int
 sys_vhangup: int
 sys_vlimit: int
@@ -748,7 +746,4 @@ sys_waitid: int
 sys_waitpid: int
 sys_write: int
 sys_writev: int
-sys_xfstat: int
-sys_xlstat: int
-sys_xstat: int
 sys_yield: int

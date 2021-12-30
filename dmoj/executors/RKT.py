@@ -1,10 +1,10 @@
-from dmoj.cptbox.filesystem_policies import ExactFile, RecursiveDir
+from dmoj.cptbox.filesystem_policies import ExactDir, ExactFile, RecursiveDir
 from dmoj.executors.compiled_executor import CompiledExecutor
 
 
 class Executor(CompiledExecutor):
     ext = 'rkt'
-    fs = [RecursiveDir('/etc/racket'), ExactFile('/etc/passwd')]
+    fs = [RecursiveDir('/etc/racket'), ExactFile('/etc/passwd'), ExactDir('/')]
     compiler_read_fs = [
         RecursiveDir('/etc/racket'),
         RecursiveDir('~/.local/share/racket'),

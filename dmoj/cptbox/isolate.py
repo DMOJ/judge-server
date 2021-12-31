@@ -59,6 +59,7 @@ class IsolateTracer(dict):
                 sys_lstat: self.check_file_access('lstat', 0),
                 sys_lstat64: self.check_file_access('lstat64', 0),
                 sys_fstatat: self.check_file_access_at('fstatat'),
+                sys_statx: self.check_file_access_at('statx'),
                 sys_tgkill: self.do_kill,
                 sys_kill: self.do_kill,
                 sys_prctl: self.do_prctl,

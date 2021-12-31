@@ -108,7 +108,6 @@ class CompilerIsolateTracer(IsolateTracer):
                 sys_chdir: self.check_file_access('chdir', 0),
                 sys_chmod: self.check_file_access('chmod', 0, is_write=True),
                 sys_utimensat: self.do_utimensat,
-                sys_statx: self.check_file_access_at('statx'),
                 sys_umask: ALLOW,
                 sys_flock: ALLOW,
                 sys_fsync: ALLOW,

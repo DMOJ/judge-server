@@ -19,7 +19,7 @@ def main : IO Unit := do
     def compile(self) -> str:
         # lean -c f2.c f1.lean && leanc -o f3 f2.c -O3 -DNDEBUG
         c_file = f'{self.problem}.c'
-        proc1 = self.create_compile_process([self.get_command(), '-c', c_file, self._code])
+        proc1 = self.create_compile_process([self.get_command(), '-c', c_file, self._code])  # type: ignore
         out1 = self.get_compile_output(proc1)
         proc2 = self.create_compile_process([f'{self.get_command()}c', '-o', self.problem, c_file, '-O3', '-DNDEBUG'])
         out2 = self.get_compile_output(proc2)

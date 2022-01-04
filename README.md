@@ -58,6 +58,7 @@ The judge can also grade in the languages listed below. These languages are less
 * Haskell
 * INTERCAL
 * Kotlin
+* Lean 4
 * Lua
 * NASM
 * Objective-C

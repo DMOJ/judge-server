@@ -6,12 +6,12 @@ from dmoj.citest import ci_test
 from dmoj.executors import get_available
 
 arch = platform.machine()
-ALLOW_FAIL = {'GASARM', 'JAVA9', 'JAVA10', 'LEAN4', 'OBJC'}
+ALLOW_FAIL = {'GASARM', 'OBJC'}
 EXECUTORS = get_available()
 
 if arch == 'aarch64':
     ALLOW_FAIL -= {'GASARM'}
-    ALLOW_FAIL |= {'D', 'GAS32', 'GAS64', 'NASM', 'NASM64', 'SWIFT', 'TUR'}
+    ALLOW_FAIL |= {'D', 'GAS32', 'GAS64', 'LEAN4', 'NASM', 'NASM64', 'SWIFT', 'TUR'}
 elif arch != 'x86_64':
     raise AssertionError('invalid architecture')
 

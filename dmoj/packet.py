@@ -110,7 +110,6 @@ class PacketManager:
 
         log.info('Starting handshake with: [%s]:%s', self.host, self.port)
         self.input = self.conn.makefile('rb')
-        self.output = self.conn.makefile('wb', 0)
         self.handshake(problems, versions, self.name, self.key)
         log.info('Judge "%s" online: [%s]:%s', self.name, self.host, self.port)
 
@@ -238,7 +237,8 @@ class PacketManager:
         raw = zlib.compress(utf8bytes(json.dumps(packet)))
         with self._lock:
             try:
-                self.output.writelines((PacketManager.SIZE_PACK.pack(len(raw)), raw))
+                assert self.conn is not None
+                self.conn.sendall(PacketManager.SIZE_PACK.pack(len(raw)) + raw)
             except Exception:  # connection reset by peer
                 log.exception('Exception while sending packet to site, will not attempt to reconnect! Quitting judge.')
                 os._exit(1)

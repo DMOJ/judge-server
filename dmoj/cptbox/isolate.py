@@ -172,6 +172,7 @@ class IsolateTracer(dict):
                     sys_pread: ALLOW,
                     sys_fsync: ALLOW,
                     sys_shm_open: self.check_file_access('shm_open', 0),
+                    sys_shm_open2: self.check_file_access('shm_open2', 0),
                     sys_cpuset_getaffinity: ALLOW,
                     sys_thr_new: ALLOW,
                     sys_thr_exit: ALLOW,
@@ -190,6 +191,8 @@ class IsolateTracer(dict):
                     sys_cap_getmode: ALLOW,
                     sys_minherit: ALLOW,
                     sys_thr_set_name: ALLOW,
+                    sys_sigfastblock: ALLOW,
+                    sys_realpathat: self.check_file_access_at('realpathat'),
                 }
             )
 

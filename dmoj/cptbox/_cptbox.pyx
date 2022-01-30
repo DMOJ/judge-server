@@ -1,5 +1,6 @@
 # cython: language_level=3
 from cpython.exc cimport PyErr_NoMemory, PyErr_SetFromErrno
+from cpython.buffer cimport PyObject_GetBuffer
 from cpython.bytes cimport PyBytes_AsString, PyBytes_FromStringAndSize
 from libc.stdio cimport FILE, fopen, fclose, fgets, sprintf
 from libc.stdlib cimport malloc, free, strtoul
@@ -600,3 +601,11 @@ cdef class Process:
         if not self._exited:
             return None
         return self._exitcode
+
+
+cdef class BufferProxy:
+    def _get_real_buffer(self):
+        raise NotImplementedError
+
+    def __getbuffer__(self, Py_buffer *buffer, int flags):
+        PyObject_GetBuffer(self._get_real_buffer(), buffer, flags)

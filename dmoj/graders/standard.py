@@ -3,6 +3,7 @@ import subprocess
 
 from dmoj.checkers import CheckerOutput
 from dmoj.cptbox import TracedPopen
+from dmoj.cptbox.lazy_bytes import LazyBytes
 from dmoj.error import OutputLimitExceeded
 from dmoj.executors import executors
 from dmoj.executors.base_executor import BaseExecutor
@@ -60,7 +61,7 @@ class StandardGrader(BaseGrader):
                     result.proc_output,
                     case.output_data(),
                     submission_source=self.source,
-                    judge_input=case.input_data(),
+                    judge_input=LazyBytes(case.input_data),
                     point_value=case.points,
                     case_position=case.position,
                     batch=case.batch,

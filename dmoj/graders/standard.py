@@ -69,6 +69,7 @@ class StandardGrader(BaseGrader):
                     binary_data=case.has_binary_data,
                     execution_time=result.execution_time,
                     problem_id=self.problem.id,
+                    case=case,
                     result=result,
                 )
             except UnicodeDecodeError:

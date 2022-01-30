@@ -22,10 +22,10 @@ class ShellExecutor(ScriptExecutor):
     def get_allowed_syscalls(self):
         return super().get_allowed_syscalls() + ['fork', 'waitpid', 'wait4']
 
-    def get_security(self, launch_kwargs=None):
+    def get_security(self, launch_kwargs=None, extra_fs=None):
         from dmoj.cptbox.syscalls import sys_execve, sys_access, sys_eaccess
 
-        sec = super().get_security(launch_kwargs)
+        sec = super().get_security(launch_kwargs=launch_kwargs, extra_fs=extra_fs)
         allowed = set(self.get_allowed_exec())
 
         def handle_execve(debugger) -> None:

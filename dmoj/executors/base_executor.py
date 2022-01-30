@@ -230,8 +230,11 @@ class BaseExecutor(metaclass=ExecutorMeta):
             sec[getattr(syscalls, f'sys_{name}')] = handler
         return sec
 
-    def get_security(self, launch_kwargs=None) -> IsolateTracer:
-        sec = IsolateTracer(read_fs=self.get_fs(), write_fs=self.get_write_fs())
+    def get_security(self, launch_kwargs=None, extra_fs=None) -> IsolateTracer:
+        read_fs = self.get_fs()
+        if extra_fs:
+            read_fs += extra_fs
+        sec = IsolateTracer(read_fs=read_fs, write_fs=self.get_write_fs())
         return self._add_syscalls(sec, self.get_allowed_syscalls())
 
     def get_fs(self) -> List[FilesystemAccessRule]:
@@ -299,7 +302,7 @@ class BaseExecutor(metaclass=ExecutorMeta):
         return TracedPopen(
             [utf8bytes(a) for a in self.get_cmdline(**kwargs) + list(args)],
             executable=utf8bytes(executable),
-            security=self.get_security(launch_kwargs=kwargs),
+            security=self.get_security(launch_kwargs=kwargs, extra_fs=kwargs.get('extra_fs')),
             address_grace=self.get_address_grace(),
             data_grace=self.data_grace,
             personality=self.personality,

@@ -32,6 +32,9 @@ class MemoryIO(io.FileIO):
         finally:
             os.close(new_fd)
 
+    def to_path(self) -> str:
+        return f'/proc/{os.getpid()}/fd/{self.fileno()}'
+
     def to_bytes(self) -> bytes:
         try:
             with mmap.mmap(self.fileno(), 0, access=mmap.ACCESS_READ) as f:

@@ -332,7 +332,7 @@ int memory_fd_create(void) {
 #ifdef __FreeBSD__
     char filename[] = "/tmp/cptbox-memoryfd-XXXXXXXX";
     int fd = mkstemp(filename);
-    if (fd > 0)
+    if (fd >= 0)
         unlink(filename);
     return fd;
 #else

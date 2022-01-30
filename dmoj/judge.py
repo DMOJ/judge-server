@@ -589,7 +589,9 @@ def main():  # pragma: no cover
         pass
 
     logging.basicConfig(
-        filename=logfile, level=logging.INFO, format='%(levelname)s %(asctime)s %(process)d %(module)s %(message)s'
+        filename=logfile,
+        level=judgeenv.log_level,
+        format='%(levelname)s %(asctime)s %(process)d %(module)s %(message)s',
     )
 
     setproctitle('DMOJ Judge %s on %s' % (env['id'], make_host_port(judgeenv)))

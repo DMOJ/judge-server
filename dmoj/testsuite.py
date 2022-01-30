@@ -330,7 +330,7 @@ def main():
     judgeenv.load_env(cli=True, testsuite=True)
 
     logging.basicConfig(
-        filename=judgeenv.log_file, level=logging.DEBUG, format='%(levelname)s %(asctime)s %(module)s %(message)s'
+        filename=judgeenv.log_file, level=judgeenv.log_level, format='%(levelname)s %(asctime)s %(module)s %(message)s'
     )
 
     executors.load_executors()

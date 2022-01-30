@@ -81,7 +81,7 @@ def cli_main():
     judgeenv.load_env(cli=True)
 
     logging.basicConfig(
-        filename=judgeenv.log_file, level=logging.INFO, format='%(levelname)s %(asctime)s %(module)s %(message)s'
+        filename=judgeenv.log_file, level=judgeenv.log_level, format='%(levelname)s %(asctime)s %(module)s %(message)s'
     )
 
     executors.load_executors()

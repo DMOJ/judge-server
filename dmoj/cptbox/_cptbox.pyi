@@ -100,8 +100,8 @@ AT_FDCWD: int
 bsd_get_proc_cwd: Callable[[int], str]
 bsd_get_proc_fdno: Callable[[int, int], str]
 
-memory_fd_create: Callable[[], int]
-memory_fd_seal: Callable[[int], None]
+memfd_create: Callable[[], int]
+memfd_seal: Callable[[int], None]
 
 class BufferProxy:
     def _get_real_buffer(self): ...

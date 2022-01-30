@@ -30,7 +30,7 @@ from yaml.scanner import ScannerError
 from dmoj import checkers
 from dmoj.checkers import Checker
 from dmoj.config import ConfigNode, InvalidInitException
-from dmoj.cptbox.utils import MemoryIO
+from dmoj.cptbox.utils import MemoryIO, MmapableIO
 from dmoj.judgeenv import env, get_problem_root
 from dmoj.utils.helper_files import compile_with_auxiliary_files, parse_helper_file_error
 from dmoj.utils.module import load_module_from_file
@@ -275,7 +275,7 @@ class ProblemDataManager(dict):
                 return self.archive.open(zipinfo)
             raise KeyError('file "%s" could not be found in "%s"' % (key, self.problem_root_dir))
 
-    def as_fd(self, key: str, normalize: bool = False) -> MemoryIO:
+    def as_fd(self, key: str, normalize: bool = False) -> MmapableIO:
         memory = MemoryIO()
         with self.open(key) as f:
             if normalize:
@@ -344,7 +344,7 @@ class TestCase(BaseTestCase):
     batch: int
     output_prefix_length: int
     has_binary_data: bool
-    _input_data_fd: Optional[MemoryIO]
+    _input_data_fd: Optional[MmapableIO]
     _generated: Optional[Tuple[bytes, bytes]]
 
     def __init__(self, count: int, batch_no: int, config: ConfigNode, problem: Problem):
@@ -451,14 +451,14 @@ class TestCase(BaseTestCase):
     def input_data(self) -> bytes:
         return self.input_data_fd().to_bytes()
 
-    def input_data_fd(self) -> MemoryIO:
+    def input_data_fd(self) -> MmapableIO:
         if self._input_data_fd:
             return self._input_data_fd
 
         result = self._input_data_fd = self._make_input_data_fd()
         return result
 
-    def _make_input_data_fd(self) -> MemoryIO:
+    def _make_input_data_fd(self) -> MmapableIO:
         gen = self.config.generator
 
         # don't try running the generator if we specify an output file explicitly,

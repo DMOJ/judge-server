@@ -35,7 +35,7 @@ int cptbox_child_run(const struct child_config *config);
 char *bsd_get_proc_cwd(pid_t pid);
 char *bsd_get_proc_fdno(pid_t pid, int fdno);
 
-int memory_fd_create(void);
-int memory_fd_seal(int fd);
+int cptbox_memfd_create(void);
+int cptbox_memfd_seal(int fd);
 
 #endif

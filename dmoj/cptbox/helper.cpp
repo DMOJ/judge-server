@@ -328,19 +328,16 @@ char *bsd_get_proc_fdno(pid_t pid, int fdno) {
     return bsd_get_proc_fd(pid, 0, fdno);
 }
 
-int memory_fd_create(void) {
+int cptbox_memfd_create(void) {
 #ifdef __FreeBSD__
-    char filename[] = "/tmp/cptbox-memoryfd-XXXXXXXX";
-    int fd = mkstemp(filename);
-    if (fd >= 0)
-        unlink(filename);
-    return fd;
+    errno = ENOSYS;
+    return -1;
 #else
     return memfd_create("cptbox memory_fd", MFD_ALLOW_SEALING);
 #endif
 }
 
-int memory_fd_seal(int fd) {
+int cptbox_memfd_seal(int fd) {
 #ifdef __FreeBSD__
     errno = ENOSYS;
     return -1;

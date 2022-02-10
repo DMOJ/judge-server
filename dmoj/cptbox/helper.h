@@ -8,6 +8,7 @@
 #define PTBOX_SPAWN_FAIL_SECCOMP      203
 #define PTBOX_SPAWN_FAIL_TRACEME      204
 #define PTBOX_SPAWN_FAIL_EXECVE       205
+#define PTBOX_SPAWN_FAIL_SETAFFINITY  206
 
 struct child_config {
     unsigned long memory;
@@ -24,6 +25,8 @@ struct child_config {
     int stdout_;
     int stderr_;
     int *seccomp_handlers;
+    // 64 cores ought to be enough for anyone.
+    unsigned long cpu_affinity_mask;
 };
 
 void cptbox_closefrom(int lowfd);

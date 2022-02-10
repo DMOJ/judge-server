@@ -14,7 +14,7 @@ __all__ = ['Process', 'Debugger', 'bsd_get_proc_cwd', 'bsd_get_proc_fdno', 'MAX_
            'PTBOX_ABI_X86', 'PTBOX_ABI_X64', 'PTBOX_ABI_X32', 'PTBOX_ABI_ARM', 'PTBOX_ABI_ARM64',
            'PTBOX_ABI_FREEBSD_X64', 'PTBOX_ABI_INVALID', 'PTBOX_ABI_COUNT',
            'PTBOX_SPAWN_FAIL_NO_NEW_PRIVS', 'PTBOX_SPAWN_FAIL_SECCOMP', 'PTBOX_SPAWN_FAIL_TRACEME',
-           'PTBOX_SPAWN_FAIL_EXECVE']
+           'PTBOX_SPAWN_FAIL_EXECVE', 'PTBOX_SPAWN_FAIL_SETAFFINITY']
 
 
 cdef extern from 'ptbox.h' nogil:
@@ -119,6 +119,7 @@ cdef extern from 'helper.h' nogil:
         int stderr_
         int abi_for_seccomp
         int *seccomp_handlers
+        unsigned long cpu_affinity_mask
 
     void cptbox_closefrom(int lowfd)
     int cptbox_child_run(child_config *)
@@ -130,6 +131,7 @@ cdef extern from 'helper.h' nogil:
         PTBOX_SPAWN_FAIL_SECCOMP
         PTBOX_SPAWN_FAIL_TRACEME
         PTBOX_SPAWN_FAIL_EXECVE
+        PTBOX_SPAWN_FAIL_SETAFFINITY
 
     int _memory_fd_create "memory_fd_create"()
     int _memory_fd_seal "memory_fd_seal"(int fd)
@@ -416,6 +418,7 @@ cdef class Process:
     cdef public unsigned long _child_memory, _child_address, _child_personality
     cdef public unsigned int _cpu_time
     cdef public int _nproc, _fsize
+    cdef public unsigned long _cpu_affinity_mask
     cdef unsigned long _max_memory
 
     cpdef Debugger create_debugger(self):
@@ -428,6 +431,7 @@ cdef class Process:
         self._fsize = -1
         self._nproc = -1
         self._signal = 0
+        self._cpu_affinity_mask = 0
 
         self.debugger = self.create_debugger()
         self.process = new pt_process(self.debugger.thisptr)
@@ -491,6 +495,7 @@ cdef class Process:
             config.nproc = self._nproc
             config.fsize = self._fsize
             config.personality = self._child_personality
+            config.cpu_affinity_mask = self._cpu_affinity_mask
             config.file = file
             config.dir = chdir
             config.stdin_ = self._child_stdin

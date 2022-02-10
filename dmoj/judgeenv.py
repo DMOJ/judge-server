@@ -47,6 +47,8 @@ env = ConfigNode(
         # Directory to use as temporary submission storage, system default
         # (e.g. /tmp) if left blank.
         'tempdir': None,
+        # CPU affinity (as a list of 0-indexed CPU IDs) to run submissions on
+        'submission_cpu_affinity': None,
     },
     dynamic=False,
 )

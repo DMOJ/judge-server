@@ -21,6 +21,7 @@
 
 #include <libprocstat.h>
 #else
+#include <sched.h>
 // No ASLR on FreeBSD... not as of 11.0, anyway
 #include <sys/personality.h>
 #include <sys/prctl.h>
@@ -72,6 +73,26 @@ int cptbox_child_run(const struct child_config *config) {
     if (ptrace_traceme()) {
         perror("ptrace");
         return PTBOX_SPAWN_FAIL_TRACEME;
+    }
+
+    if (config->cpu_affinity_mask) {
+#if PTBOX_FREEBSD
+        return PTBOX_SPAWN_FAIL_SETAFFINITY;
+#else
+        cpu_set_t cpuset;
+        CPU_ZERO(&cpuset);
+
+        for (size_t i = 0; i < sizeof(config->cpu_affinity_mask) * 8; i++) {
+            if (config->cpu_affinity_mask & (1 << i)) {
+                CPU_SET(i, &cpuset);
+            }
+        }
+
+        if (sched_setaffinity(getpid(), sizeof(cpuset), &cpuset)) {
+            perror("sched_setaffinity");
+            return PTBOX_SPAWN_FAIL_SETAFFINITY;
+        }
+#endif
     }
 
     kill(getpid(), SIGSTOP);

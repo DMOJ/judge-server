@@ -266,7 +266,7 @@ class BaseExecutor(metaclass=ExecutorMeta):
 
         agent = self._file('setbufsize.so')
         shutil.copyfile(setbufsize_path, agent)
-        env = {
+        child_env = {
             # Forward LD_LIBRARY_PATH for systems (e.g. Android Termux) that require
             # it to find shared libraries
             'LD_LIBRARY_PATH': os.environ.get('LD_LIBRARY_PATH', ''),
@@ -274,7 +274,7 @@ class BaseExecutor(metaclass=ExecutorMeta):
             'CPTBOX_STDOUT_BUFFER_SIZE': kwargs.get('stdout_buffer_size'),
             'CPTBOX_STDERR_BUFFER_SIZE': kwargs.get('stderr_buffer_size'),
         }
-        env.update(self.get_env())
+        child_env.update(self.get_env())
 
         executable = self.get_executable()
         assert executable is not None
@@ -291,10 +291,11 @@ class BaseExecutor(metaclass=ExecutorMeta):
             stdin=kwargs.get('stdin'),
             stdout=kwargs.get('stdout'),
             stderr=kwargs.get('stderr'),
-            env=env,
+            env=child_env,
             cwd=utf8bytes(self._dir),
             nproc=self.get_nproc(),
             fsize=self.fsize,
+            cpu_affinity=env.submission_cpu_affinity,
         )
 
     @classmethod

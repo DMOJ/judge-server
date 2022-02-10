@@ -114,6 +114,7 @@ class TracedPopen(Process):
         personality: int = 0,
         cwd: bytes = b'',
         wall_time: Optional[float] = None,
+        cpu_affinity: Optional[List[int]] = None,
     ) -> None:
         self._executable = executable
 
@@ -136,6 +137,11 @@ class TracedPopen(Process):
         self._child_address = memory * 1024 + address_grace * 1024 if memory else 0
         self._nproc = nproc
         self._fsize = fsize
+
+        if cpu_affinity:
+            for cpu in cpu_affinity:
+                self._cpu_affinity_mask |= 1 << cpu
+
         self._is_tle = False
         self._is_ole = False
         self.__init_streams(stdin, stdout, stderr)
@@ -215,6 +221,8 @@ class TracedPopen(Process):
                 )
             elif self.returncode == PTBOX_SPAWN_FAIL_EXECVE:
                 raise RuntimeError('failed to spawn child')
+            elif self.returncode == PTBOX_SPAWN_FAIL_SETAFFINITY:
+                raise RuntimeError('failed to set child affinity')
             elif self.returncode >= 0:
                 raise RuntimeError('process failed to initialize with unknown exit code: %d' % self.returncode)
         return self.returncode

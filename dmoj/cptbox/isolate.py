@@ -1,6 +1,8 @@
 import logging
 import os
 import sys
+from enum import Enum
+from operator import attrgetter
 from typing import Optional, Tuple
 
 from dmoj.cptbox._cptbox import AT_FDCWD, Debugger, bsd_get_proc_cwd, bsd_get_proc_fdno
@@ -29,6 +31,12 @@ except AttributeError:
     pass
 
 
+class FilesystemSyscallKind(Enum):
+    READ = 1
+    WRITE = 2
+    OPEN = 3
+
+
 class IsolateTracer(dict):
     def __init__(self, read_fs, write_fs=None, writable=(1, 2)):
         super().__init__()
@@ -47,19 +55,19 @@ class IsolateTracer(dict):
         self.update(
             {
                 # Deny with report
-                sys_openat: self.check_file_access_at('openat', is_open=True),
-                sys_open: self.check_file_access('open', 0, is_open=True),
-                sys_faccessat: self.check_file_access_at('faccessat'),
-                sys_faccessat2: self.check_file_access_at('faccessat2'),
-                sys_access: self.check_file_access('access', 0),
-                sys_readlink: self.check_file_access('readlink', 0),
-                sys_readlinkat: self.check_file_access_at('readlinkat'),
-                sys_stat: self.check_file_access('stat', 0),
-                sys_stat64: self.check_file_access('stat64', 0),
-                sys_lstat: self.check_file_access('lstat', 0),
-                sys_lstat64: self.check_file_access('lstat64', 0),
-                sys_fstatat: self.check_file_access_at('fstatat'),
-                sys_statx: self.check_file_access_at('statx'),
+                sys_openat: self.check_file_access_at('openat', FilesystemSyscallKind.OPEN),
+                sys_open: self.check_file_access('open', 0, FilesystemSyscallKind.OPEN),
+                sys_faccessat: self.check_file_access_at('faccessat', FilesystemSyscallKind.READ),
+                sys_faccessat2: self.check_file_access_at('faccessat2', FilesystemSyscallKind.READ),
+                sys_access: self.check_file_access('access', 0, FilesystemSyscallKind.READ),
+                sys_readlink: self.check_file_access('readlink', 0, FilesystemSyscallKind.READ),
+                sys_readlinkat: self.check_file_access_at('readlinkat', FilesystemSyscallKind.READ),
+                sys_stat: self.check_file_access('stat', 0, FilesystemSyscallKind.READ),
+                sys_stat64: self.check_file_access('stat64', 0, FilesystemSyscallKind.READ),
+                sys_lstat: self.check_file_access('lstat', 0, FilesystemSyscallKind.READ),
+                sys_lstat64: self.check_file_access('lstat64', 0, FilesystemSyscallKind.READ),
+                sys_fstatat: self.check_file_access_at('fstatat', FilesystemSyscallKind.READ),
+                sys_statx: self.check_file_access_at('statx', FilesystemSyscallKind.READ),
                 sys_tgkill: self.do_kill,
                 sys_kill: self.do_kill,
                 sys_prctl: self.do_prctl,
@@ -171,8 +179,8 @@ class IsolateTracer(dict):
                     sys_setcontext: ALLOW,
                     sys_pread: ALLOW,
                     sys_fsync: ALLOW,
-                    sys_shm_open: self.check_file_access('shm_open', 0),
-                    sys_shm_open2: self.check_file_access('shm_open2', 0),
+                    sys_shm_open: self.check_file_access('shm_open', 0, FilesystemSyscallKind.OPEN),
+                    sys_shm_open2: self.check_file_access('shm_open2', 0, FilesystemSyscallKind.OPEN),
                     sys_cpuset_getaffinity: ALLOW,
                     sys_thr_new: ALLOW,
                     sys_thr_exit: ALLOW,
@@ -192,21 +200,12 @@ class IsolateTracer(dict):
                     sys_minherit: ALLOW,
                     sys_thr_set_name: ALLOW,
                     sys_sigfastblock: ALLOW,
-                    sys_realpathat: self.check_file_access_at('realpathat'),
+                    sys_realpathat: self.check_file_access_at('realpathat', FilesystemSyscallKind.READ),
                 }
             )
 
     def _compile_fs_jail(self, fs):
         return FilesystemPolicy(fs or [])
-
-    def is_write_flags(self, open_flags: int) -> bool:
-        for flag in open_write_flags:
-            # Strict equality is necessary here, since e.g. O_TMPFILE has multiple bits set,
-            # and O_DIRECTORY & O_TMPFILE > 0.
-            if open_flags & flag == flag:
-                return True
-
-        return False
 
     @staticmethod
     def read_path(syscall: str, debugger: Debugger, ptr: int):
@@ -220,15 +219,34 @@ class IsolateTracer(dict):
             return None, ACCESS_ENOENT(debugger)
         return file, None
 
-    def check_file_access(self, syscall, argument, is_write=None, is_open=False) -> HandlerCallback:
-        assert is_write is None or not is_open
+    def _fs_jail_from_open_flags(self, open_flags: int) -> bool:
+        for flag in open_write_flags:
+            # Strict equality is necessary here, since e.g. O_TMPFILE has multiple bits set,
+            # and O_DIRECTORY & O_TMPFILE > 0.
+            if open_flags & flag == flag:
+                return self.write_fs_jail
+
+        return self.read_fs_jail
+
+    def _fs_jail(self, read_open_flags, kind):
+        if kind == FilesystemSyscallKind.WRITE:
+            return lambda _: self.write_fs_jail
+        elif kind == FilesystemSyscallKind.READ:
+            return lambda _: self.read_fs_jail
+        elif kind == FilesystemSyscallKind.OPEN:
+            return lambda debugger: self._fs_jail_from_open_flags(read_open_flags(debugger))
+        else:
+            raise ValueError('bad FilesystemSyscallKind value')
+
+    def check_file_access(self, syscall, argument, kind) -> HandlerCallback:
+        fs_jail = self._fs_jail(attrgetter('uarg1'), kind)
 
         def check(debugger: Debugger) -> bool:
             file, error = self.read_path(syscall, debugger, getattr(debugger, 'uarg%d' % argument))
             if error is not None:
                 return error
 
-            file, error = self._file_access_check(file, debugger, is_open, is_write=is_write)
+            file, error = self._file_access_check(file, debugger, fs_jail(debugger))
             if not error:
                 return True
 
@@ -237,15 +255,15 @@ class IsolateTracer(dict):
 
         return check
 
-    def check_file_access_at(self, syscall, argument=1, is_open=False, is_write=None) -> HandlerCallback:
+    def check_file_access_at(self, syscall, kind, argument=1) -> HandlerCallback:
+        fs_jail = self._fs_jail(attrgetter('uarg2'), kind)
+
         def check(debugger: Debugger) -> bool:
             file, error = self.read_path(syscall, debugger, getattr(debugger, 'uarg%d' % argument))
             if error is not None:
                 return error
 
-            file, error = self._file_access_check(
-                file, debugger, is_open, is_write=is_write, dirfd=debugger.arg0, flag_reg=2
-            )
+            file, error = self._file_access_check(file, debugger, fs_jail(debugger), dirfd=debugger.arg0)
             if not error:
                 return True
 
@@ -255,7 +273,7 @@ class IsolateTracer(dict):
         return check
 
     def _file_access_check(
-        self, rel_file, debugger, is_open, is_write=None, flag_reg=1, dirfd=AT_FDCWD
+        self, rel_file, debugger, fs_jail, dirfd=AT_FDCWD
     ) -> Tuple[str, Optional[ErrnoHandlerCallback]]:
         # Either process called open(NULL, ...), or we failed to read the path
         # in cptbox.  Either way this call should not be allowed; if the path
@@ -264,10 +282,6 @@ class IsolateTracer(dict):
         # it, then we should *definitely* stop the call here.
         if rel_file is None:
             return '(nil)', ACCESS_EFAULT
-
-        if is_write is None and is_open:
-            is_write = self.is_write_flags(getattr(debugger, 'uarg%d' % flag_reg))
-        fs_jail = self.write_fs_jail if is_write else self.read_fs_jail
 
         try:
             file = self.get_full_path(debugger, rel_file, dirfd)

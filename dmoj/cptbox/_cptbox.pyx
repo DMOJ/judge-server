@@ -79,6 +79,7 @@ cdef extern from 'ptbox.h' nogil:
     cdef int PTBOX_EVENT_PROTECTION
     cdef int PTBOX_EVENT_PTRACE_ERROR
     cdef int PTBOX_EVENT_UPDATE_FAIL
+    cdef int PTBOX_EVENT_INITIAL_EXEC
 
     cdef int PTBOX_EXIT_NORMAL
     cdef int PTBOX_EXIT_PROTECTION
@@ -420,6 +421,7 @@ cdef class Process:
     cdef public int _nproc, _fsize
     cdef public unsigned long _cpu_affinity_mask
     cdef unsigned long _max_memory
+    cdef unsigned long _init_nvcsw, _init_nivcsw
 
     cpdef Debugger create_debugger(self):
         return Debugger(self)
@@ -432,6 +434,7 @@ cdef class Process:
         self._nproc = -1
         self._signal = 0
         self._cpu_affinity_mask = 0
+        self._init_nvcsw = self._init_nivcsw = 0
 
         self.debugger = self.create_debugger()
         self.process = new pt_process(self.debugger.thisptr)
@@ -448,6 +451,8 @@ cdef class Process:
         return self._callback(syscall)
 
     cdef int _event_handler(self, int event, unsigned long param) nogil:
+        cdef const rusage *usage
+
         if not PTBOX_FREEBSD and (event == PTBOX_EVENT_EXITING or event == PTBOX_EVENT_SIGNAL):
             self._max_memory = get_memory(self.process.getpid()) or self._max_memory
         if event == PTBOX_EVENT_PROTECTION:
@@ -465,6 +470,10 @@ cdef class Process:
             if param == SIGXCPU:
                 with gil:
                     self._cpu_time_exceeded()
+        if event == PTBOX_EVENT_INITIAL_EXEC:
+            usage = self.process.getrusage()
+            self._init_nvcsw = usage.ru_nvcsw
+            self._init_nivcsw = usage.ru_nivcsw
         return 0
 
     cpdef _handler(self, abi, syscall, handler):
@@ -573,7 +582,7 @@ cdef class Process:
     @property
     def context_switches(self):
         cdef const rusage *usage = self.process.getrusage()
-        return (usage.ru_nvcsw, usage.ru_nivcsw)
+        return (usage.ru_nvcsw - self._init_nvcsw, usage.ru_nivcsw - self._init_nivcsw)
 
     @property
     def signal(self):

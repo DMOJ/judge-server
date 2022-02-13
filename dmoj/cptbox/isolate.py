@@ -35,6 +35,7 @@ class FilesystemSyscallKind(Enum):
     READ = 1
     WRITE = 2
     OPEN = 3
+    FSTAT = 4
 
 
 class IsolateTracer(dict):
@@ -66,8 +67,8 @@ class IsolateTracer(dict):
                 sys_stat64: self.check_file_access('stat64', 0, FilesystemSyscallKind.READ),
                 sys_lstat: self.check_file_access('lstat', 0, FilesystemSyscallKind.READ),
                 sys_lstat64: self.check_file_access('lstat64', 0, FilesystemSyscallKind.READ),
-                sys_fstatat: self.check_file_access_at('fstatat', FilesystemSyscallKind.READ),
-                sys_statx: self.check_file_access_at('statx', FilesystemSyscallKind.READ),
+                sys_fstatat: self.check_file_access_at('fstatat', FilesystemSyscallKind.FSTAT),
+                sys_statx: self.check_file_access_at('statx', FilesystemSyscallKind.FSTAT),
                 sys_tgkill: self.do_kill,
                 sys_kill: self.do_kill,
                 sys_prctl: self.do_prctl,
@@ -231,7 +232,7 @@ class IsolateTracer(dict):
     def _fs_jail(self, read_open_flags, kind):
         if kind == FilesystemSyscallKind.WRITE:
             return lambda _: self.write_fs_jail
-        elif kind == FilesystemSyscallKind.READ:
+        elif kind in (FilesystemSyscallKind.READ, FilesystemSyscallKind.FSTAT):
             return lambda _: self.read_fs_jail
         elif kind == FilesystemSyscallKind.OPEN:
             return lambda debugger: self._fs_jail_from_open_flags(read_open_flags(debugger))
@@ -255,13 +256,28 @@ class IsolateTracer(dict):
 
         return check
 
-    def check_file_access_at(self, syscall, kind, argument=1) -> HandlerCallback:
+    def check_file_access_at(self, syscall, kind, file_reg=1) -> HandlerCallback:
         fs_jail = self._fs_jail(attrgetter('uarg2'), kind)
 
         def check(debugger: Debugger) -> bool:
-            file, error = self.read_path(syscall, debugger, getattr(debugger, 'uarg%d' % argument))
+            file, error = self.read_path(syscall, debugger, getattr(debugger, 'uarg%d' % file_reg))
             if error is not None:
                 return error
+
+            # FIXME(tbrindus): defined here because FreeBSD 13 does not
+            # implement AT_EMPTY_PATH, and 14 is not yet released (but does).
+            AT_EMPTY_PATH = 0x1000
+            # FIXME(tbrindus): we always follow symlinks, regardless of whether
+            # AT_SYMLINK_NOFOLLOW is set. This may result in us denying files
+            # we otherwise wouldn't have.
+            if kind == FilesystemSyscallKind.FSTAT and file == '' and debugger.uarg3 & AT_EMPTY_PATH:
+                # If pathname is an empty string, operate on the file referred to
+                # by dirfd (which may have been obtained using the open(2) O_PATH
+                # flag). In this case, dirfd can refer to any type of file, not
+                # just a directory, and the behavior of fstatat() is similar to
+                # that of fstat(). If dirfd is AT_FDCWD, the call operates on the
+                # current working directory.
+                return True
 
             file, error = self._file_access_check(file, debugger, fs_jail(debugger), dirfd=debugger.arg0)
             if not error:

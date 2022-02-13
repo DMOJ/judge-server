@@ -100,7 +100,7 @@ class CompilerIsolateTracer(IsolateTracer):
                 sys_rmdir: self.check_file_access('rmdir', 0, FilesystemSyscallKind.WRITE),
                 # Linking system calls
                 sys_link: self.check_file_access('link', 1, FilesystemSyscallKind.WRITE),
-                sys_linkat: self.check_file_access_at('linkat', FilesystemSyscallKind.WRITE, argument=3),
+                sys_linkat: self.check_file_access_at('linkat', FilesystemSyscallKind.WRITE, file_reg=3),
                 sys_unlink: self.check_file_access('unlink', 0, FilesystemSyscallKind.WRITE),
                 sys_unlinkat: self.check_file_access_at('unlinkat', FilesystemSyscallKind.WRITE),
                 sys_symlink: self.check_file_access('symlink', 1, FilesystemSyscallKind.WRITE),

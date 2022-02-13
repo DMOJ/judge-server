@@ -213,6 +213,7 @@ int pt_process::monitor() {
             if (!spawned) {
                 if (debugger->is_end_of_first_execve()) {
                     spawned = this->_initialized = true;
+                    dispatch(PTBOX_EVENT_INITIAL_EXEC, 0);
                     goto resume_process;
                 } else {
                     // Allow any syscalls before the first execve. This allows us to do things

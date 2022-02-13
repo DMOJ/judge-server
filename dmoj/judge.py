@@ -209,10 +209,12 @@ class Judge:
         if is_sc:
             case_info = ''
         else:
-            case_info = '[%.3fs (%.3fs) | %dkb] %s%s' % (
+            case_info = '[%.3fs (%.3fs wall) | %dkb | %d switches (%d involuntary)] %s%s' % (
                 result.execution_time,
                 result.wall_clock_time,
                 result.max_memory,
+                sum(result.context_switches),
+                result.context_switches[1],
                 colored_feedback,
                 colored_aux_codes,
             )

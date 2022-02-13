@@ -185,6 +185,7 @@ class BaseExecutor(metaclass=ExecutorMeta):
         result.max_memory = process.max_memory or 0.0
         result.execution_time = process.execution_time or 0.0
         result.wall_clock_time = process.wall_clock_time or 0.0
+        result.context_switches = process.context_switches or (0, 0)
 
         if process.is_ir:
             result.result_flag |= Result.IR

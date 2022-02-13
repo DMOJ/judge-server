@@ -1,4 +1,4 @@
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Dict, List, Tuple, Optional
 
 PTBOX_ABI_X86: int
 PTBOX_ABI_X64: int
@@ -80,6 +80,8 @@ class Process:
     def cpu_time(self) -> float: ...
     @property
     def max_memory(self) -> int: ...
+    @property
+    def context_switches(self) -> Tuple[int, int]: ...
     @property
     def signal(self) -> Optional[int]: ...
     @property

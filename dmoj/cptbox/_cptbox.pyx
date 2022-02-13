@@ -571,6 +571,11 @@ cdef class Process:
         return self._max_memory or self.process.getrusage().ru_maxrss
 
     @property
+    def context_switches(self):
+        cdef const rusage *usage = self.process.getrusage()
+        return (usage.ru_nvcsw, usage.ru_nivcsw)
+
+    @property
     def signal(self):
         if not self._exited:
             return None

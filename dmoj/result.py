@@ -33,6 +33,7 @@ class Result:
         execution_time=0,
         wall_clock_time=0,
         max_memory=0,
+        context_switches=(0, 0),
         proc_output='',
         feedback='',
         extended_feedback='',
@@ -42,6 +43,7 @@ class Result:
         self.result_flag = result_flag
         self.execution_time = execution_time
         self.wall_clock_time = wall_clock_time
+        self.context_switches = context_switches
         self.max_memory = max_memory
         self.proc_output = proc_output
         self.feedback = feedback

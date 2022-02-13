@@ -7,7 +7,7 @@ from typing import Any, Dict, IO, List, Optional, Sequence
 
 import pylru
 
-from dmoj.cptbox import IsolateTracer, TracedPopen
+from dmoj.cptbox import FilesystemSyscallKind, IsolateTracer, TracedPopen
 from dmoj.cptbox._cptbox import AT_FDCWD, Debugger
 from dmoj.cptbox.filesystem_policies import ExactFile, FilesystemAccessRule, RecursiveDir
 from dmoj.cptbox.handlers import ACCESS_EFAULT, ACCESS_EPERM, ALLOW
@@ -95,24 +95,24 @@ class CompilerIsolateTracer(IsolateTracer):
                 sys_getcpu: ALLOW,
                 sys_getpgid: ALLOW,
                 # Directory system calls
-                sys_mkdir: self.check_file_access('mkdir', 0, is_write=True),
-                sys_mkdirat: self.check_file_access_at('mkdirat', is_write=True),
-                sys_rmdir: self.check_file_access('rmdir', 0, is_write=True),
+                sys_mkdir: self.check_file_access('mkdir', 0, FilesystemSyscallKind.WRITE),
+                sys_mkdirat: self.check_file_access_at('mkdirat', FilesystemSyscallKind.WRITE),
+                sys_rmdir: self.check_file_access('rmdir', 0, FilesystemSyscallKind.WRITE),
                 # Linking system calls
-                sys_link: self.check_file_access('link', 1, is_write=True),
-                sys_linkat: self.check_file_access_at('linkat', argument=3, is_write=True),
-                sys_unlink: self.check_file_access('unlink', 0, is_write=True),
-                sys_unlinkat: self.check_file_access_at('unlinkat', is_write=True),
-                sys_symlink: self.check_file_access('symlink', 1, is_write=True),
+                sys_link: self.check_file_access('link', 1, FilesystemSyscallKind.WRITE),
+                sys_linkat: self.check_file_access_at('linkat', FilesystemSyscallKind.WRITE, argument=3),
+                sys_unlink: self.check_file_access('unlink', 0, FilesystemSyscallKind.WRITE),
+                sys_unlinkat: self.check_file_access_at('unlinkat', FilesystemSyscallKind.WRITE),
+                sys_symlink: self.check_file_access('symlink', 1, FilesystemSyscallKind.WRITE),
                 # Miscellaneous other filesystem system calls
-                sys_chdir: self.check_file_access('chdir', 0),
-                sys_chmod: self.check_file_access('chmod', 0, is_write=True),
+                sys_chdir: self.check_file_access('chdir', 0, FilesystemSyscallKind.READ),
+                sys_chmod: self.check_file_access('chmod', 0, FilesystemSyscallKind.WRITE),
                 sys_utimensat: self.do_utimensat,
                 sys_umask: ALLOW,
                 sys_flock: ALLOW,
                 sys_fsync: ALLOW,
                 sys_fadvise64: ALLOW,
-                sys_fchmodat: self.check_file_access_at('fchmodat', is_write=True),
+                sys_fchmodat: self.check_file_access_at('fchmodat', FilesystemSyscallKind.WRITE),
                 sys_fchmod: self.do_fchmod,
                 sys_fallocate: ALLOW,
                 sys_ftruncate: ALLOW,
@@ -162,7 +162,7 @@ class CompilerIsolateTracer(IsolateTracer):
                     sys_cap_ioctls_limit: ALLOW,
                     sys_cap_fcntls_limit: ALLOW,
                     sys_cap_enter: ALLOW,
-                    sys_utimes: self.check_file_access('utimes', 0),
+                    sys_utimes: self.check_file_access('utimes', 0, FilesystemSyscallKind.WRITE),
                 }
             )
 
@@ -192,7 +192,7 @@ class CompilerIsolateTracer(IsolateTracer):
             path = self._getfd_pid(debugger.tid, debugger.uarg0)
             return True if self.write_fs_jail.check(path) else ACCESS_EPERM(debugger)
 
-        return self.check_file_access_at('utimensat')(debugger)
+        return self.check_file_access_at('utimensat', FilesystemSyscallKind.WRITE)(debugger)
 
     def do_fchmod(self, debugger: Debugger) -> bool:
         path = self._getfd_pid(debugger.tid, debugger.uarg0)
@@ -207,9 +207,9 @@ class CompilerIsolateTracer(IsolateTracer):
         if new_path_error is not None:
             return new_path_error
 
-        if not self._file_access_check(old_path, debugger, is_write=True, is_open=False):
+        if not self._file_access_check(old_path, debugger, self.write_fs_jail):
             return ACCESS_EPERM(debugger)
-        if not self._file_access_check(new_path, debugger, is_write=True, is_open=False):
+        if not self._file_access_check(new_path, debugger, self.write_fs_jail):
             return ACCESS_EPERM(debugger)
 
         return True
@@ -223,9 +223,9 @@ class CompilerIsolateTracer(IsolateTracer):
         if new_path_error is not None:
             return new_path_error
 
-        if not self._file_access_check(old_path, debugger, is_write=True, is_open=False, dirfd=debugger.uarg0):
+        if not self._file_access_check(old_path, debugger, self.write_fs_jail, dirfd=debugger.uarg0):
             return ACCESS_EPERM(debugger)
-        if not self._file_access_check(new_path, debugger, is_write=True, is_open=False, dirfd=debugger.uarg2):
+        if not self._file_access_check(new_path, debugger, self.write_fs_jail, dirfd=debugger.uarg2):
             return ACCESS_EPERM(debugger)
 
         return True

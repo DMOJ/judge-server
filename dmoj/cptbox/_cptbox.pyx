@@ -225,6 +225,22 @@ def memory_fd_seal(int fd):
 
 cdef class Process
 
+cdef class Debugger
+
+cdef class ArgAccessor:
+    cdef Debugger debugger
+    cdef object base
+
+    def __cinit__(self, Debugger debugger, object base):
+        self.debugger = debugger
+        self.base = base
+
+    def __getitem__(self, reg):
+        return getattr(self.debugger, '%s%d' % (self.base, reg))
+
+    def __setitem__(self, reg, val):
+        setattr(self.debugger, '%s%d' % (self.base, reg), val)
+
 
 cdef class Debugger:
     cdef pt_debugger *thisptr
@@ -235,6 +251,8 @@ cdef class Debugger:
         self.thisptr = new pt_debugger()
         self.process = process
         self.on_return_callback = {}
+        self.uarg = ArgAccessor(self, "uarg")
+        self.arg = ArgAccessor(self, "arg")
 
     def __dealloc__(self):
         del self.thisptr

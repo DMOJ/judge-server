@@ -22,7 +22,7 @@ EXECUTORS = [
     'PERL',
     'PY2',
     'PY3',
-    'RUBY2',
+    'RUBY',
     'SED',
     'TEXT',
 ]
@@ -33,7 +33,7 @@ def main():
     judgeenv.env['runtime'] = {}
     judgeenv.env['extra_fs'] = {
         'PERL': [{'exact_file': '/dev/dtrace/helper'}],
-        'RUBY2': [{'exact_file': '/dev/dtrace/helper'}],
+        'RUBY': [{'exact_file': '/dev/dtrace/helper'}],
     }
 
     logging.basicConfig(level=logging.INFO)

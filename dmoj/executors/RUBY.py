@@ -10,7 +10,9 @@ class Executor(ScriptExecutor):
     address_grace = 65536
     test_program = 'puts gets'
     nproc = -1
-    command_paths = ['ruby2.%d' % i for i in reversed(range(0, 8))] + ['ruby2%d' % i for i in reversed(range(0, 8))]
+    command_paths = (
+        ['ruby3.0'] + ['ruby2.%d' % i for i in reversed(range(0, 8))] + ['ruby2%d' % i for i in reversed(range(0, 8))]
+    )
     syscalls = ['thr_set_name', 'eventfd2', 'specialfd']
     fs = [ExactFile('/proc/self/loginuid')]
 

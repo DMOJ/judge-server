@@ -213,7 +213,7 @@ class IsolateTracer(dict):
 
     def _dirfd_getter_from_reg(self, reg: int) -> DirFDGetter:
         def getter(debugger: Debugger) -> int:
-            return getattr(debugger, 'uarg%d' % reg)
+            return debugger.uarg[reg]
 
         return getter
 
@@ -222,7 +222,7 @@ class IsolateTracer(dict):
 
     def _fs_jail_getter_from_open_flags_reg(self, reg: int) -> FSJailGetter:
         def getter(debugger: Debugger) -> FilesystemPolicy:
-            open_flags = getattr(debugger, 'uarg%d' % reg)
+            open_flags = debugger.uarg[reg]
             for flag in open_write_flags:
                 # Strict equality is necessary here, since e.g. O_TMPFILE has multiple bits set,
                 # and O_DIRECTORY & O_TMPFILE > 0.
@@ -282,7 +282,7 @@ class IsolateTracer(dict):
                 # We already allowed this one way or another, don't check again.
                 return
 
-            dirfd = getattr(debugger, 'uarg%d' % dir_reg)
+            dirfd = debugger.uarg[dir_reg]
             full_path = self.get_full_path_unnormalized(debugger, rel_file, dirfd=dirfd)
             self._access_check(debugger, full_path, self.read_fs_jail)
 
@@ -299,9 +299,8 @@ class IsolateTracer(dict):
         return check
 
     def get_rel_file(self, debugger: Debugger, *, reg: int) -> str:
-        ptr = getattr(debugger, 'uarg%d' % reg)
         try:
-            file = debugger.readstr(ptr)
+            file = debugger.readstr(debugger.uarg[reg])
         except MaxLengthExceeded as e:
             raise DeniedSyscall(ACCESS_ENAMETOOLONG, f'Overly long path: {e.args[0]}')
         except UnicodeDecodeError as e:

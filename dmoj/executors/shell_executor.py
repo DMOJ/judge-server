@@ -1,7 +1,7 @@
 import os
 import shutil
-import sys
 
+from dmoj.cptbox.isolate import DeniedSyscall, protection_fault
 from dmoj.executors.script_executor import ScriptExecutor
 
 
@@ -27,12 +27,11 @@ class ShellExecutor(ScriptExecutor):
         sec = super().get_security(launch_kwargs)
         allowed = set(self.get_allowed_exec())
 
-        def handle_execve(debugger):
-            path = sec.get_full_path(debugger, debugger.readstr(debugger.uarg0))
-            if path in allowed:
-                return True
-            print('Not allowed to use command:', path, file=sys.stderr)
-            return False
+        def handle_execve(debugger) -> None:
+            path = sec.get_full_path_unnormalized(debugger, debugger.readstr(debugger.uarg0))
+            path = '/' + os.path.normpath(path).lstrip('/')
+            if path not in allowed:
+                raise DeniedSyscall(protection_fault, f'Not allowed to use command: {path}')
 
         sec[sys_execve] = handle_execve
         sec[sys_eaccess] = sec[sys_access]

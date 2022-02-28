@@ -14,14 +14,14 @@ UTIME_OMIT = (1 << 30) - 2
 
 
 class CompilerIsolateTracer(IsolateTracer):
-    def __init__(self, tmpdir, read_fs, write_fs, *args, **kwargs):
+    def __init__(self, *, tmpdir, read_fs, write_fs):
         read_fs += BASE_FILESYSTEM + [
             RecursiveDir(tmpdir),
             ExactFile('/bin/strip'),
             RecursiveDir('/usr/x86_64-linux-gnu'),
         ]
         write_fs += BASE_WRITE_FILESYSTEM + [RecursiveDir(tmpdir)]
-        super().__init__(read_fs, *args, write_fs=write_fs, **kwargs)
+        super().__init__(read_fs=read_fs, write_fs=write_fs)
 
         self.update(
             {

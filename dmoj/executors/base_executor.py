@@ -214,7 +214,7 @@ class BaseExecutor(metaclass=ExecutorMeta):
         return sec
 
     def get_security(self, launch_kwargs=None) -> IsolateTracer:
-        sec = IsolateTracer(self.get_fs(), write_fs=self.get_write_fs())
+        sec = IsolateTracer(read_fs=self.get_fs(), write_fs=self.get_write_fs())
         return self._add_syscalls(sec)
 
     def get_fs(self) -> List[FilesystemAccessRule]:

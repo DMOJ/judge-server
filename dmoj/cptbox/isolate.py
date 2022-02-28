@@ -42,12 +42,10 @@ DirFDGetter = Callable[[Debugger], int]
 
 
 class IsolateTracer(dict):
-    def __init__(self, read_fs, write_fs=None, writable=(1, 2)):
+    def __init__(self, *, read_fs, write_fs):
         super().__init__()
         self.read_fs_jail = self._compile_fs_jail(read_fs)
         self.write_fs_jail = self._compile_fs_jail(write_fs)
-
-        self._writable = list(writable)
 
         if sys.platform.startswith('freebsd'):
             self._getcwd_pid = lambda pid: utf8text(bsd_get_proc_cwd(pid))

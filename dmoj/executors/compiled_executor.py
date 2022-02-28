@@ -123,7 +123,9 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
             [utf8bytes(a) for a in args],
             **{
                 'executable': utf8bytes(args[0]),
-                'security': CompilerIsolateTracer(self._dir, self.compiler_read_fs, self.compiler_write_fs),
+                'security': CompilerIsolateTracer(
+                    tmpdir=self._dir, read_fs=self.compiler_read_fs, write_fs=self.compiler_write_fs
+                ),
                 'stderr': _slave,
                 'stdout': _slave,
                 'stdin': _slave,

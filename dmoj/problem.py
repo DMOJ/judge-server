@@ -1,6 +1,7 @@
 import itertools
 import os
 import re
+import shutil
 import subprocess
 import zipfile
 from collections import defaultdict
@@ -12,9 +13,11 @@ from yaml.scanner import ScannerError
 
 from dmoj import checkers
 from dmoj.config import ConfigNode, InvalidInitException
+from dmoj.cptbox.utils import MemoryIO
 from dmoj.judgeenv import env, get_problem_root
 from dmoj.utils.helper_files import compile_with_auxiliary_files, parse_helper_file_error
 from dmoj.utils.module import load_module_from_file
+from dmoj.utils.normalize import normalized_file_copy
 
 DEFAULT_TEST_CASE_INPUT_PATTERN = r'^(?=.*?\.in|in).*?(?:(?:^|\W)(?P<batch>\d+)[^\d\s]+)?(?P<case>\d+)[^\d\s]*$'
 DEFAULT_TEST_CASE_OUTPUT_PATTERN = r'^(?=.*?\.out|out).*?(?:(?:^|\W)(?P<batch>\d+)[^\d\s]+)?(?P<case>\d+)[^\d\s]*$'
@@ -177,16 +180,28 @@ class ProblemDataManager(dict):
         self.problem_root_dir = problem_root_dir
         self.archive = None
 
-    def __missing__(self, key):
+    def open(self, key):
         try:
-            with open(os.path.join(self.problem_root_dir, key), 'rb') as f:
-                return f.read()
+            return open(os.path.join(self.problem_root_dir, key), 'rb')
         except IOError:
             if self.archive:
                 zipinfo = self.archive.getinfo(key)
-                with self.archive.open(zipinfo) as f:
-                    return f.read()
+                return self.archive.open(zipinfo)
             raise KeyError('file "%s" could not be found in "%s"' % (key, self.problem_root_dir))
+
+    def as_fd(self, key, normalize=False):
+        memory = MemoryIO()
+        with self.open(key) as f:
+            if normalize:
+                normalized_file_copy(f, memory)
+            else:
+                shutil.copyfileobj(f, memory)
+        memory.seal()
+        return memory
+
+    def __missing__(self, key):
+        with self.open(key) as f:
+            return f.read()
 
     def __del__(self):
         if self.archive:
@@ -241,6 +256,7 @@ class TestCase:
         self.output_prefix_length = config.output_prefix_length
         self.has_binary_data = config.binary_data
         self._generated = None
+        self._input_data_fd = None
 
     def _normalize(self, data):
         # Perhaps the correct answer may be 'no output', in which case it'll be
@@ -330,6 +346,14 @@ class TestCase:
         parse_helper_file_error(proc, executor, 'generator', stderr, time_limit, memory_limit)
 
     def input_data(self):
+        return self.input_data_fd().to_bytes()
+
+    def input_data_fd(self):
+        if not self._input_data_fd:
+            self._input_data_fd = self._make_input_data_fd()
+        return self._input_data_fd
+
+    def _make_input_data_fd(self):
         gen = self.config.generator
 
         # don't try running the generator if we specify an output file explicitly,
@@ -337,10 +361,18 @@ class TestCase:
         if gen and (not self.config['out'] or not self.config['in']):
             if self._generated is None:
                 self._run_generator(gen, args=self.config.generator_args)
+            # FIXME: generate into the MemoryIO.
             if self._generated[0]:
-                return self._generated[0]
+                memory = MemoryIO()
+                memory.write(self._generated[0])
+                memory.seal()
+                return memory
+
         # in file is optional
-        return self._normalize(self.problem.problem_data[self.config['in']]) if self.config['in'] else b''
+        if self.config['in']:
+            return self.problem.problem_data.as_fd(self.config['in'], normalize=not self.has_binary_data)
+        else:
+            return MemoryIO(seal=True)
 
     def output_data(self):
         if self.config.out:
@@ -376,13 +408,15 @@ class TestCase:
 
     def free_data(self):
         self._generated = None
+        if self._input_data_fd:
+            self._input_data_fd.close()
 
     def __str__(self):
         return 'TestCase{in=%s,out=%s,points=%s}' % (self.config['in'], self.config['out'], self.config['points'])
 
     # FIXME(tbrindus): this is a hack working around the fact we can't pickle these fields, but we do need parts of
     # TestCase itself on the other end of the IPC.
-    _pickle_blacklist = ('_generated', 'config', 'problem')
+    _pickle_blacklist = ('_generated', 'config', 'problem', '_input_data_fd')
 
     def __getstate__(self):
         k = {k: v for k, v in self.__dict__.items() if k not in self._pickle_blacklist}

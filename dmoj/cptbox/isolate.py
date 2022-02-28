@@ -354,7 +354,7 @@ class IsolateTracer(dict):
         real = os.path.realpath(file)
 
         try:
-            same = normalized == real or os.path.samefile(projected, real)
+            same = normalized == real or real.startswith('/memfd:') or os.path.samefile(projected, real)
         except OSError:
             raise DeniedSyscall(ACCESS_ENOENT, f'Cannot stat, file: {file}, projected: {projected}, real: {real}')
 

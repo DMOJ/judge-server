@@ -3,6 +3,7 @@ import shlex
 import subprocess
 
 from dmoj.contrib import contrib_modules
+from dmoj.cptbox.filesystem_policies import ExactFile
 from dmoj.error import InternalError
 from dmoj.graders.standard import StandardGrader
 from dmoj.judgeenv import env, get_problem_root
@@ -38,7 +39,7 @@ class BridgedInteractiveGrader(StandardGrader):
 
         return (not result.result_flag) and parsed_result
 
-    def _launch_process(self, case):
+    def _launch_process(self, case, input_file=None):
         self._interactor_stdin_pipe, submission_stdout_pipe = os.pipe()
         submission_stdin_pipe, self._interactor_stdout_pipe = os.pipe()
         self._current_proc = self.binary.launch(
@@ -53,7 +54,7 @@ class BridgedInteractiveGrader(StandardGrader):
         os.close(submission_stdin_pipe)
         os.close(submission_stdout_pipe)
 
-    def _interact_with_process(self, case, result, input):
+    def _interact_with_process(self, case, result):
         judge_output = case.output_data()
         # Give TL + 2s by default, so we do not race (and incorrectly throw IE) if submission gets TLE
         self._interactor_time_limit = (self.handler_data.preprocessing_time or 2) + self.problem.time_limit
@@ -63,14 +64,16 @@ class BridgedInteractiveGrader(StandardGrader):
             or contrib_modules[self.contrib_type].ContribModule.get_interactor_args_format_string()
         )
 
-        with mktemp(input) as input_file, mktemp(judge_output) as answer_file:
+        with mktemp(judge_output) as answer_file:
+            input_path = case.input_data_fd().to_path()
+
             # TODO(@kirito): testlib.h expects a file they can write to,
             # but we currently don't have a sane way to allow this.
             # Thus we pass /dev/null for now so testlib interactors will still
             # work, albeit with diminished capabilities
             interactor_args = shlex.split(
                 args_format_string.format(
-                    input_file=shlex.quote(input_file.name),
+                    input_file=shlex.quote(input_path),
                     output_file=shlex.quote(os.devnull),
                     answer_file=shlex.quote(answer_file.name),
                 )
@@ -82,6 +85,7 @@ class BridgedInteractiveGrader(StandardGrader):
                 stdin=self._interactor_stdin_pipe,
                 stdout=self._interactor_stdout_pipe,
                 stderr=subprocess.PIPE,
+                extra_fs=[ExactFile(input_path)],
             )
 
             os.close(self._interactor_stdin_pipe)

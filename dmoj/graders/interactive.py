@@ -91,7 +91,10 @@ class Interactor:
 
 
 class InteractiveGrader(StandardGrader):
-    def _interact_with_process(self, case, result, input):
+    def _launch_process(self, case, input_file=None):
+        super()._launch_process(case, input_file=None)
+
+    def _interact_with_process(self, case, result):
         interactor = Interactor(self._current_proc)
         self.check = False
         self.feedback = None

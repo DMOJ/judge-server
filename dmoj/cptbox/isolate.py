@@ -344,13 +344,19 @@ class IsolateTracer(dict):
 
         # normpath doesn't strip leading slashes
         projected = normalized = '/' + os.path.normpath(file).lstrip('/')
+        proc_dir = f'/proc/{debugger.tid}'
         if normalized.startswith('/proc/self'):
+            # modify file so that the correct realpath is used
             file = os.path.join(f'/proc/{debugger.tid}', os.path.relpath(file, '/proc/self'))
             projected = '/' + os.path.normpath(file).lstrip('/')
-        elif normalized.startswith(f'/proc/{debugger.tid}/'):
+        elif normalized.startswith(
+            proc_dir + '/'
+        ):  # Use a slash because otherwise if we are 123 then /proc/12345 matches
             # If the child process uses /proc/getpid()/foo, set the normalized path to be /proc/self/foo.
             # Access rules can more easily check /proc/self.
-            normalized = os.path.join('/proc/self', os.path.relpath(file, f'/proc/{debugger.tid}'))
+            normalized = os.path.join('/proc/self', os.path.relpath(file, proc_dir))
+        elif normalized == proc_dir:
+            normalized = '/proc/self'
         real = os.path.realpath(file)
 
         try:
@@ -367,7 +373,6 @@ class IsolateTracer(dict):
             raise DeniedSyscall(ACCESS_EACCES, f'Denying {file}, normalized to {normalized}')
 
         if normalized != real:
-            proc_dir = f'/proc/{debugger.tid}'
             if real.startswith(proc_dir):
                 real = os.path.join('/proc/self', os.path.relpath(real, proc_dir))
 

@@ -24,25 +24,52 @@ class File:
     pass
 
 
-class ExactFile:
+class BaseFilesystemAccessRule:
     def __init__(self, path: str):
+        path = os.path.expanduser(path)
+        assert os.path.abspath(path) == path, 'FilesystemAccessRule must specify a normalized, absolute path to rule'
         self.path = path
+        self._assert_rule_type()
+
+    def _assert_rule_type(self) -> None:
+        if self.exists():
+            self._assert_dir_type(os.path.isdir(self.path))
+
+    def _assert_dir_type(self, is_dir: bool) -> None:
+        raise NotImplementedError
+
+    def exists(self):
+        return os.path.exists(self.path)
+
+    def realpath(self):
+        return os.path.realpath(self.path)
+
+    def is_realpath(self) -> bool:
+        return self.path.startswith('/proc/self') or self.realpath() == self.path  # proc/self should not be resolved
+
+    def __repr__(self) -> str:
+        return f'<{self.__class__.__name__} {self.path}>'
 
 
-class ExactDir:
+class ExactFile(BaseFilesystemAccessRule):
+    def _assert_dir_type(self, is_dir: bool) -> None:
+        assert not is_dir, f"Can't apply file rule to directory {self.path}"
+
+
+class DirFilesystemAccessRule(BaseFilesystemAccessRule):
+    def _assert_dir_type(self, is_dir: bool) -> None:
+        assert is_dir, f"Can't apply directory rule to non-directory {self.path}"
+
+
+class ExactDir(DirFilesystemAccessRule):
     access_mode = AccessMode.EXACT
 
-    def __init__(self, path: str):
-        self.path = path
 
-
-class RecursiveDir:
+class RecursiveDir(DirFilesystemAccessRule):
     access_mode = AccessMode.RECURSIVE
 
-    def __init__(self, path: str):
-        self.path = path
 
-
+# Mainly for MyPy: only ExactFile, ExactDir and RecursiveDir are to be considered rules
 FilesystemAccessRule = Union[ExactFile, ExactDir, RecursiveDir]
 
 
@@ -53,13 +80,10 @@ class FilesystemPolicy:
             self._add_rule(rule)
 
     def _add_rule(self, rule: FilesystemAccessRule) -> None:
-        self._assert_rule_type(rule)
         if rule.path == '/':
             return self._finalize_root_rule(rule)
 
-        path = os.path.expanduser(rule.path)
-        assert os.path.abspath(path) == path, 'FilesystemAccessRule must specify a normalized, absolute path to rule'
-        *directory_path, final_component = path.split('/')[1:]
+        *directory_path, final_component = rule.path.split('/')[1:]
 
         node = self.root
         for component in directory_path:
@@ -70,17 +94,8 @@ class FilesystemPolicy:
         self._finalize_rule(node, final_component, rule)
 
         # Add symlink targets too
-        real_path = os.path.realpath(path)
-        if real_path != path:
-            self._add_rule(type(rule)(real_path))
-
-    def _assert_rule_type(self, rule: FilesystemAccessRule) -> None:
-        if os.path.exists(rule.path):
-            is_dir = os.path.isdir(rule.path)
-            if isinstance(rule, ExactFile):
-                assert not is_dir, f"Can't apply file rule to directory {rule.path}"
-            else:
-                assert is_dir, f"Can't apply directory rule to non-directory {rule.path}"
+        if not rule.is_realpath():
+            self._add_rule(type(rule)(rule.realpath()))
 
     def _finalize_root_rule(self, rule: FilesystemAccessRule) -> None:
         assert not isinstance(rule, ExactFile), 'Root is not a file'

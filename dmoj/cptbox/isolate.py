@@ -427,6 +427,8 @@ class DeniedSyscall(Exception):
         self.reason = reason
 
     def log(self, syscall: int):
-        syscall_name = by_id[syscall].lstrip('sys_')
+        syscall_name = by_id[syscall]
+        if syscall_name.startswith('sys_'):
+            syscall_name = syscall_name[4:]
         # We don't want to put the reason in the first position, because then users could insert format strings.
         log.debug('%s', f'Denied syscall {syscall_name}: ' + self.reason)

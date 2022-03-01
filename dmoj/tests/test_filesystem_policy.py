@@ -43,14 +43,14 @@ class CheckerTest(unittest.TestCase):
         self.assertRaises(AssertionError, self.check, '/usr/lib/not/./a/../normalized/path')
 
     def test_rule_type_check(self):
-        self.assertRaises(AssertionError, FilesystemPolicy, [ExactFile('/usr/lib')])
-        self.assertRaises(AssertionError, FilesystemPolicy, [ExactDir('/etc/passwd')])
-        self.assertRaises(AssertionError, FilesystemPolicy, [RecursiveDir('/etc/passwd')])
+        self.assertRaises(AssertionError, ExactFile, '/usr/lib')
+        self.assertRaises(AssertionError, ExactDir, '/etc/passwd')
+        self.assertRaises(AssertionError, RecursiveDir, '/etc/passwd')
 
-    def test_build_checks(self):
-        self.assertRaises(AssertionError, FilesystemPolicy, [ExactFile('not/an/absolute/path')])
-        self.assertRaises(AssertionError, FilesystemPolicy, [ExactDir('/nota/./normalized/path')])
-        self.assertRaises(AssertionError, FilesystemPolicy, [RecursiveDir('')])
+    def test_bad_path_check(self):
+        self.assertRaises(AssertionError, ExactFile, 'not/an/absolute/path')
+        self.assertRaises(AssertionError, ExactDir, '/nota/./normalized/path')
+        self.assertRaises(AssertionError, RecursiveDir, '')
 
     def check(self, path):
         self.fs.check(path)

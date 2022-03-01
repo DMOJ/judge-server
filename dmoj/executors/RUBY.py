@@ -1,7 +1,6 @@
 import os
-import re
 
-from dmoj.cptbox.filesystem_policies import ExactFile
+from dmoj.cptbox.filesystem_policies import ExactDir, ExactFile, RecursiveDir
 from dmoj.executors.script_executor import ScriptExecutor
 
 
@@ -20,11 +19,11 @@ class Executor(ScriptExecutor):
         fs = super().get_fs()
         home = self.runtime_dict.get('%s_home' % self.get_executor_name().lower())
         if home is not None:
-            fs.append(re.escape(home))
+            fs.append(RecursiveDir(home))
             components = home.split('/')
             components.pop()
             while components and components[-1]:
-                fs.append(re.escape('/'.join(components)) + '$')
+                fs.append(ExactDir('/'.join(components)))
                 components.pop()
         return fs
 

@@ -1,6 +1,6 @@
 import os
 from enum import Enum
-from typing import List, Union
+from typing import Sequence, Union
 
 
 class AccessMode(Enum):
@@ -47,7 +47,7 @@ FilesystemAccessRule = Union[ExactFile, ExactDir, RecursiveDir]
 
 
 class FilesystemPolicy:
-    def __init__(self, rules: List[FilesystemAccessRule]):
+    def __init__(self, rules: Sequence[FilesystemAccessRule]):
         self.root = Dir()
         for rule in rules:
             self._add_rule(rule)

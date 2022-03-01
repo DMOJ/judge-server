@@ -228,12 +228,6 @@ int pt_process::monitor() {
                     switch (handler[debugger->abi()][syscall]) {
                         case PTBOX_HANDLER_ALLOW:
                             break;
-                        case PTBOX_HANDLER_STDOUTERR: {
-                            int arg0 = debugger->arg0();
-                            if (arg0 != 1 && arg0 != 2)
-                                exit_reason = protection_fault(syscall);
-                            break;
-                        }
                         case PTBOX_HANDLER_CALLBACK:
                             if (callback(context, syscall))
                                 break;

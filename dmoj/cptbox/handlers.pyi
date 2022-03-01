@@ -3,7 +3,6 @@ from dmoj.cptbox._cptbox import Debugger
 ALLOW: int
 DISALLOW: int
 _CALLBACK: int
-STDOUTERR: int
 
 class ErrnoHandlerCallback:
     errno: int

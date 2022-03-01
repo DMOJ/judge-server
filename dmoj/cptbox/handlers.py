@@ -5,7 +5,6 @@ from dmoj.cptbox._cptbox import Debugger
 DISALLOW = 0
 ALLOW = 1
 _CALLBACK = 2
-STDOUTERR = 3
 
 
 class ErrnoHandlerCallback:

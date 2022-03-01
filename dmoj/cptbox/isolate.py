@@ -2,10 +2,10 @@ import logging
 import os
 import sys
 from enum import Enum
-from typing import Any, Callable, Mapping
+from typing import Any, Callable, Mapping, Sequence
 
 from dmoj.cptbox._cptbox import AT_FDCWD, Debugger, bsd_get_proc_cwd, bsd_get_proc_fdno
-from dmoj.cptbox.filesystem_policies import FilesystemPolicy
+from dmoj.cptbox.filesystem_policies import FilesystemAccessRule, FilesystemPolicy
 from dmoj.cptbox.handlers import (
     ACCESS_EACCES,
     ACCESS_EFAULT,
@@ -42,7 +42,7 @@ DirFDGetter = Callable[[Debugger], int]
 
 
 class IsolateTracer(dict):
-    def __init__(self, *, read_fs, write_fs):
+    def __init__(self, *, read_fs: Sequence[FilesystemAccessRule], write_fs: Sequence[FilesystemAccessRule]):
         super().__init__()
         self.read_fs_jail = self._compile_fs_jail(read_fs)
         self.write_fs_jail = self._compile_fs_jail(write_fs)
@@ -206,8 +206,8 @@ class IsolateTracer(dict):
                 }
             )
 
-    def _compile_fs_jail(self, fs) -> FilesystemPolicy:
-        return FilesystemPolicy(fs or [])
+    def _compile_fs_jail(self, fs: Sequence[FilesystemAccessRule]) -> FilesystemPolicy:
+        return FilesystemPolicy(fs)
 
     def _dirfd_getter_from_reg(self, reg: int) -> DirFDGetter:
         def getter(debugger: Debugger) -> int:
@@ -231,7 +231,7 @@ class IsolateTracer(dict):
 
         return getter
 
-    def _fs_jail_getter_from_kind(self, kind) -> FSJailGetter:
+    def _fs_jail_getter_from_kind(self, kind: FilesystemSyscallKind) -> FSJailGetter:
         def getter(debugger: Debugger) -> FilesystemPolicy:
             return {
                 FilesystemSyscallKind.READ: self.read_fs_jail,

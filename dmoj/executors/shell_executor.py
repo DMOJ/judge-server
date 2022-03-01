@@ -1,6 +1,7 @@
 import os
 import shutil
 
+from dmoj.cptbox.filesystem_policies import ExactFile
 from dmoj.cptbox.isolate import DeniedSyscall, protection_fault
 from dmoj.executors.script_executor import ScriptExecutor
 
@@ -16,7 +17,7 @@ class ShellExecutor(ScriptExecutor):
         return list(map(shutil.which, self.get_shell_commands()))
 
     def get_fs(self):
-        return super().get_fs() + self.get_allowed_exec()
+        return super().get_fs() + list(map(ExactFile, self.get_allowed_exec()))
 
     def get_allowed_syscalls(self):
         return super().get_allowed_syscalls() + ['fork', 'waitpid', 'wait4']

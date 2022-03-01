@@ -2,6 +2,7 @@ import os
 from subprocess import CalledProcessError, check_output
 from typing import List
 
+from dmoj.cptbox.filesystem_policies import ExactFile
 from dmoj.judgeenv import env
 from .gcc_executor import GCCExecutor
 
@@ -33,7 +34,7 @@ int main (int argc, const char * argv[]) {
         return self.objc_ldflags + super().get_ldflags()
 
     def get_fs(self):
-        return super().get_fs() + [r'/proc/\d+/cmdline$']
+        return super().get_fs() + [ExactFile('/proc/self/cmdline')]
 
     @classmethod
     def initialize(cls):

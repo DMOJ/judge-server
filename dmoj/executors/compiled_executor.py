@@ -81,6 +81,9 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
     compiler_read_fs: Sequence[FilesystemAccessRule] = []
     compiler_write_fs: Sequence[FilesystemAccessRule] = []
 
+    # List of directories required by the compiler to be present, typically for writing to
+    compiler_required_dirs: List[str] = []
+
     def __init__(self, problem_id: str, source_code: bytes, *args, **kwargs) -> None:
         super().__init__(problem_id, source_code, **kwargs)
         self.warning = None
@@ -94,6 +97,13 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
         self._code = self._file(self.source_filename_format.format(problem_id=problem_id, ext=self.ext))
         with open(self._code, 'wb') as fo:
             fo.write(utf8bytes(source_code))
+
+        for path in self.compiler_required_dirs:
+            path = os.path.expanduser(path)
+            try:
+                os.mkdir(path, mode=0o775)
+            except FileExistsError:
+                pass
 
     def get_compile_args(self) -> List[str]:
         raise NotImplementedError()

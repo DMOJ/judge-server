@@ -9,6 +9,7 @@ class Executor(CompiledExecutor):
         RecursiveDir('~/.cache'),
     ]
     compiler_write_fs = compiler_read_fs
+    compiler_required_dirs = ['~/.cache']
     test_program = 'print(readLine()!)'
 
     def get_compile_args(self):

@@ -13,6 +13,7 @@ class Executor(StripCarriageReturnsMixin, CompiledExecutor):
         RecursiveDir('~/.cache'),
     ]
     compiler_write_fs = compiler_read_fs
+    compiler_required_dirs = ['~/.cache']
     test_program = """
 const std = @import("std");
 

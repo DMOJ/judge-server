@@ -186,6 +186,9 @@ class BaseExecutor(metaclass=ExecutorMeta):
         result.execution_time = process.execution_time or 0.0
         result.wall_clock_time = process.wall_clock_time or 0.0
         result.context_switches = process.context_switches or (0, 0)
+        result.runtime_version = ', '.join(
+            f'{runtime} {".".join(map(str, version))}' for runtime, version in self.get_runtime_versions()
+        )
 
         if process.is_ir:
             result.result_flag |= Result.IR

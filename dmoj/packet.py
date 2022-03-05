@@ -206,6 +206,9 @@ class PacketManager:
                             'output': result.output,
                             'extended-feedback': result.extended_feedback,
                             'feedback': result.feedback,
+                            'voluntary-context-switches': result.context_switches[0],
+                            'involuntary-context-switches': result.context_switches[1],
+                            'runtime-version': result.runtime_version,
                         }
                         for position, result in self._testcase_queue
                     ],

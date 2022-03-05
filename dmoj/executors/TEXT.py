@@ -1,7 +1,10 @@
+from dmoj.executors.mixins import StripCarriageReturnsMixin
 from dmoj.executors.script_executor import ScriptExecutor
 
 
-class Executor(ScriptExecutor):
+# We want to strip carriage returns because the source code is outputted byte-for-byte,
+# and we strip these in test data.
+class Executor(StripCarriageReturnsMixin, ScriptExecutor):
     ext = 'txt'
     command = 'cat'
     test_program = 'echo: Hello, World!\n'

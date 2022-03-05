@@ -19,7 +19,7 @@ from dmoj.utils.ansi import print_ansi
 from dmoj.utils.error import print_protection_fault
 from dmoj.utils.unicode import utf8bytes, utf8text
 
-version_cache: Dict[str, List[Tuple[str, Optional[Tuple[int, ...]]]]] = {}
+version_cache: Dict[str, List[Tuple[str, Tuple[int, ...]]]] = {}
 
 if os.path.isdir('/usr/home'):
     USR_DIR = [RecursiveDir(f'/usr/{d}') for d in os.listdir('/usr') if d != 'home' and os.path.isdir(f'/usr/{d}')]
@@ -341,13 +341,14 @@ class BaseExecutor(metaclass=ExecutorMeta):
                 cls.get_runtime_versions()
                 usage = f'[{proc.execution_time:.3f}s, {proc.max_memory} KB]'
                 print_ansi(f'{["#ansi[Failed](red|bold) ", "#ansi[Success](green|bold)"][res]} {usage:<19}', end=' ')
-
-                runtime_version: List[Tuple[str, str]] = []
-                for runtime, version in cls.get_runtime_versions():
-                    assert version is not None
-                    runtime_version.append((runtime, '.'.join(map(str, version))))
-
-                print_ansi(', '.join(['#ansi[%s](cyan|bold) %s' % v for v in runtime_version]))
+                print_ansi(
+                    ', '.join(
+                        [
+                            f'#ansi[{runtime}](cyan|bold) {".".join(map(str, version))}'
+                            for runtime, version in cls.get_runtime_versions()
+                        ]
+                    )
+                )
             if stdout.strip() != test_message and error_callback:
                 error_callback('Got unexpected stdout output:\n' + utf8text(stdout))
             if stderr:
@@ -374,12 +375,12 @@ class BaseExecutor(metaclass=ExecutorMeta):
         return [(cls.command, command)]
 
     @classmethod
-    def get_runtime_versions(cls) -> List[Tuple[str, Optional[Tuple[int, ...]]]]:
+    def get_runtime_versions(cls) -> List[Tuple[str, Tuple[int, ...]]]:
         key = cls.get_executor_name()
         if key in version_cache:
             return version_cache[key]
 
-        versions: List[Tuple[str, Optional[Tuple[int, ...]]]] = []
+        versions: List[Tuple[str, Tuple[int, ...]]] = []
         for runtime, path in cls.get_versionable_commands():
             flags = cls.get_version_flags(runtime)
 

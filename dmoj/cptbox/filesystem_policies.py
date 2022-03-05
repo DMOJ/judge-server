@@ -80,6 +80,9 @@ class FilesystemPolicy:
             self._add_rule(rule)
 
     def _add_rule(self, rule: FilesystemAccessRule) -> None:
+        if not rule.exists():
+            return
+
         if rule.path == '/':
             return self._finalize_root_rule(rule)
 

@@ -8,6 +8,7 @@ class Executor(CompiledExecutor):
     compiler_read_fs = [
         ExactFile('/etc/fpc.cfg'),
     ]
+    compiler_time_limit = 20
     test_program = """\
 var line : string;
 begin

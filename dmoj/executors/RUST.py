@@ -1,7 +1,8 @@
 import fcntl
 import os
+from typing import List
 
-from dmoj.cptbox.filesystem_policies import ExactFile, RecursiveDir
+from dmoj.cptbox.filesystem_policies import ExactFile, FilesystemAccessRule, RecursiveDir
 from dmoj.executors.compiled_executor import CompiledExecutor
 
 CARGO_TOML = b"""\
@@ -85,6 +86,12 @@ class Executor(CompiledExecutor):
                 self.shared_target = maybe_target
                 # We intentionally don't clean this directory up at any point, since we can re-use it.
                 return self.shared_target
+
+    def get_fs(self) -> List[FilesystemAccessRule]:
+        assert self._executable is not None
+        # Under landlock we need this for execve to work.
+        # We use `self._executable` because it is copied when caching executors, but other properties are not.
+        return super().get_fs() + [ExactFile(self._executable)]
 
     def cleanup(self) -> None:
         super().cleanup()

@@ -1,4 +1,5 @@
 #include "helper.h"
+#include "landlock_helpers.h"
 #include "ptbox.h"
 
 #include <dirent.h>
@@ -90,13 +91,62 @@ int cptbox_child_run(const struct child_config *config) {
     kill(getpid(), SIGSTOP);
 
 #if !PTBOX_FREEBSD
+    // landlock setup
+    int ruleset_fd, rc;
+    struct landlock_ruleset_attr ruleset_attr = {
+        .handled_access_fs = LANDLOCK_ACCESS_FS_EXECUTE | LANDLOCK_ACCESS_FS_WRITE_FILE | LANDLOCK_ACCESS_FS_READ_FILE |
+                             LANDLOCK_ACCESS_FS_READ_DIR | LANDLOCK_ACCESS_FS_REMOVE_DIR |
+                             LANDLOCK_ACCESS_FS_REMOVE_FILE | LANDLOCK_ACCESS_FS_MAKE_REG |
+                             LANDLOCK_ACCESS_FS_MAKE_SYM | LANDLOCK_ACCESS_FS_MAKE_DIR | LANDLOCK_ACCESS_FS_REFER,
+    };
+
+    int landlock_version = get_landlock_version();
+    if (landlock_version < 2) {
+        // ABI not old enough. Skip to seccomp
+        goto seccomp_setup;
+    }
+
+    ruleset_fd = landlock_create_ruleset(&ruleset_attr, sizeof(ruleset_attr), 0);
+    if (ruleset_fd < 0) {
+        perror("Failed to create a ruleset");
+        return PTBOX_SPAWN_FAIL_LANDLOCK;
+    }
+
+    // Note: WRITE must imply READ. This is required because even if one rule allows writing and another allows reading,
+    // unless there is a rule that allows both, a call with O_RDWR will fail.
+    if (landlock_add_rules(ruleset_fd, config->landlock_read_exact_files,
+                           LANDLOCK_ACCESS_FS_READ_FILE | LANDLOCK_ACCESS_FS_EXECUTE) ||
+        landlock_add_rules(ruleset_fd, config->landlock_read_exact_dirs, LANDLOCK_ACCESS_FS_READ_DIR) ||
+        landlock_add_rules(ruleset_fd, config->landlock_read_recursive_dirs,
+                           LANDLOCK_ACCESS_FS_READ_FILE | LANDLOCK_ACCESS_FS_EXECUTE | LANDLOCK_ACCESS_FS_READ_DIR) ||
+        landlock_add_rules(ruleset_fd, config->landlock_write_exact_files,
+                           LANDLOCK_ACCESS_FS_READ_FILE | LANDLOCK_ACCESS_FS_EXECUTE | LANDLOCK_ACCESS_FS_WRITE_FILE) ||
+        landlock_add_rules(ruleset_fd, config->landlock_write_exact_dirs, LANDLOCK_ACCESS_FS_READ_DIR) ||
+        landlock_add_rules(ruleset_fd, config->landlock_write_recursive_dirs,
+                           LANDLOCK_ACCESS_FS_READ_FILE | LANDLOCK_ACCESS_FS_EXECUTE | LANDLOCK_ACCESS_FS_READ_DIR |
+                               LANDLOCK_ACCESS_FS_WRITE_FILE | LANDLOCK_ACCESS_FS_REMOVE_DIR |
+                               LANDLOCK_ACCESS_FS_REMOVE_FILE | LANDLOCK_ACCESS_FS_READ_DIR |
+                               LANDLOCK_ACCESS_FS_MAKE_REG | LANDLOCK_ACCESS_FS_MAKE_SYM | LANDLOCK_ACCESS_FS_MAKE_DIR |
+                               LANDLOCK_ACCESS_FS_REFER)) {
+        // landlock_add_rules logs errors
+        close(ruleset_fd);
+        return PTBOX_SPAWN_FAIL_LANDLOCK;
+    }
+
+    rc = landlock_restrict_self(ruleset_fd, 0);
+    close(ruleset_fd);
+    if (rc) {
+        perror("Failed to enforce ruleset");
+        return PTBOX_SPAWN_FAIL_LANDLOCK;
+    }
+
+seccomp_setup:
     scmp_filter_ctx ctx = seccomp_init(SCMP_ACT_TRACE(0));
     if (!ctx) {
         fprintf(stderr, "Failed to initialize seccomp context!");
         goto seccomp_init_fail;
     }
 
-    int rc;
     // By default, the native architecture is added to the filter already, so we add all the non-native ones.
     // This will bloat the filter due to additional architectures, but a few extra compares in the BPF matters
     // very little when syscalls are rare and other overhead is expensive.
@@ -172,6 +222,26 @@ seccomp_init_fail:
 
 seccomp_load_fail:
     return PTBOX_SPAWN_FAIL_SECCOMP;
+#endif
+}
+
+int get_landlock_version() {
+#if !PTBOX_FREEBSD
+    char *sandbox_mode = getenv("DMOJ_SANDBOX_MODE");
+    if (sandbox_mode != nullptr && strcmp(sandbox_mode, "ptrace+seccomp") == 0) {
+        // Allow disabling of landlock.
+        return 0;
+    }
+
+    int landlock_version = landlock_create_ruleset(NULL, 0, LANDLOCK_CREATE_RULESET_VERSION);
+    if (landlock_version >= 0) {
+        return landlock_version;
+    }
+    if (errno == ENOSYS || errno == EOPNOTSUPP)
+        return 0;
+    return -1;
+#else
+    return 0;  // FreeBSD does not have landlock
 #endif
 }
 

@@ -9,6 +9,7 @@ import threading
 from typing import Callable, List, Mapping, Optional, Tuple, Type
 
 from dmoj.cptbox._cptbox import *
+from dmoj.cptbox.filesystem_policies import ExactDir, ExactFile, FilesystemAccessRule, RecursiveDir
 from dmoj.cptbox.handlers import ALLOW, DISALLOW, ErrnoHandlerCallback, _CALLBACK
 from dmoj.cptbox.syscalls import SYSCALL_COUNT, by_id, sys_execve, sys_exit, sys_exit_group, sys_getpid, translator
 from dmoj.utils.communicate import safe_communicate as _safe_communicate
@@ -149,6 +150,10 @@ class TracedPopen(Process):
         self.protection_fault = None
 
         self._security = security
+        if security is not None:
+            self.configure_files(security.read_fs, security.write_fs)
+        else:
+            self.configure_files([], [])
         self._callbacks = [[None] * MAX_SYSCALL_NUMBER for _ in range(PTBOX_ABI_COUNT)]
         if security is None:
             self._trace_syscalls = False
@@ -205,6 +210,22 @@ class TracedPopen(Process):
                     handlers[call] = handler.errno
         return handlers
 
+    def configure_files(self, read_fs: List[FilesystemAccessRule], write_fs: List[FilesystemAccessRule]) -> None:
+        def _get_rule_paths(source: List[FilesystemAccessRule], type: Type[FilesystemAccessRule]) -> List[bytes]:
+            paths = []
+            for rule in source:
+                if isinstance(rule, type):
+                    paths.append(utf8bytes(rule.path))
+
+            return paths
+
+        self.landlock_read_exact_files = _get_rule_paths(read_fs, ExactFile)
+        self.landlock_read_exact_dirs = _get_rule_paths(read_fs, ExactDir)
+        self.landlock_read_recursive_dirs = _get_rule_paths(read_fs, RecursiveDir)
+        self.landlock_write_exact_files = _get_rule_paths(write_fs, ExactFile)
+        self.landlock_write_exact_dirs = _get_rule_paths(write_fs, ExactDir)
+        self.landlock_write_recursive_dirs = _get_rule_paths(write_fs, RecursiveDir)
+
     def wait(self) -> int:
         self._died.wait()
         assert self.returncode is not None
@@ -223,6 +244,8 @@ class TracedPopen(Process):
                 raise RuntimeError('failed to spawn child')
             elif self.returncode == PTBOX_SPAWN_FAIL_SETAFFINITY:
                 raise RuntimeError('failed to set child affinity')
+            elif self.returncode == PTBOX_SPAWN_FAIL_LANDLOCK:
+                raise RuntimeError('landlock configuration failed')
             elif self.returncode >= 0:
                 raise RuntimeError('process failed to initialize with unknown exit code: %d' % self.returncode)
         return self.returncode

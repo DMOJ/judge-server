@@ -79,8 +79,8 @@ class PacketManager:
         self._testcase_queue_lock = threading.Lock()
         self._testcase_queue: List[Tuple[int, Result]] = []
 
-        # Exponential backoff: starting at 4 seconds.
-        # Certainly hope it won't stack overflow, since it will take days if not years.
+        # Exponential backoff: starting at 4 seconds, max 60 seconds.
+        # If it fails to connect for something like 7 hours, it could RecursionError.
         self.fallback = 4
 
         self.conn = None
@@ -120,7 +120,7 @@ class PacketManager:
             log.info('Dropping old connection.')
             self.conn.close()
         time.sleep(self.fallback)
-        self.fallback = min(self.fallback * 1.5, 60)
+        self.fallback = min(self.fallback * 1.5, 60)  # Limit fallback to one minute.
         self._do_reconnect()
 
     def _do_reconnect(self):

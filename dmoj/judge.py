@@ -10,7 +10,7 @@ from enum import Enum
 from http.server import HTTPServer
 from itertools import groupby
 from operator import itemgetter
-from typing import Any, Callable, Dict, Generator, List, NamedTuple, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Generator, List, NamedTuple, Optional, Set, Tuple, Union
 
 from dmoj import packet
 from dmoj.control import JudgeControlRequestHandler
@@ -458,20 +458,27 @@ class JudgeWorker:
 
         flattened_cases: List[Tuple[Optional[int], Union[TestCase, BatchedTestCase]]] = []
         batch_number = 0
+        batch_requirements: List[Set[int]] = []
         for case in self.grader.cases():
             if isinstance(case, BatchedTestCase):
                 batch_number += 1
                 for batched_case in case.batched_cases:
                     flattened_cases.append((batch_number, batched_case))
+                batch_requirements.append(set(case.requirements))
             else:
                 flattened_cases.append((None, case))
 
         case_number = 0
         is_short_circuiting = False
         is_short_circuiting_enabled = self.submission.short_circuit
+        passed_batches: Set[int] = set()
         for batch_number, cases in groupby(flattened_cases, key=itemgetter(0)):
             if batch_number:
                 yield IPC.BATCH_BEGIN, (batch_number,)
+
+                requirements = batch_requirements[batch_number - 1]  # List is zero-indexed
+                if passed_batches & requirements != requirements:
+                    is_short_circuiting = True
 
             for _, case in cases:
                 case_number += 1
@@ -503,6 +510,9 @@ class JudgeWorker:
                 yield IPC.RESULT, (batch_number, case_number, result)
 
             if batch_number:
+                if not is_short_circuiting:
+                    passed_batches.add(batch_number)
+
                 yield IPC.BATCH_END, (batch_number,)
                 is_short_circuiting &= is_short_circuiting_enabled
 

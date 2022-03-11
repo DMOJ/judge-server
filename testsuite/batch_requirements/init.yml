@@ -8,7 +8,7 @@ test_cases:
 - batched:
   - {in: 3.txt, out: 3.txt}
   points: 1
-  requirements: [1, 2]
+  dependencies: [1, 2]
 - batched:
   - {in: 1.txt, out: 1.txt}
   points: 1

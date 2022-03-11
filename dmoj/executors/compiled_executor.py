@@ -1,7 +1,7 @@
 import hashlib
 import os
 import pty
-from typing import Any, Dict, IO, List, Optional, Sequence
+from typing import Any, Dict, IO, List, Optional, Sequence, Tuple, Union
 
 import pylru
 
@@ -80,6 +80,7 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
 
     compiler_read_fs: Sequence[FilesystemAccessRule] = []
     compiler_write_fs: Sequence[FilesystemAccessRule] = []
+    compiler_syscalls: Sequence[Union[str, Tuple[str, Any]]] = []
 
     # List of directories required by the compiler to be present, typically for writing to
     compiler_required_dirs: List[str] = []
@@ -114,6 +115,10 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
     def get_compile_popen_kwargs(self) -> Dict[str, Any]:
         return {}
 
+    def get_compiler_security(self):
+        sec = CompilerIsolateTracer(tmpdir=self._dir, read_fs=self.compiler_read_fs, write_fs=self.compiler_write_fs)
+        return self._add_syscalls(sec, self.compiler_syscalls)
+
     def create_compile_process(self, args: List[str]) -> TracedPopen:
         # Some languages may insist on providing certain functionality (e.g. colored highlighting of errors) if they
         # feel they are connected to a terminal. Some are more persistent than others in enforcing this, so this hack
@@ -133,9 +138,7 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
             [utf8bytes(a) for a in args],
             **{
                 'executable': utf8bytes(args[0]),
-                'security': CompilerIsolateTracer(
-                    tmpdir=self._dir, read_fs=self.compiler_read_fs, write_fs=self.compiler_write_fs
-                ),
+                'security': self.get_compiler_security(),
                 'stderr': _slave,
                 'stdout': _slave,
                 'stdin': _slave,
@@ -146,7 +149,7 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
                 'time': self.compiler_time_limit or 0,
                 'memory': 0,
                 **self.get_compile_popen_kwargs(),
-            }
+            },
         )
 
         class io_error_wrapper:

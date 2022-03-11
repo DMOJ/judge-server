@@ -203,8 +203,8 @@ class BaseExecutor(metaclass=ExecutorMeta):
     def parse_feedback_from_stderr(self, stderr: bytes, process: TracedPopen) -> str:
         return ''
 
-    def _add_syscalls(self, sec: IsolateTracer) -> IsolateTracer:
-        for item in self.get_allowed_syscalls():
+    def _add_syscalls(self, sec: IsolateTracer, handlers: List[Union[str, Tuple[str, Any]]]) -> IsolateTracer:
+        for item in handlers:
             if isinstance(item, tuple):
                 name, handler = item
             else:
@@ -215,7 +215,7 @@ class BaseExecutor(metaclass=ExecutorMeta):
 
     def get_security(self, launch_kwargs=None) -> IsolateTracer:
         sec = IsolateTracer(read_fs=self.get_fs(), write_fs=self.get_write_fs())
-        return self._add_syscalls(sec)
+        return self._add_syscalls(sec, self.get_allowed_syscalls())
 
     def get_fs(self) -> List[FilesystemAccessRule]:
         assert self._dir is not None

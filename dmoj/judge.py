@@ -458,13 +458,13 @@ class JudgeWorker:
 
         flattened_cases: List[Tuple[Optional[int], Union[TestCase, BatchedTestCase]]] = []
         batch_number = 0
-        batch_requirements: List[Set[int]] = []
+        batch_dependencies: List[Set[int]] = []
         for case in self.grader.cases():
             if isinstance(case, BatchedTestCase):
                 batch_number += 1
                 for batched_case in case.batched_cases:
                     flattened_cases.append((batch_number, batched_case))
-                batch_requirements.append(set(case.requirements))
+                batch_dependencies.append(set(case.dependencies))
             else:
                 flattened_cases.append((None, case))
 
@@ -476,8 +476,8 @@ class JudgeWorker:
             if batch_number:
                 yield IPC.BATCH_BEGIN, (batch_number,)
 
-                requirements = batch_requirements[batch_number - 1]  # List is zero-indexed
-                if passed_batches & requirements != requirements:
+                dependencies = batch_dependencies[batch_number - 1]  # List is zero-indexed
+                if passed_batches & dependencies != dependencies:
                     is_short_circuiting = True
 
             for _, case in cases:

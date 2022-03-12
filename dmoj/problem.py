@@ -35,7 +35,7 @@ class Problem:
         # lest globals be deleted with the module.
         self._checkers = {}
 
-        self.config = ProblemConfig(self.problem_data, meta)
+        self.config = ProblemConfig(self.problem_data, time_limit, memory_limit, meta)
 
         self.problem_data.archive = self._resolve_archive_files()
 
@@ -194,7 +194,7 @@ class ProblemDataManager(dict):
 
 
 class ProblemConfig(ConfigNode):
-    def __init__(self, problem_data, meta={}):
+    def __init__(self, problem_data, time_limit, memory_limit, meta={}):
         try:
             doc = yaml.safe_load(problem_data['init.yml'])
         except (IOError, KeyError, ParserError, ScannerError) as e:
@@ -206,6 +206,8 @@ class ProblemConfig(ConfigNode):
                 doc,
                 defaults={
                     'wall_time_factor': 3,
+                    'time_limit': time_limit,
+                    'memory_limit': memory_limit,
                     'output_prefix_length': 0 if 'signature_grader' in doc else 64,
                     'output_limit_length': 25165824,
                     'binary_data': False,
@@ -244,6 +246,8 @@ class TestCase:
         self.config = config
         self.problem = problem
         self.points = config.points
+        self.time_limit = config.time_limit
+        self.memory_limit = config.memory_limit
         self.output_prefix_length = config.output_prefix_length
         self.has_binary_data = config.binary_data
         self._generated = None

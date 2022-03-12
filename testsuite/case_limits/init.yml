@@ -1,0 +1,7 @@
+points: 1
+test_cases:
+  - batched:
+    - {time_limit: 1}
+    memory_limit: 1
+  - {time_limit: 0.0001}
+  - {}

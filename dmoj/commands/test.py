@@ -5,7 +5,7 @@ from typing import Any, Dict, Iterable
 from dmoj.commands.base_command import Command
 from dmoj.error import InvalidCommandException
 from dmoj.judgeenv import get_problem_root, get_supported_problems
-from dmoj.problem import ProblemConfig, ProblemDataManager
+from dmoj.problem import ProblemDataManager
 from dmoj.testsuite import Tester
 from dmoj.utils.ansi import ansi_style, print_ansi
 
@@ -14,7 +14,7 @@ class ProblemTester(Tester):
     def run_problem_tests(self, problem_id: str) -> int:
         self.output(ansi_style(f'Testing problem #ansi[{problem_id}](cyan|bold)...'))
 
-        config = ProblemConfig(ProblemDataManager(get_problem_root(problem_id)))
+        config = ProblemDataManager(get_problem_root(problem_id))
 
         if not config or 'tests' not in config or not config['tests']:
             self.output(ansi_style('\t#ansi[Skipped](magenta|bold) - No tests found'))

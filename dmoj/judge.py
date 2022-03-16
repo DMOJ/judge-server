@@ -224,9 +224,10 @@ class Judge:
 
     def _ipc_batch_begin(self, report, batch_number: int) -> None:
         self.packet_manager.batch_begin_packet()
-        report(ansi_style('#ansi[Batch #%d](yellow|bold)' % batch_number))
+        report(ansi_style('#ansi[Batch #%d start](yellow|bold)' % batch_number))
 
-    def _ipc_batch_end(self, _report, _batch_number: int) -> None:
+    def _ipc_batch_end(self, report, batch_number: int) -> None:
+        report(ansi_style('#ansi[Batch #%d end](yellow|bold)' % batch_number))
         self.packet_manager.batch_end_packet()
 
     def _ipc_grading_aborted(self, report) -> None:

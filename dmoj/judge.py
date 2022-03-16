@@ -469,8 +469,8 @@ class JudgeWorker:
                 flattened_cases.append((None, case))
 
         case_number = 0
-        is_short_circuiting = False
-        is_short_circuiting_enabled = self.submission.short_circuit
+        skip_batch = False
+        skip_all = False
         passed_batches: Set[int] = set()
         for batch_number, cases in groupby(flattened_cases, key=itemgetter(0)):
             if batch_number:
@@ -478,13 +478,13 @@ class JudgeWorker:
 
                 dependencies = batch_dependencies[batch_number - 1]  # List is zero-indexed
                 if passed_batches & dependencies != dependencies:
-                    is_short_circuiting = True
+                    skip_batch = True
 
             for _, case in cases:
                 case_number += 1
 
-                # Stop grading if we're short circuiting
-                if is_short_circuiting:
+                # Don't grade if we're short circuiting.
+                if skip_batch or skip_all:
                     result = Result(case, result_flag=Result.SC)
                 else:
                     result = self.grader.grade(case)
@@ -495,13 +495,12 @@ class JudgeWorker:
                         return
 
                     if result.result_flag & Result.WA:
-                        # If we failed a 0-point case, we will short-circuit every case after this.
-                        is_short_circuiting_enabled |= not case.points
-
-                        # Short-circuit if we just failed a case in a batch, or if short-circuiting is currently enabled
-                        # for all test cases (either this was requested by the site, or we failed a 0-point case in the
-                        # past).
-                        is_short_circuiting |= batch_number is not None or is_short_circuiting_enabled
+                        # If we failed a 0-point case, or the submission has short circuit on, then skip all cases.
+                        if case.points == 0 or self.submission.short_circuit:
+                            skip_all = True
+                        elif batch_number is not None:
+                            # Otherwise, skip just this batch.
+                            skip_batch = True
 
                 # Legacy hack: we need to allow graders to read and write `proc_output` on the `Result` object, but the
                 # judge controller only cares about the trimmed output, and shouldn't waste memory buffering the full
@@ -510,11 +509,11 @@ class JudgeWorker:
                 yield IPC.RESULT, (batch_number, case_number, result)
 
             if batch_number:
-                if not is_short_circuiting:
+                if not skip_batch:
                     passed_batches.add(batch_number)
 
+                skip_batch = False
                 yield IPC.BATCH_END, (batch_number,)
-                is_short_circuiting &= is_short_circuiting_enabled
 
         yield IPC.GRADING_END, ()
 

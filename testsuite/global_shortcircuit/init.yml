@@ -1,0 +1,6 @@
+test_cases:
+- {in: 1.txt, out: 1.txt}
+- batched:
+  - {in: 2.txt, out: 2.txt}
+  - {in: 1.txt, out: 1.txt}
+- {in: 2.txt, out: 2.txt}

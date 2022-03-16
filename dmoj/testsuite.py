@@ -246,6 +246,7 @@ class Tester:
             return 0
         time = config['time']
         memory = config['memory']
+        short_circuit = config.get('short_circuit', False)
         if isinstance(config['source'], str):
             with open(os.path.join(case_dir, config['source'])) as f:
                 sources = [f.read()]
@@ -282,7 +283,7 @@ class Tester:
                 extended_feedback_cases,
             )
             self.judge.begin_grading(
-                Submission(self.sub_id, problem, language, source, time, memory, False, {}),
+                Submission(self.sub_id, problem, language, source, time, memory, short_circuit, {}),
                 blocking=True,
                 report=output_case,
             )

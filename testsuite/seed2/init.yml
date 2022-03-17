@@ -1,6 +1,6 @@
 custom_judge: seed2.py
 unbuffered: true
-archive: seed2.zip
+archive: seed2_abridged.zip
 test_cases:
 - {in: seed2.1.in, points: 20}
 - {in: seed2.2.in, points: 20}

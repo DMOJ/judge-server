@@ -171,7 +171,7 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
         with open('/judge-runtime-paths.yml', 'rb') as runtimes_file:
             env.update(yaml.safe_load(runtimes_file))
 
-        problem_dirs = ['/problems']
+        env.problem_storage_root = ['/problems']
 
     model_file = os.path.expanduser(args.config)
     try:

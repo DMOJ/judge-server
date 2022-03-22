@@ -178,21 +178,20 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
         with open(model_file) as init_file:
             env.update(yaml.safe_load(init_file))
 
-            if getattr(args, 'judge_name', None):
-                env['id'] = args.judge_name
-
-            if getattr(args, 'judge_key', None):
-                env['key'] = args.judge_key
-
-            problem_dirs = env.problem_storage_root
-            if problem_dirs is None:
-                if not testsuite:
-                    raise SystemExit(
-                        'problem_storage_root not specified in "%s"; no problems available to grade' % model_file
-                    )
     except IOError:
         if not is_docker:
             raise
+
+    if getattr(args, 'judge_name', None):
+        env['id'] = args.judge_name
+
+        if getattr(args, 'judge_key', None):
+            env['key'] = args.judge_key
+
+    problem_dirs = env.problem_storage_root
+    if problem_dirs is None:
+        if not testsuite:
+            raise SystemExit('problem_storage_root not specified in "%s"; no problems available to grade' % model_file)
 
     # Populate cache and send warnings
     get_problem_roots(warnings=True)

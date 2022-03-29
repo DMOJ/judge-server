@@ -37,7 +37,6 @@ except ImportError:  # before Python 3.8
                 return s.decode('utf-8')
         return f'Unknown signal {signo}'
 
-
 else:
 
     def strsignal(signo: int) -> str:

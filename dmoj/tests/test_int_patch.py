@@ -53,7 +53,7 @@ class ParseTest(unittest.TestCase):
         self.assertEqual(int('-1'), -1)
         self.assertEqual(int('1337'), 1337)
         self.assertEqual(
-            int('9' * builtin_int_patch.INT_MAX_NUMBER_DIGITS), 10 ** builtin_int_patch.INT_MAX_NUMBER_DIGITS - 1
+            int('9' * builtin_int_patch.INT_MAX_NUMBER_DIGITS), 10**builtin_int_patch.INT_MAX_NUMBER_DIGITS - 1
         )
 
     def test_parse_string_long(self):
@@ -64,5 +64,5 @@ class ParseTest(unittest.TestCase):
         self.assertEqual(int(1), 1)
         self.assertEqual(int(-1337), -1337)
         self.assertEqual(
-            int(10 ** builtin_int_patch.INT_MAX_NUMBER_DIGITS), 10 ** builtin_int_patch.INT_MAX_NUMBER_DIGITS
+            int(10**builtin_int_patch.INT_MAX_NUMBER_DIGITS), 10**builtin_int_patch.INT_MAX_NUMBER_DIGITS
         )

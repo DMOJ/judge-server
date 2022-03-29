@@ -13,7 +13,6 @@ if hasattr(os, 'getloadavg'):
             load = -1
         return 'load', load
 
-
 else:
     # There exist some Unix platforms (like Android) which don't
     # have `getloadavg` implemented, but aren't Windows

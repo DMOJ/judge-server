@@ -569,6 +569,7 @@ sys_sendmmsg: int
 sys_sendmsg: int
 sys_sendto: int
 sys_set_mempolicy: int
+sys_set_mempolicy_home_node: int
 sys_set_robust_list: int
 sys_set_thread_area: int
 sys_set_tid_address: int

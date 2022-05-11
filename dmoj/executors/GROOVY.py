@@ -23,7 +23,7 @@ println System.in.newReader().readLine()
     def get_cmdline(self, **kwargs):
         res = super().get_cmdline(**kwargs)
 
-        res[-2:-1] = ['-Dsubmission.file=%s' % self._class_name] + self.runtime_dict['groovy_args']
+        res[-2:-1] = self.runtime_dict['groovy_args']
         return res
 
     def get_compile_args(self):
@@ -50,7 +50,7 @@ println System.in.newReader().readLine()
         with open(os.devnull, 'w') as devnull:
             process = subprocess.Popen(['bash', '-x', groovy, '-version'], stdout=devnull, stderr=subprocess.PIPE)
         output = utf8text(process.communicate()[1])
-        log = [i for i in output.split('\n') if 'org.codehaus.groovy.tools.GroovyStarter' in i]
+        log = [i for i in output.split('\n') if 'org.codehaus.groovy.tools.GroovyStarter' in i and '-classpath' in i]
 
         if not log:
             return result, False, 'Failed to parse: %s' % groovy
@@ -58,7 +58,8 @@ println System.in.newReader().readLine()
         cmdline = log[-1].lstrip('+ ').split()
 
         result['groovy_vm'] = cls.unravel_java(cls.find_command_from_list([cmdline[1]]))
-        result['groovy_args'] = [i for i in cmdline[2:-1]]
+        i = cmdline.index('-classpath')
+        result['groovy_args'] = ['-classpath', f'.:{cmdline[i + 1]}']
 
         data = cls.autoconfig_run_test(result)
         if data[1]:

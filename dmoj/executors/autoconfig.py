@@ -9,7 +9,6 @@ import yaml.representer
 
 from dmoj import judgeenv
 from dmoj.executors import get_available, load_executor
-from dmoj.executors.mixins import NullStdoutMixin
 from dmoj.utils.ansi import print_ansi
 
 
@@ -36,10 +35,10 @@ def main():
             continue
 
         Executor = executor.Executor
-        if not args.verbose and not issubclass(Executor, NullStdoutMixin):
+        if not args.verbose and not issubclass(Executor):
             # if you are printing errors into stdout, you may do so in your own blood
             # *cough* Racket *cough*
-            Executor = type('Executor', (NullStdoutMixin, Executor), {})
+            Executor = type('Executor', (Executor), {})
 
         if hasattr(Executor, 'autoconfig'):
             if not args.silent:

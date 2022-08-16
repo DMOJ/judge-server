@@ -1,9 +1,8 @@
 from dmoj.cptbox.filesystem_policies import RecursiveDir
 from dmoj.executors.compiled_executor import CompiledExecutor
-from dmoj.executors.mixins import NullStdoutMixin
 
 
-class Executor(NullStdoutMixin, CompiledExecutor):
+class Executor(CompiledExecutor):
     ext = 'hs'
     command = 'ghc'
     compiler_read_fs = [

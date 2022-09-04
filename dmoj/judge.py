@@ -27,7 +27,7 @@ try:
     from setproctitle import setproctitle
 except ImportError:
 
-    def setproctitle(title):
+    def setproctitle(title: str) -> None:
         pass
 
 

@@ -1,12 +1,12 @@
 DMOJ Judge [![Linux Build Status](https://img.shields.io/github/workflow/status/DMOJ/judge-server/build?logo=github)](https://github.com/DMOJ/judge-server/actions?query=workflow%3Abuild) [![FreeBSD Build Status](https://img.shields.io/jenkins/build?jobUrl=https%3A%2F%2Fci.dmoj.ca%2Fview%2FDMOJ%2Fjob%2Fdmoj-judge-freebsd-py3%2F&logo=freebsd)](https://ci.dmoj.ca/view/DMOJ/job/dmoj-judge-freebsd-py3/) [![Coverage](https://img.shields.io/codecov/c/github/DMOJ/judge-server.svg)](https://codecov.io/gh/DMOJ/judge-server) [![Slack](https://slack.dmoj.ca/badge.svg)](https://slack.dmoj.ca)
 =====
 
-Python [AGPLv3](LICENSE) contest judge backend for the [DMOJ site](http://github.com/DMOJ/online-judge) interface. See it in action at [dmoj.ca](https://dmoj.ca/)!
+Python [AGPLv3](LICENSE) contest judge backend for the [DMOJ site](https://github.com/DMOJ/online-judge) interface. See it in action at [dmoj.ca](https://dmoj.ca/)!
 
 <table>
 <tr>
 <td>
-<a href="http://dmoj.ca">
+<a href="https://dmoj.ca/">
 <img src="https://avatars2.githubusercontent.com/u/6934864?v=3&s=100" align="left"></img>
 </a>
 </td>
@@ -21,12 +21,12 @@ A modern online judge and contest platform system, supporting <b>IO-based</b>, <
 
 The judge implements secure grading on Linux and FreeBSD machines.
 
-|       | Linux 	| FreeBSD 	|
-|------	|-------	|---------	|
-| x64  	| [✔](https://github.com/DMOJ/judge-server/actions/workflows/build.yml)     	| [✔](https://ci.dmoj.ca/job/dmoj-judge-freebsd/)       	|
-| x86  	| ✔     	|       ¯\\\_(ツ)\_/¯   |
-| x32 	| ✔     	|      &mdash;   	|
-| ARM  	| [✔](https://github.com/DMOJ/judge-server/actions/workflows/build.yml)     	|      ❌   	|
+|     | Linux | FreeBSD |
+| --: | :---: | :-----: |
+| x64 | [✔](https://github.com/DMOJ/judge-server/actions/workflows/build.yml) | [✔](https://ci.dmoj.ca/job/dmoj-judge-freebsd/) |
+| x86 | ✔ | ¯\\\_(ツ)\_/¯ |
+| x32 | ✔ | &mdash; |
+| ARM | [✔](https://github.com/DMOJ/judge-server/actions/workflows/build.yml) | ❌ |
 
 Versions up to and including [v1.4.0](https://github.com/DMOJ/judge-server/releases/tag/v1.4.0) also supported grading on Windows machines.
 
@@ -36,6 +36,7 @@ with pure ptrace without seccomp, which is useful on Linux kernel versions befor
 The DMOJ judge does **not** need a root user to run on Linux machines: it will run just fine under a normal user.
 
 Supported languages include:
+
 * C++ 11/14/17/20 (GCC and Clang)
 * C 99/11
 * Java 8/9/10/11/15/17
@@ -46,6 +47,7 @@ Supported languages include:
 * Mono C#/F#/VB
 
 The judge can also grade in the languages listed below. These languages are less tested and more likely to be buggy.
+
 * Ada
 * AWK
 * COBOL
@@ -81,6 +83,7 @@ The judge can also grade in the languages listed below. These languages are less
 * Zig
 
 ## Installation
+
 Installing the DMOJ judge creates two executables in your Python's script directory: `dmoj` and `dmoj-cli`.
 `dmoj` is used to connect a judge to a DMOJ site instance, while `dmoj-cli` provides a command-line interface to a
 local judge, useful for testing problems.
@@ -90,6 +93,7 @@ For more detailed steps, read the [installation instructions](https://docs.dmoj.
 Note that **the only officially-supported Linux distribution is the latest Debian**, with the default `apt` versions of all runtimes. This is [what we run on dmoj.ca](https://dmoj.ca/runtimes/matrix/), and it should "just work". While the judge will likely still work with other distributions and runtime versions, some runtimes might fail to initialize. In these cases, please [file an issue](https://github.com/DMOJ/judge-server/issues).
 
 ### Stable Build
+
 [![PyPI version](https://badge.fury.io/py/dmoj.svg)](https://pypi.python.org/pypi/dmoj)
 [![PyPI](https://img.shields.io/pypi/pyversions/dmoj.svg)](https://pypi.python.org/pypi/dmoj)
 
@@ -101,7 +105,8 @@ $ pip install dmoj
 ```
 
 ### Bleeding-Edge Build
-This is the version of the codebase we run live on [dmoj.ca](https://dmoj.ca).
+
+This is the version of the codebase we run live on [dmoj.ca](https://dmoj.ca/).
 
 ```
 $ git clone --recursive https://github.com/DMOJ/judge-server.git
@@ -115,11 +120,12 @@ Several environment variables can be specified to control the compilation of the
    Usually this is `native`, but will not be specified on ARM unless `DMOJ_TARGET_ARCH` is set (a generic, slow build will be compiled instead).
 
 ### With Docker
+
 We maintain Docker images with all runtimes we support in the [runtimes-docker](https://github.com/DMOJ/runtimes-docker) project.
 
 Runtimes are split into three tiers of decreasing support. Tier 1 includes
 Python 2/3, C/C++ (GCC only), Java 8, and Pascal. Tier 3 contains all the
-runtimes we run on [dmoj.ca](https://dmoj.ca). Tier 2 contains some in-between
+runtimes we run on [dmoj.ca](https://dmoj.ca/). Tier 2 contains some in-between
 mix; read the `Dockerfile` for each tier for details. These images are rebuilt
 and tested every week to contain the latest runtime versions.
 
@@ -146,7 +152,9 @@ $ exec docker run \
 ```
 
 ## Usage
+
 ### Running a Judge Server
+
 ```
 $ dmoj --help
 usage: dmoj [-h] [-p SERVER_PORT] -c CONFIG [-l LOG_FILE] [--no-watchdog]
@@ -191,6 +199,7 @@ optional arguments:
 ```
 
 ### Running a CLI Judge
+
 ```
 $ dmoj-cli --help
 usage: dmoj-cli [-h] -c CONFIG
@@ -213,4 +222,5 @@ optional arguments:
 ```
 
 ## Documentation
-For info on the problem file format and more, [read the documentation.](https://docs.dmoj.ca)
+
+For info on the problem file format and more, [read the documentation](https://docs.dmoj.ca).

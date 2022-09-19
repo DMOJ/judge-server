@@ -77,7 +77,7 @@ def compile_with_auxiliary_files(
         executor = executor('_aux_file', None, aux_sources=sources, cached=True, unbuffered=unbuffered, **kwargs)
     else:
         if len(sources) > 1:
-            raise InternalError('non-C/C++ auxilary programs cannot be multi-file')
+            raise InternalError('non-C/C++ auxiliary programs cannot be multi-file')
         executor = executor('_aux_file', list(sources.values())[0], cached=True, unbuffered=unbuffered, **kwargs)
 
     return executor

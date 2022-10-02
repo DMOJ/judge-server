@@ -28,6 +28,7 @@ void main() {
         'epoll_pwait',
         'timerfd_settime',
         'memfd_create',
+        'msync',
         'ftruncate',
     ]
 

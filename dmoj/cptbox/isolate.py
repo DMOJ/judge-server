@@ -144,6 +144,7 @@ class IsolateTracer(dict):
                 sys_getppid: ALLOW,
                 sys_sched_yield: ALLOW,
                 sys_clone: ALLOW,
+                sys_clone3: ALLOW,
                 sys_exit: ALLOW,
                 sys_exit_group: ALLOW,
                 sys_gettid: ALLOW,

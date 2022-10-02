@@ -13,6 +13,9 @@ class Executor(CompiledExecutor):
         RecursiveDir('~/.cache'),
     ]
     compiler_required_dirs = ['~/.cache']
+    compiler_syscalls = [
+        ('setpgid', ACCESS_EACCES),
+    ]
     test_program = 'print(readLine()!)'
 
     def get_compile_args(self):

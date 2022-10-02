@@ -434,6 +434,11 @@ class JudgeWorker:
             # won't get called if we exit the process right now (so we'd leak all files created by the grader). This
             # should be refactored to have an explicit `cleanup()` or similar, rather than relying on refcounting
             # working out.
+            from dmoj.executors.compiled_executor import _CompiledExecutorMeta
+
+            for cached_executor in _CompiledExecutorMeta.compiled_binary_cache.values():
+                cached_executor.is_cached = False
+                cached_executor.cleanup()
             self.grader = None
 
     def _grade_cases(self) -> Generator[Tuple[IPC, tuple], None, None]:

@@ -126,14 +126,14 @@ jobs:
         run: |
           cat > run <<'EOF'
           #!/bin/bash -e
-          cp -r /code /judge
-          cd /judge
+          cp -r /source /code
+          cd /code
           curl -L "https://github.com/DMOJ/runtimes-python/releases/latest/download/python${{ matrix.python-version }}-aarch64.tar.gz" | tar -xz
 
           export PYTHONUNBUFFERED=1
           export LANG=C.UTF-8
           export PYTHONIOENCODING=utf8
-          export PYTHON="/judge/python${{ matrix.python-version }}/bin/python${{ matrix.python-version }}"
+          export PYTHON="/code/python${{ matrix.python-version }}/bin/python${{ matrix.python-version }}"
 
           "$PYTHON" -m pip install --upgrade pip wheel
           "$PYTHON" -m pip install cython coverage
@@ -141,15 +141,15 @@ jobs:
           chmod o+w .
 
           code=0
-          runuser -u judge -w PATH /code/run-su || code=$?
-          cp /judge/coverage.xml /code || true
+          runuser -u judge -w PATH /source/run-su || code=$?
+          cp /code/coverage.xml /source || true
           exit "$code"
           EOF
 
           cat > run-su <<'EOF'
           #!/bin/bash -e
           . ~/.profile
-          cd /judge
+          cd /code
           "$PYTHON" -m coverage run -m unittest discover dmoj/tests/
           "$PYTHON" -m coverage run --append .docker.test.py
           "$PYTHON" -m coverage combine
@@ -158,6 +158,8 @@ jobs:
 
           chmod a+x run run-su
       - name: Execute tests in docker
-        run: docker run -e PYTHON_VERSION="${{ matrix.python-version }}" -v "$(pwd):/code" -v "$HOME/docker-cache:/root/.cache" --cap-add=SYS_PTRACE dmoj/runtimes-tier3
+        run: |
+          docker run -e PYTHON_VERSION="${{ matrix.python-version }}" -v "$(pwd):/source" -v "$HOME/docker-cache:/root/.cache" \
+            --entrypoint=/usr/bin/tini --cap-add=SYS_PTRACE dmoj/runtimes-tier3 /source/run
       - name: Upload coverage data
         uses: codecov/codecov-action@v1

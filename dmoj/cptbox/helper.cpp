@@ -62,14 +62,6 @@ int cptbox_child_run(const struct child_config *config) {
 #endif
 #endif
 
-    if (config->stdin_ >= 0)
-        dup2(config->stdin_, 0);
-    if (config->stdout_ >= 0)
-        dup2(config->stdout_, 1);
-    if (config->stderr_ >= 0)
-        dup2(config->stderr_, 2);
-    cptbox_closefrom(3);
-
     if (ptrace_traceme()) {
         perror("ptrace");
         return PTBOX_SPAWN_FAIL_TRACEME;
@@ -137,6 +129,14 @@ int cptbox_child_run(const struct child_config *config) {
 
     seccomp_release(ctx);
 #endif
+
+    if (config->stdin_ >= 0)
+        dup2(config->stdin_, 0);
+    if (config->stdout_ >= 0)
+        dup2(config->stdout_, 1);
+    if (config->stderr_ >= 0)
+        dup2(config->stderr_, 2);
+    cptbox_closefrom(3);
 
     // All these limits should be dropped after initializing seccomp, since seccomp allocates
     // memory, and if an arena isn't sufficiently free it could force seccomp into an OOM

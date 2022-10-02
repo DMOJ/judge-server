@@ -19,7 +19,7 @@ class Executor(CompiledExecutor):
     data_grace = 98304  # Go uses data segment for heap arena map
     address_grace = 786432
     command = 'go'
-    syscalls = ['mincore', 'epoll_create1', 'epoll_ctl', 'epoll_pwait', 'pselect6', 'mlock']
+    syscalls = ['mincore', 'epoll_create1', 'epoll_ctl', 'epoll_pwait', 'pselect6', 'mlock', 'setrlimit']
     compiler_syscalls = ['setrlimit']
     test_name = 'echo'
     test_program = """\

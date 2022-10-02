@@ -79,6 +79,12 @@ def main():
 
                 if success:
                     result.update(config)
+                    Executor = type('Executor', (executor.Executor,), dict(executor.Executor.__dict__))
+                    Executor.runtime_dict = config
+                    for runtime, version in Executor.get_runtime_versions():
+                        print_ansi(
+                            '  #ansi[%s](cyan|bold) %s' % (runtime, '.'.join(map(str, version))), file=sys.stderr
+                        )
 
     if not args.silent and sys.stdout.isatty():
         print(file=sys.stderr)

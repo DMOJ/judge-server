@@ -2,11 +2,11 @@ from dmoj.executors.java_executor import JavacExecutor
 
 
 class Executor(JavacExecutor):
-    compiler = 'javac15'
-    vm = 'java15'
-    jvm_regex = r'java-15-|openjdk15'
+    compiler = 'javac'
+    vm = 'java'
+    jvm_regex = r'(?:java-|openjdk)(?:9|[1-9][0-9]+)'
 
-    test_program = '''\
+    test_program = """\
 import java.io.IOException;
 
 interface IORunnable {
@@ -20,17 +20,13 @@ public class self_test {
 
     public static void main(String[] args) throws IOException {
         run(() -> {
-            System.out.print("""
-
-""".strip());
-
-            var buffer = new byte[4096];
+            byte[] buffer = new byte[4096];
             int read;
             while ((read = System.in.read(buffer)) >= 0)
                 System.out.write(buffer, 0, read);
         });
     }
-}'''
+}"""
 
     def get_compile_args(self):
         return [self.get_compiler(), '-encoding', 'UTF-8', self._code]

@@ -6,7 +6,7 @@ class Executor(JavaExecutor):
     ext = 'kt'
 
     compiler = 'kotlinc'
-    compiler_time_limit = 20
+    compiler_time_limit = 30
     compiler_read_fs = [
         ExactFile('/bin/uname'),
         ExactFile('/bin/bash'),

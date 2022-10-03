@@ -70,6 +70,7 @@ class IsolateTracer(dict):
                 sys_lstat64: self.handle_file_access(FilesystemSyscallKind.READ, file_reg=0),
                 sys_fstatat: self.handle_fstat(dir_reg=0, file_reg=1),
                 sys_statx: self.handle_fstat(dir_reg=0, file_reg=1),
+                sys_tkill: self.handle_kill,
                 sys_tgkill: self.handle_kill,
                 sys_kill: self.handle_kill,
                 sys_prctl: self.handle_prctl,

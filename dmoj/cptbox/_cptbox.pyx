@@ -83,7 +83,6 @@ cdef extern from 'ptbox.h' nogil:
 
     cdef int PTBOX_EXIT_NORMAL
     cdef int PTBOX_EXIT_PROTECTION
-    cdef int PTBOX_EXIT_SEGFAULT
 
     cpdef enum:
         PTBOX_ABI_X86

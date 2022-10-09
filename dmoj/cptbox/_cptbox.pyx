@@ -413,7 +413,6 @@ cdef class Process:
     cdef public Debugger debugger
     cdef readonly bint _exited
     cdef readonly int _exitcode
-    cdef unsigned int _signal
     cdef public int _child_stdin, _child_stdout, _child_stderr
     cdef public unsigned long _child_memory, _child_address, _child_personality
     cdef public unsigned int _cpu_time
@@ -431,7 +430,6 @@ cdef class Process:
         self._cpu_time = 0
         self._fsize = -1
         self._nproc = -1
-        self._signal = 0
         self._cpu_affinity_mask = 0
         self._init_nvcsw = self._init_nivcsw = 0
 
@@ -464,8 +462,6 @@ cdef class Process:
             with gil:
                 self._ptrace_error(param)
         if event == PTBOX_EVENT_SIGNAL:
-            if param != SIGTRAP:
-                self._signal = param
             if param == SIGXCPU:
                 with gil:
                     self._cpu_time_exceeded()
@@ -591,21 +587,10 @@ cdef class Process:
         if not self.process.was_initialized():
             return None
 
-        # Some runtimes may use signals internally (e.g. Haskell's ticker
-        # thread sends `SIGVTALRM`), in which case a successful execution would
-        # have a nonzero `_signal`. This would lead the judge into displaying
-        # confusing output (e.g., "IR (virtual timer expired)").
-        #
-        # Avoid such cases. While we can't for sure distinguish signals that
-        # killed a process from signals that were part of normal execution, a
-        # zero or positive exit code is a good proxy.
-        #
-        # A more aggressive check here would be to ensure `self._exitcode ==
-        # -self.signal`.
         if self._exitcode >= 0:
             return None
 
-        return self._signal
+        return -self._exitcode
 
     @property
     def returncode(self):

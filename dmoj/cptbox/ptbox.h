@@ -41,7 +41,6 @@
 
 #define PTBOX_EXIT_NORMAL     0
 #define PTBOX_EXIT_PROTECTION 1
-#define PTBOX_EXIT_SEGFAULT   2
 
 enum {
     PTBOX_ABI_X86 = 0,

@@ -588,7 +588,25 @@ cdef class Process:
     def signal(self):
         if not self._exited:
             return None
-        return self._signal if self.process.was_initialized() else 0
+
+        if not self.process.was_initialized():
+            return None
+
+        # Some runtimes may use signals internally (e.g. Haskell's ticker
+        # thread sends `SIGVTALRM`), in which case a successful execution would
+        # have a nonzero `_signal`. This would lead the judge into displaying
+        # confusing output (e.g., "IR (virtual timer expired)").
+        #
+        # Avoid such cases. While we can't for sure distinguish signals that
+        # killed a process from signals that were part of normal execution, a
+        # zero or positive exit code is a good proxy.
+        #
+        # A more aggressive check here would be to ensure `self._exitcode ==
+        # -self.signal`.
+        if self._exitcode >= 0:
+            return None
+
+        return self._signal
 
     @property
     def returncode(self):

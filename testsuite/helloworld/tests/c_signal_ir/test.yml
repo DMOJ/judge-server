@@ -3,4 +3,3 @@ time: 1
 memory: 65536
 source: signal.c
 expect: IR
-feedback: 'virtual timer expired'

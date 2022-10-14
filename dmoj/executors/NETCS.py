@@ -19,6 +19,7 @@ HELLO_WORLD_PROGRAM = """\
 Console.WriteLine("Hello, World!");
 """
 
+
 class Executor(CompiledExecutor):
     ext = 'cs'
     command = 'dotnet'
@@ -36,10 +37,6 @@ class Executor(CompiledExecutor):
 
         with open(self._file('DMOJ.csproj'), 'wb') as f:
             f.write(CSPROJ)
-
-    @classmethod
-    def get_versionable_commands(cls):
-        return [('dotnet', os.path.join(os.path.dirname(cls.get_command()), 'dotnet'))]
 
     def get_compile_args(self):
         return [self.get_command(), 'publish', '--configuration', 'release', '--self-contained', 'false']

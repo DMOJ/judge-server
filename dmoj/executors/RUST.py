@@ -11,6 +11,7 @@ version = "1.0.0"
 
 [dependencies]
 dmoj = "0.1"
+libc = "0.2"
 rand = "0.8"
 """
 

@@ -11,7 +11,9 @@ version = "1.0.0"
 
 [dependencies]
 dmoj = "0.1"
-rand = "0.3"
+libc = "0.2"
+rand = "0.8"
+rand_xoshiro = "0.6"
 
 [profile.release]
 strip = "symbols"

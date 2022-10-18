@@ -15,13 +15,12 @@ CSPROJ = """\
 class Executor(CompiledExecutor):
     ext = 'cs'
     command = 'dotnet'
-    test_program = """
+    test_program = """\
 string? line;
 while (!string.IsNullOrEmpty(line = Console.ReadLine()))
 {
     Console.WriteLine(line);   
-}
-    """
+}"""
     compiler_time_limit = 20
     compiler_write_fs = [
         RecursiveDir('~/.nuget/packages'),

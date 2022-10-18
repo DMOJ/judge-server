@@ -40,4 +40,4 @@ while (!string.IsNullOrEmpty(line = Console.ReadLine()))
         return [self.get_command(), 'publish', '--configuration', 'release', '--self-contained', 'false']
 
     def get_compiled_file(self):
-        return self._file('bin', 'release', 'net6.0', 'DMOJ.exe')
+        return self._file('bin', 'release', 'net6.0', 'publish', 'DMOJ')

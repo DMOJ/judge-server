@@ -3,7 +3,7 @@ import os
 from dmoj.cptbox.filesystem_policies import ExactFile, RecursiveDir
 from dmoj.executors.compiled_executor import CompiledExecutor
 
-CSPROJ = b"""\
+CSPROJ = """
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -15,15 +15,16 @@ CSPROJ = b"""\
 </Project>
 """
 
-HELLO_WORLD_PROGRAM = """\
-Console.WriteLine("Hello, World!");
-"""
-
-
 class Executor(CompiledExecutor):
     ext = 'cs'
     command = 'dotnet'
-    test_program = HELLO_WORLD_PROGRAM
+    test_program = """
+string? line;
+while (!string.IsNullOrEmpty(line = Console.ReadLine()))
+{
+    Console.WriteLine(line);   
+}
+    """
     compiler_time_limit = 20
     compiler_write_fs = [
         RecursiveDir('~/.nuget/packages'),

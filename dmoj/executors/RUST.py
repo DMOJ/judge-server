@@ -8,6 +8,7 @@ CARGO_TOML = b"""\
 [package]
 name = "user_submission"
 version = "1.0.0"
+edition = "2021"
 
 [dependencies]
 dmoj = "0.1"
@@ -19,12 +20,17 @@ rand_xoshiro = "0.6"
 strip = "symbols"
 """
 
-HELLO_WORLD_PROGRAM = """\
-#[macro_use] extern crate dmoj;
-extern crate rand;
+TEST_PROGRAM = """\
+// Sanity-check our libraries
+use dmoj as _;
+use libc as _;
+use rand as _;
+use rand_xoshiro as _;
 
-fn main() {
-    println!("echo: Hello, World!");
+use std::io;
+fn main() -> io::Result<()> {
+    io::copy(&mut io::stdin(), &mut io::stdout())?;
+    Ok(())
 }
 """
 
@@ -32,7 +38,7 @@ fn main() {
 class Executor(CompiledExecutor):
     ext = 'rs'
     command = 'cargo'
-    test_program = HELLO_WORLD_PROGRAM
+    test_program = TEST_PROGRAM
     compiler_time_limit = 20
     compiler_read_fs = [
         RecursiveDir('/home'),

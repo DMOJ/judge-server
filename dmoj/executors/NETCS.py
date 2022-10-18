@@ -1,6 +1,4 @@
-import os
-
-from dmoj.cptbox.filesystem_policies import ExactFile, RecursiveDir
+from dmoj.cptbox.filesystem_policies import RecursiveDir
 from dmoj.executors.compiled_executor import CompiledExecutor
 
 CSPROJ = """\

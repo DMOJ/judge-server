@@ -12,6 +12,7 @@ CSPROJ = """\
 </Project>
 """
 
+
 class Executor(CompiledExecutor):
     ext = 'cs'
     command = 'dotnet'
@@ -19,7 +20,7 @@ class Executor(CompiledExecutor):
 string? line;
 while (!string.IsNullOrEmpty(line = Console.ReadLine()))
 {
-    Console.WriteLine(line);   
+    Console.WriteLine(line);
 }"""
     compiler_time_limit = 20
     compiler_write_fs = [

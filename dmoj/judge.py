@@ -459,7 +459,7 @@ class JudgeWorker:
             if hasattr(binary, 'warning') and binary.warning is not None:
                 yield IPC.COMPILE_MESSAGE, (binary.warning,)
 
-        yield IPC.GRADING_BEGIN, (self.grader.is_pretested,)
+        yield IPC.GRADING_BEGIN, (self.grader.run_pretests_only,)
 
         flattened_cases: List[Tuple[Optional[int], Union[TestCase, BatchedTestCase]]] = []
         batch_number = 0

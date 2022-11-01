@@ -9,7 +9,7 @@ class BaseGrader:
         self.problem = problem
         self.judge = judge
         self.binary = self._generate_binary()
-        self.is_pretested = self.problem.meta.pretests_only and 'pretest_test_cases' in self.problem.config
+        self.run_pretests_only = self.problem.meta.pretests_only
         self._abort_requested = False
         self._current_proc = None
         self._batch_counter = 0
@@ -48,5 +48,18 @@ class BaseGrader:
         return cases
 
     def cases(self):
-        key = 'pretest_test_cases' if self.is_pretested else 'test_cases'
-        return self._resolve_testcases(self.problem.config[key])
+        pretest_test_cases = self.problem.config.pretest_test_cases
+        if self.run_pretests_only and pretest_test_cases:
+            return self._resolve_testcases(pretest_test_cases)
+
+        test_cases = self._resolve_testcases(self.problem.config.test_cases)
+        if pretest_test_cases:
+            pretest_test_cases = self._resolve_testcases(pretest_test_cases)
+
+            # Hack: force short-circuiting behavior
+            for case in pretest_test_cases:
+                case.points = 0
+
+            test_cases = pretest_test_cases + test_cases
+
+        return test_cases

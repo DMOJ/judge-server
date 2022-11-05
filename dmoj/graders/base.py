@@ -1,4 +1,7 @@
-from dmoj.problem import BatchedTestCase, TestCase
+from typing import List, Tuple
+
+from dmoj.config import InvalidInitException
+from dmoj.problem import Batch, BatchedTestCase, StandaloneTestCase, TopLevelCase
 from dmoj.utils.unicode import utf8bytes
 
 
@@ -29,37 +32,44 @@ class BaseGrader:
             except OSError:
                 pass
 
-    def _resolve_testcases(self, cfg, batch_no=0):
-        cases = []
+    def _resolve_testcases(self, cfg) -> List[TopLevelCase]:
+        cases: List[TopLevelCase] = []
         for case_config in cfg:
             if 'batched' in case_config.raw_config:
                 self._batch_counter += 1
                 cases.append(
-                    BatchedTestCase(
+                    Batch(
                         self._batch_counter,
                         case_config,
                         self.problem,
-                        self._resolve_testcases(case_config['batched'], self._batch_counter),
+                        self._resolve_batched_cases(case_config['batched'], self._batch_counter),
                     )
                 )
             else:
-                cases.append(TestCase(self._testcase_counter, batch_no, case_config, self.problem))
                 self._testcase_counter += 1
+                cases.append(StandaloneTestCase(self._testcase_counter, case_config, self.problem))
         return cases
 
-    def cases(self):
-        pretest_test_cases = self.problem.config.pretest_test_cases
-        if self.run_pretests_only and pretest_test_cases:
-            return self._resolve_testcases(pretest_test_cases)
+    def _resolve_batched_cases(self, cfg, batch: int) -> List[BatchedTestCase]:
+        batched_cases = []
+        for case_config in cfg:
+            if 'batched' in case_config.raw_config:
+                raise InvalidInitException('nested batches')
+            self._testcase_counter += 1
+            batched_cases.append(BatchedTestCase(self._testcase_counter, batch, case_config, self.problem))
+        return batched_cases
 
-        test_cases = self._resolve_testcases(self.problem.config.test_cases)
+    def cases(self) -> Tuple[List[TopLevelCase], List[TopLevelCase]]:
+        pretest_test_cases = self.problem.config.pretest_test_cases
         if pretest_test_cases:
             pretest_test_cases = self._resolve_testcases(pretest_test_cases)
 
-            # Hack: force short-circuiting behavior
             for case in pretest_test_cases:
+                # Hack: force short-circuiting behavior
                 case.points = 0
+        else:
+            pretest_test_cases = []
 
-            test_cases = pretest_test_cases + test_cases
-
-        return test_cases
+        # Important that this comes after the previous `_resolve_testcases` call, otherwise our underlying `position` values would be all wrong.
+        test_cases = self._resolve_testcases(self.problem.config.test_cases)
+        return (pretest_test_cases, test_cases)

@@ -347,6 +347,15 @@ class PacketManager:
         self._flush_testcase_queue()
         self._send_packet({'name': 'grading-end', 'submission-id': self.judge.current_submission.id})
 
+    def pretest_begin_packet(self):
+        log.debug('Begin pretests: %d', self.judge.current_submission.id)
+        self._send_packet({'name': 'pretest-begin', 'submission-id': self.judge.current_submission.id})
+
+    def pretest_end_packet(self):
+        log.debug('End pretests: %d', self.judge.current_submission.id)
+        self._flush_testcase_queue()
+        self._send_packet({'name': 'pretest-end', 'submission-id': self.judge.current_submission.id})
+
     def batch_begin_packet(self):
         self._batch += 1
         log.debug('Enter batch number %d: %d', self._batch, self.judge.current_submission.id)

@@ -46,6 +46,7 @@ class ConfigNode:
 
     def __init__(self, raw_config=None, parent=None, defaults=None, dynamic=True):
         self.dynamic = dynamic
+        self.raw_config_id = id(raw_config)
         if defaults:
             self.raw_config = defaults
             self.raw_config.update(raw_config or {})

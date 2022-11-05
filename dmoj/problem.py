@@ -5,6 +5,7 @@ import subprocess
 import zipfile
 from collections import defaultdict
 from functools import partial
+from typing import List, Union
 
 import yaml
 from yaml.parser import ParserError
@@ -218,29 +219,23 @@ class ProblemConfig(ConfigNode):
             )
 
 
-class BatchedTestCase:
-    def __init__(self, batch_no, config, problem, cases):
+class AbstractTopLevelCase:
+    def __init__(self, config):
         self.config = config
-        self.batch_no = batch_no
         self.points = config.points
-        self.dependencies = config.dependencies
-        self.batched_cases = cases
-        if any(isinstance(case, BatchedTestCase) for case in self.batched_cases):
-            raise InvalidInitException('nested batches')
-        self.problem = problem
-        if any(dependency >= batch_no for dependency in self.dependencies):
-            raise InvalidInitException('dependencies depends on non-earlier batch')
-        if any(dependency < 1 for dependency in self.dependencies):
-            raise InvalidInitException('dependencies must be positive integers')
+        if config.depends is not None:
+            if any(not isinstance(dependency, ConfigNode) for dependency in config.depends):
+                raise InvalidInitException('dependencies should use YAML references')
 
-    def __str__(self):
-        return 'BatchedTestCase{cases=%s}' % str(self.batched_cases)
+            self.dependencies = {dependency.raw_config_id for dependency in config.depends}
+        else:
+            self.dependencies = None
 
 
-class TestCase:
-    def __init__(self, count, batch_no, config, problem):
-        self.position = count
-        self.batch = batch_no
+class AbstractTestCase:
+    def __init__(self, position, batch, config, problem):
+        self.position = position
+        self.batch = batch
         self.config = config
         self.problem = problem
         self.points = config.points
@@ -396,3 +391,29 @@ class TestCase:
 
     def __setstate__(self, state):
         self.__dict__.update(state)
+
+
+class BatchedTestCase(AbstractTestCase):
+    def __init__(self, position, batch, config, problem):
+        super().__init__(position, batch, config, problem)
+
+
+class StandaloneTestCase(AbstractTestCase, AbstractTopLevelCase):
+    def __init__(self, position, config, problem):
+        AbstractTestCase.__init__(self, position, None, config, problem)
+        AbstractTopLevelCase.__init__(self, config)
+
+
+class Batch(AbstractTopLevelCase):
+    def __init__(self, batch: int, config, problem, cases: List[BatchedTestCase]):
+        super().__init__(config)
+        self.batch = batch
+        self.batched_cases = cases
+        self.problem = problem
+
+    def __str__(self):
+        return 'Batch{cases=%s}' % str(self.batched_cases)
+
+
+# For MyPy: a TopLevelCase is either a Batch or a StandaloneTestCase
+TopLevelCase = Union[Batch, StandaloneTestCase]

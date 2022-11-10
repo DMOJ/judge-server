@@ -4,7 +4,9 @@ from importlib import import_module
 from typing import Any, Callable, Dict, List, Optional, Pattern, Sequence, Set
 
 
-def get_available_modules(pattern: Pattern, dirname: str, only: Set[str] = None, exclude: Set[str] = None) -> List[str]:
+def get_available_modules(
+    pattern: Pattern, dirname: str, only: Optional[Set[str]] = None, exclude: Optional[Set[str]] = None
+) -> List[str]:
     to_load = {i.group(1) for i in map(pattern.match, os.listdir(dirname)) if i is not None}
     if only:
         to_load &= only

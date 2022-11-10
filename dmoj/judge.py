@@ -273,7 +273,7 @@ class Judge:
         if self.packet_manager:
             self.packet_manager.close()
 
-    def log_internal_error(self, exc: BaseException = None, message: str = None) -> None:
+    def log_internal_error(self, exc: Optional[BaseException] = None, message: Optional[str] = None) -> None:
         if not message:
             # If exc exists, raise it so that sys.exc_info() is populated with its data.
             if exc:

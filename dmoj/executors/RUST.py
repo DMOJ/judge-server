@@ -1,3 +1,4 @@
+import fcntl
 import os
 
 from dmoj.cptbox.filesystem_policies import ExactFile, RecursiveDir
@@ -56,15 +57,44 @@ class Executor(CompiledExecutor):
         with open(self._file('Cargo.toml'), 'wb') as f:
             f.write(CARGO_TOML)
 
+    shared_target = None
+
+    @classmethod
+    def get_shared_target(cls):
+        if cls.shared_target is not None:
+            return cls.shared_target
+
+        cargo_dir = os.path.expanduser('~/.cargo')
+        collisions = 0
+        while True:
+            maybe_target = os.path.join(cargo_dir, f'dmoj-shared-target-{collisions}')
+            try:
+                os.mkdir(maybe_target, mode=0o775)
+            except FileExistsError:
+                pass
+
+            dirfd = os.open(maybe_target, os.O_RDONLY | os.O_DIRECTORY | os.O_CLOEXEC)
+            try:
+                fcntl.flock(dirfd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                # dirfd is leaked on purpose.
+            except BlockingIOError:
+                # Another judge is using this.
+                os.close(dirfd)
+                collisions += 1
+            else:
+                cls.shared_target = maybe_target
+                # We intentionally don't clean this directory up at any point, since we can re-use it on restart.
+                return cls.shared_target
+
     @classmethod
     def get_versionable_commands(cls):
         return [('rustc', os.path.join(os.path.dirname(cls.get_command()), 'rustc'))]
 
     def get_compile_args(self):
-        args = [self.get_command(), 'build', '--release']
+        args = [self.get_command(), 'build', '--release', '--target-dir', self.get_shared_target()]
         if bool_env('DMOJ_CARGO_OFFLINE'):
             args += ['--offline']
         return args
 
     def get_compiled_file(self):
-        return self._file('target', 'release', 'user_submission')
+        return os.path.join(self.get_shared_target(), 'release/user_submission')

@@ -3,7 +3,6 @@ import os
 
 from dmoj.cptbox.filesystem_policies import ExactFile, RecursiveDir
 from dmoj.executors.compiled_executor import CompiledExecutor
-from dmoj.utils.os_ext import bool_env
 
 CARGO_TOML = b"""\
 [package]
@@ -91,9 +90,7 @@ class Executor(CompiledExecutor):
         return [('rustc', os.path.join(os.path.dirname(cls.get_command()), 'rustc'))]
 
     def get_compile_args(self):
-        args = [self.get_command(), 'build', '--release', '--target-dir', self.get_shared_target()]
-        if bool_env('DMOJ_CARGO_OFFLINE'):
-            args += ['--offline']
+        args = [self.get_command(), 'build', '--release', '--offline', '--target-dir', self.get_shared_target()]
         return args
 
     def get_compiled_file(self):

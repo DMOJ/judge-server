@@ -1,6 +1,5 @@
 import ctypes
 import ctypes.util
-import os
 import signal
 from typing import Optional
 

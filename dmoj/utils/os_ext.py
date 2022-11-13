@@ -1,6 +1,5 @@
 import ctypes
 import ctypes.util
-import os
 import signal
 from typing import Optional
 
@@ -41,8 +40,3 @@ else:
 
     def strsignal(signo: int) -> str:
         return _strsignal(signo) or f'Unknown signal {signo}'
-
-
-def bool_env(name: str) -> bool:
-    value = os.environ.get(name, '')
-    return value.lower() in ('true', 'yes', '1', 'y', 't')

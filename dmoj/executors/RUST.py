@@ -48,6 +48,10 @@ class Executor(CompiledExecutor):
         RecursiveDir('~/.cargo'),
     ]
 
+    def __init__(self, problem_id: str, source_code: bytes, **kwargs) -> None:
+        super().__init__(problem_id, source_code, **kwargs)
+        self.shared_target = None
+
     def create_files(self, problem_id, source_code, *args, **kwargs):
         os.mkdir(self._file('src'))
         with open(self._file('src', 'main.rs'), 'wb') as f:
@@ -56,12 +60,9 @@ class Executor(CompiledExecutor):
         with open(self._file('Cargo.toml'), 'wb') as f:
             f.write(CARGO_TOML)
 
-    shared_target = None
-
-    @classmethod
-    def get_shared_target(cls):
-        if cls.shared_target is not None:
-            return cls.shared_target
+    def get_shared_target(self):
+        if self.shared_target is not None:
+            return self.shared_target
 
         cargo_dir = os.path.expanduser('~/.cargo')
         collisions = 0
@@ -75,15 +76,21 @@ class Executor(CompiledExecutor):
             dirfd = os.open(maybe_target, os.O_RDONLY | os.O_DIRECTORY | os.O_CLOEXEC)
             try:
                 fcntl.flock(dirfd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-                # dirfd is leaked on purpose.
             except BlockingIOError:
                 # Another judge is using this.
                 os.close(dirfd)
                 collisions += 1
             else:
-                cls.shared_target = maybe_target
-                # We intentionally don't clean this directory up at any point, since we can re-use it on restart.
-                return cls.shared_target
+                self.shared_target_dirfd = dirfd
+                self.shared_target = maybe_target
+                # We intentionally don't clean this directory up at any point, since we can re-use it.
+                return self.shared_target
+
+    def cleanup(self) -> None:
+        super().cleanup()
+        if self.shared_target is not None:
+            # Closing also unlocks.
+            os.close(self.shared_target_dirfd)
 
     @classmethod
     def get_versionable_commands(cls):

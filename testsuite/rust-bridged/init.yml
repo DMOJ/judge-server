@@ -1,0 +1,11 @@
+checker:
+  args:
+    cached: true
+    feedback: true
+    files: checker.rs
+    lang: RUST
+    type: coci
+  name: bridged
+test_cases:
+- {}
+- {}

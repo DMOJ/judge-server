@@ -4,12 +4,16 @@ application-import-names = dmoj
 import-order-style = pycharm
 enable-extensions = G
 ignore =
-    E203, E501, W503, # for Black
-    W504, # line break occurred after a binary operator
+    # for Black
+    E203, E501, W503,
+    # line break occurred after a binary operator
+    W504,
     # allow only generator_stop and annotations future imports
     FI10,FI11,FI12,FI13,FI14,FI15,FI16,FI17,FI18,FI55,FI58,
-    C814, # missing trailing comma in Python 2 only
-    C818  # trailing comma on bare tuple prohibited
+    # missing trailing comma in Python 2 only
+    C814,
+    # trailing comma on bare tuple prohibited
+    C818
 per-file-ignores =
     # F403: import *, F405: name comes from import *
     ./dmoj/cptbox/compiler_isolate.py:F403,F405

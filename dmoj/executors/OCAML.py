@@ -19,6 +19,9 @@ open! Stdio
 let () = (In_channel.iter_lines Stdio.stdin ~f:print_endline)
 """
 
+    # Space for major / minor heaps is reserved ahead of time.
+    address_grace = 256 * 1024
+
     def get_compile_args(self):
         # fmt: off
         return [

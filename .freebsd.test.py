@@ -5,7 +5,6 @@ from dmoj.citest import ci_test
 
 EXECUTORS = [
     'AWK',
-    'BF',
     'C',
     'C11',
     'CPP03',

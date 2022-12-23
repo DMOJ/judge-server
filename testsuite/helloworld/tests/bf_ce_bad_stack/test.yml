@@ -1,0 +1,5 @@
+language: BF
+time: 1
+memory: 64
+source: fail.b
+expect: CE

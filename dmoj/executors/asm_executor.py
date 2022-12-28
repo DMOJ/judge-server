@@ -2,7 +2,7 @@ import os
 import re
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-from dmoj.cptbox import PTBOX_ABI_X64, PTBOX_ABI_X86, can_debug
+from dmoj.cptbox import NATIVE_ABI, PTBOX_ABI_ARM, PTBOX_ABI_ARM64, PTBOX_ABI_X64, PTBOX_ABI_X86, can_debug
 from dmoj.cptbox.filesystem_policies import ExactFile, FilesystemAccessRule, RecursiveDir
 from dmoj.executors.compiled_executor import CompiledExecutor
 from dmoj.judgeenv import env, skip_self_test
@@ -200,3 +200,33 @@ class PlatformX64Mixin(ASMExecutor):
     dynamic_linker = env.runtime['ld.so_x64'] or '/lib64/ld-linux-x86-64.so.2'
     crt_pre = env.runtime.crt_pre_x64 or ['/usr/lib/x86_64-linux-gnu/crt1.o', '/usr/lib/x86_64-linux-gnu/crti.o']
     crt_post = env.runtime.crt_post_x64 or ['/usr/lib/x86_64-linux-gnu/crtn.o']
+
+
+class PlatformARMMixin(ASMExecutor):
+    abi = PTBOX_ABI_ARM
+    ld_name = 'ld_arm'
+    ld_m = 'armelf_linux_eabi'
+    platform_prefixes = ['arm-linux-gnueabihf']
+
+    qemu_path = env.runtime.qemu_arm
+    dynamic_linker = env.runtime['ld.so_arm'] or '/lib/ld-linux-armhf.so.3'
+    crt_pre = env.runtime.crt_pre_arm or ['/usr/lib/arm-linux-gnueabihf/crt1.o', '/usr/lib/arm-linux-gnueabihf/crti.o']
+    crt_post = env.runtime.crt_post_arm or ['/usr/lib/arm-linux-gnueabihf/crtn.o']
+
+
+class PlatformARM64Mixin(ASMExecutor):
+    abi = PTBOX_ABI_ARM64
+    ld_name = 'ld_arm'
+    ld_m = 'aarch64linux'
+    platform_prefixes = ['aarch64-linux-gnu']
+
+    qemu_path = env.runtime.qemu_arm64
+    dynamic_linker = env.runtime['ld.so_arm64'] or '/lib/ld-linux-aarch64.so.1'
+    crt_pre = env.runtime.crt_pre_arm or ['/usr/lib/aarch64-linux-gnu/crt1.o', '/usr/lib/aarch64-linux-gnu/crti.o']
+    crt_post = env.runtime.crt_post_arm or ['/usr/lib/aarch64-linux-gnu/crtn.o']
+
+
+NativeMixin: Any = (
+    [cls for cls in (PlatformX86Mixin, PlatformX64Mixin, PlatformARMMixin, PlatformARM64Mixin) if cls.abi == NATIVE_ABI]
+    or [ASMExecutor]
+)[0]

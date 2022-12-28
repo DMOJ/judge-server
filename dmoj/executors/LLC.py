@@ -1,9 +1,9 @@
 from typing import Dict, List, Optional, Set
 
-from dmoj.executors.asm_executor import ASMExecutor, PlatformX64Mixin
+from dmoj.executors.asm_executor import ASMExecutor, NativeMixin
 
 
-class Executor(PlatformX64Mixin, ASMExecutor):
+class Executor(NativeMixin, ASMExecutor):
     as_name = 'llc'
     optimize = 2
 

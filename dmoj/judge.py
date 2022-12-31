@@ -506,7 +506,9 @@ class JudgeWorker:
                         # Short-circuit if we just failed a case in a batch, or if short-circuiting is currently enabled
                         # for all test cases (either this was requested by the site, or we failed a 0-point case in the
                         # past).
-                        is_short_circuiting |= batch_number is not None or is_short_circuiting_enabled
+                        is_short_circuiting |= (
+                            batch_number is not None and case.short_circuit
+                        ) or is_short_circuiting_enabled
 
                 # Legacy hack: we need to allow graders to read and write `proc_output` on the `Result` object, but the
                 # judge controller only cares about the trimmed output, and shouldn't waste memory buffering the full

@@ -246,6 +246,7 @@ class TestCase:
         self.points = config.points
         self.output_prefix_length = config.output_prefix_length
         self.has_binary_data = config.binary_data
+        self.short_circuit = config.short_circuit
         self._generated = None
 
     def _normalize(self, data):

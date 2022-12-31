@@ -21,6 +21,10 @@ class ContribModule(DefaultContribModule):
         return '{input_file} {output_file} {answer_file}'
 
     @classmethod
+    def get_validator_args_format_string(cls):
+        return '--group st{batch_no}'
+
+    @classmethod
     def parse_return_code(cls, proc, executor, point_value, time_limit, memory_limit, feedback, name, stderr):
         if proc.returncode == cls.AC:
             return CheckerResult(True, point_value, feedback=feedback)

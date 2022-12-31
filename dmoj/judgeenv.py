@@ -23,6 +23,9 @@ env: ConfigNode = ConfigNode(
         'generator_compiler_time_limit': 30,  # 30 seconds
         'generator_time_limit': 20,  # 20 seconds
         'generator_memory_limit': 524288,  # 512mb of RAM
+        'validator_compiler_time_limit': 30,  # 30 seconds
+        'validator_time_limit': 20,  # 20 seconds
+        'validator_memory_limit': 524288,  # 512mb of RAM
         'compiler_time_limit': 10,  # Kill compiler after 10 seconds
         'compiler_size_limit': 131072,  # Maximum allowable compiled file size, 128mb
         'compiler_output_character_limit': 65536,  # Number of characters allowed in compile output

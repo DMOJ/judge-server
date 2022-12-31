@@ -1,9 +1,9 @@
-from dmoj.contrib.default import ContribModule as DefaultContribModule
+from dmoj.contrib.default import BaseContribModule
 from dmoj.result import CheckerResult
 from dmoj.utils.helper_files import parse_helper_file_error
 
 
-class ContribModule(DefaultContribModule):
+class ContribModule(BaseContribModule):
     name = 'peg'
 
     @classmethod

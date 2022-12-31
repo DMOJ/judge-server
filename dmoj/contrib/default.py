@@ -2,10 +2,28 @@ from dmoj.result import CheckerResult
 from dmoj.utils.helper_files import parse_helper_file_error
 
 
-class ContribModule:
+class BaseContribModule:
     AC = 0
     WA = 1
 
+    @classmethod
+    def get_checker_args_format_string(cls):
+        raise NotImplementedError
+
+    @classmethod
+    def get_interactor_args_format_string(cls):
+        raise NotImplementedError
+
+    @classmethod
+    def get_validator_args_format_string(cls):
+        raise NotImplementedError
+
+    @classmethod
+    def parse_return_code(cls, proc, executor, point_value, time_limit, memory_limit, feedback, name, stderr):
+        raise NotImplementedError
+
+
+class ContribModule(BaseContribModule):
     name = 'default'
 
     @classmethod
@@ -15,6 +33,10 @@ class ContribModule:
     @classmethod
     def get_interactor_args_format_string(cls):
         return '{input_file} {answer_file}'
+
+    @classmethod
+    def get_validator_args_format_string(cls):
+        return '{batch_no} {case_no}'
 
     @classmethod
     def parse_return_code(cls, proc, executor, point_value, time_limit, memory_limit, feedback, name, stderr):

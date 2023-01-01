@@ -1,4 +1,3 @@
-import re
 from collections import defaultdict
 from typing import DefaultDict, Dict, List, Optional, Tuple, Union
 
@@ -201,6 +200,7 @@ OPT_PASSES = [
 
 class Executor(LLCExecutor):
     test_program = ',+[-.,+]'
+    opt_name = 'opt'
 
     def create_files(self, problem_id: str, source_code: bytes, *args, **kwargs) -> None:
         super().create_files(problem_id, compile_to_llvm(source_code), *args, **kwargs)
@@ -214,24 +214,20 @@ class Executor(LLCExecutor):
     # Do both opt and llc.
     def assemble(self) -> Tuple[bytes, List[str]]:
         assert self._code is not None
-        # TODO: find an alternative to get opt_path
-        opt_path = re.sub(f'{re.escape(self.as_name)}$', 'opt', self.get_as_path())
-        args = [opt_path, '-S', f'-passes={",".join(OPT_PASSES)}', self._code, '-o', self._code]
+        args = [self.runtime_dict[self.opt_name], '-S', f'-passes={",".join(OPT_PASSES)}', self._code, '-o', self._code]
         process = self.create_compile_process(args)
         opt_output = self.get_compile_output(process)
         as_output, to_link = super().assemble()
         return b'\n'.join(filter(None, [opt_output, as_output])), to_link
 
-    # TODO: change to get_versionable_commands
     @classmethod
-    def get_runtime_versions(cls) -> List[Tuple[str, Tuple[int, ...]]]:
-        bf_version: Tuple[int, ...] = (1, 337)
-        return [('bf', bf_version)]
+    def get_versionable_commands(cls) -> List[Tuple[str, str]]:
+        return [(cls.opt_name, cls.runtime_dict[cls.opt_name])] + super().get_versionable_commands()
 
     @classmethod
     def get_find_first_mapping(cls) -> Optional[Dict[str, List[str]]]:
         res = super().get_find_first_mapping()
         if res is None:
             return None
-        res['opt'] = ['opt']
+        res[cls.opt_name] = [cls.opt_name]
         return res

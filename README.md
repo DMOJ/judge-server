@@ -51,10 +51,9 @@ Supported languages include:
 * Python 2/3
 * PyPy 2/3
 * Pascal
-* Perl
 * Mono C#/F#/VB
 
-The judge can also grade in the languages listed below. These languages are less tested and more likely to be buggy.
+The judge can also grade in the languages listed below:
 
 * Ada
 * AWK
@@ -74,6 +73,7 @@ The judge can also grade in the languages listed below. These languages are less
 * NASM
 * Objective-C
 * OCaml
+* Perl
 * PHP
 * Pike
 * Prolog
@@ -99,7 +99,7 @@ local judge, useful for testing problems.
 
 For more detailed steps, read the [installation instructions](https://docs.dmoj.ca/#/judge/setting_up_a_judge).
 
-Note that **the only officially-supported Linux distribution is the latest Debian**, with the default `apt` versions of all runtimes. This is [what we run on dmoj.ca](https://dmoj.ca/runtimes/matrix/), and it should "just work". While the judge will likely still work with other distributions and runtime versions, some runtimes might fail to initialize. In these cases, please [file an issue](https://github.com/DMOJ/judge-server/issues).
+Note that **the only Linux distribution with first-class support is the latest Debian**, with the default `apt` versions of all runtimes. This is [what we run on dmoj.ca](https://dmoj.ca/runtimes/matrix/), and it should "just work". While the judge will likely still work with other distributions and runtime versions, some runtimes might fail to initialize. In these cases, please [file an issue](https://github.com/DMOJ/judge-server/issues).
 
 ### Stable build
 
@@ -207,7 +207,7 @@ optional arguments:
   --skip-self-test      skip executor self-tests
 ```
 
-### Running a CLI Judge
+### Running a CLI judge
 
 ```
 $ dmoj-cli --help

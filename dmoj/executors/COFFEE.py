@@ -10,10 +10,6 @@ class Executor(ScriptExecutor):
     command = 'node'
     syscalls = [
         'capget',
-        'epoll_create1',
-        'epoll_ctl',
-        'epoll_wait',
-        'epoll_pwait',
         'eventfd2',
         'newselect',
         'sched_yield',

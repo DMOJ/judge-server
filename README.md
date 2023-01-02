@@ -5,7 +5,7 @@
 </h1>
 <p align="center">
   <a href="https://github.com/DMOJ/judge-server/actions?query=workflow%3Abuild">
-    <img alt="Linux Build Status" src="https://img.shields.io/github/actions/workflow/status/DMOJ/judge-server/build.yml?branch=master"/>
+    <img alt="Linux Build Status" src="https://img.shields.io/github/actions/workflow/status/DMOJ/judge-server/build.yml?branch=master&logo=linux"/>
   </a>
   <a href="https://ci.dmoj.ca/view/DMOJ/job/dmoj-judge-freebsd-py3/">
     <img alt="FreeBSD Build Status" src="https://img.shields.io/jenkins/build?jobUrl=https%3A%2F%2Fci.dmoj.ca%2Fview%2FDMOJ%2Fjob%2Fdmoj-judge-freebsd-py3%2F&logo=freebsd"/>

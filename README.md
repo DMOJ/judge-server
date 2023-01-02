@@ -1,23 +1,31 @@
-DMOJ Judge [![Linux Build Status](https://img.shields.io/github/actions/workflow/status/DMOJ/judge-server/build.yml?branch=master)](https://github.com/DMOJ/judge-server/actions?query=workflow%3Abuild) [![FreeBSD Build Status](https://img.shields.io/jenkins/build?jobUrl=https%3A%2F%2Fci.dmoj.ca%2Fview%2FDMOJ%2Fjob%2Fdmoj-judge-freebsd-py3%2F&logo=freebsd)](https://ci.dmoj.ca/view/DMOJ/job/dmoj-judge-freebsd-py3/) [![Coverage](https://img.shields.io/codecov/c/github/DMOJ/judge-server.svg)](https://codecov.io/gh/DMOJ/judge-server) [![Slack](https://slack.dmoj.ca/badge.svg)](https://slack.dmoj.ca)
-=====
+<h1 align="center">
+  <img src="https://avatars2.githubusercontent.com/u/6934864?v=3&s=1000" width="120px">
+  <br>
+  DMOJ Judge
+</h1>
+<p align="center">
+  <a href="https://github.com/DMOJ/judge-server/actions?query=workflow%3Abuild">
+    <img alt="Linux Build Status" src="https://img.shields.io/github/actions/workflow/status/DMOJ/judge-server/build.yml?branch=master"/>
+  </a>
+  <a href="https://ci.dmoj.ca/view/DMOJ/job/dmoj-judge-freebsd-py3/">
+    <img alt="FreeBSD Build Status" src="https://img.shields.io/jenkins/build?jobUrl=https%3A%2F%2Fci.dmoj.ca%2Fview%2FDMOJ%2Fjob%2Fdmoj-judge-freebsd-py3%2F&logo=freebsd"/>
+  </a>
+  <a href="https://codecov.io/gh/DMOJ/judge-server">
+    <img alt="Coverage" src="https://img.shields.io/codecov/c/github/DMOJ/judge-server.svg"/>
+  </a>
+  <a href="LICENSE.md">
+    <img alt="License" src="https://img.shields.io/github/license/DMOJ/judge-server?style=flat-square"/>
+  </a>
+  <a href="https://img.shields.io/github/license/DMOJ/judge-server?style=flat-square">
+    <img src="https://slack.dmoj.ca/badge.svg"/>
+  </a>
+</p>
 
-Python [AGPLv3](LICENSE) contest judge backend for the [DMOJ site](https://github.com/DMOJ/online-judge) interface. See it in action at [dmoj.ca](https://dmoj.ca/)!
+Contest judge backend for the [DMOJ site](https://github.com/DMOJ/online-judge) interface, supporting <b>IO-based</b>, <b>interactive</b>, and <b>signature-graded</b> tasks, with <b>runtime data generators</b> and <b>custom output validators</b>.
 
-<table>
-<tr>
-<td>
-<a href="https://dmoj.ca/">
-<img src="https://avatars2.githubusercontent.com/u/6934864?v=3&s=100" align="left"></img>
-</a>
-</td>
-<td>
-A modern online judge and contest platform system, supporting <b>IO-based</b>, <b>interactive</b>, and <b>signature-graded</b> tasks,
-            with <b>runtime data generators</b> and <b>custom output validators</b>.
-</td>
-</tr>
-</table>
+See it in action at [dmoj.ca](https://dmoj.ca/)!
 
-## Supported Platforms and Runtimes
+## Supported platforms and runtimes
 
 The judge implements secure grading on Linux and FreeBSD machines.
 
@@ -93,7 +101,7 @@ For more detailed steps, read the [installation instructions](https://docs.dmoj.
 
 Note that **the only officially-supported Linux distribution is the latest Debian**, with the default `apt` versions of all runtimes. This is [what we run on dmoj.ca](https://dmoj.ca/runtimes/matrix/), and it should "just work". While the judge will likely still work with other distributions and runtime versions, some runtimes might fail to initialize. In these cases, please [file an issue](https://github.com/DMOJ/judge-server/issues).
 
-### Stable Build
+### Stable build
 
 [![PyPI version](https://badge.fury.io/py/dmoj.svg)](https://pypi.python.org/pypi/dmoj)
 [![PyPI](https://img.shields.io/pypi/pyversions/dmoj.svg)](https://pypi.python.org/pypi/dmoj)
@@ -105,7 +113,7 @@ but may not contain all the latest features and improvements.
 $ pip install dmoj
 ```
 
-### Bleeding-Edge Build
+### Bleeding-edge build
 
 This is the version of the codebase we run live on [dmoj.ca](https://dmoj.ca/).
 
@@ -154,7 +162,7 @@ $ exec docker run \
 
 ## Usage
 
-### Running a Judge Server
+### Running a judge server
 
 ```
 $ dmoj --help

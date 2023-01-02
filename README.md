@@ -14,9 +14,9 @@
     <img alt="Coverage" src="https://img.shields.io/codecov/c/github/DMOJ/judge-server.svg"/>
   </a>
   <a href="LICENSE.md">
-    <img alt="License" src="https://img.shields.io/github/license/DMOJ/judge-server?style=flat-square"/>
+    <img alt="License" src="https://img.shields.io/github/license/DMOJ/judge-server"/>
   </a>
-  <a href="https://img.shields.io/github/license/DMOJ/judge-server?style=flat-square">
+  <a href="https://slack.dmoj.ca">
     <img src="https://slack.dmoj.ca/badge.svg"/>
   </a>
 </p>

@@ -1,0 +1,5 @@
+language: PYPY3
+time: 2
+memory: 1
+source: helloworld.py
+expect: MLE

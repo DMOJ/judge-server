@@ -14,6 +14,7 @@ from typing import Any, Callable, Dict, Generator, List, NamedTuple, Optional, S
 
 from dmoj import packet
 from dmoj.control import JudgeControlRequestHandler
+from dmoj.cptbox import has_landlock
 from dmoj.error import CompileError
 from dmoj.judgeenv import clear_problem_dirs_cache, env, get_supported_problems_and_mtimes, startup_warnings
 from dmoj.monitor import Monitor
@@ -592,7 +593,10 @@ def main():  # pragma: no cover
     executors.load_executors()
     contrib.load_contrib_modules()
 
-    print('Running live judge...')
+    if has_landlock():
+        print('Running live judge with landlock and seccomp...')
+    else:
+        print('Running live judge with just seccomp...')
 
     for warning in judgeenv.startup_warnings:
         print_ansi('#ansi[Warning: %s](yellow)' % warning)

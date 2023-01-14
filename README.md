@@ -16,8 +16,8 @@
   <a href="LICENSE.md">
     <img alt="License" src="https://img.shields.io/github/license/DMOJ/judge-server"/>
   </a>
-  <a href="https://slack.dmoj.ca">
-    <img src="https://slack.dmoj.ca/badge.svg"/>
+  <a href="https://dmoj.ca/about/discord/">
+    <img src="https://img.shields.io/discord/677340492651954177?color=%237289DA&label=Discord"/>
   </a>
 </p>
 

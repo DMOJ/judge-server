@@ -8,16 +8,14 @@ import threading
 import traceback
 from enum import Enum
 from http.server import HTTPServer
-from itertools import groupby
-from operator import itemgetter
-from typing import Any, Callable, Dict, Generator, List, NamedTuple, Optional, Set, Tuple, Union
+from typing import Any, Callable, Dict, Generator, Iterable, List, NamedTuple, Optional, Set, Tuple
 
 from dmoj import packet
 from dmoj.control import JudgeControlRequestHandler
 from dmoj.error import CompileError
 from dmoj.judgeenv import clear_problem_dirs_cache, env, get_supported_problems_and_mtimes, startup_warnings
 from dmoj.monitor import Monitor
-from dmoj.problem import BatchedTestCase, Problem, TestCase
+from dmoj.problem import AbstractTestCase, Batch, BatchedTestCase, Problem, TopLevelCase
 from dmoj.result import Result
 from dmoj.utils import builtin_int_patch
 from dmoj.utils.ansi import ansi_style, print_ansi, strip_ansi
@@ -39,6 +37,8 @@ class IPC(Enum):
     RESULT = 'RESULT'
     BATCH_BEGIN = 'BATCH-BEGIN'
     BATCH_END = 'BATCH-END'
+    PRETEST_BEGIN = 'PRETEST-BEGIN'
+    PRETEST_END = 'PRETEST-END'
     GRADING_BEGIN = 'GRADING-BEGIN'
     GRADING_END = 'GRADING-END'
     GRADING_ABORTED = 'GRADING-ABORTED'
@@ -151,6 +151,8 @@ class Judge:
                 IPC.GRADING_BEGIN: self._ipc_grading_begin,
                 IPC.GRADING_END: self._ipc_grading_end,
                 IPC.GRADING_ABORTED: self._ipc_grading_aborted,
+                IPC.PRETEST_BEGIN: self._ipc_pretest_begin,
+                IPC.PRETEST_END: self._ipc_pretest_end,
                 IPC.BATCH_BEGIN: self._ipc_batch_begin,
                 IPC.BATCH_END: self._ipc_batch_end,
                 IPC.RESULT: self._ipc_result,
@@ -194,10 +196,24 @@ class Judge:
         self.packet_manager.compile_message_packet(compile_message)
 
     def _ipc_grading_begin(self, _report, is_pretested: bool) -> None:
+        self.in_pretests = False
+        self.pretest_batch = 0
+        self.pretest_case = 0
+        self.main_batch = 0
+        self.main_case = 0
         self.packet_manager.begin_grading_packet(is_pretested)
 
     def _ipc_grading_end(self, _report) -> None:
         self.packet_manager.grading_end_packet()
+
+    def _ipc_pretest_begin(self, _report) -> None:
+        self.in_pretests = True
+        self.packet_manager.pretest_begin_packet()
+
+    def _ipc_pretest_end(self, report) -> None:
+        self.in_pretests = False
+        report('')
+        self.packet_manager.pretest_end_packet()
 
     def _ipc_result(self, report, batch_number: Optional[int], case_number: int, result: Result) -> None:
         codes = result.readable_codes()
@@ -218,13 +234,29 @@ class Judge:
                 colored_feedback,
                 colored_aux_codes,
             )
+
         case_padding = '  ' if batch_number is not None else ''
-        report(ansi_style('%sTest case %2d %-3s %s' % (case_padding, case_number, colored_codes[0], case_info)))
+        if self.in_pretests:
+            self.pretest_case += 1
+            report(
+                ansi_style(
+                    '%sPretest case %2d %-3s %s' % (case_padding, self.pretest_case, colored_codes[0], case_info)
+                )
+            )
+        else:
+            self.main_case += 1
+            report(ansi_style('%sTest case %2d %-3s %s' % (case_padding, self.main_case, colored_codes[0], case_info)))
+
         self.packet_manager.test_case_status_packet(case_number, result)
 
-    def _ipc_batch_begin(self, report, batch_number: int) -> None:
+    def _ipc_batch_begin(self, report, _batch_number: int) -> None:
         self.packet_manager.batch_begin_packet()
-        report(ansi_style('#ansi[Batch #%d](yellow|bold)' % batch_number))
+        if self.in_pretests:
+            self.pretest_batch += 1
+            report(ansi_style('#ansi[Pretest batch #%d](yellow|bold)' % self.pretest_batch))
+        else:
+            self.main_batch += 1
+            report(ansi_style('#ansi[Batch #%d](yellow|bold)' % self.main_batch))
 
     def _ipc_batch_end(self, _report, _batch_number: int) -> None:
         self.packet_manager.batch_end_packet()
@@ -459,69 +491,132 @@ class JudgeWorker:
             if hasattr(binary, 'warning') and binary.warning is not None:
                 yield IPC.COMPILE_MESSAGE, (binary.warning,)
 
-        yield IPC.GRADING_BEGIN, (self.grader.run_pretests_only,)
+        class GradingAbort(Exception):
+            pass
 
-        flattened_cases: List[Tuple[Optional[int], Union[TestCase, BatchedTestCase]]] = []
-        batch_number = 0
-        batch_dependencies: List[Set[int]] = []
-        for case in self.grader.cases():
-            if isinstance(case, BatchedTestCase):
-                batch_number += 1
-                for batched_case in case.batched_cases:
-                    flattened_cases.append((batch_number, batched_case))
-                batch_dependencies.append(set(case.dependencies))
+        def grade(case: AbstractTestCase) -> Result:
+            result = self.grader.grade(case)
+
+            # If the submission was killed due to a user-initiated abort, any result is meaningless.
+            if self._abort_requested:
+                raise GradingAbort
+
+            # Legacy hack: we need to allow graders to read and write `proc_output` on the `Result` object, but the
+            # judge controller only cares about the trimmed output, and shouldn't waste memory buffering the full
+            # output. So, we trim it here so we don't run out of memory in the controller.
+            result.proc_output = result.output
+            return result
+
+        def skip_single(case: AbstractTestCase) -> Tuple[IPC, tuple]:
+            return IPC.RESULT, (case.batch, case.position, Result(case, result_flag=Result.SC))
+
+        def skip_batched_cases(batched_cases: Iterable[BatchedTestCase]) -> Generator[Tuple[IPC, tuple], None, None]:
+            for case in batched_cases:
+                yield skip_single(case)
+
+        def skip_toplevel(test: TopLevelCase) -> Generator[Tuple[IPC, tuple], None, None]:
+            if isinstance(test, Batch):
+                yield IPC.BATCH_BEGIN, (test.batch,)
+                yield from skip_batched_cases(test.batched_cases)
+                yield IPC.BATCH_END, (test.batch,)
             else:
-                flattened_cases.append((None, case))
+                yield skip_single(test)
 
-        case_number = 0
-        is_short_circuiting = False
-        is_short_circuiting_enabled = self.submission.short_circuit
-        passed_batches: Set[int] = set()
-        for batch_number, cases in groupby(flattened_cases, key=itemgetter(0)):
-            if batch_number:
-                yield IPC.BATCH_BEGIN, (batch_number,)
+        def skip_many_toplevel(tests: List[TopLevelCase]) -> Generator[Tuple[IPC, tuple], None, None]:
+            for test in tests:
+                yield from skip_toplevel(test)
 
-                dependencies = batch_dependencies[batch_number - 1]  # List is zero-indexed
-                if passed_batches & dependencies != dependencies:
-                    is_short_circuiting = True
+        def grade_batched_cases(batched_cases: List[BatchedTestCase]) -> Generator[Tuple[IPC, tuple], None, int]:
+            case_iter = iter(batched_cases)
+            for case in case_iter:
+                result = grade(case)
+                yield IPC.RESULT, (case.batch, case.position, result)
 
-            for _, case in cases:
-                case_number += 1
+                if result.result_flag & Result.WA:
+                    # Skip the rest.
+                    yield from skip_batched_cases(case_iter)
+                    return Result.WA
 
-                # Stop grading if we're short circuiting
-                if is_short_circuiting:
-                    result = Result(case, result_flag=Result.SC)
+            return Result.AC
+
+        class GradeManyResult(Enum):
+            OK = 0
+            SKIP_ALL = 1
+
+        def grade_many(
+            tests: List[TopLevelCase], should_run: Callable[[TopLevelCase, Set[int]], bool]
+        ) -> Generator[Tuple[IPC, tuple], None, Tuple[Set[int], GradeManyResult]]:
+            failed_tests: Set[int] = set()
+            test_iter = iter(tests)
+            for test in test_iter:
+                if not should_run(test, failed_tests):
+                    failed = True
+                    yield from skip_toplevel(test)
+                elif isinstance(test, Batch):
+                    yield IPC.BATCH_BEGIN, (test.batch,)
+
+                    batch_verdict = yield from grade_batched_cases(test.batched_cases)
+                    failed = batch_verdict != Result.AC
+
+                    yield IPC.BATCH_END, (test.batch,)
                 else:
-                    result = self.grader.grade(case)
+                    result = grade(test)
+                    failed = result.result_flag & Result.WA
+                    yield IPC.RESULT, (None, test.position, result)
 
-                    # If the submission was killed due to a user-initiated abort, any result is meaningless.
-                    if self._abort_requested:
-                        yield IPC.GRADING_ABORTED, ()
-                        return
+                if failed:
+                    failed_tests.add(test.config.raw_config_id)
+                    if not test.points or self.submission.short_circuit:
+                        for remaining_test in test_iter:
+                            failed_tests.add(remaining_test.config.raw_config_id)
+                            yield from skip_toplevel(remaining_test)
 
-                    if result.result_flag & Result.WA:
-                        # If we failed a 0-point case, we will short-circuit every case after this.
-                        is_short_circuiting_enabled |= not case.points
+                        return failed_tests, GradeManyResult.SKIP_ALL
 
-                        # Short-circuit if we just failed a case in a batch, or if short-circuiting is currently enabled
-                        # for all test cases (either this was requested by the site, or we failed a 0-point case in the
-                        # past).
-                        is_short_circuiting |= batch_number is not None or is_short_circuiting_enabled
+            return failed_tests, GradeManyResult.OK
 
-                # Legacy hack: we need to allow graders to read and write `proc_output` on the `Result` object, but the
-                # judge controller only cares about the trimmed output, and shouldn't waste memory buffering the full
-                # output. So, we trim it here so we don't run out of memory in the controller.
-                result.proc_output = result.output
-                yield IPC.RESULT, (batch_number, case_number, result)
+        def should_run_pretest(case: TopLevelCase, failed_so_far: Set[int]) -> bool:
+            if case.dependencies is None:
+                # Default: depends on nothing.
+                return True
 
-            if batch_number:
-                if not is_short_circuiting:
-                    passed_batches.add(batch_number)
+            if case.dependencies & failed_so_far:
+                return False
 
-                yield IPC.BATCH_END, (batch_number,)
-                is_short_circuiting &= is_short_circuiting_enabled
+            return True
 
-        yield IPC.GRADING_END, ()
+        failed_pretests: Set[int] = set()
+
+        def should_run_main_test(case: TopLevelCase, failed_so_far: Set[int]) -> bool:
+            if case.dependencies is None:
+                # Default: depends on all pretests, and nothing else.
+                return not failed_pretests
+
+            if case.dependencies & failed_pretests:
+                return False
+
+            if case.dependencies & failed_so_far:
+                return False
+
+            return True
+
+        yield IPC.GRADING_BEGIN, (self.grader.run_pretests_only,)
+        pretests, main_tests = self.grader.cases()
+        try:
+            pretest_result = GradeManyResult.OK
+            if pretests:
+                yield IPC.PRETEST_BEGIN, ()
+                failed_pretests, pretest_result = yield from grade_many(pretests, should_run_pretest)
+                yield IPC.PRETEST_END, ()
+            if not self.grader.run_pretests_only:
+                if pretest_result == GradeManyResult.SKIP_ALL:
+                    yield from skip_many_toplevel(main_tests)
+                else:
+                    yield from grade_many(main_tests, should_run_main_test)
+        except GradingAbort:
+            yield IPC.GRADING_ABORTED, ()
+        else:
+            yield IPC.GRADING_END, ()
 
     def _do_abort(self) -> None:
         self._abort_requested = True

@@ -1,0 +1,20 @@
+archive: data.zip
+pretest_test_cases:
+- &p1 {in: 1.txt, out: 4.txt}
+- &p2 {in: 2.txt, out: 1.txt}
+- &p3 {in: 3.txt, out: 10.txt, depends: [*p1]}
+test_cases:
+- &m1 {in: 5.txt, out: 16.txt, points: 1, depends: [*p1, *p3]}
+- &m2
+  batched:
+  - {in: 4.txt, out: 2.txt}
+  - {in: 6.txt, out: 3.txt}
+  points: 1
+  depends: [*p2]
+- &m3
+  batched:
+  - {in: 5.txt, out: 16.txt}
+  - {in: 10.txt, out: 5.txt}
+  points: 1
+  depends: [*m1, *m2]
+- &m4 {in: 8.txt, out: 4.txt, points: 1, depends: [*m2]}

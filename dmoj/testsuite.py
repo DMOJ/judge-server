@@ -119,6 +119,12 @@ class TestManager:
     def grading_end_packet(self):
         pass
 
+    def pretest_begin_packet(self):
+        pass
+
+    def pretest_end_packet(self):
+        pass
+
     def batch_begin_packet(self):
         pass
 

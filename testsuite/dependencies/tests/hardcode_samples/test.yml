@@ -1,0 +1,5 @@
+language: PY3
+time: 2
+memory: 65536
+source: hardcode_samples.py
+cases: [AC, AC, AC, WA, WA, SC, SC, SC, SC]

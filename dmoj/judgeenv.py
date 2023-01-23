@@ -3,6 +3,7 @@ import glob
 import logging
 import os
 import ssl
+from fnmatch import fnmatch
 from operator import itemgetter
 from typing import Dict, List, Set
 
@@ -250,8 +251,12 @@ def get_problem_root(problem_id):
     if cached_root is None or not os.path.isfile(os.path.join(cached_root, 'init.yml')):
         for root_dir in get_problem_roots():
             problem_root_dir = os.path.join(root_dir, problem_id)
-            problem_init = os.path.join(problem_root_dir, 'init.yml')
-            if os.path.isfile(problem_init):
+            problem_config = os.path.join(problem_root_dir, 'init.yml')
+            if os.path.isfile(problem_config):
+                if problem_globs and not any(
+                    fnmatch(problem_config, os.path.join(problem_glob, 'init.yml')) for problem_glob in problem_globs
+                ):
+                    continue
                 _problem_root_cache[problem_id] = problem_root_dir
                 break
 
@@ -268,16 +273,15 @@ def get_problem_roots(warnings=False):
         return _problem_dirs_cache
 
     if problem_globs:
-        dirs = set()
+        dirs = []
+        dirs_set = set()
         for dir_glob in problem_globs:
             config_glob = os.path.join(dir_glob, 'init.yml')
-            dirs = dirs.union(
-                map(
-                    lambda x: os.path.split(os.path.dirname(x))[0],
-                    glob.iglob(config_glob, recursive=True),
-                )
-            )
-        dirs = list(dirs)
+            root_dirs = {os.path.dirname(os.path.dirname(x)) for x in glob.iglob(config_glob, recursive=True)}
+            for root_dir in root_dirs:
+                if root_dir not in dirs_set:
+                    dirs.append(root_dir)
+                    dirs_set.add(root_dir)
     else:
 
         def get_path(x, y):
@@ -347,13 +351,22 @@ def get_supported_problems_and_mtimes():
         A list of all problems in tuple format: (problem id, mtime)
     """
     problems = []
-    for dir in get_problem_roots():
-        if not os.path.isdir(dir):  # we do this check in case a problem root was deleted but persists in cache
-            continue
-        for problem in os.listdir(dir):
-            problem = utf8text(problem)
-            if os.access(os.path.join(dir, problem, 'init.yml'), os.R_OK):
-                problems.append((problem, os.path.getmtime(os.path.join(dir, problem))))
+    if problem_globs:
+        for dir_glob in problem_globs:
+            for problem_config in glob.iglob(os.path.join(dir_glob, 'init.yml')):
+                if os.access(problem_config, os.R_OK):
+                    problem_dir = os.path.dirname(problem_config)
+                    problem = utf8text(os.path.basename(problem_dir))
+                    problems.append((problem, os.path.getmtime(problem_dir)))
+
+    else:
+        for dir in get_problem_roots():
+            if not os.path.isdir(dir):  # we do this check in case a problem root was deleted but persists in cache
+                continue
+            for problem in os.listdir(dir):
+                problem = utf8text(problem)
+                if os.access(os.path.join(dir, problem, 'init.yml'), os.R_OK):
+                    problems.append((problem, os.path.getmtime(os.path.join(dir, problem))))
     return problems
 
 

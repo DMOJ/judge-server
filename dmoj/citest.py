@@ -1,3 +1,4 @@
+import glob
 import os
 import traceback
 from importlib import import_module
@@ -33,7 +34,7 @@ def ci_test(executors_to_test, overrides, allow_fail=frozenset()):
         try:
             if name in overrides:
                 if not overrides[name]:
-                    print_ansi('#ansi[Environment not found on Travis](red)')
+                    print_ansi('#ansi[Environment not found on CI](red)')
                     continue
                 print_ansi('#ansi[(manual config)](yellow)', end=' ')
                 data = executor.Executor.autoconfig_run_test(overrides[name])
@@ -90,7 +91,9 @@ def ci_test(executors_to_test, overrides, allow_fail=frozenset()):
     print()
     print()
     print('Running test cases...')
-    judgeenv.problem_dirs = [os.path.normpath(os.path.join(os.path.dirname(__file__), '..', 'testsuite'))]
+    judgeenv.problem_globs = [
+        os.path.normpath(os.path.join(glob.escape(os.path.dirname(__file__)), '..', 'testsuite', '*'))
+    ]
     tester = Tester()
     fails = tester.test_all()
     print()

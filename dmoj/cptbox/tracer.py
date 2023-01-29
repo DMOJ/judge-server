@@ -133,7 +133,7 @@ class TracedPopen(Process):
         self._cpu_time = time + 5 if time else 0
         self._memory = memory
         self._child_personality = personality
-        self._child_memory = memory * 1024 + data_grace * 1024
+        self._child_memory = memory * 1024 + data_grace * 1024 if memory else 0
         self._child_address = memory * 1024 + address_grace * 1024 if memory else 0
         self._nproc = nproc
         self._fsize = fsize

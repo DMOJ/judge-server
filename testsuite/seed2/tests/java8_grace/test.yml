@@ -1,0 +1,5 @@
+language: JAVA8
+time: 2
+memory: 1
+source: seed2.java
+expect: MLE

@@ -1,0 +1,6 @@
+output_limit_length: 16
+language: CPP11
+time: 2
+memory: 65536
+source: seed2.cpp
+expect: OLE

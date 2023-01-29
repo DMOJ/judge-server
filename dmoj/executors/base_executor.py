@@ -182,7 +182,7 @@ class BaseExecutor(metaclass=ExecutorMeta):
 
     def populate_result(self, stderr: bytes, result: Result, process: TracedPopen) -> None:
         # Translate status codes/process results into Result object for status codes
-        result.max_memory = process.max_memory or 0.0
+        result.max_memory = process.max_memory or 0
         result.execution_time = process.execution_time or 0.0
         result.wall_clock_time = process.wall_clock_time or 0.0
         result.context_switches = process.context_switches or (0, 0)

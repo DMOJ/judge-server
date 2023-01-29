@@ -3,7 +3,7 @@ import shlex
 import subprocess
 
 from dmoj.contrib import contrib_modules
-from dmoj.error import InternalError
+from dmoj.error import InternalError, OutputLimitExceeded
 from dmoj.graders.standard import StandardGrader
 from dmoj.judgeenv import env, get_problem_root
 from dmoj.utils.helper_files import compile_with_auxiliary_files, mktemp
@@ -20,11 +20,21 @@ class BridgedInteractiveGrader(StandardGrader):
         if self.contrib_type not in contrib_modules:
             raise InternalError('%s is not a valid contrib module' % self.contrib_type)
 
+    def _safe_read_stderr(self, proc):
+        stderr = proc.stderr.read(self._errlimit + 1)
+        if len(stderr) > self._errlimit:
+            raise OutputLimitExceeded
+        return stderr
+
     def check_result(self, case, result):
         # We parse the return code first in case the grader crashed, so it can raise the IE.
         # Usually a grader crash will result in IR/RTE/TLE,
         # so checking submission return code first will cover up the grader fail.
-        stderr = self._interactor.stderr.read()
+        try:
+            stderr = self._safe_read_stderr(self._interactor)
+        except OutputLimitExceeded:
+            raise InternalError('interactor output too much to stderr')
+
         parsed_result = contrib_modules[self.contrib_type].ContribModule.parse_return_code(
             self._interactor,
             self.interactor_binary,
@@ -54,6 +64,7 @@ class BridgedInteractiveGrader(StandardGrader):
         os.close(submission_stdout_pipe)
 
     def _interact_with_process(self, case, result, input):
+        process = self._current_proc
         judge_output = case.output_data()
         # Give TL + 2s by default, so we do not race (and incorrectly throw IE) if submission gets TLE
         self._interactor_time_limit = (self.handler_data.preprocessing_time or 2) + self.problem.time_limit
@@ -87,10 +98,15 @@ class BridgedInteractiveGrader(StandardGrader):
             os.close(self._interactor_stdin_pipe)
             os.close(self._interactor_stdout_pipe)
 
-            self._current_proc.wait()
+            process.wait()
             self._interactor.wait()
 
-            return self._current_proc.stderr.read()
+            try:
+                error = self._safe_read_stderr(process)
+            except OutputLimitExceeded:
+                process.mark_ole()
+                error = b''
+            return error
 
     def _generate_interactor_binary(self):
         files = self.handler_data.files

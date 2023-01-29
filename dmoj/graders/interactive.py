@@ -1,3 +1,4 @@
+from dmoj.error import OutputLimitExceeded
 from dmoj.graders.standard import StandardGrader
 from dmoj.result import CheckerResult
 from dmoj.utils.unicode import utf8bytes, utf8text
@@ -12,9 +13,25 @@ MAX_NUMBER_DIGITS = 10000
 
 
 class Interactor:
-    def __init__(self, process):
+    def __init__(self, process, result, outlimit):
         self.process = process
+        self.outlimit = outlimit
+        self._result = result
         self._tokens = None
+
+    def _safe_read(self, read):
+        ret = read(self.outlimit + 1)
+        self._result.proc_output += ret
+
+        if len(self._result.proc_output) > self.outlimit:
+            self._result.proc_output = b''  # the output is wrong, so trim it preemptively
+            self.process.mark_ole()
+            raise OutputLimitExceeded('stdout')
+
+        if ret == EOF:
+            raise IOError('child stream closed')
+
+        return ret
 
     def _abbreviate(self, s, n=5):
         s = utf8text(s)
@@ -23,15 +40,10 @@ class Interactor:
         return s
 
     def read(self):
-        ret = self.process.stdout.read()
-        if ret == EOF:
-            raise IOError('child stream closed')
-        return ret
+        return self._safe_read(self.process.stdout.read)
 
     def readln(self, strip_newline=True):
-        ret = self.process.stdout.readline()
-        if ret == EOF:
-            raise IOError('child stream closed')
+        ret = self._safe_read(self.process.stdout.readline)
         if strip_newline:
             ret = ret.rstrip()
         return ret
@@ -92,7 +104,8 @@ class Interactor:
 
 class InteractiveGrader(StandardGrader):
     def _interact_with_process(self, case, result, input):
-        interactor = Interactor(self._current_proc)
+        process = self._current_proc
+        interactor = Interactor(process, result, outlimit=case.config.output_limit_length)
         self.check = False
         self.feedback = None
         try:
@@ -100,11 +113,18 @@ class InteractiveGrader(StandardGrader):
             interactor.close()
         except WrongAnswer as wa:
             self.feedback = str(wa)
+        except OutputLimitExceeded:
+            process.kill()
+            error = b''
         except IOError:
             pass
 
-        self._current_proc.wait()
-        return self._current_proc.stderr.read()
+        process.wait()
+        error = process.stderr.read(self._errlimit + 1)
+        if len(error) > self._errlimit:
+            process.mark_ole()
+            error = b''
+        return error
 
     def check_result(self, case, result):
         if result.result_flag:

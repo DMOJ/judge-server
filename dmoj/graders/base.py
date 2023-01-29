@@ -14,6 +14,7 @@ class BaseGrader:
         self._current_proc = None
         self._batch_counter = 0
         self._testcase_counter = 0
+        self._errlimit = 1048576
 
     def grade(self, case):
         raise NotImplementedError

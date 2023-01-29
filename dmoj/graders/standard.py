@@ -90,7 +90,7 @@ class StandardGrader(BaseGrader):
         process = self._current_proc
         try:
             result.proc_output, error = process.communicate(
-                input, outlimit=case.config.output_limit_length, errlimit=1048576
+                input, outlimit=case.config.output_limit_length, errlimit=self._errlimit
             )
         except OutputLimitExceeded:
             error = b''

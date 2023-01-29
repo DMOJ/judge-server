@@ -55,6 +55,8 @@ class TestConfigGlobs(unittest.TestCase):
             )
         )
 
+        self.supported_problems = ['p1', 'p1', 'p4', 'p5', 'p6']
+
         problem_globs = list(
             map(
                 str,
@@ -88,6 +90,11 @@ class TestConfigGlobs(unittest.TestCase):
 
             for problem in ex_cases:
                 self.assertRaises(KeyError, judgeenv.get_problem_root, problem)
+
+    def test_supported_problems(self):
+        with self.mock_problem_roots:
+            supported_problems = judgeenv.get_supported_problems()
+            self.assertEqual(list(sorted(self.supported_problems)), list(sorted(supported_problems)))
 
     def tearDown(self):
         self.root.cleanup()

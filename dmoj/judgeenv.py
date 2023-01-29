@@ -353,7 +353,7 @@ def get_supported_problems_and_mtimes():
     problems = []
     if problem_globs:
         for dir_glob in problem_globs:
-            for problem_config in glob.iglob(os.path.join(dir_glob, 'init.yml')):
+            for problem_config in glob.iglob(os.path.join(dir_glob, 'init.yml'), recursive=True):
                 if os.access(problem_config, os.R_OK):
                     problem_dir = os.path.dirname(problem_config)
                     problem = utf8text(os.path.basename(problem_dir))

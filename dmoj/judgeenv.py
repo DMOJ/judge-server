@@ -11,6 +11,7 @@ import yaml
 
 from dmoj.config import ConfigNode
 from dmoj.utils import pyyaml_patch  # noqa: F401, imported for side effect
+from dmoj.utils.ansi import print_ansi
 from dmoj.utils.unicode import utf8text
 
 problem_globs = ()
@@ -280,24 +281,34 @@ def get_problem_watches():
     return problem_watches
 
 
-def get_supported_problems_and_mtimes():
+def get_supported_problems_and_mtimes(warnings=True):
     """
     Fetches a list of all problems supported by this judge and their mtimes.
     :return:
         A list of all problems in tuple format: (problem id, mtime)
     """
     problems = []
+    problem_dirs = {}
     for dir_glob in problem_globs:
         for problem_config in glob.iglob(os.path.join(dir_glob, 'init.yml'), recursive=True):
             if os.access(problem_config, os.R_OK):
                 problem_dir = os.path.dirname(problem_config)
                 problem = utf8text(os.path.basename(problem_dir))
-                problems.append((problem, os.path.getmtime(problem_dir)))
+
+                if problem in problem_dirs:
+                    if warnings:
+                        print_ansi(
+                            f'#ansi[Warning: duplicate problem {problem} found at {problem_dir},'
+                            f' ignoring in favour of {problem_dirs[problem]}](yellow)'
+                        )
+                else:
+                    problem_dirs[problem] = problem_dir
+                    problems.append((problem, os.path.getmtime(problem_dir)))
     return problems
 
 
-def get_supported_problems():
-    return map(itemgetter(0), get_supported_problems_and_mtimes())
+def get_supported_problems(warnings=True):
+    return map(itemgetter(0), get_supported_problems_and_mtimes(warnings=warnings))
 
 
 def get_runtime_versions():

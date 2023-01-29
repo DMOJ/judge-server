@@ -1,0 +1,6 @@
+language: JAVA8
+time: 2
+memory: 65536
+source: seed2.java
+expect: IR
+feedback: java.lang.ArrayIndexOutOfBoundsException

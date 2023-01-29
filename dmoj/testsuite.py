@@ -266,7 +266,7 @@ class Tester:
         )
 
         def output_case(data):
-            self.output('\t\t' + data.strip())
+            self.output('\t\t' + data)
 
         fails = 0
         for source in sources:

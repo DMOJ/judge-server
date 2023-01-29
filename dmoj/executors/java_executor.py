@@ -14,6 +14,7 @@ from dmoj.error import CompileError, InternalError
 from dmoj.executors.compiled_executor import CompiledExecutor
 from dmoj.executors.mixins import SingleDigitVersionMixin
 from dmoj.judgeenv import skip_self_test
+from dmoj.result import Result
 from dmoj.utils.unicode import utf8bytes, utf8text
 
 recomment = re.compile(r'/\*.*?\*/', re.DOTALL | re.U)
@@ -127,6 +128,13 @@ class JavaExecutor(SingleDigitVersionMixin, CompiledExecutor):
     def launch(self, *args, **kwargs) -> TracedPopen:
         kwargs['orig_memory'], kwargs['memory'] = kwargs['memory'], 0
         return super().launch(*args, **kwargs)
+
+    def populate_result(self, stderr: bytes, result: Result, process: TracedPopen) -> None:
+        super().populate_result(stderr, result, process)
+        if process.is_ir:
+            if b'Too small maximum heap' in result.proc_output or result.feedback == 'java.lang.OutOfMemoryError':
+                result.feedback = ''
+                result.result_flag |= Result.MLE
 
     def parse_feedback_from_stderr(self, stderr: bytes, process: TracedPopen) -> str:
         if process.returncode:

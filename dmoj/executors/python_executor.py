@@ -25,6 +25,7 @@ del sys.argv[0]
 runpy.run_path(sys.argv[0], run_name='__main__')
 """
     address_grace = 131072
+    data_grace = 2048
     ext = 'py'
 
     def get_compile_args(self) -> List[str]:

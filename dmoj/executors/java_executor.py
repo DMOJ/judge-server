@@ -121,6 +121,7 @@ class JavaExecutor(SingleDigitVersionMixin, CompiledExecutor):
             '-Xss128m',
             f'-Xmx{kwargs["orig_memory"]}K',
             '-XX:+UseSerialGC',
+            '-XX:+DisplayVMOutputToStderr',  # print the failed VM initialization errors to stderr
             '-XX:ErrorFile=submission_jvm_crash.log',
             self._class_name or '',
         ]
@@ -132,7 +133,12 @@ class JavaExecutor(SingleDigitVersionMixin, CompiledExecutor):
     def populate_result(self, stderr: bytes, result: Result, process: TracedPopen) -> None:
         super().populate_result(stderr, result, process)
         if process.is_ir:
-            if b'Too small maximum heap' in result.proc_output or result.feedback == 'java.lang.OutOfMemoryError':
+            failed_init_errors = [
+                b'Too small maximum heap',
+                b'Too small initial heap',
+                b'GC triggered before VM initialization completed',
+            ]
+            if any(error in stderr for error in failed_init_errors) or result.feedback == 'java.lang.OutOfMemoryError':
                 result.feedback = ''
                 result.result_flag |= Result.MLE
 

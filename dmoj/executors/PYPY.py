@@ -5,7 +5,11 @@ from dmoj.executors.python_executor import PythonExecutor
 
 class Executor(PythonExecutor):
     command = 'pypy'
-    test_program = "print __import__('sys').stdin.read()"
+    test_program = """
+import sys
+if sys.version_info.major == 2:
+    print sys.stdin.read()
+"""
     _pypy_versions: List[Tuple[int, ...]]
 
     @classmethod

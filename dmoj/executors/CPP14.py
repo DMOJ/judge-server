@@ -12,8 +12,10 @@ auto input() {
     return std::cin.rdbuf();
 }
 
+#if __cplusplus == 201402
 int main() {
     std::cout << input();
     return 0;
 }
+#endif
 """

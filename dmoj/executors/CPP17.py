@@ -8,10 +8,12 @@ class Executor(CPPExecutor):
     test_program = """
 #include <iostream>
 
+#if __cplusplus == 201703
 int main() {
     float literal = 0x3.ABCp-10;
     auto input = std::cin.rdbuf();
     std::cout << input;
     return 0;
 }
+#endif
 """

@@ -134,3 +134,11 @@ class GCCExecutor(SingleDigitVersionMixin, CompiledExecutor):
             versions = cls.get_runtime_versions()
             cls.has_color = versions is not None and versions[0][1] is not None and versions[0][1] > (4, 9)
         return res
+
+
+class CPPExecutor(GCCExecutor):
+    std: str
+    ext: str = 'cpp'
+
+    def get_flags(self):
+        return ([f'-std={self.std}']) + super().get_flags()

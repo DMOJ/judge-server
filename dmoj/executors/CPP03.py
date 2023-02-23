@@ -1,10 +1,9 @@
-from .gcc_executor import GCCExecutor
+from .gcc_executor import CPPExecutor
 
 
-class Executor(GCCExecutor):
+class Executor(CPPExecutor):
     command = 'g++'
-    std: str = 'c++03'
-    ext = 'cpp'
+    std = 'c++03'
     test_program = """
 #include <iostream>
 
@@ -15,6 +14,3 @@ int main() {
 }
 #endif
 """
-
-    def get_flags(self):
-        return ([f'-std={self.std}']) + super().get_flags()

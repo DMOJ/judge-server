@@ -1,4 +1,4 @@
-from dmoj.executors.CPP03 import Executor as CPPExecutor
+from dmoj.executors.gcc_executor import CPPExecutor
 
 
 class Executor(CPPExecutor):

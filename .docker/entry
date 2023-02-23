@@ -20,4 +20,4 @@ esac
 
 shift
 . ~judge/.profile
-runuser -u judge "${command[@]}" -- "$@"
+exec runuser -u judge "${command[@]}" -- "$@"

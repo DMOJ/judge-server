@@ -3,7 +3,7 @@ import shlex
 import subprocess
 
 from dmoj.contrib import contrib_modules
-from dmoj.error import InternalError
+from dmoj.error import CompileError, InternalError
 from dmoj.graders.standard import StandardGrader
 from dmoj.judgeenv import env, get_problem_root
 from dmoj.utils.helper_files import compile_with_auxiliary_files, mktemp
@@ -14,9 +14,14 @@ class BridgedInteractiveGrader(StandardGrader):
     def __init__(self, judge, problem, language, source):
         super().__init__(judge, problem, language, source)
         self.handler_data = self.problem.config.interactive
-        self.interactor_binary = self._generate_interactor_binary()
-        self.contrib_type = self.handler_data.get('type', 'default')
 
+        try:
+            self.interactor_binary = self._generate_interactor_binary()
+        except CompileError as compilation_error:
+            # Rethrow as IE to differentiate from the user's submission failing to compile.
+            raise InternalError('interactor failed compiling') from compilation_error
+
+        self.contrib_type = self.handler_data.get('type', 'default')
         if self.contrib_type not in contrib_modules:
             raise InternalError('%s is not a valid contrib module' % self.contrib_type)
 

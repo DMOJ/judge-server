@@ -6,12 +6,12 @@ export LANG=C.UTF-8
 export PYTHONIOENCODING=utf8
 
 cd /judge || exit
-pip3 install -q -e .
+/env/bin/pip3 install -q -e .
 
 case "$1" in
-run) command=(dmoj) ;;
-cli) command=(dmoj-cli) ;;
-test) command=(python3 -- -m dmoj.testsuite testsuite) ;;
+run) command=(/env/bin/dmoj) ;;
+cli) command=(/env/bin/dmoj-cli) ;;
+test) command=(/env/bin/python3 -- -m dmoj.testsuite testsuite) ;;
 *)
   echo "Invalid command, must be one of [run, cli, test]" 1>&2
   exit 1

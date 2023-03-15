@@ -7,6 +7,7 @@ from dmoj.cptbox import TracedPopen
 from dmoj.executors.compiled_executor import CompiledExecutor
 from dmoj.executors.mixins import SingleDigitVersionMixin
 from dmoj.judgeenv import env
+from dmoj.utils.cpp_demangle import demangle
 from dmoj.utils.unicode import utf8bytes, utf8text
 
 GCC_ENV = env.runtime.gcc_env or {}
@@ -88,7 +89,10 @@ class GCCExecutor(SingleDigitVersionMixin, CompiledExecutor):
         if not match:
             return ''
         exception = match[0].group(1)
-        return '' if len(exception) > 40 else utf8text(exception, 'replace')
+        # We call `demangle` because if the child process exits by running out of memory,
+        # __cxa_demangle will fail to allocate memory to demangle the name, resulting in errors
+        # like `St9bad_alloc`, the mangled form of the name.
+        return '' if len(exception) > 40 else utf8text(demangle(exception), 'replace')
 
     @classmethod
     def get_march_flag(cls) -> str:

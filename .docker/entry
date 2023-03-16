@@ -11,7 +11,7 @@ cd /judge || exit
 case "$1" in
 run) command=(/env/bin/dmoj) ;;
 cli) command=(/env/bin/dmoj-cli) ;;
-test) command=(/env/bin/python3 -- -m dmoj.testsuite testsuite) ;;
+test) command=(/env/bin/python3 -m dmoj.testsuite testsuite) ;;
 *)
   echo "Invalid command, must be one of [run, cli, test]" 1>&2
   exit 1
@@ -19,5 +19,6 @@ test) command=(/env/bin/python3 -- -m dmoj.testsuite testsuite) ;;
 esac
 
 shift
+export HOME=~judge
 . ~judge/.profile
-exec runuser -u judge "${command[@]}" -- "$@"
+exec setpriv --reuid judge --regid judge --clear-groups "${command[@]}" "$@"

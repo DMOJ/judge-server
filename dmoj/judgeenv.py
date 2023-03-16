@@ -186,9 +186,13 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
 
     if getattr(args, 'judge_name', None):
         env['id'] = args.judge_name
+    elif 'DMOJ_JUDGE_NAME' in os.environ:
+        env['id'] = os.environ['DMOJ_JUDGE_NAME']
 
     if getattr(args, 'judge_key', None):
         env['key'] = args.judge_key
+    elif 'DMOJ_JUDGE_KEY' in os.environ:
+        env['key'] = os.environ['DMOJ_JUDGE_KEY']
 
     if env.problem_storage_globs:
         problem_globs = env.problem_storage_globs

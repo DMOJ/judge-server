@@ -299,7 +299,7 @@ class PacketManager:
                 log.error('Handshake failed.')
                 raise JudgeAuthenticationFailed()
 
-    def supported_problems_packet(self, problems: List[Tuple[str, int]]):
+    def supported_problems_packet(self, problems: List[Tuple[str, float]]):
         log.debug('Update problems')
         self._send_packet({'name': 'supported-problems', 'problems': problems})
 

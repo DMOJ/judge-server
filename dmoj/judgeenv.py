@@ -5,7 +5,7 @@ import os
 import ssl
 from fnmatch import fnmatch
 from operator import itemgetter
-from typing import Dict, List, Set
+from typing import Dict, Iterable, List, Optional, Set, Tuple
 
 import yaml
 
@@ -14,9 +14,9 @@ from dmoj.utils import pyyaml_patch  # noqa: F401, imported for side effect
 from dmoj.utils.ansi import print_ansi
 from dmoj.utils.unicode import utf8text
 
-problem_globs = ()
-problem_watches = ()
-env = ConfigNode(
+problem_globs: List[str] = []
+problem_watches: List[str] = []
+env: ConfigNode = ConfigNode(
     defaults={
         'selftest_time_limit': 10,  # 10 seconds
         'selftest_memory_limit': 131072,  # 128mb of RAM
@@ -55,11 +55,12 @@ env = ConfigNode(
     },
     dynamic=False,
 )
-_root = os.path.dirname(__file__)
+_root: str = os.path.dirname(__file__)
 
 log_file = server_host = server_port = no_ansi = skip_self_test = no_watchdog = problem_regex = case_regex = None
 cli_history_file = cert_store = api_listen = None
-secure = no_cert_check = False
+secure: bool = False
+no_cert_check: bool = False
 log_level = logging.DEBUG
 
 startup_warnings: List[str] = []
@@ -69,7 +70,7 @@ only_executors: Set[str] = set()
 exclude_executors: Set[str] = set()
 
 
-def load_env(cli=False, testsuite=False):  # pragma: no cover
+def load_env(cli: bool = False, testsuite: bool = False) -> None:  # pragma: no cover
     global problem_globs, only_executors, exclude_executors, log_file, server_host, server_port, no_ansi, no_ansi_emu, skip_self_test, env, startup_warnings, no_watchdog, problem_regex, case_regex, api_listen, secure, no_cert_check, cert_store, problem_watches, cli_history_file, cli_command, log_level
 
     if cli:
@@ -227,7 +228,7 @@ def load_env(cli=False, testsuite=False):  # pragma: no cover
 _problem_root_cache: Dict[str, str] = {}
 
 
-def get_problem_root(problem_id):
+def get_problem_root(problem_id) -> Optional[str]:
     cached_root = _problem_root_cache.get(problem_id)
     if cached_root is None or not os.path.isfile(os.path.join(cached_root, 'init.yml')):
         for root_dir in get_problem_roots():
@@ -240,14 +241,16 @@ def get_problem_root(problem_id):
                     continue
                 _problem_root_cache[problem_id] = problem_root_dir
                 break
+        else:
+            return None
 
     return _problem_root_cache[problem_id]
 
 
-_problem_dirs_cache = None
+_problem_dirs_cache: Optional[List[str]] = None
 
 
-def get_problem_roots(warnings=False):
+def get_problem_roots(warnings: bool = False) -> List[str]:
     global _problem_dirs_cache
 
     if _problem_dirs_cache is not None:
@@ -276,23 +279,23 @@ def get_problem_roots(warnings=False):
     return cleaned_dirs
 
 
-def clear_problem_dirs_cache():
+def clear_problem_dirs_cache() -> None:
     global _problem_dirs_cache
     _problem_dirs_cache = None
 
 
-def get_problem_watches():
+def get_problem_watches() -> List[str]:
     return problem_watches
 
 
-def get_supported_problems_and_mtimes(warnings=True):
+def get_supported_problems_and_mtimes(warnings: bool = True) -> List[Tuple[str, float]]:
     """
     Fetches a list of all problems supported by this judge and their mtimes.
     :return:
         A list of all problems in tuple format: (problem id, mtime)
     """
     problems = []
-    problem_dirs = {}
+    problem_dirs: Dict[str, str] = {}
     for dir_glob in problem_globs:
         for problem_config in glob.iglob(os.path.join(dir_glob, 'init.yml'), recursive=True):
             if os.access(problem_config, os.R_OK):
@@ -311,7 +314,7 @@ def get_supported_problems_and_mtimes(warnings=True):
     return problems
 
 
-def get_supported_problems(warnings=True):
+def get_supported_problems(warnings: bool = True) -> Iterable[str]:
     return map(itemgetter(0), get_supported_problems_and_mtimes(warnings=warnings))
 
 

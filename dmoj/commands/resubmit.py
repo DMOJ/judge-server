@@ -32,7 +32,7 @@ class ResubmitCommand(Command):
         tl = args.time_limit or tl
         ml = args.memory_limit or ml
 
-        if id not in judgeenv.get_supported_problems():
+        if problem_id not in judgeenv.get_supported_problems():
             raise InvalidCommandException(f"unknown problem '{problem_id}'")
         elif lang not in executors:
             raise InvalidCommandException(f"unknown language '{lang}'")

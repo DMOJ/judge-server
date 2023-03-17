@@ -3,6 +3,7 @@ from typing import List, Type
 from dmoj.commands.base_command import Command, commands, register_command
 from dmoj.commands.diff import DifferenceCommand
 from dmoj.commands.help import HelpCommand
+from dmoj.commands.locate import LocateCommand
 from dmoj.commands.problems import ListProblemsCommand
 from dmoj.commands.quit import QuitCommand
 from dmoj.commands.rejudge import RejudgeCommand
@@ -21,6 +22,7 @@ all_commands: List[Type[Command]] = [
     DifferenceCommand,
     TestCommand,
     ShowCommand,
+    LocateCommand,
     HelpCommand,
     QuitCommand,
 ]

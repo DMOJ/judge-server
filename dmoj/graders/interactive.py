@@ -1,4 +1,4 @@
-from dmoj.graders.standard import StandardGrader
+from dmoj.graders.standard import Grader as StandardGrader
 from dmoj.result import CheckerResult
 from dmoj.utils.unicode import utf8bytes, utf8text
 
@@ -90,7 +90,7 @@ class Interactor:
         self.process.stdin.close()
 
 
-class InteractiveGrader(StandardGrader):
+class Grader(StandardGrader):
     def _interact_with_process(self, case, result, input):
         interactor = Interactor(self._current_proc)
         self.check = False
@@ -118,3 +118,6 @@ class InteractiveGrader(StandardGrader):
 
     def interact(self, case, interactor):
         raise NotImplementedError
+
+
+InteractiveGrader = Grader  # backwards compatibility

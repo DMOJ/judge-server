@@ -9,7 +9,7 @@ from dmoj.result import CheckerResult, Result
 log = logging.getLogger('dmoj.graders')
 
 
-class StandardGrader(BaseGrader):
+class Grader(BaseGrader):
     def grade(self, case):
         result = Result(case)
 
@@ -106,3 +106,6 @@ class StandardGrader(BaseGrader):
             hints=self.problem.config.hints or [],
             unbuffered=self.problem.config.unbuffered,
         )
+
+
+StandardGrader = Grader  # backwards compatibility

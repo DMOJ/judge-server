@@ -2,11 +2,11 @@ import uuid
 
 from dmoj.error import InternalError
 from dmoj.executors import executors
-from dmoj.graders.standard import StandardGrader
+from dmoj.graders.standard import Grader as StandardGrader
 from dmoj.utils.unicode import utf8bytes
 
 
-class SignatureGrader(StandardGrader):
+class Grader(StandardGrader):
     def _generate_binary(self):
         siggraders = ('C', 'C11', 'CPP03', 'CPP11', 'CPP14', 'CPP17', 'CPP20', 'CLANG', 'CLANGX')
 
@@ -30,3 +30,6 @@ class SignatureGrader(StandardGrader):
             )
         else:
             raise InternalError('no valid runtime for signature grading %s found' % self.language)
+
+
+SignatureGrader = Grader  # backwards compatibility

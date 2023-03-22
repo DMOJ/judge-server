@@ -4,13 +4,13 @@ import subprocess
 
 from dmoj.contrib import contrib_modules
 from dmoj.error import CompileError, InternalError
-from dmoj.graders.standard import StandardGrader
+from dmoj.graders.standard import Grader as StandardGrader
 from dmoj.judgeenv import env, get_problem_root
 from dmoj.utils.helper_files import compile_with_auxiliary_files, mktemp
 from dmoj.utils.unicode import utf8text
 
 
-class BridgedInteractiveGrader(StandardGrader):
+class Grader(StandardGrader):
     def __init__(self, judge, problem, language, source):
         super().__init__(judge, problem, language, source)
         self.handler_data = self.problem.config.interactive
@@ -109,3 +109,6 @@ class BridgedInteractiveGrader(StandardGrader):
         return compile_with_auxiliary_files(
             filenames, flags, self.handler_data.lang, self.handler_data.compiler_time_limit, unbuffered
         )
+
+
+BridgedInteractiveGrader = Grader  # backwards compatibility

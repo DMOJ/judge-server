@@ -1,0 +1,3 @@
+custom_judge: standard.py
+test_cases:
+- points: 100

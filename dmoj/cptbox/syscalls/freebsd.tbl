@@ -134,6 +134,7 @@
 136	mkdir
 137	rmdir
 138	utimes
+139	sigreturn
 140	adjtime
 141	getpeername
 142	gethostid
@@ -512,3 +513,4 @@
 580	fspacectl
 581	sched_getcpu
 582	swapoff
+583	kqueuex

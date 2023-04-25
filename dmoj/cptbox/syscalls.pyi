@@ -301,6 +301,7 @@ sys_kmq_timedreceive: int
 sys_kmq_timedsend: int
 sys_kmq_unlink: int
 sys_kqueue: int
+sys_kqueuex: int
 sys_kse_create: int
 sys_kse_exit: int
 sys_kse_release: int

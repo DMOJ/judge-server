@@ -52,6 +52,7 @@ sys_bindat: int
 sys_bpf: int
 sys_break: int
 sys_brk: int
+sys_cachestat: int
 sys_cap_enter: int
 sys_cap_fcntls_get: int
 sys_cap_fcntls_limit: int

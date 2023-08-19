@@ -152,6 +152,9 @@ cdef int pt_child(void *context) noexcept nogil:
 
 cdef int pt_syscall_handler(void *context, int syscall) noexcept nogil:
     return (<Process>context)._syscall_handler(syscall)
+    # Note that upon exception, this function is guaranteed to return due to noexcept.
+    # Cython will swallow any exception raised and print to stderr, then make this function return 0,
+    # which means to deny syscall.
 
 cdef void pt_syscall_return_handler(void *context, pid_t pid, int syscall) noexcept with gil:
     (<Debugger>context)._on_return(pid, syscall)

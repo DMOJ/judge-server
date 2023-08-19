@@ -146,17 +146,17 @@ cdef extern from "errno.h":
 
 MAX_SYSCALL_NUMBER = MAX_SYSCALL
 
-cdef int pt_child(void *context) nogil:
+cdef int pt_child(void *context) noexcept nogil:
     cdef child_config *config = <child_config*> context
     return cptbox_child_run(config)
 
-cdef int pt_syscall_handler(void *context, int syscall) nogil:
+cdef int pt_syscall_handler(void *context, int syscall) noexcept nogil:
     return (<Process>context)._syscall_handler(syscall)
 
-cdef void pt_syscall_return_handler(void *context, pid_t pid, int syscall) with gil:
+cdef void pt_syscall_return_handler(void *context, pid_t pid, int syscall) noexcept with gil:
     (<Debugger>context)._on_return(pid, syscall)
 
-cdef int pt_event_handler(void *context, int event, unsigned long param) nogil:
+cdef int pt_event_handler(void *context, int event, unsigned long param) noexcept nogil:
     return (<Process>context)._event_handler(event, param)
 
 cdef char **alloc_byte_array(list list) except NULL:

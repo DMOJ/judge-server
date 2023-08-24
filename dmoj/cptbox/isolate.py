@@ -136,6 +136,7 @@ class IsolateTracer(dict):
                 sys_getuid: ALLOW,
                 sys_getegid: ALLOW,
                 sys_getgid: ALLOW,
+                sys_setfsgid: ACCESS_EPERM,
                 sys_setfsuid: ACCESS_EPERM,
                 sys_getdents: ALLOW,
                 sys_lseek: ALLOW,

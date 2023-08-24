@@ -514,3 +514,4 @@
 581	sched_getcpu
 582	swapoff
 583	kqueuex
+584	membarrier

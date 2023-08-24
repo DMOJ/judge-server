@@ -20,8 +20,8 @@ class Executor(CompiledExecutor):
     data_grace = 98304  # Go uses data segment for heap arena map
     address_grace = 786432
     command = 'go'
-    syscalls = ['copy_file_range', 'mincore', 'pselect6', 'mlock', 'setrlimit']
-    compiler_syscalls = ['setrlimit']
+    syscalls = ['mincore', 'pselect6', 'mlock', 'setrlimit']
+    compiler_syscalls = ['copy_file_range', 'setrlimit']
     fs = [
         # Go will start without THP information, but has some tuning for when
         # it is available -- so let's allow it to tell.

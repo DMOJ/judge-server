@@ -149,6 +149,7 @@ sys_fchdir: int
 sys_fchflags: int
 sys_fchmod: int
 sys_fchmodat: int
+sys_fchmodat2: int
 sys_fchown: int
 sys_fchown32: int
 sys_fchownat: int
@@ -366,6 +367,7 @@ sys_mac_set_link: int
 sys_mac_set_proc: int
 sys_mac_syscall: int
 sys_madvise: int
+sys_map_shadow_stack: int
 sys_mbind: int
 sys_membarrier: int
 sys_memfd_create: int

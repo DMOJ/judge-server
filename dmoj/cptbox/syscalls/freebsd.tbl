@@ -515,3 +515,6 @@
 582	swapoff
 583	kqueuex
 584	membarrier
+585	timerfd_create
+586	timerfd_gettime
+587	timerfd_settime

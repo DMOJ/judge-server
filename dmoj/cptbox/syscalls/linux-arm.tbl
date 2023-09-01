@@ -441,3 +441,4 @@
 449	futex_waitv
 450	set_mempolicy_home_node
 451	cachestat
+452	fchmodat2

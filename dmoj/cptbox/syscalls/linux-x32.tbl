@@ -314,6 +314,7 @@
 449	futex_waitv
 450	set_mempolicy_home_node
 451	cachestat
+452	fchmodat2
 512	rt_sigaction
 513	rt_sigreturn
 514	ioctl

@@ -10,6 +10,7 @@ class Executor(NullStdoutMixin, CompiledExecutor):
         RecursiveDir('/proc/self/task'),
         RecursiveDir('/var/lib/ghc'),
     ]
+    syscalls = ['timerfd_settime']
 
     test_program = """\
 main = do

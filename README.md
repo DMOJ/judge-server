@@ -67,6 +67,7 @@ The judge can also grade in the languages listed below:
 * Groovy
 * Haskell
 * INTERCAL
+* JavaScript (Node.js and V8)
 * Kotlin
 * Lean 4
 * LLVM IR

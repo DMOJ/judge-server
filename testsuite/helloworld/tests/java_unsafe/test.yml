@@ -1,0 +1,6 @@
+language: JAVA8
+time: 5
+memory: 65535
+source: HelloWorld.java
+expect: IR
+feedback: ca.dmoj.java.UnsafeDisallowedException

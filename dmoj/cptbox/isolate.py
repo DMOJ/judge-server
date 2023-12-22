@@ -44,6 +44,8 @@ DirFDGetter = Callable[[Debugger], int]
 class IsolateTracer(dict):
     def __init__(self, *, read_fs: Sequence[FilesystemAccessRule], write_fs: Sequence[FilesystemAccessRule]):
         super().__init__()
+        self.read_fs = read_fs
+        self.write_fs = write_fs
         self.read_fs_jail = self._compile_fs_jail(read_fs)
         self.write_fs_jail = self._compile_fs_jail(write_fs)
 

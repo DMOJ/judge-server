@@ -7,12 +7,18 @@ import yaml
 
 from dmoj import judgeenv
 from dmoj.contrib import load_contrib_modules
+from dmoj.cptbox import has_landlock
 from dmoj.executors import executors
 from dmoj.testsuite import Tester
 from dmoj.utils.ansi import print_ansi
 
 
 def ci_test(executors_to_test, overrides, allow_fail=frozenset()):
+    if has_landlock():
+        print('Running CI with landlock and seccomp...')
+    else:
+        print('Running CI with just seccomp...')
+
     result = {}
     failed = False
     failed_executors = []

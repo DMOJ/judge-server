@@ -9,12 +9,12 @@ from libcpp cimport bool
 from posix.resource cimport rusage
 from posix.types cimport pid_t
 
-__all__ = ['Process', 'Debugger', 'bsd_get_proc_cwd', 'bsd_get_proc_fdno', 'MAX_SYSCALL_NUMBER',
+__all__ = ['Process', 'Debugger', 'bsd_get_proc_cwd', 'bsd_get_proc_fdno', 'has_landlock', 'landlock_version', 'MAX_SYSCALL_NUMBER',
            'AT_FDCWD', 'ALL_ABIS', 'SUPPORTED_ABIS', 'NATIVE_ABI',
            'PTBOX_ABI_X86', 'PTBOX_ABI_X64', 'PTBOX_ABI_X32', 'PTBOX_ABI_ARM', 'PTBOX_ABI_ARM64',
            'PTBOX_ABI_FREEBSD_X64', 'PTBOX_ABI_INVALID', 'PTBOX_ABI_COUNT',
            'PTBOX_SPAWN_FAIL_NO_NEW_PRIVS', 'PTBOX_SPAWN_FAIL_SECCOMP', 'PTBOX_SPAWN_FAIL_TRACEME',
-           'PTBOX_SPAWN_FAIL_EXECVE', 'PTBOX_SPAWN_FAIL_SETAFFINITY']
+           'PTBOX_SPAWN_FAIL_EXECVE', 'PTBOX_SPAWN_FAIL_SETAFFINITY', 'PTBOX_SPAWN_FAIL_LANDLOCK']
 
 
 cdef extern from 'ptbox.h' nogil:
@@ -121,6 +121,14 @@ cdef extern from 'helper.h' nogil:
         int *seccomp_handlers
         unsigned long cpu_affinity_mask
 
+        const char **landlock_read_exact_files
+        const char **landlock_read_exact_dirs
+        const char **landlock_read_recursive_dirs
+        const char **landlock_write_exact_files
+        const char **landlock_write_exact_dirs
+        const char **landlock_write_recursive_dirs
+
+    int get_landlock_version()
     void cptbox_closefrom(int lowfd)
     int cptbox_child_run(child_config *)
     char *_bsd_get_proc_cwd "bsd_get_proc_cwd"(pid_t pid)
@@ -132,6 +140,7 @@ cdef extern from 'helper.h' nogil:
         PTBOX_SPAWN_FAIL_TRACEME
         PTBOX_SPAWN_FAIL_EXECVE
         PTBOX_SPAWN_FAIL_SETAFFINITY
+        PTBOX_SPAWN_FAIL_LANDLOCK
 
     int _memory_fd_create "memory_fd_create"()
     int _memory_fd_seal "memory_fd_seal"(int fd)
@@ -224,6 +233,16 @@ def memory_fd_seal(int fd):
     cdef int result = _memory_fd_seal(fd)
     if result == -1:
         PyErr_SetFromErrno(OSError)
+
+def landlock_version():
+    cdef int version = get_landlock_version()
+    if version == -1:
+        PyErr_SetFromErrno(OSError)
+    return version
+
+def has_landlock():
+    # ABI 2 is the minimum acceptable version for us.
+    return landlock_version() >= 2
 
 cdef class Process
 
@@ -494,6 +513,12 @@ cdef class Process:
         config.argv = NULL
         config.envp = NULL
         config.seccomp_handlers = NULL
+        config.landlock_read_exact_files = NULL
+        config.landlock_read_exact_dirs = NULL
+        config.landlock_read_recursive_dirs = NULL
+        config.landlock_write_exact_files = NULL
+        config.landlock_write_exact_dirs = NULL
+        config.landlock_write_recursive_dirs = NULL
 
         try:
             config.address_space = self._child_address
@@ -522,12 +547,25 @@ cdef class Process:
                 for i in range(MAX_SYSCALL):
                     config.seccomp_handlers[i] = handlers[i]
 
+            config.landlock_read_exact_files = <const char**>alloc_byte_array(self.landlock_read_exact_files)
+            config.landlock_read_exact_dirs = <const char**>alloc_byte_array(self.landlock_read_exact_dirs)
+            config.landlock_read_recursive_dirs = <const char**>alloc_byte_array(self.landlock_read_recursive_dirs)
+            config.landlock_write_exact_files = <const char**>alloc_byte_array(self.landlock_write_exact_files)
+            config.landlock_write_exact_dirs = <const char**>alloc_byte_array(self.landlock_write_exact_dirs)
+            config.landlock_write_recursive_dirs = <const char**>alloc_byte_array(self.landlock_write_recursive_dirs)
+
             if self.process.spawn(pt_child, &config):
                 raise RuntimeError('failed to spawn child')
         finally:
             free(config.argv)
             free(config.envp)
             free(config.seccomp_handlers)
+            free(config.landlock_read_exact_files)
+            free(config.landlock_read_exact_dirs)
+            free(config.landlock_read_recursive_dirs)
+            free(config.landlock_write_exact_files)
+            free(config.landlock_write_exact_dirs)
+            free(config.landlock_write_recursive_dirs)
 
     cpdef _monitor(self):
         cdef int exitcode

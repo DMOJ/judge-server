@@ -1,7 +1,7 @@
 import struct
 import sys
 
-from dmoj.cptbox._cptbox import AT_FDCWD, Debugger
+from dmoj.cptbox._cptbox import AT_FDCWD, Debugger, has_landlock
 from dmoj.cptbox.filesystem_policies import ExactFile, FilesystemPolicy, RecursiveDir
 from dmoj.cptbox.handlers import ACCESS_EFAULT, ACCESS_EPERM, ALLOW
 from dmoj.cptbox.isolate import DeniedSyscall, FilesystemSyscallKind, IsolateTracer
@@ -23,6 +23,42 @@ class CompilerIsolateTracer(IsolateTracer):
         write_fs += BASE_WRITE_FILESYSTEM + [RecursiveDir(tmpdir)]
         super().__init__(read_fs=read_fs, write_fs=write_fs)
 
+        if has_landlock():
+            self.update(
+                {
+                    # Directory system calls
+                    sys_mkdir: ALLOW,
+                    sys_mkdirat: ALLOW,
+                    sys_rmdir: ALLOW,
+                    # Link/Rename
+                    sys_link: ALLOW,
+                    sys_linkat: ALLOW,
+                    sys_symlink: ALLOW,
+                    sys_rename: ALLOW,
+                    sys_renameat: ALLOW,
+                    # Unlink
+                    sys_unlink: ALLOW,
+                    sys_unlinkat: ALLOW,
+                }
+            )
+        else:
+            self.update(
+                {
+                    # Directory system calls
+                    sys_mkdir: self.handle_file_access(FilesystemSyscallKind.WRITE, file_reg=0),
+                    sys_mkdirat: self.handle_file_access_at(FilesystemSyscallKind.WRITE, dir_reg=0, file_reg=1),
+                    sys_rmdir: self.handle_file_access(FilesystemSyscallKind.WRITE, file_reg=0),
+                    # Linking system calls
+                    sys_link: self.handle_file_access(FilesystemSyscallKind.WRITE, file_reg=1),
+                    sys_linkat: self.handle_file_access_at(FilesystemSyscallKind.WRITE, dir_reg=2, file_reg=3),
+                    sys_unlink: self.handle_file_access(FilesystemSyscallKind.WRITE, file_reg=0),
+                    sys_unlinkat: self.handle_file_access_at(FilesystemSyscallKind.WRITE, dir_reg=0, file_reg=1),
+                    sys_symlink: self.handle_file_access(FilesystemSyscallKind.WRITE, file_reg=1),
+                    sys_rename: self.handle_rename,
+                    sys_renameat: self.handle_renameat,
+                }
+            )
+
         self.update(
             {
                 # Process spawning system calls
@@ -31,16 +67,6 @@ class CompilerIsolateTracer(IsolateTracer):
                 sys_execve: ALLOW,
                 sys_getcpu: ALLOW,
                 sys_getpgid: ALLOW,
-                # Directory system calls
-                sys_mkdir: self.handle_file_access(FilesystemSyscallKind.WRITE, file_reg=0),
-                sys_mkdirat: self.handle_file_access_at(FilesystemSyscallKind.WRITE, dir_reg=0, file_reg=1),
-                sys_rmdir: self.handle_file_access(FilesystemSyscallKind.WRITE, file_reg=0),
-                # Linking system calls
-                sys_link: self.handle_file_access(FilesystemSyscallKind.WRITE, file_reg=1),
-                sys_linkat: self.handle_file_access_at(FilesystemSyscallKind.WRITE, dir_reg=2, file_reg=3),
-                sys_unlink: self.handle_file_access(FilesystemSyscallKind.WRITE, file_reg=0),
-                sys_unlinkat: self.handle_file_access_at(FilesystemSyscallKind.WRITE, dir_reg=0, file_reg=1),
-                sys_symlink: self.handle_file_access(FilesystemSyscallKind.WRITE, file_reg=1),
                 # Miscellaneous other filesystem system calls
                 sys_chdir: self.handle_file_access(FilesystemSyscallKind.READ, file_reg=0),
                 sys_chmod: self.handle_file_access(FilesystemSyscallKind.WRITE, file_reg=0),
@@ -53,8 +79,6 @@ class CompilerIsolateTracer(IsolateTracer):
                 sys_fchmod: self.handle_fchmod,
                 sys_fallocate: ALLOW,
                 sys_ftruncate: ALLOW,
-                sys_rename: self.handle_rename,
-                sys_renameat: self.handle_renameat,
                 # I/O system calls
                 sys_readv: ALLOW,
                 sys_pwrite64: ALLOW,
@@ -102,6 +126,10 @@ class CompilerIsolateTracer(IsolateTracer):
                     sys_utimes: self.handle_file_access(FilesystemSyscallKind.WRITE, file_reg=0),
                 }
             )
+
+    def fullpath_from_reg_and_dirfd(self, debugger: Debugger, *, file_reg, dirfd):
+        rel_file = self.get_rel_file(debugger, reg=file_reg)
+        return self.get_full_path_unnormalized(debugger, rel_file, dirfd=dirfd)
 
     def handle_rename(self, debugger: Debugger) -> None:
         self.access_check(self._write_fs_jail_getter, self._dirfd_getter_cwd, file_reg=0)(debugger)

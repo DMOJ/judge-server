@@ -62,6 +62,7 @@ jobs:
     strategy:
       matrix:
         python-version: [ '3.7', '3.8', '3.9', '3.10', '3.11' ]
+        sandbox_mode: [ 'ptrace+seccomp' ]
     steps:
       - uses: actions/checkout@v3
       - name: Download docker image
@@ -118,6 +119,7 @@ jobs:
     strategy:
       matrix:
         python-version: [ '3.11' ]
+        sandbox_mode: [ 'ptrace+seccomp', 'ptrace+seccomp+landlock' ]
     steps:
       - uses: actions/checkout@v3
       - name: Download docker image
@@ -134,6 +136,7 @@ jobs:
           export LANG=C.UTF-8
           export PYTHONIOENCODING=utf8
           export PYTHON="/code/python${{ matrix.python-version }}/bin/python${{ matrix.python-version }}"
+          export DMOJ_SANDBOX_MODE=${{ matrix.sandbox_mode }}
 
           "$PYTHON" -m pip install --upgrade pip wheel
           "$PYTHON" -m pip install cython coverage

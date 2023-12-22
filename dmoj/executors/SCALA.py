@@ -20,6 +20,7 @@ class Executor(JavaExecutor):
         ExactFile('/bin/bash'),
         RecursiveDir('/etc/alternatives'),
     ]
+    compiler_syscalls = ['mincore']
     vm = 'scala_vm'
 
     test_program = """\

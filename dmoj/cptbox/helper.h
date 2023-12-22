@@ -9,6 +9,7 @@
 #define PTBOX_SPAWN_FAIL_TRACEME      204
 #define PTBOX_SPAWN_FAIL_EXECVE       205
 #define PTBOX_SPAWN_FAIL_SETAFFINITY  206
+#define PTBOX_SPAWN_FAIL_LANDLOCK     207
 
 struct child_config {
     unsigned long memory;
@@ -27,7 +28,15 @@ struct child_config {
     int *seccomp_handlers;
     // 64 cores ought to be enough for anyone.
     unsigned long cpu_affinity_mask;
+    const char **landlock_read_exact_files;
+    const char **landlock_read_exact_dirs;
+    const char **landlock_read_recursive_dirs;
+    const char **landlock_write_exact_files;
+    const char **landlock_write_exact_dirs;
+    const char **landlock_write_recursive_dirs;
 };
+
+int get_landlock_version();
 
 void cptbox_closefrom(int lowfd);
 int cptbox_child_run(const struct child_config *config);

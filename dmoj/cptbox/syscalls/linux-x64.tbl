@@ -363,3 +363,6 @@
 451	cachestat
 452	fchmodat2
 453	map_shadow_stack
+454	futex_wake
+455	futex_wait
+456	futex_requeue

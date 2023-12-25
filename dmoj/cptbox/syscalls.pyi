@@ -190,8 +190,11 @@ sys_ftruncate: int
 sys_ftruncate64: int
 sys_funlinkat: int
 sys_futex: int
+sys_futex_requeue: int
 sys_futex_time64: int
+sys_futex_wait: int
 sys_futex_waitv: int
+sys_futex_wake: int
 sys_futimens: int
 sys_futimes: int
 sys_futimesat: int

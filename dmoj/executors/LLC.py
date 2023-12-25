@@ -1,6 +1,7 @@
 from typing import Dict, List, Optional, Set
 
 from dmoj.executors.asm_executor import ASMExecutor, NativeMixin
+from dmoj.executors.base_executor import VersionFlags
 
 
 class Executor(NativeMixin, ASMExecutor):
@@ -36,7 +37,7 @@ end:
         return [self.get_as_path(), '-filetype=obj', f'-O{self.optimize}', self._code, '-o', obj_file]
 
     @classmethod
-    def get_version_flags(cls, command: str) -> List[str]:
+    def get_version_flags(cls, command: str) -> List[VersionFlags]:
         return ['-version'] if command == cls.as_name else super().get_version_flags(command)
 
     @classmethod

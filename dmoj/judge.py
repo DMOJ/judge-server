@@ -460,7 +460,7 @@ class JudgeWorker:
                 self, problem, self.submission.language, utf8bytes(self.submission.source)
             )
         except CompileError as compilation_error:
-            error = compilation_error.message or 'compiler exited abnormally'
+            error = compilation_error.message
             yield IPC.COMPILE_ERROR, (error,)
             return
         else:

@@ -4,6 +4,7 @@ from collections import deque
 from typing import List
 
 from dmoj.cptbox import TracedPopen
+from dmoj.executors.base_executor import VersionFlags
 from dmoj.executors.compiled_executor import CompiledExecutor
 from dmoj.utils.unicode import utf8bytes, utf8text
 
@@ -72,5 +73,5 @@ runpy.run_path(sys.argv[0], run_name='__main__')
             return ''
 
     @classmethod
-    def get_version_flags(cls, command: str) -> List[str]:
+    def get_version_flags(cls, command: str) -> List[VersionFlags]:
         return ['-V']

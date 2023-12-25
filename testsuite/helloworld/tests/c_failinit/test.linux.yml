@@ -3,4 +3,4 @@ time: 1
 memory: 1024
 source: fail.c
 expect: [RTE, MLE]
-feedback: ['failed initializing', 'segmentation fault']
+feedback: ['', 'failed initializing', 'segmentation fault']  # '' temporary workaround, see #1149

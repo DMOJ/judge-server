@@ -3,7 +3,7 @@ from dmoj.utils.unicode import utf8text
 
 class CompileError(Exception):
     def __init__(self, message):
-        super().__init__(utf8text(message, 'replace'))
+        super().__init__(utf8text(message, 'replace') or 'compiler exited abnormally')
 
     @property
     def message(self) -> str:

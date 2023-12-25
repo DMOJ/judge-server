@@ -37,6 +37,7 @@ class BaseGrader:
     def _generate_binary(self) -> BaseExecutor:
         raise NotImplementedError
 
+<<<<<<< HEAD
     def abort_grading(self) -> None:
         self._abort_requested = True
         if self._current_proc:
@@ -47,6 +48,10 @@ class BaseGrader:
 
     def _resolve_testcases(self, cfg, batch_no=0) -> List[BaseTestCase]:
         cases: List[BaseTestCase] = []
+=======
+    def _resolve_testcases(self, cfg, batch_no=0):
+        cases = []
+>>>>>>> 662a3127 (judge: implement instant aborts)
         for case_config in cfg:
             if 'batched' in case_config.raw_config:
                 self._batch_counter += 1

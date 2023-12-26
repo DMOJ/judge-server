@@ -14,7 +14,9 @@ class ProblemTester(Tester):
     def run_problem_tests(self, problem_id: str) -> int:
         self.output(ansi_style(f'Testing problem #ansi[{problem_id}](cyan|bold)...'))
 
-        config = ProblemConfig(ProblemDataManager(get_problem_root(problem_id)))
+        problem_root = get_problem_root(problem_id)
+        assert problem_root is not None
+        config = ProblemConfig(ProblemDataManager(problem_root))
 
         if not config or 'tests' not in config or not config['tests']:
             self.output(ansi_style('\t#ansi[Skipped](magenta|bold) - No tests found'))

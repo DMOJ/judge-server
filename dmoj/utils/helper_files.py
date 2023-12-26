@@ -84,7 +84,7 @@ def compile_with_auxiliary_files(
 
 
 def parse_helper_file_error(
-    proc: 'TracedPopen', executor: 'BaseExecutor', name: str, stderr: bytes, time_limit: int, memory_limit: int
+    proc: 'TracedPopen', executor: 'BaseExecutor', name: str, stderr: bytes, time_limit: float, memory_limit: int
 ) -> None:
     if proc.is_tle:
         error = f'{name} timed out (> {time_limit} seconds)'

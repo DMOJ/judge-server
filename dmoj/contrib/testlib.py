@@ -1,9 +1,14 @@
 import re
+from typing import TYPE_CHECKING
 
 from dmoj.contrib.default import ContribModule as DefaultContribModule
 from dmoj.error import InternalError
+from dmoj.executors.base_executor import BaseExecutor
 from dmoj.result import CheckerResult
 from dmoj.utils.helper_files import parse_helper_file_error
+
+if TYPE_CHECKING:
+    from dmoj.cptbox import TracedPopen
 
 
 class ContribModule(DefaultContribModule):
@@ -17,15 +22,25 @@ class ContribModule(DefaultContribModule):
     repartial = re.compile(br'^points (\d+)$', re.M)
 
     @classmethod
-    def get_interactor_args_format_string(cls):
+    def get_interactor_args_format_string(cls) -> str:
         return '{input_file} {output_file} {answer_file}'
 
     @classmethod
-    def get_validator_args_format_string(cls):
+    def get_validator_args_format_string(cls) -> str:
         return '--group st{batch_no}'
 
     @classmethod
-    def parse_return_code(cls, proc, executor, point_value, time_limit, memory_limit, feedback, name, stderr):
+    def parse_return_code(
+        cls,
+        proc: 'TracedPopen',
+        executor: BaseExecutor,
+        point_value: float,
+        time_limit: float,
+        memory_limit: int,
+        feedback: str,
+        name: str,
+        stderr: bytes,
+    ):
         if proc.returncode == cls.AC:
             return CheckerResult(True, point_value, feedback=feedback)
         elif proc.returncode == cls.PARTIAL:

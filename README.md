@@ -57,11 +57,12 @@ The judge can also grade in the languages listed below:
 
 * Ada
 * AWK
+* Brain\*\*\*\*
 * COBOL
 * D
 * Dart
-* Fortran
 * Forth
+* Fortran
 * Go
 * Groovy
 * Haskell
@@ -88,7 +89,6 @@ The judge can also grade in the languages listed below:
 * Tcl
 * Turing
 * V8 JavaScript
-* Brain\*\*\*\*
 * Zig
 
 ## Installation

@@ -2,7 +2,7 @@ import logging
 import os
 import sys
 from enum import Enum
-from typing import Any, Callable, Mapping, Sequence
+from typing import Any, Callable, List, Mapping, Sequence
 
 from dmoj.cptbox._cptbox import AT_FDCWD, Debugger, bsd_get_proc_cwd, bsd_get_proc_fdno
 from dmoj.cptbox.filesystem_policies import FilesystemAccessRule, FilesystemPolicy
@@ -42,7 +42,7 @@ DirFDGetter = Callable[[Debugger], int]
 
 
 class IsolateTracer(dict):
-    def __init__(self, *, read_fs: Sequence[FilesystemAccessRule], write_fs: Sequence[FilesystemAccessRule]):
+    def __init__(self, *, read_fs: List[FilesystemAccessRule], write_fs: List[FilesystemAccessRule]):
         super().__init__()
         self.read_fs_jail = self._compile_fs_jail(read_fs)
         self.write_fs_jail = self._compile_fs_jail(write_fs)

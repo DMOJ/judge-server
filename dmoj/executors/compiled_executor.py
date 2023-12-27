@@ -1,7 +1,7 @@
 import hashlib
 import os
 import pty
-from typing import Any, Dict, IO, List, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, IO, List, Optional, Tuple, Union
 
 import pylru
 
@@ -78,9 +78,9 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
     _executable: Optional[str] = None
     _code: Optional[str] = None
 
-    compiler_read_fs: Sequence[FilesystemAccessRule] = []
-    compiler_write_fs: Sequence[FilesystemAccessRule] = []
-    compiler_syscalls: Sequence[Union[str, Tuple[str, Any]]] = []
+    compiler_read_fs: List[FilesystemAccessRule] = []
+    compiler_write_fs: List[FilesystemAccessRule] = []
+    compiler_syscalls: List[Union[str, Tuple[str, Any]]] = []
 
     # List of directories required by the compiler to be present, typically for writing to
     compiler_required_dirs: List[str] = []

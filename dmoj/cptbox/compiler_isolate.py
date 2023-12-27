@@ -1,8 +1,9 @@
 import struct
 import sys
+from typing import List
 
 from dmoj.cptbox._cptbox import AT_FDCWD, Debugger
-from dmoj.cptbox.filesystem_policies import ExactFile, FilesystemPolicy, RecursiveDir
+from dmoj.cptbox.filesystem_policies import ExactFile, FilesystemAccessRule, FilesystemPolicy, RecursiveDir
 from dmoj.cptbox.handlers import ACCESS_EFAULT, ACCESS_EPERM, ALLOW
 from dmoj.cptbox.isolate import DeniedSyscall, FilesystemSyscallKind, IsolateTracer
 from dmoj.cptbox.syscalls import *
@@ -14,7 +15,7 @@ UTIME_OMIT = (1 << 30) - 2
 
 
 class CompilerIsolateTracer(IsolateTracer):
-    def __init__(self, *, tmpdir, read_fs, write_fs):
+    def __init__(self, *, tmpdir: str, read_fs: List[FilesystemAccessRule], write_fs: List[FilesystemAccessRule]):
         read_fs += BASE_FILESYSTEM + [
             RecursiveDir(tmpdir),
             ExactFile('/bin/strip'),

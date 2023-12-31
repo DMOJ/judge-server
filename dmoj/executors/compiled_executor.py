@@ -40,6 +40,7 @@ class _CompiledExecutorMeta(ExecutorMeta):
 
     def __call__(cls, *args, **kwargs) -> 'CompiledExecutor':
         is_cached: bool = kwargs.pop('cached', False)
+        print('[CompiledExecutorMeta]', tempfile.tempdir, is_cached, env.compiled_binary_cache_dir)
         if is_cached:
             kwargs['dest_dir'] = tempfile.tempdir#env.compiled_binary_cache_dir
 
@@ -57,6 +58,7 @@ class _CompiledExecutorMeta(ExecutorMeta):
                 # Minimal sanity checking: is the file still there? If not, we'll just recompile.
                 if os.path.isfile(executor._executable):
                     obj._executable = executor._executable
+                    print('overwrote obj directory to', executor._dir)
                     obj._dir = executor._dir
                     return obj
 

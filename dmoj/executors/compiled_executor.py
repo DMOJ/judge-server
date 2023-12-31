@@ -42,7 +42,7 @@ class _CompiledExecutorMeta(ExecutorMeta):
         is_cached: bool = kwargs.pop('cached', False)
         print('[CompiledExecutorMeta]', tempfile.tempdir, is_cached, env.compiled_binary_cache_dir)
         if is_cached:
-            kwargs['dest_dir'] = tempfile.tempdir#env.compiled_binary_cache_dir
+            kwargs['dest_dir'] = env.compiled_binary_cache_dir
 
         # Finish running all constructors before compiling.
         obj: 'CompiledExecutor' = super().__call__(*args, **kwargs)

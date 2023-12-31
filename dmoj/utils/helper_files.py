@@ -71,6 +71,8 @@ def compile_with_auxiliary_files(
     if hasattr(executor, 'flags'):
         kwargs['flags'] = flags + list(executor.flags)
 
+    print('kwargs to helper files', kwargs)
+
     # Optimize the common case.
     if use_cpp or use_c:
         # Some auxiliary files (like those using testlib.h) take an extremely long time to compile, so we cache them.

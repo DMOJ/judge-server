@@ -1,7 +1,7 @@
-from .gcc_executor import CPPExecutor
+from dmoj.executors.c_like_executor import CPPExecutor, GCCMixin
 
 
-class Executor(CPPExecutor):
+class Executor(GCCMixin, CPPExecutor):
     command = 'g++'
     std = 'c++03'
     test_program = """

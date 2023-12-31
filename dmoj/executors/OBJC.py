@@ -3,12 +3,12 @@ from subprocess import CalledProcessError, check_output
 from typing import List
 
 from dmoj.cptbox.filesystem_policies import ExactFile, FilesystemAccessRule
+from dmoj.executors.c_like_executor import CLikeExecutor, GCCMixin
 from dmoj.judgeenv import env
 from dmoj.utils.unicode import utf8text
-from .gcc_executor import GCCExecutor
 
 
-class Executor(GCCExecutor):
+class Executor(GCCMixin, CLikeExecutor):
     ext = 'm'
     objc_flags: List[str] = []
     objc_ldflags: List[str] = []

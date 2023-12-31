@@ -1,10 +1,10 @@
-from .gcc_executor import GCCExecutor
+from dmoj.executors.c_like_executor import CExecutor, GCCMixin
 
 
-class Executor(GCCExecutor):
+class Executor(GCCMixin, CExecutor):
     command = 'gcc'
-    flags = ['-std=c99']
-    ext = 'c'
+    std = 'c99'
+
     test_program = """
 #include <stdio.h>
 

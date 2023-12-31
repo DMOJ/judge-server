@@ -1,6 +1,7 @@
 import hashlib
 import os
 import pty
+import tempfile
 from typing import Any, Dict, IO, List, Optional, Tuple, Union
 
 import pylru
@@ -39,6 +40,7 @@ class _CompiledExecutorMeta(ExecutorMeta):
 
     def __call__(cls, *args, **kwargs) -> 'CompiledExecutor':
         is_cached: bool = kwargs.pop('cached', False)
+        print('[CompiledExecutorMeta]', tempfile.tempdir, is_cached, env.compiled_binary_cache_dir)
         if is_cached:
             kwargs['dest_dir'] = env.compiled_binary_cache_dir
 
@@ -56,6 +58,7 @@ class _CompiledExecutorMeta(ExecutorMeta):
                 # Minimal sanity checking: is the file still there? If not, we'll just recompile.
                 if os.path.isfile(executor._executable):
                     obj._executable = executor._executable
+                    print('overwrote obj directory to', executor._dir)
                     obj._dir = executor._dir
                     return obj
 
@@ -133,6 +136,15 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
         # so that we can allow it as writeable, rather than of all of /tmp.
         assert self._dir is not None
         env['TMPDIR'] = self._dir
+        print(
+            {
+                'args': args,
+                'env': env,
+                'dir': self._dir,
+                'read_fs': self.compiler_read_fs,
+                'write_fs': self.compiler_write_fs,
+                'required_dirs': self.compiler_required_dirs,
+            })
 
         proc = TracedPopen(
             [utf8bytes(a) for a in args],

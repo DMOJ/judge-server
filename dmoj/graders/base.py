@@ -37,14 +37,6 @@ class BaseGrader:
     def _generate_binary(self) -> BaseExecutor:
         raise NotImplementedError
 
-    def abort_grading(self) -> None:
-        self._abort_requested = True
-        if self._current_proc:
-            try:
-                self._current_proc.kill()
-            except OSError:
-                pass
-
     def _resolve_testcases(self, cfg, batch_no=0) -> List[BaseTestCase]:
         cases: List[BaseTestCase] = []
         for case_config in cfg:

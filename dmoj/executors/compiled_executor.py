@@ -1,6 +1,7 @@
 import hashlib
 import os
 import pty
+import tempfile
 from typing import Any, Dict, IO, List, Optional, Tuple, Union
 
 import pylru
@@ -40,7 +41,7 @@ class _CompiledExecutorMeta(ExecutorMeta):
     def __call__(cls, *args, **kwargs) -> 'CompiledExecutor':
         is_cached: bool = kwargs.pop('cached', False)
         if is_cached:
-            kwargs['dest_dir'] = env.compiled_binary_cache_dir
+            kwargs['dest_dir'] = tempfile.tempdir#env.compiled_binary_cache_dir
 
         # Finish running all constructors before compiling.
         obj: 'CompiledExecutor' = super().__call__(*args, **kwargs)
@@ -142,7 +143,7 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
                 'write_fs': self.compiler_write_fs,
                 'required_dirs': self.compiler_required_dirs,
             })
-        
+
         proc = TracedPopen(
             [utf8bytes(a) for a in args],
             **{

@@ -1,13 +1,23 @@
 from ctypes import CDLL, POINTER, byref, c_char_p, c_int, c_size_t, c_void_p, string_at
 from ctypes.util import find_library
+from typing import Any
 
 __all__ = ['demangle']
 
 libc = CDLL(find_library('c'))
-libstdcxx = CDLL(find_library('stdc++'))
+
+libstdcxx_path = find_library('stdc++')
+libcxx_path = find_library('c++')
+
+libstdcxx: Any = None if libstdcxx_path is None else CDLL(libstdcxx_path)
+libcxx: Any = None if libcxx_path is None else CDLL(libcxx_path)
 
 # Signature: char *__cxa_demangle(const char *mangled_name, char *output_buffer, size_t *length, int *status)
-__cxa_demangle = libstdcxx.__cxa_demangle
+try:
+    __cxa_demangle = libstdcxx.__cxa_demangle
+except AttributeError:
+    __cxa_demangle = libcxx.__cxa_demangle
+
 __cxa_demangle.argtypes = [c_char_p, c_char_p, POINTER(c_size_t), POINTER(c_int)]
 __cxa_demangle.restype = c_void_p
 

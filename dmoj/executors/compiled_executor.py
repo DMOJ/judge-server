@@ -133,8 +133,16 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
         # so that we can allow it as writeable, rather than of all of /tmp.
         assert self._dir is not None
         env['TMPDIR'] = self._dir
-        print(f'{args=}, {env=}, {self._dir=}, {self.compiler_read_fs=}, {self.compiler_write_fs=}, {self.compiler_required_dirs=}')
-
+        print(
+            {
+                'args': args,
+                'env': env,
+                'dir': self._dir,
+                'read_fs': self.compiler_read_fs,
+                'write_fs': self.compiler_write_fs,
+                'required_dirs': self.compiler_required_dirs,
+            })
+        
         proc = TracedPopen(
             [utf8bytes(a) for a in args],
             **{

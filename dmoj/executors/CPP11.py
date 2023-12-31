@@ -1,7 +1,7 @@
-from dmoj.executors.gcc_executor import CPPExecutor
+from dmoj.executors.c_like_executor import CPPExecutor, GCCMixin
 
 
-class Executor(CPPExecutor):
+class Executor(GCCMixin, CPPExecutor):
     command = 'g++11'
     command_paths = ['g++-5', 'g++-4.9', 'g++-4.8', 'g++']
     std = 'c++11'

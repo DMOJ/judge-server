@@ -1,10 +1,10 @@
 from typing import List
 
 from dmoj.executors.base_executor import VersionFlags
-from .gcc_executor import GCCExecutor
+from dmoj.executors.c_like_executor import CLikeExecutor, GCCMixin
 
 
-class Executor(GCCExecutor):
+class Executor(GCCMixin, CLikeExecutor):
     command = 'gnatmake'
     ext = 'adb'
     test_program = """\

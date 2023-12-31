@@ -1,9 +1,10 @@
-from .gcc_executor import GCCExecutor
+from dmoj.executors.c_like_executor import CLikeExecutor, GCCMixin
 
 
-class Executor(GCCExecutor):
+class Executor(GCCMixin, CLikeExecutor):
     command = 'gfortran'
     ext = 'f95'
+    std = 'f95'
     test_program = """\
 character(100) :: line
 read(*,'(A)') line

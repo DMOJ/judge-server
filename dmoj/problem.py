@@ -41,6 +41,12 @@ DEFAULT_TEST_CASE_INPUT_PATTERN = r'^(?=.*?\.in|in).*?(?:(?:^|\W)(?P<batch>\d+)[
 DEFAULT_TEST_CASE_OUTPUT_PATTERN = r'^(?=.*?\.out|out).*?(?:(?:^|\W)(?P<batch>\d+)[^\d\s]+)?(?P<case>\d+)[^\d\s]*$'
 
 
+class BaseTestCase:
+    config: ConfigNode
+    points: int
+    problem: 'Problem'
+
+
 class Problem:
     id: str
     time_limit: float
@@ -56,6 +62,9 @@ class Problem:
         self.time_limit = time_limit
         self.memory_limit = memory_limit
         self.meta = ConfigNode(meta)
+        self.run_pretests_only = self.meta.pretests_only
+        self._batch_counter = 0
+        self._testcase_counter = 0
 
         # Cache root dir so that we don't need to scan all roots (potentially very slow on networked mount).
         root_dir = get_problem_root(problem_id)
@@ -210,6 +219,41 @@ class Problem:
             return archive
         return None
 
+    def _resolve_testcases(self, cfg, batch_no=0) -> List[BaseTestCase]:
+        cases: List[BaseTestCase] = []
+        for case_config in cfg:
+            if 'batched' in case_config.raw_config:
+                self._batch_counter += 1
+                cases.append(
+                    BatchedTestCase(
+                        self._batch_counter,
+                        case_config,
+                        self,
+                        self._resolve_testcases(case_config['batched'], self._batch_counter),
+                    )
+                )
+            else:
+                cases.append(TestCase(self._testcase_counter, batch_no, case_config, self))
+                self._testcase_counter += 1
+        return cases
+
+    def cases(self) -> List[BaseTestCase]:
+        pretest_test_cases = self.config.pretest_test_cases
+        if self.run_pretests_only and pretest_test_cases:
+            return self._resolve_testcases(pretest_test_cases)
+
+        test_cases = self._resolve_testcases(self.config.test_cases)
+        if pretest_test_cases:
+            pretest_test_cases = self._resolve_testcases(pretest_test_cases)
+
+            # Hack: force short-circuiting behavior
+            for case in pretest_test_cases:
+                case.points = 0
+
+            test_cases = pretest_test_cases + test_cases
+
+        return test_cases
+
 
 class ProblemDataManager(dict):
     problem_root_dir: str
@@ -260,12 +304,6 @@ class ProblemConfig(ConfigNode):
                     'meta': meta,
                 },
             )
-
-
-class BaseTestCase:
-    config: ConfigNode
-    points: int
-    problem: Problem
 
 
 class BatchedTestCase(BaseTestCase):

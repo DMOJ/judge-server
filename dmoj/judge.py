@@ -468,12 +468,12 @@ class JudgeWorker:
             if warning is not None:
                 yield IPC.COMPILE_MESSAGE, (warning,)
 
-        yield IPC.GRADING_BEGIN, (self.grader.run_pretests_only,)
+        yield IPC.GRADING_BEGIN, (problem.run_pretests_only,)
 
         flattened_cases: List[Tuple[Optional[int], BaseTestCase]] = []
         batch_number = 0
         batch_dependencies: List[Set[int]] = []
-        for case in self.grader.cases():
+        for case in problem.cases():
             if isinstance(case, BatchedTestCase):
                 batch_number += 1
                 for batched_case in case.batched_cases:

@@ -13,6 +13,7 @@ EXECUTORS = [
     'CPP17',
     'CLANG',
     'CLANGX',
+    'F95',
     'JAVA8',
     'MONOCS',
     'MONOFS',

@@ -244,6 +244,13 @@ class Tester:
         if language not in all_executors:
             self.output(ansi_style('\t\t#ansi[Skipped](magenta|bold) - Language not supported'))
             return 0
+
+        if 'required_auxiliary_executors' in config and any(
+            executor not in all_executors for executor in config['required_auxiliary_executors']
+        ):
+            self.output(ansi_style('\t\t#ansi[Skipped](magenta|bold) - Required executor not supported'))
+            return 0
+
         time = config['time']
         memory = config['memory']
         if isinstance(config['source'], str):

@@ -20,7 +20,7 @@ void main() {
     print("echo: Hello, World!");
 }
 """
-    address_grace = 128 * 1024
+    address_grace = 512 * 1024
 
     syscalls = [
         'timerfd_settime',

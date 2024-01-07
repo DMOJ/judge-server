@@ -13,6 +13,7 @@ class Executor(NullStdoutMixin, CompiledExecutor):
         RecursiveDir('/var/lib/ghc'),
     ]
     syscalls = ['timerfd_settime']
+    nproc = -1
 
     test_program = """\
 main = do

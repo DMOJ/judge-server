@@ -1,13 +1,12 @@
 import glob
 import os
 import traceback
-from importlib import import_module
 
 import yaml
 
 from dmoj import judgeenv
 from dmoj.contrib import load_contrib_modules
-from dmoj.executors import executors
+from dmoj.executors import executors, load_executor, load_executors
 from dmoj.testsuite import Tester
 from dmoj.utils.ansi import print_ansi
 
@@ -17,8 +16,10 @@ def ci_test(executors_to_test, overrides, allow_fail=frozenset()):
     failed = False
     failed_executors = []
 
+    load_executors()
+
     for name in executors_to_test:
-        executor = import_module('dmoj.executors.' + name)
+        executor = load_executor(name)
 
         print_ansi('%-34s%s' % ('Testing #ansi[%s](|underline):' % name, ''), end=' ')
 

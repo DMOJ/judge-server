@@ -1,6 +1,6 @@
 import os
 import re
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from dmoj.judgeenv import exclude_executors, only_executors
 from dmoj.utils.load import get_available_modules, load_module, load_modules
@@ -37,17 +37,17 @@ def from_filename(filename: str) -> Any:
     return by_ext(ext)
 
 
-def get_available():
+def get_available() -> List[str]:
     return get_available_modules(
         _reexecutor, os.path.dirname(__file__), only_executors, exclude_executors | _unsupported_executors
     )
 
 
-def load_executor(name):
+def load_executor(name: str) -> Any:
     return load_module(f'{__name__}.{name}', ('No module named "_cptbox"', 'No module named "termios"'))
 
 
-def load_executors():
+def load_executors() -> None:
     from dmoj.judgeenv import skip_self_test
 
     load_modules(

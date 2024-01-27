@@ -346,6 +346,7 @@ sys_link: int
 sys_linkat: int
 sys_lio_listio: int
 sys_listen: int
+sys_listmount: int
 sys_listxattr: int
 sys_llistxattr: int
 sys_llseek: int
@@ -355,6 +356,9 @@ sys_lpathconf: int
 sys_lremovexattr: int
 sys_lseek: int
 sys_lsetxattr: int
+sys_lsm_get_self_attr: int
+sys_lsm_list_modules: int
+sys_lsm_set_self_attr: int
 sys_lstat: int
 sys_lstat64: int
 sys_lutimes: int
@@ -663,6 +667,7 @@ sys_stat: int
 sys_stat64: int
 sys_statfs: int
 sys_statfs64: int
+sys_statmount: int
 sys_statx: int
 sys_stime: int
 sys_stty: int

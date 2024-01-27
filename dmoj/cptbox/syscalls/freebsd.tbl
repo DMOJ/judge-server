@@ -518,3 +518,4 @@
 585	timerfd_create
 586	timerfd_gettime
 587	timerfd_settime
+588	kcmp

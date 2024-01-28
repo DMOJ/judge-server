@@ -7,7 +7,13 @@ class Executor(ScriptExecutor):
     command = 'node'
     nproc = -1
     command_paths = ['node', 'nodejs']
-    syscalls = ['capget', 'eventfd2', 'shutdown', 'pkey_alloc']
+    syscalls = [
+        'capget',
+        'eventfd2',
+        'shutdown',
+        'pkey_alloc',
+        'pkey_free',
+    ]
     address_grace = 1048576
     test_program = """
 process.stdin.on('readable', () => {

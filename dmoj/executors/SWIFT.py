@@ -21,4 +21,4 @@ class Executor(CompiledExecutor):
         command = self.get_command()
         assert command is not None
         assert self._code is not None
-        return [command, self._code]
+        return [command, self._code, '-O', '-o', self.get_compiled_file()]

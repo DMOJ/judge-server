@@ -335,3 +335,4 @@
 459	lsm_get_self_attr
 460	lsm_set_self_attr
 461	lsm_list_modules
+462	mseal

@@ -1,6 +1,9 @@
+import fcntl
 import hashlib
 import os
 import pty
+import struct
+import termios
 from typing import Any, Dict, IO, List, Optional, Tuple, Union
 
 import pylru
@@ -126,6 +129,11 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
         #
         # Emulate the streams of a process connected to a terminal: stdin, stdout, and stderr are all ptys.
         _master, _slave = pty.openpty()
+
+        # Some runtimes helpfully try to word-wrap error messages by determining the width of the screen. Lie and say
+        # we're a 1024x1024 terminal, so they don't try wrapping to 1-column width.
+        fcntl.ioctl(_slave, termios.TIOCSWINSZ, struct.pack('HHHH', 1024, 1024, 0, 0))
+
         # Some runtimes *cough cough* Swift *cough cough* actually check the environment variables too.
         env = self.get_compile_env() or os.environ.copy()
         env['TERM'] = 'xterm'

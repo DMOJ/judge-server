@@ -413,6 +413,7 @@ sys_mq_timedsend: int
 sys_mq_timedsend_time64: int
 sys_mq_unlink: int
 sys_mremap: int
+sys_mseal: int
 sys_msgctl: int
 sys_msgget: int
 sys_msgrcv: int

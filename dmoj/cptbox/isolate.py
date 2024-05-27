@@ -377,7 +377,13 @@ class IsolateTracer(dict):
         if normalized != real:
             proc_dir = f'/proc/{debugger.tid}'
             if real.startswith(proc_dir):
-                real = os.path.join('/proc/self', os.path.relpath(real, proc_dir))
+                relpath = os.path.relpath(real, proc_dir)
+                if relpath == '.':
+                    # Special-case the root /proc/self directory, otherwise the branch below generates '/proc/self/.'
+                    # which will fail the FS jail check since abspath('/proc/self/.') = '/proc/self' != '/proc/self/.'.
+                    real = '/proc/self'
+                else:
+                    real = os.path.join('/proc/self', relpath)
 
             if not fs_jail.check(real):
                 raise DeniedSyscall(ACCESS_EACCES, f'Denying {file}, real path {real}')

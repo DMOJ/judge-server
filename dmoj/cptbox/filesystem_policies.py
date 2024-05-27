@@ -121,7 +121,7 @@ class FilesystemPolicy:
 
     # `path` should be a normalized path
     def check(self, path: str) -> bool:
-        assert os.path.abspath(path) == path, 'Must pass a normalized, absolute path to check'
+        assert os.path.abspath(path) == path, f'Must pass a normalized, absolute path to check: passed {path}'
         components = [] if path == '/' else path.split('/')[1:]
 
         node = self.root

@@ -67,6 +67,9 @@ else:
         ExactDir('/sys/devices/system/cpu'),
         ExactFile('/sys/devices/system/cpu/online'),
         ExactFile('/etc/selinux/config'),
+        ExactFile('/sys/kernel/mm/transparent_hugepage/enabled'),
+        ExactFile('/sys/kernel/mm/transparent_hugepage/hpage_pmd_size'),
+        ExactFile('/sys/kernel/mm/transparent_hugepage/shmem_enabled'),
     ]
 
 if sys.platform.startswith('freebsd'):

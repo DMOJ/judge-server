@@ -390,13 +390,15 @@ class IsolateTracer(dict):
 
     def handle_kill(self, debugger: Debugger) -> None:
         # Allow tgkill to execute as long as the target thread group is the debugged process
-        # libstdc++ seems to use this to signal itself, see <https://github.com/DMOJ/judge/issues/183>
-        if debugger.uarg0 != debugger.pid:
-            raise DeniedSyscall(ACCESS_EPERM, 'Cannot kill other processes')
+        # libstdc++ seems to use this to signal itself, see <https://github.com/DMOJ/judge/issues/18A3>
+        target = debugger.uarg0
+        if target != debugger.pid:
+            raise DeniedSyscall(ACCESS_EPERM, f'Cannot kill other processes (target={target}, self={debugger.pid})')
 
     def handle_prlimit(self, debugger: Debugger) -> None:
-        if debugger.uarg0 not in (0, debugger.pid):
-            raise DeniedSyscall(ACCESS_EPERM, 'Cannot prlimit other processes')
+        target = debugger.uarg0
+        if target not in (0, debugger.pid):
+            raise DeniedSyscall(ACCESS_EPERM, f'Cannot prlimit other processes (target={target}, self={debugger.pid})')
 
     def handle_prctl(self, debugger: Debugger) -> None:
         PR_GET_DUMPABLE = 3

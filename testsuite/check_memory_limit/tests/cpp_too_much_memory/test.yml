@@ -1,5 +1,5 @@
 language: CPP11
 time: 2
-memory: 65536
+memory: 262144
 source: bloat.cpp
 expect: WA

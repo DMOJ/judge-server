@@ -362,7 +362,7 @@ class IsolateTracer(dict):
         real = os.path.realpath(file)
 
         try:
-            same = normalized == real or os.path.samefile(projected, real)
+            same = projected == real or os.path.samefile(projected, real)
         except OSError:
             raise DeniedSyscall(ACCESS_ENOENT, f'Cannot stat, file: {file}, projected: {projected}, real: {real}')
 
@@ -374,7 +374,7 @@ class IsolateTracer(dict):
         if not fs_jail.check(normalized):
             raise DeniedSyscall(ACCESS_EACCES, f'Denying {file}, normalized to {normalized}')
 
-        if normalized != real:
+        if projected != real:
             proc_dir = f'/proc/{debugger.tid}'
             if real.startswith(proc_dir):
                 relpath = os.path.relpath(real, proc_dir)

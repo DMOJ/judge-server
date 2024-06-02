@@ -7,10 +7,7 @@ from dmoj.executors.compiled_executor import CompiledExecutor
 class Executor(CompiledExecutor):
     ext = 'rkt'
     fs = [RecursiveDir('/etc/racket'), ExactFile('/etc/passwd'), ExactDir('/')]
-    compiler_read_fs = [
-        RecursiveDir('/etc/racket'),
-        RecursiveDir('~/.local/share/racket'),
-    ]
+    compiler_read_fs = [RecursiveDir('~/.local/share/racket')]
 
     command = 'racket'
 

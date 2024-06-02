@@ -118,8 +118,16 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
     def get_compile_popen_kwargs(self) -> Dict[str, Any]:
         return {}
 
+    def get_compiler_read_fs(self) -> List[FilesystemAccessRule]:
+        return self.get_fs() + self.compiler_read_fs
+
+    def get_compiler_write_fs(self) -> List[FilesystemAccessRule]:
+        return self.get_write_fs() + self.compiler_write_fs
+
     def get_compiler_security(self):
-        sec = CompilerIsolateTracer(tmpdir=self._dir, read_fs=self.compiler_read_fs, write_fs=self.compiler_write_fs)
+        sec = CompilerIsolateTracer(
+            tmpdir=self._dir, read_fs=self.get_compiler_read_fs(), write_fs=self.get_compiler_write_fs()
+        )
         return self._add_syscalls(sec, self.compiler_syscalls)
 
     def create_compile_process(self, args: List[str]) -> TracedPopen:

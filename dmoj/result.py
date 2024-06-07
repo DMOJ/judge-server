@@ -94,7 +94,7 @@ class Result:
         if not feedback and is_ir_or_rte:
             if not process.was_initialized or (error and b'error while loading shared libraries' in error):
                 # Process may failed to initialize, resulting in a SIGKILL without any prior signals.
-                # See <https://github.com/DMOJ/judge/issues/179> for more details.
+                # See <https://github.com/DMOJ/judge-server/issues/179> for more details.
                 feedback = 'failed initializing'
             elif process.signal:
                 feedback = strsignal(process.signal).lower()

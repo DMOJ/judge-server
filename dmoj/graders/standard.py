@@ -51,7 +51,7 @@ class StandardGrader(BaseGrader):
         # If the submission didn't crash and didn't time out, there's a chance it might be AC
         # We shouldn't run checkers if the submission is already known to be incorrect, because some checkers
         # might be very computationally expensive.
-        # See https://github.com/DMOJ/judge/issues/170
+        # See https://github.com/DMOJ/judge-server/issues/170
         checker = case.checker()
         # checker is a `partial` object, NOT a `function` object
         if not result.result_flag or getattr(checker.func, 'run_on_error', False):

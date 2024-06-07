@@ -289,7 +289,7 @@ class TracedPopen(Process):
     def _protection_fault(self, syscall: int, is_update: bool) -> None:
         # When signed, 0xFFFFFFFF is equal to -1, meaning that ptrace failed to read the syscall for some reason.
         # We can't continue debugging as this could potentially be unsafe, so we should exit loudly.
-        # See <https://github.com/DMOJ/judge/issues/181> for more details.
+        # See <https://github.com/DMOJ/judge-server/issues/181> for more details.
         if syscall == -1:
             err = self._last_ptrace_errno
             if err is None:

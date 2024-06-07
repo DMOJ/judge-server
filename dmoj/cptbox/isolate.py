@@ -186,7 +186,7 @@ class IsolateTracer(dict):
                     sys_sysctlbyname: ALLOW,  # TODO: More strict?
                     sys_issetugid: ALLOW,
                     sys_rtprio_thread: ALLOW,  # EPERMs when invalid anyway
-                    sys_umtx_op: ALLOW,  # http://fxr.watson.org/fxr/source/kern/kern_umtx.c?v=FREEBSD60#L720
+                    sys_umtx_op: ALLOW,  # http://fxr.watson.org/fxr/source/kern/kern_umtx.c?v=FREEBSD-6-0#L720
                     sys_getcontext: ALLOW,
                     sys_setcontext: ALLOW,
                     sys_pread: ALLOW,
@@ -390,7 +390,7 @@ class IsolateTracer(dict):
 
     def handle_kill(self, debugger: Debugger) -> None:
         # Allow tgkill to execute as long as the target thread group is the debugged process
-        # libstdc++ seems to use this to signal itself, see <https://github.com/DMOJ/judge/issues/18A3>
+        # libstdc++ seems to use this to signal itself, see <https://github.com/DMOJ/judge-server/issues/183>
         target = debugger.uarg0
         if target != debugger.pid:
             raise DeniedSyscall(ACCESS_EPERM, f'Cannot kill other processes (target={target}, self={debugger.pid})')

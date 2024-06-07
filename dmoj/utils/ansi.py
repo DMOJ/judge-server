@@ -4,7 +4,7 @@ from termcolor import colored
 
 
 def strip_ansi(s: str) -> str:
-    # http://stackoverflow.com/questions/13506033/filtering-out-ansi-escape-sequences
+    # https://stackoverflow.com/questions/13506033/filtering-out-ansi-escape-sequences
     return re.sub(r'\x1b\[([0-9,A-Z]{1,2}(;[0-9]{1,2})?(;[0-9]{3})?)?[m|K]?', '', s)
 
 

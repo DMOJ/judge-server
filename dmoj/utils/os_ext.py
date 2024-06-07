@@ -22,7 +22,7 @@ try:
 except ImportError:  # before Python 3.8
 
     def strsignal(signo: int) -> str:
-        # in large part from http://code.activestate.com/recipes/578899-strsignal/
+        # in large part from https://code.activestate.com/recipes/578899-strsignal/
         libc = ctypes.CDLL(ctypes.util.find_library('c'))
         strsignal_c = ctypes.CFUNCTYPE(ctypes.c_char_p, ctypes.c_int)(('strsignal', libc), ((1,),))
         NSIG = signal.NSIG

@@ -6,7 +6,9 @@ RUN mkdir /judge /problems && cd /judge && \
     python3 -m venv --prompt=DMOJ /env && \
 	/env/bin/pip3 install cython && \
 	/env/bin/pip3 install -e . && \
+ 	/env/bin/pip3 install pip setuptools wheel && \
 	/env/bin/python3 setup.py develop && \
+ 	apt install python3-distutils && \
 	HOME=~judge . ~judge/.profile && \
 	runuser -u judge -w PATH -- /env/bin/dmoj-autoconf -V > /judge-runtime-paths.yml && \
 	echo '  crt_x86_in_lib32: true' >> /judge-runtime-paths.yml

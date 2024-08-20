@@ -3,11 +3,11 @@ import io
 import os
 import sys
 import traceback
-from distutils.ccompiler import CCompiler
-from distutils.errors import DistutilsPlatformError
 from multiprocessing.pool import ThreadPool
 
 from setuptools import Extension, find_packages, setup
+from setuptools._distutils.ccompiler import CCompiler
+from setuptools._distutils.errors import DistutilsPlatformError
 from setuptools.command.build_ext import build_ext
 
 if os.name == 'nt':

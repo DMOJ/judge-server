@@ -239,7 +239,11 @@ class UnknownPlatformMixin(ASMExecutor):
     abi = PTBOX_ABI_INVALID
 
 
-NativeMixin: Any = (
-    [cls for cls in (PlatformX86Mixin, PlatformX64Mixin, PlatformARMMixin, PlatformARM64Mixin) if cls.abi == NATIVE_ABI]
-    or [UnknownPlatformMixin]
-)[0]
+NativeMixin: Any = next(
+    (
+        cls
+        for cls in (PlatformX86Mixin, PlatformX64Mixin, PlatformARMMixin, PlatformARM64Mixin)
+        if cls.abi == NATIVE_ABI
+    ),
+    UnknownPlatformMixin,
+)

@@ -732,6 +732,7 @@ sys_unlink: int
 sys_unlinkat: int
 sys_unmount: int
 sys_unshare: int
+sys_uretprobe: int
 sys_uselib: int
 sys_userfaultfd: int
 sys_ustat: int

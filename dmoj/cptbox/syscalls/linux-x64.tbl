@@ -333,6 +333,7 @@
 332	statx
 333	io_pgetevents
 334	rseq
+335	uretprobe
 424	pidfd_send_signal
 425	io_uring_setup
 426	io_uring_enter

@@ -183,19 +183,22 @@ def compile_to_llvm(source_code: bytes) -> bytes:
     return TEMPLATE.replace(b'{code}', '\n'.join(inst).encode())
 
 
-OPT_PASSES = [
-    # Shorten instructions
-    'instcombine',
-    'gvn',
-    # Optimize loops
-    'loop-rotate',
-    'loop-mssa(licm)',
-    'indvars',
-    # Clean up
-    'simplifycfg',
-    'instcombine',
-    'gvn',
-]
+def get_opt_passes(opt_version: Tuple[int, ...]) -> List[str]:
+    # https://github.com/llvm/llvm-project/issues/92648
+    instcombine = 'instcombine<no-verify-fixpoint>' if opt_version >= (18,) else 'instcombine'
+    return [
+        # Shorten instructions
+        instcombine,
+        'gvn',
+        # Optimize loops
+        'loop-rotate',
+        'loop-mssa(licm)',
+        'indvars',
+        # Clean up
+        'simplifycfg',
+        instcombine,
+        'gvn',
+    ]
 
 
 class Executor(LLCExecutor):
@@ -214,7 +217,8 @@ class Executor(LLCExecutor):
     # Do both opt and llc.
     def assemble(self) -> Tuple[bytes, List[str]]:
         assert self._code is not None
-        args = [self.runtime_dict[self.opt_name], '-S', f'-passes={",".join(OPT_PASSES)}', self._code, '-o', self._code]
+        opt_passes = get_opt_passes(self.get_opt_version())
+        args = [self.runtime_dict[self.opt_name], '-S', f'-passes={",".join(opt_passes)}', self._code, '-o', self._code]
         process = self.create_compile_process(args)
         opt_output = self.get_compile_output(process)
         as_output, to_link = super().assemble()
@@ -223,6 +227,10 @@ class Executor(LLCExecutor):
     @classmethod
     def get_versionable_commands(cls) -> List[Tuple[str, str]]:
         return [(cls.opt_name, cls.runtime_dict[cls.opt_name])] + super().get_versionable_commands()
+
+    @classmethod
+    def get_opt_version(cls) -> Tuple[int, ...]:
+        return cls.get_runtime_versions()[0][1]
 
     @classmethod
     def get_find_first_mapping(cls) -> Optional[Dict[str, List[str]]]:

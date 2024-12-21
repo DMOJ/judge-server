@@ -3,7 +3,7 @@ from dmoj.executors.mixins import NullStdoutMixin
 
 
 # SBCL implements its own heap management, and relies on ASLR being disabled. So, on startup,
-# it reads /proc/self/exe do determine if ASLR is disabled. If not, it forks, sets
+# it reads /proc/self/exe to determine if ASLR is disabled. If not, it forks, sets
 # personality (https://man7.org/linux/man-pages/man2/personality.2.html) to disable ASLR,
 # then execve's itself...
 # As of https://github.com/DMOJ/judge-server/issues/277 we set personality ourselves to disable ASLR,
@@ -14,8 +14,8 @@ class Executor(NullStdoutMixin, CompiledExecutor):
     command = 'sbcl'
     syscalls = ['personality']
     test_program = '(write-line (read-line))'
-    address_grace = 262144
-    data_grace = 262144
+    address_grace = 524288
+    data_grace = 524288
     nproc = -1
 
     compile_script = """(compile-file "{code}")"""

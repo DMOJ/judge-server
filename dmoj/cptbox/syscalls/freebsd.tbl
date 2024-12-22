@@ -519,3 +519,5 @@
 586	timerfd_gettime
 587	timerfd_settime
 588	kcmp
+589	getrlimitusage
+590	fchroot

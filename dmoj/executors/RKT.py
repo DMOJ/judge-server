@@ -8,6 +8,7 @@ class Executor(CompiledExecutor):
     ext = 'rkt'
     fs = [RecursiveDir('/etc/racket'), ExactFile('/etc/passwd'), ExactDir('/')]
     compiler_read_fs = [RecursiveDir('~/.local/share/racket')]
+    compiler_time_limit = 20
 
     command = 'racket'
 

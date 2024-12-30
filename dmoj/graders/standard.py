@@ -18,7 +18,7 @@ class StandardGrader(BaseGrader):
     def grade(self, case: TestCase) -> Result:
         result = Result(case)
 
-        input_file = case.input_data_fd()
+        input_file = case.input_data_io()
 
         self._launch_process(case, input_file)
 

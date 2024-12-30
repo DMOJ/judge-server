@@ -87,7 +87,7 @@ class BridgedInteractiveGrader(StandardGrader):
         )
 
         with mktemp(judge_output) as answer_file:
-            input_path = case.input_data_fd().to_path()
+            input_path = case.input_data_io().to_path()
 
             # TODO(@kirito): testlib.h expects a file they can write to,
             # but we currently don't have a sane way to allow this.

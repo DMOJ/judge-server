@@ -345,7 +345,7 @@ class TestCase(BaseTestCase):
     output_prefix_length: int
     has_binary_data: bool
     _input_data_fd: Optional[MmapableIO]
-    _generated: Optional[Tuple[bytes, bytes]]
+    _generated: Optional[Tuple[MmapableIO, bytes]]
 
     def __init__(self, count: int, batch_no: int, config: ConfigNode, problem: Problem):
         self.position = count
@@ -425,6 +425,10 @@ class TestCase(BaseTestCase):
         assert args is not None
         args = map(str, args)
 
+        input_io = MemoryIO()
+        # Enable generators to write any size files.
+        executor.fsize = -1
+
         # setting large buffers is really important, because otherwise stderr is unbuffered
         # and the generator begins calling into cptbox Python code really frequently
         proc = executor.launch(
@@ -432,7 +436,7 @@ class TestCase(BaseTestCase):
             time=time_limit,
             memory=memory_limit,
             stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
+            stdout=input_io,
             stderr=subprocess.PIPE,
             stderr_buffer_size=65536,
             stdout_buffer_size=65536,
@@ -443,8 +447,9 @@ class TestCase(BaseTestCase):
         except KeyError:
             input = None
 
-        stdout, stderr = proc.unsafe_communicate(input)
-        self._generated = self._normalize(stdout), self._normalize(stderr)
+        _, stderr = proc.unsafe_communicate(input)
+        input_io.seal()
+        self._generated = input_io, self._normalize(stderr)
 
         parse_helper_file_error(proc, executor, 'generator', stderr, time_limit, memory_limit)
 
@@ -467,12 +472,8 @@ class TestCase(BaseTestCase):
             if self._generated is None:
                 self._run_generator(gen, args=self.config.generator_args)
             assert self._generated is not None
-            # FIXME: generate into the MemoryIO.
             if self._generated[0]:
-                memory = MemoryIO()
-                memory.write(self._generated[0])
-                memory.seal()
-                return memory
+                return self._generated[0]
 
         # in file is optional
         if self.config['in']:

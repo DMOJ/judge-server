@@ -48,7 +48,7 @@ def check(
     args_format_string = args_format_string or contrib_modules[type].ContribModule.get_checker_args_format_string()
 
     with mktemp(process_output) as output_file, mktemp(judge_output) as answer_file:
-        input_path = case.input_data_fd().to_path()
+        input_path = case.input_data_io().to_path()
 
         checker_args = shlex.split(
             args_format_string.format(

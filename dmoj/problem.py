@@ -344,7 +344,7 @@ class TestCase(BaseTestCase):
     batch: int
     output_prefix_length: int
     has_binary_data: bool
-    _input_data_fd: Optional[MmapableIO]
+    _input_data_io: Optional[MmapableIO]
     _generated: Optional[Tuple[MmapableIO, bytes]]
 
     def __init__(self, count: int, batch_no: int, config: ConfigNode, problem: Problem):
@@ -356,7 +356,7 @@ class TestCase(BaseTestCase):
         self.output_prefix_length = config.output_prefix_length
         self.has_binary_data = config.binary_data
         self._generated = None
-        self._input_data_fd = None
+        self._input_data_io = None
 
     def _normalize(self, data: bytes) -> bytes:
         # Perhaps the correct answer may be 'no output', in which case it'll be
@@ -454,16 +454,16 @@ class TestCase(BaseTestCase):
         parse_helper_file_error(proc, executor, 'generator', stderr, time_limit, memory_limit)
 
     def input_data(self) -> bytes:
-        return self.input_data_fd().to_bytes()
+        return self.input_data_io().to_bytes()
 
-    def input_data_fd(self) -> MmapableIO:
-        if self._input_data_fd:
-            return self._input_data_fd
+    def input_data_io(self) -> MmapableIO:
+        if self._input_data_io:
+            return self._input_data_io
 
-        result = self._input_data_fd = self._make_input_data_fd()
+        result = self._input_data_io = self._make_input_data_io()
         return result
 
-    def _make_input_data_fd(self) -> MmapableIO:
+    def _make_input_data_io(self) -> MmapableIO:
         gen = self.config.generator
 
         # don't try running the generator if we specify an output file explicitly,
@@ -516,15 +516,15 @@ class TestCase(BaseTestCase):
 
     def free_data(self) -> None:
         self._generated = None
-        if self._input_data_fd:
-            self._input_data_fd.close()
+        if self._input_data_io:
+            self._input_data_io.close()
 
     def __str__(self) -> str:
         return f'TestCase(in={self.config["in"]},out={self.config["out"]},points={self.config["points"]})'
 
     # FIXME(tbrindus): this is a hack working around the fact we can't pickle these fields, but we do need parts of
     # TestCase itself on the other end of the IPC.
-    _pickle_blacklist = ('_generated', 'config', 'problem', '_input_data_fd')
+    _pickle_blacklist = ('_generated', 'config', 'problem', '_input_data_io')
 
     def __getstate__(self) -> dict:
         k = {k: v for k, v in self.__dict__.items() if k not in self._pickle_blacklist}

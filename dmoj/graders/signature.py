@@ -26,8 +26,10 @@ class SignatureGrader(StandardGrader):
 
             aux_sources[handler_data['header']] = header
             entry = entry_point
-            return executors[self.language].Executor(
+            executor = executors[self.language].Executor(
                 self.problem.id, entry, aux_sources=aux_sources, defines=['-DSIGNATURE_GRADER']
             )
+            self._orig_fsize = executor.fsize
+            return executor
         else:
             raise InternalError('no valid runtime for signature grading %s found' % self.language)

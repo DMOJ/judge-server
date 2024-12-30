@@ -104,6 +104,7 @@ class Interactor:
 
 class InteractiveGrader(StandardGrader):
     check: CheckerOutput
+    memfd_output = False
 
     def _launch_process(self, case, input_file=None):
         super()._launch_process(case, input_file=None)

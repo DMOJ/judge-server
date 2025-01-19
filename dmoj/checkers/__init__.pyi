@@ -32,6 +32,7 @@ floatsabs: Checker
 floatsrel: Checker
 identical: Checker
 linecount: Checker
+exception: Checker
 linematches: Checker
 rstripped: Checker
 sorted: Checker

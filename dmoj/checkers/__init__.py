@@ -8,6 +8,7 @@ from dmoj.checkers import (
     floatsrel,
     identical,
     linecount,
+    exception,
     linematches,
     rstripped,
     sorted,

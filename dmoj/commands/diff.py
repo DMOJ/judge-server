@@ -1,6 +1,7 @@
 import difflib
 from typing import List
 
+import pygments
 import pygments.formatters
 import pygments.lexers
 

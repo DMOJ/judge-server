@@ -10,6 +10,8 @@ def main : IO Unit := do
   let line ← cin.getLine
   IO.println line
 """
+    nproc = -1
+    syscalls = ['eventfd2']
 
     def compile(self) -> str:
         command = self.get_command()

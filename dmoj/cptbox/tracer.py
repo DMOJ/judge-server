@@ -30,7 +30,6 @@ _SYSCALL_INDICIES[PTBOX_ABI_FREEBSD_X64] = 4
 _SYSCALL_INDICIES[PTBOX_ABI_ARM64] = 5
 
 FREEBSD = sys.platform.startswith('freebsd')
-BAD_SECCOMP = is_bad_seccomp()
 
 _address_bits = {
     PTBOX_ABI_X86: 32,
@@ -43,6 +42,20 @@ _address_bits = {
 
 HandlerCallback = Callable[[Debugger], bool]
 
+def is_bad_seccomp() -> bool:
+    try:
+        version_parts = os.uname().release.partition('-')[0].split('.')
+        clean_parts = []
+        for part in version_parts:
+            clean_part = ''.join(c for c in part if c.isdigit())
+            if clean_part:
+                clean_parts.append(int(clean_part))
+        return sys.platform == 'linux' and tuple(clean_parts) < (4, 8)
+    except (ValueError, IndexError):
+        # Default to assuming bad seccomp if we can't parse
+        return True
+
+BAD_SECCOMP = is_bad_seccomp()
 
 class MaxLengthExceeded(ValueError):
     pass
@@ -424,17 +437,3 @@ class TracedPopen(Process):
 
 def can_debug(abi: int) -> bool:
     return abi in SUPPORTED_ABIS
-
-def is_bad_seccomp() -> bool:
-    try:
-        version_parts = os.uname().release.partition('-')[0].split('.')
-        clean_parts = []
-        for part in version_parts:
-            clean_part = ''.join(c for c in part if c.isdigit())
-            if clean_part:
-                clean_parts.append(int(clean_part))
-        return sys.platform == 'linux' and tuple(clean_parts) < (4, 8)
-    except (ValueError, IndexError):
-        # Default to assuming bad seccomp if we can't parse
-        return True
-    

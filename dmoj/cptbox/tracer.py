@@ -42,6 +42,7 @@ _address_bits = {
 
 HandlerCallback = Callable[[Debugger], bool]
 
+
 def is_bad_seccomp() -> bool:
     try:
         version_parts = os.uname().release.partition('-')[0].split('.')
@@ -55,7 +56,9 @@ def is_bad_seccomp() -> bool:
         # Default to assuming bad seccomp if we can't parse
         return True
 
+
 BAD_SECCOMP = is_bad_seccomp()
+
 
 class MaxLengthExceeded(ValueError):
     pass

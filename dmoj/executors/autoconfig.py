@@ -60,9 +60,11 @@ def main():
             else:
                 if not args.silent:
                     print_ansi(
-                        f'#ansi[{feedback or "Success"}](green|bold)'
-                        if success
-                        else f'#ansi[{feedback or "Failed"}](red|bold)',
+                        (
+                            f'#ansi[{feedback or "Success"}](green|bold)'
+                            if success
+                            else f'#ansi[{feedback or "Failed"}](red|bold)'
+                        ),
                         file=sys.stderr,
                     )
 

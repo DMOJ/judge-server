@@ -63,6 +63,4 @@ class ParseTest(unittest.TestCase):
     def test_parse_int(self):
         self.assertEqual(int(1), 1)
         self.assertEqual(int(-1337), -1337)
-        self.assertEqual(
-            int(10**builtin_int_patch.INT_MAX_NUMBER_DIGITS), 10**builtin_int_patch.INT_MAX_NUMBER_DIGITS
-        )
+        self.assertEqual(int(10**builtin_int_patch.INT_MAX_NUMBER_DIGITS), 10**builtin_int_patch.INT_MAX_NUMBER_DIGITS)

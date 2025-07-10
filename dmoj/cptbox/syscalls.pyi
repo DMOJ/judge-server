@@ -153,6 +153,7 @@ sys_fchmodat2: int
 sys_fchown: int
 sys_fchown32: int
 sys_fchownat: int
+sys_fchroot: int
 sys_fcntl: int
 sys_fcntl64: int
 sys_fdatasync: int
@@ -244,6 +245,7 @@ sys_getresgid32: int
 sys_getresuid: int
 sys_getresuid32: int
 sys_getrlimit: int
+sys_getrlimitusage: int
 sys_getrusage: int
 sys_getsid: int
 sys_getsockname: int
@@ -253,6 +255,7 @@ sys_gettimeofday: int
 sys_getuid: int
 sys_getuid32: int
 sys_getxattr: int
+sys_getxattrat: int
 sys_gssd_syscall: int
 sys_gtty: int
 sys_idle: int
@@ -348,6 +351,7 @@ sys_lio_listio: int
 sys_listen: int
 sys_listmount: int
 sys_listxattr: int
+sys_listxattrat: int
 sys_llistxattr: int
 sys_llseek: int
 sys_lock: int
@@ -524,6 +528,7 @@ sys_recvmmsg_time64: int
 sys_recvmsg: int
 sys_remap_file_pages: int
 sys_removexattr: int
+sys_removexattrat: int
 sys_rename: int
 sys_renameat: int
 sys_renameat2: int
@@ -626,6 +631,7 @@ sys_setuid: int
 sys_setuid32: int
 sys_setup: int
 sys_setxattr: int
+sys_setxattrat: int
 sys_sgetmask: int
 sys_shm_open: int
 sys_shm_open2: int
@@ -732,6 +738,7 @@ sys_unlink: int
 sys_unlinkat: int
 sys_unmount: int
 sys_unshare: int
+sys_uretprobe: int
 sys_uselib: int
 sys_userfaultfd: int
 sys_ustat: int

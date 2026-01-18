@@ -31,7 +31,7 @@ class Result:
         'OLE': 'yellow',
         'IE': 'red',
     }
-    CODE_DISPLAY_ORDER = ('IE', 'TLE', 'MLE', 'OLE', 'RTE', 'IR', 'WA', 'SC')
+    CODE_DISPLAY_ORDER = ('IE', 'OLE', 'TLE', 'MLE', 'RTE', 'IR', 'WA', 'SC')
 
     def __init__(
         self,

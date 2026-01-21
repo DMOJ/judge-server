@@ -12,6 +12,10 @@ PTBOX_ABI_COUNT: int
 ALL_ABIS: List[int]
 SUPPORTED_ABIS: List[int]
 
+class ArgAccessor:
+    def __getitem__(self, reg : int) -> int: ...
+    def __setitem__(self, reg : int, val : int) -> None: ...
+
 class Debugger:
     syscall: int
     result: int
@@ -22,6 +26,7 @@ class Debugger:
     arg3: int
     arg4: int
     arg5: int
+    arg: ArgAccessor
 
     uresult: int
     uarg0: int
@@ -30,6 +35,7 @@ class Debugger:
     uarg3: int
     uarg4: int
     uarg5: int
+    uarg: ArgAccessor
 
     pid: int
     tid: int

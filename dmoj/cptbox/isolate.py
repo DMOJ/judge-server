@@ -441,7 +441,7 @@ def wrap_access_check(syscall: int, check: AccessChecker) -> HandlerCallback:
     return inner
 
 
-def protection_fault(self, debugger: Debugger) -> bool:
+def protection_fault(debugger: Debugger) -> bool:
     return False
 
 

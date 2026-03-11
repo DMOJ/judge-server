@@ -436,7 +436,7 @@
 502	symlinkat
 503	unlinkat
 504	posix_openpt
-505	gssd_syscall
+505	kgssapi
 506	jail_get
 507	jail_set
 508	jail_remove
@@ -521,3 +521,15 @@
 588	kcmp
 589	getrlimitusage
 590	fchroot
+591	setcred
+592	exterrctl
+593	inotify_add_watch_at
+594	inotify_rm_watch
+595	getgroups
+596	setgroups
+597	jail_attach_jd
+598	jail_remove_jd
+599	kexec_load
+600	pdrfork
+601	pdwait
+602	renameat2

@@ -454,3 +454,8 @@
 464	getxattrat
 465	listxattrat
 466	removexattrat
+467	open_tree_attr
+468	file_getattr
+469	file_setattr
+470	listns
+471	rseq_slice_yield

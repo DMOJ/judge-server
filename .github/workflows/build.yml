@@ -5,13 +5,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - name: Set up Python 3.11
+    - name: Set up Python 3.14
       uses: actions/setup-python@v5
       with:
-        python-version: '3.11'
+        python-version: '3.14'
     - name: Install Black and Flake8
       run: |
-        pip install black==22.3 flake8==5.0.4 flake8-future-import flake8-logging-format flake8-import-order flake8-quotes flake8-black
+        pip install black==22.3 flake8==5.0.4 flake8-logging flake8-import-order flake8-quotes flake8-black
     - name: Run Flake8
       run: |
         black --version
@@ -27,10 +27,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - name: Set up Python 3.11
+    - name: Set up Python 3.14
       uses: actions/setup-python@v5
       with:
-        python-version: '3.11'
+        python-version: '3.14'
     - name: Install dependencies and mypy
       run: |
         pip install cython mypy types-termcolor types-requests types-PyYAML
@@ -43,12 +43,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - name: Set up Python 3.11
+    - name: Set up Python 3.14
       uses: actions/setup-python@v5
       with:
-        python-version: '3.11'
+        python-version: '3.14'
     - name: Install build dependencies
-      run: pip install cython
+      run: pip install cython setuptools
     - name: Create sdist
       run: python setup.py sdist
     - name: Install test dependencies
@@ -61,7 +61,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ '3.7', '3.8', '3.9', '3.10', '3.11' ]
+        python-version: ['3.10', '3.11', '3.12', '3.13']
     steps:
       - uses: actions/checkout@v4
       - name: Download docker image
@@ -117,7 +117,7 @@ jobs:
     runs-on: [self-hosted, Linux, ARM64]
     strategy:
       matrix:
-        python-version: [ '3.11' ]
+        python-version: [ '3.13' ]
     steps:
       - uses: actions/checkout@v4
       - name: Download docker image

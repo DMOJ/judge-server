@@ -27,16 +27,13 @@ class MmapableIO(io.FileIO, metaclass=ABCMeta):
 
     @classmethod
     @abstractmethod
-    def usable_with_name(cls) -> bool:
-        ...
+    def usable_with_name(cls) -> bool: ...
 
     @abstractmethod
-    def seal(self) -> None:
-        ...
+    def seal(self) -> None: ...
 
     @abstractmethod
-    def to_path(self) -> str:
-        ...
+    def to_path(self) -> str: ...
 
     def to_bytes(self) -> bytes:
         try:

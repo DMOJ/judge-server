@@ -17,7 +17,6 @@ from dmoj.utils.ansi import print_ansi
 from dmoj.utils.helper_files import compile_with_auxiliary_files
 from dmoj.utils.unicode import utf8text
 
-
 all_executors = executors.executors
 
 

@@ -74,7 +74,7 @@ exclude_executors: Set[str] = set()
 
 
 def load_env(cli: bool = False, testsuite: bool = False) -> None:  # pragma: no cover
-    global problem_globs, only_executors, exclude_executors, log_file, server_host, server_port, no_ansi, no_ansi_emu, skip_self_test, env, startup_warnings, no_watchdog, problem_regex, case_regex, api_listen, secure, no_cert_check, cert_store, problem_watches, cli_history_file, cli_command, log_level
+    global problem_globs, only_executors, exclude_executors, log_file, server_host, server_port, no_ansi, skip_self_test, no_watchdog, problem_regex, case_regex, api_listen, secure, no_cert_check, cert_store, problem_watches, cli_history_file, cli_command, log_level
 
     if cli:
         description = 'Starts a shell for interfacing with a local judge instance.'

@@ -16,3 +16,4 @@ ACCESS_EINVAL: ErrnoHandlerCallback
 ACCESS_ENOENT: ErrnoHandlerCallback
 ACCESS_EPERM: ErrnoHandlerCallback
 ACCESS_ENAMETOOLONG: ErrnoHandlerCallback
+ACCESS_ENOSYS: ErrnoHandlerCallback

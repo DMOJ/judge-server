@@ -5,7 +5,6 @@ from dmoj.cptbox import TracedPopen
 from dmoj.error import CompileError
 from dmoj.executors.LLC import Executor as LLCExecutor
 
-
 # This executor translates BF into LLVM and runs optimizations.
 # If a BF program does not segfault, the optimized version should not segfault.
 # If a BF program segfaults, the optimized version does not guarantee anything.

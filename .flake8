@@ -5,7 +5,7 @@ import-order-style = pycharm
 enable-extensions = G
 ignore =
     # for Black
-    E203, E501, W503,
+    E203, E501, E704, W503,
     # line break occurred after a binary operator
     W504,
     # allow only generator_stop and annotations future imports
@@ -13,7 +13,9 @@ ignore =
     # missing trailing comma in Python 2 only
     C814,
     # trailing comma on bare tuple prohibited
-    C818
+    C818,
+    # use exception() within an exception handler
+    LOG005
 per-file-ignores =
     # F403: import *, F405: name comes from import *
     ./dmoj/cptbox/compiler_isolate.py:F403,F405

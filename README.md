@@ -47,7 +47,7 @@ Supported languages include:
 
 * C++ 11/14/17/20/23 (GCC and Clang)
 * C 99/11
-* Java 8-19
+* Java 8/25
 * Python 2/3
 * PyPy 2/3
 * Pascal

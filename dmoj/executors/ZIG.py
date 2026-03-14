@@ -17,26 +17,25 @@ class Executor(StripCarriageReturnsMixin, CompiledExecutor):
     ]
     compiler_write_fs = compiler_read_fs
     compiler_required_dirs = ['~/.cache']
+    compiler_syscalls = [
+        'preadv',
+        'pwritev',
+        'copy_file_range',
+    ]
     test_program = """
 const std = @import("std");
 
 pub fn main() !void {
-    const io = std.io;
-    const stdin = std.io.getStdIn().inStream();
-    const stdout = std.io.getStdOut().outStream();
-
-    var line_buf: [50]u8 = undefined;
-    while (try stdin.readUntilDelimiterOrEof(&line_buf, '\n')) |line| {
-        if (line.len == 0) break;
-        try stdout.print("{}", .{line});
-    }
+    var buf: [50]u8 = undefined;
+    const n = try std.fs.File.stdin().readAll(&buf);
+    _ = try std.fs.File.stdout().writeAll(buf[0..n-1]);
 }"""
 
     def get_compile_args(self) -> List[str]:
         command = self.get_command()
         assert command is not None
         assert self._code is not None
-        return [command, 'build-exe', self._code, '--release-safe', '--name', self.problem]
+        return [command, 'build-exe', self._code, '-fsingle-threaded', '-O', 'ReleaseSafe', '--name', self.problem]
 
     @classmethod
     def get_version_flags(cls, command: str) -> List[VersionFlags]:

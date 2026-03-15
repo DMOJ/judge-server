@@ -25,7 +25,7 @@ println System.in.newReader().readLine()
     def get_cmdline(self, **kwargs) -> List[str]:
         res = super().get_cmdline(**kwargs)
 
-        res[-2:-1] = self.runtime_dict['groovy_args']
+        res[-2:-1] = ['-classpath', f'{self.runtime_dict["groovy_classpath"]}:{self._dir}']
         return res
 
     def get_compile_args(self):
@@ -74,7 +74,7 @@ println System.in.newReader().readLine()
 
         result['groovy_vm'] = cls.unravel_java(vm)
         i = cmdline.index('-classpath')
-        result['groovy_args'] = ['-classpath', f'.:{cmdline[i + 1]}']
+        result['groovy_classpath'] = cmdline[i + 1]
 
         data = cls.autoconfig_run_test(result)
         if data[1]:

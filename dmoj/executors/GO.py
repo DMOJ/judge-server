@@ -23,6 +23,7 @@ class Executor(CompiledExecutor):
     command = 'go'
     syscalls = ['mincore', 'pselect6', 'mlock', 'setrlimit', 'eventfd2']
     compiler_syscalls = ['copy_file_range', 'setrlimit', 'pidfd_open', 'pidfd_send_signal']
+    compiler_time_limit = 20
     test_name = 'echo'
     test_program = """\
 package main

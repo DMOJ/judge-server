@@ -25,10 +25,9 @@ class Executor(JavaExecutor):
     vm = 'scala_vm'
 
     test_program = """\
-object self_test extends App {
-     println("echo: Hello, World!")
-}
-"""
+object self_test:
+    def main(args: Array[String]) = println("echo: Hello, World!")
+    """
 
     def create_files(self, problem_id: str, source_code: bytes, *args, **kwargs) -> None:
         super().create_files(problem_id, source_code, *args, **kwargs)
@@ -37,9 +36,7 @@ object self_test extends App {
     def get_cmdline(self, **kwargs) -> List[str]:
         res = super().get_cmdline(**kwargs)
 
-        # Simply run bash -x $(which scala) and copy all arguments after -Xmx and -Xms
-        # and add it as a list in the configuration.
-        res[-2:-1] = self.runtime_dict['scala_args']
+        res[-2:-1] = ['-classpath', f'{self.runtime_dict["scala_classpath"]}:{self._dir}']
         return res
 
     def get_compile_args(self):
@@ -60,22 +57,18 @@ object self_test extends App {
     def autoconfig(cls) -> AutoConfigOutput:
         result: AutoConfigResult = {}
 
-        for key, files in {'scalac': ['scalac'], 'scala': ['scala']}.items():
-            file = cls.find_command_from_list(files)
-            if file is None:
-                return result, False, f'Failed to find "{key}"', ''
-            result[key] = file
+        scalac = cls.find_command_from_list(['scalac'])
+        if scalac is None:
+            return None, False, 'Failed to find "scalac"', ''
+        result['scalac'] = scalac
 
-        scala = result.pop('scala')
         with open(os.devnull, 'w') as devnull:
-            process = subprocess.Popen(
-                ['bash', '-x', scala, '-usebootcp', '-version'], stdout=devnull, stderr=subprocess.PIPE
-            )
+            process = subprocess.Popen(['bash', '-x', scalac, '-version'], stdout=devnull, stderr=subprocess.PIPE)
         output = utf8text(process.communicate()[1])
-        log = [i for i in output.split('\n') if 'scala.tools.nsc.MainGenericRunner' in i]
+        log = [i for i in output.split('\n') if 'dotty.tools.MainGenericCompiler' in i]
 
         if not log:
-            return result, False, f'Failed to parse: {scala}', ''
+            return result, False, f'Failed to parse: {scalac}', ''
 
         cmdline = log[-1].lstrip('+ ').split()
         vm = cls.find_command_from_list([cmdline[0]])
@@ -83,9 +76,10 @@ object self_test extends App {
             return result, False, f'Failed to find: {cmdline[0]}', ''
 
         result['scala_vm'] = cls.unravel_java(vm)
-        result['scala_args'] = [i for i in cmdline[1:-1] if not i.startswith(('-Xmx', '-Xms'))]
+        i = cmdline.index('-classpath')
+        result['scala_classpath'] = cmdline[i + 1]
 
         data = cls.autoconfig_run_test(result)
         if data[1]:
-            data = data[:2] + (f'Using {scala}',) + data[3:]
+            data = data[:2] + (f'Using {scalac}',) + data[3:]
         return data

@@ -83,7 +83,7 @@ The judge can also grade in the languages listed below:
 * Racket
 * Ruby
 * Rust
-* Scala
+* Scala 3
 * Chicken Scheme
 * sed
 * Steel Bank Common Lisp

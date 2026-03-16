@@ -24,10 +24,7 @@ class Executor(JavaExecutor):
     ]
     vm = 'scala_vm'
 
-    test_program = """\
-object self_test:
-    def main(args: Array[String]) = println("echo: Hello, World!")
-    """
+    test_program = '@main def self_test() = println(scala.io.StdIn.readLine())'
 
     def create_files(self, problem_id: str, source_code: bytes, *args, **kwargs) -> None:
         super().create_files(problem_id, source_code, *args, **kwargs)

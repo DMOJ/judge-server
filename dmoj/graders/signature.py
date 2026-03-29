@@ -9,9 +9,8 @@ from dmoj.utils.unicode import utf8bytes
 
 class SignatureGrader(StandardGrader):
     def _generate_binary(self) -> BaseExecutor:
-        siggraders = ('C', 'C11', 'CPP03', 'CPP11', 'CPP14', 'CPP17', 'CPP20', 'CPP23', 'CLANG', 'CLANGX')
-
-        if self.language in siggraders:
+        executor = executors[self.language].Executor
+        if getattr(executor, 'is_signature_gradable', False):
             aux_sources = {}
             handler_data = self.problem.config['signature_grader']
 
@@ -26,8 +25,6 @@ class SignatureGrader(StandardGrader):
 
             aux_sources[handler_data['header']] = header
             entry = entry_point
-            return executors[self.language].Executor(
-                self.problem.id, entry, aux_sources=aux_sources, defines=['-DSIGNATURE_GRADER']
-            )
+            return executor(self.problem.id, entry, aux_sources=aux_sources, defines=['-DSIGNATURE_GRADER'])
         else:
             raise InternalError('no valid runtime for signature grading %s found' % self.language)

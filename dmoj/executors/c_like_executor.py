@@ -164,7 +164,9 @@ class ClangMixin(CLikeExecutor):
 
 class CExecutor(CLikeExecutor):
     ext: str = 'c'
+    is_signature_gradable = True
 
 
 class CPPExecutor(CLikeExecutor):
     ext: str = 'cpp'
+    is_signature_gradable = True

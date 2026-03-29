@@ -90,10 +90,15 @@ jobs:
           #!/bin/bash -e
           . ~/.profile
           cd /code
+
+          cleanup() {
+            "$PYTHON" -m coverage combine
+            "$PYTHON" -m coverage xml
+          }
+          trap cleanup EXIT
+
           "$PYTHON" -m coverage run -m unittest discover dmoj/tests/
           "$PYTHON" -m coverage run --append .docker.test.py
-          "$PYTHON" -m coverage combine
-          "$PYTHON" -m coverage xml
           EOF
 
           chmod a+x run run-su
@@ -152,10 +157,15 @@ jobs:
           #!/bin/bash -e
           . ~/.profile
           cd /code
+
+          cleanup() {
+            "$PYTHON" -m coverage combine
+            "$PYTHON" -m coverage xml
+          }
+          trap cleanup EXIT
+
           "$PYTHON" -m coverage run -m unittest discover dmoj/tests/
           "$PYTHON" -m coverage run --append .docker.test.py
-          "$PYTHON" -m coverage combine
-          "$PYTHON" -m coverage xml
           EOF
 
           chmod a+x run run-su

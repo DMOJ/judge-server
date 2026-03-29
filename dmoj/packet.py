@@ -84,6 +84,7 @@ class PacketManager:
         self.fallback = 4
 
         self.conn = None
+        self.online = False
         self._do_reconnect()
 
     def _connect(self):
@@ -112,8 +113,10 @@ class PacketManager:
         self.input = self.conn.makefile('rb')
         self.handshake(problems, versions, self.name, self.key)
         log.info('Judge "%s" online: [%s]:%s', self.name, self.host, self.port)
+        self.online = True
 
     def _reconnect(self):
+        self.online = False
         log.warning('Attempting reconnection in %.0fs: [%s]:%s', self.fallback, self.host, self.port)
 
         if self.conn is not None:

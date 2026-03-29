@@ -110,7 +110,9 @@ jobs:
       - name: Execute tests in docker
         run: docker run -e PYTHON_VERSION="${{ matrix.python-version }}" -v "$(pwd):/code" -v "$HOME/docker-cache:/root/.cache" --cap-add=SYS_PTRACE dmoj/runtimes-tier3
       - name: Upload coverage data
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v6
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
       - name: Prepare cache for storage
         run: sudo chown -R "$USER:$USER" "$HOME/docker-cache"
   arm64:
@@ -162,4 +164,6 @@ jobs:
           docker run -e PYTHON_VERSION="${{ matrix.python-version }}" -v "$(pwd):/source" -v "$HOME/docker-cache:/root/.cache" \
             --entrypoint=/usr/bin/tini --cap-add=SYS_PTRACE dmoj/runtimes-tier3 /source/run
       - name: Upload coverage data
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v6
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}

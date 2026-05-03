@@ -8,7 +8,7 @@ LINUX_SYSCALLS_32 = 'https://raw.githubusercontent.com/torvalds/linux/master/arc
 LINUX_SYSCALLS_64 = 'https://raw.githubusercontent.com/torvalds/linux/master/arch/x86/entry/syscalls/syscall_64.tbl'
 LINUX_SYSCALLS_ARM = 'https://raw.githubusercontent.com/torvalds/linux/master/arch/arm/tools/syscall.tbl'
 LINUX_SYSCALLS_GENERIC = 'https://raw.githubusercontent.com/torvalds/linux/master/include/uapi/asm-generic/unistd.h'
-FREEBSD_SYSCALLS = 'https://cgit.freebsd.org/src/plain/sys/kern/syscalls.master'
+FREEBSD_SYSCALLS = 'https://raw.githubusercontent.com/freebsd/freebsd-src/refs/heads/main/sys/kern/syscalls.master'
 
 func_to_name = {}
 names = set()

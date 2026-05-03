@@ -14,6 +14,7 @@ jobs:
         python-version: '3.14'
     - name: Update syscalls
       run: |
+        pip install requests
         cd dmoj/cptbox/syscalls
         python generate.py
     - name: Create pull request

@@ -1,8 +1,6 @@
-import codecs
 import re
-from urllib.request import urlopen
 
-utf8reader = codecs.getreader('utf-8')
+import requests
 
 LINUX_SYSCALLS_32 = 'https://raw.githubusercontent.com/torvalds/linux/master/arch/x86/entry/syscalls/syscall_32.tbl'
 LINUX_SYSCALLS_64 = 'https://raw.githubusercontent.com/torvalds/linux/master/arch/x86/entry/syscalls/syscall_64.tbl'
@@ -13,7 +11,15 @@ FREEBSD_SYSCALLS = 'https://raw.githubusercontent.com/freebsd/freebsd-src/refs/h
 func_to_name = {}
 names = set()
 
-with open('linux-x86.tbl', 'w') as x86, utf8reader(urlopen(LINUX_SYSCALLS_32)) as data:
+
+def load_lines(url):
+    response = requests.get(url)
+    response.raise_for_status()
+    return response.text.splitlines()
+
+
+data = load_lines(LINUX_SYSCALLS_32)
+with open('linux-x86.tbl', 'w') as x86:
     for line in data:
         if line.startswith('#') or line.isspace():
             continue
@@ -27,11 +33,10 @@ with open('linux-x86.tbl', 'w') as x86, utf8reader(urlopen(LINUX_SYSCALLS_32)) a
         names.add(name)
         print('%d\t%s' % (int(syscall[0]), name), file=x86)
 
-with open('linux-x64.tbl', 'w') as x64, open('linux-x32.tbl', 'w') as x32, utf8reader(
-    urlopen(LINUX_SYSCALLS_64)
-) as data:
+data = load_lines(LINUX_SYSCALLS_64)
+with open('linux-x64.tbl', 'w') as x64, open('linux-x32.tbl', 'w') as x32:
     for line in data:
-        if line.startswith('#') or line.isspace():
+        if not line or line.startswith('#') or line.isspace():
             continue
         syscall = line.split()
         id = int(syscall[0])
@@ -46,7 +51,8 @@ with open('linux-x64.tbl', 'w') as x64, open('linux-x32.tbl', 'w') as x32, utf8r
             print('%d\t%s' % (id, name), file=x32)
 
 rewas = re.compile(r'# (\d+) was (sys_[a-z0-9_]+)')
-with open('linux-arm.tbl', 'w') as arm, utf8reader(urlopen(LINUX_SYSCALLS_ARM)) as data:
+data = load_lines(LINUX_SYSCALLS_ARM)
+with open('linux-arm.tbl', 'w') as arm:
     id = 0
     for line in data:
         match = rewas.search(line)
@@ -68,9 +74,8 @@ with open('linux-arm.tbl', 'w') as arm, utf8reader(urlopen(LINUX_SYSCALLS_ARM)) 
         print('%d\t%s' % (int(id_str), name), file=arm)
 
 renr = re.compile(r'#define\s+__NR(?:3264)?_([a-z0-9_]+)\s+(\d+)')
-with open('linux-generic.tbl', 'w') as generic64, open('linux-generic32.tbl', 'w') as generic32, utf8reader(
-    urlopen(LINUX_SYSCALLS_GENERIC)
-) as data:
+data = load_lines(LINUX_SYSCALLS_GENERIC)
+with open('linux-generic.tbl', 'w') as generic64, open('linux-generic32.tbl', 'w') as generic32:
     only_32 = False
     for line in data:
         if '#undef __NR_syscalls' in line:
@@ -91,7 +96,6 @@ with open('linux-generic.tbl', 'w') as generic64, open('linux-generic32.tbl', 'w
                 print('%d\t%s' % (id, name), file=generic64)
             print('%d\t%s' % (id, name), file=generic32)
 
-
 renumber = re.compile(r'^(\d+)\s+AUE_\S+\s+\S+(?:\t(\w+)$)?')
 rename = re.compile(r'\t\t\w+ \*?(.*)\(')
 number = -1
@@ -107,7 +111,8 @@ def freebsd_syscall(name):
     number = -1
 
 
-with open('freebsd.tbl', 'w') as output, utf8reader(urlopen(FREEBSD_SYSCALLS)) as data:
+data = load_lines(FREEBSD_SYSCALLS)
+with open('freebsd.tbl', 'w') as output:
     for line in data:
         match = renumber.match(line)
         if match:

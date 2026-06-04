@@ -91,6 +91,7 @@ class Problem:
         input_case_pattern: Pattern[str],
         output_case_pattern: Pattern[str],
         case_points: Iterator[int],
+        case_batch_dependencies: Optional[dict] = None,
     ) -> List[dict]:
         key_type = Union[str, int, None]
 
@@ -142,15 +143,16 @@ class Problem:
         for batch_or_case_id in sorted(groups.keys(), key=lambda id: (isinstance(id, int), id)):
             group_cases = groups[batch_or_case_id]
             if batch_or_case_id in batch_ids:
-                test_cases.append(
-                    {
-                        'batched': [
-                            {'in': testcase.input_file, 'out': testcase.output_file}
-                            for _, testcase in sorted(group_cases.items())
-                        ],
-                        'points': next(case_points),
-                    }
-                )
+                batch_dict: dict = {
+                    'batched': [
+                        {'in': testcase.input_file, 'out': testcase.output_file}
+                        for _, testcase in sorted(group_cases.items())
+                    ],
+                    'points': next(case_points),
+                }
+                if case_batch_dependencies and batch_or_case_id in case_batch_dependencies:
+                    batch_dict['dependencies'] = case_batch_dependencies[batch_or_case_id]
+                test_cases.append(batch_dict)
             else:
                 if len(group_cases) > 1:
                     raise InvalidInitException('problem has conflicting test cases: %s' % group_cases)
@@ -186,6 +188,7 @@ class Problem:
             re.compile(get_with_default('input_format', DEFAULT_TEST_CASE_INPUT_PATTERN), re.IGNORECASE),
             re.compile(get_with_default('output_format', DEFAULT_TEST_CASE_OUTPUT_PATTERN), re.IGNORECASE),
             iter(get_with_default('case_points', itertools.repeat(self.config.points))),
+            get_with_default('case_batch_dependencies', None),
         )
 
         return self.config['test_cases']

@@ -91,7 +91,7 @@ class Problem:
         input_case_pattern: Pattern[str],
         output_case_pattern: Pattern[str],
         case_points: Iterator[int],
-        case_batch_dependencies: Optional[dict] = None,
+        case_dependencies: Optional[list] = None,
     ) -> List[dict]:
         key_type = Union[str, int, None]
 
@@ -151,8 +151,8 @@ class Problem:
                     ],
                     'points': next(case_points),
                 }
-                if case_batch_dependencies is not None and batch_counter < len(case_batch_dependencies):
-                    deps = case_batch_dependencies[batch_counter]
+                if case_dependencies is not None and batch_counter < len(case_dependencies):
+                    deps = case_dependencies[batch_counter]
                     if deps:
                         batch_dict['dependencies'] = deps
                 batch_counter += 1
@@ -161,9 +161,15 @@ class Problem:
                 if len(group_cases) > 1:
                     raise InvalidInitException('problem has conflicting test cases: %s' % group_cases)
                 test_case = next(iter(group_cases.values()))
-                test_cases.append(
-                    {'in': test_case.input_file, 'out': test_case.output_file, 'points': next(case_points)}
-                )
+                case_dict = {'in': test_case.input_file, 'out': test_case.output_file, 'points': next(case_points)}
+                
+                if case_dependencies is not None and batch_counter < len(case_dependencies):
+                    deps = case_dependencies[batch_counter]
+                    if deps:
+                        case_dict['dependencies'] = deps
+                
+                batch_counter += 1
+                test_cases.append(case_dict)
 
         return test_cases
 
@@ -187,15 +193,15 @@ class Problem:
             return test_cases[name] or default
 
         # If the `test_cases` node is None, we try to guess the testcase name format.
-        raw_deps = get_with_default('case_batch_dependencies', None)
-        case_batch_dependencies = raw_deps.unwrap() if hasattr(raw_deps, 'unwrap') else raw_deps
+        raw_deps = get_with_default('case_dependencies', None)
+        case_dependencies = raw_deps.unwrap() if hasattr(raw_deps, 'unwrap') else raw_deps
 
         self.config['test_cases'] = self._match_test_cases(
             self._problem_file_list(),
             re.compile(get_with_default('input_format', DEFAULT_TEST_CASE_INPUT_PATTERN), re.IGNORECASE),
             re.compile(get_with_default('output_format', DEFAULT_TEST_CASE_OUTPUT_PATTERN), re.IGNORECASE),
             iter(get_with_default('case_points', itertools.repeat(self.config.points))),
-            case_batch_dependencies,
+            case_dependencies,
         )
 
         return self.config['test_cases']

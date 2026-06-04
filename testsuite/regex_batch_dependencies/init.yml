@@ -2,4 +2,4 @@ archive: archive.zip
 test_cases:
   input_format: (?P<case>\d)\.txt
   output_format: (?P<case>\d)\.txt
-  case_batch_dependencies: [[], [], [1, 2], []]
+  case_dependencies: [[], [], [1, 2], []]

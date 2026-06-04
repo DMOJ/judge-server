@@ -162,12 +162,12 @@ class Problem:
                     raise InvalidInitException('problem has conflicting test cases: %s' % group_cases)
                 test_case = next(iter(group_cases.values()))
                 case_dict = {'in': test_case.input_file, 'out': test_case.output_file, 'points': next(case_points)}
-                
+
                 if case_dependencies is not None and batch_counter < len(case_dependencies):
                     deps = case_dependencies[batch_counter]
                     if deps:
                         case_dict['dependencies'] = deps
-                
+    
                 batch_counter += 1
                 test_cases.append(case_dict)
 

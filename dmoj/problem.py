@@ -167,7 +167,7 @@ class Problem:
                     deps = case_dependencies[batch_counter]
                     if deps:
                         case_dict['dependencies'] = deps
-    
+
                 batch_counter += 1
                 test_cases.append(case_dict)
 

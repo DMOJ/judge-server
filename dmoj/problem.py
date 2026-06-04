@@ -140,6 +140,7 @@ class Problem:
                 setattr(groups[batch][case], filetype, testcase_file)
 
         test_cases = []
+        batch_counter = 0
         for batch_or_case_id in sorted(groups.keys(), key=lambda id: (isinstance(id, int), id)):
             group_cases = groups[batch_or_case_id]
             if batch_or_case_id in batch_ids:
@@ -150,8 +151,11 @@ class Problem:
                     ],
                     'points': next(case_points),
                 }
-                if case_batch_dependencies and batch_or_case_id in case_batch_dependencies:
-                    batch_dict['dependencies'] = case_batch_dependencies[batch_or_case_id]
+                if case_batch_dependencies is not None and batch_counter < len(case_batch_dependencies):
+                    deps = case_batch_dependencies[batch_counter]
+                    if deps:
+                        batch_dict['dependencies'] = deps
+                batch_counter += 1
                 test_cases.append(batch_dict)
             else:
                 if len(group_cases) > 1:
@@ -183,12 +187,15 @@ class Problem:
             return test_cases[name] or default
 
         # If the `test_cases` node is None, we try to guess the testcase name format.
+        raw_deps = get_with_default('case_batch_dependencies', None)
+        case_batch_dependencies = raw_deps.unwrap() if hasattr(raw_deps, 'unwrap') else raw_deps
+
         self.config['test_cases'] = self._match_test_cases(
             self._problem_file_list(),
             re.compile(get_with_default('input_format', DEFAULT_TEST_CASE_INPUT_PATTERN), re.IGNORECASE),
             re.compile(get_with_default('output_format', DEFAULT_TEST_CASE_OUTPUT_PATTERN), re.IGNORECASE),
             iter(get_with_default('case_points', itertools.repeat(self.config.points))),
-            get_with_default('case_batch_dependencies', None),
+            case_batch_dependencies,
         )
 
         return self.config['test_cases']

@@ -153,8 +153,10 @@ class Problem:
                 }
                 if case_dependencies is not None and batch_counter < len(case_dependencies):
                     deps = case_dependencies[batch_counter]
+                    if hasattr(deps, 'unwrap'):
+                        deps = deps.unwrap()
                     if deps:
-                        batch_dict['dependencies'] = deps
+                        batch_dict['dependencies'] = list(deps)
                 batch_counter += 1
                 test_cases.append(batch_dict)
             else:
@@ -165,8 +167,10 @@ class Problem:
 
                 if case_dependencies is not None and batch_counter < len(case_dependencies):
                     deps = case_dependencies[batch_counter]
+                    if hasattr(deps, 'unwrap'):
+                        deps = deps.unwrap()
                     if deps:
-                        case_dict['dependencies'] = deps
+                        case_dict['dependencies'] = list(deps)
 
                 batch_counter += 1
                 test_cases.append(case_dict)

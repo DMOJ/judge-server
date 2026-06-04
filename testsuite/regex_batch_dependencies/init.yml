@@ -1,3 +1,4 @@
+archive: archive.zip
 test_cases:
   input_format: (?P<case>\d)\.txt
   output_format: (?P<case>\d)\.txt

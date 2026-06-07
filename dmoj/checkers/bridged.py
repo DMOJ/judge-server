@@ -43,7 +43,7 @@ def check(
     executor = get_executor(problem_id, files, flags, lang, compiler_time_limit)
 
     if type not in contrib_modules:
-        raise InternalError('%s is not a valid contrib module' % type)
+        raise InternalError(f'{type} is not a valid contrib module')
 
     args_format_string = args_format_string or contrib_modules[type].ContribModule.get_checker_args_format_string()
 
@@ -75,7 +75,8 @@ def check(
             point_value,
             time_limit,
             memory_limit,
-            feedback=utf8text(proc_output) if feedback else '',
+            feedback=utf8text(proc_output),
             name='checker',
             stderr=error,
+            show_feedback=feedback,
         )

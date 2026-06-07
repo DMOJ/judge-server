@@ -1,5 +1,5 @@
 import re
-from typing import TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 
 from dmoj.contrib.testlib import ContribModule as TestlibContribModule
 from dmoj.error import InternalError
@@ -34,7 +34,8 @@ class ContribModule(TestlibContribModule):
         feedback: str,
         name: str,
         stderr: bytes,
-    ):
+        show_feedback: bool = True,
+    ) -> Optional[CheckerResult]:
         if proc.returncode == cls.PARTIAL:
             match = cls.repartial.search(stderr)
             if not match:
@@ -46,5 +47,5 @@ class ContribModule(TestlibContribModule):
             return CheckerResult(True, points, feedback=feedback)
         else:
             return super().parse_return_code(
-                proc, executor, point_value, time_limit, memory_limit, feedback, name, stderr
+                proc, executor, point_value, time_limit, memory_limit, feedback, name, stderr, show_feedback
             )

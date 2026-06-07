@@ -1,7 +1,7 @@
 import os
 import re
 from collections import deque
-from typing import Dict, List, Optional, Type
+from typing import Dict, List, Optional, Sequence, Type
 
 from dmoj.cptbox import TracedPopen
 from dmoj.executors.base_executor import AutoConfigOutput, AutoConfigResult, VersionFlags
@@ -139,6 +139,10 @@ class CLikeExecutor(SingleDigitVersionMixin, CompiledExecutor):
             cls.has_color = versions is not None and versions[0][1] is not None and versions[0][1] > (4, 9)
         return res
 
+    @classmethod
+    def supports_multifile(cls) -> bool:
+        return True
+
 
 class GCCMixin(CLikeExecutor):
     arch: str = 'gcc_target_arch'
@@ -170,3 +174,8 @@ class CExecutor(CLikeExecutor):
 class CPPExecutor(CLikeExecutor):
     ext: str = 'cpp'
     is_signature_gradable = True
+
+    @classmethod
+    def get_valid_exts(cls) -> Sequence[str]:
+        # Recognize both `cpp` and `cc` as valid C++ extensions for auxiliary files
+        return 'cpp', 'cc'

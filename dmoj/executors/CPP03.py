@@ -4,6 +4,7 @@ from dmoj.executors.c_like_executor import CPPExecutor, GCCMixin
 class Executor(GCCMixin, CPPExecutor):
     command = 'g++'
     std = 'c++03'
+    ext_priority = 1
     test_program = """
 #include <iostream>
 

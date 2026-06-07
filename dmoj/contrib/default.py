@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 
 from dmoj.contrib.base import BaseContribModule
 from dmoj.executors.base_executor import BaseExecutor
@@ -35,10 +35,15 @@ class ContribModule(BaseContribModule):
         feedback: str,
         name: str,
         stderr: bytes,
-    ):
+        show_feedback: bool = True,
+    ) -> Optional[CheckerResult]:
+        if not show_feedback:
+            feedback = ''
+
         if proc.returncode == cls.AC:
             return CheckerResult(True, point_value, feedback=feedback)
         elif proc.returncode == cls.WA:
             return CheckerResult(False, 0, feedback=feedback)
         else:
             parse_helper_file_error(proc, executor, name, stderr, time_limit, memory_limit)
+            return None

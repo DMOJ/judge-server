@@ -1,0 +1,3 @@
+generator: gen.cc
+test_cases:
+- {in: 1.in, generator_args: [1], points: 1}

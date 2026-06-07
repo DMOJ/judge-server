@@ -1,0 +1,7 @@
+generator: gen.cc
+checker: checker.py
+test_cases:
+- {in: 1.in, points: 1}
+- {in: 2.in, out: 2.in, points: 1}
+- {generator_in: 1.in, points: 1}
+- {generator_args: ['3'], points: 1}

@@ -443,7 +443,8 @@ class TestCase(BaseTestCase):
         )
 
         try:
-            input = self.problem.problem_data[self.config['in']] if self.config['in'] else None
+            generator_input = self.config['generator_in']
+            input = self.problem.problem_data[generator_input] if generator_input else None
         except KeyError:
             input = None
 
@@ -466,9 +467,19 @@ class TestCase(BaseTestCase):
     def _make_input_data_io(self) -> MmapableIO:
         gen = self.config.generator
 
-        # don't try running the generator if we specify an output file explicitly,
-        # otherwise generator may segfault and we end up returning the output file anyway
-        if gen and (not self.config['out'] or not self.config['in']):
+        # sometimes problems will specify a generator but have some pre-generated test cases
+        # we follow the following logic:
+        # check if the case has an input file specified
+        # - if yes, use that file as input, and make sure `generator_args` and `generator_in` are not specified
+        # - if no, run the generator and pass `generator_args` and `generator_in`
+        #   it is ok if both are specified
+        run_generator = bool(gen)
+        if run_generator and self.config['in']:
+            run_generator = False
+            if self.config['generator_args'] or self.config['generator_in']:
+                raise InvalidInitException('Input for test case ambiguous! Make up your mind!')
+
+        if run_generator:
             if self._generated is None:
                 self._run_generator(gen, args=self.config.generator_args)
             assert self._generated is not None

@@ -1,0 +1,5 @@
+language: CLANG
+time: 2
+memory: 65536
+source: sigtest.c
+expect: AC

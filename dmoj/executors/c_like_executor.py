@@ -165,6 +165,11 @@ class ClangMixin(CLikeExecutor):
     def get_version_flags(cls, command: str) -> List[VersionFlags]:
         return ['--version']
 
+    def create_files(self, problem_id: str, source_code: bytes, *args, **kwargs) -> None:
+        super().create_files(problem_id, source_code, *args, **kwargs)
+        # Clang/++ will complain if you pass header files, so we strip them out
+        self.source_paths = [source for source in self.source_paths if source.partition('.')[-1] not in ('h', 'hpp')]
+
 
 class CExecutor(CLikeExecutor):
     ext: str = 'c'

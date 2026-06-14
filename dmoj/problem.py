@@ -176,7 +176,7 @@ class Problem:
                 test_cases.append(case_dict)
         import sys
 
-        print("DEBUG test_cases:", test_cases, file=sys.stderr)
+        print('DEBUG test_cases:', test_cases, file=sys.stderr)
 
         return test_cases
 

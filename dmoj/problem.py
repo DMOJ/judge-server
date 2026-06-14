@@ -174,6 +174,8 @@ class Problem:
 
                 batch_counter += 1
                 test_cases.append(case_dict)
+        import sys
+        print("DEBUG test_cases:", test_cases, file=sys.stderr)
 
         return test_cases
 

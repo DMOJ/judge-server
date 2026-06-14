@@ -156,7 +156,7 @@ class Problem:
                     if hasattr(deps, 'unwrap'):
                         deps = deps.unwrap()
                     if deps:
-                        batch_dict['dependencies'] = [int(d) for d in deps]
+                        batch_dict['dependencies'] = deps
                 batch_counter += 1
                 test_cases.append(batch_dict)
             else:
@@ -170,7 +170,7 @@ class Problem:
                     if hasattr(deps, 'unwrap'):
                         deps = deps.unwrap()
                     if deps:
-                        case_dict['dependencies'] = [int(d) for d in deps]
+                        case_dict['dependencies'] = deps
 
                 batch_counter += 1
                 test_cases.append(case_dict)
@@ -200,7 +200,11 @@ class Problem:
         raw_deps = get_with_default('case_batch_dependencies', None)
         if hasattr(raw_deps, 'unwrap'):
             raw_deps = raw_deps.unwrap()
-        case_dependencies = [[int(d) for d in dep] if hasattr(dep, '__iter__') else dep for dep in raw_deps] if raw_deps is not None else None
+        case_dependencies = (
+            [[int(d) for d in dep] if hasattr(dep, '__iter__') else dep for dep in raw_deps]
+            if raw_deps is not None
+            else None
+        )
 
         self.config['test_cases'] = self._match_test_cases(
             self._problem_file_list(),

@@ -5,6 +5,7 @@ class Executor(ClangMixin, CPPExecutor):
     command = 'clang++'
     std = 'c++17'
     command_paths = [f'clang++-{i}' for i in CLANG_VERSIONS] + ['clang++']
+    ext_priority = 6
 
     test_program = """
 #include <iostream>

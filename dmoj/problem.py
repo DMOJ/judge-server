@@ -388,7 +388,7 @@ class TestCase(BaseTestCase):
         time_limit = env.generator_time_limit
         memory_limit = env.generator_memory_limit
         compiler_time_limit = env.generator_compiler_time_limit
-        lang = None  # Default to C/C++
+        lang = None  # Default to autodetection
 
         base = get_problem_root(self.problem.id)
         assert base is not None

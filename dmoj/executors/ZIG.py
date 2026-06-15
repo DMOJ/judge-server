@@ -22,13 +22,14 @@ class Executor(StripCarriageReturnsMixin, CompiledExecutor):
         'pwritev',
         'copy_file_range',
     ]
+    syscalls = ['readv']
     test_program = """
 const std = @import("std");
 
-pub fn main() !void {
+pub fn main(init: std.process.Init) !void {
     var buf: [50]u8 = undefined;
-    const n = try std.fs.File.stdin().readAll(&buf);
-    _ = try std.fs.File.stdout().writeAll(buf[0..n-1]);
+    const n = try std.Io.File.stdin().readStreaming(init.io, &.{&buf});
+    _ = try std.Io.File.stdout().writeStreamingAll(init.io, buf[0..n-1]);
 }"""
 
     def get_compile_args(self) -> List[str]:

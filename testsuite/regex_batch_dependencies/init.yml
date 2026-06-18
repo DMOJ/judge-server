@@ -1,0 +1,5 @@
+archive: archive.zip
+test_cases:
+  input_format: (?P<case>\d)\.txt
+  output_format: (?P<case>\d)\.txt
+  case_dependencies: [[], [], [1, 2], []]

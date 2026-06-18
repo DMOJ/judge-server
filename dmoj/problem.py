@@ -91,6 +91,7 @@ class Problem:
         input_case_pattern: Pattern[str],
         output_case_pattern: Pattern[str],
         case_points: Iterator[int],
+        case_dependencies: Optional[list] = None,
     ) -> List[dict]:
         key_type = Union[str, int, None]
 
@@ -139,25 +140,43 @@ class Problem:
                 setattr(groups[batch][case], filetype, testcase_file)
 
         test_cases = []
+        batch_counter = 0
         for batch_or_case_id in sorted(groups.keys(), key=lambda id: (isinstance(id, int), id)):
             group_cases = groups[batch_or_case_id]
             if batch_or_case_id in batch_ids:
-                test_cases.append(
-                    {
-                        'batched': [
-                            {'in': testcase.input_file, 'out': testcase.output_file}
-                            for _, testcase in sorted(group_cases.items())
-                        ],
-                        'points': next(case_points),
-                    }
-                )
+                batch_dict: dict = {
+                    'batched': [
+                        {'in': testcase.input_file, 'out': testcase.output_file}
+                        for _, testcase in sorted(group_cases.items())
+                    ],
+                    'points': next(case_points),
+                }
+                if case_dependencies is not None and batch_counter < len(case_dependencies):
+                    deps = case_dependencies[batch_counter]
+                    if hasattr(deps, 'unwrap'):
+                        deps = deps.unwrap()
+                    if deps:
+                        batch_dict['dependencies'] = deps
+                batch_counter += 1
+                test_cases.append(batch_dict)
             else:
                 if len(group_cases) > 1:
                     raise InvalidInitException('problem has conflicting test cases: %s' % group_cases)
                 test_case = next(iter(group_cases.values()))
-                test_cases.append(
-                    {'in': test_case.input_file, 'out': test_case.output_file, 'points': next(case_points)}
-                )
+                case_dict = {'in': test_case.input_file, 'out': test_case.output_file, 'points': next(case_points)}
+
+                if case_dependencies is not None and batch_counter < len(case_dependencies):
+                    deps = case_dependencies[batch_counter]
+                    if hasattr(deps, 'unwrap'):
+                        deps = deps.unwrap()
+                    if deps:
+                        case_dict['dependencies'] = deps
+
+                batch_counter += 1
+                test_cases.append(case_dict)
+        import sys
+
+        print('DEBUG test_cases:', test_cases, file=sys.stderr)
 
         return test_cases
 
@@ -181,11 +200,21 @@ class Problem:
             return test_cases[name] or default
 
         # If the `test_cases` node is None, we try to guess the testcase name format.
+        raw_deps = get_with_default('case_batch_dependencies', None)
+        if hasattr(raw_deps, 'unwrap'):
+            raw_deps = raw_deps.unwrap()
+        case_dependencies = (
+            [[int(d) for d in dep] if hasattr(dep, '__iter__') else dep for dep in raw_deps]
+            if raw_deps is not None
+            else None
+        )
+
         self.config['test_cases'] = self._match_test_cases(
             self._problem_file_list(),
             re.compile(get_with_default('input_format', DEFAULT_TEST_CASE_INPUT_PATTERN), re.IGNORECASE),
             re.compile(get_with_default('output_format', DEFAULT_TEST_CASE_OUTPUT_PATTERN), re.IGNORECASE),
             iter(get_with_default('case_points', itertools.repeat(self.config.points))),
+            case_dependencies,
         )
 
         return self.config['test_cases']

@@ -473,6 +473,7 @@ sys_pciconfig_write: int
 sys_pdfork: int
 sys_pdgetpid: int
 sys_pdkill: int
+sys_pdopenpid: int
 sys_pdrfork: int
 sys_pdwait: int
 sys_perf_event_open: int

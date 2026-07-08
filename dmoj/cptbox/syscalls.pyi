@@ -470,6 +470,7 @@ sys_pause: int
 sys_pciconfig_iobase: int
 sys_pciconfig_read: int
 sys_pciconfig_write: int
+sys_pddupfd: int
 sys_pdfork: int
 sys_pdgetpid: int
 sys_pdkill: int

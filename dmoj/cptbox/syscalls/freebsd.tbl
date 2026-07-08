@@ -534,3 +534,4 @@
 601	pdwait
 602	renameat2
 603	pdopenpid
+604	pddupfd

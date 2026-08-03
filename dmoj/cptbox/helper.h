@@ -9,6 +9,9 @@
 #define PTBOX_SPAWN_FAIL_TRACEME      204
 #define PTBOX_SPAWN_FAIL_EXECVE       205
 #define PTBOX_SPAWN_FAIL_SETAFFINITY  206
+#define PTBOX_SPAWN_FAIL_SETRLIMIT2   207
+#define PTBOX_SPAWN_FAIL_CHDIR        208
+#define PTBOX_SPAWN_FAIL_DUP2         209
 
 struct child_config {
     unsigned long memory;

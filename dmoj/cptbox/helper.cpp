@@ -33,15 +33,15 @@
 #define FD_DIR "/proc/self/fd"
 #endif
 
-inline void setrlimit2(int resource, rlim_t cur, rlim_t max) {
+inline int setrlimit2(int resource, rlim_t cur, rlim_t max) {
     rlimit limit;
     limit.rlim_cur = cur;
     limit.rlim_max = max;
-    setrlimit(resource, &limit);
+    return setrlimit(resource, &limit);
 }
 
-inline void setrlimit2(int resource, rlim_t limit) {
-    setrlimit2(resource, limit, limit);
+inline int setrlimit2(int resource, rlim_t limit) {
+    return setrlimit2(resource, limit, limit);
 }
 
 int cptbox_child_run(const struct child_config *config) {
@@ -90,10 +90,10 @@ int cptbox_child_run(const struct child_config *config) {
     kill(getpid(), SIGSTOP);
 
 #if !PTBOX_FREEBSD
-    scmp_filter_ctx ctx = seccomp_init(SCMP_ACT_TRACE(0));
+    __attribute__((cleanup(seccomp_release))) scmp_filter_ctx ctx = seccomp_init(SCMP_ACT_TRACE(0));
     if (!ctx) {
         fprintf(stderr, "Failed to initialize seccomp context!");
-        goto seccomp_init_fail;
+        return PTBOX_SPAWN_FAIL_SECCOMP;
     }
 
     int rc;
@@ -124,55 +124,48 @@ int cptbox_child_run(const struct child_config *config) {
 
     if ((rc = seccomp_load(ctx))) {
         fprintf(stderr, "seccomp_load: %s\n", strerror(-rc));
-        goto seccomp_load_fail;
+        return PTBOX_SPAWN_FAIL_SECCOMP;
     }
-
-    seccomp_release(ctx);
 #endif
 
-    if (config->stdin_ >= 0)
-        dup2(config->stdin_, 0);
-    if (config->stdout_ >= 0)
-        dup2(config->stdout_, 1);
-    if (config->stderr_ >= 0)
-        dup2(config->stderr_, 2);
+    if (config->stdin_ >= 0 && dup2(config->stdin_, 0) < 0)
+        return PTBOX_SPAWN_FAIL_DUP2;
+    if (config->stdout_ >= 0 && dup2(config->stdout_, 1) < 0)
+        return PTBOX_SPAWN_FAIL_DUP2;
+    if (config->stderr_ >= 0 && dup2(config->stderr_, 2) < 0)
+        return PTBOX_SPAWN_FAIL_DUP2;
     cptbox_closefrom(3);
 
     // All these limits should be dropped after initializing seccomp, since seccomp allocates
     // memory, and if an arena isn't sufficiently free it could force seccomp into an OOM
     // situation where we'd fail to initialize.
-    if (config->address_space)
-        setrlimit2(RLIMIT_AS, config->address_space);
+    if (config->address_space && setrlimit2(RLIMIT_AS, config->address_space))
+        return PTBOX_SPAWN_FAIL_SETRLIMIT2;
 
-    if (config->memory)
-        setrlimit2(RLIMIT_DATA, config->memory);
+    if (config->memory && setrlimit2(RLIMIT_DATA, config->memory))
+        return PTBOX_SPAWN_FAIL_SETRLIMIT2;
 
-    if (config->cpu_time)
-        setrlimit2(RLIMIT_CPU, config->cpu_time, config->cpu_time + 1);
+    if (config->cpu_time && setrlimit2(RLIMIT_CPU, config->cpu_time, config->cpu_time + 1))
+        return PTBOX_SPAWN_FAIL_SETRLIMIT2;
 
-    if (config->nproc >= 0)
-        setrlimit2(RLIMIT_NPROC, config->nproc);
+    if (config->nproc >= 0 && setrlimit2(RLIMIT_NPROC, config->nproc))
+        return PTBOX_SPAWN_FAIL_SETRLIMIT2;
 
-    if (config->fsize >= 0)
-        setrlimit2(RLIMIT_FSIZE, config->fsize);
+    if (config->fsize >= 0 && setrlimit2(RLIMIT_FSIZE, config->fsize))
+        return PTBOX_SPAWN_FAIL_SETRLIMIT2;
 
-    if (config->dir && *config->dir)
-        chdir(config->dir);
+    if (setrlimit2(RLIMIT_STACK, RLIM_INFINITY))
+        return PTBOX_SPAWN_FAIL_SETRLIMIT2;
 
-    setrlimit2(RLIMIT_STACK, RLIM_INFINITY);
-    setrlimit2(RLIMIT_CORE, 0);
+    if (setrlimit2(RLIMIT_CORE, 0))
+        return PTBOX_SPAWN_FAIL_SETRLIMIT2;
+
+    if (config->dir && *config->dir && chdir(config->dir))
+        return PTBOX_SPAWN_FAIL_CHDIR;
 
     execve(config->file, config->argv, config->envp);
     perror("execve");
     return PTBOX_SPAWN_FAIL_EXECVE;
-
-#if !PTBOX_FREEBSD
-seccomp_init_fail:
-    seccomp_release(ctx);
-
-seccomp_load_fail:
-    return PTBOX_SPAWN_FAIL_SECCOMP;
-#endif
 }
 
 // From python's _posixsubprocess

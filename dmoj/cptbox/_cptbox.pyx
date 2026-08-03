@@ -15,7 +15,8 @@ __all__ = ['Process', 'Debugger', 'bsd_get_proc_cwd', 'bsd_get_proc_fdno', 'MAX_
            'PTBOX_ABI_X86', 'PTBOX_ABI_X64', 'PTBOX_ABI_X32', 'PTBOX_ABI_ARM', 'PTBOX_ABI_ARM64',
            'PTBOX_ABI_FREEBSD_X64', 'PTBOX_ABI_INVALID', 'PTBOX_ABI_COUNT',
            'PTBOX_SPAWN_FAIL_NO_NEW_PRIVS', 'PTBOX_SPAWN_FAIL_SECCOMP', 'PTBOX_SPAWN_FAIL_TRACEME',
-           'PTBOX_SPAWN_FAIL_EXECVE', 'PTBOX_SPAWN_FAIL_SETAFFINITY']
+           'PTBOX_SPAWN_FAIL_EXECVE', 'PTBOX_SPAWN_FAIL_SETAFFINITY', 'PTBOX_SPAWN_FAIL_SETRLIMIT2',
+           'PTBOX_SPAWN_FAIL_CHDIR', 'PTBOX_SPAWN_FAIL_DUP2']
 
 
 cdef extern from 'ptbox.h' nogil:
@@ -133,6 +134,9 @@ cdef extern from 'helper.h' nogil:
         PTBOX_SPAWN_FAIL_TRACEME
         PTBOX_SPAWN_FAIL_EXECVE
         PTBOX_SPAWN_FAIL_SETAFFINITY
+        PTBOX_SPAWN_FAIL_SETRLIMIT2
+        PTBOX_SPAWN_FAIL_CHDIR
+        PTBOX_SPAWN_FAIL_DUP2
 
     int cptbox_memfd_create()
     int cptbox_memfd_seal(int fd)

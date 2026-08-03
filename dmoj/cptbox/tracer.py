@@ -225,6 +225,12 @@ class TracedPopen(Process):
                 raise RuntimeError('failed to spawn child')
             elif self.returncode == PTBOX_SPAWN_FAIL_SETAFFINITY:
                 raise RuntimeError('failed to set child affinity')
+            elif self.returncode == PTBOX_SPAWN_FAIL_SETRLIMIT2:
+                raise RuntimeError('failed to rlimit child resource usage')
+            elif self.returncode == PTBOX_SPAWN_FAIL_CHDIR:
+                raise RuntimeError('failed to chdir child')
+            elif self.returncode == PTBOX_SPAWN_FAIL_DUP2:
+                raise RuntimeError('failed to dup child stdio')
             elif self.returncode >= 0:
                 raise RuntimeError('process failed to initialize with unknown exit code: %d' % self.returncode)
         return self.returncode

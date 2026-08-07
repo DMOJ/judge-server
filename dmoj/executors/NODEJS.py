@@ -10,6 +10,7 @@ class Executor(ScriptExecutor):
     command_paths = ['node', 'nodejs']
     syscalls = ['capget', 'eventfd2', 'shutdown', 'pkey_alloc', 'pkey_free', ('io_uring_setup', ACCESS_ENOSYS)]
     address_grace = 1048576
+    data_grace = 524288
     test_program = """
 process.stdin.on('readable', () => {
     const chunk = process.stdin.read();

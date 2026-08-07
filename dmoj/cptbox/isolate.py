@@ -357,9 +357,12 @@ class IsolateTracer(dict):
             file = os.path.join(f'/proc/{debugger.tid}', os.path.relpath(file, '/proc/self'))
             projected = '/' + os.path.normpath(file).lstrip('/')
         elif normalized.startswith(f'/proc/{debugger.tid}/'):
-            # If the child process uses /proc/getpid()/foo, set the normalized path to be /proc/self/foo.
+            # If the child process uses /proc/[tid]/foo, set the normalized path to be /proc/self/foo.
             # Access rules can more easily check /proc/self.
             normalized = os.path.join('/proc/self', os.path.relpath(file, f'/proc/{debugger.tid}'))
+        elif normalized.startswith(f'/proc/{debugger.pid}/'):
+            # Normalize /proc/[pid]/foo to /proc/self/foo. LEAN4 uses this.
+            normalized = os.path.join('/proc/self', os.path.relpath(file, f'/proc/{debugger.pid}'))
         real = os.path.realpath(file)
 
         try:

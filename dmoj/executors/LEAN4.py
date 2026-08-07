@@ -1,3 +1,5 @@
+from typing import Dict
+
 from dmoj.executors.compiled_executor import CompiledExecutor
 
 
@@ -12,6 +14,8 @@ def main : IO Unit := do
 """
     nproc = -1
     syscalls = ['eventfd2']
+    address_grace = 1088 * 1024
+    data_grace = 1088 * 1024
 
     def compile(self) -> str:
         command = self.get_command()
@@ -28,3 +32,11 @@ def main : IO Unit := do
         self.warning = b'\n'.join(filter(None, [out1, out2]))
         self._executable = self.get_compiled_file()
         return self._executable
+
+    def get_env(self) -> Dict[str, str]:
+        env = super().get_env()
+        env['LEAN_MAIN_USE_THREAD'] = '0'
+        env['LEAN_NUM_THREADS'] = '0'
+        # Don't change LEAN_STACK_SIZE_KB.
+        env['MIMALLOC_ARENA_RESERVE'] = '65536'  # KiB
+        return env

@@ -45,6 +45,11 @@ class MonoExecutor(CompiledExecutor):
         ('fork', ACCESS_EAGAIN),
     ]
 
+    def get_compile_env(self) -> Dict[str, str]:
+        env = super().get_compile_env() or os.environ.copy()
+        env['TERM'] = 'dumb'
+        return env
+
     def get_env(self) -> Dict[str, str]:
         env = super().get_env()
         # Disable Mono's usage of /dev/shm, so we don't have to deal with

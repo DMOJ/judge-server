@@ -144,7 +144,7 @@ class CompiledExecutor(BaseExecutor, metaclass=_CompiledExecutorMeta):
 
         # Some runtimes *cough cough* Swift *cough cough* actually check the environment variables too.
         env = self.get_compile_env() or os.environ.copy()
-        env['TERM'] = 'xterm'
+        env.setdefault('TERM', 'xterm')
         # Instruct compilers to put their temporary files into the submission directory,
         # so that we can allow it as writeable, rather than of all of /tmp.
         assert self._dir is not None

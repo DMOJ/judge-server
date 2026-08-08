@@ -147,6 +147,7 @@ class IsolateTracer(dict):
                 sys_clock_gettime: ALLOW,
                 sys_clock_gettime64: ALLOW,
                 sys_clock_getres: ALLOW,
+                sys_clock_nanosleep: ALLOW,
                 sys_gettimeofday: ALLOW,
                 sys_getpid: ALLOW,
                 sys_getppid: ALLOW,

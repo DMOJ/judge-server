@@ -7,6 +7,7 @@ from libc.stdlib cimport malloc, free, strtoul
 from libc.string cimport strncmp, strlen
 from libc.signal cimport SIGTRAP, SIGXCPU
 from libcpp cimport bool
+from libcpp.vector cimport vector
 from posix.resource cimport rusage
 from posix.types cimport pid_t
 
@@ -52,6 +53,8 @@ cdef extern from 'ptbox.h' nogil:
         bool readbytes(unsigned long, char *, size_t)
         pid_t getpid()
         pid_t gettid()
+        pid_t gettgid()
+        vector[pid_t] gettgids()
         int getpid_syscall()
         int abi()
         void on_return(pt_syscall_return_callback callback, void *context)
@@ -402,6 +405,19 @@ cdef class Debugger:
     @property
     def pid(self):
         return self.thisptr.getpid()
+
+    @property
+    def root_pid(self):
+        return self.thisptr.getpid()
+
+    @property
+    def tgid(self):
+        return self.thisptr.gettgid()
+
+    @property
+    def pids(self):
+        cdef vector[pid_t] pids = self.thisptr.gettgids()
+        return tuple([pids[i] for i in range(pids.size())])
 
     @property
     def abi(self):

@@ -32,7 +32,10 @@ class Debugger:
     uarg5: int
 
     pid: int
+    root_pid: int
     tid: int
+    tgid: int
+    pids: Tuple[int, ...]
     abi: int
     def __init__(self, process: Process): ...
     def readstr(self, address: int, max_size: int = ...) -> str: ...

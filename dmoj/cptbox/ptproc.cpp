@@ -17,6 +17,10 @@
 
 #include "ptbox.h"
 
+#if !PTBOX_FREEBSD
+#include <sys/syscall.h>
+#endif
+
 pt_process::pt_process(pt_debugger *debugger)
     : pid(0), callback(NULL), context(NULL), debugger(debugger), event_proc(NULL), event_context(NULL),
       _trace_syscalls(true), _initialized(false) {
@@ -25,6 +29,64 @@ pt_process::pt_process(pt_debugger *debugger)
     memset(&end_time, 0, sizeof exec_time);
     memset(handler, 0, sizeof handler);
     debugger->set_process(this);
+}
+
+void pt_process::register_process(pid_t tid) {
+    tasks[tid] = tid;
+}
+
+bool pt_process::register_clone(pid_t parent_tid, pid_t child_tid) {
+    auto parent = tasks.find(parent_tid);
+    if (parent == tasks.end()) {
+        // If the parent is unknown, fail closed: treating the child as a
+        // separate process never grants it permissions belonging to another TGID.
+        register_process(child_tid);
+        return false;
+    }
+
+#if PTBOX_FREEBSD
+    register_process(child_tid);
+    return false;
+#else
+    // PTRACE_EVENT_CLONE does not imply CLONE_THREAD. Rather than trusting
+    // clone()/clone3() userspace arguments, ask the kernel whether child_tid
+    // actually belongs to the parent's known thread group. Signal 0 performs
+    // validation without delivering a signal. A mismatched (tgid, tid) pair
+    // returns ESRCH; EPERM still proves that the pair names one thread group.
+    errno = 0;
+    long result = syscall(SYS_tgkill, parent->second, child_tid, 0);
+    bool is_thread = result == 0 || errno == EPERM;
+
+    tasks[child_tid] = is_thread ? parent->second : child_tid;
+    return is_thread;
+#endif
+}
+
+void pt_process::unregister_task(pid_t tid) {
+    tasks.erase(tid);
+}
+
+void pt_process::exec_task(pid_t tgid) {
+    for (auto it = tasks.begin(); it != tasks.end();) {
+        if (it->second == tgid)
+            it = tasks.erase(it);
+        else
+            ++it;
+    }
+    // After successful exec, Linux leaves one thread with TID == TGID.
+    tasks[tgid] = tgid;
+}
+
+pid_t pt_process::get_tgid(pid_t tid) const {
+    auto it = tasks.find(tid);
+    return it == tasks.end() ? -1 : it->second;
+}
+
+std::vector<pid_t> pt_process::get_tgids() const {
+    std::set<pid_t> tgids;
+    for (const auto &task : tasks)
+        tgids.insert(task.second);
+    return std::vector<pid_t>(tgids.begin(), tgids.end());
 }
 
 double pt_process::wall_clock_time() {
@@ -73,6 +135,8 @@ int pt_process::spawn(pt_fork_handler child, void *context) {
         _exit(child(context));
     }
     this->pid = pid;
+    tasks.clear();
+    tasks[pid] = pid;
     debugger->new_process();
     return 0;
 }
@@ -122,6 +186,7 @@ int pt_process::monitor() {
         // printf("pid: %d (%d)\n", pid, this->pid);
 
         if (WIFEXITED(status) || WIFSIGNALED(status)) {
+            unregister_task(pid);
             if (first || pid == pgid)
                 break;
             else {
@@ -157,8 +222,8 @@ int pt_process::monitor() {
 #else
             // This is right after SIGSTOP is received:
             ptrace(PTRACE_SETOPTIONS, pid, NULL,
-                   PTRACE_O_TRACEEXIT | PTRACE_O_TRACESECCOMP | PTRACE_O_TRACESYSGOOD | PTRACE_O_EXITKILL |
-                       PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK | PTRACE_O_TRACEVFORK);
+                   PTRACE_O_TRACEEXIT | PTRACE_O_TRACEEXEC | PTRACE_O_TRACESECCOMP | PTRACE_O_TRACESYSGOOD |
+                       PTRACE_O_EXITKILL | PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK | PTRACE_O_TRACEVFORK);
 #endif
             // We now set the process group to the actual pgid.
             pgid = pid;
@@ -301,16 +366,29 @@ int pt_process::monitor() {
                                 dispatch(PTBOX_EVENT_EXITING, PTBOX_EXIT_NORMAL);
                             }
                             break;
+                        case PTRACE_EVENT_EXEC: {
+                            // If a non-leader thread execs, Linux changes its TID to the
+                            // old TGID and destroys the other threads in that group.
+                            exec_task(pid);
+                            break;
+                        }
                         case PTRACE_EVENT_CLONE: {
                             unsigned long tid;
                             ptrace(PTRACE_GETEVENTMSG, pid, NULL, &tid);
                             // printf("Created thread: %d\n", tid);
+                            // PTRACE_EVENT_CLONE may represent either a new thread or a
+                            // new process. Classify the new task using the kernel's atomic
+                            // TGID/TID validation rather than userspace clone flags.
+                            if (!register_clone(pid, tid))
+                                children.insert(tid);
+
                             break;
                         }
                         case PTRACE_EVENT_FORK:
                         case PTRACE_EVENT_VFORK: {
                             unsigned long npid;
                             ptrace(PTRACE_GETEVENTMSG, pid, NULL, &npid);
+                            register_process(npid);
                             children.insert(npid);
                             // printf("Created process: %d\n", npid);
                             break;

@@ -11,6 +11,7 @@
 #include <sys/types.h>
 
 #include <map>
+#include <vector>
 
 #if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
 #define PTBOX_FREEBSD 1
@@ -101,22 +102,30 @@ class pt_process {
     void set_callback(pt_handler_callback, void *context);
     void set_event_proc(pt_event_callback, void *context);
     int set_handler(int abi, int syscall, int handler);
-    bool trace_syscalls() { return _trace_syscalls; }
+    bool trace_syscalls() const { return _trace_syscalls; }
     void trace_syscalls(bool value) { _trace_syscalls = value; }
     int spawn(pt_fork_handler child, void *context);
     int monitor();
-    int getpid() { return pid; }
-    double execution_time() { return exec_time.tv_sec + exec_time.tv_nsec / 1000000000.0; }
+    int getpid() const { return pid; }
+    pid_t get_tgid(pid_t tid) const;
+    std::vector<pid_t> get_tgids() const;
+
+    double execution_time() const { return exec_time.tv_sec + exec_time.tv_nsec / 1000000000.0; }
     double wall_clock_time();
     const rusage *getrusage() { return &_rusage; }
-    bool was_initialized() { return _initialized; }
+    bool was_initialized() const { return _initialized; }
 
   protected:
     int dispatch(int event, unsigned long param);
     int protection_fault(int syscall, int type = PTBOX_EVENT_PROTECTION);
 
   private:
+    bool register_clone(pid_t parent_tid, pid_t child_tid);
+    void register_process(pid_t tid);
+    void unregister_task(pid_t tid);
+    void exec_task(pid_t tgid);
     pid_t pid;
+    std::map<pid_t, pid_t> tasks;
     int handler[PTBOX_ABI_COUNT][MAX_SYSCALL];
     pt_handler_callback callback;
     void *context;
@@ -160,9 +169,17 @@ class pt_debugger {
     void freestr(char *);
     bool readbytes(unsigned long addr, char *buffer, size_t size);
 
-    pid_t gettid() { return tid; }
+    pid_t gettid() const { return tid; }
     pid_t tid;  // TODO maybe call super instead
-    pid_t getpid() { return process->getpid(); }
+    pid_t getpid() const { return process->getpid(); }
+    pid_t gettgid() const {
+#if PTBOX_FREEBSD
+        return process->getpid();
+#else
+        return process->get_tgid(tid);
+#endif
+    }
+    std::vector<pid_t> gettgids() const { return process->get_tgids(); }
 
 #if PTBOX_FREEBSD
     void update_syscall(struct ptrace_lwpinfo *info);

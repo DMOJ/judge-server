@@ -70,8 +70,8 @@ class IsolateTracer(dict):
                 sys_lstat64: self.handle_file_access(FilesystemSyscallKind.READ, file_reg=0),
                 sys_fstatat: self.handle_fstat(dir_reg=0, file_reg=1),
                 sys_statx: self.handle_fstat(dir_reg=0, file_reg=1),
-                sys_tkill: self.handle_kill,
-                sys_tgkill: self.handle_kill,
+                sys_tkill: self.handle_tkill,
+                sys_tgkill: self.handle_tgkill,
                 sys_kill: self.handle_kill,
                 sys_prctl: self.handle_prctl,
                 sys_read: ALLOW,
@@ -349,21 +349,21 @@ class IsolateTracer(dict):
         # the same file, and check the accessibility of both.
         #
         # This works, except when the child process uses /proc/self, which refers to something else in this process.
-        # Therefore, we "project" it by changing it to /proc/[tid] for computing the realpath and doing the samefile
+        # Therefore, we "project" it by changing it to /proc/[tgid] for computing the realpath and doing the same file
         # check. However, we still keep it as /proc/self when checking access rules.
 
         # normpath doesn't strip leading slashes
         projected = normalized = '/' + os.path.normpath(file).lstrip('/')
         if normalized.startswith('/proc/self'):
-            file = os.path.join(f'/proc/{debugger.tid}', os.path.relpath(file, '/proc/self'))
+            file = os.path.join(f'/proc/{debugger.tgid}', os.path.relpath(file, '/proc/self'))
             projected = '/' + os.path.normpath(file).lstrip('/')
         elif normalized.startswith(f'/proc/{debugger.tid}/'):
             # If the child process uses /proc/[tid]/foo, set the normalized path to be /proc/self/foo.
             # Access rules can more easily check /proc/self.
             normalized = os.path.join('/proc/self', os.path.relpath(file, f'/proc/{debugger.tid}'))
-        elif normalized.startswith(f'/proc/{debugger.pid}/'):
-            # Normalize /proc/[pid]/foo to /proc/self/foo. LEAN4 uses this.
-            normalized = os.path.join('/proc/self', os.path.relpath(file, f'/proc/{debugger.pid}'))
+        elif normalized.startswith(f'/proc/{debugger.tgid}/'):
+            # Normalize /proc/[tgid]/foo to /proc/self/foo. LEAN4 uses this.
+            normalized = os.path.join('/proc/self', os.path.relpath(file, f'/proc/{debugger.tgid}'))
         real = os.path.realpath(file)
 
         try:
@@ -380,30 +380,57 @@ class IsolateTracer(dict):
             raise DeniedSyscall(ACCESS_EACCES, f'Denying {file}, normalized to {normalized}')
 
         if normalized != real:
-            proc_dir = f'/proc/{debugger.tid}'
-            if real.startswith(proc_dir):
-                relpath = os.path.relpath(real, proc_dir)
-                if relpath == '.':
-                    # Special-case the root /proc/self directory, otherwise the branch below generates '/proc/self/.'
-                    # which will fail the FS jail check since abspath('/proc/self/.') = '/proc/self' != '/proc/self/.'.
-                    real = '/proc/self'
-                else:
-                    real = os.path.join('/proc/self', relpath)
+            proc_dirs = (f'/proc/{debugger.tgid}', f'/proc/{debugger.tid}')
+            for proc_dir in proc_dirs:
+                if real == proc_dir or real.startswith(proc_dir + '/'):
+                    relpath = os.path.relpath(real, proc_dir)
+                    if relpath == '.':
+                        # Special-case the root /proc/self directory, otherwise the branch below generates '/proc/self/.'
+                        # which will fail the FS jail check since abspath('/proc/self/.') = '/proc/self' != '/proc/self/.'.
+                        real = '/proc/self'
+                    else:
+                        real = os.path.join('/proc/self', relpath)
+                    break
 
             if not real.startswith('/memfd:') and not fs_jail.check(real):
                 raise DeniedSyscall(ACCESS_EACCES, f'Denying {file}, real path {real}')
 
     def handle_kill(self, debugger: Debugger) -> None:
-        # Allow tgkill to execute as long as the target thread group is the debugged process
+        # kill(pid, sig) targets a process/thread group. Only allow the current process to signal itself.
+        target_tgid = debugger.arg0
+        if debugger.tgid < 0 or target_tgid != debugger.tgid:
+            raise DeniedSyscall(
+                ACCESS_EPERM,
+                f'Cannot kill other processes (target={target_tgid}, self={debugger.tgid})',
+            )
+
+    def handle_tkill(self, debugger: Debugger) -> None:
+        # tkill has no TGID argument, so authorizing an arbitrary target TID via a separate lookup would
+        # introduce a TID-reuse race. Keep it conservative and allow only the calling thread.
+        target_tid = debugger.uarg0
+        if target_tid != debugger.tid:
+            raise DeniedSyscall(
+                ACCESS_EPERM,
+                f'Cannot tkill another thread (target={target_tid}, self={debugger.tid})',
+            )
+
+    def handle_tgkill(self, debugger: Debugger) -> None:
+        # tgkill(tgid, tid, sig) atomically validates the TID/TGID relationship in the kernel.
+        # Only permit targets in the calling process's own thread group.
         # libstdc++ seems to use this to signal itself, see <https://github.com/DMOJ/judge-server/issues/183>
-        target = debugger.uarg0
-        if target != debugger.pid:
-            raise DeniedSyscall(ACCESS_EPERM, f'Cannot kill other processes (target={target}, self={debugger.pid})')
+        target_tgid = debugger.uarg0
+        target_tid = debugger.uarg1
+        if debugger.tgid < 0 or target_tgid != debugger.tgid:
+            raise DeniedSyscall(
+                ACCESS_EPERM,
+                f'Cannot tgkill a thread in another process '
+                f'(target_tgid={target_tgid}, target_tid={target_tid}, self={debugger.tgid})',
+            )
 
     def handle_prlimit(self, debugger: Debugger) -> None:
         target = debugger.uarg0
-        if target not in (0, debugger.pid):
-            raise DeniedSyscall(ACCESS_EPERM, f'Cannot prlimit other processes (target={target}, self={debugger.pid})')
+        if debugger.tgid < 0 or target not in (0, debugger.tgid):
+            raise DeniedSyscall(ACCESS_EPERM, f'Cannot prlimit other processes (target={target}, self={debugger.tgid})')
 
     def handle_prctl(self, debugger: Debugger) -> None:
         PR_GET_DUMPABLE = 3

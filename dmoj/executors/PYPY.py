@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from dmoj.executors.base_executor import RuntimeVersionList, VersionTuple
 from dmoj.executors.python_executor import PythonExecutor
@@ -26,3 +26,8 @@ if sys.version_info.major == 2:
     def get_runtime_versions(cls) -> RuntimeVersionList:
         # A little hack to report implemented Python version too
         return list(super().get_runtime_versions()) + [('implementing python', cls._pypy_versions[0])]
+
+    def get_env(self) -> Dict[str, str]:
+        env = super().get_env()
+        env['PYPY_GC_NURSERY'] = '8M'
+        return env

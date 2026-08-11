@@ -42,6 +42,11 @@ jobs:
   test-sdist:
     runs-on: ubuntu-latest
     steps:
+    - name: Print runner diagnostics
+      run: |
+        lscpu
+        lscpu --caches
+        free -h
     - uses: actions/checkout@v6
     - name: Set up Python 3.14
       uses: actions/setup-python@v6
@@ -63,6 +68,11 @@ jobs:
       matrix:
         python-version: ['3.10', '3.11', '3.12', '3.13', '3.14']
     steps:
+      - name: Print runner diagnostics
+        run: |
+          lscpu
+          lscpu --caches
+          free -h
       - uses: actions/checkout@v6
       - name: Download docker image
         run: docker pull dmoj/runtimes-tier3
@@ -126,6 +136,11 @@ jobs:
       matrix:
         python-version: ['3.10', '3.11', '3.12', '3.13', '3.14']
     steps:
+      - name: Print runner diagnostics
+        run: |
+          lscpu
+          lscpu --caches
+          free -h
       - uses: actions/checkout@v6
       - name: Download docker image
         run: docker pull dmoj/runtimes-tier3

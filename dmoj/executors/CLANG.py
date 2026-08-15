@@ -5,6 +5,7 @@ class Executor(ClangMixin, CExecutor):
     command = 'clang'
     std = 'c11'
     command_paths = [f'clang-{i}' for i in CLANG_VERSIONS] + ['clang']
+    ext_priority = 3
 
     test_program = """
 #include <stdio.h>

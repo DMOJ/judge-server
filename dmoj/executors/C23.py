@@ -5,6 +5,7 @@ class Executor(GCCMixin, CExecutor):
     command = 'gcc23'
     std = 'c23'
     command_paths = ['gcc']
+    ext_priority = 4
 
     test_program = """
 #include <stdio.h>

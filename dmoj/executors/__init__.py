@@ -22,8 +22,8 @@ def by_ext(ext: str) -> Any:
         if name.lower() == ext:
             return executor
 
-    for executor in sorted(executors.values(), key=lambda executor: executor.Executor.name):
-        if executor.Executor.ext == ext:
+    for executor in sorted(executors.values(), key=lambda executor: executor.Executor.ext_priority, reverse=True):
+        if ext in executor.Executor.get_valid_exts():
             return executor
 
     raise KeyError('no executor for extension "%s"' % ext)

@@ -7,6 +7,7 @@ class Executor(JavacExecutor):
     compiler = 'javac8'
     vm = 'java8'
     jvm_regex = r'java-8-|jdk-8-|openjdk8|oracle-java8'
+    ext_priority = 1
 
     test_program = """\
 import java.io.IOException;

@@ -35,22 +35,6 @@ def compile_with_auxiliary_files(
         with open(filename, 'rb') as f:
             sources[os.path.basename(filename)] = f.read()
 
-    def find_runtime(*languages):
-        for grader in languages:
-            if grader in executors.executors:
-                return grader
-        return None
-
-    use_cpp = any(map(lambda name: os.path.splitext(name)[1] in ['.cpp', '.cc'], filenames))
-    use_c = any(map(lambda name: os.path.splitext(name)[1] in ['.c'], filenames))
-    if not lang:
-        if use_cpp:
-            lang = find_runtime('CPP20', 'CPP17', 'CPP14', 'CPP11', 'CPP03')
-        elif use_c:
-            lang = find_runtime('C11', 'C')
-
-    # TODO: remove above code once `from_filename` is smart enough to
-    # prioritize newer versions of runtimes
     if not lang:
         for filename in filenames:
             try:
@@ -69,15 +53,15 @@ def compile_with_auxiliary_files(
         kwargs['compiler_time_limit'] = compiler_time_limit
 
     if hasattr(executor, 'flags'):
-        kwargs['flags'] = flags + list(executor.flags)
+        kwargs['flags'] = flags + executor.flags
 
-    # Optimize the common case.
-    if use_cpp or use_c:
+    # Check if the executor supports multifile compilation
+    if executor.supports_multifile():
         # Some auxiliary files (like those using testlib.h) take an extremely long time to compile, so we cache them.
         executor = executor('_aux_file', None, aux_sources=sources, cached=True, unbuffered=unbuffered, **kwargs)
     else:
         if len(sources) > 1:
-            raise InternalError('non-C/C++ auxiliary programs cannot be multi-file')
+            raise InternalError(f'{lang} auxiliary programs cannot be multi-file')
         executor = executor('_aux_file', list(sources.values())[0], cached=True, unbuffered=unbuffered, **kwargs)
 
     return executor

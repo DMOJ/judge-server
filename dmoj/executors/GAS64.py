@@ -3,6 +3,7 @@ from dmoj.executors.asm_executor import GASExecutor, PlatformX64Mixin
 
 class Executor(PlatformX64Mixin, GASExecutor):
     as_name = 'as_x64'
+    ext_priority = 2
 
     test_program = r""".intel_syntax noprefix
 

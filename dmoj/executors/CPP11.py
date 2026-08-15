@@ -5,6 +5,7 @@ class Executor(GCCMixin, CPPExecutor):
     command = 'g++11'
     command_paths = ['g++-5', 'g++-4.9', 'g++-4.8', 'g++']
     std = 'c++11'
+    ext_priority = 2
     test_program = """
 #include <iostream>
 

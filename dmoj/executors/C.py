@@ -4,6 +4,7 @@ from dmoj.executors.c_like_executor import CExecutor, GCCMixin
 class Executor(GCCMixin, CExecutor):
     command = 'gcc'
     std = 'c99'
+    ext_priority = 1
 
     test_program = """
 #include <stdio.h>

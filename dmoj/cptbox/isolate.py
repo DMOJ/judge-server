@@ -12,6 +12,7 @@ from dmoj.cptbox.handlers import (
     ACCESS_ENAMETOOLONG,
     ACCESS_ENOENT,
     ACCESS_EPERM,
+    ACCESS_ESRCH,
     ALLOW,
     ErrnoHandlerCallback,
 )
@@ -70,7 +71,7 @@ class IsolateTracer(dict):
                 sys_lstat64: self.handle_file_access(FilesystemSyscallKind.READ, file_reg=0),
                 sys_fstatat: self.handle_fstat(dir_reg=0, file_reg=1),
                 sys_statx: self.handle_fstat(dir_reg=0, file_reg=1),
-                sys_tkill: self.handle_kill,
+                sys_tkill: self.handle_tkill,
                 sys_tgkill: self.handle_kill,
                 sys_kill: self.handle_kill,
                 sys_prctl: self.handle_prctl,
@@ -390,11 +391,39 @@ class IsolateTracer(dict):
                 raise DeniedSyscall(ACCESS_EACCES, f'Denying {file}, real path {real}')
 
     def handle_kill(self, debugger: Debugger) -> None:
-        # Allow tgkill to execute as long as the target thread group is the debugged process
+        # Allow tgkill/kill to execute as long as the target thread group is the debugged process
         # libstdc++ seems to use this to signal itself, see <https://github.com/DMOJ/judge-server/issues/183>
         target = debugger.uarg0
         if target != debugger.pid:
             raise DeniedSyscall(ACCESS_EPERM, f'Cannot kill other processes (target={target}, self={debugger.pid})')
+
+    def handle_tkill(self, debugger: Debugger) -> None:
+        # tkill(pid_t tid, int sig) is deprecated in favor of tgkill, and unlike tgkill/kill its first
+        # argument is a *tid*, not a tgid. Comparing it directly to debugger.pid (as handle_kill does)
+        # would only ever allow a thread to signal the thread group leader (whose tid == pid), wrongly
+        # denying legitimate same-process signalling between sibling threads. See issue #1254.
+        #
+        # Instead, resolve the target tid's thread group via /proc and confirm it matches the process
+        # being debugged.
+        target = debugger.uarg0
+        try:
+            with open(f'/proc/{target}/status') as f:
+                for line in f:
+                    if line.startswith('Tgid:'):
+                        tgid = int(line.split()[1])
+                        break
+                else:
+                    # Shouldn't happen on Linux, but fail closed if the status file is malformed.
+                    raise DeniedSyscall(ACCESS_ESRCH, f'Could not determine thread group of tid={target}')
+        except (FileNotFoundError, ProcessLookupError):
+            # The target tid doesn't exist (already exited, or never existed).
+            raise DeniedSyscall(ACCESS_ESRCH, f'No such thread: tid={target}')
+
+        if tgid != debugger.pid:
+            raise DeniedSyscall(
+                ACCESS_EPERM,
+                f'Cannot kill threads outside the debugged process (target tid={target}, tgid={tgid}, self={debugger.pid})',
+            )
 
     def handle_prlimit(self, debugger: Debugger) -> None:
         target = debugger.uarg0

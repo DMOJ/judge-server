@@ -336,6 +336,7 @@
 469	file_setattr
 470	listns
 471	rseq_slice_yield
+472	fchroot
 512	rt_sigaction
 513	rt_sigreturn
 514	ioctl

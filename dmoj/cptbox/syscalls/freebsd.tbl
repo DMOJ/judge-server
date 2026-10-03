@@ -535,3 +535,4 @@
 602	renameat2
 603	pdopenpid
 604	pddupfd
+605	pdptrace

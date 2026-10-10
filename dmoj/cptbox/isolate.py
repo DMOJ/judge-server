@@ -4,7 +4,7 @@ import sys
 from enum import Enum
 from typing import Any, Callable, List, Mapping, Sequence
 
-from dmoj.cptbox._cptbox import AT_FDCWD, Debugger, bsd_get_proc_cwd, bsd_get_proc_fdno
+from dmoj.cptbox._cptbox import AT_FDCWD, Debugger, PTBOX_ABI_ARM, bsd_get_proc_cwd, bsd_get_proc_fdno
 from dmoj.cptbox.filesystem_policies import FilesystemAccessRule, FilesystemPolicy
 from dmoj.cptbox.handlers import (
     ACCESS_EACCES,
@@ -17,7 +17,7 @@ from dmoj.cptbox.handlers import (
 )
 from dmoj.cptbox.syscalls import *
 from dmoj.cptbox.syscalls import by_id
-from dmoj.cptbox.tracer import HandlerCallback, MaxLengthExceeded
+from dmoj.cptbox.tracer import AdvancedDebugger, HandlerCallback, MaxLengthExceeded
 from dmoj.utils.unicode import utf8text
 
 log = logging.getLogger('dmoj.security')
@@ -70,7 +70,7 @@ class IsolateTracer(dict):
                 sys_lstat64: self.handle_file_access(FilesystemSyscallKind.READ, file_reg=0),
                 sys_fstatat: self.handle_fstat(dir_reg=0, file_reg=1),
                 sys_statx: self.handle_fstat(dir_reg=0, file_reg=1),
-                sys_tkill: self.handle_kill,
+                sys_tkill: self.handle_tkill,
                 sys_tgkill: self.handle_kill,
                 sys_kill: self.handle_kill,
                 sys_prctl: self.handle_prctl,
@@ -399,6 +399,26 @@ class IsolateTracer(dict):
         target = debugger.uarg0
         if target != debugger.pid:
             raise DeniedSyscall(ACCESS_EPERM, f'Cannot kill other processes (target={target}, self={debugger.pid})')
+
+    def handle_tkill(self, debugger: AdvancedDebugger) -> None:
+        # Checking tkill's target thread here would race with it exiting and its ID being reused. Instead, rewrite
+        # tkill(tid, sig) into tgkill(pid, tid, sig), and let the kernel atomically check that the thread is ours.
+        tid, sig, arg2 = debugger.uarg0, debugger.uarg1, debugger.uarg2
+        debugger.syscall = debugger.get_syscall_id(sys_tgkill)
+        debugger.uarg0, debugger.uarg1, debugger.uarg2 = debugger.pid, tid, sig
+        if debugger.abi == PTBOX_ABI_ARM:
+            # On ARM, arg0 is orig_r0, a saved copy that the kernel doesn't pass to the syscall. The argument it does
+            # pass is r0, which doubles as the result register, so write the target thread group there as well.
+            debugger.uresult = debugger.pid
+
+        def restore_args() -> None:
+            # Userspace relies on syscalls not clobbering their arguments. Save the result first, since it shares a
+            # register with arg0 on ARM64.
+            result = debugger.uresult
+            debugger.uarg0, debugger.uarg1, debugger.uarg2 = tid, sig, arg2
+            debugger.uresult = result
+
+        debugger.on_return(restore_args)
 
     def handle_prlimit(self, debugger: Debugger) -> None:
         target = debugger.uarg0

@@ -63,9 +63,13 @@ class AdvancedDebugger(Debugger):
 
     @property
     def noop_syscall_id(self):
+        return self.get_syscall_id(sys_getpid)
+
+    def get_syscall_id(self, syscall):
+        # Translates a cptbox syscall (e.g. sys_tgkill) into the native syscall number for the current ABI.
         if self.abi == PTBOX_ABI_INVALID:
             raise ValueError('ABI is invalid')
-        return translator[sys_getpid][_SYSCALL_INDICIES[self.abi]][0]
+        return translator[syscall][_SYSCALL_INDICIES[self.abi]][0]
 
     def get_syscall_name(self, syscall):
         if self.abi == PTBOX_ABI_INVALID:

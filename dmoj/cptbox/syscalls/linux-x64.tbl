@@ -383,3 +383,4 @@
 469	file_setattr
 470	listns
 471	rseq_slice_yield
+472	fchroot

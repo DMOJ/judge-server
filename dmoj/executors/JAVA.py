@@ -5,6 +5,7 @@ class Executor(JavacExecutor):
     compiler = 'javac'
     vm = 'java'
     jvm_regex = r'(?:java-|openjdk)(?:9|[1-9][0-9]+)'
+    ext_priority = 2
 
     test_program = """\
 import java.io.IOException;

@@ -6,7 +6,7 @@ import subprocess
 import sys
 import tempfile
 import traceback
-from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Type, Union
 
 from dmoj.cptbox import IsolateTracer, TracedPopen, syscalls
 from dmoj.cptbox.filesystem_policies import ExactDir, ExactFile, FilesystemAccessRule, RecursiveDir
@@ -120,6 +120,7 @@ class BaseExecutor(metaclass=ExecutorMeta):
     test_memory = env.selftest_memory_limit
     version_regex = re.compile(r'.*?(\d+(?:\.\d+)+)', re.DOTALL)
     source_filename_format = '{problem_id}.{ext}'
+    ext_priority = 0  # When there are multiple versions of a similar runtime, bigger is newer
 
     address_grace = 65536
     data_grace = 0
@@ -483,3 +484,12 @@ class BaseExecutor(metaclass=ExecutorMeta):
     @classmethod
     def autoconfig(cls) -> AutoConfigOutput:
         return cls.autoconfig_find_first(cls.get_find_first_mapping())
+
+    @classmethod
+    def get_valid_exts(cls) -> Sequence[str]:
+        # This exists because sometimes we want to recognize more extensions than just `ext` for auxiliary files
+        return (cls.ext,)
+
+    @classmethod
+    def supports_multifile(cls) -> bool:
+        return False

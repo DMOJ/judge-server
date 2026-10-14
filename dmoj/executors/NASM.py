@@ -3,6 +3,7 @@ from dmoj.executors.asm_executor import NASMExecutor, PlatformX86Mixin
 
 class Executor(PlatformX86Mixin, NASMExecutor):
     nasm_format = 'elf32'
+    ext_priority = 1
 
     test_program = """\
 section .text

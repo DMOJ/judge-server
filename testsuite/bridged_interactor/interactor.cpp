@@ -11,17 +11,18 @@ int main(int argc, char *argv[]) {
   int N, guesses = 0;
   long long guess;
   fscanf(input_file, "%d", &N);
-  while (guess != N) {
+  while (true) {
     read(&guess);
+    guesses++;
     if (guess == N) {
       puts("OK");
+      break;
     } else if (guess > N) {
       puts("FLOATS");
     } else {
       puts("SINKS");
     }
     fflush(stdout);
-    guesses++;
   }
   if (guesses <= 31)
     return 0; // AC

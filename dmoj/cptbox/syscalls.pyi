@@ -70,6 +70,7 @@ sys_cap_set_file: int
 sys_cap_set_proc: int
 sys_capget: int
 sys_capset: int
+sys_chaltroot: int
 sys_chdir: int
 sys_chflags: int
 sys_chflagsat: int
@@ -146,6 +147,7 @@ sys_fadvise64_64: int
 sys_fallocate: int
 sys_fanotify_init: int
 sys_fanotify_mark: int
+sys_fchaltroot: int
 sys_fchdir: int
 sys_fchflags: int
 sys_fchmod: int
@@ -475,6 +477,7 @@ sys_pdfork: int
 sys_pdgetpid: int
 sys_pdkill: int
 sys_pdopenpid: int
+sys_pdptrace: int
 sys_pdrfork: int
 sys_pdwait: int
 sys_perf_event_open: int
